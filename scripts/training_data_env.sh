@@ -51,9 +51,6 @@ export NUMBA_CACHE_DIR="${NUMBA_CACHE_DIR:-"$CACHE_ROOT/numba"}"
 export MPLCONFIGDIR="${MPLCONFIGDIR:-"$CACHE_ROOT/matplotlib"}"
 export JOBLIB_TEMP_FOLDER="${JOBLIB_TEMP_FOLDER:-"$CACHE_ROOT/joblib"}"
 export TMPDIR="${TMPDIR:-"$CACHE_ROOT/tmp"}"
-# Librosa/numba occasionally fails during import with cache-related issues in some envs.
-# Default to disabling JIT to keep the pipeline reliable; override with NUMBA_DISABLE_JIT=0.
-export NUMBA_DISABLE_JIT="${NUMBA_DISABLE_JIT:-1}"
 
 mkdir -p \
   "$XDG_CACHE_HOME" \

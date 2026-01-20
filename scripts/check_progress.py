@@ -46,7 +46,7 @@ def main():
         features_dir = root / "features" / channel
         interactions_dir = root / "interactions" / channel
 
-        n_audio = count_files(audio_dir, ["*.opus", "*.mp3", "*.wav", "*.m4a", "*.webm", "*.mkv"])
+        n_audio = count_files(audio_dir, ["*.opus", "*.mp3", "*.wav", "*.m4a", "*.webm", "*.mkv", "*.mp4"])
         # Count raw Whisper JSONs only (exclude *.classified.json)
         if transcript_dir.exists():
             n_trans = len([p for p in transcript_dir.glob("*.json") if not p.name.endswith(".classified.json")])

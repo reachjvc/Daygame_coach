@@ -17,11 +17,11 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, List, Optional
 
-import librosa
 import numpy as np
 
 try:
@@ -54,6 +54,151 @@ def hash_file(path: Path) -> str:
             h.update(chunk)
     return h.hexdigest()
 
+def load_audio_ffmpeg(path: Path, sr: int = 22050) -> tuple[np.ndarray, int]:
+    """
+    Load audio using ffmpeg into a mono float32 waveform in [-1, 1].
+
+    We avoid librosa here because some environments hit numba/librosa import-time
+    failures that break the whole pipeline.
+    """
+    if not path.exists():
+        raise FileNotFoundError(path)
+
+    cmd = [
+        "ffmpeg",
+        "-v",
+        "error",
+        "-i",
+        str(path),
+        "-ac",
+        "1",
+        "-ar",
+        str(sr),
+        "-f",
+        "f32le",
+        "pipe:1",
+    ]
+    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"ffmpeg failed for {path.name} (code {proc.returncode}): {proc.stderr.decode('utf-8', errors='ignore')}"
+        )
+
+    y = np.frombuffer(proc.stdout, dtype=np.float32)
+    return y, sr
+
+def frame_audio(y: np.ndarray, frame_length: int, hop_length: int) -> np.ndarray:
+    if y.size < frame_length:
+        return np.empty((0, frame_length), dtype=np.float32)
+    n_frames = 1 + (y.size - frame_length) // hop_length
+    shape = (n_frames, frame_length)
+    strides = (y.strides[0] * hop_length, y.strides[0])
+    frames = np.lib.stride_tricks.as_strided(y, shape=shape, strides=strides)
+    return frames.astype(np.float32, copy=False)
+
+def rms_per_frame(frames: np.ndarray) -> np.ndarray:
+    if frames.size == 0:
+        return np.array([], dtype=np.float32)
+    return np.sqrt(np.mean(frames * frames, axis=1) + 1e-12).astype(np.float32)
+
+def pitch_autocorr(
+    frames: np.ndarray,
+    sr: int,
+    fmin_hz: float = 65.41,  # C2
+    fmax_hz: float = 1046.5,  # C6
+    min_confidence: float = 0.3,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Very lightweight pitch tracker using normalized autocorrelation peak-picking.
+
+    Returns:
+      f0_hz: float array, NaN when unvoiced/unknown
+      voiced_probs: [0..1] confidence proxy per frame
+    """
+    n_frames = frames.shape[0]
+    if n_frames == 0:
+        return np.array([], dtype=np.float32), np.array([], dtype=np.float32)
+
+    win = np.hanning(frames.shape[1]).astype(np.float32)
+    f0 = np.full((n_frames,), np.nan, dtype=np.float32)
+    conf = np.zeros((n_frames,), dtype=np.float32)
+
+    lag_min = max(1, int(sr / fmax_hz))
+    lag_max = max(lag_min + 1, int(sr / fmin_hz))
+
+    for i in range(n_frames):
+        x = frames[i].astype(np.float32, copy=False)
+        x = (x - np.mean(x)) * win
+        if not np.any(x):
+            continue
+
+        # Autocorrelation via FFT (real, positive lags).
+        n = int(2 ** np.ceil(np.log2(x.size * 2)))
+        X = np.fft.rfft(x, n=n)
+        r = np.fft.irfft(X * np.conj(X), n=n)[: x.size]
+        r0 = float(r[0]) if r.size else 0.0
+        if r0 <= 0:
+            continue
+
+        search = r[lag_min : min(lag_max, r.size)]
+        if search.size == 0:
+            continue
+
+        peak_idx = int(np.argmax(search))
+        peak_val = float(search[peak_idx])
+        c = peak_val / (r0 + 1e-12)
+        conf[i] = float(np.clip(c, 0.0, 1.0))
+
+        if c < min_confidence:
+            continue
+
+        lag = lag_min + peak_idx
+        if lag > 0:
+            f0[i] = float(sr / lag)
+
+    return f0, conf
+
+def spectral_features(frames: np.ndarray, sr: int) -> tuple[float, float]:
+    if frames.size == 0:
+        return 0.0, 0.0
+
+    win = np.hanning(frames.shape[1]).astype(np.float32)
+    freqs = np.fft.rfftfreq(frames.shape[1], d=1.0 / sr).astype(np.float32)
+
+    centroids: list[float] = []
+    rolloffs: list[float] = []
+
+    for i in range(frames.shape[0]):
+        x = frames[i] * win
+        mag = np.abs(np.fft.rfft(x)).astype(np.float32)
+        total = float(np.sum(mag))
+        if total <= 0:
+            continue
+
+        centroid = float(np.sum(freqs * mag) / (total + 1e-12))
+        centroids.append(centroid)
+
+        cumsum = np.cumsum(mag)
+        target = 0.85 * cumsum[-1]
+        idx = int(np.searchsorted(cumsum, target))
+        idx = min(max(idx, 0), freqs.size - 1)
+        rolloffs.append(float(freqs[idx]))
+
+    if not centroids:
+        return 0.0, 0.0
+    return float(np.mean(centroids)), float(np.mean(rolloffs))
+
+def onset_count_from_rms(rms: np.ndarray, hop_length: int, sr: int) -> int:
+    if rms.size < 3:
+        return 0
+    diff = np.diff(rms)
+    thr = float(np.mean(diff) + 2.0 * np.std(diff))
+    count = 0
+    for i in range(1, rms.size - 1):
+        if diff[i - 1] > thr and rms[i] > rms[i - 1] and rms[i] >= rms[i + 1]:
+            count += 1
+    return count
+
 
 def detect_quality(segment: np.ndarray, voiced_probs: Optional[np.ndarray]) -> QualityFlags:
     rms = np.sqrt(np.mean(segment**2)) if len(segment) else 0
@@ -73,6 +218,8 @@ def extract_segment_features(
     """Extract audio features for a single segment."""
     start_sample = int(start_time * sr)
     end_sample = int(end_time * sr)
+    start_sample = max(0, start_sample)
+    end_sample = min(int(y.size), end_sample)
     segment = y[start_sample:end_sample]
 
     if len(segment) < sr * MIN_SEGMENT_SEC:
@@ -80,12 +227,11 @@ def extract_segment_features(
 
     features: Dict = {}
 
-    f0, voiced_flag, voiced_probs = librosa.pyin(
-        segment,
-        fmin=librosa.note_to_hz("C2"),
-        fmax=librosa.note_to_hz("C6"),
-        sr=sr,
-    )
+    frame_length = int(0.04 * sr)  # 40ms
+    hop_length = int(0.01 * sr)  # 10ms
+    frames = frame_audio(segment, frame_length=frame_length, hop_length=hop_length)
+
+    f0, voiced_probs = pitch_autocorr(frames, sr=sr)
 
     f0_valid = f0[~np.isnan(f0)]
     if f0_valid.size:
@@ -97,33 +243,31 @@ def extract_segment_features(
             "max_hz": float(np.max(f0_valid)),
             "range_hz": float(np.max(f0_valid) - np.min(f0_valid)),
             "direction": direction,
-            # Safety check for empty voiced_probs to prevent NaN
-            "voiced_ratio": float(np.mean(voiced_probs[~np.isnan(voiced_probs)])) if np.any(~np.isnan(voiced_probs)) else 0.0,
+            "voiced_ratio": float(np.mean(voiced_probs > 0.0)) if voiced_probs.size else 0.0,
         }
     else:
         features["pitch"] = None
 
-    rms = librosa.feature.rms(y=segment)[0]
+    rms = rms_per_frame(frames)
     features["energy"] = {
-        "mean_db": float(20 * np.log10(np.mean(rms) + 1e-10)),
-        "max_db": float(20 * np.log10(np.max(rms) + 1e-10)),
-        "std_db": float(20 * np.log10(np.std(rms) + 1e-10)),
-        "dynamics_db": float(20 * np.log10(np.max(rms) / (np.mean(rms) + 1e-10))),
+        "mean_db": float(20 * np.log10(float(np.mean(rms)) + 1e-10)) if rms.size else -100.0,
+        "max_db": float(20 * np.log10(float(np.max(rms)) + 1e-10)) if rms.size else -100.0,
+        "std_db": float(20 * np.log10(float(np.std(rms)) + 1e-10)) if rms.size else -100.0,
+        "dynamics_db": float(20 * np.log10(float(np.max(rms)) / (float(np.mean(rms)) + 1e-10))) if rms.size else 0.0,
     }
 
-    onset_frames = librosa.onset.onset_detect(y=segment, sr=sr)
     duration = max(end_time - start_time, 1e-6)
+    onset_count = onset_count_from_rms(rms, hop_length=hop_length, sr=sr)
     features["tempo"] = {
-        "syllable_rate": float(len(onset_frames) / duration),
-        "onset_count": int(len(onset_frames)),
+        "syllable_rate": float(onset_count / duration),
+        "onset_count": int(onset_count),
         "duration_sec": float(duration),
     }
 
-    spectral_centroid = librosa.feature.spectral_centroid(y=segment, sr=sr)[0]
-    spectral_rolloff = librosa.feature.spectral_rolloff(y=segment, sr=sr)[0]
+    brightness_hz, rolloff_hz = spectral_features(frames, sr=sr)
     features["spectral"] = {
-        "brightness_hz": float(np.mean(spectral_centroid)),
-        "rolloff_hz": float(np.mean(spectral_rolloff)),
+        "brightness_hz": float(brightness_hz),
+        "rolloff_hz": float(rolloff_hz),
     }
 
     quality = detect_quality(segment, voiced_probs)
@@ -155,7 +299,7 @@ def process_audio_file(
     embed: bool = False,
 ) -> Dict:
     """Process a single audio file with its timestamps."""
-    y, sr = librosa.load(audio_path, sr=22050)
+    y, sr = load_audio_ffmpeg(audio_path, sr=22050)
 
     with timestamps_path.open("r") as f:
         whisper_data = json.load(f)
@@ -168,8 +312,8 @@ def process_audio_file(
         "source_timestamps": str(timestamps_path),
         "processing": {
             "sample_rate": sr,
-            "librosa_version": librosa.__version__,
-            "pyin_range": ["C2", "C6"],
+            "feature_extractor": "ffmpeg+numpy",
+            "pitch_range_hz": [65.41, 1046.5],
             "embedder": "resemblyzer" if encoder else None,
         },
         "total_duration_sec": float(len(y) / sr),

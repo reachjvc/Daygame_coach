@@ -1,12 +1,12 @@
 "use server"
 
-import { createClient } from "@/src/db/server"
+import { createServerSupabaseClient } from "@/src/db/server"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { REGIONS } from "@/src/profile/data/regions"
 
 export async function completeOnboarding(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -86,7 +86,7 @@ function getInitialLevelFromExperience(experienceLevel: string): number {
 }
 
 export async function updateSecondaryRegion(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -126,7 +126,7 @@ export async function updateSecondaryRegion(formData: FormData) {
 }
 
 export async function updateProfilePreference(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -187,7 +187,7 @@ export async function updateProfilePreference(formData: FormData) {
 }
 
 export async function updatePreferredRegion(regionId: string) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -197,7 +197,7 @@ export async function updatePreferredRegion(regionId: string) {
     redirect("/auth/login")
   }
 
-  const regionIds = new Set(REGIONS.map((region) => region.id))
+  const regionIds = new Set<string>(REGIONS.map((region) => region.id))
   if (!regionIds.has(regionId)) {
     throw new Error("Invalid region")
   }
@@ -232,7 +232,7 @@ export async function updatePreferredRegion(regionId: string) {
 }
 
 export async function updateSecondaryRegionDirect(regionId: string | null) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -242,7 +242,7 @@ export async function updateSecondaryRegionDirect(regionId: string | null) {
     redirect("/auth/login")
   }
 
-  const regionIds = new Set(REGIONS.map((region) => region.id))
+  const regionIds = new Set<string>(REGIONS.map((region) => region.id))
   if (regionId && !regionIds.has(regionId)) {
     throw new Error("Invalid region")
   }
@@ -275,7 +275,7 @@ export async function updateSecondaryRegionDirect(regionId: string | null) {
 }
 
 export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
@@ -310,7 +310,7 @@ export async function updateAgeRange(ageRangeStart: number, ageRangeEnd: number)
 }
 
 export async function updateArchetypes(formData: FormData) {
-  const supabase = await createClient()
+  const supabase = await createServerSupabaseClient()
 
   const {
     data: { user },
