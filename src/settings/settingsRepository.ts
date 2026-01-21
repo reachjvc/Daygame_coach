@@ -4,12 +4,12 @@
  */
 
 import { createServerSupabaseClient } from "@/src/db/server"
-import type { ProfileRow, ProfileUpdate, PurchaseRow } from "@/src/db/types"
-import type { SandboxSettings } from "@/src/scenarios/openers/data/sandbox-settings"
 import {
   DEFAULT_SANDBOX_SETTINGS,
   mergeSandboxSettings,
-} from "@/src/scenarios/openers/data/sandbox-settings"
+  type SandboxSettings,
+} from "@/src/scenarios"
+import type { ProfileRow, ProfileUpdate, PurchaseRow } from "@/src/db"
 
 /**
  * Get sandbox settings for a user.

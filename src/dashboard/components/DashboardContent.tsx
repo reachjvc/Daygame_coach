@@ -4,8 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Target, MessageCircle, Brain } from "lucide-react";
-import { UserPreferences } from "@/src/profile/components/UserPreferences";
-import { LevelProgressBar } from "@/src/profile/components/LevelProgressBar";
+import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
 interface DashboardContentProps {

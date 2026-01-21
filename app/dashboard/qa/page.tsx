@@ -1,4 +1,4 @@
-import { QAPage } from "@/src/qa/components/QAPage"
+import { QAPage } from "@/src/qa"
 
 export default function DashboardQAPage() {
   return <QAPage />

@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { createServerSupabaseClient } from "@/src/db/server"
 import { hasPurchased } from "@/src/db/profilesRepo"
-import { scenariosService } from "@/src/scenarios/scenariosService"
+import { scenariosService } from "@/src/scenarios"
 
 const ScenarioTypeSchema = z.enum([
   "practice-openers",

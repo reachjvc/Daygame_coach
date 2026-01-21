@@ -220,14 +220,14 @@ export function UserPreferences({
       </CardHeader>
       <CardContent className="space-y-8">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_auto]">
-          <div className="space-y-4 lg:col-start-1 lg:row-start-1">
+          <div className="flex h-full flex-col lg:col-start-1 lg:row-start-1">
             {primaryArchetypeData?.image && (
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex h-full flex-col items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
                 <div className="relative">
                   <img
                     src={primaryArchetypeData.image}
                     alt={archetype}
-                    className="w-52 h-52 object-cover object-top rounded-full ring-2 ring-primary/40 shadow-lg"
+                    className="size-40 object-cover object-top rounded-full ring-2 ring-primary/40 shadow-lg sm:size-48 lg:size-52"
                   />
                   <Badge className="absolute right-2 top-2 bg-gradient-to-r from-primary to-orange-400 text-primary-foreground shadow-sm ring-1 ring-primary/40">
                     Primary
@@ -235,20 +235,20 @@ export function UserPreferences({
                 </div>
 
                 {(secondaryArchetypeData?.image || tertiaryArchetypeData?.image) && (
-                  <div className="flex flex-wrap justify-center gap-4">
+                  <div className="flex flex-wrap justify-center gap-3">
                     {secondaryArchetypeData?.image && secondary_archetype !== archetype && (
                       <div className="flex flex-col items-center gap-1">
                         <div className="relative">
                           <img
                             src={secondaryArchetypeData.image}
                             alt={secondary_archetype || "Secondary archetype"}
-                            className="w-24 h-24 object-cover object-top rounded-full opacity-80 saturate-75 ring-1 ring-primary/20"
+                            className="size-20 object-cover object-top rounded-full opacity-80 saturate-75 ring-1 ring-primary/20 sm:size-24 lg:size-28"
                           />
                           <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary/15 text-primary text-[10px] uppercase tracking-wide ring-1 ring-primary/30">
                             Secondary
                           </Badge>
                         </div>
-                        <span className="text-[11px] text-muted-foreground">Less likely</span>
+                        <span className="text-[11px] text-muted-foreground sm:hidden">Less likely</span>
                       </div>
                     )}
                     {tertiaryArchetypeData?.image && tertiary_archetype !== archetype && (
@@ -257,13 +257,13 @@ export function UserPreferences({
                           <img
                             src={tertiaryArchetypeData.image}
                             alt={tertiary_archetype || "Tertiary archetype"}
-                            className="w-24 h-24 object-cover object-top rounded-full opacity-70 saturate-60 ring-1 ring-primary/15"
+                            className="size-20 object-cover object-top rounded-full opacity-70 saturate-60 ring-1 ring-primary/15 sm:size-24 lg:size-28"
                           />
                           <Badge className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-primary/10 text-primary/80 text-[10px] uppercase tracking-wide ring-1 ring-primary/20">
                             Tertiary
                           </Badge>
                         </div>
-                        <span className="text-[11px] text-muted-foreground">Occasional</span>
+                        <span className="text-[11px] text-muted-foreground sm:hidden">Occasional</span>
                       </div>
                     )}
                   </div>
@@ -280,7 +280,7 @@ export function UserPreferences({
             </Button>
           </div>
 
-          <div className="rounded-xl border border-border bg-muted/30 p-4 lg:col-start-2 lg:row-start-1">
+          <div className="rounded-xl border border-border bg-muted/30 p-3 lg:col-start-2 lg:row-start-1">
             <div className="mb-3 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-foreground">Preferred region map</p>

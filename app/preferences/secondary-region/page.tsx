@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { SecondaryRegionSelector } from "@/src/profile/components/SecondaryRegionSelector"
+import { SecondaryRegionSelector } from "@/src/profile/components"
 
 export default async function SecondaryRegionPage() {
   const supabase = await createServerSupabaseClient()

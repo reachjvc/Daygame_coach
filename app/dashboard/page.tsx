@@ -1,3 +1,3 @@
-import { DashboardPage } from "@/src/dashboard/components/DashboardPage"
+import { DashboardPage } from "@/src/dashboard"
 
 export default DashboardPage

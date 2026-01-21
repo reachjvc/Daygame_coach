@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { ArchetypeSelector } from "@/src/profile/components/ArchetypeSelector"
+import { ArchetypeSelector } from "@/src/profile/components"
 
 export default async function ArchetypesPage() {
   const supabase = await createServerSupabaseClient()

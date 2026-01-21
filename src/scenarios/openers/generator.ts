@@ -50,8 +50,7 @@ import {
   getWeatherMoodModifier,
   getWeatherAiDescription,
 } from "./data/weather";
-import { getCountryRegion } from "@/src/profile/data/regions";
-import { getDisplayName, normalizeCountryId } from "@/src/profile/data/map-audit";
+import { getCountryRegion, getDisplayName, normalizeCountryId } from "@/src/profile";
 import { type SandboxSettings } from "./data/sandbox-settings";
 
 // ============================================================================

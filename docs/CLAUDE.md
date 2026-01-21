@@ -154,6 +154,21 @@ Do NOT restructure unrelated parts of the codebase.
 
 ---
 
+## Engineering Philosophy: Best Practice Over Shortcuts
+
+**Always aim for best practice and the best method.** No easy ways out, except when there's a huge tradeoff or limited benefit.
+
+The objective is to create the best possible product with no technical debt.
+
+Specifically:
+- **Use the most accurate method** even if it's more complex (e.g., pyannote-audio for speaker diarization over simple pitch heuristics)
+- **Prefer local processing** when quality is comparable (e.g., Ollama over cloud APIs for cost savings without quality loss)
+- **Document trade-offs explicitly** when shortcuts are necessary
+- **Build for the future** - data pipelines should support voice-to-voice even before that feature exists
+- **Quality over speed** - a pipeline that takes 10 hours but produces excellent data beats a 1-hour pipeline with mediocre output
+
+---
+
 ## CRITICAL: Keep Documentation Updated
 
 After completing any significant work, you MUST update the relevant documentation files:

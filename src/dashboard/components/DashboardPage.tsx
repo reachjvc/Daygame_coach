@@ -74,7 +74,7 @@ export async function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="text-foreground hover:text-primary">
-              <Link href="/settings">
+              <Link href="/dashboard/settings">
                 <Settings className="size-4 mr-2" />
                 Settings
               </Link>

@@ -1,3 +1,3 @@
-import { ScenariosPage } from "@/src/scenarios/components/ScenariosPage"
+import { ScenariosPage } from "@/src/scenarios"
 
 export default ScenariosPage

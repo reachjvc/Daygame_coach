@@ -115,20 +115,35 @@ type Chunk = {
   type: SegmentType
   chunkIndex: number
   totalChunks: number
+  // New fields for phase-based chunking
+  conversationId?: number
+  phase?: string
+  techniques?: string[]
+  topics?: string[]
 }
 
 type InteractionJsonlRow = {
   id?: string
+  conversation_id?: number
   source_video?: string
   start_time?: number
   end_time?: number
+  outcome?: string
   content_summary?: string
+  techniques?: string[]
+  topics?: string[]
   turns?: Array<{
     speaker?: string
     text?: string
     start?: number
     end?: number
     phase?: string
+    semantic_tags?: {
+      phase?: string
+      techniques?: string[]
+      topics?: string[]
+      topic_values?: Record<string, string>
+    }
   }>
 }
 
@@ -335,11 +350,107 @@ async function main() {
     function formatInteraction(row: InteractionJsonlRow): string {
       const start = typeof row.start_time === "number" ? row.start_time.toFixed(1) : ""
       const end = typeof row.end_time === "number" ? row.end_time.toFixed(1) : ""
-      const header = start && end ? `Interaction (${start}s–${end}s)` : "Interaction"
+      const outcomeStr = row.outcome && row.outcome !== "unknown" ? ` [${row.outcome}]` : ""
+      const header = start && end ? `Interaction (${start}s–${end}s)${outcomeStr}` : `Interaction${outcomeStr}`
       const lines = (row.turns ?? [])
         .filter((t) => typeof t.text === "string" && t.text.trim().length > 0)
         .map((t) => `${mapSpeakerLabel(t.speaker)}: ${String(t.text).trim()}`)
       return [header, ...lines].join("\n")
+    }
+
+    /**
+     * Phase-based chunking: group turns by phase, creating one chunk per phase
+     * This respects conversation boundaries and semantic structure.
+     */
+    function chunkInteractionByPhase(row: InteractionJsonlRow, maxChunkSize: number): Chunk[] {
+      const chunks: Chunk[] = []
+      const turns = row.turns ?? []
+
+      if (turns.length === 0) return chunks
+
+      // Group turns by phase
+      type PhaseGroup = {
+        phase: string
+        turns: typeof turns
+        techniques: string[]
+        topics: string[]
+      }
+
+      const phaseGroups: PhaseGroup[] = []
+      let currentGroup: PhaseGroup | null = null
+
+      for (const turn of turns) {
+        const phase = turn.phase || turn.semantic_tags?.phase || "unknown"
+
+        if (!currentGroup || currentGroup.phase !== phase) {
+          if (currentGroup) {
+            phaseGroups.push(currentGroup)
+          }
+          currentGroup = {
+            phase,
+            turns: [],
+            techniques: [],
+            topics: [],
+          }
+        }
+
+        currentGroup.turns.push(turn)
+
+        // Collect techniques and topics from semantic tags
+        const tags = turn.semantic_tags
+        if (tags?.techniques) {
+          currentGroup.techniques.push(...tags.techniques)
+        }
+        if (tags?.topics) {
+          currentGroup.topics.push(...tags.topics)
+        }
+      }
+
+      if (currentGroup) {
+        phaseGroups.push(currentGroup)
+      }
+
+      // Create chunks from phase groups
+      for (const group of phaseGroups) {
+        let content = ""
+        for (const turn of group.turns) {
+          const speaker = mapSpeakerLabel(turn.speaker)
+          const text = (turn.text ?? "").trim()
+          if (text) {
+            const line = `${speaker}: ${text}`
+            if (content.length + line.length + 1 > maxChunkSize && content.length > 0) {
+              // Split large phase groups
+              chunks.push({
+                content: content.trim(),
+                type: "INTERACTION",
+                chunkIndex: chunks.length,
+                totalChunks: 0, // Will be normalized later
+                conversationId: row.conversation_id,
+                phase: group.phase,
+                techniques: Array.from(new Set(group.techniques)),
+                topics: Array.from(new Set(group.topics)),
+              })
+              content = ""
+            }
+            content += (content ? "\n" : "") + line
+          }
+        }
+
+        if (content.trim()) {
+          chunks.push({
+            content: content.trim(),
+            type: "INTERACTION",
+            chunkIndex: chunks.length,
+            totalChunks: 0,
+            conversationId: row.conversation_id,
+            phase: group.phase,
+            techniques: [...new Set(group.techniques)],
+            topics: [...new Set(group.topics)],
+          })
+        }
+      }
+
+      return chunks
     }
 
     for (const filePath of interactionFiles) {
@@ -364,16 +475,24 @@ async function main() {
         }
         if (!parsed) continue
 
-        const formatted = formatInteraction(parsed)
-        if (formatted.length < 20) continue
+        // Use phase-based chunking for better semantic structure
+        const phaseChunks = chunkInteractionByPhase(parsed, chunkSize)
 
-        const segments = segmentTranscript(formatted, chunkSize, chunkOverlap)
-        const chunks = segmentsToChunks(
-          // Treat all interaction-derived content as interaction for metadata.
-          segments.map((seg) => ({ ...seg, type: "INTERACTION" as const }))
-        )
-        interactionChunks.push(...chunks)
-        interactionCount++
+        if (phaseChunks.length > 0) {
+          interactionChunks.push(...phaseChunks)
+          interactionCount++
+        } else {
+          // Fallback to simple formatting for interactions without turns
+          const formatted = formatInteraction(parsed)
+          if (formatted.length < 20) continue
+
+          const segments = segmentTranscript(formatted, chunkSize, chunkOverlap)
+          const chunks = segmentsToChunks(
+            segments.map((seg) => ({ ...seg, type: "INTERACTION" as const }))
+          )
+          interactionChunks.push(...chunks)
+          interactionCount++
+        }
       }
 
       if (interactionChunks.length === 0) {
@@ -482,19 +601,36 @@ async function main() {
       const chunk = chunks[i]
       const embedding = await generateEmbeddingWithRetry(chunk.content)
 
+      // Build metadata with new phase-based fields
+      const metadata: Record<string, unknown> = {
+        channel,
+        coach: channel,
+        video_title: videoTitle,
+        chunkIndex: chunk.chunkIndex,
+        totalChunks: chunk.totalChunks,
+        segmentType: chunk.type,
+        isRealExample: chunk.type === "INTERACTION",
+      }
+
+      // Add phase-based metadata if available
+      if (chunk.conversationId !== undefined) {
+        metadata.conversationId = chunk.conversationId
+      }
+      if (chunk.phase) {
+        metadata.phase = chunk.phase
+      }
+      if (chunk.techniques && chunk.techniques.length > 0) {
+        metadata.techniques = chunk.techniques
+      }
+      if (chunk.topics && chunk.topics.length > 0) {
+        metadata.topics = chunk.topics
+      }
+
       rows.push({
         content: chunk.content,
         source,
         embedding,
-        metadata: {
-          channel,
-          coach: channel,
-          video_title: videoTitle,
-          chunkIndex: chunk.chunkIndex,
-          totalChunks: chunk.totalChunks,
-          segmentType: chunk.type,
-          isRealExample: chunk.type === "INTERACTION",
-        },
+        metadata,
       })
 
       if ((i + 1) % 25 === 0 || i + 1 === chunks.length) {

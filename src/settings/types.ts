@@ -3,7 +3,7 @@
  * Follows the vertical slice architecture pattern from SLICE_QA.md
  */
 
-import type { SandboxSettings } from "@/src/scenarios/openers/data/sandbox-settings"
+import type { SandboxSettings } from "@/src/scenarios"
 
 // ============================================
 // Props types (for components)

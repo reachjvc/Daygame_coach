@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { OnboardingFlow } from "@/src/profile/components/OnboardingFlow"
+import { OnboardingFlow } from "@/src/profile/components"
 
 interface PreferencesPageProps {
   searchParams: Promise<{ step?: string }>
