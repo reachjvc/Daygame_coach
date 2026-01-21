@@ -20,7 +20,7 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { DifficultyLevel } from "@/src/scenarios/openers/energy";
+import type { DifficultyLevel } from "@/src/scenarios/openers/data/energy";
 import { PracticeOpenersTrainer } from "@/src/scenarios/openers/OpenersTrainer";
 import { VoiceChatWindow } from "@/src/scenarios/components/ChatWindow";
 import { cn } from "@/lib/utils";
@@ -275,7 +275,7 @@ function getRecommendedScenarios(userLevel: number, scenariosCompleted: number):
   return ["practice-openers", "practice-career-response", "practice-shittests"];
 }
 
-export function ScenariosPageClientV2({
+export function ScenariosHub({
   recommendedDifficulty,
   userLevel,
   scenariosCompleted,

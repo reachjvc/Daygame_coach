@@ -18,3 +18,8 @@ export type ScenarioType =
   | "flake-recovery"
   | "app-opener"
   | "app-to-date"
+
+export type ChatScenarioType =
+  | "practice-openers"
+  | "practice-career-response"
+  | "practice-shittests"

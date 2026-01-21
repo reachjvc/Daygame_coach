@@ -1,6 +1,6 @@
 import type { Archetype } from "../shared/archetypes";
 import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../shared/difficulty";
-import { ENHANCED_OUTFITS, type OutfitCategory } from "../openers/outfits";
+import { ENHANCED_OUTFITS, type OutfitCategory } from "../openers/data/outfits";
 
 interface CareerOption {
   title: string;

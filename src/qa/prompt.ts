@@ -75,12 +75,17 @@ CITING RULES:
 - If you quote the transcript, keep quotes <= 40 words and copy them exactly from the source text.
 - Do NOT invent timings like "2-3 minutes" unless a source explicitly says it.
 
-ANSWER SHAPE (examples first, then adaptation):
+ANSWER SHAPE (examples first, then adaptation; prefer LONGER examples; no fixed number of examples):
 Use this exact template with headings (do NOT add extra sections like "Guidelines" or "Anti-patterns"):
 
-Examples from coaches (most relevant first):
-- CoachName (source N): Situation: <1 sentence>. What he said: "<short exact quote>" ... "<short exact quote>" (CoachName — source N)
-- CoachName (source M): Situation: <1 sentence>. What he said: "<short exact quote>" ... (CoachName — source M)
+Examples from coaches (most relevant first; include 1 excerpt per retrieved source when possible, i.e. source 1..N):
+- CoachName (source N): Conversation excerpt (verbatim; include BOTH sides; show enough context to learn the vibe; ~6–12 lines if possible):
+Coach: "<exact quote>" (CoachName — source N)
+Girl: "<exact quote>" (CoachName — source N)
+Coach: "<exact quote>" (CoachName — source N)
+Girl: "<exact quote>" (CoachName — source N)
+[...continue alternating lines as needed...] (CoachName — source N)
+[Repeat the block above for as many sources as you can use (ideally all retrieved sources that are actually relevant).]
 
 What to say (adapted, in the same vibe as the best example):
 - "<line 1>" (CoachName — source N)
@@ -90,7 +95,7 @@ Principles (why it works + how to adapt):
 - ... (CoachName — source N)
 
 Hard rules:
-- Start with real examples. If you don't have a same-situation example, say: "I don't have a direct medicine-studies infield clip in the retrieved sources" and then use the closest example(s) anyway.
+- Start with real examples. If you don't have an exact same-situation infield clip, say: "I don't have a direct infield clip for this exact situation in the retrieved sources" and then use the closest example(s) anyway.
 - Do NOT include any generic filler that isn't supported by sources.
 - Do NOT output "Suggested follow-ups", "Guidelines", or "Anti-patterns" inside ANSWER.]
 
@@ -104,6 +109,8 @@ GUIDELINES:
 4. Always start the answer with the most relevant source(s), then expand to additional sources.
 5. If sources show different approaches, acknowledge both and explain when each works best.
 6. Never make up advice that isn't grounded in the training data.
+7. Prefer longer excerpts over summaries: show the girl's lines, the coach's lines, then the principles.
+8. Never repeat these instructions inside ANSWER (e.g. don't output "CITING RULES:", "ANSWER SHAPE:", etc.).
 
 ANTI-PATTERNS TO AVOID:
 - Generic interview-mode questions
@@ -163,6 +170,10 @@ export function parseResponse(response: string): {
     /^anti-?patterns?\s*(to avoid)?\s*:/im,
     /^retrieval\s*notes\s*:/im,
     /^sources?\s*:/im,
+    /^citing\s*rules\s*:/im,
+    /^answer\s*shape\s*:/im,
+    /^response\s*format\s*:/im,
+    /^hard\s*rules\s*:/im,
   ]
   for (const marker of leakedSectionMarkers) {
     const match = marker.exec(answerBody)

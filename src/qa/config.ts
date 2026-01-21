@@ -33,10 +33,12 @@ export const QA_CONFIG: QAConfig = {
 
   defaults: {
     provider: (process.env.AI_PROVIDER as "ollama" | "openai" | "claude") || "claude",
-    topK: 5,
+    // Retrieve more examples when available so answers can show multiple infield excerpts.
+    topK: 8,
     minScore: 0.5,
     maxChunkChars: 8000,
-    maxOutputTokens: 1024,
+    // Prefer longer, more complete answers (fuller examples + principles).
+    maxOutputTokens: 2048,
     temperature: 0.7,
   },
 }

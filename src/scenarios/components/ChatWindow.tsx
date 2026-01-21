@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ScenarioType } from "@/src/scenarios/types";
+import type { ChatScenarioType } from "@/src/scenarios/types";
 
 interface ChatMessage {
   id: string;
@@ -32,7 +32,7 @@ interface MilestoneEvaluation extends SmallEvaluation {
 
 interface VoiceChatWindowProps {
   onClose: () => void;
-  scenarioType: ScenarioType;
+  scenarioType: ChatScenarioType;
 }
 
 export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps) {

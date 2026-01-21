@@ -22,14 +22,30 @@ type Args = {
   force: boolean
   dryRun: boolean
   verifyOnly: boolean
+  mode: "transcripts" | "interactions"
 }
 
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
+  let mode: Args["mode"] = "transcripts"
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (arg === "--interactions") mode = "interactions"
+    if (arg.startsWith("--mode=")) {
+      const value = arg.split("=", 2)[1]
+      if (value === "transcripts" || value === "interactions") mode = value
+    }
+    if (arg === "--mode") {
+      const value = argv[i + 1]
+      if (value === "transcripts" || value === "interactions") mode = value
+    }
+  }
   return {
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     verifyOnly: flags.has("--verify"),
+    mode,
   }
 }
 
@@ -73,6 +89,25 @@ async function listTxtFiles(rootDir: string): Promise<string[]> {
   return out.sort((a, b) => a.localeCompare(b))
 }
 
+async function listJsonlFiles(rootDir: string, suffix: string): Promise<string[]> {
+  const out: string[] = []
+
+  async function walk(dir: string) {
+    const dirents = await fsp.readdir(dir, { withFileTypes: true })
+    for (const dirent of dirents) {
+      const full = path.join(dir, dirent.name)
+      if (dirent.isDirectory()) {
+        await walk(full)
+      } else if (dirent.isFile() && full.endsWith(suffix)) {
+        out.push(full)
+      }
+    }
+  }
+
+  await walk(rootDir)
+  return out.sort((a, b) => a.localeCompare(b))
+}
+
 type SegmentType = "INTERACTION" | "EXPLANATION" | "UNKNOWN"
 
 type Chunk = {
@@ -80,6 +115,21 @@ type Chunk = {
   type: SegmentType
   chunkIndex: number
   totalChunks: number
+}
+
+type InteractionJsonlRow = {
+  id?: string
+  source_video?: string
+  start_time?: number
+  end_time?: number
+  content_summary?: string
+  turns?: Array<{
+    speaker?: string
+    text?: string
+    start?: number
+    end?: number
+    phase?: string
+  }>
 }
 
 function classifySegmentType(text: string): SegmentType {
@@ -202,22 +252,17 @@ async function main() {
   const { storeEmbeddings, deleteEmbeddingsBySource } = await import("../src/db/server")
 
   const transcriptsDir = path.join(process.cwd(), "training-data", "transcripts")
-  if (!fs.existsSync(transcriptsDir)) {
-    console.error(`❌ Missing directory: ${transcriptsDir}`)
-    process.exit(1)
-  }
-
-  const transcriptFiles = await listTxtFiles(transcriptsDir)
-  if (transcriptFiles.length === 0) {
-    console.log("No transcript .txt files found under training-data/transcripts")
-    return
-  }
+  const interactionsDir = path.join(process.cwd(), "training-data", "interactions")
 
   const chunkSize = QA_CONFIG.rag.chunkSize
   const chunkOverlap = QA_CONFIG.rag.chunkOverlap
   const embeddingModel = QA_CONFIG.ollama.embeddingModel
 
-  const statePath = path.join(process.cwd(), "training-data", ".ingest_state.json")
+  const statePath = path.join(
+    process.cwd(),
+    "training-data",
+    args.mode === "interactions" ? ".ingest_state.interactions.json" : ".ingest_state.json"
+  )
   const state = await loadState(statePath, { embeddingModel, chunkSize, chunkOverlap })
 
   let force = args.force
@@ -236,29 +281,130 @@ async function main() {
   const toIngest: Array<{ source: string; chunks: Chunk[]; hash: string }> = []
   let unchanged = 0
 
-  for (const filePath of transcriptFiles) {
-    const relSource = path.relative(transcriptsDir, filePath)
-    const content = await fsp.readFile(filePath, "utf-8")
-
-    const segments = segmentTranscript(content, chunkSize, chunkOverlap)
-    const chunks = segmentsToChunks(segments)
-    const hash = hashChunks(chunks)
-
-    const prev = state.sources[relSource]
-    const isUnchanged = !force && prev?.hash === hash && prev?.chunkCount === chunks.length
-
-    if (isUnchanged) {
-      unchanged++
-      continue
+  if (args.mode === "transcripts") {
+    if (!fs.existsSync(transcriptsDir)) {
+      console.error(`❌ Missing directory: ${transcriptsDir}`)
+      process.exit(1)
     }
 
-    toIngest.push({ source: relSource, chunks, hash })
+    const transcriptFiles = await listTxtFiles(transcriptsDir)
+    if (transcriptFiles.length === 0) {
+      console.log("No transcript .txt files found under training-data/transcripts")
+      return
+    }
+
+    for (const filePath of transcriptFiles) {
+      const relSource = path.relative(transcriptsDir, filePath)
+      const content = await fsp.readFile(filePath, "utf-8")
+
+      const segments = segmentTranscript(content, chunkSize, chunkOverlap)
+      const chunks = segmentsToChunks(segments)
+      const hash = hashChunks(chunks)
+
+      const prev = state.sources[relSource]
+      const isUnchanged = !force && prev?.hash === hash && prev?.chunkCount === chunks.length
+
+      if (isUnchanged) {
+        unchanged++
+        continue
+      }
+
+      toIngest.push({ source: relSource, chunks, hash })
+    }
+  } else {
+    if (!fs.existsSync(interactionsDir)) {
+      console.error(`❌ Missing directory: ${interactionsDir}`)
+      process.exit(1)
+    }
+
+    const interactionFiles = await listJsonlFiles(interactionsDir, ".interactions.jsonl")
+    if (interactionFiles.length === 0) {
+      console.log("No .interactions.jsonl files found under training-data/interactions")
+      return
+    }
+
+    function mapSpeakerLabel(raw?: string): string {
+      const s = (raw ?? "").toLowerCase().trim()
+      if (s === "coach") return "Coach"
+      if (s === "target") return "Girl"
+      if (s === "voiceover") return "Voiceover"
+      if (s === "ambiguous") return "Ambiguous"
+      return "Unknown"
+    }
+
+    function formatInteraction(row: InteractionJsonlRow): string {
+      const start = typeof row.start_time === "number" ? row.start_time.toFixed(1) : ""
+      const end = typeof row.end_time === "number" ? row.end_time.toFixed(1) : ""
+      const header = start && end ? `Interaction (${start}s–${end}s)` : "Interaction"
+      const lines = (row.turns ?? [])
+        .filter((t) => typeof t.text === "string" && t.text.trim().length > 0)
+        .map((t) => `${mapSpeakerLabel(t.speaker)}: ${String(t.text).trim()}`)
+      return [header, ...lines].join("\n")
+    }
+
+    for (const filePath of interactionFiles) {
+      const relInteractionPath = path.relative(interactionsDir, filePath)
+      const channel = relInteractionPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
+      const videoTitle = path.basename(filePath, ".interactions.jsonl")
+      // Store under the same source key format as transcript ingestion to avoid duplicating sources in the DB.
+      const sourceKey = path.join(channel, `${videoTitle}.txt`)
+
+      const raw = await fsp.readFile(filePath, "utf-8")
+      const interactionChunks: Chunk[] = []
+
+      let interactionCount = 0
+      for (const rawLine of raw.split("\n")) {
+        const line = rawLine.trim()
+        if (!line) continue
+        let parsed: InteractionJsonlRow | null = null
+        try {
+          parsed = JSON.parse(line)
+        } catch {
+          continue
+        }
+        if (!parsed) continue
+
+        const formatted = formatInteraction(parsed)
+        if (formatted.length < 20) continue
+
+        const segments = segmentTranscript(formatted, chunkSize, chunkOverlap)
+        const chunks = segmentsToChunks(
+          // Treat all interaction-derived content as interaction for metadata.
+          segments.map((seg) => ({ ...seg, type: "INTERACTION" as const }))
+        )
+        interactionChunks.push(...chunks)
+        interactionCount++
+      }
+
+      if (interactionChunks.length === 0) {
+        continue
+      }
+
+      // Normalize chunkIndex/totalChunks across the whole video source.
+      const normalizedChunks = interactionChunks.map((c, idx) => ({
+        ...c,
+        chunkIndex: idx,
+        totalChunks: interactionChunks.length,
+      }))
+
+      const hash = hashChunks(normalizedChunks)
+      const prev = state.sources[sourceKey]
+      const isUnchanged =
+        !force && prev?.hash === hash && prev?.chunkCount === normalizedChunks.length
+
+      if (isUnchanged) {
+        unchanged++
+        continue
+      }
+
+      toIngest.push({ source: sourceKey, chunks: normalizedChunks, hash })
+    }
   }
 
   console.log("================================")
   console.log("🧠 TRAINING DATA INGEST")
   console.log("================================")
-  console.log(`Transcripts:  ${transcriptFiles.length}`)
+  console.log(`Mode:         ${args.mode}`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${force ? " (forced)" : ""}`)
   console.log(`Chunk size:   ${chunkSize}`)

@@ -2,8 +2,8 @@ import type { z } from "zod"
 
 import { getProfile } from "@/src/db/profilesRepo"
 
-import type { ActivityId } from "@/src/scenarios/openers/base-texts"
-import type { DifficultyLevel as OpenersDifficultyLevel } from "@/src/scenarios/openers/energy"
+import type { ActivityId } from "@/src/scenarios/openers/data/base-texts"
+import type { DifficultyLevel as OpenersDifficultyLevel } from "@/src/scenarios/openers/data/energy"
 import {
   generateScenarioV2,
   getAvailableActivities,
@@ -53,7 +53,7 @@ export type GenerateEncounterRequest = {
 
 export type EvaluateOpenerRequest = {
   opener: string
-  encounter: unknown
+  encounter?: unknown
 }
 
 export type OpenerEvaluation = Awaited<ReturnType<typeof evaluateOpener>>
@@ -148,6 +148,10 @@ export class ScenariosService {
     request: EvaluateOpenerRequest,
     _userId: string
   ): Promise<OpenerEvaluation> {
+    if (typeof request.encounter === "undefined") {
+      throw new Error("Encounter is required")
+    }
+
     return evaluateOpener(request.opener, request.encounter)
   }
 
