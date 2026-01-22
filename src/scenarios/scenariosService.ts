@@ -7,8 +7,8 @@
 
 import { getProfile } from "@/src/db/profilesRepo"
 
-import type { ActivityId } from "@/src/scenarios/openers/data/base-texts"
-import type { DifficultyLevel as OpenersDifficultyLevel } from "@/src/scenarios/openers/data/energy"
+import type { ActivityId } from "@/src/encounters/data/base-texts"
+import type { DifficultyLevel as OpenersDifficultyLevel } from "@/src/encounters/data/energy"
 import {
   generateScenarioV2,
   getAvailableActivities,

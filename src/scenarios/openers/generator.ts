@@ -19,7 +19,7 @@ import {
   getEnergyAiDescription,
   getEnergyApproachability,
   ENERGY_STATES,
-} from "./data/energy";
+} from "@/src/encounters/data/energy";
 
 import {
   type Position,
@@ -27,7 +27,7 @@ import {
   getBaseText,
   getValidPositions,
   isValidPosition,
-} from "./data/base-texts";
+} from "@/src/encounters/data/base-texts";
 import {
   type OutfitCategory,
   getOutfitByCategory,
@@ -38,7 +38,7 @@ import {
   getEnvironmentTypeFromCode,
   getAccessoryTextForDifficulty,
   getHairTextForDifficulty,
-} from "./data/outfits";
+} from "@/src/encounters/data/outfits";
 import {
   type WeatherType,
   type Season,
@@ -49,9 +49,9 @@ import {
   getWeatherBehaviorModifier,
   getWeatherMoodModifier,
   getWeatherAiDescription,
-} from "./data/weather";
+} from "@/src/encounters/data/weather";
 import { getCountryRegion, getDisplayName, normalizeCountryId } from "@/src/profile";
-import { type SandboxSettings } from "./data/sandbox-settings";
+import { type SandboxSettings } from "@/src/encounters";
 
 // ============================================================================
 // ENVIRONMENT TYPES AND WEIGHTS

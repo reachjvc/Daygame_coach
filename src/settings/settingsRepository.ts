@@ -8,7 +8,7 @@ import {
   DEFAULT_SANDBOX_SETTINGS,
   mergeSandboxSettings,
   type SandboxSettings,
-} from "@/src/scenarios"
+} from "@/src/encounters"
 import type { ProfileRow, ProfileUpdate, PurchaseRow } from "@/src/db"
 
 /**

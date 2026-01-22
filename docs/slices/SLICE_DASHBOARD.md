@@ -149,7 +149,7 @@ app/dashboard/
 ├── scenarios/
 │   └── page.tsx                    # Scenarios page (future)
 └── inner-game/
-    └── page.tsx                    # Inner game page (future)
+    └── page.tsx                    # Inner game page
 
 toggles.json                        # Feature toggles file (root)
 ```

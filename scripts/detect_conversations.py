@@ -186,17 +186,19 @@ Current conversation ID: {current_conversation_id}
 Segments:
 {chr(10).join(segment_texts)}
 
-Respond with ONLY a JSON array, one object per segment:
-[
-  {{"index": 0, "type": "approach"|"commentary"|"transition", "new_conversation": true|false, "confidence": 0.0-1.0}},
-  ...
-]
+IMPORTANT: Respond with ONLY a valid JSON array. No explanation, no text before or after. Just the JSON.
+There are exactly {len(segment_texts)} segments, so return exactly {len(segment_texts)} objects.
+
+Example format:
+[{{"index": 0, "type": "commentary", "new_conversation": false, "confidence": 0.8}}, {{"index": 1, "type": "approach", "new_conversation": true, "confidence": 0.9}}]
 
 Key signals:
 - Openers like "excuse me", "two seconds", "I just saw you" start NEW approaches
 - Short responses like "yeah", "kind of", "thank you" are likely approach exchanges (girl talking)
 - References to "you guys", "as you can see", "notice how" are commentary
-- New conversations start when coach approaches a different woman"""
+- New conversations start when coach approaches a different woman
+
+JSON response:"""
 
         response = self._call_ollama(prompt)
         if not response:
@@ -206,9 +208,27 @@ Key signals:
         # Parse LLM response
         try:
             # Extract JSON from response (handle markdown code blocks)
-            json_match = re.search(r'\[[\s\S]*\]', response)
-            if json_match:
-                analyses = json.loads(json_match.group())
+            # First, try to find JSON within code blocks
+            code_block_match = re.search(r'```(?:json)?\s*(\[[\s\S]*?\])\s*```', response)
+            if code_block_match:
+                json_str = code_block_match.group(1)
+            else:
+                # Find the first complete JSON array using bracket matching
+                json_str = None
+                start_idx = response.find('[')
+                if start_idx != -1:
+                    bracket_count = 0
+                    for i, char in enumerate(response[start_idx:], start_idx):
+                        if char == '[':
+                            bracket_count += 1
+                        elif char == ']':
+                            bracket_count -= 1
+                            if bracket_count == 0:
+                                json_str = response[start_idx:i+1]
+                                break
+
+            if json_str:
+                analyses = json.loads(json_str)
                 results = []
                 conv_id = current_conversation_id
 
@@ -230,8 +250,10 @@ Key signals:
                     ))
 
                 return results
-        except (json.JSONDecodeError, KeyError) as e:
+        except (json.JSONDecodeError, KeyError, ValueError) as e:
             print(f"[detect_conversations] Failed to parse LLM response: {e}")
+            # Debug: print first 500 chars of response for troubleshooting
+            print(f"[detect_conversations] Response preview: {response[:500]}...")
 
         return self._analyze_window_heuristic(window, current_conversation_id, prev_type)
 

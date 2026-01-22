@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { DifficultyLevel } from "@/src/scenarios/openers/data/energy";
+import type { DifficultyLevel } from "@/src/encounters/data/energy";
 import type { GeneratedScenarioV2 } from "@/src/scenarios/openers/generator";
 
 type EnvironmentChoice =

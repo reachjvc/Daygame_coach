@@ -3,7 +3,7 @@
  * All settings-related business logic goes through here.
  */
 
-import { mergeSandboxSettings, type SandboxSettings } from "@/src/scenarios"
+import { mergeSandboxSettings, type SandboxSettings } from "@/src/encounters"
 import { getStripe } from "./stripe"
 import {
   getSandboxSettings,

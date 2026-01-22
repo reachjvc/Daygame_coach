@@ -76,10 +76,10 @@ app/dashboard/scenarios/
 | Old Location | New Location | Purpose |
 |--------------|--------------|---------|
 | `lib/scenarios/scenario-generator-v2.ts` | `src/scenarios/openers/generator.ts` | Core opener generator |
-| `lib/scenarios/base-texts.ts` | `src/scenarios/openers/data/base-texts.ts` | Activity descriptions |
-| `lib/scenarios/energy.ts` | `src/scenarios/openers/data/energy.ts` | Energy states |
-| `lib/scenarios/outfits.ts` | `src/scenarios/openers/data/outfits.ts` | Outfits by tier |
-| `lib/scenarios/weather.ts` | `src/scenarios/openers/data/weather.ts` | Weather system |
+| `lib/scenarios/base-texts.ts` | `src/encounters/data/base-texts.ts` | Activity descriptions |
+| `lib/scenarios/energy.ts` | `src/encounters/data/energy.ts` | Energy states |
+| `lib/scenarios/outfits.ts` | `src/encounters/data/outfits.ts` | Outfits by tier |
+| `lib/scenarios/weather.ts` | `src/encounters/data/weather.ts` | Weather system |
 | `lib/scenarios/difficulty.ts` | `src/scenarios/shared/difficulty.ts` | Difficulty levels |
 | `lib/scenarios/archetypes.ts` | `src/scenarios/shared/archetypes.ts` | Woman archetypes |
 | `lib/scenarios/prompts.ts` | `src/scenarios/shared/prompts.ts` | AI system prompts |

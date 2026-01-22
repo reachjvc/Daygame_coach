@@ -197,15 +197,23 @@ training-data/
    └─→ Detects outcomes: number, instagram, rejected, etc.
    └─→ Output: interactions/*.interactions.jsonl
 
-10. GENERATE SPEAKER TIMELINES
+10. ENRICH GROUND TRUTH (NEW)
+    └─→ Uses Ollama to analyze interactions deeply
+    └─→ Maps turns to transcript line numbers
+    └─→ Detects phases with line-level precision
+    └─→ Extracts techniques and topics via LLM
+    └─→ Identifies commentary sections
+    └─→ Output: enriched/*.ground_truth.json
+
+11. GENERATE SPEAKER TIMELINES
     └─→ Coach-only and girl-only timestamps for voice training
     └─→ Output: speaker_timelines/*.speakers.json
 
-11. AGGREGATE
+12. AGGREGATE
     └─→ Combines all channels into unified dataset
     └─→ Output: processed/training_data.jsonl
 
-12. INGEST TO VECTOR STORE
+13. INGEST TO VECTOR STORE
     └─→ Phase-based chunking
     └─→ Generate embeddings (nomic-embed-text)
     └─→ Store to Supabase
@@ -392,6 +400,133 @@ When a user asks: "What should I say when a girl says she studies medicine?"
 
 ---
 
+## Ground Truth Enrichment
+
+### Purpose
+
+The basic pipeline extracts interactions but misses nuance. The enrichment step uses Ollama to create rich ground-truth-style JSON files that include:
+
+- **Line-number mapping**: Each interaction links back to exact transcript lines
+- **Phase segmentation**: Precise opener/hook/vibe/close boundaries
+- **Technique detection**: LLM identifies specific techniques used (push_pull, cold_read, etc.)
+- **Topic extraction**: What subjects were discussed (career, origin, appearance, etc.)
+- **Commentary detection**: Separates coach talking to camera from actual approaches
+
+### Output Format
+
+```json
+{
+  "video_title": "Are You Making THIS Mistake...",
+  "source_playlist": "SocialStoic",
+  "content_type": "mixed",
+  "transcript_file": "training-data/transcripts/SocialStoic/Video.txt",
+
+  "interactions": [
+    {
+      "id": 1,
+      "type": "approach",
+      "description": "Redhead approach - front stop demonstration",
+      "start_line": 20,
+      "end_line": 28,
+      "start_time_approx": "1:00",
+      "end_time_approx": "1:28",
+      "phases": {
+        "opener": { "start_line": 20, "end_line": 23 },
+        "hook": { "start_line": 24, "end_line": 28 },
+        "vibe": null,
+        "close": null
+      },
+      "outcome": "unknown",
+      "topics_mentioned": ["appearance", "hair", "eyes"],
+      "techniques_used": ["direct_opener", "front_stop", "observation"]
+    },
+    {
+      "id": 2,
+      "type": "commentary",
+      "description": "Coach explains front stop vs side stop",
+      "start_line": 29,
+      "end_line": 47
+    }
+  ],
+
+  "summary": {
+    "total_interactions": 13,
+    "total_commentary_sections": 8,
+    "approaches_with_outcome": { "number": 1, "instant_date": 1, "blowout": 2 },
+    "techniques_demonstrated": ["front_stop", "push_pull", "cold_read", ...]
+  }
+}
+```
+
+### Running Enrichment
+
+```bash
+# Single video
+python3 scripts/enrich_ground_truth.py \
+  --interactions training-data/interactions/SocialStoic/Video.interactions.jsonl \
+  --transcript training-data/transcripts/SocialStoic/Video.txt
+
+# All videos in a channel (recommended: use 1-2 workers to avoid rate limits)
+python3 scripts/enrich_ground_truth.py --channel SocialStoic --workers 2
+
+# All channels (run in separate terminals for parallelism)
+python3 scripts/enrich_ground_truth.py --channel SocialStoic --workers 1
+python3 scripts/enrich_ground_truth.py --channel NaturalLifestyles-Infield --workers 1
+# etc.
+
+# Or process everything sequentially
+python3 scripts/enrich_ground_truth.py --all --workers 1
+```
+
+### Verifying Scripts Are Working
+
+When running enrichment scripts in parallel across multiple terminals, here's how to confirm they're generating data:
+
+**1. Watch the terminal output** - Each script will print progress like:
+```
+Processing video 1/15: "Video Title Here"
+  → Found 5 interactions
+  → Enriching with Ollama...
+  → Saved to training-data/enriched/SocialStoic/Video.ground_truth.json
+```
+
+**2. Check the output directory** - New `.ground_truth.json` files appear as each video completes:
+```bash
+# Watch for new files being created
+ls -lt training-data/enriched/*/  | head -20
+
+# Count total enriched files per channel
+find training-data/enriched -name "*.ground_truth.json" | wc -l
+```
+
+**3. Monitor in real-time** - Use watch to see files appear:
+```bash
+watch -n 5 'find training-data/enriched -name "*.ground_truth.json" -mmin -1'
+```
+
+**4. Check file contents** - Verify a generated file looks correct:
+```bash
+# Pretty-print the latest generated file
+cat training-data/enriched/SocialStoic/*.ground_truth.json | head -100
+```
+
+**5. If nothing is happening** - Check for errors:
+- Ollama must be running: `ollama serve` (in a separate terminal)
+- Verify interactions exist: `ls training-data/interactions/*/`
+- Check for Python errors in the terminal output
+
+### Validation
+
+Compare enriched output against manually created ground truth:
+
+```bash
+python3 scripts/validate_extraction.py \
+  --ground-truth training-data/validation/video1_ground_truth.json \
+  --pipeline-output training-data/enriched/SocialStoic/Video.ground_truth.json
+```
+
+---
+
 ## Retrieval & Ranking
 
 ### Query-Time Weighting
@@ -494,6 +629,7 @@ Future feature: Users speak to AI, AI responds with coach-like voice and content
 | `classify_tonality.py` | features/*.features.json | features/*.features.json |
 | `tag_semantics.py` | features/*.features.json | features/*.features.json |
 | `extract_interactions.py` | features/*.features.json | interactions/*.jsonl |
+| `enrich_ground_truth.py` | interactions/*.jsonl + transcripts/*.txt | enriched/*.ground_truth.json |
 | `generate_training_data.py` | interactions/ | processed/training_data.jsonl |
 | `ingest.ts` | transcripts/*.txt | Supabase embeddings |
 

@@ -44,7 +44,7 @@ export interface EmbeddingMatch {
 // Profiles table (user profiles)
 // ============================================
 
-import type { SandboxSettings } from "@/src/scenarios"
+import type { SandboxSettings } from "@/src/encounters"
 
 export interface ProfileRow {
   id: string

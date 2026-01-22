@@ -47,16 +47,6 @@ export {
 } from "./scenariosService"
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Sandbox settings (used by Settings slice)
-// ─────────────────────────────────────────────────────────────────────────────
-
-export {
-  DEFAULT_SANDBOX_SETTINGS,
-  mergeSandboxSettings,
-} from "./openers/data/sandbox-settings"
-export type { SandboxSettings } from "./openers/data/sandbox-settings"
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Types (shared scenario types)
 // ─────────────────────────────────────────────────────────────────────────────
 
