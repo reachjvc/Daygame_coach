@@ -8,7 +8,7 @@ const saveSchema = z.object({
   valueIds: z.array(z.string().min(1)).default([]),
 })
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     // 1. Auth check
     const supabase = await createServerSupabaseClient()
@@ -26,7 +26,17 @@ export async function GET() {
       return NextResponse.json({ error: "Premium subscription required" }, { status: 403 })
     }
 
-    const values = await getInnerGameValues()
+    // 3. Get optional category filter from query params
+    const { searchParams } = new URL(req.url)
+    const category = searchParams.get("category")
+
+    let values = await getInnerGameValues()
+
+    // 4. Filter by category if provided
+    if (category) {
+      values = values.filter(v => v.category.toLowerCase() === category.toLowerCase())
+    }
+
     return NextResponse.json(values)
   } catch (error) {
     console.error("Inner Game values GET error:", error)

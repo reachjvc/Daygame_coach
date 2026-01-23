@@ -176,7 +176,52 @@ function classifySegmentType(text: string): SegmentType {
   return "UNKNOWN"
 }
 
-function segmentTranscript(text: string, maxChunkSize: number, overlapSize: number) {
+function splitOverlongUnit(unit: string, maxChunkSize: number): string[] {
+  const trimmed = unit.trim()
+  if (!trimmed) return []
+  if (trimmed.length <= maxChunkSize) return [trimmed]
+
+  const out: string[] = []
+  let remaining = trimmed
+
+  while (remaining.length > maxChunkSize) {
+    // Prefer splitting on whitespace near the boundary for readability.
+    const window = remaining.slice(0, maxChunkSize + 1)
+    let splitAt = window.lastIndexOf(" ")
+
+    // If whitespace is too far back (tiny chunk), hard-split.
+    if (splitAt < Math.floor(maxChunkSize * 0.7)) splitAt = -1
+    if (splitAt === -1) splitAt = maxChunkSize
+
+    const head = remaining.slice(0, splitAt).trim()
+    if (head) out.push(head)
+    remaining = remaining.slice(splitAt).trim()
+  }
+
+  if (remaining) out.push(remaining)
+  return out
+}
+
+function splitTranscriptIntoUnits(text: string, maxChunkSize: number): string[] {
+  const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim()
+  if (!normalized) return []
+
+  // Whisper .txt transcripts often have no punctuation but do have line breaks.
+  // Split on newlines first, then on sentence-ending punctuation within a line.
+  const rawLines = normalized.split(/\n+/).map((l) => l.trim()).filter(Boolean)
+  const units: string[] = []
+
+  for (const line of rawLines.length > 0 ? rawLines : [normalized]) {
+    const parts = line.split(/(?<=[.!?])\s+/).map((p) => p.trim()).filter(Boolean)
+    for (const part of parts.length > 0 ? parts : [line]) {
+      units.push(...splitOverlongUnit(part, maxChunkSize))
+    }
+  }
+
+  return units
+}
+
+function segmentTranscriptLegacy(text: string, maxChunkSize: number, overlapSize: number) {
   const sentences = text.split(/(?<=[.!?\n])\s+/)
 
   const segments: Array<{ content: string; type: SegmentType }> = []
@@ -201,6 +246,58 @@ function segmentTranscript(text: string, maxChunkSize: number, overlapSize: numb
       currentSegment = potentialContent
       if (sentenceType !== "UNKNOWN" && currentType === "UNKNOWN") {
         currentType = sentenceType
+      }
+    }
+  }
+
+  if (currentSegment.trim().length > 0) {
+    segments.push({ content: currentSegment.trim(), type: currentType })
+  }
+
+  return segments
+}
+
+function segmentTranscript(text: string, maxChunkSize: number, overlapSize: number) {
+  // Back-compat: keep the previous chunking output when it already produces valid chunk sizes,
+  // to avoid unnecessary full re-ingests. Fall back to a more robust line-aware chunker when
+  // transcripts lack punctuation (common for Whisper .txt) or contain very long "sentences".
+  const legacy = segmentTranscriptLegacy(text, maxChunkSize, overlapSize)
+  const legacyMaxLen = legacy.reduce((m, s) => Math.max(m, s.content.length), 0)
+  if (legacy.length > 0 && legacyMaxLen <= maxChunkSize) {
+    return legacy
+  }
+
+  const units = splitTranscriptIntoUnits(text, maxChunkSize)
+
+  const segments: Array<{ content: string; type: SegmentType }> = []
+  let currentSegment = ""
+  let currentType: SegmentType = "UNKNOWN"
+
+  for (const unit of units) {
+    const unitType = classifySegmentType(unit)
+
+    const isTypeChange =
+      currentType !== "UNKNOWN" && unitType !== "UNKNOWN" && currentType !== unitType
+
+    const joiner = "\n"
+    const potentialContent = currentSegment + (currentSegment ? joiner : "") + unit
+
+    if ((isTypeChange || potentialContent.length > maxChunkSize) && currentSegment.length > 0) {
+      segments.push({ content: currentSegment.trim(), type: currentType })
+
+      // Ensure the overlap + next unit never exceeds the max chunk size.
+      const allowedOverlap = Math.min(
+        overlapSize,
+        Math.max(0, maxChunkSize - joiner.length - unit.length)
+      )
+      const overlapStart = Math.max(0, currentSegment.length - allowedOverlap)
+      const overlapText = currentSegment.slice(overlapStart).trim()
+      currentSegment = overlapText ? overlapText + joiner + unit : unit
+      currentType = unitType !== "UNKNOWN" ? unitType : currentType
+    } else {
+      currentSegment = potentialContent
+      if (unitType !== "UNKNOWN" && currentType === "UNKNOWN") {
+        currentType = unitType
       }
     }
   }

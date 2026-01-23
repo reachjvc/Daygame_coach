@@ -1,140 +1,381 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Loader2 } from "lucide-react"
 
-import type { ValueItem } from "../types"
+import {
+  InnerGameStep,
+  type InnerGameProgress,
+  type InferredValue,
+  type CoreValue,
+} from "../types"
+import { CATEGORIES } from "../config"
+import { getCompletedSteps, getResumeStep } from "../modules/progressUtils"
+import { WelcomeCard } from "./WelcomeCard"
+import { ValuesStepPage } from "./ValuesStep"
+import { HurdlesStep } from "./HurdlesStep"
+import { DeathbedStep } from "./DeathbedStep"
+import { CuttingStepPage } from "./CuttingStep"
+import { SummaryPage } from "./SummaryPage"
 
 export function InnerGamePage() {
-  const [values, setValues] = useState<ValueItem[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+  // Loading states
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
+  // Progress state
+  const [progress, setProgress] = useState<InnerGameProgress | null>(null)
+  const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set())
+  const [showWelcome, setShowWelcome] = useState(true)
+
+  // Fetch initial data
   useEffect(() => {
-    async function fetchValues() {
+    async function fetchData() {
       setLoading(true)
+      setError(null)
 
       try {
-        const response = await fetch("/api/inner-game/values")
-        if (!response.ok) throw new Error(`Request failed (status ${response.status})`)
+        const res = await fetch("/api/inner-game/progress")
+        if (!res.ok) {
+          const data = await res.json()
+          throw new Error(data.error || "Failed to load progress")
+        }
 
-        const data = (await response.json()) as ValueItem[]
-        setValues(data)
-      } catch (error) {
-        console.error("Failed to load values:", error)
+        const data = await res.json()
+        setProgress(data.progress)
+        setSelectedValues(new Set(data.selectedValues))
+
+        // Always show welcome card on session start
+        setShowWelcome(true)
+      } catch (err) {
+        console.error("Failed to load progress:", err)
+        setError(err instanceof Error ? err.message : "Something went wrong")
       } finally {
         setLoading(false)
       }
     }
 
-    fetchValues()
+    fetchData()
   }, [])
 
-  const toggleValue = (id: string) => {
-    setSelected((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) newSet.delete(id)
-      else newSet.add(id)
-      return newSet
-    })
-  }
-
-  const saveSelection = async () => {
-    setSaving(true)
-
+  // Update progress on server
+  const updateProgress = useCallback(async (updates: Partial<InnerGameProgress>) => {
     try {
-      const selectedArray = Array.from(selected)
-      const response = await fetch("/api/inner-game/values", {
+      const res = await fetch("/api/inner-game/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ valueIds: selectedArray }),
+        body: JSON.stringify(updates),
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
-        throw new Error(errorData?.error ?? `Request failed (status ${response.status})`)
+      if (!res.ok) {
+        throw new Error("Failed to update progress")
       }
 
-      alert("Your selections have been saved!")
-    } catch (error) {
-      console.error("Failed to save selections:", error)
-    } finally {
-      setSaving(false)
+      const data = await res.json()
+      setProgress(data.progress)
+      return data.progress
+    } catch (err) {
+      console.error("Failed to update progress:", err)
+      throw err
+    }
+  }, [])
+
+  // Save selected values
+  const saveValues = useCallback(async () => {
+    try {
+      const res = await fetch("/api/inner-game/values", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ valueIds: Array.from(selectedValues) }),
+      })
+
+      if (!res.ok) {
+        throw new Error("Failed to save values")
+      }
+    } catch (err) {
+      console.error("Failed to save values:", err)
+      throw err
+    }
+  }, [selectedValues])
+
+  // Handle welcome dismiss
+  const handleWelcomeDismiss = async () => {
+    setShowWelcome(false)
+    if (!progress) return
+
+    // Treat "welcome dismissed" as true when computing the next step;
+    // otherwise first-time users would "resume" to WELCOME again.
+    const resumeStep = getResumeStep({ ...progress, welcomeDismissed: true })
+
+    // Optimistically advance client state so the next step renders immediately.
+    setProgress(prev =>
+      prev
+        ? { ...prev, welcomeDismissed: true, currentStep: resumeStep }
+        : prev
+    )
+
+    // Keep server in sync (and also correct stale currentStep for returning users).
+    if (!progress.welcomeDismissed || progress.currentStep !== resumeStep) {
+      await updateProgress({
+        welcomeDismissed: true,
+        currentStep: resumeStep,
+      })
     }
   }
 
-  if (loading) return <div className="text-center py-12">Loading values...</div>
-
-  const categories = Array.from(new Set(values.map((v) => v.category)))
-  const valuesByCategory: Record<string, ValueItem[]> = {}
-  categories.forEach((cat) => {
-    valuesByCategory[cat] = values.filter((v) => v.category === cat)
-  })
-
-  const categoryColors: Record<string, string> = {
-    Discipline: "bg-red-500/20",
-    Drive: "bg-orange-500/20",
-    Emotion: "bg-yellow-400/20",
-    Ethics: "bg-green-400/20",
-    Freedom: "bg-blue-400/20",
-    Growth: "bg-indigo-400/20",
-    Identity: "bg-purple-400/20",
-    Play: "bg-pink-400/20",
-    Purpose: "bg-rose-400/20",
-    Social: "bg-teal-400/20",
+  // Handle value toggle
+  const handleToggleValue = (id: string) => {
+    setSelectedValues(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
   }
 
-  return (
-    <div className="min-h-screen bg-background py-12">
-        <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
-            <div className="max-w-[95%] mx-auto py-4">
-                <Button asChild variant="outline">
-                    <Link href="/dashboard">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to Dashboard
-                    </Link>
-                </Button>
-            </div>
-        </header>
-      <div className="max-w-[95%] mx-auto space-y-8 pt-20">
-        <h1 className="text-3xl font-bold mb-4 text-foreground">Choose Your Values</h1>
-        <p className="text-muted-foreground mb-6">
-          Select the values that resonate with you. You can update these later in your profile.
-        </p>
+  // Handle values step navigation
+  const handleValuesNext = async () => {
+    if (!progress) return
 
-        {categories.map((cat) => (
-          <div key={cat}>
-            <h2 className="text-xl font-semibold mb-2 text-foreground">{cat}</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
-              {valuesByCategory[cat].map((value) => (
-                <button
-                  key={value.id}
-                  onClick={() => toggleValue(value.id)}
-                  className={`p-3 border rounded-lg cursor-pointer text-center font-medium transition-all duration-150
-                    ${selected.has(value.id)
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : `${categoryColors[cat] || "bg-card"} border-border text-foreground`
-                    }
-                  `}
-                >
-                  {value.display_name || value.id.replace("_", " ")}
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
+    const nextSubstep = progress.currentSubstep + 1
+    if (nextSubstep >= CATEGORIES.length) {
+      // Completed all categories
+      await updateProgress({
+        step1Completed: true,
+        currentStep: InnerGameStep.HURDLES,
+        currentSubstep: 0,
+      })
+    } else {
+      await updateProgress({ currentSubstep: nextSubstep })
+    }
+  }
 
-        <Button
-          onClick={saveSelection}
-          disabled={saving}
-          className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90"
-        >
-          {saving ? "Saving..." : "Save Selections"}
-        </Button>
+  const handleValuesBack = async () => {
+    if (!progress || progress.currentSubstep <= 0) return
+    await updateProgress({ currentSubstep: progress.currentSubstep - 1 })
+  }
+
+  // Handle hurdles completion
+  const handleHurdlesComplete = async (response: string, inferredValues: InferredValue[]) => {
+    await updateProgress({
+      hurdlesResponse: response,
+      hurdlesInferredValues: inferredValues,
+      step2Completed: true,
+      currentStep: InnerGameStep.DEATHBED,
+    })
+  }
+
+  // Handle deathbed completion
+  const handleDeathbedComplete = async (response: string, inferredValues: InferredValue[]) => {
+    await updateProgress({
+      deathbedResponse: response,
+      deathbedInferredValues: inferredValues,
+      step3Completed: true,
+      currentStep: InnerGameStep.CUTTING,
+    })
+  }
+
+  // Handle cutting completion
+  const handleCuttingComplete = async (
+    coreValues: CoreValue[],
+    aspirationalValues: { id: string }[]
+  ) => {
+    await updateProgress({
+      finalCoreValues: coreValues,
+      aspirationalValues: aspirationalValues,
+      cuttingCompleted: true,
+      currentStep: InnerGameStep.COMPLETE,
+    })
+  }
+
+  // Handle restart
+  const handleRestart = async () => {
+    try {
+      // Reset progress
+      await fetch("/api/inner-game/progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentStep: InnerGameStep.WELCOME,
+          currentSubstep: 0,
+          welcomeDismissed: false,
+          step1Completed: false,
+          step2Completed: false,
+          step3Completed: false,
+          cuttingCompleted: false,
+          hurdlesResponse: null,
+          hurdlesInferredValues: null,
+          deathbedResponse: null,
+          deathbedInferredValues: null,
+          finalCoreValues: null,
+          aspirationalValues: null,
+        }),
+      })
+
+      // Clear comparisons
+      await fetch("/api/inner-game/comparisons", { method: "DELETE" })
+
+      // Clear selected values
+      setSelectedValues(new Set())
+
+      // Reload progress
+      const res = await fetch("/api/inner-game/progress")
+      const data = await res.json()
+      setProgress(data.progress)
+      setShowWelcome(true)
+    } catch (err) {
+      console.error("Failed to restart:", err)
+    }
+  }
+
+  // Handle back navigation for question steps
+  const handleBackToValues = async () => {
+    await updateProgress({
+      currentStep: InnerGameStep.VALUES,
+      currentSubstep: CATEGORIES.length - 1,
+    })
+  }
+
+  const handleBackToHurdles = async () => {
+    await updateProgress({ currentStep: InnerGameStep.HURDLES })
+  }
+
+  const handleBackToDeathbed = async () => {
+    await updateProgress({ currentStep: InnerGameStep.DEATHBED })
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-5 h-5 animate-spin" />
+          Loading...
+        </div>
       </div>
+    )
+  }
+
+  // Error state
+  if (error || !progress) {
+    return (
+      <div className="min-h-screen bg-background py-12">
+        <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
+          <div className="max-w-2xl mx-auto px-4 py-4">
+            <Button asChild variant="outline">
+              <Link href="/dashboard">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Dashboard
+              </Link>
+            </Button>
+          </div>
+        </header>
+        <div className="max-w-2xl mx-auto px-4 pt-20">
+          <h1 className="text-2xl font-bold mb-4 text-foreground">
+            Inner Game
+          </h1>
+          <p className="text-destructive">{error || "Failed to load"}</p>
+        </div>
+      </div>
+    )
+  }
+
+  const completedSteps = getCompletedSteps(progress)
+  const completedCategories = progress.step1Completed
+    ? CATEGORIES.length
+    : progress.currentSubstep
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          <Button asChild variant="outline">
+            <Link href="/dashboard">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+        </div>
+      </header>
+
+      {/* Welcome modal */}
+      {showWelcome && (
+        <WelcomeCard
+          progress={progress}
+          onDismiss={handleWelcomeDismiss}
+          completedCategories={completedCategories}
+        />
+      )}
+
+      {/* Main content */}
+      <main className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+        {progress.currentStep === InnerGameStep.VALUES && (
+          <ValuesStepPage
+            currentSubstep={progress.currentSubstep}
+            selectedValues={selectedValues}
+            onToggleValue={handleToggleValue}
+            onNext={handleValuesNext}
+            onBack={handleValuesBack}
+            onSaveValues={saveValues}
+            completedSteps={completedSteps}
+          />
+        )}
+
+        {progress.currentStep === InnerGameStep.HURDLES && (
+          <HurdlesStep
+            initialResponse={progress.hurdlesResponse}
+            initialInferredValues={progress.hurdlesInferredValues}
+            completedSteps={completedSteps}
+            onBack={handleBackToValues}
+            onComplete={handleHurdlesComplete}
+          />
+        )}
+
+        {progress.currentStep === InnerGameStep.DEATHBED && (
+          <DeathbedStep
+            initialResponse={progress.deathbedResponse}
+            initialInferredValues={progress.deathbedInferredValues}
+            completedSteps={completedSteps}
+            onBack={handleBackToHurdles}
+            onComplete={handleDeathbedComplete}
+          />
+        )}
+
+        {progress.currentStep === InnerGameStep.CUTTING && (
+          <CuttingStepPage
+            selectedValues={Array.from(selectedValues)}
+            hurdlesInferredValues={progress.hurdlesInferredValues}
+            deathbedInferredValues={progress.deathbedInferredValues}
+            completedSteps={completedSteps}
+            onBack={handleBackToDeathbed}
+            onComplete={handleCuttingComplete}
+          />
+        )}
+
+        {progress.currentStep === InnerGameStep.COMPLETE && progress.finalCoreValues && (
+          <SummaryPage
+            coreValues={progress.finalCoreValues}
+            aspirationalValues={progress.aspirationalValues ?? []}
+            completedSteps={completedSteps}
+            onRestart={handleRestart}
+          />
+        )}
+
+        {/* Fallback for welcome step without modal */}
+        {progress.currentStep === InnerGameStep.WELCOME && !showWelcome && (
+          <div className="text-center py-12">
+            <Button onClick={() => setShowWelcome(true)}>
+              Start Inner Game Journey
+            </Button>
+          </div>
+        )}
+      </main>
     </div>
   )
 }

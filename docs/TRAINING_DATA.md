@@ -1,6 +1,6 @@
 # Training Data Pipeline
 
-**Last Updated:** 2026-01-21
+**Last Updated:** 2026-01-22 21:55:23
 
 This document describes how the daygame-coach training data pipeline works: downloading videos, transcribing, segmenting, extracting features, and ingesting into Supabase for RAG-based retrieval.
 
@@ -60,21 +60,25 @@ The AI needs to retrieve the RIGHT information—not just keyword matches, but s
 
 ```bash
 # Download + transcribe + process + ingest a new source
-./scripts/run_source.sh "NaturalLifestyles/NewPlaylist" "https://youtube.com/playlist?list=..."
+./scripts/run_source.sh "NaturalLifestyles-Infield" "https://youtube.com/playlist?list=..."
 ```
 
 ### Step-by-Step
 
 ```bash
 # 1. Download videos
-./scripts/download_channel.sh "NaturalLifestyles/Infield" "https://youtube.com/..."
+./scripts/download_channel.sh "NaturalLifestyles-Infield" "https://youtube.com/..."
 
-# 2. Run full processing pipeline
-./scripts/full_pipeline.sh "NaturalLifestyles/Infield"
+# 2. Process the channel (transcribe → classify → features → interactions)
+./scripts/process_channel.sh "NaturalLifestyles-Infield"
 
 # 3. Ingest to vector store
 ./scripts/quick_ingest.sh
 ```
+
+Notes:
+- `./scripts/full_pipeline.sh "<Channel>"` already runs ingestion at the end; running `quick_ingest.sh` right after will usually print “✅ Nothing to ingest.”
+- Use `./scripts/run_full_pipeline.sh --channel "<Channel>" --resume` if you want the resumable pipeline + LLM stages (conversation detection + enrichment). It does **not** ingest — run `quick_ingest.sh` after.
 
 ### First-Time Setup
 
@@ -106,45 +110,45 @@ SUPABASE_SERVICE_ROLE_KEY=...
 
 ```
 training-data/
-├── sources.yaml                    # Source configuration (see below)
-├── techniques.json                 # Technique taxonomy
-├── patterns_to_review.jsonl        # Discovered patterns queue
+├── sources.txt                     # Source configuration (ChannelName|YouTubeURL)
 │
-├── NaturalLifestyles/              # Channel
-│   ├── Infield/                    # Playlist
-│   │   ├── raw/                    # Downloaded audio files
-│   │   │   ├── Video Title.opus
-│   │   │   └── .youtube-dl-archive.txt
-│   │   ├── transcripts/            # Whisper outputs
-│   │   │   ├── Video Title.txt     # Plain text
-│   │   │   ├── Video Title.json    # Timestamps + segments
-│   │   │   └── Video Title.srt     # Subtitles
-│   │   ├── features/               # Extracted features
-│   │   │   └── Video Title.features.json
-│   │   ├── interactions/           # Extracted conversations
-│   │   │   └── Video Title.interactions.jsonl
-│   │   └── speaker_timelines/      # Speaker-separated timestamps
-│   │       └── Video Title.speakers.json
-│   │
-│   ├── Students/                   # Another playlist
-│   │   └── ...
-│   └── InnerGrowth/
-│       └── ...
+├── raw-audio/<ChannelName>/         # Downloaded audio files (yt-dlp)
+│   ├── Video Title.webm
+│   └── .youtube-dl-archive.txt
 │
-├── SocialStoic/
-│   └── Main/
-│       └── ...
+├── transcripts/<ChannelName>/       # Whisper outputs
+│   ├── Video Title.json             # Timestamps + segments
+│   ├── Video Title.txt              # Plain text
+│   ├── Video Title.srt              # Subtitles
+│   ├── Video Title.vtt              # WebVTT
+│   └── Video Title.tsv              # Token-level timestamps
 │
-├── processed/                      # Aggregated outputs
+├── classified/<ChannelName>/        # Content classification
+│   └── Video Title.classified.json
+│
+├── features/<ChannelName>/          # Extracted audio/text features (in-place updates)
+│   └── Video Title.features.json
+│
+├── interactions/<ChannelName>/      # Extracted conversations
+│   └── Video Title.interactions.jsonl
+│
+├── enriched/<ChannelName>/          # LLM-enriched ground truth (optional)
+│   └── Video Title.ground_truth.json
+│
+├── processed/                       # Aggregated outputs (optional / legacy)
 │   ├── training_data.jsonl
 │   └── scenario_training.jsonl
 │
-├── validation/                     # Ground truth for testing
+├── validation/                      # Ground truth for testing
 │   └── *.ground_truth.json
 │
-└── logs/
-    ├── pipeline-*.log
-    └── ingest.log
+├── pipeline_status.json             # Progress tracking for run_full_pipeline.sh
+├── .ingest_state.json               # Incremental ingest state (transcripts mode)
+├── .ingest_state.interactions.json  # Incremental ingest state (interactions mode, optional)
+│
+├── ingest.log
+├── pipeline-*.log
+└── download-*.log / download-*-issues.tsv
 ```
 
 ---
@@ -158,62 +162,51 @@ training-data/
 
 1. DOWNLOAD
    └─→ yt-dlp fetches audio from YouTube
-   └─→ Output: raw/*.opus
+   └─→ Output: raw-audio/<ChannelName>/*.(webm|opus|m4a|mp3|wav|mp4|mkv)
 
 2. TRANSCRIBE
    └─→ Whisper converts audio to text with timestamps
-   └─→ Output: transcripts/*.json, *.txt, *.srt
+   └─→ Output: transcripts/<ChannelName>/*.json + *.txt + *.srt + *.vtt + *.tsv
 
-3. DETECT CONVERSATIONS
-   └─→ LLM identifies conversation boundaries
-   └─→ Separates approaches from commentary
-   └─→ Output: transcripts/*.conversations.json
-
-4. CLASSIFY CONTENT
+3. CLASSIFY CONTENT
    └─→ Labels segments: infield, theory, intro/outro, transition
-   └─→ Output: transcripts/*.classified.json
+   └─→ Output: classified/<ChannelName>/*.classified.json
 
-5. EXTRACT AUDIO FEATURES
+4. EXTRACT AUDIO FEATURES
    └─→ Pitch, energy, tempo per segment
-   └─→ Output: features/*.features.json
+   └─→ Output: features/<ChannelName>/*.features.json
 
-6. CLASSIFY SPEAKERS
+5. CLASSIFY SPEAKERS
    └─→ Hybrid: audio features + text patterns + conversation structure
    └─→ Labels: coach, girl, voiceover, unknown
    └─→ Output: features/*.features.json (updated)
 
-7. CLASSIFY TONALITY
+6. CLASSIFY TONALITY
    └─→ Playful, confident, warm, nervous, neutral
    └─→ Output: features/*.features.json (updated)
 
-8. TAG SEMANTICS (LLM)
-   └─→ Topics: career, hobby, origin, age, etc.
-   └─→ Techniques: push_pull, qualification, cold_read, etc.
-   └─→ Phases: opener, hook, vibe, close
-   └─→ Output: features/*.features.json (updated)
+7. DETECT CONVERSATIONS (LLM, optional)
+   └─→ LLM identifies conversation boundaries + assigns conversation_id
+   └─→ Output: features/<ChannelName>/*.features.json (updated)
 
-9. EXTRACT INTERACTIONS
+8. EXTRACT INTERACTIONS
    └─→ Groups segments into complete approaches
    └─→ Detects outcomes: number, instagram, rejected, etc.
-   └─→ Output: interactions/*.interactions.jsonl
+   └─→ Output: interactions/<ChannelName>/*.interactions.jsonl
 
-10. ENRICH GROUND TRUTH (NEW)
+9. ENRICH GROUND TRUTH (LLM, optional)
     └─→ Uses Ollama to analyze interactions deeply
     └─→ Maps turns to transcript line numbers
     └─→ Detects phases with line-level precision
     └─→ Extracts techniques and topics via LLM
     └─→ Identifies commentary sections
-    └─→ Output: enriched/*.ground_truth.json
+    └─→ Output: enriched/<ChannelName>/*.ground_truth.json
 
-11. GENERATE SPEAKER TIMELINES
-    └─→ Coach-only and girl-only timestamps for voice training
-    └─→ Output: speaker_timelines/*.speakers.json
-
-12. AGGREGATE
+10. AGGREGATE (legacy)
     └─→ Combines all channels into unified dataset
     └─→ Output: processed/training_data.jsonl
 
-13. INGEST TO VECTOR STORE
+11. INGEST TO VECTOR STORE
     └─→ Phase-based chunking
     └─→ Generate embeddings (nomic-embed-text)
     └─→ Store to Supabase
@@ -224,49 +217,24 @@ training-data/
 
 ## Source Configuration
 
-### sources.yaml
+### sources.txt
 
-```yaml
-# training-data/sources.yaml
-# Defines all video sources with metadata
+```text
+# training-data/sources.txt
+# Format (one per line):
+#   ChannelName|YouTubeURL
+#
+# Notes:
+# - ChannelName becomes the folder name under training-data/raw-audio/, /transcripts/, /features/, etc.
+# - YouTubeURL can be a channel, playlist, or single video URL
+# - Lines starting with # are ignored
 
-NaturalLifestyles:
-  Infield:
-    url: https://youtube.com/playlist?list=PLxxx
-    type: coach_infield           # coach_infield, student_infield, talking_head, mixed
-    weight: 1.0                   # Retrieval weight (1.0 = normal)
-    coaches:
-      - James Marshall
-      - Liam McRae
-      - Shae Matthews
-    description: Raw infield footage from coaches
-
-  Students:
-    url: https://youtube.com/playlist?list=PLyyy
-    type: student_infield
-    commentary_by: coach          # Who provides commentary
-    weight: 0.7                   # Lower weight for student footage
-    coaches:
-      - James Marshall
-    description: Student pickup footage with coach breakdown
-
-  InnerGrowth:
-    url: https://youtube.com/playlist?list=PLzzz
-    type: talking_head
-    weight: 0.8
-    coaches:
-      - Shae Matthews
-    description: Inner game and psychology content
-
-SocialStoic:
-  Main:
-    url: https://youtube.com/@SocialStoic/videos
-    type: mixed
-    weight: 1.0
-    coaches:
-      - Adam
-    description: Infield with commentary interspersed
+SocialStoic|https://www.youtube.com/@SocialStoicYouTube
+NaturalLifestyles-Infield|https://www.youtube.com/playlist?list=PLxxx
+NaturalLifestyles-InnerGrowth|https://www.youtube.com/playlist?list=PLyyy
 ```
+
+The current pipeline reads this file directly (see `scripts/download_sources.sh` and `scripts/full_pipeline.sh`). The richer YAML metadata shown in older versions of this doc is not wired up right now.
 
 ### Source Types
 
@@ -355,29 +323,22 @@ Sub-events (tracked but not separate phases):
 ```json
 {
   "content": "Coach: You look very feminine walking there...",
-  "source": "NaturalLifestyles/Infield/Video Title.txt",
+  "source": "NaturalLifestyles-Infield/Video Title.txt",
   "embedding": [...],
   "metadata": {
-    "channel": "NaturalLifestyles",
-    "playlist": "Infield",
+    "channel": "NaturalLifestyles-Infield",
+    "coach": "NaturalLifestyles-Infield",
     "video_title": "Video Title",
-    "coach": "James Marshall",
 
-    "conversation_id": 3,
+    "conversationId": 3,
     "phase": "opener",
-    "chunk_index": 0,
-    "total_chunks_in_conversation": 4,
+    "chunkIndex": 0,
+    "totalChunks": 12,
+    "segmentType": "INTERACTION",
+    "isRealExample": true,
 
-    "speakers_present": ["coach", "girl"],
-    "tonality": "confident",
-
-    "topics": ["appearance", "walking_style"],
-    "topic_values": {},
-    "techniques": ["statement_of_intent", "observation_opener"],
-
-    "is_real_example": true,
-    "content_type": "infield",
-    "source_weight": 1.0
+    "topics": ["appearance", "origin"],
+    "techniques": ["direct_opener", "cold_read"]
   }
 }
 ```
@@ -578,7 +539,7 @@ Future feature: Users speak to AI, AI responds with coach-like voice and content
 
 ```json
 {
-  "video": "NaturalLifestyles/Infield/raw/Video.opus",
+  "video": "training-data/raw-audio/NaturalLifestyles-Infield/Video.webm",
   "duration_sec": 542.5,
   "speakers": {
     "coach": [
@@ -607,31 +568,80 @@ Future feature: Users speak to AI, AI responds with coach-like voice and content
 
 ## Scripts Reference
 
-### Primary Scripts
+### Main Pipeline Script (Recommended)
+
+The recommended way to process training data is the new unified pipeline script with progress tracking and resume capability:
+
+```bash
+# Process all files in a channel (with progress tracking)
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield
+
+# Process a single file (for testing)
+./scripts/run_full_pipeline.sh --file "training-data/raw-audio/Channel/Video.webm"
+
+# Resume from where you left off (skips completed stages)
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield --resume
+
+# Skip LLM steps for faster testing (conversations, enrichment)
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield --no-llm
+
+# Re-run from a specific stage
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield --from-stage conversations
+
+# Show progress status only
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield --status-only
+
+# Limit number of files to process
+./scripts/run_full_pipeline.sh --channel NaturalLifestyles-Infield --limit 5
+```
+
+**Pipeline Stages:**
+1. `transcription` - Whisper audio-to-text
+2. `classification` - Content type labeling (intro/infield/theory/outro)
+3. `features` - Audio feature extraction (pitch, energy, tempo)
+4. `speakers` - Speaker classification (coach vs girl)
+5. `tonality` - Tonality classification (playful, confident, etc.)
+6. `conversations` - Conversation boundary detection (LLM - Ollama)
+7. `interactions` - Group segments into complete approaches
+8. `enrichment` - Deep analysis with techniques/topics (LLM - Ollama)
+
+**Progress Tracking:**
+- Status saved to `training-data/pipeline_status.json`
+- Ctrl+C safely interrupts and saves progress
+- Resume later with `--resume` flag
+- View progress anytime with `--status-only`
+
+**Time Estimates (with local Ollama):**
+- Small file (50 segments): 2-3 minutes
+- Medium file (500 segments): 15-30 minutes
+- Full channel (50 files): 5-15 hours
+- 500 files: 2-5 days
+
+### Legacy Primary Scripts
 
 | Script | Purpose |
 |--------|---------|
 | `run_source.sh` | Full pipeline for new source (download → ingest) |
 | `download_channel.sh` | Download videos from YouTube |
-| `full_pipeline.sh` | Run all processing steps |
+| `full_pipeline.sh` | Run all processing steps (legacy, use run_full_pipeline.sh instead) |
 | `quick_ingest.sh` | Ingest to vector store (incremental) |
-| `refresh_training_data.sh` | Update all sources from sources.yaml |
+| `refresh_training_data.sh` | Update all sources from `training-data/sources.txt` |
 
 ### Processing Scripts
 
 | Script | Input | Output |
 |--------|-------|--------|
-| `transcribe_channel.sh` | raw/*.opus | transcripts/*.json |
-| `detect_conversations.py` | transcripts/*.json | transcripts/*.conversations.json |
-| `classify_content.py` | transcripts/*.json | transcripts/*.classified.json |
-| `batch_extract_features.sh` | raw/*.opus | features/*.features.json |
+| `transcribe_channel.sh` | `raw-audio/<ChannelName>/*` | `transcripts/<ChannelName>/*.{json,txt,srt,vtt,tsv}` |
+| `classify_content.py` | `transcripts/<ChannelName>/*.json` | `classified/<ChannelName>/*.classified.json` |
+| `batch_extract_features.sh` | `raw-audio/<ChannelName>/*` + timestamps | `features/<ChannelName>/*.features.json` |
 | `classify_speakers.py` | features/*.features.json | features/*.features.json |
 | `classify_tonality.py` | features/*.features.json | features/*.features.json |
-| `tag_semantics.py` | features/*.features.json | features/*.features.json |
-| `extract_interactions.py` | features/*.features.json | interactions/*.jsonl |
-| `enrich_ground_truth.py` | interactions/*.jsonl + transcripts/*.txt | enriched/*.ground_truth.json |
-| `generate_training_data.py` | interactions/ | processed/training_data.jsonl |
-| `ingest.ts` | transcripts/*.txt | Supabase embeddings |
+| `detect_conversations.py` | `features/<ChannelName>/*.features.json` | `features/<ChannelName>/*.features.json` (updated) |
+| `tag_semantics.py` | `features/<ChannelName>/*.features.json` | `features/<ChannelName>/*.features.json` (updated) |
+| `extract_interactions.py` | `features/<ChannelName>/*.features.json` | `interactions/<ChannelName>/*.interactions.jsonl` |
+| `enrich_ground_truth.py` | `interactions/<ChannelName>/*.interactions.jsonl` + `transcripts/<ChannelName>/*.txt` | `enriched/<ChannelName>/*.ground_truth.json` |
+| `generate_training_data.py` | `features/` | `processed/training_data.jsonl` |
+| `ingest.ts` | `transcripts/` or `interactions/` | Supabase `embeddings` table |
 
 ### Utility Scripts
 
@@ -647,10 +657,10 @@ Future feature: Users speak to AI, AI responds with coach-like voice and content
 
 ```bash
 # Download a specific playlist
-./scripts/download_channel.sh "NaturalLifestyles/NewPlaylist" "https://youtube.com/..."
+./scripts/download_channel.sh "NaturalLifestyles-NewPlaylist" "https://youtube.com/..."
 
 # Process one playlist only
-./scripts/full_pipeline.sh "NaturalLifestyles/NewPlaylist"
+./scripts/full_pipeline.sh "NaturalLifestyles-NewPlaylist"
 
 # Force full re-ingest (ignore cache)
 ./scripts/quick_ingest.sh full
@@ -661,7 +671,7 @@ python3 scripts/check_progress.py
 # Validate against ground truth
 python3 scripts/validate_extraction.py \
   --ground-truth training-data/validation/video1.ground_truth.json \
-  --pipeline-output training-data/interactions/SocialStoic/Main/video1.interactions.jsonl
+  --pipeline-output "training-data/interactions/SocialStoic/video1.interactions.jsonl"
 ```
 
 ---
@@ -694,26 +704,26 @@ ollama list  # Verify models are pulled
 ```
 
 **"Speaker classification mostly 'unknown'"**
-- Check if audio features extracted: `ls features/*.features.json`
+- Check if audio features extracted: `ls training-data/features/<ChannelName>/*.features.json`
 - Low quality audio = poor pitch detection
 - Run with verbose: `python scripts/classify_speakers.py --verbose`
 
 **"Only 1 interaction detected in multi-approach video"**
 - Conversation boundary detection failing
-- Check `transcripts/*.conversations.json` exists
+- Check that conversation detection has run (LLM stage) and updated the features JSON (e.g. `conversation_summary` / `conversation_id` fields)
 - May need to tune LLM prompts in `detect_conversations.py`
 
 ### Logs
 
 ```bash
 # Watch pipeline progress
-tail -f training-data/logs/pipeline-*.log
+tail -f training-data/pipeline-*.log
 
 # Check ingest status
-tail -f training-data/logs/ingest.log
+tail -f training-data/ingest.log
 
 # Find errors
-grep -i error training-data/logs/*.log
+grep -i error training-data/*.log
 ```
 
 ---

@@ -1,0 +1,107 @@
+[
+  {
+    "id": "disc",
+    "label": "Discipline, Structure & Performance",
+    "color": "#9E9E9E",
+    "values": [
+      "Accomplishment","Accuracy","Achievement","Alertness","Careful","Cleanliness","Clarity",
+      "Commitment","Competence","Concentration","Consistency","Dedication","Discipline",
+      "Effectiveness","Efficiency","Excellence","Focus","Hard work","Order","Organization",
+      "Performance","Productivity","Professionalism","Quality","Results-oriented","Rigor",
+      "Simplicity","Structure","Thorough","Timeliness"
+    ]
+  },
+  {
+    "id": "drive",
+    "label": "Courage, Drive & Intensity",
+    "color": "#E53935",
+    "values": [
+      "Ambition","Boldness","Bravery","Challenge","Courage","Decisive","Decisiveness",
+      "Determination","Drive","Endurance","Fearless","Ferocious","Fortitude","Intensity",
+      "Motivation","Passion","Persistence","Strength","Toughness","Valor","Vigor"
+    ]
+  },
+  {
+    "id": "emo",
+    "label": "Emotional Regulation & Inner State",
+    "color": "#26A69A",
+    "values": [
+      "Balance","Calm","Comfort","Contentment","Feelings","Gratitude","Happiness","Harmony",
+      "Health","Moderation","Optimism","Patience","Peace","Present","Restraint","Satisfaction",
+      "Security","Sensitivity","Serenity","Silence","Solitude","Stability","Temperance",
+      "Thankful","Tranquility"
+    ]
+  },
+  {
+    "id": "eth",
+    "label": "Ethics, Integrity & Moral Compass",
+    "color": "#1E88E5",
+    "values": [
+      "Accountability","Candor","Credibility","Dependability","Equality","Ethical","Fairness",
+      "Fidelity","Goodness","Honesty","Honor","Integrity","Justice","Lawful","Respect",
+      "Responsibility","Sincerity","Stewardship","Sustainability","Tolerance","Transparency",
+      "Trust","Trustworthy","Truth"
+    ]
+  },
+  {
+    "id": "free",
+    "label": "Freedom, Power & Independence",
+    "color": "#FB8C00",
+    "values": [
+      "Assertiveness","Control","Empower","Famous","Freedom","Independence","Leadership",
+      "Liberty","Power","Prosperity","Recognition","Risk","Status","Success","Victory",
+      "Wealth","Winning"
+    ]
+  },
+  {
+    "id": "grow",
+    "label": "Growth, Learning & Mastery",
+    "color": "#43A047",
+    "values": [
+      "Adaptability","Awareness","Brilliance","Clever","Common sense","Consciousness",
+      "Curiosity","Development","Discovery","Experience","Exploration","Genius","Growth",
+      "Improvement","Innovation","Inquisitive","Insightful","Intelligence","Intuitive",
+      "Knowledge","Learning","Logic","Mastery","Realistic","Reason","Reflective","Skill",
+      "Skillfulness","Smart","Talent","Understanding","Wisdom"
+    ]
+  },
+  {
+    "id": "id",
+    "label": "Self-Worth & Identity",
+    "color": "#5C6BC0",
+    "values": [
+      "Acceptance","Capable","Certainty","Confidence","Conviction","Dignity","Grace",
+      "Humility","Individuality","Maturity","Poise","Self-reliance","Uniqueness"
+    ]
+  },
+  {
+    "id": "play",
+    "label": "Play, Expression & Vitality",
+    "color": "#FDD835",
+    "values": [
+      "Amusement","Beauty","Creation","Creativity","Energy","Enjoyment","Enthusiasm",
+      "Expressive","Fun","Imagination","Irreverent","Joy","Originality","Playfulness",
+      "Recreation","Spontaneous","Surprise","Vitality","Wonder"
+    ]
+  },
+  {
+    "id": "purp",
+    "label": "Purpose, Vision & Meaning",
+    "color": "#8E24AA",
+    "values": [
+      "Devotion","Foresight","Greatness","Hope","Inspiring","Meaning","Potential","Purpose",
+      "Reverence","Significance","Spirit","Spirituality","Traditional","Vision"
+    ]
+  },
+  {
+    "id": "soc",
+    "label": "Connection, Love & Belonging",
+    "color": "#EC407A",
+    "values": [
+      "Altruism","Attentive","Charity","Communication","Community","Compassion","Connection",
+      "Contribution","Cooperation","Courtesy","Empathy","Family","Friendship","Generosity",
+      "Giving","Kindness","Love","Loyalty","Openness","Selfless","Service","Sharing",
+      "Support","Teamwork","Thoughtful","Unity","Welcoming"
+    ]
+  }
+]

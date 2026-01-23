@@ -81,6 +81,16 @@ export async function saveInnerGameValueSelection(
 
 ---
 
+## Data Source
+
+**Canonical store:** Supabase table `values`
+
+**Seed/reference files (not used at runtime):**
+- `src/inner-game/data/values.json`
+- `src/inner-game/data/categories.json`
+
+---
+
 ## DB Contract
 
 **Repo File:** `src/db/valuesRepo.ts`
