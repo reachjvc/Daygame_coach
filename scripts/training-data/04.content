@@ -1,0 +1,739 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/04.content
+
+Reads:
+  - Whisper transcript JSONs:
+      data/02.transcribe/<source>/<video>/*.json
+
+Writes:
+  - Classified transcript JSONs:
+      data/04.content/<source>/<video>/*.classified.json
+
+Use:
+
+  A) One source (video / playlist / channel):
+     ./scripts/training-data/04.content "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+
+  B) Batch from sources file:
+     ./scripts/training-data/04.content --sources
+     ./scripts/training-data/04.content --sources docs/sources.txt
+
+Overwrite behavior:
+  - This script OVERWRITES existing .classified.json outputs by default.
+  - To NOT overwrite existing files, add:
+      --skip-existing
+
+Output:
+  data/04.content/<source>/**/*.classified.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shlex
+from collections import deque
+from pathlib import Path
+from typing import Dict, List
+
+
+# -----------------------------
+# Pattern definitions
+# -----------------------------
+
+INTRO_PATTERNS = [
+    r"hey guys",
+    r"what's up (everyone|guys|youtube)",
+    r"welcome back",
+    r"in today's video",
+    r"before we (get into|start)",
+    r"let's get into it",
+    r"yo (guys|everyone)",
+    r"what's going on (guys|everyone)",
+    r"alright (guys|everyone)",
+    r"okay (guys|everyone)",
+    r"so today we're (gonna|going to)",
+    r"today we're (gonna|going to) be",
+    r"i'm out here in",
+    r"we're out here in",
+    r"we're out here today",
+    r"we're back out here",
+    r"we're back with another video",
+    r"back with another one",
+    r"today i want to talk about",
+    r"quick video for you",
+    r"a lot of you have been asking",
+    r"in this one",
+    r"in this video i'm going to show you",
+    r"make sure you (like|subscribe)",
+    r"if you're new here",
+    r"let's (jump|dive) right in",
+    r"let's get started",
+    r"stay tuned",
+]
+
+OUTRO_PATTERNS = [
+    r"thanks for watching",
+    r"see you (in the next|next time)",
+    r"don't forget to subscribe",
+    r"links in the description",
+]
+
+# IMPORTANT:
+# These are meant to detect the START of an infield interaction.
+# So they must be anchored + use word boundaries to avoid false matches like:
+#   "they" -> matches "hey" if you use a naked r"hey"
+# Also: avoid bare greetings ("hey", "hi") here — too many talking-head intros start that way.
+INFIELD_STARTERS = [
+    r"^\s*excuse me\b",
+    r"^\s*sorry to bother you\b",
+    r"^\s*i don't mean to interrupt\b",
+    r"^\s*i know you're busy but\b",
+    r"^\s*super quick question\b",
+    r"^\s*quick question\b",
+    r"^\s*can i ask you something\b",
+    r"^\s*can i ask you a quick question\b",
+    r"^\s*do you have a second\b",
+    r"^\s*are you in a rush\b",
+    r"^\s*i promise i'll be quick\b",
+    r"^\s*this is (so )?random\b",
+    r"^\s*i had to (come|stop)\b",
+    r"^\s*i had to say hi\b",
+    r"^\s*i had to meet you\b",
+    r"^\s*i had to come say hello\b",
+    r"^\s*i (just )?(saw|noticed) you\b",
+    r"^\s*i'm (not|really not) trying to be weird but\b",
+    r"^\s*you seem (cool|nice|interesting)\b",
+    r"^\s*you have a really (nice|cool) (style|vibe)\b",
+    r"^\s*i like your (shoes|jacket|outfit)\b",
+    r"^\s*where did you get your (shoes|jacket|coat)\b",
+    r"^\s*you're from around here\b",
+    r"^\s*you look like you know this area\b",
+    r"^\s*what are you up to today\b",
+    r"^\s*do you speak english\??\b",
+]
+
+INFIELD_EXCHANGES = [
+    r"\bwhat's your name\b",
+    r"\bwhere (are you|you) from\b",
+    r"\bcan i get your (number|instagram)\b",
+    r"\bnice to meet you\b",
+    r"\byou('re| are) (so |really |very )?cute\b",
+    r"\bhow's your day going\b",
+    r"\bwhat are you up to (today|right now)\b",
+    r"\bwhat brings you here\b",
+    r"\bare you from (around here|the area)\b",
+    r"\bhow long have you been here\b",
+    r"\bwhat do you do\b",
+    r"\bwhat do you do for work\b",
+    r"\bwhat are you studying\b",
+    r"\bwhat do you do for fun\b",
+    r"\bwhat's your vibe\b",
+    r"\bhow old are you\b",
+    r"\bso are you (single|seeing someone)\b",
+    r"\bdo you have a boyfriend\b",
+    r"\bwhat's your instagram\b",
+    r"\bwhat's your ig\b",
+    r"\blet me get your instagram\b",
+    r"\bwhat's your number\b",
+    r"\blet me get your number\b",
+    r"\bput your number in\b",
+    r"\bshoot me a text\b",
+    r"\bi'll text you\b",
+    r"\blet's grab a coffee sometime\b",
+    r"\bwe should hang out sometime\b",
+    r"\bwhen are you free\b",
+    r"\bwhat's your schedule like\b",
+    r"\bare you free (later|this week)\b",
+]
+
+THEORY_PATTERNS = [
+    r"\bthe (reason|key|trick|secret) (is|to)\b",
+    r"\bwhat (you|i) (want|need) to do\b",
+    r"\blet me (explain|break down|tell you)\b",
+    r"\b(most|many) guys\b",
+    r"\bthe psychology\b",
+    r"\b(always|never) (do|say) this\b",
+    r"\btip (number )?\d\b",
+    r"\bmistake (number )?\d\b",
+    r"\bhere's the thing\b",
+    r"\bhere's what happens\b",
+    r"\bhere's why\b",
+    r"\bthe main thing is\b",
+    r"\bthe important part is\b",
+    r"\bthe goal here is\b",
+    r"\bwhat you're trying to do is\b",
+    r"\bthe mindset is\b",
+    r"\byour mindset should be\b",
+    r"\bthe frame is\b",
+    r"\bwhat it comes down to is\b",
+    r"\bthink about it like this\b",
+    r"\blet me give you an example\b",
+    r"\bhere's an example\b",
+    r"\bthis is a (big|huge) mistake\b",
+    r"\bthis is where guys mess up\b",
+    r"\bmost guys (mess up|fail) because\b",
+    r"\bwhat you don't want to do is\b",
+    r"\bthe best way to do this is\b",
+]
+
+BREAKDOWN_PATTERNS = [
+    r"\blet's break (that|this) down\b",
+    r"\blet me break (that|this) down\b",
+    r"\bbreakdown\b",
+    r"\bwhat i did (there|here) was\b",
+    r"\bwhat i'm doing (there|here) is\b",
+    r"\bwhat i said (there|here) was\b",
+    r"\bwhy i said (that|this) is\b",
+    r"\bthe reason i said (that|this) is\b",
+    r"\bthe reason i did (that|this) is\b",
+    r"\bnotice how\b",
+    r"\byou'll notice\b",
+    r"\bpay attention to\b",
+    r"\bwatch how\b",
+    r"\blisten to how\b",
+    r"\byou can see\b",
+    r"\bas you can see\b",
+    r"\bwhat's happening (here|there) is\b",
+    r"\bin this (interaction|clip|approach)\b",
+    r"\bin that (interaction|clip|approach)\b",
+    r"\bwhen she (said|did)\b",
+    r"\bthen i (said|did)\b",
+    r"\bmy response (was|is)\b",
+    r"\bher response (was|is)\b",
+    r"\bthis is important because\b",
+    r"\bthis is a good example of\b",
+    r"\bthis is where\b",
+]
+
+TRANSITION_PATTERNS = [
+    r"\blet's (see|watch|look at) (another|the next)\b",
+    r"\bhere's another\b",
+    r"\bnext (approach|interaction|one)\b",
+    r"\bmoving on\b",
+    r"\balright let's (go|get) into\b",
+    r"\blet's get into the next one\b",
+    r"\bnow let's look at\b",
+    r"\bnow let's watch\b",
+    r"\bnow let's see\b",
+    r"\blet's roll the next clip\b",
+    r"\broll the next clip\b",
+    r"\blet's run that\b",
+    r"\bso in this clip\b",
+    r"\bcheck this one out\b",
+    r"\blet's switch it up\b",
+    r"\blet's change it up\b",
+    r"\blet's move to\b",
+    r"\blet's keep it going\b",
+    r"\balright moving on\b",
+    r"\balright next\b",
+    r"\blet's keep going\b",
+]
+
+
+# -----------------------------
+# Helpers
+# -----------------------------
+
+def _norm_text(s: str) -> str:
+    """
+    Normalize punctuation/whitespace a little to make regex matching more reliable.
+    (Keeps it simple on purpose.)
+    """
+    s = s.replace("\u2019", "'").replace("\u2018", "'")  # smart quotes -> '
+    s = s.replace("\u201c", '"').replace("\u201d", '"')  # smart quotes -> "
+    s = re.sub(r"\s+", " ", s)
+    return s.strip()
+
+
+# -----------------------------
+# Classifier
+# -----------------------------
+
+class ContentClassifier:
+    def __init__(self) -> None:
+        self.compiled_patterns = {
+            "intro": [re.compile(p, re.IGNORECASE) for p in INTRO_PATTERNS],
+            "outro": [re.compile(p, re.IGNORECASE) for p in OUTRO_PATTERNS],
+            "infield_start": [re.compile(p, re.IGNORECASE) for p in INFIELD_STARTERS],
+            "infield_exchange": [re.compile(p, re.IGNORECASE) for p in INFIELD_EXCHANGES],
+            "theory": [re.compile(p, re.IGNORECASE) for p in THEORY_PATTERNS],
+            "breakdown": [re.compile(p, re.IGNORECASE) for p in BREAKDOWN_PATTERNS],
+            "transition": [re.compile(p, re.IGNORECASE) for p in TRANSITION_PATTERNS],
+        }
+
+    def classify_segment(self, text: str, context: Dict | None = None) -> Dict:
+        """
+        NOTE:
+        - Intro/outro position bias is ONLY used as a tiebreaker.
+          It does not create a label by itself anymore.
+        - Infield is only allowed if we see *actual* infield evidence:
+            - an anchored opener, or
+            - a real infield exchange marker
+        """
+        text = _norm_text(text)
+        text_lower = text.lower()
+
+        # Track evidence flags
+        matched_infield_start = False
+        matched_infield_exchange = False
+
+        scores = {
+            "intro": 0,
+            "outro": 0,
+            "infield": 0,
+            "theory": 0,
+            "breakdown": 0,
+            "transition": 0,
+        }
+
+        # Intro / outro
+        for pattern in self.compiled_patterns["intro"]:
+            if pattern.search(text_lower):
+                scores["intro"] += 2
+
+        for pattern in self.compiled_patterns["outro"]:
+            if pattern.search(text_lower):
+                scores["outro"] += 2
+
+        # Infield start (high weight, anchored)
+        for pattern in self.compiled_patterns["infield_start"]:
+            if pattern.search(text_lower):
+                matched_infield_start = True
+                scores["infield"] += 4
+
+        # Infield exchange (medium)
+        for pattern in self.compiled_patterns["infield_exchange"]:
+            if pattern.search(text_lower):
+                matched_infield_exchange = True
+                scores["infield"] += 3
+
+        # Theory
+        for pattern in self.compiled_patterns["theory"]:
+            if pattern.search(text_lower):
+                scores["theory"] += 2
+
+        # Breakdown
+        for pattern in self.compiled_patterns["breakdown"]:
+            if pattern.search(text_lower):
+                scores["breakdown"] += 2
+
+        # Transition
+        for pattern in self.compiled_patterns["transition"]:
+            if pattern.search(text_lower):
+                scores["transition"] += 2
+
+        # Heuristics:
+        # Question marks in random talk are NOT strong evidence of infield.
+        # But short questions in a back-and-forth style can help slightly.
+        word_count = len(text.split())
+        if text.endswith("?") and word_count <= 10:
+            scores["infield"] += 1
+
+        # IMPORTANT RULE:
+        # If we never matched a real infield opener/exchange, do not allow "infield".
+        if not (matched_infield_start or matched_infield_exchange):
+            scores["infield"] = 0
+
+        # Tiebreaker position bias (ONLY if there's already evidence)
+        # i.e. if everything is 0, we keep "unknown".
+        if context and sum(scores.values()) > 0:
+            position = float(context.get("position_ratio", 0.5))
+            # only small nudges
+            if position < 0.1:
+                scores["intro"] += 1
+            if position > 0.9:
+                scores["outro"] += 1
+
+        max_score = max(scores.values())
+        if max_score <= 0:
+            return {
+                "type": "unknown",
+                "confidence": 0.0,
+                "scores": scores,
+            }
+
+        # Pick best label
+        max_type = max(scores, key=scores.get)
+
+        # Confidence = best score / total score
+        total = sum(scores.values()) or 1
+        confidence = max_score / total
+
+        return {
+            "type": max_type,
+            "confidence": confidence,
+            "scores": scores,
+        }
+
+    def classify_transcript(self, segments: List[Dict]) -> List[Dict]:
+        total_segments = len(segments)
+        results = []
+
+        for i, segment in enumerate(segments):
+            context = {
+                "position_ratio": i / total_segments if total_segments else 0.0,
+                "prev_text": segments[i - 1].get("text", "") if i > 0 else "",
+                "next_text": segments[i + 1].get("text", "") if i < total_segments - 1 else "",
+            }
+            classification = self.classify_segment(segment.get("text", ""), context)
+            segment["content_type"] = classification
+            results.append(segment)
+
+        expanded = self._expand_infield_regions(results)
+        return self._smooth_classifications(expanded)
+
+    def _expand_infield_regions(self, segments: List[Dict]) -> List[Dict]:
+        """
+        Expand "infield" from high-precision anchor detections into nearby dialogue-like segments.
+
+        Why:
+          - The per-segment regexes are intentionally strict to avoid false positives.
+          - Real infield is usually a *region* (back-and-forth), not only the opener/number-close lines.
+
+        How:
+          - Treat segments with real infield evidence (starter/exchange matches) as anchors.
+          - Once inside an infield region, convert adjacent "unknown" segments to "infield" while
+            the local window still looks like dialogue (short turns / questions).
+          - Stop when we hit a large time gap or a strong non-infield label (theory/breakdown/etc).
+        """
+        if not segments:
+            return segments
+
+        # Parameters tuned to favor precision over recall.
+        # These should work across sources without special-casing specific videos.
+        reset_gap_seconds = 6.0
+        dialogue_window_size = 12
+        min_dialogue_marker_score = 1.75
+        grace_segments_after_anchor = 6
+        max_backfill_seconds = 20.0
+        max_question_words = 20
+        long_monologue_word_count = 14
+        max_long_monologue_run = 4
+
+        def is_anchor(seg: Dict) -> bool:
+            ct = seg.get("content_type") or {}
+            scores = ct.get("scores") or {}
+            return float(scores.get("infield", 0) or 0) > 0
+
+        def dialogue_marker_score(seg: Dict) -> float:
+            text = _norm_text(seg.get("text", ""))
+            if not text:
+                return 0.0
+            words = text.split()
+            wc = len(words)
+            if wc <= 2 and text.endswith("?"):
+                # Very short questions ("Really?", "What?", etc) often happen in dialogue.
+                # Keep this weaker than a plain short reply to reduce monologue false positives.
+                return 0.5
+            if wc <= 2:
+                return 1.0
+            if text.endswith("?") and wc <= 8:
+                return 0.25
+            if text.endswith("?") and wc <= max_question_words:
+                return 0.1
+            return 0.0
+
+        def is_strong_non_infield(seg: Dict) -> bool:
+            t = (seg.get("content_type") or {}).get("type", "unknown")
+            return t in {"intro", "outro", "theory", "breakdown", "transition"}
+
+        infield_active = False
+        last_anchor_index = -10_000
+        dialogue_window: deque[float] = deque(maxlen=dialogue_window_size)
+        long_monologue_run = 0
+
+        prev_end: float | None = None
+
+        for i, seg in enumerate(segments):
+            # Reset on big gaps (common between clips / edits)
+            start = float(seg.get("start", 0.0) or 0.0)
+            end = float(seg.get("end", start) or start)
+            if prev_end is not None and start - prev_end > reset_gap_seconds:
+                infield_active = False
+                dialogue_window.clear()
+
+            prev_end = end
+
+            # Hard stop on strong non-infield labels (unless this is also an anchor)
+            if infield_active and is_strong_non_infield(seg) and not is_anchor(seg):
+                infield_active = False
+                dialogue_window.clear()
+
+            anchor_here = is_anchor(seg)
+            if anchor_here:
+                infield_active = True
+                last_anchor_index = i
+                long_monologue_run = 0
+
+                # Backfill immediately preceding dialogue-like segments (common when the opener is
+                # split across Whisper segments). Keep this bounded in time to avoid overreach.
+                anchor_start = start
+                j = i - 1
+                while j >= 0:
+                    prev_seg = segments[j]
+                    prev_type = (prev_seg.get("content_type") or {}).get("type", "unknown")
+                    if prev_type != "unknown":
+                        break
+
+                    prev_start = float(prev_seg.get("start", 0.0) or 0.0)
+                    if anchor_start - prev_start > max_backfill_seconds:
+                        break
+
+                    if dialogue_marker_score(prev_seg) <= 0:
+                        break
+
+                    prev_seg["content_type"]["type"] = "infield"
+                    prev_seg["content_type"]["expanded"] = True
+                    j -= 1
+
+            # Track dialogue-likeness
+            marker_score = dialogue_marker_score(seg)
+            dialogue_window.append(marker_score)
+
+            # If we get a stretch of long, non-question segments, we're likely out of infield.
+            text_norm = _norm_text(seg.get("text", ""))
+            wc = len(text_norm.split()) if text_norm else 0
+            if anchor_here or marker_score > 0:
+                long_monologue_run = 0
+            else:
+                if wc >= long_monologue_word_count:
+                    long_monologue_run += 1
+                else:
+                    long_monologue_run = 0
+
+            if infield_active:
+                # Decide whether the region still looks like dialogue.
+                if (i - last_anchor_index) > grace_segments_after_anchor:
+                    if long_monologue_run >= max_long_monologue_run:
+                        infield_active = False
+                        dialogue_window.clear()
+                        long_monologue_run = 0
+                    elif sum(dialogue_window) < min_dialogue_marker_score:
+                        infield_active = False
+                        dialogue_window.clear()
+                        long_monologue_run = 0
+
+            # Apply expansion: only convert unknown -> infield.
+            if infield_active:
+                ct = seg.get("content_type") or {}
+                if ct.get("type") == "unknown":
+                    ct["type"] = "infield"
+                    ct["expanded"] = True
+
+        return segments
+
+    def _smooth_classifications(self, segments: List[Dict]) -> List[Dict]:
+        """
+        Smooth isolated misclassifications using neighbors.
+
+        Example:
+          theory, intro, theory  -> intro becomes theory (if low confidence)
+        """
+        for i in range(1, len(segments) - 1):
+            prev_type = segments[i - 1]["content_type"]["type"]
+            curr_type = segments[i]["content_type"]["type"]
+            next_type = segments[i + 1]["content_type"]["type"]
+
+            if prev_type == next_type and curr_type != prev_type:
+                if segments[i]["content_type"].get("confidence", 0.0) < 0.70:
+                    segments[i]["content_type"]["type"] = prev_type
+                    segments[i]["content_type"]["smoothed"] = True
+        return segments
+
+
+# -----------------------------
+# File processing
+# -----------------------------
+
+def process_transcript_file(input_path: Path, output_path: Path) -> Dict:
+    with input_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    classifier = ContentClassifier()
+    segments = data.get("segments", [])
+    classified_segments = classifier.classify_transcript(segments)
+    data["segments"] = classified_segments
+
+    type_counts: Dict[str, int] = {}
+    for seg in classified_segments:
+        t = seg["content_type"]["type"]
+        type_counts[t] = type_counts.get(t, 0) + 1
+    data["content_summary"] = type_counts
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+    return data
+
+
+def classify_dir(
+    input_dir: Path,
+    output_dir: Path,
+    skip_existing: bool,
+    video_id: str | None = None,
+) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    files = sorted(
+        f
+        for f in input_dir.rglob("*.json")
+        if not f.name.endswith(".classified.json")
+    )
+
+    if video_id:
+        needle = f"[{video_id}]"
+        files = [f for f in files if needle in f.as_posix() or needle in f.name]
+
+    for file in files:
+        rel_parent = file.parent.relative_to(input_dir)
+        out_file = (output_dir / rel_parent / f"{file.stem}.classified.json")
+
+        if skip_existing and out_file.exists():
+            print(f"[content] SKIP existing: {out_file}")
+            continue
+
+        print(f"[content] {file} -> {out_file}")
+        process_transcript_file(file, out_file)
+
+
+def parse_sources_file(path: Path) -> List[tuple[str, str]]:
+    """
+    Accepts sources.txt formats like:
+      daily_evolution|https://youtube.com/...
+      daily_evolution https://youtube.com/...
+      "daily evolution" https://youtube.com/...
+    Returns (source_name, youtube_url).
+    """
+    sources: List[tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                sources.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def extract_video_id(url: str) -> str | None:
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def repo_root() -> Path:
+    # scripts/training-data/<thisfile> -> repo root = parents[2]
+    return Path(__file__).resolve().parents[2]
+
+
+def main() -> None:
+    p = argparse.ArgumentParser(description="Classify transcript segments by content type.")
+
+    # Preferred modes
+    p.add_argument("source", nargs="?", help="Source/channel name (e.g. daily_evolution).")
+    p.add_argument("youtube_url", nargs="?", help="YouTube URL (video/playlist/channel). Video URL filters by ID.")
+    p.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Path to sources.txt (default: docs/sources.txt).",
+    )
+
+    # Optional behavior flags
+    p.add_argument(
+        "--skip-existing",
+        action="store_true",
+        help="Do not overwrite existing .classified.json outputs.",
+    )
+
+    # Legacy override mode
+    p.add_argument("--input", help="Input file or directory of Whisper JSONs.")
+    p.add_argument("--output", help="Output file or directory to write classified JSONs.")
+
+    args = p.parse_args()
+
+    # -----------------------------
+    # Mode 1: --input/--output (legacy)
+    # -----------------------------
+    if args.input and args.output:
+        input_path = Path(args.input)
+        output_path = Path(args.output)
+
+        if input_path.is_dir():
+            classify_dir(input_path, output_path, skip_existing=args.skip_existing)
+        else:
+            if args.skip_existing and output_path.exists():
+                print(f"[content] SKIP existing: {output_path}")
+            else:
+                print(f"[content] {input_path} -> {output_path}")
+                process_transcript_file(input_path, output_path)
+        return
+
+    # -----------------------------
+    # Mode 2: single source name (new default data paths)
+    # -----------------------------
+    if args.source and not args.sources:
+        source = args.source
+        root = repo_root()
+        input_dir = root / "data" / "02.transcribe" / source
+        output_dir = root / "data" / "04.content" / source
+        video_id = extract_video_id(args.youtube_url or "")
+
+        if not input_dir.exists():
+            raise SystemExit(f"[content] ERROR: missing input folder: {input_dir}")
+
+        classify_dir(input_dir, output_dir, skip_existing=args.skip_existing, video_id=video_id)
+        return
+
+    # -----------------------------
+    # Mode 3: batch from sources.txt
+    # -----------------------------
+    if args.sources:
+        sources_path = Path(args.sources)
+        if not sources_path.exists():
+            raise SystemExit(f"[content] ERROR: missing sources file: {sources_path}")
+
+        sources = parse_sources_file(sources_path)
+        if not sources:
+            raise SystemExit(f"[content] ERROR: no sources found in: {sources_path}")
+
+        for source, youtube_url in sources:
+            root = repo_root()
+            input_dir = root / "data" / "02.transcribe" / source
+            output_dir = root / "data" / "04.content" / source
+            video_id = extract_video_id(youtube_url)
+
+            if not input_dir.exists():
+                print(f"[content] WARN: skipping (missing transcripts): {input_dir}")
+                continue
+
+            classify_dir(input_dir, output_dir, skip_existing=args.skip_existing, video_id=video_id)
+        return
+
+    raise SystemExit(
+        "[content] ERROR: Provide either:\n"
+        "  - one source:    ./scripts/training-data/04.content \"daily_evolution\" \"https://www.youtube.com/watch?v=utuuVOXJunM\"\n"
+        "  - --sources:     ./scripts/training-data/04.content --sources docs/sources.txt\n"
+        "  - --input/--output (legacy)\n"
+    )
+
+
+if __name__ == "__main__":
+    main()

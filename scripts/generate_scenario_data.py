@@ -73,7 +73,7 @@ def main() -> None:
     print(f"✅ Successfully generated {count} conversational examples in: {output_path}")
     if count == 0:
         print("⚠️  Generated 0 examples. This usually means no interactions were found or speakers are 'unknown'.")
-        print("    Ensure you have run scripts/classify_speakers.py and scripts/extract_interactions.py.")
+        print("    Ensure you have run scripts/classify_speakers.py and scripts/training-data/08.interactions.")
 
 
 if __name__ == "__main__":

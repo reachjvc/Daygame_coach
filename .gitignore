@@ -52,3 +52,32 @@ training-data.local-backup-*
 
 # Windows alternate data stream artifacts
 *:Zone.Identifier
+
+# Python virtual environments
+.venv/
+venv/
+env/
+.ENV/
+
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# python
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# caches (torch / hf / etc)
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# editor
+.vscode/
+.idea/
+.DS_Store
+.venv/

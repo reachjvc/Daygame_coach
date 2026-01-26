@@ -1,0 +1,893 @@
+#!/usr/bin/env python3
+# scripts/training-data/03.audio-features
+#
+# STEP 3 — AUDIO FEATURES (+ optional speaker embeddings)
+#
+# Reads:
+#   data/01.download/<source_name>/<video_name>/*.wav
+#   data/02.transcribe/<source_name>/<video_name>/<stem>.json   (Whisper-shape JSON)
+#
+# Writes:
+#   data/03.audio-features/<source_name>/<video_name>/<stem>.audio_features.json
+#
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/03.audio-features "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/03.audio-features --sources
+#      ./scripts/training-data/03.audio-features --sources docs/sources.txt
+#
+#   C) Single-file mode:
+#      python3 scripts/training-data/03.audio-features \
+#        --audio path/to/audio.wav \
+#        --transcript path/to/transcript.json \
+#        --out path/to/audio_features.json
+#
+# Notes:
+# - Transcript JSON must be Whisper-shape:
+#     {"text": "...", "segments":[{"start":..,"end":..,"text":".."}, ...]}
+# - Speaker embeddings are optional (requires resemblyzer).
+# - Short segments may fail embedding window (speaker_embedding becomes null).
+# - Output segments are never dropped due to embedding failure.
+
+import argparse
+import hashlib
+import json
+import re
+import shlex
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+
+try:
+    import librosa  # type: ignore
+except Exception:
+    librosa = None
+
+try:
+    import soundfile as sf  # type: ignore
+except Exception:
+    sf = None
+
+try:
+    import torchaudio  # type: ignore
+    import torch
+except Exception:
+    torchaudio = None
+    torch = None
+
+# Optional (speaker embeddings)
+try:
+    from resemblyzer import VoiceEncoder  # type: ignore
+except Exception:
+    VoiceEncoder = None
+
+
+# -------------------------
+# Config
+# -------------------------
+
+@dataclass
+class Config:
+    # Feature extraction
+    sample_rate: int = 22050
+    feature_extractor: str = "librosa"
+
+    # Pitch range (C2..C6 by default)
+    pitch_fmin_hz: float = 65.41
+    pitch_fmax_hz: float = 1046.50
+
+    # Pitch extraction method / robustness
+    # NOTE: pyin gives voiced/unvoiced flags + probabilities -> fixes voiced_ratio == 1.0 issue
+    pitch_method: str = "pyin"  # "pyin" (recommended) or "yin"
+    pyin_voiced_prob_threshold: float = 0.35  # raise if you still see unrealistic highs
+    pitch_trim_percentile: float = 2.0        # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
+
+    # Quality thresholds
+    low_energy_db: float = -35.0
+    activity_db_threshold: float = -40.0
+    clip_abs_threshold: float = 0.999
+
+    # Speaker embeddings
+    embedder: str = "resemblyzer"
+    embedder_sample_rate: int = 16000
+    speaker_sim_threshold: float = 0.82
+    speaker_sim_threshold_prev: float = 0.76
+
+    # IMPORTANT:
+    # - prefer_max_speakers defaults to 2 (3 is allowed but should be rare)
+    # - if a third speaker is uncertain, output "unknown" instead of inventing spk_2
+    max_speakers: int = 3
+    prefer_max_speakers: int = 2
+
+    # Third speaker creation should require strong evidence:
+    third_speaker_min_sec: float = 1.8
+    third_speaker_create_max_sim: float = 0.62
+
+    min_embed_raw_sec: float = 0.8
+    min_embed_window_sec: float = 1.2
+    embed_pad_sec: float = 0.25
+    store_embedding_vectors: bool = True
+
+
+# -------------------------
+# Small utils
+# -------------------------
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def safe_name(name: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (name or "").strip())
+    return cleaned.strip("_") or "source"
+
+
+def extract_video_id(url: str) -> Optional[str]:
+    url = (url or "").strip()
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                sources.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def r3(x: float) -> float:
+    return float(np.round(float(x), 3))
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        while True:
+            chunk = f.read(1024 * 1024)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def percentile_trim(values: np.ndarray, pct: float) -> np.ndarray:
+    """
+    Soft-robustness: remove only extreme outliers (spikes), without hard clamping.
+    pct=2 trims lowest 2% and highest 2%.
+    """
+    if values.size == 0:
+        return values
+    pct = float(np.clip(pct, 0.0, 49.0))
+    if pct <= 0.0:
+        return values
+    lo = np.percentile(values, pct)
+    hi = np.percentile(values, 100.0 - pct)
+    return values[(values >= lo) & (values <= hi)]
+
+
+# -------------------------
+# Audio loading (robust)
+# -------------------------
+
+def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
+    """
+    Load audio as mono float32 without resampling.
+    Priority:
+      1) torchaudio (if works)
+      2) soundfile
+      3) librosa (sr=None, mono=True)
+    """
+    # torchaudio
+    if torchaudio is not None:
+        try:
+            wav, sr = torchaudio.load(path)
+            wav = wav.to(torch.float32)
+
+            # mono
+            if wav.ndim == 2 and wav.shape[0] > 1:
+                wav = wav.mean(dim=0, keepdim=True)
+            if wav.ndim == 2:
+                wav = wav.squeeze(0)
+
+            y = wav.detach().cpu().numpy().astype(np.float32)
+            return y, int(sr)
+        except Exception as e:
+            msg = str(e).lower()
+            if "torchcodec" in msg:
+                print("[audio-features] WARN: torchaudio requires torchcodec for this file; falling back.")
+            else:
+                print(f"[audio-features] WARN: torchaudio.load failed ({type(e).__name__}): {e}")
+
+    # soundfile
+    if sf is not None:
+        try:
+            y, sr = sf.read(path, dtype="float32", always_2d=True)
+            if y.shape[1] > 1:
+                y = y.mean(axis=1, keepdims=True)
+            y = y[:, 0].astype(np.float32)
+            return y, int(sr)
+        except Exception as e:
+            print(f"[audio-features] WARN: soundfile failed ({type(e).__name__}): {e}")
+
+    # librosa
+    if librosa is not None:
+        y, sr = librosa.load(path, sr=None, mono=True)
+        return y.astype(np.float32), int(sr)
+
+    raise SystemExit("No audio backend worked. Install soundfile or librosa (or torchcodec for torchaudio).")
+
+
+def resample_np(y: np.ndarray, sr_in: int, sr_out: int) -> np.ndarray:
+    if sr_in == sr_out:
+        return y.astype(np.float32)
+    if librosa is None:
+        raise SystemExit("librosa is required for resampling in this script.")
+    return librosa.resample(y.astype(np.float32), orig_sr=sr_in, target_sr=sr_out).astype(np.float32)
+
+
+# -------------------------
+# Transcript loading
+# -------------------------
+
+def load_whisper_json(path: Path) -> Dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if "segments" not in data or not isinstance(data["segments"], list):
+        raise ValueError(f"Transcript missing segments list: {path}")
+    return data
+
+
+# -------------------------
+# Feature extraction
+# -------------------------
+
+def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, float]:
+    """
+    Fix for pitch.voiced_ratio:
+    - Use librosa.pyin() (voiced_flag + voiced_prob) when available.
+    - voiced_ratio becomes meaningful (not 1.0 everywhere).
+    Also: avoid insane pitch spikes without hard clamping by percentile trimming.
+    """
+    if librosa is None or y.size == 0:
+        return {
+            "mean_hz": 0.0,
+            "std_hz": 0.0,
+            "min_hz": 0.0,
+            "max_hz": 0.0,
+            "range_hz": 0.0,
+            "direction": 0.0,
+            "voiced_ratio": 0.0,
+        }
+
+    try:
+        if cfg.pitch_method.lower() == "pyin" and hasattr(librosa, "pyin"):
+            f0, voiced_flag, voiced_prob = librosa.pyin(
+                y=y,
+                fmin=cfg.pitch_fmin_hz,
+                fmax=cfg.pitch_fmax_hz,
+                sr=sr,
+            )
+            f0 = np.asarray(f0, dtype=np.float32)  # contains NaN for unvoiced
+            voiced_flag = np.asarray(voiced_flag, dtype=bool)
+            voiced_prob = np.asarray(voiced_prob, dtype=np.float32)
+
+            # This is the ratio you actually want: fraction of frames pyin considers voiced.
+            voiced_ratio = float(np.mean(voiced_flag)) if voiced_flag.size else 0.0
+
+            # For stats, use a stricter voiced mask (reduces false highs)
+            voiced = voiced_flag & np.isfinite(f0) & (voiced_prob >= cfg.pyin_voiced_prob_threshold)
+
+        else:
+            # Fallback: yin() has no voiced probability, only gives an f0 guess everywhere
+            f0 = librosa.yin(
+                y=y,
+                fmin=cfg.pitch_fmin_hz,
+                fmax=cfg.pitch_fmax_hz,
+                sr=sr,
+            )
+            f0 = np.asarray(f0, dtype=np.float32)
+            # With yin(), treat low-energy / garbage frames as unvoiced is hard.
+            # We approximate: if f0 is finite and >0, mark voiced.
+            voiced = np.isfinite(f0) & (f0 > 0)
+            voiced_ratio = float(np.mean(voiced)) if f0.size > 0 else 0.0
+
+        if np.sum(voiced) < 2:
+            return {
+                "mean_hz": 0.0,
+                "std_hz": 0.0,
+                "min_hz": 0.0,
+                "max_hz": 0.0,
+                "range_hz": 0.0,
+                "direction": 0.0,
+                "voiced_ratio": voiced_ratio,
+            }
+
+        f0v = f0[voiced]
+
+        # Soft robustness (not hard clamping): trim only the extreme outliers
+        f0v_stats = percentile_trim(f0v, cfg.pitch_trim_percentile)
+        if f0v_stats.size < 2:
+            f0v_stats = f0v  # fallback
+
+        mean_hz = float(np.mean(f0v_stats))
+        std_hz = float(np.std(f0v_stats))
+        min_hz = float(np.min(f0v_stats))
+        max_hz = float(np.max(f0v_stats))
+        range_hz = float(max_hz - min_hz)
+
+        # direction = slope of linear fit over voiced frames
+        idx_all = np.arange(len(f0), dtype=np.float32)
+        idx = idx_all[voiced]
+        slope = 0.0
+        if idx.size >= 2:
+            slope = float(np.polyfit(idx, f0v, 1)[0])
+
+        return {
+            "mean_hz": mean_hz,
+            "std_hz": std_hz,
+            "min_hz": min_hz,
+            "max_hz": max_hz,
+            "range_hz": range_hz,
+            "direction": slope,
+            "voiced_ratio": voiced_ratio,
+        }
+    except Exception:
+        return {
+            "mean_hz": 0.0,
+            "std_hz": 0.0,
+            "min_hz": 0.0,
+            "max_hz": 0.0,
+            "range_hz": 0.0,
+            "direction": 0.0,
+            "voiced_ratio": 0.0,
+        }
+
+
+def compute_energy_features(y: np.ndarray, sr: int) -> Dict[str, float]:
+    if librosa is None or y.size == 0:
+        return {"mean_db": 0.0, "max_db": 0.0, "std_db": 0.0, "dynamics_db": 0.0}
+
+    rms = librosa.feature.rms(y=y)[0]  # shape [frames]
+    rms = np.asarray(rms, dtype=np.float32)
+    db = 20.0 * np.log10(rms + 1e-9)
+
+    mean_db = float(np.mean(db)) if db.size else 0.0
+    max_db = float(np.max(db)) if db.size else 0.0
+    std_db = float(np.std(db)) if db.size else 0.0
+    dynamics_db = float(max_db - mean_db)
+
+    return {
+        "mean_db": mean_db,
+        "max_db": max_db,
+        "std_db": std_db,
+        "dynamics_db": dynamics_db,
+    }
+
+
+def compute_tempo_features(y: np.ndarray, sr: int, duration_sec: float) -> Dict[str, float]:
+    if librosa is None or y.size == 0 or duration_sec <= 0:
+        return {"syllable_rate": 0.0, "onset_count": 0, "duration_sec": float(duration_sec)}
+
+    try:
+        onset_frames = librosa.onset.onset_detect(y=y, sr=sr, backtrack=False, units="frames")
+        onset_count = int(len(onset_frames))
+        syllable_rate = float(onset_count / max(1e-6, duration_sec))
+        return {"syllable_rate": syllable_rate, "onset_count": onset_count, "duration_sec": float(duration_sec)}
+    except Exception:
+        return {"syllable_rate": 0.0, "onset_count": 0, "duration_sec": float(duration_sec)}
+
+
+def compute_spectral_features(y: np.ndarray, sr: int) -> Dict[str, float]:
+    if librosa is None or y.size == 0:
+        return {"brightness_hz": 0.0, "rolloff_hz": 0.0}
+
+    centroid = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+    rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85)[0]
+
+    return {
+        "brightness_hz": float(np.mean(centroid)) if centroid.size else 0.0,
+        "rolloff_hz": float(np.mean(rolloff)) if rolloff.size else 0.0,
+    }
+
+
+def compute_quality_flags(
+    y: np.ndarray,
+    sr: int,
+    energy_db: Dict[str, float],
+    pitch_voiced_ratio: float,
+    cfg: Config,
+) -> Dict[str, Any]:
+    if y.size == 0:
+        return {
+            "clipped": False,
+            "low_energy": True,
+            "pitch_voiced_ratio": float(pitch_voiced_ratio),
+            "speech_activity_ratio": 0.0,
+        }
+
+    clipped = bool(np.max(np.abs(y)) >= cfg.clip_abs_threshold)
+    low_energy = bool(float(energy_db.get("mean_db", 0.0)) <= cfg.low_energy_db)
+
+    # activity ratio: fraction of frames above threshold
+    if librosa is not None:
+        rms = librosa.feature.rms(y=y)[0]
+        db = 20.0 * np.log10(rms + 1e-9)
+        speech_activity_ratio = float(np.mean(db > cfg.activity_db_threshold)) if db.size else 0.0
+    else:
+        speech_activity_ratio = 0.0
+
+    return {
+        "clipped": clipped,
+        "low_energy": low_energy,
+        "pitch_voiced_ratio": float(pitch_voiced_ratio),
+        "speech_activity_ratio": float(speech_activity_ratio),
+    }
+
+
+# -------------------------
+# Speaker embeddings + clustering
+# -------------------------
+
+def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
+    a = a.astype(np.float32)
+    b = b.astype(np.float32)
+    na = float(np.linalg.norm(a) + 1e-9)
+    nb = float(np.linalg.norm(b) + 1e-9)
+    return float(np.dot(a, b) / (na * nb))
+
+
+def get_speaker_encoder(cfg: Config):
+    if VoiceEncoder is None:
+        return None
+    return VoiceEncoder()
+
+
+def try_embed_segment(
+    encoder,
+    y_orig: np.ndarray,
+    sr_orig: int,
+    start: float,
+    end: float,
+    cfg: Config,
+) -> Optional[np.ndarray]:
+    if encoder is None:
+        return None
+
+    # padded window for embedding (helps stability)
+    s = max(0.0, start - cfg.embed_pad_sec)
+    e = max(s, end + cfg.embed_pad_sec)
+    raw_len = e - s
+
+    # too short => fail
+    if raw_len < cfg.min_embed_raw_sec:
+        return None
+
+    s_idx = int(round(s * sr_orig))
+    e_idx = int(round(e * sr_orig))
+    s_idx = max(0, min(s_idx, len(y_orig)))
+    e_idx = max(0, min(e_idx, len(y_orig)))
+    if e_idx <= s_idx:
+        return None
+
+    chunk = y_orig[s_idx:e_idx]
+    if chunk.size == 0:
+        return None
+
+    # enforce minimum window length
+    if raw_len < cfg.min_embed_window_sec:
+        return None
+
+    # resample to embedder SR
+    y16 = resample_np(chunk, sr_orig, cfg.embedder_sample_rate)
+
+    # resemblyzer likes float32 in [-1,1]
+    y16 = np.clip(y16.astype(np.float32), -1.0, 1.0)
+
+    try:
+        emb = encoder.embed_utterance(y16)
+        emb = np.asarray(emb, dtype=np.float32)
+        return emb
+    except Exception:
+        return None
+
+
+def assign_speaker(
+    emb: Optional[np.ndarray],
+    speakers: List[Dict[str, Any]],
+    prev_speaker_id: Optional[str],
+    seg_duration_sec: float,
+    cfg: Config,
+) -> Tuple[str, Optional[float]]:
+    """
+    Goal:
+      - Keep speaker count low (2 by default).
+      - When uncertain, return "unknown" instead of inventing spk_2.
+      - Allow 3rd speaker only when segment is long enough and clearly distinct.
+    speakers: list of dicts with keys: id, centroid (np.ndarray), count
+    returns: (speaker_id, similarity)
+    """
+    if emb is None:
+        # No embedding -> don't create speakers.
+        # Prefer continuity; otherwise unknown.
+        return (prev_speaker_id or "unknown", None)
+
+    # If we have prev speaker, see if it's still plausible
+    if prev_speaker_id is not None:
+        for spk in speakers:
+            if spk["id"] == prev_speaker_id:
+                sim_prev = cosine_sim(emb, spk["centroid"])
+                if sim_prev >= cfg.speaker_sim_threshold_prev:
+                    return (prev_speaker_id, sim_prev)
+
+    # Choose best matching speaker
+    best_id = None
+    best_sim = -1.0
+    for spk in speakers:
+        sim = cosine_sim(emb, spk["centroid"])
+        if sim > best_sim:
+            best_sim = sim
+            best_id = spk["id"]
+
+    # If good match, assign it
+    if best_id is not None and best_sim >= cfg.speaker_sim_threshold:
+        return (best_id, best_sim)
+
+    # Decide whether to create a new speaker or fallback to "unknown"
+    # 1) If we have fewer than the preferred max (usually 2), allow creating a new speaker
+    if len(speakers) < cfg.prefer_max_speakers:
+        new_id = f"spk_{len(speakers)}"
+        speakers.append({"id": new_id, "centroid": emb.copy(), "count": 1})
+        return (new_id, None)
+
+    # 2) If we'd be creating a third speaker (or beyond), require strong evidence
+    if len(speakers) < cfg.max_speakers:
+        is_third_candidate = (len(speakers) >= cfg.prefer_max_speakers)
+        if is_third_candidate:
+            if seg_duration_sec >= cfg.third_speaker_min_sec and best_sim >= 0.0 and best_sim <= cfg.third_speaker_create_max_sim:
+                new_id = f"spk_{len(speakers)}"
+                speakers.append({"id": new_id, "centroid": emb.copy(), "count": 1})
+                return (new_id, None)
+
+    # 3) Otherwise: don't invent new speakers. Use unknown.
+    return ("unknown", best_sim if best_id is not None else None)
+
+
+def update_speaker_centroid(speakers: List[Dict[str, Any]], speaker_id: str, emb: Optional[np.ndarray]) -> None:
+    if emb is None:
+        return
+    if speaker_id == "unknown":
+        return
+
+    for spk in speakers:
+        if spk["id"] == speaker_id:
+            c = spk["centroid"]
+            n = int(spk["count"])
+            # running average centroid
+            spk["centroid"] = (c * n + emb) / float(n + 1)
+            spk["count"] = n + 1
+            return
+
+    # If missing, create it
+    speakers.append({"id": speaker_id, "centroid": emb.copy(), "count": 1})
+
+
+# -------------------------
+# Main worker
+# -------------------------
+
+def build_audio_features(
+    audio_path: Path,
+    transcript_path: Path,
+    out_path: Path,
+    cfg: Config,
+) -> None:
+    y_orig, sr_orig = load_audio_mono(str(audio_path))
+    total_duration = float(len(y_orig) / sr_orig) if sr_orig > 0 else 0.0
+
+    transcript = load_whisper_json(transcript_path)
+    segments_in = transcript.get("segments", []) or []
+
+    encoder = get_speaker_encoder(cfg)
+    speakers: List[Dict[str, Any]] = []
+    prev_speaker_id: Optional[str] = None
+
+    segments_out: List[Dict[str, Any]] = []
+
+    for seg in segments_in:
+        start = float(seg.get("start", 0.0))
+        end = float(seg.get("end", 0.0))
+        text = str(seg.get("text", "") or "").strip()
+        if not text:
+            continue
+        if end <= start:
+            continue
+
+        start = max(0.0, min(start, total_duration))
+        end = max(0.0, min(end, total_duration))
+        if end <= start:
+            continue
+
+        dur = float(end - start)
+
+        # Slice segment from original
+        s_idx = int(round(start * sr_orig))
+        e_idx = int(round(end * sr_orig))
+        s_idx = max(0, min(s_idx, len(y_orig)))
+        e_idx = max(0, min(e_idx, len(y_orig)))
+        y_seg = y_orig[s_idx:e_idx]
+        if y_seg.size == 0:
+            continue
+
+        # Resample for feature extraction
+        y_feat = resample_np(y_seg, sr_orig, cfg.sample_rate)
+
+        pitch = compute_pitch_features(y_feat, cfg.sample_rate, cfg)
+        energy = compute_energy_features(y_feat, cfg.sample_rate)
+        tempo = compute_tempo_features(y_feat, cfg.sample_rate, dur)
+        spectral = compute_spectral_features(y_feat, cfg.sample_rate)
+        quality = compute_quality_flags(
+            y_feat,
+            cfg.sample_rate,
+            energy_db=energy,
+            pitch_voiced_ratio=float(pitch.get("voiced_ratio", 0.0)),
+            cfg=cfg,
+        )
+
+        # Speaker embedding
+        emb = try_embed_segment(encoder, y_orig, sr_orig, start, end, cfg)
+
+        speaker_id, sim = assign_speaker(
+            emb=emb,
+            speakers=speakers,
+            prev_speaker_id=prev_speaker_id,
+            seg_duration_sec=dur,
+            cfg=cfg,
+        )
+
+        update_speaker_centroid(speakers, speaker_id, emb)
+
+        # Keep continuity only if it's a real speaker id
+        if speaker_id != "unknown":
+            prev_speaker_id = speaker_id
+
+        speaker_embedding_obj = None
+        if emb is not None:
+            if cfg.store_embedding_vectors:
+                speaker_embedding_obj = {
+                    "dim": int(emb.shape[0]),
+                    "vector": [float(x) for x in emb.tolist()],
+                }
+            else:
+                speaker_embedding_obj = {"dim": int(emb.shape[0]), "vector": None}
+
+        segments_out.append(
+            {
+                "start": r3(start),
+                "end": r3(end),
+                "duration_sec": r3(dur),
+                "text": text,
+                "speaker_id": speaker_id,
+                "features": {
+                    "pitch": pitch,
+                    "energy": energy,
+                    "tempo": tempo,
+                    "spectral": spectral,
+                    "quality": quality,
+                    "speaker_embedding": speaker_embedding_obj,
+                },
+                "audio_clip": {
+                    "file": str(audio_path.resolve()),
+                    "start": r3(start),
+                    "end": r3(end),
+                },
+            }
+        )
+
+    # Build top-level output
+    out = {
+        "source_audio": str(audio_path.resolve()),
+        "audio_sha256": sha256_file(audio_path),
+        "source_timestamps": str(transcript_path.resolve()),
+        "processing": {
+            "sample_rate": cfg.sample_rate,
+            "feature_extractor": cfg.feature_extractor,
+            "pitch_range_hz": [cfg.pitch_fmin_hz, cfg.pitch_fmax_hz],
+            "pitch_method": cfg.pitch_method,
+            "pyin_voiced_prob_threshold": cfg.pyin_voiced_prob_threshold,
+            "pitch_trim_percentile": cfg.pitch_trim_percentile,
+            "embedder": cfg.embedder,
+            "embedder_sample_rate": cfg.embedder_sample_rate,
+            "speaker_sim_threshold": cfg.speaker_sim_threshold,
+            "speaker_sim_threshold_prev": cfg.speaker_sim_threshold_prev,
+            "max_speakers": cfg.max_speakers,
+            "prefer_max_speakers": cfg.prefer_max_speakers,
+            "third_speaker_min_sec": cfg.third_speaker_min_sec,
+            "third_speaker_create_max_sim": cfg.third_speaker_create_max_sim,
+            "min_embed_raw_sec": cfg.min_embed_raw_sec,
+            "min_embed_window_sec": cfg.min_embed_window_sec,
+            "embed_pad_sec": cfg.embed_pad_sec,
+            "store_embedding_vectors": cfg.store_embedding_vectors,
+        },
+        "total_duration_sec": r3(total_duration),
+        "segments": segments_out,
+    }
+
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: Config) -> int:
+    root = repo_root()
+    safe_source = safe_name(source_name)
+
+    downloads_root = root / "data" / "01.download" / safe_source
+    transcribe_root = root / "data" / "02.transcribe" / safe_source
+    out_root = root / "data" / "03.audio-features" / safe_source
+
+    if not downloads_root.exists():
+        raise SystemExit(f"[audio-features] Missing downloads folder: {downloads_root}")
+
+    video_id = extract_video_id(youtube_url)
+    wav_files = sorted(downloads_root.rglob("*.wav"))
+    if video_id:
+        wav_files = [p for p in wav_files if f"[{video_id}]" in p.as_posix() or f"[{video_id}]" in p.name]
+
+    if not wav_files:
+        print(f"[audio-features] No WAV files found under: {downloads_root}")
+        return 0
+
+    processed = 0
+    skipped = 0
+
+    for wav_path in wav_files:
+        rel = wav_path.relative_to(downloads_root)
+        rel_dir = rel.parent
+        stem = wav_path.stem
+
+        transcript_path = transcribe_root / rel_dir / f"{stem}.json"
+        if not transcript_path.exists():
+            print(f"[audio-features] WARN: missing transcript: {transcript_path}")
+            continue
+
+        out_path = out_root / rel_dir / f"{stem}.audio_features.json"
+        if out_path.exists() and not overwrite:
+            skipped += 1
+            continue
+
+        print(f"[audio-features] {stem}")
+        build_audio_features(
+            audio_path=wav_path,
+            transcript_path=transcript_path,
+            out_path=out_path,
+            cfg=cfg,
+        )
+        processed += 1
+
+    print(f"[audio-features] Done: processed={processed} skipped={skipped}")
+    return processed
+
+
+# -------------------------
+# CLI
+# -------------------------
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(
+        description="Extract audio features aligned to Whisper segments + optional speaker embeddings.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
+    p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
+
+    p.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+    )
+
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs in batch mode.")
+
+    # Single-file mode
+    p.add_argument("--audio", help="Single-file mode: audio path (.wav etc).")
+    p.add_argument("--transcript", help="Single-file mode: transcript JSON path (Whisper-shape).")
+    p.add_argument("--out", help="Single-file mode: output .json path.")
+
+    # Config knobs
+    p.add_argument("--sample_rate", type=int, default=Config.sample_rate)
+    p.add_argument("--pitch_fmin_hz", type=float, default=Config.pitch_fmin_hz)
+    p.add_argument("--pitch_fmax_hz", type=float, default=Config.pitch_fmax_hz)
+
+    p.add_argument("--pitch_method", type=str, default=Config.pitch_method)
+    p.add_argument("--pyin_voiced_prob_threshold", type=float, default=Config.pyin_voiced_prob_threshold)
+    p.add_argument("--pitch_trim_percentile", type=float, default=Config.pitch_trim_percentile)
+
+    p.add_argument("--speaker_sim_threshold", type=float, default=Config.speaker_sim_threshold)
+    p.add_argument("--speaker_sim_threshold_prev", type=float, default=Config.speaker_sim_threshold_prev)
+
+    p.add_argument("--max_speakers", type=int, default=Config.max_speakers)
+    p.add_argument("--prefer_max_speakers", type=int, default=Config.prefer_max_speakers)
+    p.add_argument("--third_speaker_min_sec", type=float, default=Config.third_speaker_min_sec)
+    p.add_argument("--third_speaker_create_max_sim", type=float, default=Config.third_speaker_create_max_sim)
+
+    p.add_argument("--min_embed_raw_sec", type=float, default=Config.min_embed_raw_sec)
+    p.add_argument("--min_embed_window_sec", type=float, default=Config.min_embed_window_sec)
+    p.add_argument("--embed_pad_sec", type=float, default=Config.embed_pad_sec)
+    p.add_argument("--store_embedding_vectors", action="store_true", default=Config.store_embedding_vectors)
+
+    args = p.parse_args()
+
+    cfg = Config(
+        sample_rate=int(args.sample_rate),
+        pitch_fmin_hz=float(args.pitch_fmin_hz),
+        pitch_fmax_hz=float(args.pitch_fmax_hz),
+        pitch_method=str(args.pitch_method),
+        pyin_voiced_prob_threshold=float(args.pyin_voiced_prob_threshold),
+        pitch_trim_percentile=float(args.pitch_trim_percentile),
+        speaker_sim_threshold=float(args.speaker_sim_threshold),
+        speaker_sim_threshold_prev=float(args.speaker_sim_threshold_prev),
+        max_speakers=int(args.max_speakers),
+        prefer_max_speakers=int(args.prefer_max_speakers),
+        third_speaker_min_sec=float(args.third_speaker_min_sec),
+        third_speaker_create_max_sim=float(args.third_speaker_create_max_sim),
+        min_embed_raw_sec=float(args.min_embed_raw_sec),
+        min_embed_window_sec=float(args.min_embed_window_sec),
+        embed_pad_sec=float(args.embed_pad_sec),
+        store_embedding_vectors=bool(args.store_embedding_vectors),
+    )
+
+    # Single-file mode
+    if args.audio:
+        if not args.transcript or not args.out:
+            raise SystemExit("--audio requires --transcript and --out")
+        build_audio_features(
+            audio_path=Path(args.audio),
+            transcript_path=Path(args.transcript),
+            out_path=Path(args.out),
+            cfg=cfg,
+        )
+        raise SystemExit(0)
+
+    # Batch from sources file
+    if args.sources is not None:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = repo_root() / sources_path
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+
+        for source_name, youtube_url in parse_sources_file(sources_path):
+            batch_for_source(source_name, youtube_url, overwrite=bool(args.overwrite), cfg=cfg)
+        raise SystemExit(0)
+
+    # One source mode
+    if not args.source_name or not args.youtube_url:
+        raise SystemExit(
+            "Provide either --audio/--transcript/--out, or --sources [file], or:\n"
+            "./scripts/training-data/03.audio-features <source_name> <youtube_url>"
+        )
+
+    batch_for_source(str(args.source_name), str(args.youtube_url), overwrite=bool(args.overwrite), cfg=cfg)

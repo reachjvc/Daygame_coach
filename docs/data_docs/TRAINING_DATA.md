@@ -129,7 +129,7 @@ training-data/
 ├── features/<ChannelName>/          # Extracted audio/text features (in-place updates)
 │   └── Video Title.features.json
 │
-├── interactions/<ChannelName>/      # Extracted conversations
+├── interactions/<ChannelName>/      # (legacy) Extracted conversations
 │   └── Video Title.interactions.jsonl
 │
 ├── enriched/<ChannelName>/          # LLM-enriched ground truth (optional)
@@ -150,6 +150,8 @@ training-data/
 ├── pipeline-*.log
 └── download-*.log / download-*-issues.tsv
 ```
+
+Note: The normalized step scripts in `scripts/training-data/` write outputs under `data/` (including `data/08.interactions/...`).
 
 ---
 
@@ -192,7 +194,7 @@ training-data/
 8. EXTRACT INTERACTIONS
    └─→ Groups segments into complete approaches
    └─→ Detects outcomes: number, instagram, rejected, etc.
-   └─→ Output: interactions/<ChannelName>/*.interactions.jsonl
+   └─→ Output: data/08.interactions/<ChannelName>/**/*.interactions.jsonl
 
 9. ENRICH GROUND TRUTH (LLM, optional)
     └─→ Uses Ollama to analyze interactions deeply
@@ -211,6 +213,12 @@ training-data/
     └─→ Generate embeddings (nomic-embed-text)
     └─→ Store to Supabase
     └─→ Output: Supabase `embeddings` table
+
+Required env (in `.env.local` or exported):
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Use `./scripts/training-data/final_pipeline "<source_name>" "<youtube_url>"` to run steps 01‑09 for that source, regenerate `training-data/processed/training_data.jsonl`, and then perform the ingest (step 11). Pass `--sources docs/sources.txt` to iterate the entire source list, or drop into `--skip-ingest`, `--ingest-full`, `--ingest-mode`, `--ingest-dry-run`, `--ingest-verify`, and `--ingest-arg` as needed before the ingestion step (implemented by `./scripts/training-data/10.ingest.ts`, alias: `npm run ingest`).
 ```
 
 ---
@@ -220,12 +228,12 @@ training-data/
 ### sources.txt
 
 ```text
-# training-data/sources.txt
+# docs/sources.txt
 # Format (one per line):
 #   ChannelName|YouTubeURL
 #
 # Notes:
-# - ChannelName becomes the folder name under training-data/raw-audio/, /transcripts/, /features/, etc.
+# - ChannelName becomes the folder name under data/<step>/ and legacy training-data/<stage>/ outputs
 # - YouTubeURL can be a channel, playlist, or single video URL
 # - Lines starting with # are ignored
 
@@ -234,7 +242,7 @@ NaturalLifestyles-Infield|https://www.youtube.com/playlist?list=PLxxx
 NaturalLifestyles-InnerGrowth|https://www.youtube.com/playlist?list=PLyyy
 ```
 
-The current pipeline reads this file directly (see `scripts/download_sources.sh` and `scripts/full_pipeline.sh`). The richer YAML metadata shown in older versions of this doc is not wired up right now.
+The current pipeline reads this file directly (see `scripts/full_pipeline.sh`). The normalized step scripts also default to it via `--sources`.
 
 ### Source Types
 
@@ -625,9 +633,29 @@ The recommended way to process training data is the new unified pipeline script 
 | `download_channel.sh` | Download videos from YouTube |
 | `full_pipeline.sh` | Run all processing steps (legacy, use run_full_pipeline.sh instead) |
 | `quick_ingest.sh` | Ingest to vector store (incremental) |
-| `refresh_training_data.sh` | Update all sources from `training-data/sources.txt` |
+| `refresh_training_data.sh` | Update all sources from `docs/sources.txt` |
 
 ### Processing Scripts
+
+#### Training-data Step Scripts (Normalized)
+
+These scripts live in `scripts/training-data/` and write outputs under `data/`:
+
+| Step | Script | Reads | Writes |
+|------|--------|-------|--------|
+| 01 | `01.download` | YouTube URL(s) | `data/01.download/<source>/<video>/*` |
+| 02 | `02.transcribe` | `data/01.download/<source>/<video>/*.wav` | `data/02.transcribe/<source>/<video>/*.{json,txt,srt,vtt,tsv}` |
+| 03 | `03.audio-features` | `data/01.download` + `data/02.transcribe` | `data/03.audio-features/<source>/<video>/*.features.json` |
+| 04 | `04.content` | `data/02.transcribe/<source>/<video>/*.json` | `data/04.content/<source>/<video>/*.classified.json` |
+| 05 | `05.tonality` | `data/03.audio-features/<source>/**/*.features.json` | `data/05.tonality/<source>/**/*.tonality.json` |
+| 06 | `06.speakers` | `data/05.tonality/<source>/**/*.tonality.json` | `data/06.speakers/<source>/**/*.tonality.json` |
+| 07 | `07.LLM-conversations` | `data/06.speakers/<source>/**/*.json` | `data/07.LLM-conversations/<source>/**/*.conversations.json` |
+| 08 | `08.interactions` | `data/07.LLM-conversations/<source>/**/*.conversations.json` | `data/08.interactions/<source>/<video>/*.interactions.jsonl` |
+| 09 | `09.enrich` | `data/08.interactions/<source>/<video>/*.interactions.jsonl` | `data/09.enrich/<source>/<video>/*.enriched.json` |
+
+#### Final Pipeline Entry Point
+
+`./scripts/training-data/final_pipeline` runs steps 01‑09 for a single video/playlist/channel or for every entry listed in `docs/sources.txt`. After the processing steps finish it regenerates `training-data/processed/training_data.jsonl` and then runs `./scripts/training-data/10.ingest.ts` (step 11, alias: `npm run ingest`). Pass `--skip-ingest` to stop before embeddings are written, `--ingest-full` to force a full reingest, `--ingest-mode interactions` to target interaction chunks, or `--ingest-dry-run`/`--ingest-verify` for dry-run checks; any flag you pass with `--ingest-arg` is forwarded verbatim to `./scripts/training-data/10.ingest.ts`.
 
 | Script | Input | Output |
 |--------|-------|--------|
@@ -636,12 +664,12 @@ The recommended way to process training data is the new unified pipeline script 
 | `batch_extract_features.sh` | `raw-audio/<ChannelName>/*` + timestamps | `features/<ChannelName>/*.features.json` |
 | `classify_speakers.py` | features/*.features.json | features/*.features.json |
 | `classify_tonality.py` | features/*.features.json | features/*.features.json |
-| `detect_conversations.py` | `features/<ChannelName>/*.features.json` | `features/<ChannelName>/*.features.json` (updated) |
+| `07.LLM-conversations` | `data/06.speakers/<ChannelName>/*.json` | `data/07.LLM-conversations/<ChannelName>/*.conversations.json` |
 | `tag_semantics.py` | `features/<ChannelName>/*.features.json` | `features/<ChannelName>/*.features.json` (updated) |
-| `extract_interactions.py` | `features/<ChannelName>/*.features.json` | `interactions/<ChannelName>/*.interactions.jsonl` |
+| `08.interactions` | `data/07.LLM-conversations/<ChannelName>/**/*.conversations.json` | `data/08.interactions/<ChannelName>/**/*.interactions.jsonl` |
 | `enrich_ground_truth.py` | `interactions/<ChannelName>/*.interactions.jsonl` + `transcripts/<ChannelName>/*.txt` | `enriched/<ChannelName>/*.ground_truth.json` |
 | `generate_training_data.py` | `features/` | `processed/training_data.jsonl` |
-| `ingest.ts` | `transcripts/` or `interactions/` | Supabase `embeddings` table |
+| `10.ingest.ts` | `transcripts/` or `interactions/` | Supabase `embeddings` table |
 
 ### Utility Scripts
 
@@ -711,7 +739,7 @@ ollama list  # Verify models are pulled
 **"Only 1 interaction detected in multi-approach video"**
 - Conversation boundary detection failing
 - Check that conversation detection has run (LLM stage) and updated the features JSON (e.g. `conversation_summary` / `conversation_id` fields)
-- May need to tune LLM prompts in `detect_conversations.py`
+- May need to tune LLM prompts in `scripts/training-data/07.LLM-conversations`
 
 ### Logs
 

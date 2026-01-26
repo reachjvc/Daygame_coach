@@ -231,7 +231,7 @@ The old project at `/home/jonaswsl/projects/v0-ai-daygame-coach/` is deprecated 
   - [x] Sign-out action (app/actions/auth.ts)
   - [x] UI components (Input, Label, Badge, Dialog)
 - [x] Home page with checkout (src/home/)
-- [x] Ingest script for training data (scripts/ingest.ts)
+- [x] Ingest script for training data (scripts/training-data/10.ingest.ts)
 
 ### Deferred (Not Needed Now)
 - [ ] Rate limiting implementation

@@ -2,31 +2,35 @@
 """
 Ground Truth Enrichment Script
 
-Takes existing pipeline output (.interactions.jsonl) and the original transcript,
-then uses Ollama to create rich ground-truth-style JSON files with:
-- Interaction boundaries with line numbers
-- Phase segmentation (opener, hook, vibe, close)
-- Technique detection
-- Topic extraction
-- Commentary section identification
+NOTE: This script has moved to:
+  scripts/training-data/09.enrich
 
-This bridges the gap between basic pipeline output and the video1_ground_truth.json format.
+This file is kept as a compatibility shim. When run as a script, it forwards
+execution to the new location.
 
-Usage:
-    # Single file
-    python scripts/enrich_ground_truth.py \
-        --interactions training-data/interactions/SocialStoic/Video.interactions.jsonl \
-        --transcript training-data/transcripts/SocialStoic/Video.txt \
-        --output training-data/enriched/SocialStoic/Video.ground_truth.json
+The new script reads from data/08.interactions/ and writes to data/09.enrich/
 
-    # Batch process a channel
-    python scripts/enrich_ground_truth.py \
-        --channel SocialStoic \
-        --workers 4
+Usage (new):
+    ./scripts/training-data/09.enrich "daily_evolution"
+    ./scripts/training-data/09.enrich --sources
+
+Legacy usage (still supported via shim):
+    python scripts/enrich_ground_truth.py --channel SocialStoic
 """
 
 from __future__ import annotations
 
+import runpy
+import sys
+from pathlib import Path
+
+_MOVED_SCRIPT = Path(__file__).resolve().parent / "training-data" / "09.enrich"
+if __name__ == "__main__" and _MOVED_SCRIPT.exists():
+    sys.argv[0] = str(_MOVED_SCRIPT)
+    runpy.run_path(str(_MOVED_SCRIPT), run_name="__main__")
+    raise SystemExit(0)
+
+# Legacy imports kept for backwards compatibility if imported as a module
 import argparse
 import json
 import os
@@ -34,7 +38,6 @@ import re
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests

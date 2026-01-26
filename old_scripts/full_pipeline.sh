@@ -9,7 +9,7 @@
 
 set -euo pipefail
 
-DEFAULT_SOURCES_FILE="training-data/sources.txt"
+DEFAULT_SOURCES_FILE="docs/sources.txt"
 FALLBACK_CHANNELS=("SocialStoic" "The Natural Lifestyles" "NaturalLifestyles-Infield" "NaturalLifestyles-InnerGrowth" "NaturalLifestyles-Students" "TheNaturalLifestyles-FemalePsychology")
 CHANNELS=("${FALLBACK_CHANNELS[@]}")
 SPECIFIC_CHANNEL="${1:-}"

@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+#
+# scripts/training-data/final_pipeline
+#
+# STEP 10 — FULL TRAINING-DATA PIPELINE
+#
+# Runs steps 01‒09 per source, then ingests the enriched results into Supabase
+# (step 10 / `./scripts/training-data/10.ingest.ts`).
+#
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/final_pipeline "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/final_pipeline --sources
+#      ./scripts/training-data/final_pipeline --sources docs/sources.txt
+#
+# Optional flags:
+#   --skip-ingest        stop before step 10
+#   --ingest-full        pass `--full` to `./scripts/training-data/10.ingest.ts`
+#   --ingest-mode <mode> pass `--mode=<mode>` to the ingest script
+#   --ingest-dry-run     run ingest in dry-run mode
+#   --ingest-verify      verify ingest without writing to the DB
+#   --ingest-arg <arg>   forward any other flag to `./scripts/training-data/10.ingest.ts`
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+cd "$REPO_ROOT"
+
+PER_SOURCE_STEPS=(
+  "$REPO_ROOT/scripts/training-data/01.download"
+  "$REPO_ROOT/scripts/training-data/02.transcribe"
+  "$REPO_ROOT/scripts/training-data/03.audio-features"
+  "$REPO_ROOT/scripts/training-data/04.content"
+  "$REPO_ROOT/scripts/training-data/05.tonality"
+  "$REPO_ROOT/scripts/training-data/06.speakers"
+  "$REPO_ROOT/scripts/training-data/07.LLM-conversations"
+  "$REPO_ROOT/scripts/training-data/08.interactions"
+  "$REPO_ROOT/scripts/training-data/09.enrich"
+)
+TOTAL_PER_SOURCE_STEPS=${#PER_SOURCE_STEPS[@]}
+GLOBAL_STEP_DESCRIPTIONS=("Ingest to vector store")
+TOTAL_GLOBAL_STEPS=${#GLOBAL_STEP_DESCRIPTIONS[@]}
+TOTAL_STEPS=$((TOTAL_PER_SOURCE_STEPS + TOTAL_GLOBAL_STEPS))
+
+DEFAULT_SOURCES="docs/sources.txt"
+MODE="single"
+SOURCES_FILE=""
+SKIP_INGEST=false
+declare -a INGEST_ARGS=()
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./scripts/training-data/final_pipeline "<source_name>" "<youtube_url>"
+  ./scripts/training-data/final_pipeline --sources [path/to/sources.txt]
+
+Options:
+  --sources <file>        Use the provided sources file (default: docs/sources.txt)
+  --skip-ingest           Stop before the vector-store ingestion step
+  --ingest-full           Pass --full to `./scripts/training-data/10.ingest.ts` (force reingest)
+  --ingest-mode <mode>    Forward --mode=<mode> to `./scripts/training-data/10.ingest.ts`
+  --ingest-dry-run        Forward --dry-run to `./scripts/training-data/10.ingest.ts`
+  --ingest-verify         Forward --verify to `./scripts/training-data/10.ingest.ts`
+  --ingest-arg <arg>      Forward any extra flag to `./scripts/training-data/10.ingest.ts`
+EOF
+}
+
+cli_error() {
+  echo "ERROR: $*" >&2
+  usage
+  exit 1
+}
+
+trim() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+run_pipeline_for_source() {
+  local source="$1"
+  local url="$2"
+
+  echo ""
+  echo "==========================================================="
+  echo "➡️  Running training-data pipeline for: $source"
+  echo "    URL: $url"
+  echo "==========================================================="
+
+  for idx in "${!PER_SOURCE_STEPS[@]}"; do
+    local stepNumber=$((idx + 1))
+    local script="${PER_SOURCE_STEPS[$idx]}"
+    local name
+    name="$(basename "$script")"
+
+    echo ""
+    echo "Step ${stepNumber}/${TOTAL_STEPS} — $name"
+    "$script" "$source" "$url"
+  done
+
+  echo ""
+  echo "✅ Completed pipeline for $source"
+}
+
+process_sources_file() {
+  local path="$1"
+  if [[ ! -f "$path" ]]; then
+    echo "ERROR: Sources file not found: $path" >&2
+    exit 1
+  fi
+
+  local processed=0
+  while IFS= read -r raw_line || [[ -n "$raw_line" ]]; do
+    local line="${raw_line//$'\r'/}"
+    line="$(trim "$line")"
+    [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+
+    local source_name
+    local youtube_url
+    if [[ "$line" == *"|"* ]]; then
+      source_name="${line%%|*}"
+      youtube_url="${line#*|}"
+    else
+      source_name="${line%%[[:space:]]*}"
+      youtube_url="${line#"$source_name"}"
+    fi
+
+    source_name="$(trim "$source_name")"
+    youtube_url="$(trim "$youtube_url")"
+    [[ -z "$source_name" || -z "$youtube_url" ]] && continue
+
+    run_pipeline_for_source "$source_name" "$youtube_url"
+    processed=$((processed + 1))
+  done < "$path"
+
+  if [[ "$processed" -eq 0 ]]; then
+    echo "ERROR: No valid sources were found in $path" >&2
+    exit 1
+  fi
+}
+
+run_ingest() {
+  if [[ "$SKIP_INGEST" == true ]]; then
+    echo "⚠️  Skipping ingestion (--skip-ingest)"
+    return
+  fi
+
+  echo "==========================================================="
+  echo "🧠 Ingesting to vector store"
+  echo "==========================================================="
+
+  local ingest_cmd=("node" "$REPO_ROOT/node_modules/tsx/dist/cli.mjs" "$REPO_ROOT/scripts/training-data/10.ingest.ts")
+  if [[ "${#INGEST_ARGS[@]}" -gt 0 ]]; then
+    ingest_cmd+=("${INGEST_ARGS[@]}")
+  fi
+  "${ingest_cmd[@]}"
+}
+
+run_global_steps() {
+  for idx in "${!GLOBAL_STEP_DESCRIPTIONS[@]}"; do
+    local stepNumber=$((TOTAL_PER_SOURCE_STEPS + idx + 1))
+    local description="${GLOBAL_STEP_DESCRIPTIONS[$idx]}"
+
+    echo ""
+    echo "Step ${stepNumber}/${TOTAL_STEPS} — ${description}"
+
+    run_ingest
+  done
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --sources)
+      MODE="sources"
+      if [[ $# -gt 1 && "$2" != --* ]]; then
+        SOURCES_FILE="$2"
+        shift
+      else
+        SOURCES_FILE="$DEFAULT_SOURCES"
+      fi
+      shift
+      ;;
+    --sources=*)
+      MODE="sources"
+      SOURCES_FILE="${1#--sources=}"
+      shift
+      ;;
+    --skip-ingest)
+      SKIP_INGEST=true
+      shift
+      ;;
+    --ingest-full)
+      INGEST_ARGS+=("--full")
+      shift
+      ;;
+    --ingest-mode)
+      if [[ $# -lt 2 ]]; then
+        cli_error "--ingest-mode requires a value"
+      fi
+      INGEST_ARGS+=("--mode" "$2")
+      shift 2
+      ;;
+    --ingest-mode=*)
+      INGEST_ARGS+=("--mode" "${1#--ingest-mode=}")
+      shift
+      ;;
+    --ingest-dry-run)
+      INGEST_ARGS+=("--dry-run")
+      shift
+      ;;
+    --ingest-verify)
+      INGEST_ARGS+=("--verify")
+      shift
+      ;;
+    --ingest-arg)
+      if [[ $# -lt 2 ]]; then
+        cli_error "--ingest-arg requires a value"
+      fi
+      INGEST_ARGS+=("$2")
+      shift 2
+      ;;
+    --ingest-arg=*)
+      INGEST_ARGS+=("${1#--ingest-arg=}")
+      shift
+      ;;
+    *)
+      break
+      ;;
+  esac
+done
+
+if [[ "$MODE" == "sources" && -z "$SOURCES_FILE" ]]; then
+  SOURCES_FILE="$DEFAULT_SOURCES"
+fi
+
+if [[ "$MODE" == "single" ]]; then
+  if [[ $# -lt 2 ]]; then
+    cli_error "Provide a <source_name> and <youtube_url>, or use --sources"
+  fi
+  SOURCE_NAME="$1"
+  YOUTUBE_URL="$2"
+  if [[ $# -gt 2 ]]; then
+    cli_error "Unexpected arguments: ${*:3}"
+  fi
+  run_pipeline_for_source "$SOURCE_NAME" "$YOUTUBE_URL"
+else
+  if [[ $# -gt 0 ]]; then
+    cli_error "Unexpected positional arguments when using --sources"
+  fi
+  process_sources_file "$SOURCES_FILE"
+fi
+
+run_global_steps
+
+echo ""
+echo "✅ Final pipeline finished"

@@ -1,3 +1,40 @@
+/**
+ * scripts/training-data/10.ingest.ts
+ *
+ * Ingest training data into the vector store (Supabase embeddings).
+ *
+ * Reads:
+ *   - Transcript .txt files:
+ *       data/02.transcribe/**\/*.txt
+ *   - Enriched ground-truth JSON files (from step 09.enrich):
+ *       data/09.enrich/**\/*.enriched.json
+ *
+ * Writes:
+ *   - Supabase embeddings (via `storeEmbeddings`)
+ *   - Local incremental state:
+ *       data/.ingest_state.json
+ *       data/.ingest_state.interactions.json
+ *
+ * Use:
+ *   # enriched interactions (default)
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts
+ *
+ *   # transcripts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --mode transcripts
+ *
+ *   # utilities
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
+ *
+ * Environment:
+ *   - Loads `.env.local` (if present)
+ *   - Uses `src/qa/config` + Supabase env vars (see `src/db/server`)
+ *
+ * Note:
+ *   - Interactions mode ingests from `data/09.enrich` (step 09 output).
+ */
+
 import fs from "fs"
 import fsp from "fs/promises"
 import path from "path"
@@ -27,7 +64,7 @@ type Args = {
 
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
-  let mode: Args["mode"] = "transcripts"
+  let mode: Args["mode"] = "interactions"
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -360,11 +397,10 @@ async function main() {
 
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
-  const { QA_CONFIG } = await import("../src/qa/config")
-  const { storeEmbeddings, deleteEmbeddingsBySource } = await import("../src/db/server")
+  const { QA_CONFIG } = await import("../../src/qa/config")
 
-  const transcriptsDir = path.join(process.cwd(), "training-data", "transcripts")
-  const interactionsDir = path.join(process.cwd(), "training-data", "interactions")
+  const transcriptsDir = path.join(process.cwd(), "data", "02.transcribe")
+  const enrichedDir = path.join(process.cwd(), "data", "09.enrich")
 
   const chunkSize = QA_CONFIG.rag.chunkSize
   const chunkOverlap = QA_CONFIG.rag.chunkOverlap
@@ -372,7 +408,7 @@ async function main() {
 
   const statePath = path.join(
     process.cwd(),
-    "training-data",
+    "data",
     args.mode === "interactions" ? ".ingest_state.interactions.json" : ".ingest_state.json"
   )
   const state = await loadState(statePath, { embeddingModel, chunkSize, chunkOverlap })
@@ -401,7 +437,7 @@ async function main() {
 
     const transcriptFiles = await listTxtFiles(transcriptsDir)
     if (transcriptFiles.length === 0) {
-      console.log("No transcript .txt files found under training-data/transcripts")
+      console.log("No transcript .txt files found under data/02.transcribe")
       return
     }
 
@@ -424,14 +460,14 @@ async function main() {
       toIngest.push({ source: relSource, chunks, hash })
     }
   } else {
-    if (!fs.existsSync(interactionsDir)) {
-      console.error(`❌ Missing directory: ${interactionsDir}`)
+    if (!fs.existsSync(enrichedDir)) {
+      console.error(`❌ Missing directory: ${enrichedDir}`)
       process.exit(1)
     }
 
-    const interactionFiles = await listJsonlFiles(interactionsDir, ".interactions.jsonl")
-    if (interactionFiles.length === 0) {
-      console.log("No .interactions.jsonl files found under training-data/interactions")
+    const enrichedFiles = await listJsonlFiles(enrichedDir, ".enriched.json")
+    if (enrichedFiles.length === 0) {
+      console.log("No .enriched.json files found under data/09.enrich")
       return
     }
 
@@ -486,8 +522,8 @@ async function main() {
           currentGroup = {
             phase,
             turns: [],
-            techniques: [],
-            topics: [],
+            techniques: [...new Set(row.techniques ?? [])],
+            topics: [...new Set(row.topics ?? [])],
           }
         }
 
@@ -550,37 +586,111 @@ async function main() {
       return chunks
     }
 
-    for (const filePath of interactionFiles) {
-      const relInteractionPath = path.relative(interactionsDir, filePath)
-      const channel = relInteractionPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
-      const videoTitle = path.basename(filePath, ".interactions.jsonl")
-      // Store under the same source key format as transcript ingestion to avoid duplicating sources in the DB.
-      const sourceKey = path.join(channel, `${videoTitle}.txt`)
+    type EnrichedInteraction = {
+      id?: unknown
+      original_id?: unknown
+      conversation_id?: number
+      start_time?: number
+      end_time?: number
+      outcome?: string
+      topics_discussed?: unknown
+      techniques_used?: unknown
+      turns?: InteractionJsonlRow["turns"]
+    }
+
+    type EnrichedFile = {
+      source?: string
+      video_title?: string
+      interactions?: EnrichedInteraction[]
+    }
+
+    function normalizeVideoStemFromEnrichedFilename(filePath: string): string {
+      let base = path.basename(filePath, ".enriched.json")
+      if (base.endsWith(".interactions")) base = base.slice(0, -".interactions".length)
+      return base
+    }
+
+    function extractTechniqueNames(raw: unknown): string[] {
+      if (!raw) return []
+      if (!Array.isArray(raw)) return []
+      const names: string[] = []
+      for (const entry of raw) {
+        if (typeof entry === "string") {
+          if (entry.trim()) names.push(entry.trim())
+          continue
+        }
+        if (entry && typeof entry === "object") {
+          const technique = (entry as any).technique
+          if (typeof technique === "string" && technique.trim()) names.push(technique.trim())
+        }
+      }
+      return Array.from(new Set(names))
+    }
+
+    function extractStringArray(raw: unknown): string[] {
+      if (!raw) return []
+      if (!Array.isArray(raw)) return []
+      const out = raw
+        .filter((x) => typeof x === "string")
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+      return Array.from(new Set(out))
+    }
+
+    for (const filePath of enrichedFiles) {
+      const relEnrichedPath = path.relative(enrichedDir, filePath)
+      const channel = relEnrichedPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
+      const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
+      // Store under a stable per-video source key for DB lookups.
+      const sourceKey = path.join(channel, `${videoStem}.txt`)
 
       const raw = await fsp.readFile(filePath, "utf-8")
       const interactionChunks: Chunk[] = []
 
+      let parsedFile: EnrichedFile | null = null
+      try {
+        parsedFile = JSON.parse(raw)
+      } catch {
+        continue
+      }
+
+      const interactions = parsedFile?.interactions
+      if (!Array.isArray(interactions) || interactions.length === 0) {
+        continue
+      }
+
       let interactionCount = 0
-      for (const rawLine of raw.split("\n")) {
-        const line = rawLine.trim()
-        if (!line) continue
-        let parsed: InteractionJsonlRow | null = null
-        try {
-          parsed = JSON.parse(line)
-        } catch {
-          continue
+      for (let i = 0; i < interactions.length; i++) {
+        const interaction = interactions[i]
+        if (!interaction || typeof interaction !== "object") continue
+
+        const row: InteractionJsonlRow = {
+          id:
+            typeof interaction.original_id === "string"
+              ? interaction.original_id
+              : typeof interaction.id === "string"
+                ? interaction.id
+                : `interaction_${i + 1}`,
+          conversation_id:
+            typeof interaction.conversation_id === "number" ? interaction.conversation_id : i + 1,
+          source_video: parsedFile?.video_title ?? videoStem,
+          start_time: typeof interaction.start_time === "number" ? interaction.start_time : undefined,
+          end_time: typeof interaction.end_time === "number" ? interaction.end_time : undefined,
+          outcome: typeof interaction.outcome === "string" ? interaction.outcome : undefined,
+          techniques: extractTechniqueNames(interaction.techniques_used),
+          topics: extractStringArray(interaction.topics_discussed),
+          turns: Array.isArray(interaction.turns) ? interaction.turns : [],
         }
-        if (!parsed) continue
 
         // Use phase-based chunking for better semantic structure
-        const phaseChunks = chunkInteractionByPhase(parsed, chunkSize)
+        const phaseChunks = chunkInteractionByPhase(row, chunkSize)
 
         if (phaseChunks.length > 0) {
           interactionChunks.push(...phaseChunks)
           interactionCount++
         } else {
           // Fallback to simple formatting for interactions without turns
-          const formatted = formatInteraction(parsed)
+          const formatted = formatInteraction(row)
           if (formatted.length < 20) continue
 
           const segments = segmentTranscript(formatted, chunkSize, chunkOverlap)
@@ -638,6 +748,8 @@ async function main() {
     console.log("✅ Nothing to ingest.")
     return
   }
+
+  const { storeEmbeddings, deleteEmbeddingsBySource } = await import("../../src/db/server")
 
   async function generateEmbedding(text: string): Promise<number[]> {
     const MAX_LENGTH = 8000

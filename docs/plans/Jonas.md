@@ -61,7 +61,7 @@
 - [x] Button, Card, Input, Label, Badge, Dialog
 
 ### Scripts
-- [x] Ingest script for training data (scripts/ingest.ts)
+- [x] Ingest script for training data (scripts/training-data/10.ingest.ts)
 
 ---
 

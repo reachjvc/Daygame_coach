@@ -103,7 +103,7 @@ def validate_interaction_count(
         ground_truth_value=gt_approaches,
         pipeline_value=detected_interactions,
         passed=detected_interactions >= gt_approaches * 0.7,
-        notes="Based on extract_interactions.py output"
+        notes="Based on 08.interactions output"
     ))
 
     # Commentary detection
@@ -323,7 +323,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--interactions",
-        help="Path to interactions JSONL file (from extract_interactions.py)"
+        help="Path to interactions JSONL file (from scripts/training-data/08.interactions)"
     )
     parser.add_argument(
         "--json",

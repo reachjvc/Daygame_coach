@@ -1,0 +1,232 @@
+#!/usr/bin/env bash
+# scripts/training-data/02.transcribe
+#
+# STEP 2 — TRANSCRIBE (Whisper)
+#
+# Reads:
+#   data/01.download/<source_name>/<video_name>/*.wav
+#
+# Writes:
+#   data/02.transcribe/<source_name>/<video_name>/*.{json,txt,srt,vtt,tsv}
+#
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/02.transcribe --sources
+#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
+#
+# Notes:
+# - If the URL is a single video (watch?v=...), this script only transcribes that video (by ID match).
+# - If the URL is a playlist/channel, it transcribes all downloaded WAVs under data/01.download/<source_name>/.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+
+  A) One source (video / playlist / channel):
+     ./scripts/training-data/02.transcribe "<source_name>" "<youtube_url>"
+
+  B) Batch from sources file:
+     ./scripts/training-data/02.transcribe --sources [path/to/sources.txt]
+
+Examples:
+  ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+  ./scripts/training-data/02.transcribe --sources
+  ./scripts/training-data/02.transcribe --sources docs/sources.txt
+EOF
+}
+
+safe_name() {
+  printf '%s' "$1" | tr -cs 'A-Za-z0-9._-' '_' | sed -E 's/^_+//;s/_+$//'
+}
+
+extract_video_id() {
+  local url="${1:-}"
+  local id=""
+  local re1='[?&]v=([^&]+)'
+  local re2='youtu\.be/([^?&/]+)'
+  if [[ "$url" =~ $re1 ]]; then
+    id="${BASH_REMATCH[1]}"
+  elif [[ "$url" =~ $re2 ]]; then
+    id="${BASH_REMATCH[1]}"
+  fi
+  printf '%s' "$id"
+}
+
+# Script lives at: scripts/training-data/02.transcribe
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Load environment variables
+# Prefer env file in the same folder, otherwise allow it to live one level up.
+if [[ -f "$SCRIPT_DIR/training_data_env.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "$SCRIPT_DIR/training_data_env.sh"
+elif [[ -f "$SCRIPT_DIR/../training_data_env.sh" ]]; then
+  # shellcheck disable=SC1090
+  source "$SCRIPT_DIR/../training_data_env.sh"
+else
+  echo "❌ Could not find training_data_env.sh" >&2
+  echo "   Expected either:" >&2
+  echo "     $SCRIPT_DIR/training_data_env.sh" >&2
+  echo "     $SCRIPT_DIR/../training_data_env.sh" >&2
+  exit 1
+fi
+
+MODEL="${WHISPER_MODEL:-base}"
+LANGUAGE="${WHISPER_LANGUAGE:-en}"
+
+if ! command -v whisper >/dev/null 2>&1; then
+  echo "❌ 'whisper' CLI not found in the active environment." >&2
+  echo "   Install it inside your Whisper env:" >&2
+  echo "     pip install -U openai-whisper" >&2
+  exit 1
+fi
+
+transcribe_one_source() {
+  local source_name="$1"
+  local youtube_url="${2:-}"
+
+  local safe_source
+  safe_source="$(safe_name "$source_name")"
+
+  local in_root="$ROOT_DIR/data/01.download/$safe_source"
+  local out_root="$ROOT_DIR/data/02.transcribe/$safe_source"
+
+  if [[ ! -d "$in_root" ]]; then
+    echo "❌ Missing download folder: $in_root" >&2
+    echo "   Run: ./scripts/training-data/01.download \"$source_name\" \"$youtube_url\"" >&2
+    exit 1
+  fi
+
+  local video_id=""
+  if [[ -n "$youtube_url" ]]; then
+    video_id="$(extract_video_id "$youtube_url")"
+  fi
+
+  echo "📝 Transcribing: $source_name"
+  echo "   Model: $MODEL"
+  echo "   Language: $LANGUAGE"
+  echo "   Input:  $in_root"
+  echo "   Output: $out_root"
+  if [[ -n "$video_id" ]]; then
+    echo "   Filter: video_id=$video_id"
+  fi
+  echo ""
+
+  mapfile -t wav_files < <(find "$in_root" -type f -name '*.wav' | sort)
+  if [[ "${#wav_files[@]}" -eq 0 ]]; then
+    echo "⚠️  No WAV files found under: $in_root"
+    return 0
+  fi
+
+  if [[ -n "$video_id" ]]; then
+    filtered=()
+    for f in "${wav_files[@]}"; do
+      if [[ "$f" == *"[$video_id]"* ]]; then
+        filtered+=("$f")
+      fi
+    done
+    wav_files=("${filtered[@]}")
+  fi
+
+  if [[ "${#wav_files[@]}" -eq 0 ]]; then
+    echo "⚠️  No matching WAV files found (after filter)."
+    return 0
+  fi
+
+  local transcribed=0
+  local skipped=0
+
+  for wav_path in "${wav_files[@]}"; do
+    local rel="${wav_path#"$in_root"/}"
+    local video_folder
+    video_folder="$(dirname "$rel")"
+    [[ "$video_folder" == "." ]] && video_folder=""
+
+    local filename
+    filename="$(basename "$wav_path")"
+    local stem="${filename%.*}"
+
+    local out_dir="$out_root/$video_folder"
+    mkdir -p "$out_dir"
+
+    local json_out="$out_dir/${stem}.json"
+    if [[ -f "$json_out" ]]; then
+      skipped=$((skipped + 1))
+      continue
+    fi
+
+    echo "[whisper] $stem"
+    whisper "$wav_path" \
+      --model "$MODEL" \
+      --task transcribe \
+      --output_format all \
+      --output_dir "$out_dir" \
+      --language "$LANGUAGE"
+    transcribed=$((transcribed + 1))
+  done
+
+  echo ""
+  echo "✅ Transcription complete for $source_name"
+  echo "   Transcribed: $transcribed"
+  echo "   Skipped:     $skipped"
+}
+
+transcribe_from_sources() {
+  local sources_file="${1:-$ROOT_DIR/docs/sources.txt}"
+
+  if [[ ! -f "$sources_file" ]]; then
+    echo "❌ Sources file not found: $sources_file" >&2
+    exit 1
+  fi
+
+  echo "🧾 Sources file: $sources_file"
+  echo ""
+
+  while IFS= read -r line; do
+    [[ -z "${line//[[:space:]]/}" ]] && continue
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+
+    local name=""
+    local url=""
+    if [[ "$line" == *"|"* ]]; then
+      name="${line%%|*}"
+      url="${line#*|}"
+    else
+      # best-effort: whitespace split (first token = name, rest = url)
+      name="${line%%[[:space:]]*}"
+      url="${line#"$name"}"
+      url="${url#"${url%%[![:space:]]*}"}"
+    fi
+
+    [[ -z "$name" || -z "$url" ]] && continue
+    transcribe_one_source "$name" "$url"
+    echo ""
+  done < "$sources_file"
+}
+
+# CLI
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+if [[ "${1:-}" == "--sources" ]]; then
+  shift
+  transcribe_from_sources "${1:-}"
+  exit 0
+fi
+
+SOURCE_NAME="${1:-}"
+YOUTUBE_URL="${2:-}"
+if [[ -z "$SOURCE_NAME" ]]; then
+  usage >&2
+  exit 1
+fi
+
+transcribe_one_source "$SOURCE_NAME" "$YOUTUBE_URL"

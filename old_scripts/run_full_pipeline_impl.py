@@ -45,7 +45,7 @@ STAGES = [
     "features",           # extract_audio_features.py: raw-audio + classified -> features
     "speakers",           # classify_speakers.py: features -> features (updated)
     "tonality",           # classify_tonality.py: features -> features (updated)
-    "conversations",      # detect_conversations.py (LLM): features -> features (updated)
+    "conversations",      # 07.LLM-conversations (LLM): features -> LLM_conversations
     "interactions",       # extract_interactions.py: features -> interactions
     "enrichment",         # enrich_ground_truth.py (LLM): interactions -> enriched
 ]
@@ -180,6 +180,9 @@ def process_file(
     transcript_json = Path(f"training-data/transcripts/{channel}/{base_name}.json")
     classified_json = Path(f"training-data/classified/{channel}/{base_name}.classified.json")
     features_json = Path(f"training-data/features/{channel}/{base_name}.features.json")
+    conversations_json = Path(
+        f"training-data/LLM_conversations/{channel}/{base_name}.features.conversations.json"
+    )
     interactions_jsonl = Path(f"training-data/interactions/{channel}/{base_name}.interactions.jsonl")
     enriched_json = Path(f"training-data/enriched/{channel}/{base_name}.ground_truth.json")
     transcript_txt = Path(f"training-data/transcripts/{channel}/{base_name}.txt")
@@ -296,38 +299,51 @@ def process_file(
                     print(f"    [{stage}] Skipping - no features file")
                 continue
             try:
-                with open(features_json) as f:
+                with open(conversations_json) as f:
                     data = json.load(f)
                 if data.get("conversation_summary"):
                     success = True
                     if verbose:
-                        print(f"    [{stage}] Already detected")
+                        print(f"    [{stage}] Already detected (LLM_conversations)")
             except:
                 pass
             if not success:
+                # Back-compat: older pipeline runs may have updated features.json in-place.
+                try:
+                    with open(features_json) as f:
+                        data = json.load(f)
+                    if data.get("conversation_summary"):
+                        conversations_json.parent.mkdir(parents=True, exist_ok=True)
+                        if not conversations_json.exists():
+                            conversations_json.write_bytes(features_json.read_bytes())
+                        success = True
+                        if verbose:
+                            print(f"    [{stage}] Already detected (features.json)")
+                except:
+                    pass
+            if not success:
                 print(f"    [{stage}]{llm_marker}")
-                conv_output = features_json.parent / f"{base_name}.features.conversations.json"
+                conversations_json.parent.mkdir(parents=True, exist_ok=True)
                 success = run_command(
-                    ["python3", "scripts/detect_conversations.py",
+                    ["python3", "scripts/training-data/07.LLM-conversations",
                      "--input", str(features_json),
-                     "--output", str(conv_output)],
+                     "--output", str(conversations_json)],
                     "Conversation detection",
                     timeout=1800  # 30 min for LLM processing
                 )
-                if success and conv_output.exists():
-                    conv_output.replace(features_json)
 
         elif stage == "interactions":
             if file_exists_and_valid(interactions_jsonl, 10):
                 success = True
                 if verbose:
                     print(f"    [{stage}] Already exists")
-            elif file_exists_and_valid(features_json, 100):
+            elif file_exists_and_valid(conversations_json, 100) or file_exists_and_valid(features_json, 100):
+                interactions_input = conversations_json if file_exists_and_valid(conversations_json, 100) else features_json
                 print(f"    [{stage}]{llm_marker}")
                 Path(f"training-data/interactions/{channel}").mkdir(parents=True, exist_ok=True)
                 success = run_command(
                     ["python3", "scripts/extract_interactions.py",
-                     "--input", str(features_json),
+                     "--input", str(interactions_input),
                      "--output", str(interactions_jsonl)],
                     "Interaction extraction"
                 )

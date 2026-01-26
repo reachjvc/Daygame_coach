@@ -1,0 +1,875 @@
+#!/usr/bin/env python3
+# scripts/training-data/02.transcribe
+#
+# STEP 2A — VAD-FIRST TRANSCRIBE (Silero VAD -> Whisper)
+#
+# Reads:
+#   data/01.download/<source_name>/<video_name>/*
+#
+# Prefers these audio inputs (best-first):
+#   1) *.audio.asr.clean16k.wav   (recommended ASR input)
+#   2) *.audio.asr.raw16k.wav     (fallback ASR input)
+#   3) *.wav                      (legacy extraction)
+#
+# Writes (TWO transcript versions per video folder):
+#   data/02.transcribe/<source_name>/<video_name>/<video_name>.vad.json
+#   data/02.transcribe/<source_name>/<video_name>/<video_name>.full.json
+#
+# Optional debug writes:
+#   data/02.transcribe/<source_name>/<video_name>/<video_name>.vad_regions.json
+#
+# Output contract (same shape as Whisper JSON):
+# {
+#   "text": "...",
+#   "segments": [
+#     {"start": 0.00, "end": 2.72, "text": "..."},
+#     ...
+#   ]
+# }
+#
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/02.transcribe --sources
+#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
+#
+#   C) Single-file mode:
+#      python3 scripts/training-data/02.transcribe \
+#        --audio path/to/audio.wav \
+#        --out path/to/transcript.json
+#
+# Notes:
+# - If the URL is a single video (watch?v=...), this script only processes that video (by ID match).
+# - If the URL is a playlist/channel, it processes all downloaded videos under data/01.download/<source_name>/.
+# - This script runs Silero VAD on a 16kHz copy of the audio to find speech regions, then transcribes ONLY speech.
+# - It splits long speech into <= 20s chunks (default) for Whisper stability.
+# - TWO outputs are generated:
+#     1) *.vad.json  = VAD-first chunked transcription (robust segmentation)
+#     2) *.full.json = full-file transcription (better continuity/context)
+# - The JSON output is compatible with your existing 03.audio-features step.
+
+
+import argparse
+import functools
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+import torch
+
+try:
+    import torchaudio  # type: ignore
+except Exception:  # pragma: no cover
+    torchaudio = None
+
+try:
+    import soundfile as sf  # type: ignore
+except Exception:  # pragma: no cover
+    sf = None
+
+try:
+    import librosa  # type: ignore
+except Exception:
+    librosa = None
+
+
+def _sec_to_srt_timestamp(t: float) -> str:
+    # HH:MM:SS,mmm
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+
+
+def _sec_to_vtt_timestamp(t: float) -> str:
+    # HH:MM:SS.mmm
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
+def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
+
+
+def write_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
+    # Whisper-style TSV: start \t end \t text
+    lines = []
+    for s in segments:
+        start = float(s.get("start", 0.0))
+        end = float(s.get("end", 0.0))
+        text = str(s.get("text", "")).replace("\t", " ").strip()
+        lines.append(f"{start:.3f}\t{end:.3f}\t{text}")
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+
+def write_srt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines = []
+    idx = 1
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_srt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_srt_timestamp(float(s.get("end", 0.0)))
+        lines.append(str(idx))
+        lines.append(f"{start} --> {end}")
+        lines.append(text)
+        lines.append("")  # blank line between cues
+        idx += 1
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_vtt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines = ["WEBVTT", ""]
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_vtt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_vtt_timestamp(float(s.get("end", 0.0)))
+        lines.append(f"{start} --> {end}")
+        lines.append(text)
+        lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+@dataclass
+class Config:
+    vad_threshold: float = 0.5
+    min_speech_sec: float = 0.30
+    min_silence_sec: float = 0.25
+    pad_sec: float = 0.15
+    merge_gap_sec: float = 0.30
+    max_chunk_sec: float = 20.0
+    sample_rate_vad: int = 16000
+
+    dedup_window_sec: float = 0.15
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def safe_name(name: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", name.strip())
+    return cleaned.strip("_") or "source"
+
+
+def extract_video_id(url: str) -> Optional[str]:
+    url = (url or "").strip()
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                sources.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def _normalize_text(s: str) -> str:
+    s = (s or "").strip().lower()
+    s = s.strip(" .,!?:;\"'“”‘’")
+    s = re.sub(r"\s+", " ", s)
+    return s
+
+
+def _r3(x: float) -> float:
+    return float(np.round(float(x), 3))
+
+
+def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
+    """
+    Robust audio loader:
+      1) torchaudio (if available)
+      2) soundfile
+      3) librosa (sr=None so it does NOT resample)
+
+    Returns:
+      (mono float32 waveform, sample_rate)
+    """
+
+    # 1) torchaudio first (fastest, best if it works)
+    if torchaudio is not None:
+        try:
+            waveform, sr = torchaudio.load(path)
+            waveform = waveform.to(torch.float32)
+
+            # to mono
+            if waveform.ndim == 2 and waveform.shape[0] > 1:
+                waveform = waveform.mean(dim=0, keepdim=True)
+            if waveform.ndim == 2:
+                waveform = waveform.squeeze(0)
+
+            y = waveform.detach().cpu().numpy().astype(np.float32)
+            return y, int(sr)
+
+        except Exception as e:
+            msg = str(e).lower()
+            if "torchcodec" in msg:
+                print("[vad-first-transcribe] WARN: torchaudio requires torchcodec; falling back to soundfile/librosa.")
+            else:
+                print(f"[vad-first-transcribe] WARN: torchaudio.load failed ({type(e).__name__}): {e}")
+
+    # 2) soundfile fallback (good + simple)
+    if sf is not None:
+        try:
+            y, sr = sf.read(path, dtype="float32", always_2d=True)
+            # y shape: [T, C]
+            if y.shape[1] > 1:
+                y = y.mean(axis=1, keepdims=True)
+            y = y[:, 0].astype(np.float32)
+            return y, int(sr)
+        except Exception as e:
+            print(f"[vad-first-transcribe] WARN: soundfile failed ({type(e).__name__}): {e}")
+
+    # 3) librosa fallback (IMPORTANT: sr=None -> NO resample)
+    if librosa is not None:
+        y, sr = librosa.load(path, sr=None, mono=True)
+        return y.astype(np.float32), int(sr)
+
+    raise SystemExit("No audio loader worked. Install torchcodec OR soundfile OR librosa.")
+
+
+def resample_for_vad(y: np.ndarray, sr: int, sr_vad: int) -> torch.Tensor:
+    if y.size == 0:
+        return torch.zeros((0,), dtype=torch.float32)
+
+    if sr == sr_vad:
+        return torch.from_numpy(y).to(torch.float32).contiguous()
+
+    if torchaudio is not None:
+        t = torch.from_numpy(y).to(torch.float32).unsqueeze(0)  # [1, T]
+        t = torchaudio.functional.resample(t, orig_freq=sr, new_freq=sr_vad)
+        return t.squeeze(0).contiguous()
+
+    try:
+        from scipy.signal import resample_poly  # type: ignore
+    except Exception as e:  # pragma: no cover
+        raise SystemExit("Missing resampler: install torchaudio or scipy.") from e
+
+    g = int(np.gcd(sr, sr_vad))
+    up = sr_vad // g
+    down = sr // g
+    y2 = resample_poly(y.astype(np.float32), up=up, down=down).astype(np.float32)
+    return torch.from_numpy(y2).to(torch.float32).contiguous()
+
+
+@functools.lru_cache(maxsize=1)
+def _load_silero_vad() -> Tuple[Any, Any]:
+    if "TORCH_HOME" not in os.environ:
+        cache_dir = repo_root() / ".cache" / "torch"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        os.environ["TORCH_HOME"] = str(cache_dir)
+
+    model, utils = torch.hub.load(
+        repo_or_dir="snakers4/silero-vad",
+        model="silero_vad",
+        trust_repo=True,
+        verbose=False,
+    )
+    get_speech_timestamps = utils[0]
+    model.eval()
+    return model, get_speech_timestamps
+
+
+def detect_speech_regions(y_vad_16k: torch.Tensor, cfg: Config) -> List[Tuple[float, float]]:
+    if y_vad_16k.numel() == 0:
+        return []
+
+    model, get_speech_timestamps = _load_silero_vad()
+    with torch.no_grad():
+        raw = get_speech_timestamps(
+            y_vad_16k,
+            model,
+            sampling_rate=cfg.sample_rate_vad,
+            threshold=float(cfg.vad_threshold),
+            min_speech_duration_ms=int(round(cfg.min_speech_sec * 1000.0)),
+            min_silence_duration_ms=int(round(cfg.min_silence_sec * 1000.0)),
+            speech_pad_ms=0,
+        )
+
+    regions: List[Tuple[float, float]] = []
+    for item in raw or []:
+        start_s = float(item["start"]) / float(cfg.sample_rate_vad)
+        end_s = float(item["end"]) / float(cfg.sample_rate_vad)
+        if end_s > start_s:
+            regions.append((start_s, end_s))
+    regions.sort(key=lambda x: x[0])
+    return regions
+
+
+def finalize_regions(
+    regions: List[Tuple[float, float]],
+    duration_sec: float,
+    cfg: Config,
+) -> List[Tuple[float, float]]:
+    regions = [(s, e) for (s, e) in regions if (e - s) >= cfg.min_speech_sec]
+    if not regions:
+        return []
+
+    # merge close gaps
+    merged: List[Tuple[float, float]] = []
+    cur_s, cur_e = regions[0]
+    for s, e in regions[1:]:
+        if s - cur_e < cfg.merge_gap_sec:
+            cur_e = max(cur_e, e)
+        else:
+            merged.append((cur_s, cur_e))
+            cur_s, cur_e = s, e
+    merged.append((cur_s, cur_e))
+
+    # pad and clamp
+    padded: List[Tuple[float, float]] = []
+    for s, e in merged:
+        s2 = max(0.0, s - cfg.pad_sec)
+        e2 = min(duration_sec, e + cfg.pad_sec)
+        if e2 > s2:
+            padded.append((s2, e2))
+
+    # split long chunks
+    final: List[Tuple[float, float]] = []
+    for s, e in padded:
+        cur = s
+        while (e - cur) > cfg.max_chunk_sec:
+            final.append((cur, cur + cfg.max_chunk_sec))
+            cur = cur + cfg.max_chunk_sec
+        if e > cur:
+            final.append((cur, e))
+
+    final = [(max(0.0, s), min(duration_sec, e)) for (s, e) in final if e > s]
+    final.sort(key=lambda x: x[0])
+    return final
+
+
+class Transcriber:
+    def __init__(
+        self,
+        model_name: str,
+        language: str,
+        device: str,
+        condition_on_previous_text: bool,
+        decode_options: Optional[Dict[str, Any]] = None,
+    ):
+        self.model_name = model_name
+        self.language = language
+        self.device = device
+        self.condition_on_previous_text = bool(condition_on_previous_text)
+        self.decode_options = decode_options or {}
+
+        self._whisper = None
+        self._model = None
+        self._use_cli = False
+
+        try:
+            import whisper  # type: ignore
+            self._whisper = whisper
+        except Exception:
+            self._whisper = None
+
+        if self._whisper is None:
+            if not shutil.which("whisper"):
+                raise SystemExit(
+                    "Missing Whisper: install python package (openai-whisper) or ensure 'whisper' CLI is on PATH."
+                )
+            self._use_cli = True
+        else:
+            self._model = self._whisper.load_model(self.model_name, device=self.device)
+
+    def transcribe_file(self, audio_path: str) -> Dict[str, Any]:
+        if self._use_cli:
+            return self._transcribe_via_cli(audio_path)
+        return self._transcribe_via_lib(audio_path)
+
+    def _transcribe_via_lib(self, audio_path: str) -> Dict[str, Any]:
+        assert self._model is not None
+        result = self._model.transcribe(
+            audio_path,
+            language=self.language,
+            task="transcribe",
+            fp16=False,
+            verbose=False,
+            condition_on_previous_text=self.condition_on_previous_text,
+            **self.decode_options,
+        )
+        return {
+            "text": result.get("text", "") or "",
+            "segments": result.get("segments", []) or [],
+        }
+
+    def _transcribe_via_cli(self, audio_path: str) -> Dict[str, Any]:
+        # NOTE: CLI fallback cannot perfectly mirror lib decode options,
+        # but it will still generate usable JSON.
+        out_dir = Path(tempfile.mkdtemp(prefix="whisper_cli_"))
+        try:
+            cmd = [
+                "whisper",
+                audio_path,
+                "--model",
+                self.model_name,
+                "--task",
+                "transcribe",
+                "--output_format",
+                "json",
+                "--output_dir",
+                str(out_dir),
+                "--language",
+                self.language,
+            ]
+
+            # Best-effort decode flags (some may be ignored depending on CLI version)
+            if "temperature" in self.decode_options:
+                cmd += ["--temperature", str(self.decode_options["temperature"])]
+            if "beam_size" in self.decode_options:
+                cmd += ["--beam_size", str(self.decode_options["beam_size"])]
+
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if proc.returncode != 0:
+                raise RuntimeError(f"whisper CLI failed:\nSTDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
+
+            out_json = out_dir / f"{Path(audio_path).stem}.json"
+            if not out_json.exists():
+                json_files = list(out_dir.glob("*.json"))
+                if not json_files:
+                    raise RuntimeError("whisper CLI did not produce a .json output")
+                out_json = json_files[0]
+
+            data = json.loads(out_json.read_text(encoding="utf-8"))
+            return {
+                "text": data.get("text", "") or "",
+                "segments": data.get("segments", []) or [],
+            }
+        finally:
+            shutil.rmtree(out_dir, ignore_errors=True)
+
+
+def write_wav_chunk(path: Path, y: np.ndarray, sr: int) -> None:
+    """
+    Always-safe WAV writer using Python's built-in wave module (no torchcodec needed).
+    Writes 16-bit PCM mono WAV.
+    """
+    import wave
+
+    if y.size == 0:
+        return
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    # clamp & convert float32 [-1,1] -> int16
+    y = np.clip(y.astype(np.float32), -1.0, 1.0)
+    pcm16 = (y * 32767.0).astype(np.int16)
+
+    with wave.open(str(path), "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)  # 16-bit
+        wf.setframerate(int(sr))
+        wf.writeframes(pcm16.tobytes())
+
+
+def _segments_from_whisper_result(result: Dict[str, Any], duration_sec: float) -> List[Dict[str, Any]]:
+    segs_out: List[Dict[str, Any]] = []
+    for seg in result.get("segments", []) or []:
+        try:
+            gs = float(seg.get("start", 0.0))
+            ge = float(seg.get("end", 0.0))
+            txt = (seg.get("text") or "").strip()
+        except Exception:
+            continue
+        if not txt:
+            continue
+        gs = max(0.0, min(gs, duration_sec))
+        ge = max(0.0, min(ge, duration_sec))
+        if ge <= gs:
+            continue
+        segs_out.append({"start": _r3(gs), "end": _r3(ge), "text": txt})
+
+    segs_out.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    return segs_out
+
+
+def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
+    """
+    Writes:
+      - JSON (canonical)
+      - TXT / SRT / VTT / TSV sidecars
+    """
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+
+    text = " ".join([s["text"].strip() for s in segments if s.get("text", "").strip()]).strip()
+    out = {"text": text, "segments": segments}
+
+    with open(out_json_path, "w", encoding="utf-8") as f:
+        json.dump(out, f, ensure_ascii=False, indent=2)
+
+    base = out_json_path.with_suffix("")  # removes ".json"
+    write_txt(base.with_suffix(".txt"), segments)
+    write_srt(base.with_suffix(".srt"), segments)
+    write_vtt(base.with_suffix(".vtt"), segments)
+    write_tsv(base.with_suffix(".tsv"), segments)
+
+
+def transcribe_full_file(audio_path: str, out_json: str, transcriber: Transcriber) -> None:
+    y, sr = load_audio_mono(audio_path)
+    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
+
+    result = transcriber.transcribe_file(audio_path)
+    segments = _segments_from_whisper_result(result, duration_sec)
+
+    _write_all_outputs(Path(out_json), segments)
+
+
+def transcribe_with_vad_first(
+    audio_path: str,
+    out_json: str,
+    transcriber: Transcriber,
+    cfg: Config,
+    vad_json_out: Optional[str] = None,
+) -> None:
+    y, sr = load_audio_mono(audio_path)
+    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
+
+    # VAD
+    y_vad = resample_for_vad(y, sr, cfg.sample_rate_vad)
+    regions_raw = detect_speech_regions(y_vad, cfg)
+    regions = finalize_regions(regions_raw, duration_sec, cfg)
+
+    # DEBUG VAD REGIONS
+    if vad_json_out is not None:
+        Path(vad_json_out).parent.mkdir(parents=True, exist_ok=True)
+        with open(vad_json_out, "w", encoding="utf-8") as f:
+            json.dump([{"start": _r3(s), "end": _r3(e)} for (s, e) in regions], f, indent=2)
+
+    # IMPORTANT FALLBACK:
+    # If VAD returns nothing (silence / failure / bad threshold),
+    # transcribe the full file so you never get an empty output.
+    if not regions:
+        print("[vad-first-transcribe] WARN: VAD returned 0 regions, falling back to full-file transcription.")
+        result = transcriber.transcribe_file(audio_path)
+        segments = _segments_from_whisper_result(result, duration_sec)
+        _write_all_outputs(Path(out_json), segments)
+        return
+
+    # NORMAL VAD-CHUNK FLOW
+    segments: List[Dict[str, Any]] = []
+
+    with tempfile.TemporaryDirectory(prefix="vadfirst_", dir="/tmp") as td:
+        tmp_dir = Path(td)
+
+        for i, (rs, re_) in enumerate(regions):
+            s_idx = int(round(rs * sr))
+            e_idx = int(round(re_ * sr))
+            s_idx = max(0, min(s_idx, len(y)))
+            e_idx = max(0, min(e_idx, len(y)))
+            if e_idx <= s_idx:
+                continue
+
+            chunk = y[s_idx:e_idx]
+            if chunk.size < int(0.05 * sr):
+                continue
+
+            chunk_path = tmp_dir / f"chunk_{i:04d}_{int(rs*1000):07d}_{int(re_*1000):07d}.wav"
+            write_wav_chunk(chunk_path, chunk, sr)
+
+            result = transcriber.transcribe_file(str(chunk_path))
+            local_segments = result.get("segments", []) or []
+
+            for seg in local_segments:
+                try:
+                    ls = float(seg.get("start", 0.0))
+                    le = float(seg.get("end", 0.0))
+                    txt = (seg.get("text") or "").strip()
+                except Exception:
+                    continue
+
+                if not txt:
+                    continue
+
+                gs = rs + max(0.0, ls)
+                ge = rs + max(0.0, le)
+                gs = max(0.0, min(gs, duration_sec))
+                ge = max(0.0, min(ge, duration_sec))
+                if ge <= gs:
+                    continue
+
+                # Light boundary dedup
+                if segments:
+                    prev = segments[-1]
+                    if (gs - float(prev["end"])) <= cfg.dedup_window_sec:
+                        if _normalize_text(txt) == _normalize_text(prev.get("text", "")):
+                            continue
+
+                segments.append({"start": _r3(gs), "end": _r3(ge), "text": txt})
+
+    segments.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    _write_all_outputs(Path(out_json), segments)
+
+
+def _pick_best_audio_in_video_dir(video_dir: Path) -> Optional[Path]:
+    """
+    Picks ONE input audio per video folder, best-first:
+      1) *.audio.asr.clean16k.wav
+      2) *.audio.asr.raw16k.wav
+      3) *.wav
+    """
+    # 1) clean16k
+    clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
+    if clean:
+        return clean[0]
+
+    # 2) raw16k
+    raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
+    if raw:
+        return raw[0]
+
+    # 3) any wav (legacy)
+    wavs = sorted(video_dir.glob("*.wav"))
+    if wavs:
+        return wavs[0]
+
+    return None
+
+
+def batch_for_source(
+    source_name: str,
+    youtube_url: str,
+    overwrite: bool,
+    write_vad_debug: bool,
+    transcriber_vad: Transcriber,
+    transcriber_full: Transcriber,
+    cfg: Config,
+) -> int:
+    root = repo_root()
+    safe_source = safe_name(source_name)
+
+    downloads_root = root / "data" / "01.download" / safe_source
+    out_root = root / "data" / "02.transcribe" / safe_source
+
+    if not downloads_root.exists():
+        raise SystemExit(f"[vad-first-transcribe] Missing downloads folder: {downloads_root}")
+
+    video_id = extract_video_id(youtube_url)
+
+    # Each downloaded YouTube video lives inside its own folder:
+    #   data/01.download/<source>/<title> [id]/*
+    video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
+    if video_id:
+        video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
+
+    if not video_dirs:
+        print(f"[vad-first-transcribe] No video folders found under: {downloads_root}")
+        return 0
+
+    processed = 0
+    skipped = 0
+
+    for video_dir in video_dirs:
+        audio_path = _pick_best_audio_in_video_dir(video_dir)
+        if audio_path is None:
+            print(f"[vad-first-transcribe] WARN: No audio input found in: {video_dir}")
+            continue
+
+        # Output folder mirrors the video folder name
+        out_video_dir = out_root / video_dir.name
+        out_video_dir.mkdir(parents=True, exist_ok=True)
+
+        # Two versions:
+        out_vad_json = out_video_dir / f"{video_dir.name}.vad.json"
+        out_full_json = out_video_dir / f"{video_dir.name}.full.json"
+
+        if (out_vad_json.exists() and out_full_json.exists()) and not overwrite:
+            skipped += 1
+            continue
+
+        vad_regions_path = None
+        if write_vad_debug:
+            vad_regions_path = str(out_video_dir / f"{video_dir.name}.vad_regions.json")
+
+        print(f"[vad-first-transcribe] VIDEO: {video_dir.name}")
+        print(f"[vad-first-transcribe] AUDIO: {audio_path.name}")
+
+        # Version A: VAD-first
+        transcribe_with_vad_first(
+            audio_path=str(audio_path),
+            out_json=str(out_vad_json),
+            transcriber=transcriber_vad,
+            cfg=cfg,
+            vad_json_out=vad_regions_path,
+        )
+
+        # Version B: full-file
+        transcribe_full_file(
+            audio_path=str(audio_path),
+            out_json=str(out_full_json),
+            transcriber=transcriber_full,
+        )
+
+        processed += 1
+
+    print(f"[vad-first-transcribe] Done: processed={processed} skipped={skipped}")
+    return processed
+
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(
+        description="VAD-first segmentation before Whisper transcription (writes Whisper-shape JSON).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
+    p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
+
+    p.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+    )
+
+    p.add_argument("--audio", help="Single-file mode: path to WAV/MP3/etc.")
+    p.add_argument("--out", help="Single-file mode: output .json path (base name).")
+    p.add_argument("--vad-out", help="Optional: write debug VAD regions JSON to this path (single-file mode).")
+
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs in batch mode.")
+    p.add_argument("--write-vad", action="store_true", help="Write VAD regions JSON alongside transcript JSON in batch mode.")
+
+    p.add_argument("--model", default=os.environ.get("WHISPER_MODEL", "base"))
+    p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
+    p.add_argument("--device", default=os.environ.get("WHISPER_DEVICE", "cpu"))
+
+    p.add_argument("--vad_threshold", type=float, default=Config.vad_threshold)
+    p.add_argument("--min_speech_sec", type=float, default=Config.min_speech_sec)
+    p.add_argument("--min_silence_sec", type=float, default=Config.min_silence_sec)
+    p.add_argument("--pad_sec", type=float, default=Config.pad_sec)
+    p.add_argument("--merge_gap_sec", type=float, default=Config.merge_gap_sec)
+    p.add_argument("--max_chunk_sec", type=float, default=Config.max_chunk_sec)
+
+    args = p.parse_args()
+
+    cfg = Config(
+        vad_threshold=float(args.vad_threshold),
+        min_speech_sec=float(args.min_speech_sec),
+        min_silence_sec=float(args.min_silence_sec),
+        pad_sec=float(args.pad_sec),
+        merge_gap_sec=float(args.merge_gap_sec),
+        max_chunk_sec=float(args.max_chunk_sec),
+    )
+
+    # Two different decoding “styles”
+    # - VAD: short chunks, greedy decoding is usually enough and avoids drift
+    # - FULL: full context benefits from beam search for stability
+    transcriber_vad = Transcriber(
+        model_name=args.model,
+        language=args.language,
+        device=args.device,
+        condition_on_previous_text=False,
+        decode_options={"temperature": 0.0, "beam_size": 1},
+    )
+
+    transcriber_full = Transcriber(
+        model_name=args.model,
+        language=args.language,
+        device=args.device,
+        condition_on_previous_text=True,
+        decode_options={"temperature": 0.0, "beam_size": 5},
+    )
+
+    # Single-file mode
+    if args.audio:
+        if not args.out:
+            raise SystemExit("--audio requires --out")
+
+        out_path = Path(args.out)
+        if out_path.suffix.lower() != ".json":
+            out_path = out_path.with_suffix(".json")
+
+        out_vad = out_path.with_name(out_path.stem + ".vad.json")
+        out_full = out_path.with_name(out_path.stem + ".full.json")
+
+        transcribe_with_vad_first(
+            audio_path=str(args.audio),
+            out_json=str(out_vad),
+            transcriber=transcriber_vad,
+            cfg=cfg,
+            vad_json_out=args.vad_out,
+        )
+        transcribe_full_file(
+            audio_path=str(args.audio),
+            out_json=str(out_full),
+            transcriber=transcriber_full,
+        )
+        raise SystemExit(0)
+
+    # Batch mode
+    if args.sources is not None:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = repo_root() / sources_path
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+        for source_name, youtube_url in parse_sources_file(sources_path):
+            batch_for_source(
+                source_name=source_name,
+                youtube_url=youtube_url,
+                overwrite=bool(args.overwrite),
+                write_vad_debug=bool(args.write_vad),
+                transcriber_vad=transcriber_vad,
+                transcriber_full=transcriber_full,
+                cfg=cfg,
+            )
+        raise SystemExit(0)
+
+    if not args.source_name or not args.youtube_url:
+        raise SystemExit(
+            "Provide either --audio/--out, or --sources [file], or: ./scripts/training-data/02.transcribe <source_name> <youtube_url>"
+        )
+
+    batch_for_source(
+        source_name=str(args.source_name),
+        youtube_url=str(args.youtube_url),
+        overwrite=bool(args.overwrite),
+        write_vad_debug=bool(args.write_vad),
+        transcriber_vad=transcriber_vad,
+        transcriber_full=transcriber_full,
+        cfg=cfg,
+    )

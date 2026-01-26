@@ -1,0 +1,838 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/05.tonality
+
+Tonality Classification for Daygame Audio (WINDOW-BASED)
+
+OBJECTIVE (NEW):
+Tone is a *context phenomenon*, so we classify tone on rolling windows (e.g. 30s),
+NOT per tiny segment.
+
+- Segments remain short for acoustic features.
+- Tone is computed at the window level for stability.
+- Each segment gets a `tone_window_id` pointing to the window it belongs to.
+- Output includes `tone_windows[]` with the true tone results.
+
+Tones:
+- playful
+- confident
+- warm
+- nervous
+- grounded
+- direct
+- flirty
+- neutral
+
+INPUT:
+This script expects *.features.json files. It can run on:
+- a single video file (by youtube id match)
+- a playlist folder
+- a channel folder
+- a direct input path to a features folder
+
+OUTPUT:
+Always writes to:
+  <repo_root>/data/05.tonality/<source>/...
+
+Files are saved as:
+  *.tonality.json
+
+Use:
+  A) One source (video / playlist / channel):
+     ./scripts/training-data/05.tonality "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+
+  B) Batch from sources file:
+     ./scripts/training-data/05.tonality --sources
+     ./scripts/training-data/05.tonality --sources docs/sources.txt
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import re
+import shlex
+from pathlib import Path
+from typing import Dict, Optional, List, Tuple, Any
+
+
+# ---------------------------
+# Tonality logic
+# ---------------------------
+
+TONE_LABELS = [
+    "playful",
+    "confident",
+    "warm",
+    "nervous",
+    "grounded",
+    "direct",
+    "flirty",
+    "neutral",
+]
+
+
+def classify_tone(features: Dict, text: str, min_confidence: float = 0.0) -> Dict:
+    """
+    Rule-based tone classification using audio features + text.
+
+    Notes:
+    - neutral is NOT given a default score (avoids bias)
+    - returns secondary + ranked tones
+    - optional min_confidence fallback to neutral
+    """
+    if not features:
+        return {
+            "primary": "unknown",
+            "secondary": None,
+            "confidence": 0.0,
+            "scores": {},
+            "ranked": [],
+            "version": "04b_v2",
+        }
+
+    scores = {t: 0 for t in TONE_LABELS}
+
+    pitch = features.get("pitch") or {}
+    energy = features.get("energy") or {}
+    tempo = features.get("tempo") or {}
+    text_lower = (text or "").lower().strip()
+
+    # ---------------------------
+    # Playful indicators
+    # ---------------------------
+    if pitch.get("range_hz", 0) > 80:
+        scores["playful"] += 2
+    if pitch.get("direction", 0) > 0.1:
+        scores["playful"] += 1
+
+    # ---------------------------
+    # Confident indicators
+    # ---------------------------
+    if energy.get("mean_db", -100) > -20:
+        scores["confident"] += 2
+    if 3 < tempo.get("syllable_rate", 0) < 5.5:
+        scores["confident"] += 1
+    if pitch.get("std_hz", 100) < 30:
+        scores["confident"] += 1
+
+    # ---------------------------
+    # Nervous indicators
+    # ---------------------------
+    if tempo.get("syllable_rate", 0) > 6:
+        scores["nervous"] += 2
+    if (pitch.get("mean_hz") or 150) > 180:
+        scores["nervous"] += 1
+    if "um" in text_lower or "uh" in text_lower:
+        scores["nervous"] += 2
+
+    # ---------------------------
+    # Warm indicators
+    # ---------------------------
+    if energy.get("dynamics_db", 0) > 6:
+        scores["warm"] += 1
+    if 100 < (pitch.get("mean_hz") or 150) < 140:
+        scores["warm"] += 1
+
+    # ---------------------------
+    # Grounded indicators (calm + stable + un-rushed)
+    # ---------------------------
+    if tempo.get("syllable_rate", 999) < 3.8:
+        scores["grounded"] += 2
+    if pitch.get("std_hz", 999) < 25:
+        scores["grounded"] += 1
+    if energy.get("dynamics_db", 999) < 6:
+        scores["grounded"] += 1
+
+    # ---------------------------
+    # Direct indicators (clear, low hedging, steady delivery)
+    # ---------------------------
+    hedges = ["maybe", "kinda", "sort of", "just wondering", "sorry", "if that makes sense"]
+    filler = ["um", "uh", "like", "you know", "i mean"]
+
+    if not any(h in text_lower for h in hedges):
+        scores["direct"] += 1
+    if not any(f in text_lower for f in filler):
+        scores["direct"] += 1
+    if 3.0 < tempo.get("syllable_rate", 0) < 5.2:
+        scores["direct"] += 1
+    if pitch.get("std_hz", 999) < 35:
+        scores["direct"] += 1
+
+    # ---------------------------
+    # Flirty indicators (playful + warm + tease/compliment language)
+    # ---------------------------
+    flirty_words = [
+        "cute",
+        "adorable",
+        "dangerous",
+        "trouble",
+        "flirting",
+        "teasing",
+        "i like that",
+        "you're fun",
+        "you’re fun",
+        "you seem fun",
+        "that's attractive",
+        "pretty",
+        "gorgeous",
+        "hot",
+    ]
+
+    if pitch.get("range_hz", 0) > 70:
+        scores["flirty"] += 1
+    if energy.get("dynamics_db", 0) > 6:
+        scores["flirty"] += 1
+    if any(w in text_lower for w in flirty_words):
+        scores["flirty"] += 2
+    if scores["playful"] >= 2 and scores["warm"] >= 1:
+        scores["flirty"] += 1
+
+    # ---------------------------
+    # Determine tone
+    # ---------------------------
+    positive_total = sum(v for k, v in scores.items() if k != "neutral")
+    if positive_total <= 0:
+        return {
+            "primary": "neutral",
+            "secondary": None,
+            "confidence": 1.0,
+            "scores": scores,
+            "ranked": [("neutral", 1)],
+            "version": "04b_v2",
+        }
+
+    ranked: List[Tuple[str, int]] = sorted(
+        [(k, v) for k, v in scores.items() if k != "neutral" and v > 0],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+
+    primary, max_score = ranked[0]
+    secondary = ranked[1][0] if len(ranked) > 1 else None
+
+    confidence = (max_score / positive_total) if positive_total > 0 else 0.0
+
+    if min_confidence > 0 and confidence < min_confidence:
+        return {
+            "primary": "neutral",
+            "secondary": None,
+            "confidence": confidence,
+            "scores": scores,
+            "ranked": ranked,
+            "version": "04b_v2",
+            "note": f"fell back to neutral (confidence<{min_confidence})",
+        }
+
+    return {
+        "primary": primary,
+        "secondary": secondary,
+        "confidence": confidence,
+        "scores": scores,
+        "ranked": ranked,
+        "version": "04b_v2",
+    }
+
+
+def aggregate_window_tone(
+    segments: List[Dict[str, Any]],
+    min_confidence: float = 0.0,
+) -> Dict[str, Any]:
+    """
+    Aggregate tone over a list of segments by summing their rule-scores.
+    This produces stable window-level tone and avoids segment jitter.
+    """
+    summed = {t: 0 for t in TONE_LABELS}
+    any_scored = False
+
+    for seg in segments:
+        tone = classify_tone(
+            seg.get("features", {}) or {},
+            seg.get("text", "") or "",
+            min_confidence=0.0,  # window decides fallback
+        )
+        scores = tone.get("scores") or {}
+        for k, v in scores.items():
+            if k in summed:
+                summed[k] += int(v)
+        if scores:
+            any_scored = True
+
+    # Determine window tone from summed scores
+    positive_total = sum(v for k, v in summed.items() if k != "neutral")
+
+    if not any_scored or positive_total <= 0:
+        return {
+            "primary": "neutral",
+            "secondary": None,
+            "confidence": 1.0,
+            "scores": summed,
+            "ranked": [("neutral", 1)],
+            "version": "04b_window_v1",
+        }
+
+    ranked: List[Tuple[str, int]] = sorted(
+        [(k, v) for k, v in summed.items() if k != "neutral" and v > 0],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+    primary, max_score = ranked[0]
+    secondary = ranked[1][0] if len(ranked) > 1 else None
+    confidence = (max_score / positive_total) if positive_total > 0 else 0.0
+
+    if min_confidence > 0 and confidence < min_confidence:
+        return {
+            "primary": "neutral",
+            "secondary": None,
+            "confidence": confidence,
+            "scores": summed,
+            "ranked": ranked,
+            "version": "04b_window_v1",
+            "note": f"fell back to neutral (confidence<{min_confidence})",
+        }
+
+    return {
+        "primary": primary,
+        "secondary": secondary,
+        "confidence": confidence,
+        "scores": summed,
+        "ranked": ranked,
+        "version": "04b_window_v1",
+    }
+
+
+# ---------------------------
+# Windowing logic
+# ---------------------------
+
+def build_tone_windows(
+    segments: List[Dict[str, Any]],
+    window_sec: float = 30.0,
+    hop_sec: float = 10.0,
+) -> List[Dict[str, Any]]:
+    """
+    Build rolling time windows and attach segment indices that overlap each window.
+    Windows are built on real timeline using segment start/end.
+
+    Returns:
+      [
+        {id, start, end, duration_sec, segment_indices, text},
+        ...
+      ]
+    """
+    if not segments:
+        return []
+
+    start_t = float(segments[0]["start"])
+    end_t = float(segments[-1]["end"])
+
+    windows: List[Dict[str, Any]] = []
+    wid = 0
+    t = start_t
+
+    # Pre-cache starts/ends for performance
+    seg_times = [(float(s["start"]), float(s["end"])) for s in segments]
+
+    while t < end_t:
+        w_start = float(t)
+        w_end = float(min(end_t, t + window_sec))
+
+        idxs: List[int] = []
+        for i, (s_start, s_end) in enumerate(seg_times):
+            if not (s_end <= w_start or s_start >= w_end):
+                idxs.append(i)
+
+        if idxs:
+            text = " ".join((segments[i].get("text") or "").strip() for i in idxs).strip()
+            windows.append({
+                "id": wid,
+                "start": w_start,
+                "end": w_end,
+                "duration_sec": w_end - w_start,
+                "segment_count": len(idxs),
+                "segment_indices": idxs,
+                "text": text,
+            })
+            wid += 1
+
+        t += hop_sec
+
+    return windows
+
+
+def assign_segment_to_best_window(
+    segments: List[Dict[str, Any]],
+    tone_windows: List[Dict[str, Any]],
+) -> None:
+    """
+    Assign each segment to the closest window by midpoint distance.
+    Adds: segment["tone_window_id"]
+    """
+    if not tone_windows:
+        for seg in segments:
+            seg["tone_window_id"] = None
+        return
+
+    # Precompute window centers
+    centers = [(w["id"], (w["start"] + w["end"]) / 2.0) for w in tone_windows]
+
+    for seg in segments:
+        mid = (float(seg["start"]) + float(seg["end"])) / 2.0
+        best_id, _ = min(centers, key=lambda x: abs(x[1] - mid))
+        seg["tone_window_id"] = best_id
+
+
+# ---------------------------
+# JSON helpers
+# ---------------------------
+
+def _json_default(o):
+    """JSON serializer for numpy types."""
+    try:
+        import numpy as np
+        if isinstance(o, np.generic):
+            return o.item()
+    except ImportError:
+        pass
+    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+
+
+def output_path_for_tonality(in_file: Path, in_root: Path, out_root: Path) -> Path:
+    """
+    Mirror input structure under out_root, but rename:
+      *.features.json -> *.tonality.json
+    """
+    rel = in_file.relative_to(in_root)
+    out_name = rel.name
+
+    if out_name.endswith(".features.json"):
+        out_name = out_name.replace(".features.json", ".tonality.json")
+    else:
+        out_name = out_name + ".tonality.json"
+
+    return out_root / rel.parent / out_name
+
+
+def process_file(
+    path: Path,
+    output_path: Path,
+    include_voiceover: bool = False,
+    min_confidence: float = 0.0,
+    window_sec: float = 30.0,
+    hop_sec: float = 10.0,
+    embed_segment_tone: bool = False,
+) -> int:
+    """
+    WINDOW-BASED processing.
+
+    - Computes tone_windows[] across the conversation timeline
+    - Assigns tone_window_id per segment
+    - Optionally embeds window tone into each segment (compat convenience)
+
+    Returns: number of segments assigned a tone_window_id
+    """
+    with path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    segments_all = data.get("segments", [])
+    if not segments_all:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=_json_default)
+        return 0
+
+    # Build the list of eligible segments (for tone computation)
+    eligible_segments: List[Dict[str, Any]] = []
+    eligible_to_original_idx: List[int] = []
+
+    for i, seg in enumerate(segments_all):
+        speaker_label = (seg.get("speaker") or {}).get("label", "unknown")
+        if not include_voiceover and speaker_label in {"voiceover", "narration"}:
+            continue
+        eligible_segments.append(seg)
+        eligible_to_original_idx.append(i)
+
+    # If nothing eligible, write neutral with no assignments
+    if not eligible_segments:
+        data["tone_windows"] = []
+        for seg in segments_all:
+            seg["tone_window_id"] = None
+            if embed_segment_tone:
+                seg["tone"] = {
+                    "primary": "neutral",
+                    "secondary": None,
+                    "confidence": 1.0,
+                    "scores": {t: 0 for t in TONE_LABELS},
+                    "ranked": [("neutral", 1)],
+                    "version": "04b_window_v1",
+                    "note": "no eligible segments for tone windowing",
+                }
+
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, default=_json_default)
+        return 0
+
+    # Build rolling windows over eligible timeline
+    tone_windows = build_tone_windows(
+        eligible_segments,
+        window_sec=window_sec,
+        hop_sec=hop_sec,
+    )
+
+    # Compute tone per window
+    for w in tone_windows:
+        idxs = w.get("segment_indices") or []
+        segs_in_win = [eligible_segments[i] for i in idxs]
+        w["tone"] = aggregate_window_tone(segs_in_win, min_confidence=min_confidence)
+
+    # Assign each eligible segment -> best window id
+    assign_segment_to_best_window(eligible_segments, tone_windows)
+
+    # Push assignments back onto original segments using original indices
+    assigned = 0
+    for elig_i, orig_i in enumerate(eligible_to_original_idx):
+        win_id = eligible_segments[elig_i].get("tone_window_id")
+        segments_all[orig_i]["tone_window_id"] = win_id
+        assigned += 1
+
+    # For ineligible segments
+    for i, seg in enumerate(segments_all):
+        if i not in set(eligible_to_original_idx):
+            seg["tone_window_id"] = None
+
+    # Optional convenience: embed window tone per segment
+    if embed_segment_tone:
+        window_by_id = {w["id"]: w for w in tone_windows}
+        for seg in segments_all:
+            wid = seg.get("tone_window_id")
+            if wid is None:
+                continue
+            w = window_by_id.get(wid)
+            if w and "tone" in w:
+                seg["tone"] = w["tone"]
+
+    # Attach windows to top-level JSON
+    data["tone_windows"] = tone_windows
+    data["tone_windowing"] = {
+        "window_sec": float(window_sec),
+        "hop_sec": float(hop_sec),
+        "version": "04b_window_v1",
+        "note": "Tone is computed per rolling window; segments reference tone_window_id.",
+    }
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, default=_json_default)
+
+    return assigned
+
+
+# ---------------------------
+# Path helpers
+# ---------------------------
+
+def repo_root() -> Path:
+    # scripts/training-data/<thisfile> -> repo root = parents[2]
+    return Path(__file__).resolve().parents[2]
+
+
+def features_root() -> Path:
+    return repo_root() / "data" / "03.audio-features"
+
+
+def tonality_root() -> Path:
+    return repo_root() / "data" / "05.tonality"
+
+
+def resolve_features_dir(input_arg: Optional[str], name: Optional[str]) -> Path:
+    """
+    Resolve features folder path.
+
+    Priority:
+    1) --input existing path (absolute or relative)
+    2) --channel/--playlist/--name -> <repo>/data/03.audio-features/<name>
+    """
+    root = repo_root()
+
+    if input_arg:
+        p = Path(input_arg)
+        if p.exists():
+            return p.resolve()
+
+        # try repo-root relative
+        p2 = (root / input_arg)
+        if p2.exists():
+            return p2.resolve()
+
+        # user passed just a name (e.g. daily_evolution)
+        p3 = features_root() / input_arg
+        if p3.exists():
+            return p3.resolve()
+
+        raise FileNotFoundError(
+            "Features input not found. Tried:\n"
+            f"  {p}\n"
+            f"  {p2}\n"
+            f"  {p3}\n"
+        )
+
+    if name:
+        p = features_root() / name
+        if p.exists():
+            return p.resolve()
+        raise FileNotFoundError(f"Expected features folder not found: {p}")
+
+    # fallback: default to features root if it exists (lets --video search globally)
+    fr = features_root()
+    if fr.exists():
+        return fr.resolve()
+
+    raise ValueError(
+        "You must provide --input OR --channel/--playlist/--name, "
+        "or ensure data/03.audio-features exists."
+    )
+
+
+def resolve_output_dir(name: str) -> Path:
+    return tonality_root() / name
+
+
+def find_feature_files(in_path: Path, video_id: Optional[str]) -> List[Path]:
+    """
+    Find *.features.json files to process.
+    - If video_id provided: filter by matching substring in filename
+    - Otherwise: all *.features.json under in_path
+    """
+    all_files = sorted(in_path.rglob("*.features.json"))
+    if not video_id:
+        return all_files
+
+    needle = video_id.strip()
+    return [f for f in all_files if needle in f.name]
+
+
+# ---------------------------
+# Pipeline mode (best-effort)
+# ---------------------------
+
+def ensure_features_exist_or_run_pipeline(name: Optional[str], input_dir: Path) -> None:
+    """
+    Best-effort "full pipeline" behavior:
+    - If *.features.json exist already -> do nothing
+    - Else try running: scripts/training-data/03.audio-features (if it exists)
+    """
+    existing = list(input_dir.rglob("*.features.json"))
+    if existing:
+        return
+
+    candidate = repo_root() / "scripts" / "training-data" / "03.audio-features"
+    if candidate.exists():
+        cmd = [str(candidate)]
+        if name:
+            cmd += [name, ""]
+        print(f"[pipeline] No features found. Running: {' '.join(cmd)}")
+        subprocess.run(cmd, check=True)
+        return
+
+    raise FileNotFoundError(
+        "[pipeline] No *.features.json found and 03.audio-features not found.\n"
+        "Either generate features first, or add the extractor script at:\n"
+        f"  {candidate}"
+    )
+
+
+# ---------------------------
+# Main
+# ---------------------------
+
+def main() -> None:
+    examples = """
+Use:
+
+  A) One source (video / playlist / channel):
+     ./scripts/training-data/05.tonality "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+
+  B) Batch from sources file:
+     ./scripts/training-data/05.tonality --sources
+     ./scripts/training-data/05.tonality --sources docs/sources.txt
+
+Advanced examples:
+  ./scripts/training-data/05.tonality --channel daily_evolution
+  ./scripts/training-data/05.tonality --input data/03.audio-features/daily_evolution
+"""
+
+    parser = argparse.ArgumentParser(
+        description="Classify tone per rolling context window in *.features.json files.",
+        epilog=examples,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    parser.add_argument("source_name", nargs="?", help="Source name (folder under data/03.audio-features).")
+    parser.add_argument("youtube_url", nargs="?", help="YouTube URL (video/playlist/channel). Video URL filters by ID.")
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+    )
+
+    # Targets (aliases)
+    parser.add_argument("--channel", help="Channel name (uses data/03.audio-features/<channel>)")
+    parser.add_argument("--playlist", help="Playlist name (same behavior as --channel)")
+    parser.add_argument("--name", help="Alias for --channel/--playlist")
+    parser.add_argument("--input", help="Direct features folder path (contains *.features.json)")
+
+    # Scope
+    parser.add_argument("--video", help="Run only one video by YouTube ID (matches filename substring)")
+
+    # Pipeline behavior
+    parser.add_argument(
+        "--pipeline",
+        action="store_true",
+        help="Best-effort: if features are missing, try running upstream extractor before tonality.",
+    )
+
+    # Write behavior
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite already-written outputs.")
+    parser.add_argument("--dry-run", action="store_true", help="Print what would happen, don’t write files.")
+    parser.add_argument("--include-voiceover", action="store_true", help="Also classify voiceover segments.")
+    parser.add_argument(
+        "--min-confidence",
+        type=float,
+        default=0.0,
+        help="If confidence is below this value, fall back to neutral (0.0 disables).",
+    )
+
+    # Window controls (NEW)
+    parser.add_argument(
+        "--window-sec",
+        type=float,
+        default=30.0,
+        help="Tone window size in seconds (default: 30).",
+    )
+    parser.add_argument(
+        "--hop-sec",
+        type=float,
+        default=10.0,
+        help="Hop/stride for rolling windows in seconds (default: 10).",
+    )
+    parser.add_argument(
+        "--embed-segment-tone",
+        action="store_true",
+        help="Convenience: also copy window tone into each segment['tone'] (segment tone is still window-derived).",
+    )
+
+    args = parser.parse_args()
+
+    # Normalize name choice
+    target_name = args.channel or args.playlist or args.name or args.source_name
+
+    def extract_video_id(url: str) -> Optional[str]:
+        if not url:
+            return None
+        m = re.search(r"[?&]v=([^&]+)", url)
+        if m:
+            return m.group(1)
+        m = re.search(r"youtu\.be/([^?&/]+)", url)
+        if m:
+            return m.group(1)
+        return None
+
+    def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+        sources: List[Tuple[str, str]] = []
+        for raw in path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "|" in line:
+                name, url = line.split("|", 1)
+                name = name.strip()
+                url = url.strip()
+                if name and url:
+                    sources.append((name, url))
+                continue
+            parts = shlex.split(line)
+            if len(parts) >= 2:
+                sources.append((parts[0], parts[1]))
+        return sources
+
+    def run_for_target(name: Optional[str], youtube_url: str) -> None:
+        # Resolve features input folder
+        in_path = resolve_features_dir(args.input, name)
+
+        # Pipeline mode: ensure features exist if requested
+        if args.pipeline:
+            ensure_features_exist_or_run_pipeline(name, in_path)
+
+        # Decide output folder name
+        if name:
+            out_name = name
+        else:
+            # if user is searching globally by video id, group it under "global"
+            out_name = "global" if in_path.resolve() == features_root().resolve() else in_path.name
+
+        out_dir = resolve_output_dir(out_name)
+        effective_video = args.video or extract_video_id(youtube_url or "")
+        files = find_feature_files(in_path, effective_video)
+
+        if not files:
+            print(f"[tonality] No *.features.json found under: {in_path}")
+            return
+
+        print(f"[tonality] Input : {in_path}")
+        print(f"[tonality] Output: {out_dir}")
+        print(f"[tonality] Files : {len(files)}")
+        print(f"[tonality] Window: {args.window_sec:.2f}s  Hop: {args.hop_sec:.2f}s")
+
+        written = 0
+        skipped = 0
+        total_segments_assigned = 0
+
+        for src in files:
+            dst = output_path_for_tonality(src, in_path, out_dir)
+
+            if dst.exists() and not args.overwrite:
+                skipped += 1
+                continue
+
+            if args.dry_run:
+                print(f"[dry-run] Would write: {dst}")
+                written += 1
+                continue
+
+            assigned = process_file(
+                src,
+                dst,
+                include_voiceover=args.include_voiceover,
+                min_confidence=args.min_confidence,
+                window_sec=args.window_sec,
+                hop_sec=args.hop_sec,
+                embed_segment_tone=args.embed_segment_tone,
+            )
+            total_segments_assigned += assigned
+            written += 1
+
+        print("")
+        print("[tonality] Done.")
+        print(f"  written : {written}")
+        print(f"  skipped : {skipped}")
+        if not args.dry_run:
+            print(f"  segments assigned to windows : {total_segments_assigned}")
+
+    if args.sources:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = (repo_root() / sources_path).resolve()
+        if not sources_path.exists():
+            raise SystemExit(f"[tonality] Missing sources file: {sources_path}")
+        for name, url in parse_sources_file(sources_path):
+            run_for_target(name, url)
+        return
+
+    run_for_target(target_name, args.youtube_url or "")
+
+
+if __name__ == "__main__":
+    main()
