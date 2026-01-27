@@ -100,3 +100,6 @@ __pycache__/
 # Data and Logs
 *.log
 .DS_Store
+
+# local dependency clones
+/whisper.cpp/
