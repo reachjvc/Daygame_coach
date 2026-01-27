@@ -3,11 +3,16 @@ node_modules
 .pnp
 .pnp.js
 
+#data
+data
 # Build
 .next
 out
 build
 dist
+
+# Hugging Face token (keep private)
+data/token/huggingface
 
 # Environment
 .env
@@ -81,3 +86,17 @@ __pycache__/
 .idea/
 .DS_Store
 .venv/
+
+# Python Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Python Cache and Compiled files
+__pycache__/
+*.py[cod]
+*.class
+
+# Data and Logs
+*.log
+.DS_Store

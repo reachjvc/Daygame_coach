@@ -3,15 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Target, MessageCircle, Brain } from "lucide-react";
+import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
 interface DashboardContentProps {
   profileData: DashboardProfileData | null;
+  isPreviewMode?: boolean;
 }
 
-export function DashboardContent({ profileData }: DashboardContentProps) {
+export function DashboardContent({ profileData, isPreviewMode = false }: DashboardContentProps) {
   const [experienceLevel, setExperienceLevel] = useState<string | null>(
     profileData?.experience_level ?? null
   );
@@ -31,15 +32,34 @@ export function DashboardContent({ profileData }: DashboardContentProps) {
     <main className="mx-auto max-w-6xl px-8 py-24">
       <div className="text-center mb-16">
         <h1 className="text-balance text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
-          Welcome Back!
+          {isPreviewMode ? "Explore the Dashboard" : "Welcome Back!"}
         </h1>
         <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
-          Choose a training module to continue improving your daygame skills
+          {isPreviewMode
+            ? "See what training modules are available. Sign up to start practicing!"
+            : "Choose a training module to continue improving your daygame skills"
+          }
         </p>
       </div>
 
-      {/* Level Progress Bar */}
-      {profileData && (
+      {/* Level Progress Bar - Show sample in preview mode */}
+      {isPreviewMode ? (
+        <div className="mb-12 relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/80 to-transparent z-10 flex items-center justify-center">
+            <div className="bg-card border border-border rounded-lg px-4 py-2 shadow-lg">
+              <span className="text-sm text-muted-foreground">Your progress will appear here</span>
+            </div>
+          </div>
+          <div className="opacity-40 pointer-events-none">
+            <LevelProgressBar
+              level={1}
+              xp={0}
+              scenariosCompleted={0}
+              experienceLevel="beginner"
+            />
+          </div>
+        </div>
+      ) : profileData && (
         <div className="mb-12">
           <LevelProgressBar
             level={profileData.level || 1}
@@ -61,8 +81,13 @@ export function DashboardContent({ profileData }: DashboardContentProps) {
             <p className="text-muted-foreground leading-relaxed mb-6">
               Master the art of approaching strangers with confidence. Learn opening lines, body language, and conversation flow.
             </p>
-            <div className="mt-auto bg-primary text-primary-foreground hover:bg-primary/90 w-full p-2 rounded-md">
-              Start Training
+            <div className={`mt-auto w-full p-2 rounded-md flex items-center justify-center gap-2 ${
+              isPreviewMode
+                ? "bg-primary/80 text-primary-foreground"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}>
+              {isPreviewMode && <Lock className="size-4" />}
+              {isPreviewMode ? "Preview Scenarios" : "Start Training"}
             </div>
           </Card>
         </Link>
@@ -93,14 +118,60 @@ export function DashboardContent({ profileData }: DashboardContentProps) {
             <p className="text-muted-foreground leading-relaxed mb-6">
               Develop mental strength, overcome approach anxiety, and build authentic confidence from within.
             </p>
-            <div className="mt-auto bg-primary text-primary-foreground hover:bg-primary/90 w-full p-2 rounded-md">
-                Start Training
+            <div className={`mt-auto w-full p-2 rounded-md flex items-center justify-center gap-2 ${
+              isPreviewMode
+                ? "bg-primary/80 text-primary-foreground"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}>
+              {isPreviewMode && <Lock className="size-4" />}
+              {isPreviewMode ? "Preview Module" : "Start Training"}
             </div>
           </Card>
         </Link>
       </div>
 
-      {profileData && (
+      {/* Ask Your Coach - QA Section */}
+      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/qa"} className="group block mt-8">
+        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="size-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+                <HelpCircle className="size-7 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">Ask Your Coach</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl">
+                  Got questions about dating, approaching, or social dynamics? Get personalized advice from your AI coach based on proven strategies and real-world experience.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-primary group-hover:translate-x-1 transition-transform">
+              {isPreviewMode && <Lock className="size-4" />}
+              <span className="font-medium hidden sm:inline">
+                {isPreviewMode ? "Sign Up to Ask" : "Ask a Question"}
+              </span>
+              <ArrowRight className="size-5" />
+            </div>
+          </div>
+        </Card>
+      </Link>
+
+      {/* Preview Mode CTA */}
+      {isPreviewMode && (
+        <div className="mt-12 text-center p-8 bg-primary/5 border border-primary/20 rounded-lg">
+          <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Training?</h3>
+          <p className="text-muted-foreground mb-6">
+            Sign up now to unlock all features and start improving your social skills today.
+          </p>
+          <Link href="/auth/sign-up">
+            <button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 rounded-md font-medium">
+              Get Started Free
+            </button>
+          </Link>
+        </div>
+      )}
+
+      {profileData && !isPreviewMode && (
         <div className="mt-16">
           <UserPreferences
             age_range_start={profileData.age_range_start}

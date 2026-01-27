@@ -1,15 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
   Lock,
   CheckCircle2,
   Sparkles,
+  X,
 } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import type { DifficultyLevel } from "@/src/encounters/data/energy";
 import { PracticeOpenersTrainer } from "@/src/scenarios/openers/OpenersTrainer";
 import { VoiceChatWindow } from "@/src/scenarios/components/ChatWindow";
@@ -23,10 +26,11 @@ import {
   type PhaseDef,
 } from "@/src/scenarios/catalog";
 
-interface ScenariosPageClientV2Props {
+interface ScenariosHubProps {
   recommendedDifficulty: DifficultyLevel;
   userLevel: number;
   scenariosCompleted: number;
+  isPreviewMode?: boolean;
 }
 
 // Get recommended scenarios based on user progress
@@ -65,16 +69,31 @@ export function ScenariosHub({
   recommendedDifficulty,
   userLevel,
   scenariosCompleted,
-}: ScenariosPageClientV2Props) {
+  isPreviewMode = false,
+}: ScenariosHubProps) {
   const [activeScenario, setActiveScenario] = useState<ScenarioId | null>(null);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(
     new Set(["opening", "vibing", "resistance"]) // Default expanded
   );
+  const [showSignupPrompt, setShowSignupPrompt] = useState(false);
+  const [selectedScenarioName, setSelectedScenarioName] = useState<string>("");
 
   const recommendedScenarioIds = getRecommendedScenarios(userLevel, scenariosCompleted);
 
-  // Handle active scenario rendering
-  if (activeScenario === "practice-openers") {
+  // Handle scenario click - gate in preview mode
+  const handleScenarioClick = (scenario: ScenarioDef) => {
+    if (!isAvailable(scenario)) return;
+
+    if (isPreviewMode) {
+      setSelectedScenarioName(scenario.title);
+      setShowSignupPrompt(true);
+    } else {
+      setActiveScenario(scenario.id);
+    }
+  };
+
+  // Handle active scenario rendering (only when not in preview mode)
+  if (!isPreviewMode && activeScenario === "practice-openers") {
     return (
       <PracticeOpenersTrainer
         recommendedDifficulty={recommendedDifficulty}
@@ -104,13 +123,54 @@ export function ScenariosHub({
 
   return (
     <div className="space-y-8">
+      {/* Signup Prompt Modal */}
+      {showSignupPrompt && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative">
+            <button
+              onClick={() => setShowSignupPrompt(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-5" />
+            </button>
+
+            <div className="text-center">
+              <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Lock className="size-8 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">
+                Unlock "{selectedScenarioName}"
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Sign up to start practicing this scenario and track your progress. Get personalized feedback and improve your social skills.
+              </p>
+              <div className="flex flex-col gap-3">
+                <Link href="/auth/sign-up" className="w-full">
+                  <Button className="w-full">
+                    Get Started Free
+                  </Button>
+                </Link>
+                <Link href="/auth/login" className="w-full">
+                  <Button variant="outline" className="w-full">
+                    Already have an account? Login
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto">
         <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground mb-3">
           Practice Scenarios
         </h1>
         <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
-          Train each phase of the conversation, from opener to close.
+          {isPreviewMode
+            ? "Browse available scenarios. Sign up to start practicing!"
+            : "Train each phase of the conversation, from opener to close."
+          }
         </p>
       </div>
 
@@ -119,7 +179,7 @@ export function ScenariosHub({
         <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Sparkles className="size-5 text-primary" />
-            Recommended for You
+            {isPreviewMode ? "Popular Scenarios" : "Recommended for You"}
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {recommendedScenarios.map((scenario) => {
@@ -127,15 +187,23 @@ export function ScenariosHub({
               return (
                 <Card
                   key={scenario.id}
-                  className="p-4 bg-card border-border hover:border-primary/50 transition-all cursor-pointer"
-                  onClick={() => setActiveScenario(scenario.id)}
+                  className={cn(
+                    "p-4 bg-card border-border transition-all cursor-pointer",
+                    isPreviewMode
+                      ? "hover:border-primary/50 hover:shadow-md"
+                      : "hover:border-primary/50"
+                  )}
+                  onClick={() => handleScenarioClick(scenario)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                       <Icon className="size-5 text-primary" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{scenario.title}</h3>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">{scenario.title}</h3>
+                        {isPreviewMode && <Lock className="size-3 text-muted-foreground" />}
+                      </div>
                       <p className="text-sm text-muted-foreground">{scenario.description}</p>
                     </div>
                   </div>
@@ -199,7 +267,7 @@ export function ScenariosHub({
                             ? "bg-card border-border hover:border-primary/50 cursor-pointer"
                             : "bg-muted/30 border-border/50 opacity-60"
                         )}
-                        onClick={() => available && setActiveScenario(scenario.id)}
+                        onClick={() => handleScenarioClick(scenario)}
                       >
                         <div className="flex items-start gap-3 flex-1">
                           <div
@@ -219,7 +287,10 @@ export function ScenariosHub({
                               <h4 className="font-medium text-foreground text-sm">
                                 {scenario.title}
                               </h4>
-                              {isRecommended && available && (
+                              {isPreviewMode && available && (
+                                <Lock className="size-3 text-muted-foreground shrink-0" />
+                              )}
+                              {!isPreviewMode && isRecommended && available && (
                                 <CheckCircle2 className="size-4 text-primary shrink-0" />
                               )}
                             </div>
@@ -243,8 +314,23 @@ export function ScenariosHub({
         })}
       </div>
 
-      {/* Voice Chat Window for non-opener scenarios */}
-      {activeScenario && (
+      {/* Preview Mode CTA */}
+      {isPreviewMode && (
+        <div className="text-center p-8 bg-primary/5 border border-primary/20 rounded-lg">
+          <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Practicing?</h3>
+          <p className="text-muted-foreground mb-6">
+            Sign up to unlock all scenarios and start improving your conversation skills today.
+          </p>
+          <Link href="/auth/sign-up">
+            <Button size="lg">
+              Get Started Free
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Voice Chat Window for non-opener scenarios (only when not in preview mode) */}
+      {!isPreviewMode && activeScenario && (
         <VoiceChatWindow
           onClose={() => setActiveScenario(null)}
           scenarioType={activeScenario as any}

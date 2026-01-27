@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { CheckCircle2, MessageCircle, Settings, Target, TrendingUp, Zap } from "lucide-react"
+import { CheckCircle2, LayoutDashboard, LogOut, MessageCircle, Settings, Target, TrendingUp, Zap } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,11 @@ import { Card } from "@/components/ui/card"
 import { CheckoutButton } from "@/src/home/components/CheckoutButton"
 import { PRODUCTS } from "@/src/home/products"
 
-export function HomePage() {
+interface HomePageProps {
+  isLoggedIn?: boolean
+}
+
+export function HomePage({ isLoggedIn = false }: HomePageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -20,35 +24,45 @@ export function HomePage() {
             <span>DayGame Coach</span>
           </div>
           <nav className="flex items-center gap-4">
-            <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-              <Link href="/settings">
-                <Settings className="size-4 mr-2" />
-                Settings
-              </Link>
-            </Button>
-            <Link href="/admin">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-                Admin
-              </Button>
-            </Link>
-            <Link href="/QA">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-                QA
-              </Button>
-            </Link>
-            <Link href="/setup">
-              <Button variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-                Setup Guide
-              </Button>
-            </Link>
-            <Link href="/auth/login">
-              <Button variant="ghost" className="text-foreground hover:text-primary">
-                Login
-              </Button>
-            </Link>
-            <Link href="/auth/sign-up">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
+                  <Link href="/dashboard/settings">
+                    <Settings className="size-4 mr-2" />
+                    Settings
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
+                  <Link href="/auth/logout">
+                    <LogOut className="size-4 mr-2" />
+                    Log Out
+                  </Link>
+                </Button>
+                <Link href="/dashboard">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <LayoutDashboard className="size-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/dashboard">
+                  <Button variant="ghost" className="text-foreground hover:text-primary">
+                    <LayoutDashboard className="size-4 mr-2" />
+                    Dashboard
+                  </Button>
+                </Link>
+                <Link href="/auth/login">
+                  <Button variant="ghost" className="text-foreground hover:text-primary">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -86,7 +100,7 @@ export function HomePage() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="w-full py-24 bg-card/30">
+      <section id="features" className="w-full py-8 bg-card/30">
         <div className="mx-auto max-w-6xl px-8">
           <h2 className="text-balance text-3xl font-bold text-center mb-16 text-foreground">
             Why Practice With AI?
@@ -116,6 +130,30 @@ export function HomePage() {
               </p>
             </Card>
           </div>
+
+          {/* Preview Dashboard CTA */}
+          <Card className="mt-8 p-6 bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-accent/40">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="size-12 rounded-full bg-accent/30 flex items-center justify-center shrink-0">
+                  <LayoutDashboard className="size-6 text-foreground" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold text-foreground mb-1">
+                    Curious what's inside?
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Explore our scenarios and see how AI coaching works — no account needed.
+                  </p>
+                </div>
+              </div>
+              <Link href="/dashboard">
+                <Button size="lg" className="bg-accent text-accent-foreground hover:bg-accent/80 whitespace-nowrap">
+                  Preview Dashboard
+                </Button>
+              </Link>
+            </div>
+          </Card>
         </div>
       </section>
 

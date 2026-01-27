@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { createServerSupabaseClient } from "@/src/db/server"
-import { LogOut, Settings, Target } from "lucide-react"
+import { HelpCircle, LogOut, Settings, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { DashboardContent } from "./DashboardContent"
@@ -14,8 +14,39 @@ export async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Preview mode for non-logged-in users
   if (!user) {
-    redirect("/auth/login")
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Preview Header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
+              <Target className="size-6 text-primary" />
+              <span>DayGame Coach</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
+              </div>
+              <Link href="/auth/login">
+                <Button variant="ghost" className="text-foreground hover:text-primary">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth/sign-up">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content - Preview Mode */}
+        <DashboardContent profileData={null} isPreviewMode={true} />
+      </div>
+    )
   }
 
   const { data: profile } = await supabase
@@ -27,14 +58,35 @@ export async function DashboardPage() {
   // Users must be premium (has_purchased) to access features
   if (!profile?.has_purchased) {
     return (
-      <div className="container flex flex-col items-center justify-center min-h-screen text-center">
-        <h1 className="text-4xl font-bold mb-4">Subscription Required</h1>
-        <p className="text-muted-foreground mb-8 text-lg">
-          You need to subscribe to access the Daygame Coach.
-        </p>
-        <Button asChild size="lg">
-          <Link href="/">View Pricing</Link>
-        </Button>
+      <div className="min-h-screen bg-background">
+        {/* Logged in but no subscription header */}
+        <header className="border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
+              <Target className="size-6 text-primary" />
+              <span>DayGame Coach</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
+              </div>
+              <form action={signOut}>
+                <Button variant="ghost" type="submit" className="text-foreground hover:text-primary">
+                  <LogOut className="size-4 mr-2" />
+                  Sign Out
+                </Button>
+              </form>
+              <Link href="/#pricing">
+                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Subscribe
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content - Preview Mode (logged in but no subscription) */}
+        <DashboardContent profileData={null} isPreviewMode={true} />
       </div>
     )
   }
@@ -74,6 +126,12 @@ export async function DashboardPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+              <Link href="/dashboard/qa">
+                <HelpCircle className="size-4 mr-2" />
+                Ask Coach
+              </Link>
+            </Button>
+            <Button asChild variant="ghost" className="text-foreground hover:text-primary">
               <Link href="/dashboard/settings">
                 <Settings className="size-4 mr-2" />
                 Settings
@@ -90,7 +148,7 @@ export async function DashboardPage() {
       </header>
 
       {/* Main Content */}
-      <DashboardContent profileData={profileData} />
+      <DashboardContent profileData={profileData} isPreviewMode={false} />
     </div>
   )
 }

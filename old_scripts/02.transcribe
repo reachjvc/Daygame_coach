@@ -1,13 +1,28 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python3
 # scripts/training-data/02.transcribe
 #
-# STEP 2 — TRANSCRIBE (Whisper)
+# STEP 2A — FULL-FILE TRANSCRIBE (Whisper, no VAD)
 #
 # Reads:
-#   data/01.download/<source_name>/<video_name>/*.wav
+#   data/01.download/<source_name>/<video_dir>/*
 #
-# Writes:
-#   data/02.transcribe/<source_name>/<video_name>/*.{json,txt,srt,vtt,tsv}
+# Prefers these audio inputs (best-first):
+#   1) *.audio.asr.clean16k.wav   (recommended ASR input)
+#   2) *.audio.asr.raw16k.wav     (fallback ASR input)
+#   3) *.wav                      (legacy extraction)
+#
+# Writes (ONE transcript version per video folder):
+#   data/02.transcribe/<source_name>/<video_dir>/<video_dir>.full.json
+#   + sidecars: .txt .srt .vtt .tsv
+#
+# Output contract (same shape as Whisper JSON):
+# {
+#   "text": "...",
+#   "segments": [
+#     {"start": 0.00, "end": 2.72, "text": "..."},
+#     ...
+#   ]
+# }
 #
 # Use:
 #   A) One source (video / playlist / channel):
@@ -17,216 +32,619 @@
 #      ./scripts/training-data/02.transcribe --sources
 #      ./scripts/training-data/02.transcribe --sources docs/sources.txt
 #
-# Notes:
-# - If the URL is a single video (watch?v=...), this script only transcribes that video (by ID match).
-# - If the URL is a playlist/channel, it transcribes all downloaded WAVs under data/01.download/<source_name>/.
+#   C) Single-file mode:
+#      python3 scripts/training-data/02.transcribe \
+#        --audio path/to/audio.wav \
+#        --out path/to/transcript.full.json
 
-set -euo pipefail
+import argparse
+import json
+import os
+import re
+import shlex
+import shutil
+import subprocess
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
-usage() {
-  cat <<'EOF'
-Usage:
+import numpy as np
 
-  A) One source (video / playlist / channel):
-     ./scripts/training-data/02.transcribe "<source_name>" "<youtube_url>"
+try:
+    import torch  # type: ignore
+except Exception:  # pragma: no cover
+    torch = None
 
-  B) Batch from sources file:
-     ./scripts/training-data/02.transcribe --sources [path/to/sources.txt]
+try:
+    import torchaudio  # type: ignore
+except Exception:  # pragma: no cover
+    torchaudio = None
 
-Examples:
-  ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
-  ./scripts/training-data/02.transcribe --sources
-  ./scripts/training-data/02.transcribe --sources docs/sources.txt
-EOF
-}
+try:
+    import soundfile as sf  # type: ignore
+except Exception:  # pragma: no cover
+    sf = None
 
-safe_name() {
-  printf '%s' "$1" | tr -cs 'A-Za-z0-9._-' '_' | sed -E 's/^_+//;s/_+$//'
-}
+try:
+    import librosa  # type: ignore
+except Exception:
+    librosa = None
 
-extract_video_id() {
-  local url="${1:-}"
-  local id=""
-  local re1='[?&]v=([^&]+)'
-  local re2='youtu\.be/([^?&/]+)'
-  if [[ "$url" =~ $re1 ]]; then
-    id="${BASH_REMATCH[1]}"
-  elif [[ "$url" =~ $re2 ]]; then
-    id="${BASH_REMATCH[1]}"
-  fi
-  printf '%s' "$id"
-}
 
-# Script lives at: scripts/training-data/02.transcribe
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+# --------------------------
+# Timestamp helpers + sidecars
+# --------------------------
 
-# Load environment variables
-# Prefer env file in the same folder, otherwise allow it to live one level up.
-if [[ -f "$SCRIPT_DIR/training_data_env.sh" ]]; then
-  # shellcheck disable=SC1090
-  source "$SCRIPT_DIR/training_data_env.sh"
-elif [[ -f "$SCRIPT_DIR/../training_data_env.sh" ]]; then
-  # shellcheck disable=SC1090
-  source "$SCRIPT_DIR/../training_data_env.sh"
-else
-  echo "❌ Could not find training_data_env.sh" >&2
-  echo "   Expected either:" >&2
-  echo "     $SCRIPT_DIR/training_data_env.sh" >&2
-  echo "     $SCRIPT_DIR/../training_data_env.sh" >&2
-  exit 1
-fi
+def _sec_to_srt_timestamp(t: float) -> str:
+    # HH:MM:SS,mmm
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
 
-MODEL="${WHISPER_MODEL:-base}"
-LANGUAGE="${WHISPER_LANGUAGE:-en}"
 
-if ! command -v whisper >/dev/null 2>&1; then
-  echo "❌ 'whisper' CLI not found in the active environment." >&2
-  echo "   Install it inside your Whisper env:" >&2
-  echo "     pip install -U openai-whisper" >&2
-  exit 1
-fi
+def _sec_to_vtt_timestamp(t: float) -> str:
+    # HH:MM:SS.mmm
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
 
-transcribe_one_source() {
-  local source_name="$1"
-  local youtube_url="${2:-}"
 
-  local safe_source
-  safe_source="$(safe_name "$source_name")"
+def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
 
-  local in_root="$ROOT_DIR/data/01.download/$safe_source"
-  local out_root="$ROOT_DIR/data/02.transcribe/$safe_source"
 
-  if [[ ! -d "$in_root" ]]; then
-    echo "❌ Missing download folder: $in_root" >&2
-    echo "   Run: ./scripts/training-data/01.download \"$source_name\" \"$youtube_url\"" >&2
-    exit 1
-  fi
+def write_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
+    # start \t end \t text
+    lines = []
+    for s in segments:
+        start = float(s.get("start", 0.0))
+        end = float(s.get("end", 0.0))
+        text = str(s.get("text", "")).replace("\t", " ").strip()
+        lines.append(f"{start:.3f}\t{end:.3f}\t{text}")
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
-  local video_id=""
-  if [[ -n "$youtube_url" ]]; then
-    video_id="$(extract_video_id "$youtube_url")"
-  fi
 
-  echo "📝 Transcribing: $source_name"
-  echo "   Model: $MODEL"
-  echo "   Language: $LANGUAGE"
-  echo "   Input:  $in_root"
-  echo "   Output: $out_root"
-  if [[ -n "$video_id" ]]; then
-    echo "   Filter: video_id=$video_id"
-  fi
-  echo ""
+def write_srt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines = []
+    idx = 1
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_srt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_srt_timestamp(float(s.get("end", 0.0)))
+        lines.append(str(idx))
+        lines.append(f"{start} --> {end}")
+        lines.append(text)
+        lines.append("")
+        idx += 1
+    path.write_text("\n".join(lines), encoding="utf-8")
 
-  mapfile -t wav_files < <(find "$in_root" -type f -name '*.wav' | sort)
-  if [[ "${#wav_files[@]}" -eq 0 ]]; then
-    echo "⚠️  No WAV files found under: $in_root"
-    return 0
-  fi
 
-  if [[ -n "$video_id" ]]; then
-    filtered=()
-    for f in "${wav_files[@]}"; do
-      if [[ "$f" == *"[$video_id]"* ]]; then
-        filtered+=("$f")
-      fi
-    done
-    wav_files=("${filtered[@]}")
-  fi
+def write_vtt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines = ["WEBVTT", ""]
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_vtt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_vtt_timestamp(float(s.get("end", 0.0)))
+        lines.append(f"{start} --> {end}")
+        lines.append(text)
+        lines.append("")
+    path.write_text("\n".join(lines), encoding="utf-8")
 
-  if [[ "${#wav_files[@]}" -eq 0 ]]; then
-    echo "⚠️  No matching WAV files found (after filter)."
-    return 0
-  fi
 
-  local transcribed=0
-  local skipped=0
+# --------------------------
+# General helpers
+# --------------------------
 
-  for wav_path in "${wav_files[@]}"; do
-    local rel="${wav_path#"$in_root"/}"
-    local video_folder
-    video_folder="$(dirname "$rel")"
-    [[ "$video_folder" == "." ]] && video_folder=""
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
 
-    local filename
-    filename="$(basename "$wav_path")"
-    local stem="${filename%.*}"
 
-    local out_dir="$out_root/$video_folder"
-    mkdir -p "$out_dir"
+def safe_name(name: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (name or "").strip())
+    return cleaned.strip("_") or "source"
 
-    local json_out="$out_dir/${stem}.json"
-    if [[ -f "$json_out" ]]; then
-      skipped=$((skipped + 1))
-      continue
-    fi
 
-    echo "[whisper] $stem"
-    whisper "$wav_path" \
-      --model "$MODEL" \
-      --task transcribe \
-      --output_format all \
-      --output_dir "$out_dir" \
-      --language "$LANGUAGE"
-    transcribed=$((transcribed + 1))
-  done
+def extract_video_id(url: str) -> Optional[str]:
+    url = (url or "").strip()
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
 
-  echo ""
-  echo "✅ Transcription complete for $source_name"
-  echo "   Transcribed: $transcribed"
-  echo "   Skipped:     $skipped"
-}
 
-transcribe_from_sources() {
-  local sources_file="${1:-$ROOT_DIR/docs/sources.txt}"
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                sources.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
 
-  if [[ ! -f "$sources_file" ]]; then
-    echo "❌ Sources file not found: $sources_file" >&2
-    exit 1
-  fi
 
-  echo "🧾 Sources file: $sources_file"
-  echo ""
+def _r3(x: float) -> float:
+    return float(np.round(float(x), 3))
 
-  while IFS= read -r line; do
-    [[ -z "${line//[[:space:]]/}" ]] && continue
-    [[ "$line" =~ ^[[:space:]]*# ]] && continue
 
-    local name=""
-    local url=""
-    if [[ "$line" == *"|"* ]]; then
-      name="${line%%|*}"
-      url="${line#*|}"
-    else
-      # best-effort: whitespace split (first token = name, rest = url)
-      name="${line%%[[:space:]]*}"
-      url="${line#"$name"}"
-      url="${url#"${url%%[![:space:]]*}"}"
-    fi
+# --------------------------
+# Audio loading + duration
+# --------------------------
 
-    [[ -z "$name" || -z "$url" ]] && continue
-    transcribe_one_source "$name" "$url"
-    echo ""
-  done < "$sources_file"
-}
+def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
+    """
+    Robust audio loader:
+      1) torchaudio (if available)
+      2) soundfile
+      3) librosa (sr=None so it does NOT resample)
+    Returns: (mono float32 waveform, sample_rate)
+    """
 
+    if torchaudio is not None and torch is not None:
+        try:
+            waveform, sr = torchaudio.load(path)
+            waveform = waveform.to(torch.float32)
+            if waveform.ndim == 2 and waveform.shape[0] > 1:
+                waveform = waveform.mean(dim=0, keepdim=True)
+            if waveform.ndim == 2:
+                waveform = waveform.squeeze(0)
+            y = waveform.detach().cpu().numpy().astype(np.float32)
+            return y, int(sr)
+        except Exception:
+            pass
+
+    if sf is not None:
+        try:
+            y, sr = sf.read(path, dtype="float32", always_2d=True)
+            if y.shape[1] > 1:
+                y = y.mean(axis=1, keepdims=True)
+            y = y[:, 0].astype(np.float32)
+            return y, int(sr)
+        except Exception:
+            pass
+
+    if librosa is not None:
+        y, sr = librosa.load(path, sr=None, mono=True)
+        return y.astype(np.float32), int(sr)
+
+    raise SystemExit("No audio loader worked. Install soundfile or librosa (or torchaudio).")
+
+
+def wav_duration_sec_fast(path: Path) -> Optional[float]:
+    """
+    Fast duration check for PCM WAV files using stdlib wave.
+    """
+    try:
+        import wave
+        with wave.open(str(path), "rb") as wf:
+            frames = wf.getnframes()
+            rate = wf.getframerate()
+            if rate <= 0:
+                return None
+            return float(frames) / float(rate)
+    except Exception:
+        return None
+
+
+# --------------------------
+# Whisper wrapper
+# --------------------------
+
+class Transcriber:
+    def __init__(
+        self,
+        model_name: str,
+        language: str,
+        device: str,
+        condition_on_previous_text: bool,
+        decode_options: Optional[Dict[str, Any]] = None,
+    ):
+        self.model_name = model_name
+        self.language = language
+        self.device = device if device else ("cuda" if (torch and torch.cuda.is_available()) else "cpu")
+        self.condition_on_previous_text = bool(condition_on_previous_text)
+        self.decode_options = decode_options or {}
+
+        self._whisper = None
+        self._model = None
+        self._use_cli = False
+
+        try:
+            import whisper  # type: ignore
+            self._whisper = whisper
+        except Exception:
+            self._whisper = None
+
+        if self._whisper is None:
+            if not shutil.which("whisper"):
+                raise SystemExit("Missing Whisper: install openai-whisper or ensure 'whisper' CLI is on PATH.")
+            self._use_cli = True
+        else:
+            # ✅ respect the requested device (no hardcoded cuda)
+            self._model = self._whisper.load_model(self.model_name, device=self.device)
+
+    def transcribe_file(self, audio_path: str) -> Dict[str, Any]:
+        if self._use_cli:
+            return self._transcribe_via_cli(audio_path)
+        return self._transcribe_via_lib(audio_path)
+
+    def _transcribe_via_lib(self, audio_path: str) -> Dict[str, Any]:
+        assert self._model is not None
+        result = self._model.transcribe(
+            audio_path,
+            language=self.language,
+            task="transcribe",
+            fp16=False,
+            verbose=False,
+            condition_on_previous_text=self.condition_on_previous_text,
+            **self.decode_options,
+        )
+        return {
+            "text": result.get("text", "") or "",
+            "segments": result.get("segments", []) or [],
+        }
+
+    def _transcribe_via_cli(self, audio_path: str) -> Dict[str, Any]:
+        out_dir = Path(tempfile.mkdtemp(prefix="whisper_cli_"))
+        try:
+            cmd = [
+                "whisper",
+                audio_path,
+                "--model",
+                self.model_name,
+                "--task",
+                "transcribe",
+                "--output_format",
+                "json",
+                "--output_dir",
+                str(out_dir),
+                "--language",
+                self.language,
+            ]
+
+            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if proc.returncode != 0:
+                raise RuntimeError(f"whisper CLI failed:\nSTDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
+
+            # pick output json
+            out_json = out_dir / f"{Path(audio_path).stem}.json"
+            if not out_json.exists():
+                json_files = list(out_dir.glob("*.json"))
+                if not json_files:
+                    raise RuntimeError("whisper CLI did not produce a .json output")
+                out_json = json_files[0]
+
+            data = json.loads(out_json.read_text(encoding="utf-8"))
+            return {
+                "text": data.get("text", "") or "",
+                "segments": data.get("segments", []) or [],
+            }
+        finally:
+            shutil.rmtree(out_dir, ignore_errors=True)
+
+
+def _segments_from_whisper_result(result: Dict[str, Any], duration_sec: float) -> List[Dict[str, Any]]:
+    segs_out: List[Dict[str, Any]] = []
+    for seg in result.get("segments", []) or []:
+        try:
+            gs = float(seg.get("start", 0.0))
+            ge = float(seg.get("end", 0.0))
+            txt = (seg.get("text") or "").strip()
+        except Exception:
+            continue
+        if not txt:
+            continue
+        gs = max(0.0, min(gs, duration_sec))
+        ge = max(0.0, min(ge, duration_sec))
+        if ge <= gs:
+            continue
+        segs_out.append({"start": _r3(gs), "end": _r3(ge), "text": txt})
+
+    segs_out.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    return segs_out
+
+
+def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+
+    text = " ".join([s["text"].strip() for s in segments if s.get("text", "").strip()]).strip()
+    out = {"text": text, "segments": segments}
+
+    out_json_path.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    base = out_json_path.with_suffix("")  # removes ".json"
+    write_txt(base.with_suffix(".txt"), segments)
+    write_srt(base.with_suffix(".srt"), segments)
+    write_vtt(base.with_suffix(".vtt"), segments)
+    write_tsv(base.with_suffix(".tsv"), segments)
+
+
+def write_meta_json(
+    out_path: Path,
+    audio_path: Path,
+    audio_duration_sec: Optional[float],
+    model_name: str,
+    language: str,
+    device: str,
+    decode_options: Dict[str, Any],
+) -> None:
+    meta = {
+        "audio_path": str(audio_path),
+        "audio_duration_sec": audio_duration_sec,
+        "whisper_model": model_name,
+        "language": language,
+        "device": device,
+        "decode_options": decode_options,
+        "transcription_type": "full",
+    }
+    out_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def transcribe_full_file(audio_path: str, out_json: str, transcriber: Transcriber, write_meta: bool) -> None:
+    y, sr = load_audio_mono(audio_path)
+    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
+
+    result = transcriber.transcribe_file(audio_path)
+    segments = _segments_from_whisper_result(result, duration_sec)
+
+    out_json_path = Path(out_json)
+    _write_all_outputs(out_json_path, segments)
+
+    if write_meta:
+        meta_path = out_json_path.with_suffix(".meta.json")
+        write_meta_json(
+            out_path=meta_path,
+            audio_path=Path(audio_path),
+            audio_duration_sec=duration_sec,
+            model_name=transcriber.model_name,
+            language=transcriber.language,
+            device=transcriber.device,
+            decode_options=dict(transcriber.decode_options),
+        )
+
+
+# --------------------------
+# Audio choice (same behavior as your current script)
+# --------------------------
+
+def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Optional[Path]:
+    """
+    Picks ONE input audio per video folder, best-first:
+      1) *.audio.asr.clean16k.wav
+      2) *.audio.asr.raw16k.wav
+      3) *.wav
+
+    Extra safety:
+      - If clean exists but is truncated compared to raw, raw is selected automatically.
+    """
+    clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
+    raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
+    legacy = sorted(video_dir.glob("*.wav"))
+
+    if prefer == "raw" and raw:
+        return raw[0]
+    if prefer == "legacy" and legacy:
+        return legacy[0]
+
+    if clean:
+        clean_path = clean[0]
+        if raw:
+            raw_path = raw[0]
+            d_clean = wav_duration_sec_fast(clean_path)
+            d_raw = wav_duration_sec_fast(raw_path)
+            if d_clean is not None and d_raw is not None and d_clean < (0.95 * d_raw):
+                print("[02.transcribe] WARN: clean audio appears truncated vs raw -> using raw instead.")
+                print(f"[02.transcribe]   clean: {d_clean:.2f}s")
+                print(f"[02.transcribe]   raw  : {d_raw:.2f}s")
+                return raw_path
+        return clean_path
+
+    if raw:
+        return raw[0]
+    if legacy:
+        return legacy[0]
+    return None
+
+
+# --------------------------
+# Batch logic
+# --------------------------
+
+def batch_for_source(
+    source_name: str,
+    youtube_url: str,
+    overwrite: bool,
+    write_meta: bool,
+    prefer_audio: str,
+    transcriber: Transcriber,
+) -> int:
+    root = repo_root()
+    safe_source = safe_name(source_name)
+
+    downloads_root = root / "data" / "01.download" / safe_source
+    out_root = root / "data" / "02.transcribe" / safe_source
+
+    if not downloads_root.exists():
+        raise SystemExit(f"[02.transcribe] Missing downloads folder: {downloads_root}")
+
+    video_id = extract_video_id(youtube_url)
+
+    video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
+    if video_id:
+        video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
+
+    if not video_dirs:
+        print(f"[02.transcribe] No video folders found under: {downloads_root}")
+        return 0
+
+    processed = 0
+    skipped = 0
+    failed = 0
+
+    for video_dir in video_dirs:
+        try:
+            audio_path = _pick_best_audio_in_video_dir(video_dir, prefer=prefer_audio)
+            if audio_path is None:
+                print(f"[02.transcribe] WARN: No audio input found in: {video_dir}")
+                continue
+
+            out_video_dir = out_root / video_dir.name
+            out_video_dir.mkdir(parents=True, exist_ok=True)
+
+            out_full_json = out_video_dir / f"{video_dir.name}.full.json"
+
+            if out_full_json.exists() and not overwrite:
+                skipped += 1
+                continue
+
+            print(f"[02.transcribe] VIDEO: {video_dir.name}")
+            print(f"[02.transcribe] AUDIO: {audio_path.name}")
+
+            transcribe_full_file(
+                audio_path=str(audio_path),
+                out_json=str(out_full_json),
+                transcriber=transcriber,
+                write_meta=write_meta,
+            )
+
+            processed += 1
+
+        except Exception as e:
+            failed += 1
+            print(f"[02.transcribe] ERROR: Failed on folder: {video_dir.name}")
+            print(f"[02.transcribe]        {type(e).__name__}: {e}")
+            continue
+
+    print(f"[02.transcribe] Done: processed={processed} skipped={skipped} failed={failed}")
+    return processed
+
+
+# --------------------------
 # CLI
-if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  usage
-  exit 0
-fi
+# --------------------------
 
-if [[ "${1:-}" == "--sources" ]]; then
-  shift
-  transcribe_from_sources "${1:-}"
-  exit 0
-fi
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(
+        description="Full-file Whisper transcription (no VAD).",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
 
-SOURCE_NAME="${1:-}"
-YOUTUBE_URL="${2:-}"
-if [[ -z "$SOURCE_NAME" ]]; then
-  usage >&2
-  exit 1
-fi
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
+    p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
-transcribe_one_source "$SOURCE_NAME" "$YOUTUBE_URL"
+    p.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+    )
+
+    p.add_argument("--audio", help="Single-file mode: path to WAV/MP3/etc.")
+    p.add_argument("--out", help="Single-file mode: output .full.json path")
+
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs in batch mode.")
+    p.add_argument("--write-meta", action="store_true", help="Write *.meta.json sidecars for auditing/correctness.")
+    p.add_argument(
+        "--prefer-audio",
+        choices=["clean", "raw", "legacy"],
+        default="clean",
+        help="Choose preferred audio input when multiple exist (default: clean).",
+    )
+
+    p.add_argument("--model", default=os.environ.get("WHISPER_MODEL", "base"))
+    p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
+    p.add_argument("--device", default=os.environ.get("WHISPER_DEVICE", "cpu"))
+
+    # FULL transcription decoding style:
+    # condition_on_previous_text=True + beam search tends to be more coherent.
+    transcriber = Transcriber(
+        model_name=str(p.parse_args().model),
+        language=str(p.parse_args().language),
+        device=str(p.parse_args().device),
+        condition_on_previous_text=True,
+        decode_options={"temperature": 0.0, "beam_size": 5},
+    )
+
+    args = p.parse_args()
+
+    # Single-file mode
+    if args.audio:
+        if not args.out:
+            raise SystemExit("--audio requires --out")
+
+        out_path = Path(args.out)
+        if out_path.suffix.lower() != ".json":
+            out_path = out_path.with_suffix(".json")
+
+        # enforce .full.json naming
+        if not out_path.name.endswith(".full.json"):
+            out_path = out_path.with_name(out_path.stem + ".full.json")
+
+        transcribe_full_file(
+            audio_path=str(args.audio),
+            out_json=str(out_path),
+            transcriber=transcriber,
+            write_meta=bool(args.write_meta),
+        )
+        raise SystemExit(0)
+
+    # Batch mode
+    if args.sources is not None:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = repo_root() / sources_path
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+        for source_name, youtube_url in parse_sources_file(sources_path):
+            batch_for_source(
+                source_name=source_name,
+                youtube_url=youtube_url,
+                overwrite=bool(args.overwrite),
+                write_meta=bool(args.write_meta),
+                prefer_audio=str(args.prefer_audio),
+                transcriber=transcriber,
+            )
+        raise SystemExit(0)
+
+    if not args.source_name or not args.youtube_url:
+        raise SystemExit(
+            "Provide either --audio/--out, or --sources [file], or: ./scripts/training-data/02.transcribe <source_name> <youtube_url>"
+        )
+
+    batch_for_source(
+        source_name=str(args.source_name),
+        youtube_url=str(args.youtube_url),
+        overwrite=bool(args.overwrite),
+        write_meta=bool(args.write_meta),
+        prefer_audio=str(args.prefer_audio),
+        transcriber=transcriber,
+    )

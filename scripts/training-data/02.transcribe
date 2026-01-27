@@ -1,80 +1,113 @@
 #!/usr/bin/env python3
-# scripts/training-data/02.transcribe
-#
-# STEP 2A — VAD-FIRST TRANSCRIBE (Silero VAD -> Whisper)
-#
-# Reads:
-#   data/01.download/<source_name>/<video_name>/*
-#
-# Prefers these audio inputs (best-first):
-#   1) *.audio.asr.clean16k.wav   (recommended ASR input)
-#   2) *.audio.asr.raw16k.wav     (fallback ASR input)
-#   3) *.wav                      (legacy extraction)
-#
-# Writes (TWO transcript versions per video folder):
-#   data/02.transcribe/<source_name>/<video_name>/<video_name>.vad.json
-#   data/02.transcribe/<source_name>/<video_name>/<video_name>.full.json
-#
-# Optional debug writes:
-#   data/02.transcribe/<source_name>/<video_name>/<video_name>.vad_regions.json
-#
-# Output contract (same shape as Whisper JSON):
-# {
-#   "text": "...",
-#   "segments": [
-#     {"start": 0.00, "end": 2.72, "text": "..."},
-#     ...
-#   ]
-# }
-#
-# Use:
-#   A) One source (video / playlist / channel):
-#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
-#
-#   B) Batch from sources file:
-#      ./scripts/training-data/02.transcribe --sources
-#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
-#
-#   C) Single-file mode:
-#      python3 scripts/training-data/02.transcribe \
-#        --audio path/to/audio.wav \
-#        --out path/to/transcript.json
-#
-# Notes:
-# - If the URL is a single video (watch?v=...), this script only processes that video (by ID match).
-# - If the URL is a playlist/channel, it processes all downloaded videos under data/01.download/<source_name>/.
-# - This script runs Silero VAD on a 16kHz copy of the audio to find speech regions, then transcribes ONLY speech.
-# - It splits long speech into <= 20s chunks (default) for Whisper stability.
-# - TWO outputs are generated:
-#     1) *.vad.json  = VAD-first chunked transcription (robust segmentation)
-#     2) *.full.json = full-file transcription (better continuity/context)
-# - The JSON output is compatible with your existing 03.audio-features step.
+"""
+scripts/training-data/02.transcribe
 
+STEP 2A — FULL-FILE TRANSCRIBE (STABLE)
+
+Goals:
+- No "Whisper looping weirdly": default condition_on_previous_text=False for whisper + faster-whisper.
+- WhisperX word timestamps WITHOUT pyannote VAD crashes:
+    whisperx engine = faster-whisper transcription -> whisperx alignment
+  (does NOT call whisperx ASR, so it avoids whisperx.vads.pyannote completely)
+
+Engines:
+- whisperx : faster-whisper -> whisperx.align (word timestamps)
+- faster   : faster-whisper only (segments)
+- whisper  : openai-whisper only (segments)
+
+Batch mode reads:
+  data/01.download/<source>/<video>/*
+
+Prefers audio inputs:
+  1) *.audio.asr.clean16k.wav
+  2) *.audio.asr.raw16k.wav
+  3) *.wav
+
+Writes:
+  data/02.transcribe/<source>/<video>/<video>.full.<engine>.json
+  plus <video>.full.json (copy of primary engine)
+
+Sidecars:
+  *.txt / *.srt / *.vtt / *.tsv
+  plus when present:
+    *.words.tsv (word timestamps)
+    *.spk.tsv   (speaker labels)
+
+Diarization:
+- OFF by default.
+- enable with --whisperx-diarize (requires HF token + pyannote; may require torch<2.6 or unsafe torch.load)
+"""
+
+from __future__ import annotations
 
 import argparse
-import functools
 import json
 import os
 import re
 import shlex
 import shutil
 import subprocess
+import sys
 import tempfile
+import threading
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 import numpy as np
-import torch
+
+# --------------------------
+# Torch import + (optional) safe-globals allowlist
+# --------------------------
 
 try:
+    import torch  # type: ignore
+except Exception:
+    torch = None
+
+
+def _apply_torch_safe_globals_allowlist() -> None:
+    """
+    If you DO use pyannote (diarization), torch 2.6+ may block unpickling.
+    This allowlist helps, but can still become whack-a-mole.
+    The main stability move in this script is: avoid pyannote VAD entirely.
+    """
+    if torch is None:
+        return
+    if not (hasattr(torch, "serialization") and hasattr(torch.serialization, "add_safe_globals")):
+        return
+    try:
+        import typing
+        import omegaconf
+        from omegaconf import base, dictconfig, listconfig
+
+        torch.serialization.add_safe_globals(
+            [
+                typing.Any,
+                listconfig.ListConfig,
+                dictconfig.DictConfig,
+                base.ContainerMetadata,
+            ]
+        )
+    except Exception:
+        pass
+
+
+_apply_torch_safe_globals_allowlist()
+
+
+# Optional audio loaders
+try:
     import torchaudio  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:
     torchaudio = None
 
 try:
     import soundfile as sf  # type: ignore
-except Exception:  # pragma: no cover
+except Exception:
     sf = None
 
 try:
@@ -83,96 +116,25 @@ except Exception:
     librosa = None
 
 
-def _sec_to_srt_timestamp(t: float) -> str:
-    # HH:MM:SS,mmm
-    t = max(0.0, float(t))
-    hours = int(t // 3600)
-    minutes = int((t % 3600) // 60)
-    seconds = int(t % 60)
-    millis = int(round((t - int(t)) * 1000.0))
-    if millis >= 1000:
-        millis = 999
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+# --------------------------
+# Small helpers
+# --------------------------
 
-
-def _sec_to_vtt_timestamp(t: float) -> str:
-    # HH:MM:SS.mmm
-    t = max(0.0, float(t))
-    hours = int(t // 3600)
-    minutes = int((t % 3600) // 60)
-    seconds = int(t % 60)
-    millis = int(round((t - int(t)) * 1000.0))
-    if millis >= 1000:
-        millis = 999
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
-
-
-def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
-    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
-
-
-def write_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
-    # Whisper-style TSV: start \t end \t text
-    lines = []
-    for s in segments:
-        start = float(s.get("start", 0.0))
-        end = float(s.get("end", 0.0))
-        text = str(s.get("text", "")).replace("\t", " ").strip()
-        lines.append(f"{start:.3f}\t{end:.3f}\t{text}")
-    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
-
-
-def write_srt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines = []
-    idx = 1
-    for s in segments:
-        text = str(s.get("text", "")).strip()
-        if not text:
-            continue
-        start = _sec_to_srt_timestamp(float(s.get("start", 0.0)))
-        end = _sec_to_srt_timestamp(float(s.get("end", 0.0)))
-        lines.append(str(idx))
-        lines.append(f"{start} --> {end}")
-        lines.append(text)
-        lines.append("")  # blank line between cues
-        idx += 1
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-def write_vtt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines = ["WEBVTT", ""]
-    for s in segments:
-        text = str(s.get("text", "")).strip()
-        if not text:
-            continue
-        start = _sec_to_vtt_timestamp(float(s.get("start", 0.0)))
-        end = _sec_to_vtt_timestamp(float(s.get("end", 0.0)))
-        lines.append(f"{start} --> {end}")
-        lines.append(text)
-        lines.append("")
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-@dataclass
-class Config:
-    vad_threshold: float = 0.5
-    min_speech_sec: float = 0.30
-    min_silence_sec: float = 0.25
-    pad_sec: float = 0.15
-    merge_gap_sec: float = 0.30
-    max_chunk_sec: float = 20.0
-    sample_rate_vad: int = 16000
-
-    dedup_window_sec: float = 0.15
+def log(msg: str) -> None:
+    print(msg, flush=True)
 
 
 def repo_root() -> Path:
+    # scripts/training-data/02.transcribe -> parents[2] == repo root
     return Path(__file__).resolve().parents[2]
 
 
+def now_iso() -> str:
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
 def safe_name(name: str) -> str:
-    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", name.strip())
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (name or "").strip())
     return cleaned.strip("_") or "source"
 
 
@@ -190,7 +152,7 @@ def extract_video_id(url: str) -> Optional[str]:
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
-    sources: List[Tuple[str, str]] = []
+    out: List[Tuple[str, str]] = []
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -200,484 +162,890 @@ def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
             name = name.strip()
             url = url.strip()
             if name and url:
-                sources.append((name, url))
+                out.append((name, url))
             continue
         parts = shlex.split(line)
         if len(parts) >= 2:
-            sources.append((parts[0], parts[1]))
-    return sources
-
-
-def _normalize_text(s: str) -> str:
-    s = (s or "").strip().lower()
-    s = s.strip(" .,!?:;\"'“”‘’")
-    s = re.sub(r"\s+", " ", s)
-    return s
+            out.append((parts[0], parts[1]))
+    return out
 
 
 def _r3(x: float) -> float:
     return float(np.round(float(x), 3))
 
 
+def _norm_lang(lang: str) -> str:
+    return (lang or "en").strip()
+
+
+def _auto_device(preferred: str = "") -> str:
+    preferred = (preferred or "").strip().lower()
+    if preferred in {"cuda", "cpu"}:
+        if preferred == "cuda":
+            if torch is not None and torch.cuda.is_available():
+                return "cuda"
+            return "cpu"
+        return "cpu"
+    if torch is not None and torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
+@contextmanager
+def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
+    stop = threading.Event()
+    start = time.monotonic()
+
+    def _runner() -> None:
+        while not stop.wait(interval_sec):
+            elapsed = int(time.monotonic() - start)
+            log(f"[02.transcribe] … {label}: still running ({elapsed}s)")
+
+    t = threading.Thread(target=_runner, daemon=True)
+    t.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        t.join(timeout=1.0)
+
+
+def cleanup_after_engine_run(engine: Optional["BaseEngine"]) -> None:
+    try:
+        del engine
+    except Exception:
+        pass
+    import gc
+    gc.collect()
+    if torch is not None and torch.cuda.is_available():
+        try:
+            torch.cuda.synchronize()
+        except Exception:
+            pass
+        for fn in ("empty_cache", "ipc_collect"):
+            try:
+                getattr(torch.cuda, fn)()
+            except Exception:
+                pass
+
+
+# --------------------------
+# Output formats
+# --------------------------
+
+def _sec_to_srt_timestamp(t: float) -> str:
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
+
+
+def _sec_to_vtt_timestamp(t: float) -> str:
+    t = max(0.0, float(t))
+    hours = int(t // 3600)
+    minutes = int((t % 3600) // 60)
+    seconds = int(t % 60)
+    millis = int(round((t - int(t)) * 1000.0))
+    if millis >= 1000:
+        millis = 999
+    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
+
+
+def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
+
+
+def write_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines: List[str] = []
+    for s in segments:
+        start = float(s.get("start", 0.0))
+        end = float(s.get("end", 0.0))
+        text = str(s.get("text", "")).replace("\t", " ").strip()
+        lines.append(f"{start:.3f}\t{end:.3f}\t{text}")
+    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+
+
+def write_srt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines: List[str] = []
+    idx = 1
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_srt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_srt_timestamp(float(s.get("end", 0.0)))
+        lines += [str(idx), f"{start} --> {end}", text, ""]
+        idx += 1
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_vtt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines: List[str] = ["WEBVTT", ""]
+    for s in segments:
+        text = str(s.get("text", "")).strip()
+        if not text:
+            continue
+        start = _sec_to_vtt_timestamp(float(s.get("start", 0.0)))
+        end = _sec_to_vtt_timestamp(float(s.get("end", 0.0)))
+        lines += [f"{start} --> {end}", text, ""]
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def write_spk_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines: List[str] = []
+    for s in segments:
+        if "speaker" not in s:
+            continue
+        start = float(s.get("start", 0.0))
+        end = float(s.get("end", 0.0))
+        spk = str(s.get("speaker", "UNKNOWN"))
+        text = str(s.get("text", "")).replace("\t", " ").strip()
+        lines.append(f"{start:.3f}\t{end:.3f}\t{spk}\t{text}")
+    if lines:
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_words_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
+    lines: List[str] = []
+    for s in segments:
+        words = s.get("words")
+        if not isinstance(words, list):
+            continue
+        for w in words:
+            if not isinstance(w, dict):
+                continue
+            word = str(w.get("word", "")).replace("\t", " ").strip()
+            if not word:
+                continue
+            try:
+                ws = float(w.get("start", 0.0))
+                we = float(w.get("end", 0.0))
+            except Exception:
+                continue
+            spk = str(w.get("speaker", "") or "")
+            if spk:
+                lines.append(f"{ws:.3f}\t{we:.3f}\t{spk}\t{word}")
+            else:
+                lines.append(f"{ws:.3f}\t{we:.3f}\t{word}")
+    if lines:
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+    full_text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    out_json_path.write_text(
+        json.dumps({"text": full_text, "segments": segments}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+
+    base = out_json_path.with_suffix("")  # remove ".json"
+    write_txt(base.with_name(base.name + ".txt"), segments)
+    write_srt(base.with_name(base.name + ".srt"), segments)
+    write_vtt(base.with_name(base.name + ".vtt"), segments)
+    write_tsv(base.with_name(base.name + ".tsv"), segments)
+    write_spk_tsv(base.with_name(base.name + ".spk.tsv"), segments)
+    write_words_tsv(base.with_name(base.name + ".words.tsv"), segments)
+
+
+# --------------------------
+# Audio loading
+# --------------------------
+
+def wav_duration_sec_fast(path: Path) -> Optional[float]:
+    try:
+        import wave
+        with wave.open(str(path), "rb") as wf:
+            frames = wf.getnframes()
+            rate = wf.getframerate()
+            if rate <= 0:
+                return None
+            return float(frames) / float(rate)
+    except Exception:
+        return None
+
+
 def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
-    """
-    Robust audio loader:
-      1) torchaudio (if available)
-      2) soundfile
-      3) librosa (sr=None so it does NOT resample)
-
-    Returns:
-      (mono float32 waveform, sample_rate)
-    """
-
-    # 1) torchaudio first (fastest, best if it works)
-    if torchaudio is not None:
+    # torchaudio first (if available)
+    if torchaudio is not None and torch is not None:
         try:
             waveform, sr = torchaudio.load(path)
             waveform = waveform.to(torch.float32)
-
-            # to mono
             if waveform.ndim == 2 and waveform.shape[0] > 1:
                 waveform = waveform.mean(dim=0, keepdim=True)
             if waveform.ndim == 2:
                 waveform = waveform.squeeze(0)
-
             y = waveform.detach().cpu().numpy().astype(np.float32)
             return y, int(sr)
+        except Exception:
+            pass
 
-        except Exception as e:
-            msg = str(e).lower()
-            if "torchcodec" in msg:
-                print("[vad-first-transcribe] WARN: torchaudio requires torchcodec; falling back to soundfile/librosa.")
-            else:
-                print(f"[vad-first-transcribe] WARN: torchaudio.load failed ({type(e).__name__}): {e}")
-
-    # 2) soundfile fallback (good + simple)
+    # soundfile
     if sf is not None:
-        try:
-            y, sr = sf.read(path, dtype="float32", always_2d=True)
-            # y shape: [T, C]
-            if y.shape[1] > 1:
-                y = y.mean(axis=1, keepdims=True)
-            y = y[:, 0].astype(np.float32)
-            return y, int(sr)
-        except Exception as e:
-            print(f"[vad-first-transcribe] WARN: soundfile failed ({type(e).__name__}): {e}")
+        y, sr = sf.read(path, dtype="float32", always_2d=True)
+        if y.shape[1] > 1:
+            y = y.mean(axis=1, keepdims=True)
+        y = y[:, 0].astype(np.float32)
+        return y, int(sr)
 
-    # 3) librosa fallback (IMPORTANT: sr=None -> NO resample)
+    # librosa
     if librosa is not None:
         y, sr = librosa.load(path, sr=None, mono=True)
         return y.astype(np.float32), int(sr)
 
-    raise SystemExit("No audio loader worked. Install torchcodec OR soundfile OR librosa.")
+    raise SystemExit("No audio loader available. Install soundfile or librosa (or torchaudio).")
 
 
-def resample_for_vad(y: np.ndarray, sr: int, sr_vad: int) -> torch.Tensor:
-    if y.size == 0:
-        return torch.zeros((0,), dtype=torch.float32)
+def resample_to_16k(y: np.ndarray, sr: int) -> np.ndarray:
+    if sr == 16000:
+        return y.astype(np.float32)
+    if torchaudio is not None and torch is not None:
+        try:
+            yt = torch.from_numpy(y).to(torch.float32)
+            yt = torchaudio.functional.resample(yt, orig_freq=sr, new_freq=16000)
+            return yt.detach().cpu().numpy().astype(np.float32)
+        except Exception:
+            pass
+    if librosa is not None:
+        return librosa.resample(y.astype(np.float32), orig_sr=sr, target_sr=16000).astype(np.float32)
+    raise SystemExit("Need torchaudio or librosa to resample to 16k.")
 
-    if sr == sr_vad:
-        return torch.from_numpy(y).to(torch.float32).contiguous()
 
-    if torchaudio is not None:
-        t = torch.from_numpy(y).to(torch.float32).unsqueeze(0)  # [1, T]
-        t = torchaudio.functional.resample(t, orig_freq=sr, new_freq=sr_vad)
-        return t.squeeze(0).contiguous()
-
+def load_audio_16k_for_whisperx(audio_path: str) -> np.ndarray:
+    # whisperx.load_audio uses ffmpeg and returns 16k float32 (best path)
     try:
-        from scipy.signal import resample_poly  # type: ignore
-    except Exception as e:  # pragma: no cover
-        raise SystemExit("Missing resampler: install torchaudio or scipy.") from e
-
-    g = int(np.gcd(sr, sr_vad))
-    up = sr_vad // g
-    down = sr // g
-    y2 = resample_poly(y.astype(np.float32), up=up, down=down).astype(np.float32)
-    return torch.from_numpy(y2).to(torch.float32).contiguous()
+        import whisperx  # type: ignore
+        return whisperx.load_audio(audio_path)
+    except Exception:
+        y, sr = load_audio_mono(audio_path)
+        return resample_to_16k(y, sr)
 
 
-@functools.lru_cache(maxsize=1)
-def _load_silero_vad() -> Tuple[Any, Any]:
-    if "TORCH_HOME" not in os.environ:
-        cache_dir = repo_root() / ".cache" / "torch"
-        cache_dir.mkdir(parents=True, exist_ok=True)
-        os.environ["TORCH_HOME"] = str(cache_dir)
+# --------------------------
+# Segment normalization + anti-loop tail trim
+# --------------------------
 
-    model, utils = torch.hub.load(
-        repo_or_dir="snakers4/silero-vad",
-        model="silero_vad",
-        trust_repo=True,
-        verbose=False,
-    )
-    get_speech_timestamps = utils[0]
-    model.eval()
-    return model, get_speech_timestamps
+def _normalize_word_list(words: Any, duration_sec: float) -> Optional[List[Dict[str, Any]]]:
+    if not isinstance(words, list):
+        return None
+    out: List[Dict[str, Any]] = []
+    for w in words:
+        if not isinstance(w, dict):
+            continue
+        word = str(w.get("word", "")).strip()
+        if not word:
+            continue
+        ww: Dict[str, Any] = {"word": word}
+        try:
+            ws = float(w.get("start", -1.0))
+            we = float(w.get("end", -1.0))
+        except Exception:
+            ws, we = -1.0, -1.0
+        if ws >= 0.0 and we > ws:
+            ws = max(0.0, min(ws, duration_sec))
+            we = max(0.0, min(we, duration_sec))
+            ww["start"] = _r3(ws)
+            ww["end"] = _r3(we)
+        if "speaker" in w:
+            ww["speaker"] = str(w.get("speaker"))
+        out.append(ww)
+    return out or None
 
 
-def detect_speech_regions(y_vad_16k: torch.Tensor, cfg: Config) -> List[Tuple[float, float]]:
-    if y_vad_16k.numel() == 0:
+def _segments_from_any(segments_in: Any, duration_sec: float) -> List[Dict[str, Any]]:
+    if not isinstance(segments_in, list):
         return []
-
-    model, get_speech_timestamps = _load_silero_vad()
-    with torch.no_grad():
-        raw = get_speech_timestamps(
-            y_vad_16k,
-            model,
-            sampling_rate=cfg.sample_rate_vad,
-            threshold=float(cfg.vad_threshold),
-            min_speech_duration_ms=int(round(cfg.min_speech_sec * 1000.0)),
-            min_silence_duration_ms=int(round(cfg.min_silence_sec * 1000.0)),
-            speech_pad_ms=0,
-        )
-
-    regions: List[Tuple[float, float]] = []
-    for item in raw or []:
-        start_s = float(item["start"]) / float(cfg.sample_rate_vad)
-        end_s = float(item["end"]) / float(cfg.sample_rate_vad)
-        if end_s > start_s:
-            regions.append((start_s, end_s))
-    regions.sort(key=lambda x: x[0])
-    return regions
-
-
-def finalize_regions(
-    regions: List[Tuple[float, float]],
-    duration_sec: float,
-    cfg: Config,
-) -> List[Tuple[float, float]]:
-    regions = [(s, e) for (s, e) in regions if (e - s) >= cfg.min_speech_sec]
-    if not regions:
-        return []
-
-    # merge close gaps
-    merged: List[Tuple[float, float]] = []
-    cur_s, cur_e = regions[0]
-    for s, e in regions[1:]:
-        if s - cur_e < cfg.merge_gap_sec:
-            cur_e = max(cur_e, e)
-        else:
-            merged.append((cur_s, cur_e))
-            cur_s, cur_e = s, e
-    merged.append((cur_s, cur_e))
-
-    # pad and clamp
-    padded: List[Tuple[float, float]] = []
-    for s, e in merged:
-        s2 = max(0.0, s - cfg.pad_sec)
-        e2 = min(duration_sec, e + cfg.pad_sec)
-        if e2 > s2:
-            padded.append((s2, e2))
-
-    # split long chunks
-    final: List[Tuple[float, float]] = []
-    for s, e in padded:
-        cur = s
-        while (e - cur) > cfg.max_chunk_sec:
-            final.append((cur, cur + cfg.max_chunk_sec))
-            cur = cur + cfg.max_chunk_sec
-        if e > cur:
-            final.append((cur, e))
-
-    final = [(max(0.0, s), min(duration_sec, e)) for (s, e) in final if e > s]
-    final.sort(key=lambda x: x[0])
-    return final
+    out: List[Dict[str, Any]] = []
+    for seg in segments_in:
+        if not isinstance(seg, dict):
+            continue
+        txt = str(seg.get("text", "") or "").strip()
+        if not txt:
+            continue
+        try:
+            s = float(seg.get("start", 0.0))
+            e = float(seg.get("end", 0.0))
+        except Exception:
+            continue
+        s = max(0.0, min(s, duration_sec))
+        e = max(0.0, min(e, duration_sec))
+        if e <= s:
+            continue
+        o: Dict[str, Any] = {"start": _r3(s), "end": _r3(e), "text": txt}
+        if "speaker" in seg:
+            o["speaker"] = str(seg.get("speaker"))
+        if "words" in seg:
+            wn = _normalize_word_list(seg.get("words"), duration_sec)
+            if wn:
+                o["words"] = wn
+        out.append(o)
+    out.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    return out
 
 
-class Transcriber:
+def _norm_text(t: str) -> str:
+    t = (t or "").strip().lower()
+    t = re.sub(r"\s+", " ", t)
+    return t
+
+
+def trim_repeated_tail(
+    segments: List[Dict[str, Any]],
+    min_run: int = 10,
+    max_seg_dur: float = 2.0,
+) -> Tuple[List[Dict[str, Any]], bool, int, str]:
+    """
+    If the very end is the exact same short phrase repeated many times in short segments,
+    drop that tail (common failure mode for some whisper settings).
+    """
+    if len(segments) < min_run:
+        return segments, False, 0, ""
+    last = _norm_text(str(segments[-1].get("text", "")))
+    if not last:
+        return segments, False, 0, ""
+    run = 1
+    i = len(segments) - 2
+    while i >= 0 and _norm_text(str(segments[i].get("text", ""))) == last:
+        run += 1
+        i -= 1
+    if run < min_run:
+        return segments, False, 0, ""
+    tail = segments[-run:]
+    for s in tail:
+        dur = float(s["end"]) - float(s["start"])
+        if dur > max_seg_dur:
+            return segments, False, 0, ""
+    return segments[:-run], True, run, last
+
+
+# --------------------------
+# Engines
+# --------------------------
+
+class BaseEngine:
+    name: str = "base"
+    model_name: str = ""
+    language: str = "en"
+    device: str = "cpu"
+    decode_options: Dict[str, Any] = {}
+
+    def transcribe(self, audio_path: str) -> Dict[str, Any]:
+        raise NotImplementedError
+
+
+class FasterWhisperEngine(BaseEngine):
+    name = "faster"
+
     def __init__(
         self,
         model_name: str,
         language: str,
         device: str,
-        condition_on_previous_text: bool,
-        decode_options: Optional[Dict[str, Any]] = None,
+        compute_type: str,
+        beam_size: int,
+        temperature: float,
+        condition_on_previous_text: bool = False,
+        vad_filter: bool = False,
     ):
-        self.model_name = model_name
-        self.language = language
-        self.device = device
-        self.condition_on_previous_text = bool(condition_on_previous_text)
-        self.decode_options = decode_options or {}
+        self.model_name = str(model_name)
+        self.language = _norm_lang(language)
+        self.device = _auto_device(device)
+        self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
+        self.decode_options = {
+            "beam_size": int(beam_size),
+            "temperature": float(temperature),
+            "condition_on_previous_text": bool(condition_on_previous_text),
+            "vad_filter": bool(vad_filter),
+            "compute_type": self.compute_type,
+        }
+        try:
+            from faster_whisper import WhisperModel  # type: ignore
+        except Exception as e:
+            raise SystemExit(f"Missing faster-whisper. Install: pip install -U faster-whisper ({type(e).__name__}: {e})")
+        self._model = WhisperModel(self.model_name, device=self.device, compute_type=self.compute_type)
 
-        self._whisper = None
-        self._model = None
-        self._use_cli = False
+    def transcribe(self, audio_path: str) -> Dict[str, Any]:
+        segments_out: List[Dict[str, Any]] = []
+        segments, _info = self._model.transcribe(
+            audio_path,
+            language=self.language,
+            task="transcribe",
+            beam_size=int(self.decode_options["beam_size"]),
+            temperature=float(self.decode_options["temperature"]),
+            condition_on_previous_text=bool(self.decode_options["condition_on_previous_text"]),
+            vad_filter=bool(self.decode_options["vad_filter"]),
+        )
+        parts: List[str] = []
+        for seg in segments:
+            txt = (seg.text or "").strip()
+            if not txt:
+                continue
+            segments_out.append({"start": float(seg.start), "end": float(seg.end), "text": txt})
+            parts.append(txt)
+        return {"text": " ".join(parts).strip(), "segments": segments_out}
 
+
+class WhisperEngine(BaseEngine):
+    name = "whisper"
+
+    def __init__(
+        self,
+        model_name: str,
+        language: str,
+        device: str,
+        use_fp16: bool,
+        beam_size: int,
+        condition_on_previous_text: bool = False,
+        temperature_schedule: Tuple[float, ...] = (0.0, 0.2, 0.4, 0.6),
+        best_of: int = 5,
+        compression_ratio_threshold: float = 2.4,
+        logprob_threshold: float = -1.0,
+        no_speech_threshold: float = 0.6,
+        patience: float = 1.0,
+    ):
+        self.model_name = str(model_name)
+        self.language = _norm_lang(language)
+        self.device = _auto_device(device)
+        self.use_fp16 = bool(use_fp16)
+        self.decode_options = {
+            "beam_size": int(beam_size),
+            "patience": float(patience),
+            "temperature": tuple(float(x) for x in temperature_schedule),
+            "best_of": int(best_of),
+            "compression_ratio_threshold": float(compression_ratio_threshold),
+            "logprob_threshold": float(logprob_threshold),
+            "no_speech_threshold": float(no_speech_threshold),
+            "condition_on_previous_text": bool(condition_on_previous_text),
+        }
         try:
             import whisper  # type: ignore
-            self._whisper = whisper
-        except Exception:
-            self._whisper = None
+        except Exception as e:
+            raise SystemExit(f"Missing openai-whisper. Install: pip install -U openai-whisper ({type(e).__name__}: {e})")
+        self._whisper = whisper
+        self._model = self._whisper.load_model(self.model_name, device=self.device)
 
-        if self._whisper is None:
-            if not shutil.which("whisper"):
-                raise SystemExit(
-                    "Missing Whisper: install python package (openai-whisper) or ensure 'whisper' CLI is on PATH."
-                )
-            self._use_cli = True
-        else:
-            self._model = self._whisper.load_model(self.model_name, device=self.device)
-
-    def transcribe_file(self, audio_path: str) -> Dict[str, Any]:
-        if self._use_cli:
-            return self._transcribe_via_cli(audio_path)
-        return self._transcribe_via_lib(audio_path)
-
-    def _transcribe_via_lib(self, audio_path: str) -> Dict[str, Any]:
-        assert self._model is not None
+    def transcribe(self, audio_path: str) -> Dict[str, Any]:
         result = self._model.transcribe(
             audio_path,
             language=self.language,
             task="transcribe",
-            fp16=False,
             verbose=False,
-            condition_on_previous_text=self.condition_on_previous_text,
-            **self.decode_options,
+            fp16=(self.device == "cuda" and self.use_fp16),
+            condition_on_previous_text=bool(self.decode_options["condition_on_previous_text"]),
+            beam_size=int(self.decode_options["beam_size"]),
+            patience=float(self.decode_options["patience"]),
+            temperature=self.decode_options["temperature"],
+            best_of=int(self.decode_options["best_of"]),
+            compression_ratio_threshold=float(self.decode_options["compression_ratio_threshold"]),
+            logprob_threshold=float(self.decode_options["logprob_threshold"]),
+            no_speech_threshold=float(self.decode_options["no_speech_threshold"]),
         )
-        return {
-            "text": result.get("text", "") or "",
-            "segments": result.get("segments", []) or [],
+        return {"text": result.get("text", "") or "", "segments": result.get("segments", []) or []}
+
+
+def _get_hf_token(cli_token: str = "") -> str:
+    tok = (cli_token or "").strip()
+    if tok:
+        return tok
+    for k in ("HF_TOKEN", "HUGGINGFACE_TOKEN", "WHISPERX_HF_TOKEN"):
+        v = (os.environ.get(k) or "").strip()
+        if v:
+            return v
+    return ""
+
+
+def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
+    segs: List[Dict[str, Any]] = []
+    try:
+        import pandas as pd  # type: ignore
+        if isinstance(diar_out, pd.DataFrame):
+            for _, row in diar_out.iterrows():
+                segs.append({"start": float(row["start"]), "end": float(row["end"]), "speaker": str(row["speaker"])})
+            segs.sort(key=lambda x: (x["start"], x["end"]))
+            return segs
+    except Exception:
+        pass
+
+    if isinstance(diar_out, list):
+        for it in diar_out:
+            if not isinstance(it, dict):
+                continue
+            if "start" in it and "end" in it:
+                spk = it.get("speaker", it.get("label", "UNKNOWN"))
+                segs.append({"start": float(it["start"]), "end": float(it["end"]), "speaker": str(spk)})
+        segs.sort(key=lambda x: (x["start"], x["end"]))
+        return segs
+
+    if isinstance(diar_out, dict) and isinstance(diar_out.get("segments"), list):
+        return _normalize_diar_output(diar_out["segments"])
+
+    return segs
+
+
+def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec: float = 0.25) -> List[Dict[str, Any]]:
+    turns = [t for t in turns if float(t.get("end", 0.0)) > float(t.get("start", 0.0))]
+    turns.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    merged: List[Dict[str, Any]] = []
+    for t in turns:
+        s = float(t["start"])
+        e = float(t["end"])
+        spk = str(t.get("speaker", "UNKNOWN"))
+        if (e - s) < min_dur_sec:
+            continue
+        if not merged:
+            merged.append({"start": s, "end": e, "speaker": spk})
+            continue
+        prev = merged[-1]
+        if spk == prev["speaker"] and s <= float(prev["end"]) + gap_sec:
+            prev["end"] = max(float(prev["end"]), e)
+        else:
+            merged.append({"start": s, "end": e, "speaker": spk})
+    return merged
+
+
+class WhisperXAlignEngine(BaseEngine):
+    """
+    whisperx engine in this script:
+      - transcribe with faster-whisper (stable, no pyannote VAD)
+      - align with whisperx.align to get word timestamps
+      - optional diarization (pyannote) if enabled
+    """
+    name = "whisperx"
+
+    def __init__(
+        self,
+        faster_model: str,
+        language: str,
+        device: str,
+        compute_type: str,
+        beam_size: int,
+        temperature: float,
+        batch_size: int,
+        diarize: bool,
+        diarize_first: bool,
+        hf_token: str,
+        vad_filter: bool = False,
+    ):
+        self.model_name = str(faster_model)  # this is the ASR model used
+        self.language = _norm_lang(language)
+        self.device = _auto_device(device)
+        self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
+        self.decode_options = {
+            "beam_size": int(beam_size),
+            "temperature": float(temperature),
+            "batch_size": int(batch_size),
+            "compute_type": self.compute_type,
+            "diarize": bool(diarize),
+            "diarize_first": bool(diarize_first),
+            "vad_filter": bool(vad_filter),
         }
+        self.diarize = bool(diarize)
+        self.diarize_first = bool(diarize_first)
+        self.hf_token = str(hf_token or "")
 
-    def _transcribe_via_cli(self, audio_path: str) -> Dict[str, Any]:
-        # NOTE: CLI fallback cannot perfectly mirror lib decode options,
-        # but it will still generate usable JSON.
-        out_dir = Path(tempfile.mkdtemp(prefix="whisper_cli_"))
+        # faster-whisper ASR
         try:
-            cmd = [
-                "whisper",
-                audio_path,
-                "--model",
-                self.model_name,
-                "--task",
-                "transcribe",
-                "--output_format",
-                "json",
-                "--output_dir",
-                str(out_dir),
-                "--language",
-                self.language,
-            ]
+            from faster_whisper import WhisperModel  # type: ignore
+        except Exception as e:
+            raise SystemExit(f"Missing faster-whisper. Install: pip install -U faster-whisper ({type(e).__name__}: {e})")
+        self._fw = WhisperModel(self.model_name, device=self.device, compute_type=self.compute_type)
 
-            # Best-effort decode flags (some may be ignored depending on CLI version)
-            if "temperature" in self.decode_options:
-                cmd += ["--temperature", str(self.decode_options["temperature"])]
-            if "beam_size" in self.decode_options:
-                cmd += ["--beam_size", str(self.decode_options["beam_size"])]
-
-            proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            if proc.returncode != 0:
-                raise RuntimeError(f"whisper CLI failed:\nSTDERR:\n{proc.stderr}\nSTDOUT:\n{proc.stdout}")
-
-            out_json = out_dir / f"{Path(audio_path).stem}.json"
-            if not out_json.exists():
-                json_files = list(out_dir.glob("*.json"))
-                if not json_files:
-                    raise RuntimeError("whisper CLI did not produce a .json output")
-                out_json = json_files[0]
-
-            data = json.loads(out_json.read_text(encoding="utf-8"))
-            return {
-                "text": data.get("text", "") or "",
-                "segments": data.get("segments", []) or [],
-            }
-        finally:
-            shutil.rmtree(out_dir, ignore_errors=True)
-
-
-def write_wav_chunk(path: Path, y: np.ndarray, sr: int) -> None:
-    """
-    Always-safe WAV writer using Python's built-in wave module (no torchcodec needed).
-    Writes 16-bit PCM mono WAV.
-    """
-    import wave
-
-    if y.size == 0:
-        return
-
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    # clamp & convert float32 [-1,1] -> int16
-    y = np.clip(y.astype(np.float32), -1.0, 1.0)
-    pcm16 = (y * 32767.0).astype(np.int16)
-
-    with wave.open(str(path), "wb") as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)  # 16-bit
-        wf.setframerate(int(sr))
-        wf.writeframes(pcm16.tobytes())
-
-
-def _segments_from_whisper_result(result: Dict[str, Any], duration_sec: float) -> List[Dict[str, Any]]:
-    segs_out: List[Dict[str, Any]] = []
-    for seg in result.get("segments", []) or []:
+        # whisperx align
         try:
-            gs = float(seg.get("start", 0.0))
-            ge = float(seg.get("end", 0.0))
-            txt = (seg.get("text") or "").strip()
-        except Exception:
-            continue
-        if not txt:
-            continue
-        gs = max(0.0, min(gs, duration_sec))
-        ge = max(0.0, min(ge, duration_sec))
-        if ge <= gs:
-            continue
-        segs_out.append({"start": _r3(gs), "end": _r3(ge), "text": txt})
+            import whisperx  # type: ignore
+        except Exception as e:
+            raise SystemExit(f"Missing whisperx. Install: pip install -U whisperx ({type(e).__name__}: {e})")
+        self._whisperx = whisperx
+        self._align_model, self._align_meta = self._whisperx.load_align_model(
+            language_code=self.language,
+            device=self.device,
+        )
 
-    segs_out.sort(key=lambda x: (float(x["start"]), float(x["end"])))
-    return segs_out
-
-
-def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
-    """
-    Writes:
-      - JSON (canonical)
-      - TXT / SRT / VTT / TSV sidecars
-    """
-    out_json_path.parent.mkdir(parents=True, exist_ok=True)
-
-    text = " ".join([s["text"].strip() for s in segments if s.get("text", "").strip()]).strip()
-    out = {"text": text, "segments": segments}
-
-    with open(out_json_path, "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=2)
-
-    base = out_json_path.with_suffix("")  # removes ".json"
-    write_txt(base.with_suffix(".txt"), segments)
-    write_srt(base.with_suffix(".srt"), segments)
-    write_vtt(base.with_suffix(".vtt"), segments)
-    write_tsv(base.with_suffix(".tsv"), segments)
-
-
-def transcribe_full_file(audio_path: str, out_json: str, transcriber: Transcriber) -> None:
-    y, sr = load_audio_mono(audio_path)
-    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
-
-    result = transcriber.transcribe_file(audio_path)
-    segments = _segments_from_whisper_result(result, duration_sec)
-
-    _write_all_outputs(Path(out_json), segments)
-
-
-def transcribe_with_vad_first(
-    audio_path: str,
-    out_json: str,
-    transcriber: Transcriber,
-    cfg: Config,
-    vad_json_out: Optional[str] = None,
-) -> None:
-    y, sr = load_audio_mono(audio_path)
-    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
-
-    # VAD
-    y_vad = resample_for_vad(y, sr, cfg.sample_rate_vad)
-    regions_raw = detect_speech_regions(y_vad, cfg)
-    regions = finalize_regions(regions_raw, duration_sec, cfg)
-
-    # DEBUG VAD REGIONS
-    if vad_json_out is not None:
-        Path(vad_json_out).parent.mkdir(parents=True, exist_ok=True)
-        with open(vad_json_out, "w", encoding="utf-8") as f:
-            json.dump([{"start": _r3(s), "end": _r3(e)} for (s, e) in regions], f, indent=2)
-
-    # IMPORTANT FALLBACK:
-    # If VAD returns nothing (silence / failure / bad threshold),
-    # transcribe the full file so you never get an empty output.
-    if not regions:
-        print("[vad-first-transcribe] WARN: VAD returned 0 regions, falling back to full-file transcription.")
-        result = transcriber.transcribe_file(audio_path)
-        segments = _segments_from_whisper_result(result, duration_sec)
-        _write_all_outputs(Path(out_json), segments)
-        return
-
-    # NORMAL VAD-CHUNK FLOW
-    segments: List[Dict[str, Any]] = []
-
-    with tempfile.TemporaryDirectory(prefix="vadfirst_", dir="/tmp") as td:
-        tmp_dir = Path(td)
-
-        for i, (rs, re_) in enumerate(regions):
-            s_idx = int(round(rs * sr))
-            e_idx = int(round(re_ * sr))
-            s_idx = max(0, min(s_idx, len(y)))
-            e_idx = max(0, min(e_idx, len(y)))
-            if e_idx <= s_idx:
-                continue
-
-            chunk = y[s_idx:e_idx]
-            if chunk.size < int(0.05 * sr):
-                continue
-
-            chunk_path = tmp_dir / f"chunk_{i:04d}_{int(rs*1000):07d}_{int(re_*1000):07d}.wav"
-            write_wav_chunk(chunk_path, chunk, sr)
-
-            result = transcriber.transcribe_file(str(chunk_path))
-            local_segments = result.get("segments", []) or []
-
-            for seg in local_segments:
+        # diarization (optional)
+        self._diar_pipeline = None
+        if self.diarize:
+            tok = _get_hf_token(self.hf_token)
+            if not tok:
+                raise SystemExit("Diarization requested but no HF token found. Set HF_TOKEN or pass --whisperx-hf-token.")
+            try:
+                self._diar_pipeline = self._whisperx.DiarizationPipeline(use_auth_token=tok, device=self.device)
+            except TypeError:
                 try:
-                    ls = float(seg.get("start", 0.0))
-                    le = float(seg.get("end", 0.0))
-                    txt = (seg.get("text") or "").strip()
+                    self._diar_pipeline = self._whisperx.DiarizationPipeline(device=self.device, use_auth_token=tok)
+                except TypeError:
+                    self._diar_pipeline = self._whisperx.DiarizationPipeline(use_auth_token=tok)
+
+    def _fw_transcribe_segments(self, audio_path: str) -> List[Dict[str, Any]]:
+        segs_out: List[Dict[str, Any]] = []
+        segs, _info = self._fw.transcribe(
+            audio_path,
+            language=self.language,
+            task="transcribe",
+            beam_size=int(self.decode_options["beam_size"]),
+            temperature=float(self.decode_options["temperature"]),
+            condition_on_previous_text=False,
+            vad_filter=bool(self.decode_options["vad_filter"]),
+        )
+        for s in segs:
+            txt = (s.text or "").strip()
+            if not txt:
+                continue
+            segs_out.append({"start": float(s.start), "end": float(s.end), "text": txt})
+        return segs_out
+
+    def _align(self, segments: List[Dict[str, Any]], audio16k: np.ndarray) -> Dict[str, Any]:
+        try:
+            return self._whisperx.align(
+                segments,
+                self._align_model,
+                self._align_meta,
+                audio16k,
+                self.device,
+                return_char_alignments=False,
+            )
+        except TypeError:
+            return self._whisperx.align(segments, self._align_model, self._align_meta, audio16k, self.device)
+
+    def _run_diarization(self, audio16k: np.ndarray, audio_path: str) -> List[Dict[str, Any]]:
+        assert self._diar_pipeline is not None
+        try:
+            diar_out = self._diar_pipeline(audio_path)
+        except Exception:
+            diar_out = self._diar_pipeline(audio16k)
+        turns = _normalize_diar_output(diar_out)
+        return _merge_turns(turns)
+
+    @staticmethod
+    def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[str, Any]]) -> None:
+        for seg in segments:
+            s0 = float(seg.get("start", 0.0))
+            s1 = float(seg.get("end", 0.0))
+            best_spk = "UNKNOWN"
+            best_ov = 0.0
+            for d in turns:
+                ov = max(0.0, min(s1, float(d["end"])) - max(s0, float(d["start"])))
+                if ov > best_ov:
+                    best_ov = ov
+                    best_spk = str(d.get("speaker", "UNKNOWN"))
+            seg["speaker"] = best_spk
+            if isinstance(seg.get("words"), list):
+                for w in seg["words"]:
+                    if isinstance(w, dict):
+                        w["speaker"] = best_spk
+
+    def transcribe(self, audio_path: str) -> Dict[str, Any]:
+        # 1) transcribe segments with faster-whisper
+        fw_segments = self._fw_transcribe_segments(audio_path)
+
+        # 2) load 16k audio + align to words
+        audio16k = load_audio_16k_for_whisperx(audio_path)
+        aligned = self._align(fw_segments, audio16k)
+
+        # aligned["segments"] already contains start/end/text + words
+        segs = aligned.get("segments", []) or []
+        if not isinstance(segs, list):
+            segs = []
+
+        # 3) optional diarization (assign speakers to aligned segs/words)
+        if self.diarize:
+            turns = self._run_diarization(audio16k, audio_path)
+            if turns:
+                try:
+                    # if helper exists in your whisperx version
+                    assigned = self._whisperx.assign_word_speakers(turns, aligned)
+                    segs = assigned.get("segments", []) or segs
                 except Exception:
-                    continue
+                    self._attach_speaker_by_overlap(segs, turns)
 
-                if not txt:
-                    continue
-
-                gs = rs + max(0.0, ls)
-                ge = rs + max(0.0, le)
-                gs = max(0.0, min(gs, duration_sec))
-                ge = max(0.0, min(ge, duration_sec))
-                if ge <= gs:
-                    continue
-
-                # Light boundary dedup
-                if segments:
-                    prev = segments[-1]
-                    if (gs - float(prev["end"])) <= cfg.dedup_window_sec:
-                        if _normalize_text(txt) == _normalize_text(prev.get("text", "")):
-                            continue
-
-                segments.append({"start": _r3(gs), "end": _r3(ge), "text": txt})
-
-    segments.sort(key=lambda x: (float(x["start"]), float(x["end"])))
-    _write_all_outputs(Path(out_json), segments)
+        full_text = " ".join([str(s.get("text", "")).strip() for s in segs if str(s.get("text", "")).strip()]).strip()
+        return {"text": full_text, "segments": segs}
 
 
-def _pick_best_audio_in_video_dir(video_dir: Path) -> Optional[Path]:
-    """
-    Picks ONE input audio per video folder, best-first:
-      1) *.audio.asr.clean16k.wav
-      2) *.audio.asr.raw16k.wav
-      3) *.wav
-    """
-    # 1) clean16k
+# --------------------------
+# Audio selection
+# --------------------------
+
+def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Optional[Path]:
     clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
-    if clean:
-        return clean[0]
-
-    # 2) raw16k
     raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
+    legacy = sorted(video_dir.glob("*.wav"))
+
+    if prefer == "raw" and raw:
+        return raw[0]
+    if prefer == "legacy" and legacy:
+        return legacy[0]
+
+    if clean:
+        clean_path = clean[0]
+        if raw:
+            raw_path = raw[0]
+            d_clean = wav_duration_sec_fast(clean_path)
+            d_raw = wav_duration_sec_fast(raw_path)
+            if d_clean is not None and d_raw is not None and d_clean < (0.95 * d_raw):
+                log("[02.transcribe] WARN: clean audio appears truncated vs raw -> using raw instead.")
+                log(f"[02.transcribe]   clean: {d_clean:.2f}s")
+                log(f"[02.transcribe]   raw  : {d_raw:.2f}s")
+                return raw_path
+        return clean_path
+
     if raw:
         return raw[0]
-
-    # 3) any wav (legacy)
-    wavs = sorted(video_dir.glob("*.wav"))
-    if wavs:
-        return wavs[0]
-
+    if legacy:
+        return legacy[0]
     return None
 
+
+# --------------------------
+# Core runner
+# --------------------------
+
+def transcribe_full_file_with_engine(
+    audio_path: str,
+    out_json: str,
+    engine: BaseEngine,
+    progress_interval: float,
+    trim_repeat_tail: bool,
+) -> None:
+    t0 = time.monotonic()
+
+    y, sr = load_audio_mono(audio_path)
+    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
+
+    out_json_path = Path(out_json)
+    log(
+        f"[02.transcribe]   START {engine.name} ({getattr(engine, 'model_name', '')}) "
+        f"| device={getattr(engine, 'device', '')} | audio={Path(audio_path).name} | dur={duration_sec:.1f}s"
+    )
+
+    with heartbeat(f"{engine.name} decode", interval_sec=float(progress_interval)):
+        result = engine.transcribe(audio_path)
+
+    segments = _segments_from_any(result.get("segments", []) or [], duration_sec)
+
+    if trim_repeat_tail:
+        segments2, trimmed, run, txt = trim_repeated_tail(segments)
+        if trimmed:
+            log(f"[02.transcribe]   WARN {engine.name}: trimmed repeated tail x{run}: {txt!r}")
+            segments = segments2
+
+    seg_n = len(segments)
+    last_end = float(segments[-1]["end"]) if segments else 0.0
+    if duration_sec > 60 and last_end < 0.90 * duration_sec:
+        log(f"[02.transcribe]   WARN {engine.name}: transcript ends early (last_end={last_end:.1f}s vs dur={duration_sec:.1f}s)")
+
+    _write_all_outputs(out_json_path, segments)
+
+    elapsed = time.monotonic() - t0
+    log(f"[02.transcribe]   DONE  {engine.name}: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s -> {out_json_path.name}")
+
+
+# --------------------------
+# Engine planning + subprocess isolation
+# --------------------------
+
+@dataclass(frozen=True)
+class EnginePlan:
+    name: str
+    enabled: bool
+    build: Callable[[], BaseEngine]
+
+    def out_path_for(self, out_video_dir: Path, video_folder_name: str) -> Path:
+        return out_video_dir / f"{video_folder_name}.full.{self.name}.json"
+
+
+@contextmanager
+def materialize_engine(plan: EnginePlan) -> Iterator[BaseEngine]:
+    eng: Optional[BaseEngine] = None
+    try:
+        eng = plan.build()
+        yield eng
+    finally:
+        cleanup_after_engine_run(eng)
+
+
+def _run_engine_in_subprocess(args: argparse.Namespace, engine_name: str, audio_path: Path, out_json: Path) -> None:
+    script_path = Path(__file__).resolve()
+    cmd: List[str] = [sys.executable, str(script_path)]
+    cmd += ["--_engine-run", engine_name, "--_engine-out", str(out_json)]
+    cmd += ["--audio", str(audio_path)]
+
+    # shared flags
+    cmd += ["--language", str(args.language)]
+    cmd += ["--beam-size", str(args.beam_size)]
+    cmd += ["--temperature", str(args.temperature)]
+    cmd += ["--progress-interval", str(args.progress_interval)]
+    if args.no_trim_repeat_tail:
+        cmd += ["--no-trim-repeat-tail"]
+
+    # whisper
+    cmd += ["--model", str(args.model)]
+    cmd += ["--device", str(args.device)]
+    if args.whisper_fp16:
+        cmd += ["--whisper-fp16"]
+    if args.no_whisper_fp16:
+        cmd += ["--no-whisper-fp16"]
+
+    # faster
+    cmd += ["--faster-model", str(args.faster_model)]
+    cmd += ["--faster-device", str(args.faster_device)]
+    cmd += ["--faster-compute-type", str(args.faster_compute_type or "")]
+    if args.faster_vad_filter:
+        cmd += ["--faster-vad-filter"]
+
+    # whisperx (align engine uses faster-whisper model)
+    cmd += ["--whisperx-device", str(args.whisperx_device)]
+    cmd += ["--whisperx-compute-type", str(args.whisperx_compute_type or "")]
+    cmd += ["--whisperx-batch-size", str(args.whisperx_batch_size)]
+    if args.whisperx_diarize:
+        cmd += ["--whisperx-diarize"]
+    if args.whisperx_diarize_after:
+        cmd += ["--whisperx-diarize-after"]
+    if args.whisperx_diarize_first:
+        cmd += ["--whisperx-diarize-first"]
+    if args.whisperx_hf_token:
+        cmd += ["--whisperx-hf-token", str(args.whisperx_hf_token)]
+    if args.whisperx_vad_filter:
+        cmd += ["--whisperx-vad-filter"]
+
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+
+    log_path = out_json.with_suffix(".log")
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log(f"[02.transcribe]   SUBPROC {engine_name}: {' '.join(cmd)}")
+    log(f"[02.transcribe]   LOGFILE: {log_path}")
+
+    with open(log_path, "a", encoding="utf-8") as lf:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            print(line, end="")
+            lf.write(line)
+        rc = proc.wait()
+
+    if rc != 0:
+        raise RuntimeError(f"Engine subprocess failed: {engine_name} (exit {rc}). See log: {log_path}")
+
+
+# --------------------------
+# Batch runner
+# --------------------------
 
 def batch_for_source(
     source_name: str,
     youtube_url: str,
     overwrite: bool,
-    write_vad_debug: bool,
-    transcriber_vad: Transcriber,
-    transcriber_full: Transcriber,
-    cfg: Config,
+    prefer_audio: str,
+    plans: List[EnginePlan],
+    primary_engine_name: str,
+    isolate_engines: bool,
+    args_for_subprocess: argparse.Namespace,
+    trim_repeat_tail: bool,
 ) -> int:
     root = repo_root()
     safe_source = safe_name(source_name)
@@ -686,190 +1054,364 @@ def batch_for_source(
     out_root = root / "data" / "02.transcribe" / safe_source
 
     if not downloads_root.exists():
-        raise SystemExit(f"[vad-first-transcribe] Missing downloads folder: {downloads_root}")
+        raise SystemExit(f"[02.transcribe] Missing downloads folder: {downloads_root}")
 
     video_id = extract_video_id(youtube_url)
-
-    # Each downloaded YouTube video lives inside its own folder:
-    #   data/01.download/<source>/<title> [id]/*
     video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
     if video_id:
         video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
 
     if not video_dirs:
-        print(f"[vad-first-transcribe] No video folders found under: {downloads_root}")
+        log(f"[02.transcribe] No video folders found under: {downloads_root}")
         return 0
+
+    enabled_plans = [p for p in plans if p.enabled]
+    if not enabled_plans:
+        raise SystemExit("No engines enabled. Fix --engines and dependencies.")
 
     processed = 0
     skipped = 0
+    failed = 0
 
     for video_dir in video_dirs:
-        audio_path = _pick_best_audio_in_video_dir(video_dir)
-        if audio_path is None:
-            print(f"[vad-first-transcribe] WARN: No audio input found in: {video_dir}")
+        try:
+            audio_path = _pick_best_audio_in_video_dir(video_dir, prefer=prefer_audio)
+            if audio_path is None:
+                log(f"[02.transcribe] WARN: No audio found in: {video_dir}")
+                continue
+
+            out_video_dir = out_root / video_dir.name
+            out_video_dir.mkdir(parents=True, exist_ok=True)
+
+            out_primary = out_video_dir / f"{video_dir.name}.full.json"
+            out_files: Dict[str, Path] = {p.name: p.out_path_for(out_video_dir, video_dir.name) for p in enabled_plans}
+
+            if not overwrite:
+                if out_primary.exists() and all(p.exists() for p in out_files.values()):
+                    skipped += 1
+                    continue
+
+            log(f"[02.transcribe] VIDEO: {video_dir.name}")
+            log(f"[02.transcribe] AUDIO: {audio_path.name}")
+
+            for plan in enabled_plans:
+                out_path = out_files[plan.name]
+                if out_path.exists() and not overwrite:
+                    log(f"[02.transcribe]   SKIP {plan.name}: exists")
+                    continue
+
+                if isolate_engines:
+                    log(f"[02.transcribe]   RUN  {plan.name} (isolated)")
+                    _run_engine_in_subprocess(args_for_subprocess, plan.name, Path(audio_path), out_path)
+                else:
+                    with materialize_engine(plan) as eng:
+                        log(f"[02.transcribe]   RUN  {eng.name} ({getattr(eng, 'model_name', '')}) | device={getattr(eng, 'device', '')}")
+                        transcribe_full_file_with_engine(
+                            audio_path=str(audio_path),
+                            out_json=str(out_path),
+                            engine=eng,
+                            progress_interval=float(args_for_subprocess.progress_interval),
+                            trim_repeat_tail=trim_repeat_tail,
+                        )
+
+            primary = out_files.get(primary_engine_name)
+            if primary and primary.exists():
+                shutil.copyfile(primary, out_primary)
+
+            processed += 1
+
+        except Exception as e:
+            failed += 1
+            log(f"[02.transcribe] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[02.transcribe]        {type(e).__name__}: {e}")
             continue
 
-        # Output folder mirrors the video folder name
-        out_video_dir = out_root / video_dir.name
-        out_video_dir.mkdir(parents=True, exist_ok=True)
-
-        # Two versions:
-        out_vad_json = out_video_dir / f"{video_dir.name}.vad.json"
-        out_full_json = out_video_dir / f"{video_dir.name}.full.json"
-
-        if (out_vad_json.exists() and out_full_json.exists()) and not overwrite:
-            skipped += 1
-            continue
-
-        vad_regions_path = None
-        if write_vad_debug:
-            vad_regions_path = str(out_video_dir / f"{video_dir.name}.vad_regions.json")
-
-        print(f"[vad-first-transcribe] VIDEO: {video_dir.name}")
-        print(f"[vad-first-transcribe] AUDIO: {audio_path.name}")
-
-        # Version A: VAD-first
-        transcribe_with_vad_first(
-            audio_path=str(audio_path),
-            out_json=str(out_vad_json),
-            transcriber=transcriber_vad,
-            cfg=cfg,
-            vad_json_out=vad_regions_path,
-        )
-
-        # Version B: full-file
-        transcribe_full_file(
-            audio_path=str(audio_path),
-            out_json=str(out_full_json),
-            transcriber=transcriber_full,
-        )
-
-        processed += 1
-
-    print(f"[vad-first-transcribe] Done: processed={processed} skipped={skipped}")
+    log(f"[02.transcribe] Done: processed={processed} skipped={skipped} failed={failed}")
     return processed
+
+
+# --------------------------
+# CLI
+# --------------------------
+
+def _parse_temp_schedule(s: str) -> Tuple[float, ...]:
+    s = (s or "").strip()
+    if not s:
+        return (0.0, 0.2, 0.4, 0.6)
+    parts = [p.strip() for p in s.split(",") if p.strip()]
+    out: List[float] = []
+    for p in parts:
+        out.append(float(p))
+    return tuple(out) if out else (0.0, 0.2, 0.4, 0.6)
 
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
-        description="VAD-first segmentation before Whisper transcription (writes Whisper-shape JSON).",
+        description="Full-file transcription (stable engines + whisperx word timestamps without pyannote VAD).",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
+
+    # hidden subprocess mode
+    p.add_argument("--_engine-run", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
+    p.add_argument("--_engine-out", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
 
     p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
-    p.add_argument(
-        "--sources",
-        nargs="?",
-        const="docs/sources.txt",
-        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
-    )
+    p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--audio", help="Single-file input path.")
+    p.add_argument("--out", help="Single-file output .full.json (primary engine copy).")
 
-    p.add_argument("--audio", help="Single-file mode: path to WAV/MP3/etc.")
-    p.add_argument("--out", help="Single-file mode: output .json path (base name).")
-    p.add_argument("--vad-out", help="Optional: write debug VAD regions JSON to this path (single-file mode).")
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
+    p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
 
-    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs in batch mode.")
-    p.add_argument("--write-vad", action="store_true", help="Write VAD regions JSON alongside transcript JSON in batch mode.")
+    p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
+    p.add_argument("--no-trim-repeat-tail", action="store_true", help="Disable repeated-tail trimming guardrail.")
 
-    p.add_argument("--model", default=os.environ.get("WHISPER_MODEL", "base"))
+    p.add_argument("--engines", default=os.environ.get("TRANSCRIBE_ENGINES", "whisperx"))
+    p.add_argument("--primary-engine", default=os.environ.get("TRANSCRIBE_PRIMARY_ENGINE", "whisperx"), choices=["whisperx", "faster", "whisper"])
+
+    p.add_argument("--beam-size", type=int, default=int(os.environ.get("WHISPER_BEAM_SIZE", "3")))
+    p.add_argument("--temperature", type=float, default=float(os.environ.get("WHISPER_TEMPERATURE", "0.0")))
     p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
-    p.add_argument("--device", default=os.environ.get("WHISPER_DEVICE", "cpu"))
 
-    p.add_argument("--vad_threshold", type=float, default=Config.vad_threshold)
-    p.add_argument("--min_speech_sec", type=float, default=Config.min_speech_sec)
-    p.add_argument("--min_silence_sec", type=float, default=Config.min_silence_sec)
-    p.add_argument("--pad_sec", type=float, default=Config.pad_sec)
-    p.add_argument("--merge_gap_sec", type=float, default=Config.merge_gap_sec)
-    p.add_argument("--max_chunk_sec", type=float, default=Config.max_chunk_sec)
+    # openai-whisper
+    p.add_argument("--model", default=os.environ.get("WHISPER_MODEL", "large"))
+    p.add_argument("--device", default=os.environ.get("WHISPER_DEVICE", ""))
+    p.add_argument("--whisper-fp16", action="store_true")
+    p.add_argument("--no-whisper-fp16", action="store_true")
+    p.add_argument("--whisper-temp-schedule", default=os.environ.get("WHISPER_TEMP_SCHEDULE", "0.0,0.2,0.4,0.6"))
+    p.add_argument("--whisper-best-of", type=int, default=int(os.environ.get("WHISPER_BEST_OF", "5")))
+    p.add_argument("--whisper-patience", type=float, default=float(os.environ.get("WHISPER_PATIENCE", "1.0")))
+    p.add_argument("--whisper-comp-ratio-thresh", type=float, default=float(os.environ.get("WHISPER_COMP_RATIO_THRESH", "2.4")))
+    p.add_argument("--whisper-logprob-thresh", type=float, default=float(os.environ.get("WHISPER_LOGPROB_THRESH", "-1.0")))
+    p.add_argument("--whisper-no-speech-thresh", type=float, default=float(os.environ.get("WHISPER_NO_SPEECH_THRESH", "0.6")))
+    p.add_argument("--whisper-condition-on-prev", action="store_true", help="(Not recommended) enable conditioning.")
+    p.add_argument("--whisper-no-condition-on-prev", action="store_true", help="Force conditioning OFF (default).")
+
+    # faster-whisper
+    p.add_argument("--faster-model", default=os.environ.get("FASTER_WHISPER_MODEL", "Systran/faster-distil-whisper-large-v3"))
+    p.add_argument("--faster-device", default=os.environ.get("FASTER_WHISPER_DEVICE", ""))
+    p.add_argument("--faster-compute-type", default=os.environ.get("FASTER_WHISPER_COMPUTE_TYPE", ""))
+    p.add_argument("--faster-vad-filter", action="store_true", help="Enable faster-whisper Silero VAD filter (default OFF).")
+
+    # whisperx-align engine (uses faster-whisper ASR model)
+    p.add_argument("--whisperx-device", default=os.environ.get("WHISPERX_DEVICE", ""))
+    p.add_argument("--whisperx-compute-type", default=os.environ.get("WHISPERX_COMPUTE_TYPE", ""))
+    p.add_argument("--whisperx-batch-size", type=int, default=int(os.environ.get("WHISPERX_BATCH_SIZE", "16")))
+    p.add_argument("--whisperx-vad-filter", action="store_true", help="Enable VAD filter for whisperx ASR stage (default OFF).")
+
+    # diarization (optional)
+    p.add_argument("--whisperx-diarize", action="store_true", help="Enable diarization (pyannote, requires HF token).")
+    p.add_argument("--whisperx-diarize-first", action="store_true")
+    p.add_argument("--whisperx-diarize-after", action="store_true")
+    p.add_argument("--whisperx-hf-token", default=os.environ.get("WHISPERX_HF_TOKEN", ""))
+
+    p.add_argument("--no-isolate-engines", action="store_true", help="Run engines in-process (not recommended with CUDA + multiple engines).")
 
     args = p.parse_args()
 
-    cfg = Config(
-        vad_threshold=float(args.vad_threshold),
-        min_speech_sec=float(args.min_speech_sec),
-        min_silence_sec=float(args.min_silence_sec),
-        pad_sec=float(args.pad_sec),
-        merge_gap_sec=float(args.merge_gap_sec),
-        max_chunk_sec=float(args.max_chunk_sec),
+    engines_to_run = [e.strip().lower() for e in str(args.engines).split(",") if e.strip()]
+    engines_to_run = [e for e in engines_to_run if e in {"whisperx", "faster", "whisper"}]
+    if not engines_to_run:
+        raise SystemExit("No valid engines selected. Use --engines whisperx,faster,whisper")
+
+    # devices + compute types
+    whisper_device = _auto_device(args.device)
+    if args.no_whisper_fp16:
+        whisper_fp16 = False
+    elif args.whisper_fp16:
+        whisper_fp16 = True
+    else:
+        whisper_fp16 = (whisper_device == "cuda")
+
+    faster_device = _auto_device(args.faster_device)
+    faster_compute = (args.faster_compute_type or "").strip().lower() or ("int8_float16" if faster_device == "cuda" else "int8")
+
+    whisperx_device = _auto_device(args.whisperx_device)
+    whisperx_compute = (args.whisperx_compute_type or "").strip().lower() or ("int8_float16" if whisperx_device == "cuda" else "int8")
+
+    # diarization mode
+    diarize_first = True
+    if args.whisperx_diarize_after:
+        diarize_first = False
+    if args.whisperx_diarize_first:
+        diarize_first = True
+
+    # whisper conditioning
+    whisper_condition_prev = bool(args.whisper_condition_on_prev)
+    if args.whisper_no_condition_on_prev:
+        whisper_condition_prev = False
+
+    temp_schedule = _parse_temp_schedule(args.whisper_temp_schedule)
+    trim_repeat_tail_enabled = not bool(args.no_trim_repeat_tail)
+
+    plans: List[EnginePlan] = []
+
+    plans.append(
+        EnginePlan(
+            name="whisperx",
+            enabled=("whisperx" in engines_to_run),
+            build=lambda: WhisperXAlignEngine(
+                faster_model=args.faster_model,
+                language=args.language,
+                device=whisperx_device,
+                compute_type=whisperx_compute,
+                beam_size=int(args.beam_size),
+                temperature=float(args.temperature),
+                batch_size=int(args.whisperx_batch_size),
+                diarize=bool(args.whisperx_diarize),
+                diarize_first=bool(diarize_first),
+                hf_token=str(args.whisperx_hf_token or ""),
+                vad_filter=bool(args.whisperx_vad_filter),
+            ),
+        )
     )
 
-    # Two different decoding “styles”
-    # - VAD: short chunks, greedy decoding is usually enough and avoids drift
-    # - FULL: full context benefits from beam search for stability
-    transcriber_vad = Transcriber(
-        model_name=args.model,
-        language=args.language,
-        device=args.device,
-        condition_on_previous_text=False,
-        decode_options={"temperature": 0.0, "beam_size": 1},
+    plans.append(
+        EnginePlan(
+            name="faster",
+            enabled=("faster" in engines_to_run),
+            build=lambda: FasterWhisperEngine(
+                model_name=args.faster_model,
+                language=args.language,
+                device=faster_device,
+                compute_type=faster_compute,
+                beam_size=int(args.beam_size),
+                temperature=float(args.temperature),
+                condition_on_previous_text=False,
+                vad_filter=bool(args.faster_vad_filter),
+            ),
+        )
     )
 
-    transcriber_full = Transcriber(
-        model_name=args.model,
-        language=args.language,
-        device=args.device,
-        condition_on_previous_text=True,
-        decode_options={"temperature": 0.0, "beam_size": 5},
+    plans.append(
+        EnginePlan(
+            name="whisper",
+            enabled=("whisper" in engines_to_run),
+            build=lambda: WhisperEngine(
+                model_name=args.model,
+                language=args.language,
+                device=whisper_device,
+                use_fp16=whisper_fp16,
+                beam_size=int(args.beam_size),
+                condition_on_previous_text=bool(whisper_condition_prev),
+                temperature_schedule=temp_schedule,
+                best_of=int(args.whisper_best_of),
+                patience=float(args.whisper_patience),
+                compression_ratio_threshold=float(args.whisper_comp_ratio_thresh),
+                logprob_threshold=float(args.whisper_logprob_thresh),
+                no_speech_threshold=float(args.whisper_no_speech_thresh),
+            ),
+        )
     )
 
-    # Single-file mode
+    enabled_names = [pl.name for pl in plans if pl.enabled]
+    if not enabled_names:
+        raise SystemExit("No engines enabled. Fix --engines and installs.")
+
+    primary_engine = str(args.primary_engine).strip().lower()
+    if primary_engine not in enabled_names:
+        primary_engine = enabled_names[0]
+
+    isolate_engines = False
+    if not args.no_isolate_engines:
+        if torch is not None and torch.cuda.is_available() and len(enabled_names) > 1:
+            isolate_engines = True
+
+    # hidden subprocess-run
+    if hasattr(args, "_engine_run") and hasattr(args, "_engine_out"):
+        eng_name = str(getattr(args, "_engine_run")).strip().lower()
+        out_path = Path(str(getattr(args, "_engine_out"))).expanduser()
+        if not args.audio:
+            raise SystemExit("--_engine-run requires --audio")
+        audio_in = Path(args.audio).expanduser()
+        if not audio_in.exists():
+            raise SystemExit(f"Audio not found: {audio_in}")
+        plan_map = {pl.name: pl for pl in plans if pl.enabled}
+        if eng_name not in plan_map:
+            raise SystemExit(f"Engine not enabled/valid: {eng_name}")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        with materialize_engine(plan_map[eng_name]) as eng:
+            transcribe_full_file_with_engine(
+                audio_path=str(audio_in),
+                out_json=str(out_path),
+                engine=eng,
+                progress_interval=float(args.progress_interval),
+                trim_repeat_tail=trim_repeat_tail_enabled,
+            )
+        raise SystemExit(0)
+
+    # single-file mode
     if args.audio:
         if not args.out:
             raise SystemExit("--audio requires --out")
-
         out_path = Path(args.out)
         if out_path.suffix.lower() != ".json":
             out_path = out_path.with_suffix(".json")
+        if not out_path.name.endswith(".full.json"):
+            out_path = out_path.with_name(out_path.stem + ".full.json")
+        base_dir = out_path.parent
+        base_dir.mkdir(parents=True, exist_ok=True)
 
-        out_vad = out_path.with_name(out_path.stem + ".vad.json")
-        out_full = out_path.with_name(out_path.stem + ".full.json")
-
-        transcribe_with_vad_first(
-            audio_path=str(args.audio),
-            out_json=str(out_vad),
-            transcriber=transcriber_vad,
-            cfg=cfg,
-            vad_json_out=args.vad_out,
-        )
-        transcribe_full_file(
-            audio_path=str(args.audio),
-            out_json=str(out_full),
-            transcriber=transcriber_full,
-        )
+        out_files: Dict[str, Path] = {}
+        for plan in [pl for pl in plans if pl.enabled]:
+            out_eng = base_dir / (out_path.name.replace(".full.json", f".full.{plan.name}.json"))
+            out_files[plan.name] = out_eng
+            if isolate_engines and len(enabled_names) > 1:
+                _run_engine_in_subprocess(args, plan.name, Path(args.audio), out_eng)
+            else:
+                with materialize_engine(plan) as eng:
+                    transcribe_full_file_with_engine(
+                        audio_path=str(args.audio),
+                        out_json=str(out_eng),
+                        engine=eng,
+                        progress_interval=float(args.progress_interval),
+                        trim_repeat_tail=trim_repeat_tail_enabled,
+                    )
+        primary_file = out_files.get(primary_engine)
+        if primary_file and primary_file.exists():
+            shutil.copyfile(primary_file, out_path)
         raise SystemExit(0)
 
-    # Batch mode
+    # batch sources file
     if args.sources is not None:
         sources_path = Path(args.sources)
         if not sources_path.is_absolute():
             sources_path = repo_root() / sources_path
         if not sources_path.exists():
             raise SystemExit(f"Sources file not found: {sources_path}")
+        total = 0
         for source_name, youtube_url in parse_sources_file(sources_path):
-            batch_for_source(
+            total += batch_for_source(
                 source_name=source_name,
                 youtube_url=youtube_url,
                 overwrite=bool(args.overwrite),
-                write_vad_debug=bool(args.write_vad),
-                transcriber_vad=transcriber_vad,
-                transcriber_full=transcriber_full,
-                cfg=cfg,
+                prefer_audio=str(args.prefer_audio),
+                plans=plans,
+                primary_engine_name=primary_engine,
+                isolate_engines=isolate_engines,
+                args_for_subprocess=args,
+                trim_repeat_tail=trim_repeat_tail_enabled,
             )
+        log(f"[02.transcribe] ✅ ALL SOURCES DONE: total_processed={total}")
         raise SystemExit(0)
 
+    # normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
-            "Provide either --audio/--out, or --sources [file], or: ./scripts/training-data/02.transcribe <source_name> <youtube_url>"
+            "Provide either --audio/--out, or --sources [file], or:\n"
+            "./scripts/training-data/02.transcribe <source_name> <youtube_url>"
         )
 
     batch_for_source(
         source_name=str(args.source_name),
         youtube_url=str(args.youtube_url),
         overwrite=bool(args.overwrite),
-        write_vad_debug=bool(args.write_vad),
-        transcriber_vad=transcriber_vad,
-        transcriber_full=transcriber_full,
-        cfg=cfg,
+        prefer_audio=str(args.prefer_audio),
+        plans=plans,
+        primary_engine_name=primary_engine,
+        isolate_engines=isolate_engines,
+        args_for_subprocess=args,
+        trim_repeat_tail=trim_repeat_tail_enabled,
     )

@@ -6,9 +6,10 @@ import { NextResponse, type NextRequest } from "next/server"
  *
  * This middleware:
  * 1. Refreshes the Supabase session on every request
- * 2. Protects /dashboard routes - redirects unauthenticated users to /auth/login
+ * 2. Allows preview mode for dashboard routes (non-authenticated users can browse)
+ * 3. Protects sensitive routes like settings and QA
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Legacy route alias
@@ -41,8 +42,12 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect dashboard routes - require authentication
-  if (pathname.startsWith("/dashboard") && !user) {
+  // Routes that require authentication (no preview mode)
+  const protectedRoutes = ["/dashboard/settings", "/dashboard/qa"]
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+
+  // Only protect specific routes - allow preview mode for main dashboard and training modules
+  if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
     url.pathname = "/auth/login"
     url.searchParams.set("next", pathname)

@@ -38,13 +38,12 @@ export default async function RedirectPage({
   const safeNext =
     requestedNext && requestedNext.startsWith("/")
       ? requestedNext
-      : "/dashboard/qa"
+      : "/dashboard"
 
   if (profile?.onboarding_completed) {
     redirect(safeNext)
   } else {
-    // For now, skip onboarding and go straight to Q&A
-    // In the future, redirect to /preferences for onboarding
-    redirect("/dashboard/qa")
+    // User hasn't completed onboarding, send them to preferences
+    redirect("/preferences")
   }
 }

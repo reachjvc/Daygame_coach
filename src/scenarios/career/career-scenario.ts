@@ -330,7 +330,7 @@ export function generateCareerScenarioIntro(context: CareerScenarioContext): str
 
 She says: "${context.jobLine}"
 
-She's ${context.outfitDescription}. Her vibe is ${context.vibeDescription}.
+Her outfit: ${context.outfitDescription} Her vibe is ${context.vibeDescription}.
 
 Your turn to respond. Try a push/pull on her job (tease or light challenge, then show genuine interest).
 

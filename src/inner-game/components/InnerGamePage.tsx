@@ -20,7 +20,11 @@ import { DeathbedStep } from "./DeathbedStep"
 import { CuttingStepPage } from "./CuttingStep"
 import { SummaryPage } from "./SummaryPage"
 
-export function InnerGamePage() {
+interface InnerGamePageProps {
+  isPreviewMode?: boolean
+}
+
+export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   // Loading states
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -30,8 +34,30 @@ export function InnerGamePage() {
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set())
   const [showWelcome, setShowWelcome] = useState(true)
 
-  // Fetch initial data
+  // Fetch initial data (skip in preview mode)
   useEffect(() => {
+    if (isPreviewMode) {
+      // In preview mode, set up mock progress and skip API call
+      setProgress({
+        currentStep: InnerGameStep.WELCOME,
+        currentSubstep: 0,
+        welcomeDismissed: false,
+        step1Completed: false,
+        step2Completed: false,
+        step3Completed: false,
+        cuttingCompleted: false,
+        hurdlesResponse: null,
+        hurdlesInferredValues: null,
+        deathbedResponse: null,
+        deathbedInferredValues: null,
+        finalCoreValues: null,
+        aspirationalValues: null,
+      })
+      setShowWelcome(true)
+      setLoading(false)
+      return
+    }
+
     async function fetchData() {
       setLoading(true)
       setError(null)
@@ -58,7 +84,7 @@ export function InnerGamePage() {
     }
 
     fetchData()
-  }, [])
+  }, [isPreviewMode])
 
   // Update progress on server
   const updateProgress = useCallback(async (updates: Partial<InnerGameProgress>) => {
@@ -252,7 +278,7 @@ export function InnerGamePage() {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className={isPreviewMode ? "flex items-center justify-center py-12" : "min-h-screen bg-background flex items-center justify-center"}>
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
           Loading...
@@ -261,8 +287,8 @@ export function InnerGamePage() {
     )
   }
 
-  // Error state
-  if (error || !progress) {
+  // Error state (not shown in preview mode)
+  if (!isPreviewMode && (error || !progress)) {
     return (
       <div className="min-h-screen bg-background py-12">
         <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
@@ -283,6 +309,24 @@ export function InnerGamePage() {
         </div>
       </div>
     )
+  }
+
+  // Preview mode - show welcome card only
+  if (isPreviewMode && progress) {
+    return (
+      <div className="py-8">
+        <WelcomeCard
+          progress={progress}
+          onDismiss={() => {}} // No-op in preview mode, button redirects to sign-up
+          completedCategories={0}
+          isPreviewMode={true}
+        />
+      </div>
+    )
+  }
+
+  if (!progress) {
+    return null
   }
 
   const completedSteps = getCompletedSteps(progress)
@@ -310,6 +354,7 @@ export function InnerGamePage() {
           progress={progress}
           onDismiss={handleWelcomeDismiss}
           completedCategories={completedCategories}
+          isPreviewMode={isPreviewMode}
         />
       )}
 

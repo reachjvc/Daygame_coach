@@ -152,6 +152,7 @@ export function UserPreferences({
     tertiaryArchetypeData?.name || tertiary_archetype,
   ].filter((name): name is string => Boolean(name));
   const uniqueArchetypes = Array.from(new Set(chosenArchetypes));
+  const archetypeCount = uniqueArchetypes.length;
   const archetypeSummary = uniqueArchetypes.length ? uniqueArchetypes.join(", ") : "Not set";
 
   const handleMapSelect = (regionId: string) => {
@@ -222,7 +223,12 @@ export function UserPreferences({
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr] lg:grid-rows-[auto_auto]">
           <div className="flex h-full flex-col lg:col-start-1 lg:row-start-1">
             {primaryArchetypeData?.image && (
-              <div className="flex h-full flex-col items-center gap-2 rounded-xl border border-border bg-muted/30 p-3">
+              <div
+                className={[
+                  "flex h-full flex-col items-center gap-2 rounded-xl border border-border bg-muted/30 p-3",
+                  archetypeCount >= 3 ? "" : "justify-center",
+                ].join(" ")}
+              >
                 <div className="relative">
                   <img
                     src={primaryArchetypeData.image}
@@ -235,7 +241,13 @@ export function UserPreferences({
                 </div>
 
                 {(secondaryArchetypeData?.image || tertiaryArchetypeData?.image) && (
-                  <div className="flex flex-wrap justify-center gap-3">
+                  <div
+                    className={
+                      archetypeCount >= 3
+                        ? "flex flex-wrap justify-center gap-3"
+                        : "flex flex-col items-center gap-3"
+                    }
+                  >
                     {secondaryArchetypeData?.image && secondary_archetype !== archetype && (
                       <div className="flex flex-col items-center gap-1">
                         <div className="relative">

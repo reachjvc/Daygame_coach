@@ -148,12 +148,10 @@ export function SettingsPage({
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-8">
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm">
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Back
-              </Button>
-            </Link>
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
+            </Button>
             <h1 className="text-xl font-semibold">Settings</h1>
           </div>
           <Button variant="ghost" size="sm" onClick={handleSignOut}>

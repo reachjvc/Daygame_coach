@@ -1,45 +1,13 @@
 #!/usr/bin/env bash
 # scripts/training-data/01.download
 #
-# STEP 1 — DOWNLOAD (single entrypoint)
+# Polite/reliable batch downloader:
+# - Fixed pacing between items (playlist/channel safe)
+# - Optional bandwidth cap
+# - Outer exponential backoff on failure
+# - Abort early on "bot-check" style responses (don't keep retrying)
 #
-# Downloads:
-#   1) Best audio (original format: webm/opus/m4a/etc)  -> keeps it  ✅ (SOURCE OF TRUTH)
-#   2) WAV audio extracted from that best audio         -> for Whisper/pipeline ✅ (raw + clean)
-#   3) MP4 video (best video+audio merged into mp4)
-#   4) Info JSON metadata files
-#
-# Output:
-#   data/01.download/<source_name>/<video_name>/*
-#
-# Use:
-#   A) One source (video / playlist / channel):
-#      ./scripts/training-data/01.download "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
-#
-#   B) Batch from sources file:
-#      ./scripts/training-data/01.download --sources
-#      ./scripts/training-data/01.download --sources docs/sources.txt
-#
-# Cookies:
-#   - Put cookie export file at:
-#       docs/data_docs/www.youtube.com_cookies.txt
-#     OR set:
-#       YOUTUBE_COOKIES_FILE=/path/to/cookies.txt
-#   - Script COPIES cookies into the output folder and uses the copy.
-#
-# NOTE (2026 reality check):
-#   YouTube increasingly requires JS-based signature extraction for yt-dlp.
-#   This script enforces a JS runtime for reliability (node/deno/etc).
-#
-# BEST-PRACTICE AUDIO STRATEGY (core correctness):
-#   1) ALWAYS keep the original best audio file downloaded from YouTube.
-#   2) Create ASR WAVs yourself with ffmpeg:
-#        - *.asr.raw16k.wav    (format normalized only)
-#        - *.asr.clean16k.wav  (mild cleanup for fewer hallucinations)
-#   3) Optionally create *.listen.mp3 for fast playback / QA.
-#
-# IMPORTANT: ffmpeg can break loops if it reads from stdin.
-#   -> We force -nostdin so it cannot steal input from while-read loops.
+# NOTE: This is NOT “stealth”. It just avoids abusive request patterns.
 
 set -euo pipefail
 
@@ -51,7 +19,7 @@ Usage:
     ./scripts/training-data/01.download "<source_name>" "<youtube_url>"
 
   Download all sources from config:
-    ./scripts/training-data/01.download --sources [path/to/sources.txt]
+    ./scripts/training-data/01.download --sources docs/sources.txt
 
 Examples:
   ./scripts/training-data/01.download "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
@@ -71,82 +39,71 @@ if ! have_cmd yt-dlp; then
   if have_cmd youtube-dl; then
     DOWNLOADER="youtube-dl"
   else
-    echo "❌ Error: yt-dlp not found. Install it with:"
+    echo "❌ Error: yt-dlp not found. Install:"
     echo "   pip install -U yt-dlp yt-dlp-ejs"
     exit 1
   fi
 fi
 
-# Need ffmpeg for merging mp4 + extracting wav
+# Need ffmpeg
 if ! have_cmd ffmpeg; then
-  echo "❌ Error: ffmpeg not found. Install it first."
-  echo "   macOS:   brew install ffmpeg"
-  echo "   Ubuntu:  sudo apt-get install -y ffmpeg"
+  echo "❌ Error: ffmpeg not found."
   exit 1
 fi
 
-# ffprobe helps us validate that clean/raw durations match
 FFPROBE_OK=0
-if have_cmd ffprobe; then
-  FFPROBE_OK=1
-fi
+if have_cmd ffprobe; then FFPROBE_OK=1; fi
 
-# Script lives at: scripts/training-data/01.download
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-# Where downloads must go
 OUTPUT_ROOT="${OUTPUT_ROOT:-"$ROOT_DIR/data/01.download"}"
-
 COOKIES_FILE="${YOUTUBE_COOKIES_FILE:-"$ROOT_DIR/docs/data_docs/www.youtube.com_cookies.txt"}"
 
 # --------------------------
-# Reliability + audio settings (business-critical)
+# Gentle / compliance-friendly pacing knobs
 # --------------------------
+# Fixed delay between items within playlist/channel downloads (seconds).
+# Kept fixed (not randomized) on purpose.
+SLEEP_BETWEEN_ITEMS_SEC="${SLEEP_BETWEEN_ITEMS_SEC:-8}"
 
-# 1) YouTube download reliability knobs
-#    Lower concurrent fragments reduces 403s on many networks/regions.
+# Extra fixed delay between processing each line in --sources mode.
+SLEEP_BETWEEN_SOURCES_SEC="${SLEEP_BETWEEN_SOURCES_SEC:-12}"
+
+# Optional bandwidth cap for downloads (yt-dlp: --limit-rate). Examples: 500K, 2M, 10M
+LIMIT_RATE="${LIMIT_RATE:-2M}"
+
+# Outer retry/backoff (script-level) for whole yt-dlp call
+OUTER_MAX_ATTEMPTS="${OUTER_MAX_ATTEMPTS:-3}"
+OUTER_BACKOFF_BASE_SEC="${OUTER_BACKOFF_BASE_SEC:-15}"
+OUTER_BACKOFF_MAX_SEC="${OUTER_BACKOFF_MAX_SEC:-300}"
+
+# Inner yt-dlp retry knobs (still useful for flaky fragments)
 CONCURRENT_FRAGMENTS="${CONCURRENT_FRAGMENTS:-1}"
-RETRIES="${RETRIES:-10}"
-FRAGMENT_RETRIES="${FRAGMENT_RETRIES:-10}"
+RETRIES="${RETRIES:-8}"
+FRAGMENT_RETRIES="${FRAGMENT_RETRIES:-8}"
 RETRY_SLEEP="${RETRY_SLEEP:-2}"
 
-# 2) ASR audio standardization
-#    16k mono PCM = safest common denominator for Whisper pipelines.
+# ASR audio standardization
 ASR_SAMPLE_RATE="${ASR_SAMPLE_RATE:-16000}"
 
-# 3) Clean audio filters (conservative & robust)
-#    IMPORTANT: dynaudnorm is intentionally removed here because it can hang or truncate in batch pipelines.
-#    These are stable and typically helpful:
-#      - highpass: remove rumble
-#      - lowpass: reduce hiss
-#      - afftdn: mild noise reduction (optional)
-#      - alimiter: prevent clipping
 ASR_CLEAN_FILTERS="${ASR_CLEAN_FILTERS:-highpass=f=80,lowpass=f=8000,afftdn=nf=-25,alimiter=limit=0.97}"
-
-# 3b) Timestamp safety (prevents weird duration truncation on some sources)
-#     async=1 helps align/repair broken timestamps without aggressive stretching.
 ASR_RESYNC_FILTER="${ASR_RESYNC_FILTER:-aresample=async=1:first_pts=0}"
 
-# 4) Optional playable preview file for QA
 MAKE_PREVIEW_MP3="${MAKE_PREVIEW_MP3:-1}"
 PREVIEW_MP3_BITRATE="${PREVIEW_MP3_BITRATE:-128k}"
 
-# 5) ffmpeg hang protection (never let one file brick the batch)
-FFMPEG_TIMEOUT_SEC="${FFMPEG_TIMEOUT_SEC:-600}"  # 10 minutes
+FFMPEG_TIMEOUT_SEC="${FFMPEG_TIMEOUT_SEC:-600}"
 USE_TIMEOUT=0
-if have_cmd timeout; then
-  USE_TIMEOUT=1
-fi
+if have_cmd timeout; then USE_TIMEOUT=1; fi
 
 # --------------------------
-# JS runtime detection (yt-dlp best practice)
+# JS runtime detection (yt-dlp)
 # --------------------------
 js_runtime_args=()
 extractor_args=()
 
 if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
-  # yt-dlp increasingly needs JS runtime for reliable extraction.
   if have_cmd deno; then
     js_runtime_args=(--js-runtimes deno)
   elif have_cmd node; then
@@ -156,20 +113,14 @@ if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
   elif have_cmd bun; then
     js_runtime_args=(--js-runtimes bun)
   else
-    echo "❌ Error: No JS runtime found (required for reliable YouTube extraction now)."
-    echo "   Install one (recommended: deno OR node):"
-    echo "     Ubuntu/WSL: sudo apt update && sudo apt install -y nodejs npm"
-    echo "     or install deno from official docs"
+    echo "❌ Error: No JS runtime found (needed for reliable extraction). Install deno or node."
     exit 1
   fi
-
-  # DO NOT force android client by default.
-  # It frequently triggers PO Token requirements and skipped formats.
   extractor_args=()
 fi
 
 # --------------------------
-# Common yt-dlp args (reliability)
+# Common yt-dlp args
 # --------------------------
 common_dl_args=()
 if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
@@ -178,25 +129,26 @@ if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
     --fragment-retries "$FRAGMENT_RETRIES"
     --file-access-retries "$FRAGMENT_RETRIES"
     --retry-sleep "$RETRY_SLEEP"
-    --sleep-interval 1
-    --max-sleep-interval 3
     --concurrent-fragments "$CONCURRENT_FRAGMENTS"
     --continue
     --no-post-overwrites
     --ignore-errors
     --progress
     --newline
+
+    # Gentle pacing between playlist items (fixed)
+    --sleep-interval "$SLEEP_BETWEEN_ITEMS_SEC"
+    --max-sleep-interval "$SLEEP_BETWEEN_ITEMS_SEC"
   )
+  if [[ -n "${LIMIT_RATE// }" ]]; then
+    common_dl_args+=( --limit-rate "$LIMIT_RATE" )
+  fi
 else
-  # youtube-dl fallback: keep it simple (some yt-dlp flags may not exist)
-  common_dl_args=(
-    --continue
-    --ignore-errors
-  )
+  common_dl_args=( --continue --ignore-errors )
 fi
 
 # --------------------------
-# Helpers: durations + safe ffmpeg runner
+# Helpers
 # --------------------------
 ffprobe_duration_sec() {
   local f="$1"
@@ -204,14 +156,13 @@ ffprobe_duration_sec() {
     echo "0"
     return 0
   fi
-  ffprobe -v error -show_entries format=duration -of default=nokey=1:noprint_wrappers=1 "$f" 2>/dev/null | awk '{printf "%.3f\n", $1}'
+  ffprobe -v error -show_entries format=duration \
+    -of default=nokey=1:noprint_wrappers=1 "$f" 2>/dev/null \
+    | awk '{printf "%.3f\n", $1}'
 }
 
 run_ffmpeg() {
-  # Usage: run_ffmpeg <log_file> <ffmpeg args...>
-  local log_file="$1"
-  shift
-
+  local log_file="$1"; shift
   if [[ "$USE_TIMEOUT" -eq 1 ]]; then
     timeout "$FFMPEG_TIMEOUT_SEC" ffmpeg -nostdin "$@" 2>>"$log_file"
   else
@@ -219,70 +170,97 @@ run_ffmpeg() {
   fi
 }
 
+detect_botcheck_in_file() {
+  # Conservative patterns that usually indicate a human verification gate.
+  local f="$1"
+  grep -Eqi \
+    "unusual traffic|not a robot|captcha|verify you are|confirm you|sign in to confirm|robot check|sorry.*cannot process|access denied" \
+    "$f"
+}
+
+dl_with_backoff() {
+  # dl_with_backoff <log_file> <cmd...>
+  local log_file="$1"; shift
+  local attempt=1
+  local tmp
+  tmp="$(mktemp)"
+
+  while [[ "$attempt" -le "$OUTER_MAX_ATTEMPTS" ]]; do
+    echo "" >>"$log_file"
+    echo "----- Attempt $attempt/$OUTER_MAX_ATTEMPTS -----" >>"$log_file"
+
+    set +e
+    "$@" 2>&1 | tee "$tmp"
+    local status="${PIPESTATUS[0]}"
+    set -e
+
+    cat "$tmp" >>"$log_file"
+
+    if detect_botcheck_in_file "$tmp"; then
+      echo "❌ Detected a likely human-verification/bot-check response. Stopping (do not hammer retries)." | tee -a "$log_file"
+      rm -f "$tmp"
+      return 77
+    fi
+
+    if [[ "$status" -eq 0 ]]; then
+      rm -f "$tmp"
+      return 0
+    fi
+
+    # Backoff before next attempt
+    local sleep_sec
+    sleep_sec="$(awk -v b="$OUTER_BACKOFF_BASE_SEC" -v a="$attempt" 'BEGIN{v=b*(2^(a-1)); printf "%.0f", v}')"
+    if [[ "$sleep_sec" -gt "$OUTER_BACKOFF_MAX_SEC" ]]; then
+      sleep_sec="$OUTER_BACKOFF_MAX_SEC"
+    fi
+    echo "⚠️ Download failed (exit $status). Backing off ${sleep_sec}s before retry..." | tee -a "$log_file"
+    sleep "$sleep_sec"
+    attempt=$((attempt + 1))
+  done
+
+  rm -f "$tmp"
+  return 1
+}
+
 # --------------------------
-# ASR file creation
+# ASR building (same as your logic)
 # --------------------------
 make_asr_outputs_for_input() {
   local in_audio="$1"
   local log_file="$2"
 
-  local stem="${in_audio%.*}"              # remove extension
+  local stem="${in_audio%.*}"
   local raw_out="${stem}.asr.raw16k.wav"
   local clean_out="${stem}.asr.clean16k.wav"
   local mp3_out="${stem}.listen.mp3"
 
-  # RAW WAV (format normalization only)
   if [[ ! -f "$raw_out" ]]; then
-    echo "🎛️  RAW ASR WAV:"
-    echo "   IN : $in_audio"
-    echo "   OUT: $raw_out"
-
     run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
       -i "$in_audio" \
       -map 0:a:0? -vn -sn -dn \
       -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
       -af "$ASR_RESYNC_FILTER" \
-      "$raw_out" || {
-        echo "⚠️ Failed to build RAW WAV: $raw_out" >>"$log_file"
-      }
+      "$raw_out" || echo "⚠️ RAW WAV failed: $raw_out" >>"$log_file"
   fi
 
-  # CLEAN WAV (mild cleanup)
   if [[ ! -f "$clean_out" ]]; then
-    echo "🧼 CLEAN ASR WAV:"
-    echo "   IN : $in_audio"
-    echo "   OUT: $clean_out"
-
     run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
       -i "$in_audio" \
       -map 0:a:0? -vn -sn -dn \
       -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
       -af "$ASR_CLEAN_FILTERS,$ASR_RESYNC_FILTER" \
-      "$clean_out" || {
-        echo "⚠️ Failed to build CLEAN WAV: $clean_out" >>"$log_file"
-      }
+      "$clean_out" || echo "⚠️ CLEAN WAV failed: $clean_out" >>"$log_file"
   fi
 
-  # Duration verification: clean must not be shorter than raw (this is your 1:46 bug)
   if [[ -f "$raw_out" && -f "$clean_out" && "$FFPROBE_OK" -eq 1 ]]; then
-    local d_raw d_clean
+    local d_raw d_clean min_ok
     d_raw="$(ffprobe_duration_sec "$raw_out")"
     d_clean="$(ffprobe_duration_sec "$clean_out")"
-
-    # If clean is suspiciously shorter, rebuild clean with ultra-safe filters
-    # (no afftdn, no risky stuff; just bandlimit + limiter)
-    local min_ok
-    min_ok="$(awk -v r="$d_raw" 'BEGIN{printf "%.3f", (r - 0.500)}')" # allow 0.5s tolerance
+    min_ok="$(awk -v r="$d_raw" 'BEGIN{printf "%.3f", (r - 0.500)}')"
 
     if awk -v c="$d_clean" -v m="$min_ok" 'BEGIN{exit !(c < m)}'; then
-      echo "⚠️ CLEAN WAV seems truncated:"
-      echo "   raw  : ${d_raw}s"
-      echo "   clean: ${d_clean}s"
-      echo "   -> rebuilding clean with safer filters (no afftdn)..."
-
       local safer_filters="highpass=f=80,lowpass=f=8000,alimiter=limit=0.97"
       rm -f "$clean_out" 2>/dev/null || true
-
       run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
         -i "$in_audio" \
         -map 0:a:0? -vn -sn -dn \
@@ -290,29 +268,20 @@ make_asr_outputs_for_input() {
         -af "$safer_filters,$ASR_RESYNC_FILTER" \
         "$clean_out" || true
 
-      # If still bad, fallback: clean = raw (never block the pipeline)
       d_clean="$(ffprobe_duration_sec "$clean_out")"
       min_ok="$(awk -v r="$d_raw" 'BEGIN{printf "%.3f", (r - 0.500)}')"
       if awk -v c="$d_clean" -v m="$min_ok" 'BEGIN{exit !(c < m)}'; then
-        echo "⚠️ CLEAN still truncated after rebuild -> using RAW as CLEAN fallback."
         cp -f "$raw_out" "$clean_out"
       fi
     fi
   fi
 
-  # Optional preview MP3 (fast QA listening)
   if [[ "$MAKE_PREVIEW_MP3" == "1" && ! -f "$mp3_out" ]]; then
-    echo "🎧 PREVIEW MP3:"
-    echo "   IN : $in_audio"
-    echo "   OUT: $mp3_out"
-
     run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
       -i "$in_audio" \
       -map 0:a:0? -vn -sn -dn \
       -c:a libmp3lame -b:a "$PREVIEW_MP3_BITRATE" \
-      "$mp3_out" || {
-        echo "⚠️ Failed to build preview MP3: $mp3_out" >>"$log_file"
-      }
+      "$mp3_out" || echo "⚠️ MP3 preview failed: $mp3_out" >>"$log_file"
   fi
 }
 
@@ -321,46 +290,29 @@ make_asr_files() {
   local log_file="$output_dir/audio-asr-build.log"
   : > "$log_file"
 
-  echo ""
-  echo "🧪 Building ASR audio outputs under: $output_dir"
-  echo "   - *.asr.raw16k.wav    (normalized only)"
-  echo "   - *.asr.clean16k.wav  (mild cleanup)"
-  if [[ "$MAKE_PREVIEW_MP3" == "1" ]]; then
-    echo "   - *.listen.mp3        (playable QA preview)"
-  fi
-  echo "   Log: $log_file"
-  echo ""
-
   local found_any=0
-
-  # Primary path: use original downloaded best audio:
-  #   <title> [id].audio.<ext>
   while IFS= read -r -d '' in_audio; do
     found_any=1
     make_asr_outputs_for_input "$in_audio" "$log_file"
-  done < <(
-    find "$output_dir" -type f \
-      -name "*.audio.*" \
-      ! -name "*.wav" \
-      ! -name "*.asr.raw16k.wav" \
-      ! -name "*.asr.clean16k.wav" \
-      -print0
+    done < <(
+    # Only actual audio containers (avoid *.info.json etc.)
+    find "$output_dir" -type f \( \
+        -iname "*.audio.webm" -o \
+        -iname "*.audio.m4a"  -o \
+        -iname "*.audio.mp3"  -o \
+        -iname "*.audio.mp4"  -o \
+        -iname "*.audio.mkv"  -o \
+        -iname "*.audio.opus" -o \
+        -iname "*.audio.mka" \
+      \) -print0
   )
 
-  # Fallback path: if audio download failed, extract from the MP4 instead.
+
   if [[ "$found_any" -eq 0 ]]; then
-    echo "⚠️  No original audio files found. Falling back to extracting audio from MP4..." | tee -a "$log_file"
     while IFS= read -r -d '' mp4; do
       make_asr_outputs_for_input "$mp4" "$log_file"
-    done < <(
-      find "$output_dir" -type f \
-        -name "*.mp4" \
-        -print0
-    )
+    done < <(find "$output_dir" -type f -name "*.mp4" -print0)
   fi
-
-  echo ""
-  echo "✅ ASR outputs step completed."
 }
 
 download_one() {
@@ -369,180 +321,119 @@ download_one() {
 
   local safe_source
   safe_source="$(safe_name "$source_name")"
-
-  # ✅ REQUIRED output: data/01.download/<source>/<video_name>/*
   local output_dir="$OUTPUT_ROOT/$safe_source"
 
-  # Keep logs/archives inside the same output folder (self-contained)
   local archive_audio="$output_dir/.youtube-dl-archive.audio.txt"
   local archive_video="$output_dir/.youtube-dl-archive.video.txt"
-
   local log_audio="$output_dir/download-audio.log"
   local log_video="$output_dir/download-video.log"
 
   mkdir -p "$output_dir"
 
-  # Cookies: runtime copy so the export is never overwritten
   local -a cookies_args=()
   if [[ -f "$COOKIES_FILE" ]]; then
     local runtime_cookie="$output_dir/.yt-dlp-cookies.runtime.txt"
     cp "$COOKIES_FILE" "$runtime_cookie"
     chmod 600 "$runtime_cookie" 2>/dev/null || true
     cookies_args=(--cookies "$runtime_cookie")
-    echo "🍪 Cookies: using $COOKIES_FILE (copied -> $runtime_cookie)"
-  else
-    echo "⚠️  Cookies: NOT FOUND at $COOKIES_FILE"
-    echo "    (public videos still work, age/private may fail)"
   fi
 
-  echo "================================"
-  echo "📥 Download source: $source_name"
-  echo "   URL: $youtube_url"
-  echo "   Output: $output_dir"
-  echo "   Using: $DOWNLOADER"
-  echo "================================"
-
-  # Base naming:
-  # - original audio file: <title> [id].audio.<ext>
-  # - extracted wav:       <title> [id].audio.asr.raw16k.wav (created by ffmpeg)
-  # - cleaned wav:         <title> [id].audio.asr.clean16k.wav (created by ffmpeg)
-  # - preview mp3:         <title> [id].audio.listen.mp3 (created by ffmpeg)
-  # - mp4 video:           <title> [id].mp4
   local base="$output_dir/%(title)s [%(id)s]/%(title)s [%(id)s]"
 
-  # --------------------------
-  # 1) Download best audio (original) — DO NOT let yt-dlp convert to WAV
-  # --------------------------
-  echo ""
-  echo "🎧 AUDIO: bestaudio (original format retained as source-of-truth)"
-  set +e
-  "$DOWNLOADER" \
-    --format "bestaudio/best" \
-    --output "${base}.audio.%(ext)s" \
-    --write-info-json \
-    --download-archive "$archive_audio" \
-    --no-post-overwrites \
-    "${common_dl_args[@]}" \
-    "${js_runtime_args[@]}" \
-    "${extractor_args[@]}" \
-    "${cookies_args[@]}" \
-    "$youtube_url" 2>&1 | tee "$log_audio"
-  local audio_status=${PIPESTATUS[0]}
-  set -e
+  echo "================================"
+  echo "📥 $source_name"
+  echo "   $youtube_url"
+  echo "   -> $output_dir"
+  echo "================================"
 
-  if [[ "$audio_status" -ne 0 ]]; then
-    echo "⚠️  Audio download finished with errors (exit code $audio_status). Check: $log_audio"
-  else
-    echo "✅ Audio download finished OK. Log: $log_audio"
-  fi
+  # AUDIO
+  : > "$log_audio"
+  dl_with_backoff "$log_audio" \
+    "$DOWNLOADER" \
+      --format "bestaudio/best" \
+      --output "${base}.audio.%(ext)s" \
+      --write-info-json \
+      --download-archive "$archive_audio" \
+      --no-post-overwrites \
+      "${common_dl_args[@]}" \
+      "${js_runtime_args[@]}" \
+      "${extractor_args[@]}" \
+      "${cookies_args[@]}" \
+      "$youtube_url" || {
+        rc=$?
+        echo "⚠️ Audio step ended (code $rc). Log: $log_audio"
+        [[ "$rc" -eq 77 ]] && return 77
+      }
 
-  # --------------------------
-  # 1b) Create ASR-safe WAVs (raw + clean) + preview mp3
-  # --------------------------
   make_asr_files "$output_dir"
 
-  # --------------------------
-  # 2) Download MP4 video (best effort)
-  # --------------------------
-  echo ""
-  echo "🎥 VIDEO: MP4 download"
-
-  # Reliability-first default:
-  #   - progressive MP4 avoids many 403s caused by separate BV+BA fragment fetching
+  # VIDEO
+  : > "$log_video"
   VIDEO_FORMAT="${VIDEO_FORMAT:-best[ext=mp4]/best}"
-
-  # If you *really* want bestvideo+audio merging, enable:
-  #   HIGH_QUALITY_VIDEO=1 ./scripts/training-data/01.download ...
   if [[ "${HIGH_QUALITY_VIDEO:-0}" == "1" ]]; then
     VIDEO_FORMAT="bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bv*+ba/b"
-    echo "    (HQ MODE enabled: bestvideo+audio merge)"
-  else
-    echo "    (SAFE MODE: progressive mp4 preferred)"
   fi
 
-  set +e
-  "$DOWNLOADER" \
-    --format "$VIDEO_FORMAT" \
-    --merge-output-format mp4 \
-    --output "${base}.%(ext)s" \
-    --write-info-json \
-    --download-archive "$archive_video" \
-    --no-post-overwrites \
-    "${common_dl_args[@]}" \
-    "${js_runtime_args[@]}" \
-    "${extractor_args[@]}" \
-    "${cookies_args[@]}" \
-    "$youtube_url" 2>&1 | tee "$log_video"
-  local video_status=${PIPESTATUS[0]}
-  set -e
-
-  if [[ "$video_status" -ne 0 ]]; then
-    echo "⚠️  Video download finished with errors (exit code $video_status). Check: $log_video"
-  else
-    echo "✅ Video download finished OK. Log: $log_video"
-  fi
-
-  echo ""
+  dl_with_backoff "$log_video" \
+    "$DOWNLOADER" \
+      --format "$VIDEO_FORMAT" \
+      --merge-output-format mp4 \
+      --output "${base}.%(ext)s" \
+      --write-info-json \
+      --download-archive "$archive_video" \
+      --no-post-overwrites \
+      "${common_dl_args[@]}" \
+      "${js_runtime_args[@]}" \
+      "${extractor_args[@]}" \
+      "${cookies_args[@]}" \
+      "$youtube_url" || {
+        rc=$?
+        echo "⚠️ Video step ended (code $rc). Log: $log_video"
+        [[ "$rc" -eq 77 ]] && return 77
+      }
+  make_asr_files "$output_dir"
   echo "✅ Done: $source_name"
-  echo "   Folder: $output_dir"
-  echo ""
 }
 
 download_from_sources() {
   local sources_file="${1:-$ROOT_DIR/docs/sources.txt}"
+  [[ -f "$sources_file" ]] || { echo "❌ Sources file not found: $sources_file"; exit 1; }
 
-  if [[ ! -f "$sources_file" ]]; then
-    echo "❌ Sources file not found: $sources_file"
-    exit 1
-  fi
-
-  echo "📥 Downloading from sources file: $sources_file"
-  echo "📁 Output root: $OUTPUT_ROOT"
-  echo ""
-
-  while IFS= read -r line; do
+  while IFS= read -r line <&3; do
     [[ -z "${line//[[:space:]]/}" ]] && continue
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
 
-    local source_name=""
-    local youtube_url=""
+    local source_name youtube_url
     if [[ "$line" == *"|"* ]]; then
       source_name="${line%%|*}"
       youtube_url="${line#*|}"
     else
-      # best-effort: whitespace split (first token = name, rest = url)
       source_name="${line%%[[:space:]]*}"
       youtube_url="${line#"$source_name"}"
       youtube_url="${youtube_url#"${youtube_url%%[![:space:]]*}"}"
     fi
 
     [[ -z "$source_name" || -z "$youtube_url" ]] && continue
-    download_one "$source_name" "$youtube_url"
-  done < "$sources_file"
 
-  echo "✅ All sources processed."
+    download_one "$source_name" "$youtube_url" || {
+      rc=$?
+      if [[ "$rc" -eq 77 ]]; then
+        echo "❌ Stopped due to likely verification gate. Fix auth/permissions, then resume."
+        exit 77
+      fi
+      echo "⚠️ Failed source: $source_name (code $rc) — continuing..."
+    }
+
+    sleep "$SLEEP_BETWEEN_SOURCES_SEC"
+  done 3< "$sources_file"
 }
 
-# CLI
+
 case "${1:-}" in
-  -h|--help)
-    usage
-    exit 0
-    ;;
-  --sources)
-    download_from_sources "${2:-}"
-    ;;
-  "")
-    usage
-    exit 1
-    ;;
-  *)
-    if [[ $# -lt 2 ]]; then
-      echo "❌ Error: Need both <source_name> and <youtube_url>"
-      echo ""
-      usage
-      exit 1
-    fi
-    download_one "$1" "$2"
-    ;;
+  -h|--help) usage; exit 0 ;;
+  --sources) download_from_sources "${2:-}" ;;
+  "") usage; exit 1 ;;
+  *) [[ $# -ge 2 ]] || { echo "❌ Need <source_name> <youtube_url>"; usage; exit 1; }
+     download_one "$1" "$2"
+     ;;
 esac

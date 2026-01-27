@@ -1,6 +1,7 @@
 "use client"
 
-import { X, Check, Compass, Target, Heart, Sparkles } from "lucide-react"
+import Link from "next/link"
+import { X, Check, Compass, Target, Heart, Sparkles, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { InnerGameStep, type InnerGameProgress } from "../types"
 import { TIME_ESTIMATES, CATEGORIES } from "../config"
@@ -9,12 +10,14 @@ type WelcomeCardProps = {
   progress: InnerGameProgress
   onDismiss: () => void | Promise<void>
   completedCategories: number
+  isPreviewMode?: boolean
 }
 
 export function WelcomeCard({
   progress,
   onDismiss,
   completedCategories,
+  isPreviewMode = false,
 }: WelcomeCardProps) {
   const totalCategories = CATEGORIES.length
   const estimatedMinutes = TIME_ESTIMATES.totalMinutes()
@@ -55,33 +58,57 @@ export function WelcomeCard({
   const isReturningUser = completedCount > 0
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className={isPreviewMode
+      ? "flex items-center justify-center p-4"
+      : "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    }>
       <div className="bg-card rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-border/50">
         {/* Header with gradient accent */}
         <div className="relative p-6 pb-4">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-t-2xl" />
 
-          <button
-            onClick={onDismiss}
-            className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {isPreviewMode ? (
+            <Link
+              href="/dashboard"
+              className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </Link>
+          ) : (
+            <button
+              onClick={onDismiss}
+              className="absolute top-4 right-4 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
 
           <div className="text-center pt-4">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 flex items-center justify-center">
-              <Compass className="w-8 h-8 text-primary" />
+              {isPreviewMode ? (
+                <Lock className="w-8 h-8 text-primary" />
+              ) : (
+                <Compass className="w-8 h-8 text-primary" />
+              )}
             </div>
             <h2 className="text-2xl font-bold text-foreground">
-              {isReturningUser ? "Welcome Back" : "Discover Your Inner Game"}
+              {isPreviewMode
+                ? "Inner Game Preview"
+                : isReturningUser
+                ? "Welcome Back"
+                : "Discover Your Inner Game"}
             </h2>
-            <p className="text-muted-foreground mt-2 text-sm">
-              {isReturningUser
-                ? "Ready to continue your journey?"
-                : "Know your values. Own your confidence."
-              }
-            </p>
+            {isPreviewMode ? (
+              <p className="text-muted-foreground mt-2 text-sm">
+                Sign up to discover your core values and purpose
+              </p>
+            ) : isReturningUser ? (
+              <p className="text-muted-foreground mt-2 text-sm">
+                Ready to continue your journey?
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -89,10 +116,28 @@ export function WelcomeCard({
         <div className="px-6 pb-6 space-y-5">
           {/* Quick intro */}
           {!isReturningUser && (
-            <p className="text-muted-foreground text-sm leading-relaxed text-center">
-              Your inner game is your foundation. When you know what you stand for,
-              you become unshakeable—and that's magnetic.
-            </p>
+            <div className="space-y-4">
+              <p className="text-muted-foreground text-sm leading-relaxed text-center">
+                If your mission is unclear, your presence is weak. Women are naturally
+                drawn to a man who is going somewhere—with or without them. This section
+                defines your <span className="text-foreground font-medium">"North Star"</span> so
+                you stop looking for a woman to be your purpose, and start inviting women
+                to join you on yours.
+              </p>
+              <div className="relative px-4 py-3 bg-muted/30 rounded-lg border-l-2 border-primary/50">
+                <p className="text-xs text-muted-foreground/80 uppercase tracking-wider mb-2">
+                  The Philosophy
+                </p>
+                <p className="text-sm text-muted-foreground italic leading-relaxed">
+                  "If a man prioritizes his relationship over his highest purpose, he weakens
+                  himself, disserves the universe, and cheats his woman of an authentic man
+                  who can offer her full presence."
+                </p>
+                <p className="text-xs text-muted-foreground/70 mt-2 text-right">
+                  — David Deida, <span className="italic">The Way of the Superior Man</span>
+                </p>
+              </div>
+            </div>
           )}
 
           {/* Progress overview */}
@@ -170,17 +215,42 @@ export function WelcomeCard({
           </div>
 
           {/* Action button */}
-          <Button
-            onClick={onDismiss}
-            className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
-            size="lg"
-          >
-            {completedCount === 0 ? "Let's Begin" : "Continue Journey"}
-          </Button>
+          {isPreviewMode ? (
+            <div className="flex flex-col gap-3">
+              <Button
+                asChild
+                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
+                size="lg"
+              >
+                <Link href="/auth/sign-up">
+                  Get Started Free
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="w-full"
+              >
+                <Link href="/auth/login">
+                  Already have an account? Login
+                </Link>
+              </Button>
+            </div>
+          ) : (
+            <Button
+              onClick={onDismiss}
+              className="w-full h-12 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-lg shadow-primary/20"
+              size="lg"
+            >
+              {completedCount === 0 ? "Let's Begin" : "Continue Journey"}
+            </Button>
+          )}
 
           {/* Subtle footer */}
           <p className="text-xs text-muted-foreground text-center">
-            Your progress is saved automatically
+            {isPreviewMode
+              ? "Sign up to track your progress and unlock all features"
+              : "Your progress is saved automatically"}
           </p>
         </div>
       </div>

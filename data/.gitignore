@@ -3,3 +3,5 @@
 
 # But keep this .gitignore file
 !.gitignore
+# Hugging Face token (keep private)
+data/token/huggingface

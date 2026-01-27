@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { redirect } from "next/navigation"
 import { ArrowLeft, Target } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -23,8 +22,40 @@ export async function ScenariosPage() {
     data: { user },
   } = await supabase.auth.getUser()
 
+  // Preview mode for non-logged-in users
   if (!user) {
-    redirect("/auth/login")
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
+              <Target className="size-6 text-primary" />
+              <span>Scenarios</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/dashboard">
+                  <ArrowLeft className="size-4 mr-2" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl px-8 py-12">
+          <ScenariosHub
+            recommendedDifficulty="beginner"
+            userLevel={1}
+            scenariosCompleted={0}
+            isPreviewMode={true}
+          />
+        </main>
+      </div>
+    )
   }
 
   const { data: profile } = await supabase
@@ -33,22 +64,72 @@ export async function ScenariosPage() {
     .eq("id", user.id)
     .single()
 
+  // Preview mode for users without subscription
   if (!profile?.has_purchased) {
     return (
-      <div className="container flex flex-col items-center justify-center min-h-screen text-center">
-        <h1 className="text-4xl font-bold mb-4">Subscription Required</h1>
-        <p className="text-muted-foreground mb-8 text-lg">
-          You need to subscribe to access the Daygame Coach.
-        </p>
-        <Button asChild size="lg">
-          <Link href="/">View Pricing</Link>
-        </Button>
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
+              <Target className="size-6 text-primary" />
+              <span>Scenarios</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
+              </div>
+              <Button asChild variant="outline">
+                <Link href="/dashboard">
+                  <ArrowLeft className="size-4 mr-2" />
+                  Back to Dashboard
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl px-8 py-12">
+          <ScenariosHub
+            recommendedDifficulty="beginner"
+            userLevel={1}
+            scenariosCompleted={0}
+            isPreviewMode={true}
+          />
+        </main>
       </div>
     )
   }
 
+  // Onboarding check - only for subscribed users
   if (!profile?.onboarding_completed) {
-    redirect("/preferences")
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
+              <Target className="size-6 text-primary" />
+              <span>Scenarios</span>
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/dashboard">
+                <ArrowLeft className="size-4 mr-2" />
+                Back to Dashboard
+              </Link>
+            </Button>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl px-8 py-12">
+          <div className="text-center py-16">
+            <h2 className="text-2xl font-bold mb-4">Complete Your Profile First</h2>
+            <p className="text-muted-foreground mb-6">Set up your preferences to get personalized scenarios.</p>
+            <Button asChild>
+              <Link href="/preferences">Complete Setup</Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    )
   }
 
   const recommendedDifficulty = getRecommendedDifficulty(profile?.level)
@@ -75,6 +156,7 @@ export async function ScenariosPage() {
           recommendedDifficulty={recommendedDifficulty}
           userLevel={profile?.level ?? 1}
           scenariosCompleted={profile?.scenarios_completed ?? 0}
+          isPreviewMode={false}
         />
       </main>
     </div>
