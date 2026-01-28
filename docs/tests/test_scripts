@@ -1,0 +1,28 @@
+#to test if scripts are working. AI must ALWAYS do this when running a script.
+
+#1
+Create LOGS at /docs/logs/ that go through any tests that fail.
+
+#2
+When AI has changed a script, it must ALWAYS try to run the script. 
+
+#3
+If the script fails, AI must ALWAYS add a new step to its plan to fix the script.
+
+#4
+AI must always then complete that step.
+
+#5
+A training-data script must ALWAYS have usage commands in the form:
+
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/02.transcribe --sources
+#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
+
+#6
+If in doubt on what file to run for a script step, choose "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+

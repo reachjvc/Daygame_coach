@@ -4,6 +4,14 @@ scripts/training-data/02.transcribe
 
 STEP 2A — FULL-FILE TRANSCRIBE (STABLE)
 
+# Use:
+#   A) One source (video / playlist / channel):
+#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#
+#   B) Batch from sources file:
+#      ./scripts/training-data/02.transcribe --sources
+#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
+
 Goals:
 - No "Whisper looping weirdly": default condition_on_previous_text=False for whisper + faster-whisper.
 - WhisperX word timestamps WITHOUT pyannote VAD crashes:
@@ -11,7 +19,7 @@ Goals:
   (does NOT call whisperx ASR, so it avoids whisperx.vads.pyannote completely)
 
 Engines:
-- whisperx : faster-whisper -> whisperx.align (word timestamps)
+- whisperx : faster-whisper -> whisperx.align (word timestamps) + (optional) diarization
 - faster   : faster-whisper only (segments)
 - whisper  : openai-whisper only (segments)
 
@@ -48,7 +56,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 from contextlib import contextmanager
@@ -97,7 +104,6 @@ def _apply_torch_safe_globals_allowlist() -> None:
 
 
 _apply_torch_safe_globals_allowlist()
-
 
 # Optional audio loaders
 try:
@@ -727,11 +733,11 @@ class WhisperXAlignEngine(BaseEngine):
         temperature: float,
         batch_size: int,
         diarize: bool,
-        diarize_first: bool,
+        diarize_first: bool,  # kept for CLI compatibility; not used in this align-based engine
         hf_token: str,
         vad_filter: bool = False,
     ):
-        self.model_name = str(faster_model)  # this is the ASR model used
+        self.model_name = str(faster_model)  # ASR model used for the whisperx-align pipeline
         self.language = _norm_lang(language)
         self.device = _auto_device(device)
         self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
@@ -846,7 +852,6 @@ class WhisperXAlignEngine(BaseEngine):
         audio16k = load_audio_16k_for_whisperx(audio_path)
         aligned = self._align(fw_segments, audio16k)
 
-        # aligned["segments"] already contains start/end/text + words
         segs = aligned.get("segments", []) or []
         if not isinstance(segs, list):
             segs = []
@@ -856,7 +861,6 @@ class WhisperXAlignEngine(BaseEngine):
             turns = self._run_diarization(audio16k, audio_path)
             if turns:
                 try:
-                    # if helper exists in your whisperx version
                     assigned = self._whisperx.assign_word_speakers(turns, aligned)
                     segs = assigned.get("segments", []) or segs
                 except Exception:
@@ -981,6 +985,8 @@ def _run_engine_in_subprocess(args: argparse.Namespace, engine_name: str, audio_
     cmd += ["--progress-interval", str(args.progress_interval)]
     if args.no_trim_repeat_tail:
         cmd += ["--no-trim-repeat-tail"]
+    if args.overwrite:
+        cmd += ["--overwrite"]
 
     # whisper
     cmd += ["--model", str(args.model)]
@@ -989,6 +995,16 @@ def _run_engine_in_subprocess(args: argparse.Namespace, engine_name: str, audio_
         cmd += ["--whisper-fp16"]
     if args.no_whisper_fp16:
         cmd += ["--no-whisper-fp16"]
+    cmd += ["--whisper-temp-schedule", str(args.whisper_temp_schedule)]
+    cmd += ["--whisper-best-of", str(args.whisper_best_of)]
+    cmd += ["--whisper-patience", str(args.whisper_patience)]
+    cmd += ["--whisper-comp-ratio-thresh", str(args.whisper_comp_ratio_thresh)]
+    cmd += ["--whisper-logprob-thresh", str(args.whisper_logprob_thresh)]
+    cmd += ["--whisper-no-speech-thresh", str(args.whisper_no_speech_thresh)]
+    if args.whisper_condition_on_prev:
+        cmd += ["--whisper-condition-on-prev"]
+    if args.whisper_no_condition_on_prev:
+        cmd += ["--whisper-no-condition-on-prev"]
 
     # faster
     cmd += ["--faster-model", str(args.faster_model)]
@@ -1086,6 +1102,7 @@ def batch_for_source(
             out_primary = out_video_dir / f"{video_dir.name}.full.json"
             out_files: Dict[str, Path] = {p.name: p.out_path_for(out_video_dir, video_dir.name) for p in enabled_plans}
 
+            # Full skip only if everything already exists and overwrite is OFF
             if not overwrite:
                 if out_primary.exists() and all(p.exists() for p in out_files.values()):
                     skipped += 1
@@ -1114,9 +1131,13 @@ def batch_for_source(
                             trim_repeat_tail=trim_repeat_tail,
                         )
 
+            # Primary copy: do NOT overwrite unless overwrite=True
             primary = out_files.get(primary_engine_name)
             if primary and primary.exists():
-                shutil.copyfile(primary, out_primary)
+                if overwrite or (not out_primary.exists()):
+                    shutil.copyfile(primary, out_primary)
+                else:
+                    log(f"[02.transcribe]   SKIP primary copy: exists ({out_primary.name})")
 
             processed += 1
 
@@ -1162,14 +1183,24 @@ if __name__ == "__main__":
     p.add_argument("--audio", help="Single-file input path.")
     p.add_argument("--out", help="Single-file output .full.json (primary engine copy).")
 
-    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs (per-engine + primary copy).")
     p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
 
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
     p.add_argument("--no-trim-repeat-tail", action="store_true", help="Disable repeated-tail trimming guardrail.")
 
-    p.add_argument("--engines", default=os.environ.get("TRANSCRIBE_ENGINES", "whisperx"))
-    p.add_argument("--primary-engine", default=os.environ.get("TRANSCRIBE_PRIMARY_ENGINE", "whisperx"), choices=["whisperx", "faster", "whisper"])
+    # IMPORTANT: default runs EVERYTHING
+    p.add_argument(
+        "--engines",
+        default="whisperx,faster,whisper",
+        help="Comma-separated list: whisperx,faster,whisper (default: run all).",
+    )
+    p.add_argument(
+        "--primary-engine",
+        default="whisper",
+        choices=["whisperx", "faster", "whisper"],
+        help="Which engine is copied to *.full.json (default: whisper).",
+    )
 
     p.add_argument("--beam-size", type=int, default=int(os.environ.get("WHISPER_BEAM_SIZE", "3")))
     p.add_argument("--temperature", type=float, default=float(os.environ.get("WHISPER_TEMPERATURE", "0.0")))
@@ -1231,7 +1262,7 @@ if __name__ == "__main__":
     whisperx_device = _auto_device(args.whisperx_device)
     whisperx_compute = (args.whisperx_compute_type or "").strip().lower() or ("int8_float16" if whisperx_device == "cuda" else "int8")
 
-    # diarization mode
+    # diarization mode (kept for CLI compatibility)
     diarize_first = True
     if args.whisperx_diarize_after:
         diarize_first = False
@@ -1319,18 +1350,28 @@ if __name__ == "__main__":
         if torch is not None and torch.cuda.is_available() and len(enabled_names) > 1:
             isolate_engines = True
 
+    log(f"[02.transcribe] Engines enabled: {', '.join(enabled_names)} | primary={primary_engine} | overwrite={bool(args.overwrite)}")
+
     # hidden subprocess-run
     if hasattr(args, "_engine_run") and hasattr(args, "_engine_out"):
         eng_name = str(getattr(args, "_engine_run")).strip().lower()
         out_path = Path(str(getattr(args, "_engine_out"))).expanduser()
+
         if not args.audio:
             raise SystemExit("--_engine-run requires --audio")
         audio_in = Path(args.audio).expanduser()
         if not audio_in.exists():
             raise SystemExit(f"Audio not found: {audio_in}")
+
+        # Respect "don't overwrite"
+        if out_path.exists() and not args.overwrite:
+            log(f"[02.transcribe]   SKIP {eng_name}: exists ({out_path.name})")
+            raise SystemExit(0)
+
         plan_map = {pl.name: pl for pl in plans if pl.enabled}
         if eng_name not in plan_map:
             raise SystemExit(f"Engine not enabled/valid: {eng_name}")
+
         out_path.parent.mkdir(parents=True, exist_ok=True)
         with materialize_engine(plan_map[eng_name]) as eng:
             transcribe_full_file_with_engine(
@@ -1358,6 +1399,11 @@ if __name__ == "__main__":
         for plan in [pl for pl in plans if pl.enabled]:
             out_eng = base_dir / (out_path.name.replace(".full.json", f".full.{plan.name}.json"))
             out_files[plan.name] = out_eng
+
+            if out_eng.exists() and not args.overwrite:
+                log(f"[02.transcribe]   SKIP {plan.name}: exists ({out_eng.name})")
+                continue
+
             if isolate_engines and len(enabled_names) > 1:
                 _run_engine_in_subprocess(args, plan.name, Path(args.audio), out_eng)
             else:
@@ -1369,9 +1415,13 @@ if __name__ == "__main__":
                         progress_interval=float(args.progress_interval),
                         trim_repeat_tail=trim_repeat_tail_enabled,
                     )
+
         primary_file = out_files.get(primary_engine)
         if primary_file and primary_file.exists():
-            shutil.copyfile(primary_file, out_path)
+            if args.overwrite or (not out_path.exists()):
+                shutil.copyfile(primary_file, out_path)
+            else:
+                log(f"[02.transcribe]   SKIP primary copy: exists ({out_path.name})")
         raise SystemExit(0)
 
     # batch sources file
