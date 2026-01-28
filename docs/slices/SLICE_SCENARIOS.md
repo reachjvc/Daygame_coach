@@ -24,11 +24,11 @@ All scenarios share common infrastructure (archetypes, difficulty, evaluation pa
 src/scenarios/
 ├── scenariosService.ts           # Routes to correct scenario handler
 ├── types.ts                      # All shared types
-├── config.ts                     # ALL 19 scenarios with phases, availability
+├── catalog.ts                     # ALL 19 scenarios with phases, availability
 ├── shared/
 │   ├── archetypes.ts             # Woman personality types (6 archetypes)
 │   ├── difficulty.ts             # Difficulty system (5 levels)
-│   └── evaluation.ts             # Shared evaluation patterns
+│   └── prompts.ts                # Shared system/evaluation prompts
 ├── openers/                      # Single-turn opener practice
 │   ├── generator.ts              # Scenario generation (v2)
 │   ├── evaluator.ts              # AI + heuristic evaluation
@@ -83,7 +83,7 @@ app/dashboard/scenarios/
 | `lib/scenarios/difficulty.ts` | `src/scenarios/shared/difficulty.ts` | Difficulty levels |
 | `lib/scenarios/archetypes.ts` | `src/scenarios/shared/archetypes.ts` | Woman archetypes |
 | `lib/scenarios/prompts.ts` | `src/scenarios/shared/prompts.ts` | AI system prompts |
-| `lib/scenarios/career-scenario.ts` | `src/scenarios/career/data/careers.ts` | Career options |
+| `lib/scenarios/career-scenario.ts` | `src/scenarios/career/career-scenario.ts` | Career options |
 | `lib/scenarios/shit-tests.ts` | `src/scenarios/shittests/data/shit-tests.ts` | Shit-test database |
 | `app/api/scenarios/openers/encounter/route.ts` | `app/api/scenarios/openers/encounter/route.ts` | Encounter API |
 | `app/api/scenarios/openers/evaluate/route.ts` | `app/api/scenarios/openers/evaluate/route.ts` | Evaluation API |
@@ -102,35 +102,22 @@ app/dashboard/scenarios/
 
 ## Shared Infrastructure
 
-### 1. Types (`src/scenarios/types.ts`)
+### 1. Types + Catalog (`src/scenarios/types.ts`, `src/scenarios/catalog.ts`)
 
 ```typescript
-// ============ DIFFICULTY ============
-export type DifficultyLevel =
-  | "beginner"
-  | "intermediate"
-  | "advanced"
-  | "expert"
-  | "master";
-
-// ============ SCENARIOS ============
+// types.ts
 export type ScenarioType =
-  // Opening phase
   | "practice-openers"
-  // Hooking phase
   | "topic-pivot"
   | "assumption-game"
   | "her-question"
-  // Vibing phase
   | "practice-career-response"
   | "hobby-response"
   | "compliment-delivery"
   | "flirting-escalation"
-  // Resistance phase
   | "practice-shittests"
   | "boyfriend-mention"
   | "time-pressure"
-  // Closing phase
   | "number-ask"
   | "insta-close"
   | "instant-date"
@@ -140,280 +127,45 @@ export type ScenarioType =
   | "app-opener"
   | "app-to-date";
 
-export type ScenarioPhase =
-  | "opening"
-  | "hooking"
-  | "vibing"
-  | "resistance"
-  | "closing";
+export type ChatScenarioType =
+  | "practice-openers"
+  | "practice-career-response"
+  | "practice-shittests";
 
-export interface ScenarioConfig {
-  id: ScenarioType;
+// catalog.ts
+export type ScenarioId = ScenarioType;
+export type ScenarioStatus = "available" | "placeholder";
+
+export interface ScenarioDef {
+  id: ScenarioId;
   title: string;
   description: string;
-  phase: ScenarioPhase;
-  available: boolean;
-  isMultiTurn: boolean;
+  icon: ComponentType<{ className?: string }>;
+  status: ScenarioStatus;
+  comingSoon?: boolean;
 }
 
-// ============ SCENARIO REGISTRY ============
-// This is the complete list - ALL scenarios must appear in the UI
-export const SCENARIO_PHASES: ScenarioPhase[] = [
-  "opening",
-  "hooking",
-  "vibing",
-  "resistance",
-  "closing",
+export type PhaseId = "opening" | "hooking" | "vibing" | "resistance" | "closing";
+
+export interface PhaseDef {
+  id: PhaseId;
+  title: string;
+  description: string;
+  scenarioIds: ScenarioId[];
+}
+
+export const SCENARIO_CATALOG: Record<ScenarioId, ScenarioDef> = {
+  "practice-openers": { /* ... */ },
+  // ...rest of scenarios
+};
+
+export const PHASE_CATALOG: PhaseDef[] = [
+  { id: "opening", scenarioIds: ["practice-openers"] },
+  // ...rest of phases
 ];
-
-export const ALL_SCENARIOS: ScenarioConfig[] = [
-  // === OPENING PHASE ===
-  {
-    id: "practice-openers",
-    title: "Practice Openers",
-    description: "First 5 seconds - what do you say to get her attention?",
-    phase: "opening",
-    available: true,
-    isMultiTurn: false,
-  },
-
-  // === HOOKING PHASE ===
-  {
-    id: "topic-pivot",
-    title: "Topic Pivot",
-    description: "She gave a bland response. Keep the conversation going.",
-    phase: "hooking",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "assumption-game",
-    title: "Assumption Game",
-    description: "Make playful assumptions about her to create intrigue.",
-    phase: "hooking",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "her-question",
-    title: "Her Question to You",
-    description: '"So what do you do?" - she\'s qualifying you now.',
-    phase: "hooking",
-    available: false,
-    isMultiTurn: true,
-  },
-
-  // === VIBING PHASE ===
-  {
-    id: "practice-career-response",
-    title: "Career Response",
-    description: "She reveals her job. Practice push/pull dynamics.",
-    phase: "vibing",
-    available: true,
-    isMultiTurn: true,
-  },
-  {
-    id: "hobby-response",
-    title: "Hobby Response",
-    description: '"I do yoga" - respond without interview mode.',
-    phase: "vibing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "compliment-delivery",
-    title: "Compliment Delivery",
-    description: "Give a genuine compliment without being needy.",
-    phase: "vibing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "flirting-escalation",
-    title: "Flirting Escalation",
-    description: "Add tension and romantic intent to the conversation.",
-    phase: "vibing",
-    available: false,
-    isMultiTurn: true,
-  },
-
-  // === RESISTANCE PHASE ===
-  {
-    id: "practice-shittests",
-    title: "Shit-Tests",
-    description: "Handle challenges and boundary checks with humor.",
-    phase: "resistance",
-    available: true,
-    isMultiTurn: true,
-  },
-  {
-    id: "boyfriend-mention",
-    title: "Boyfriend Mention",
-    description: '"I have a boyfriend" - real or test? How do you respond?',
-    phase: "resistance",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "time-pressure",
-    title: "Time Pressure",
-    description: '"I really need to go" - respect or persist?',
-    phase: "resistance",
-    available: false,
-    isMultiTurn: true,
-  },
-
-  // === CLOSING PHASE ===
-  {
-    id: "number-ask",
-    title: "Number Ask",
-    description: "Conversation is going well. Ask for her number.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "insta-close",
-    title: "Instagram Close",
-    description: "She's hesitant on number. Pivot to social media.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "instant-date",
-    title: "Instant Date Pitch",
-    description: "High momentum - propose grabbing coffee right now.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "first-text",
-    title: "First Text",
-    description: "You got her number. What do you send?",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "date-proposal",
-    title: "Date Proposal",
-    description: "She's responding positively. Set up a date.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "flake-recovery",
-    title: "Flake Recovery",
-    description: "She went cold or cancelled. Re-engage without neediness.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "app-opener",
-    title: "Dating App Opener",
-    description: "Her profile is interesting. Send a standout first message.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-  {
-    id: "app-to-date",
-    title: "App to Date",
-    description: "Match is going well. Move from app chat to real date.",
-    phase: "closing",
-    available: false,
-    isMultiTurn: true,
-  },
-];
-
-// ============ OPENERS-SPECIFIC ============
-export type EnvironmentChoice =
-  | "any"
-  | "high-street"
-  | "mall"
-  | "coffee-shop"
-  | "transit"
-  | "park"
-  | "gym"
-  | "campus";
-
-export type EnergyState =
-  | "bubbly" | "cheerful" | "relaxed" | "curious" | "playful"
-  | "flirty" | "excited" | "amused" | "content"    // positive
-  | "neutral" | "daydreaming" | "shy" | "bored"     // neutral
-  | "preoccupied" | "focused" | "rushed" | "closed" // negative
-  | "icy" | "tired" | "stressed" | "distracted";
-
-export type Position =
-  | "standing"
-  | "seated"
-  | "walking_slow"
-  | "walking_moderate"
-  | "walking_brisk"
-  | "walking_fast";
-
-export interface GeneratedScenarioV2 {
-  userFacing: {
-    description: string;
-    environment: string;
-    activity: string;
-    hook?: string;
-    weatherDescription?: string;
-  };
-  aiHandoff: {
-    env: string;
-    activity: string;
-    position: Position;
-    energy: EnergyState;
-    energyDescription: string;
-    approachability: number;
-    crowd: string;
-    hasHeadphones: boolean;
-    listeningTo?: string;
-    weather?: WeatherData;
-  };
-  meta: {
-    activityId: string;
-    difficulty: DifficultyLevel;
-    calculatedDifficulty: number;
-  };
-}
-
-// ============ CHAT-SPECIFIC ============
-export interface ChatMessage {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
-
-export interface SmallEvaluation {
-  score: number;
-  feedback: string;
-}
-
-export interface MilestoneEvaluation extends SmallEvaluation {
-  strengths: string[];
-  improvements: string[];
-  suggestedNextLine?: string;
-  turn: number;
-}
-
-// ============ EVALUATION ============
-export interface OpenerEvaluation {
-  overallScore: number;
-  confidence: number;
-  authenticity: number;
-  calibration: number;
-  hook: number;
-  feedback: string;
-  strengths: string[];
-  improvements: string[];
-  suggestedRewrite?: string;
-}
 ```
+
+
 
 ### 2. Archetypes (`src/scenarios/shared/archetypes.ts`)
 
@@ -474,23 +226,29 @@ export const DIFFICULTY_LEVELS: Record<DifficultyLevel, DifficultyConfig> = {
 };
 ```
 
-### 4. Evaluation Patterns (`src/scenarios/shared/evaluation.ts`)
+### 4. Prompts (`src/scenarios/shared/prompts.ts`)
 
-Shared evaluation utilities:
+Shared prompt builders for scenario roleplay and evaluation:
 
 ```typescript
-// AI evaluation with structured output (reuses Q&A provider pattern)
-export async function evaluateWithAI<T>(
-  systemPrompt: string,
-  userInput: string,
-  schema: z.ZodSchema<T>
-): Promise<T | null>
+export function getPracticeOpenersPrompt(
+  archetype: Archetype,
+  location: string
+): { systemPrompt: string; evaluationPrompt: string }
 
-// Heuristic fallback checks
-export function checkApologeticFraming(text: string): boolean
-export function checkGenericCompliment(text: string): boolean
-export function checkHasQuestion(text: string): boolean
-export function checkWordCount(text: string): { tooShort: boolean; tooLong: boolean }
+export function getPracticeCareerResponsePrompt(
+  archetype: Archetype,
+  careerContext: CareerScenarioContext
+): { systemPrompt: string; evaluationPrompt: string }
+
+export function getPracticePushPullPrompt(
+  archetype: Archetype
+): { systemPrompt: string; evaluationPrompt: string }
+
+export function getPracticeShittestsPrompt(
+  archetype: Archetype,
+  location: string
+): { systemPrompt: string; evaluationPrompt: string }
 ```
 
 ---
@@ -787,7 +545,7 @@ The service:
 
 ## UI Components
 
-### ScenariosHub (`components/ScenariosHub.tsx`)
+### ScenariosHub (`src/scenarios/components/ScenariosHub.tsx`)
 
 Main page showing **ALL 19 scenarios** organized by phase.
 
@@ -800,7 +558,7 @@ Main page showing **ALL 19 scenarios** organized by phase.
 
 ```tsx
 export function ScenariosHub() {
-  // Import ALL_SCENARIOS from config
+  // Import SCENARIO_CATALOG from catalog
   // Group by phase using SCENARIO_PHASES
   // Render collapsible sections for each phase
   // Each scenario card shows:
@@ -817,7 +575,7 @@ When user clicks an available scenario:
 - **practice-shittests** → Render `<ShittestChat />`
 - Others → (implement as scenarios become available)
 
-### ChatWindow (`components/ChatWindow.tsx`)
+### ChatWindow (`src/scenarios/components/ChatWindow.tsx`)
 
 Shared multi-turn chat interface.
 
@@ -861,10 +619,10 @@ if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status:
 ### Phase 1: Foundation (Shared Infrastructure)
 
 1. **Types** - Create `src/scenarios/types.ts` with all shared types
-2. **Config** - Create `src/scenarios/config.ts` with scenario registry
+2. **Catalog** - Create `src/scenarios/catalog.ts` with scenario registry
 3. **Difficulty** - Migrate to `src/scenarios/shared/difficulty.ts`
 4. **Archetypes** - Migrate to `src/scenarios/shared/archetypes.ts`
-5. **Evaluation utilities** - Create `src/scenarios/shared/evaluation.ts`
+5. **Prompts** - Create `src/scenarios/shared/prompts.ts`
 
 ### Phase 2: Openers Sub-Module
 
@@ -900,7 +658,7 @@ if (!parsed.success) return NextResponse.json({ error: parsed.error }, { status:
 
 ## Making a "Coming Soon" Scenario Available
 
-All 19 scenarios are already defined in `config.ts`. To implement a "coming soon" scenario (e.g., "boyfriend-mention"):
+All 19 scenarios are already defined in `catalog.ts`. To implement a "coming soon" scenario (e.g., "boyfriend-mention"):
 
 1. **Create the sub-module** `src/scenarios/boyfriend/`:
    - `generator.ts` - Scenario setup
@@ -909,12 +667,13 @@ All 19 scenarios are already defined in `config.ts`. To implement a "coming soon
 
 2. **Add routing** in `scenariosService.ts` for the new scenario type
 
-3. **Set `available: true`** in `config.ts`:
+3. **Set `status: "available"`** in `catalog.ts` (and remove `comingSoon` if present):
    ```typescript
    {
      id: "boyfriend-mention",
      ...
-     available: true,  // Change from false to true
+     status: "available",
+     // comingSoon: true, // remove when available
    }
    ```
 
@@ -925,7 +684,7 @@ All 19 scenarios are already defined in `config.ts`. To implement a "coming soon
 If you need to add an entirely new scenario not in the current 19:
 
 1. Add to `ScenarioType` union in `types.ts`
-2. Add config entry to `ALL_SCENARIOS` in `config.ts`
+2. Add catalog entry to `SCENARIO_CATALOG` in `catalog.ts`
 3. Create sub-module folder with generator/evaluator
 4. Add routing in `scenariosService.ts`
 

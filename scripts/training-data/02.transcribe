@@ -79,8 +79,7 @@ except Exception:
 def _apply_torch_safe_globals_allowlist() -> None:
     """
     If you DO use pyannote (diarization), torch 2.6+ may block unpickling.
-    This allowlist helps, but can still become whack-a-mole.
-    The main stability move in this script is: avoid pyannote VAD entirely.
+    Add all required classes to safe globals to allow model loading.
     """
     if torch is None:
         return
@@ -88,17 +87,25 @@ def _apply_torch_safe_globals_allowlist() -> None:
         return
     try:
         import typing
-        import omegaconf
-        from omegaconf import base, dictconfig, listconfig
+        from omegaconf import ListConfig, DictConfig
+        from omegaconf.base import ContainerMetadata
 
-        torch.serialization.add_safe_globals(
-            [
-                typing.Any,
-                listconfig.ListConfig,
-                dictconfig.DictConfig,
-                base.ContainerMetadata,
-            ]
-        )
+        safe_globals: List[Any] = [
+            typing.Any,
+            ListConfig,
+            DictConfig,
+            ContainerMetadata,
+        ]
+        # Add TorchVersion for pyannote model loading
+        if hasattr(torch, "torch_version") and hasattr(torch.torch_version, "TorchVersion"):
+            safe_globals.append(torch.torch_version.TorchVersion)
+        # Add pyannote classes required for diarization model loading
+        try:
+            from pyannote.audio.core.task import Specifications, Problem, Resolution
+            safe_globals.extend([Specifications, Problem, Resolution])
+        except ImportError:
+            pass
+        torch.serialization.add_safe_globals(safe_globals)
     except Exception:
         pass
 
@@ -778,13 +785,20 @@ class WhisperXAlignEngine(BaseEngine):
             tok = _get_hf_token(self.hf_token)
             if not tok:
                 raise SystemExit("Diarization requested but no HF token found. Set HF_TOKEN or pass --whisperx-hf-token.")
+            # whisperx >= 3.7 moved DiarizationPipeline to whisperx.diarize
             try:
-                self._diar_pipeline = self._whisperx.DiarizationPipeline(use_auth_token=tok, device=self.device)
+                from whisperx.diarize import DiarizationPipeline
+            except ImportError:
+                DiarizationPipeline = getattr(self._whisperx, "DiarizationPipeline", None)
+                if DiarizationPipeline is None:
+                    raise SystemExit("DiarizationPipeline not found. Install whisperx with diarization support.")
+            try:
+                self._diar_pipeline = DiarizationPipeline(use_auth_token=tok, device=self.device)
             except TypeError:
                 try:
-                    self._diar_pipeline = self._whisperx.DiarizationPipeline(device=self.device, use_auth_token=tok)
+                    self._diar_pipeline = DiarizationPipeline(device=self.device, use_auth_token=tok)
                 except TypeError:
-                    self._diar_pipeline = self._whisperx.DiarizationPipeline(use_auth_token=tok)
+                    self._diar_pipeline = DiarizationPipeline(use_auth_token=tok)
 
     def _fw_transcribe_segments(self, audio_path: str) -> List[Dict[str, Any]]:
         segs_out: List[Dict[str, Any]] = []

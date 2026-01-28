@@ -315,7 +315,7 @@ export function UserPreferences({
             />
           </div>
 
-          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 lg:col-start-2 lg:row-start-2">
+          <div className="rounded-lg border border-border/60 bg-muted/30 p-4 text-center lg:col-start-2 lg:row-start-2">
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               {secondaryRegionLabel ? "Chosen primary · secondary region" : "Chosen primary region"}
             </p>

@@ -61,14 +61,23 @@ OUTPUT_ROOT="${OUTPUT_ROOT:-"$ROOT_DIR/data/01.download"}"
 COOKIES_FILE="${YOUTUBE_COOKIES_FILE:-"$ROOT_DIR/docs/data_docs/www.youtube.com_cookies.txt"}"
 
 # --------------------------
-# Gentle / compliance-friendly pacing knobs
+# Anti-bot detection pacing (for scaled operations)
 # --------------------------
-# Fixed delay between items within playlist/channel downloads (seconds).
-# Kept fixed (not randomized) on purpose.
-SLEEP_BETWEEN_ITEMS_SEC="${SLEEP_BETWEEN_ITEMS_SEC:-8}"
+# Random delay range between items (seconds)
+SLEEP_MIN_SEC="${SLEEP_MIN_SEC:-30}"
+SLEEP_MAX_SEC="${SLEEP_MAX_SEC:-120}"
 
-# Extra fixed delay between processing each line in --sources mode.
-SLEEP_BETWEEN_SOURCES_SEC="${SLEEP_BETWEEN_SOURCES_SEC:-12}"
+# Jitter percentage (±20% by default)
+JITTER_PCT="${JITTER_PCT:-20}"
+
+# Session limits: pause after N videos
+SESSION_MAX_VIDEOS="${SESSION_MAX_VIDEOS:-30}"  # 20-40 range
+SESSION_PAUSE_MIN_SEC="${SESSION_PAUSE_MIN_SEC:-7200}"   # 2 hours
+SESSION_PAUSE_MAX_SEC="${SESSION_PAUSE_MAX_SEC:-21600}"  # 6 hours
+
+# Extra delay between processing each line in --sources mode (with jitter)
+SLEEP_BETWEEN_SOURCES_MIN_SEC="${SLEEP_BETWEEN_SOURCES_MIN_SEC:-60}"
+SLEEP_BETWEEN_SOURCES_MAX_SEC="${SLEEP_BETWEEN_SOURCES_MAX_SEC:-180}"
 
 # Optional bandwidth cap for downloads (yt-dlp: --limit-rate). Examples: 500K, 2M, 10M
 LIMIT_RATE="${LIMIT_RATE:-2M}"
@@ -77,6 +86,23 @@ LIMIT_RATE="${LIMIT_RATE:-2M}"
 OUTER_MAX_ATTEMPTS="${OUTER_MAX_ATTEMPTS:-3}"
 OUTER_BACKOFF_BASE_SEC="${OUTER_BACKOFF_BASE_SEC:-15}"
 OUTER_BACKOFF_MAX_SEC="${OUTER_BACKOFF_MAX_SEC:-300}"
+
+# Avoid downloading during suspicious hours (1am-6am local)
+AVOID_NIGHT_HOURS="${AVOID_NIGHT_HOURS:-1}"
+
+# Session video counter (persists in state file)
+SESSION_STATE_FILE="${SESSION_STATE_FILE:-$ROOT_DIR/data/.download_session_state}"
+
+# User-agent rotation pool
+USER_AGENTS=(
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36"
+  "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0"
+)
 
 # Inner yt-dlp retry knobs (still useful for flaky fragments)
 CONCURRENT_FRAGMENTS="${CONCURRENT_FRAGMENTS:-1}"
@@ -120,32 +146,169 @@ if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
 fi
 
 # --------------------------
-# Common yt-dlp args
+# Common yt-dlp args (built dynamically per call)
 # --------------------------
-common_dl_args=()
-if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
-  common_dl_args=(
-    --retries "$RETRIES"
-    --fragment-retries "$FRAGMENT_RETRIES"
-    --file-access-retries "$FRAGMENT_RETRIES"
-    --retry-sleep "$RETRY_SLEEP"
-    --concurrent-fragments "$CONCURRENT_FRAGMENTS"
-    --continue
-    --no-post-overwrites
-    --ignore-errors
-    --progress
-    --newline
+build_common_dl_args() {
+  local user_agent
+  user_agent="$(get_random_user_agent)"
 
-    # Gentle pacing between playlist items (fixed)
-    --sleep-interval "$SLEEP_BETWEEN_ITEMS_SEC"
-    --max-sleep-interval "$SLEEP_BETWEEN_ITEMS_SEC"
-  )
-  if [[ -n "${LIMIT_RATE// }" ]]; then
-    common_dl_args+=( --limit-rate "$LIMIT_RATE" )
+  common_dl_args=()
+  if [[ "$DOWNLOADER" == "yt-dlp" ]]; then
+    common_dl_args=(
+      --retries "$RETRIES"
+      --fragment-retries "$FRAGMENT_RETRIES"
+      --file-access-retries "$FRAGMENT_RETRIES"
+      --retry-sleep "$RETRY_SLEEP"
+      --concurrent-fragments "$CONCURRENT_FRAGMENTS"
+      --continue
+      --no-post-overwrites
+      --ignore-errors
+      --progress
+      --newline
+
+      # Randomized user-agent
+      --user-agent "$user_agent"
+
+      # Randomized pacing between playlist items
+      --sleep-interval "$SLEEP_MIN_SEC"
+      --max-sleep-interval "$SLEEP_MAX_SEC"
+
+      # Also add sleep for subtitles/metadata requests
+      --sleep-requests "$(random_between 1 3)"
+    )
+    if [[ -n "${LIMIT_RATE// }" ]]; then
+      common_dl_args+=( --limit-rate "$LIMIT_RATE" )
+    fi
+  else
+    common_dl_args=( --continue --ignore-errors )
   fi
-else
-  common_dl_args=( --continue --ignore-errors )
-fi
+}
+
+# --------------------------
+# Anti-detection helpers
+# --------------------------
+
+# Random integer between min and max (inclusive)
+random_between() {
+  local min="$1" max="$2"
+  echo $(( min + RANDOM % (max - min + 1) ))
+}
+
+# Add jitter to a value (±JITTER_PCT%)
+add_jitter() {
+  local val="$1"
+  local jitter_range=$(( val * JITTER_PCT / 100 ))
+  local jitter=$(( (RANDOM % (2 * jitter_range + 1)) - jitter_range ))
+  echo $(( val + jitter ))
+}
+
+# Random sleep between min and max seconds, with jitter
+random_sleep() {
+  local min="$1" max="$2"
+  local base=$(random_between "$min" "$max")
+  local with_jitter=$(add_jitter "$base")
+  [[ "$with_jitter" -lt 1 ]] && with_jitter=1
+  echo "💤 Sleeping ${with_jitter}s (anti-detection)..."
+  sleep "$with_jitter"
+}
+
+# Pick a random user-agent
+get_random_user_agent() {
+  local idx=$(( RANDOM % ${#USER_AGENTS[@]} ))
+  echo "${USER_AGENTS[$idx]}"
+}
+
+# Check if we should avoid current hour (1am-6am)
+is_suspicious_hour() {
+  [[ "$AVOID_NIGHT_HOURS" != "1" ]] && return 1
+  local hour
+  hour=$(date +%H)
+  hour=$((10#$hour))  # Remove leading zero
+  [[ "$hour" -ge 1 && "$hour" -lt 6 ]]
+}
+
+# Wait until safe hours if needed
+wait_for_safe_hours() {
+  while is_suspicious_hour; do
+    local hour
+    hour=$(date +%H)
+    echo "⏰ Current hour ($hour) is in suspicious range (1-6am). Waiting until 6am..."
+    # Calculate seconds until 6am
+    local now_sec
+    now_sec=$(date +%s)
+    local today_6am
+    today_6am=$(date -d "today 06:00" +%s 2>/dev/null || date -d "06:00" +%s 2>/dev/null || echo "0")
+    if [[ "$today_6am" -le "$now_sec" ]]; then
+      today_6am=$(date -d "tomorrow 06:00" +%s 2>/dev/null || echo "0")
+    fi
+    if [[ "$today_6am" -gt 0 ]]; then
+      local wait_sec=$(( today_6am - now_sec + 60 ))  # +60 for buffer
+      echo "   Sleeping until 6am (~${wait_sec}s)..."
+      sleep "$wait_sec"
+    else
+      # Fallback: sleep 1 hour and check again
+      sleep 3600
+    fi
+  done
+}
+
+# Session state management
+load_session_state() {
+  if [[ -f "$SESSION_STATE_FILE" ]]; then
+    source "$SESSION_STATE_FILE"
+  fi
+  # Ensure defaults if not set (handles empty or partial state files)
+  SESSION_VIDEO_COUNT=${SESSION_VIDEO_COUNT:-0}
+  SESSION_START_TIME=${SESSION_START_TIME:-$(date +%s)}
+}
+
+save_session_state() {
+  cat > "$SESSION_STATE_FILE" <<EOF
+SESSION_VIDEO_COUNT=$SESSION_VIDEO_COUNT
+SESSION_START_TIME=$SESSION_START_TIME
+EOF
+}
+
+reset_session() {
+  SESSION_VIDEO_COUNT=0
+  SESSION_START_TIME=$(date +%s)
+  save_session_state
+}
+
+increment_session_count() {
+  SESSION_VIDEO_COUNT=$((SESSION_VIDEO_COUNT + 1))
+  save_session_state
+}
+
+check_session_limit() {
+  load_session_state
+  if [[ "$SESSION_VIDEO_COUNT" -ge "$SESSION_MAX_VIDEOS" ]]; then
+    local pause_sec
+    pause_sec=$(random_between "$SESSION_PAUSE_MIN_SEC" "$SESSION_PAUSE_MAX_SEC")
+    local pause_hours=$(( pause_sec / 3600 ))
+    local pause_mins=$(( (pause_sec % 3600) / 60 ))
+    echo ""
+    echo "🛑 SESSION LIMIT REACHED ($SESSION_VIDEO_COUNT videos)"
+    echo "   Pausing for ${pause_hours}h ${pause_mins}m to avoid detection..."
+    echo "   Resume at: $(date -d "+${pause_sec} seconds" 2>/dev/null || date -v+${pause_sec}S 2>/dev/null || echo "~${pause_hours}h from now")"
+    echo ""
+    sleep "$pause_sec"
+    reset_session
+    echo "✅ Session reset. Resuming downloads..."
+  fi
+}
+
+# Shuffle array (Fisher-Yates)
+shuffle_array() {
+  local -n arr=$1
+  local i j temp
+  for ((i=${#arr[@]}-1; i>0; i--)); do
+    j=$((RANDOM % (i+1)))
+    temp="${arr[$i]}"
+    arr[$i]="${arr[$j]}"
+    arr[$j]="$temp"
+  done
+}
 
 # --------------------------
 # Helpers
@@ -319,6 +482,15 @@ download_one() {
   local source_name="$1"
   local youtube_url="$2"
 
+  # Anti-detection: wait for safe hours
+  wait_for_safe_hours
+
+  # Anti-detection: check session limit
+  check_session_limit
+
+  # Anti-detection: build args with fresh random user-agent
+  build_common_dl_args
+
   local safe_source
   safe_source="$(safe_name "$source_name")"
   local output_dir="$OUTPUT_ROOT/$safe_source"
@@ -340,10 +512,14 @@ download_one() {
 
   local base="$output_dir/%(title)s [%(id)s]/%(title)s [%(id)s]"
 
+  local user_agent
+  user_agent="$(get_random_user_agent)"
   echo "================================"
   echo "📥 $source_name"
   echo "   $youtube_url"
   echo "   -> $output_dir"
+  echo "   🎭 User-Agent: ${user_agent:0:50}..."
+  echo "   📊 Session: $SESSION_VIDEO_COUNT/$SESSION_MAX_VIDEOS"
   echo "================================"
 
   # AUDIO
@@ -392,14 +568,26 @@ download_one() {
         [[ "$rc" -eq 77 ]] && return 77
       }
   make_asr_files "$output_dir"
-  echo "✅ Done: $source_name"
+
+  # Anti-detection: increment session counter
+  increment_session_count
+
+  echo "✅ Done: $source_name (session: $SESSION_VIDEO_COUNT/$SESSION_MAX_VIDEOS)"
 }
 
 download_from_sources() {
   local sources_file="${1:-$ROOT_DIR/docs/sources.txt}"
   [[ -f "$sources_file" ]] || { echo "❌ Sources file not found: $sources_file"; exit 1; }
 
-  while IFS= read -r line <&3; do
+  # Initialize session state
+  load_session_state
+  echo "📊 Resuming session: $SESSION_VIDEO_COUNT videos already downloaded"
+  echo "   Session limit: $SESSION_MAX_VIDEOS videos before ${SESSION_PAUSE_MIN_SEC}s-${SESSION_PAUSE_MAX_SEC}s pause"
+  echo ""
+
+  # Load sources into array
+  local -a sources=()
+  while IFS= read -r line; do
     [[ -z "${line//[[:space:]]/}" ]] && continue
     [[ "$line" =~ ^[[:space:]]*# ]] && continue
 
@@ -414,6 +602,21 @@ download_from_sources() {
     fi
 
     [[ -z "$source_name" || -z "$youtube_url" ]] && continue
+    sources+=("$source_name|$youtube_url")
+  done < "$sources_file"
+
+  # Anti-detection: shuffle download order
+  echo "🔀 Shuffling ${#sources[@]} sources for randomized order..."
+  shuffle_array sources
+
+  local idx=0
+  for entry in "${sources[@]}"; do
+    idx=$((idx + 1))
+    local source_name="${entry%%|*}"
+    local youtube_url="${entry#*|}"
+
+    echo ""
+    echo "[$idx/${#sources[@]}] Processing: $source_name"
 
     download_one "$source_name" "$youtube_url" || {
       rc=$?
@@ -424,8 +627,14 @@ download_from_sources() {
       echo "⚠️ Failed source: $source_name (code $rc) — continuing..."
     }
 
-    sleep "$SLEEP_BETWEEN_SOURCES_SEC"
-  done 3< "$sources_file"
+    # Anti-detection: random sleep between sources
+    if [[ "$idx" -lt "${#sources[@]}" ]]; then
+      random_sleep "$SLEEP_BETWEEN_SOURCES_MIN_SEC" "$SLEEP_BETWEEN_SOURCES_MAX_SEC"
+    fi
+  done
+
+  echo ""
+  echo "🎉 All sources processed!"
 }
 
 

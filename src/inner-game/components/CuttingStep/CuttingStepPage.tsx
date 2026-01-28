@@ -7,12 +7,13 @@ import { NavigationButtons } from "../shared/NavigationButtons"
 import { StepProgress } from "../shared/StepProgress"
 import { PairComparison } from "./PairComparison"
 import { AspirationalCheck } from "./AspirationalCheck"
-import { GripVertical, Check } from "lucide-react"
+import { GripVertical } from "lucide-react"
 
 type CuttingStepPageProps = {
   selectedValues: string[]
   hurdlesInferredValues: InferredValue[] | null
-  deathbedInferredValues: InferredValue[] | null
+  shadowInferredValues: InferredValue[] | null
+  peakExperienceInferredValues: InferredValue[] | null
   completedSteps: InnerGameStep[]
   onBack: () => void
   onComplete: (coreValues: CoreValue[], aspirationalValues: { id: string }[]) => void
@@ -23,19 +24,21 @@ type Phase = "aspirational" | "pairwise" | "ranking"
 export function CuttingStepPage({
   selectedValues,
   hurdlesInferredValues,
-  deathbedInferredValues,
+  shadowInferredValues,
+  peakExperienceInferredValues,
   completedSteps,
   onBack,
   onComplete,
 }: CuttingStepPageProps) {
-  // Merge all values
+  // Merge all values from all sources
   const allValues = useMemo(() => {
     const merged = new Set<string>()
     selectedValues.forEach(v => merged.add(v))
     hurdlesInferredValues?.forEach(v => merged.add(v.id))
-    deathbedInferredValues?.forEach(v => merged.add(v.id))
+    shadowInferredValues?.forEach(v => merged.add(v.id))
+    peakExperienceInferredValues?.forEach(v => merged.add(v.id))
     return Array.from(merged)
-  }, [selectedValues, hurdlesInferredValues, deathbedInferredValues])
+  }, [selectedValues, hurdlesInferredValues, shadowInferredValues, peakExperienceInferredValues])
 
   // Phase state
   const [phase, setPhase] = useState<Phase>(

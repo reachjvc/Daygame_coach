@@ -1,0 +1,122 @@
+# Cleanup Log
+
+## 2026-01-28 06:23:11 CET
+- Scope: Implement docs/codex cleanup plan; preserve functionality; run required tests after moves/cleanups.
+- Notes: AGENTS instructions provided in user request (no AGENTS.md found).
+- Search old_scripts: only references found in docs/codex (steps list).
+- Search "old scripts"/"old-scripts": only reference found in docs/codex.
+- Search "training-data": references in scripts/training-data/*, docs/data_docs/TRAINING_DATA.md, docs/CLAUDE.md (folder structure), docs/tests/test_scripts, package.json ingest script, and docs/codex.
+- Search "middleware.ts": only references in docs/codex; file exists at repo root (middleware.ts) with no explicit references found.
+- Root listing: .cache .claude .env.local .git .gitignore .next .venv .vscode app components data docs lib middleware.ts next-env.d.ts next.config.mjs node_modules package-lock.json package.json postcss.config.mjs public requirements.txt scripts src supabase tests training-data tsconfig.json tsconfig.tsbuildinfo
+- Slice path check: Most referenced paths exist. Mismatches noted: QA and Scenarios docs list tests under `tests/qa/*.test.ts`, `tests/scenarios/*`, `tests/api/*` that do not exist (empty dirs). Scenarios doc also references legacy `components/scenarios/*` paths that are not present (current paths in `src/scenarios/*`).
+- App routes vs slice docs: Undocumented routes found: `app/qa/page.tsx` (QA marketing/alias) and `app/api/inner-game/{comparisons,infer-values,progress}/route.ts` (inner-game API extras). Other documented slice routes align with app tree.
+- Slice index exports check: src/*/index.ts files exist for core slices. QA/Scenarios/Dashboard/Settings/Inner-Game export their main components/services. Profile index exports only shared-safe types/data (components/actions/services are not exported), which may or may not align with docs (docs don't specify a public API).
+- package.json scripts vs docs: docs mention `dev`, `lint`, `test`, `build`, and `ingest` (all present). Scripts `start`, `check-stats`, and `seed:values` are not referenced in docs.
+- Initial inconsistency backlog:
+  - QA/Scenarios slice docs specify test files under `tests/qa/*`, `tests/scenarios/*`, `tests/api/*` that are not present (directories empty).
+  - Legacy path references in SLICE_SCENARIOS (`components/scenarios/*`) do not exist; current components live under `src/scenarios/*`.
+  - Undocumented routes: `app/qa/page.tsx`, `app/api/inner-game/{comparisons,infer-values,progress}/route.ts`.
+  - package.json scripts `start`, `check-stats`, `seed:values` not referenced in docs.
+- old_scripts: directory not present; no references outside docs/codex.
+- Tests after old_scripts check:
+  - `npm run lint` failed: `eslint` not found in PATH (exit 127).
+  - `npm run build` failed: Next.js Turbopack could not fetch Google Fonts (Geist/Geist Mono) due to network; also warned that middleware file convention is deprecated.
+- Training-data location decision: keep canonical location at repo root `training-data/` for raw/processed assets; normalized step outputs remain under `data/`. Current `training-data/` only has `.cache`, so no move needed.
+- Training-data phase tests: no move or script changes; did not rerun lint/build or script syntax checks (prior failures already logged).
+- Data output alignment: docs/data_docs table for steps 01-09 matches scripts/training-data outputs under `data/<step>/...`. Legacy `training-data/...` references remain in docs (not part of normalized script outputs).
+- Updated docs/data_docs/TRAINING_DATA.md to align with normalized scripts (scripts/training-data) and data/ outputs; removed/flagged legacy script references and paths.
+- Noted mismatch: `scripts/generate_training_data.py` expects `*.features.json` while normalized pipeline outputs `*.audio_features.json` (legacy script).
+- Path normalization (docs-only) completed; lint/build not rerun for this doc update.
+- Middleware decision: keep `middleware.ts` at repo root for now (no move). Next.js warns about deprecated middleware convention; migration to `proxy` deferred to avoid breaking auth without explicit approval.
+- Updated SLICE_SCENARIOS.md to reference catalog.ts (SCENARIO_CATALOG/PHASE_CATALOG, status/comingSoon) and align types/docs with current scenarios catalog.
+- Updated SLICE_QA.md defaults to match src/qa/config.ts (provider=claude, topK=8, minScore=0.5, maxChunkChars=8000, maxOutputTokens=2048; model defaults per provider).
+- QA route audit: app/api/qa/route.ts has TODOs for rate limiting/logging. Updated SLICE_QA.md to mark rate limiting tests as deferred (no code changes).
+- QA rate limiting/logging implementation deferred; no QA code changes or tests run for this phase.
+- Updated SLICE_DASHBOARD.md to reflect preview-mode behavior (no toggles.json; unauth/non-purchased render preview mode) and updated checklist/testing items.
+- SLICE_SETTINGS.md audit: paths/actions/components align with current settings implementation; no doc changes required.
+- Updated SLICE_INNER_GAME.md to document additional endpoints (progress, infer-values, comparisons), category filter, and DB tables.
+- Dashboard/settings/inner-game doc updates only; lint/build not rerun for this phase.
+- Rescan (old_scripts): no references outside docs/log/codex.
+- Rescan (middleware.ts): no references outside docs/log/codex; file remains at repo root.
+- Rescan (training-data): references mostly in scripts/training-data and docs; found legacy mention in `scripts/generate_scenario_data.py` pointing to `scripts/classify_speakers.py` (missing).
+- Updated scripts/generate_scenario_data.py to reference scripts/training-data/06.speakers (replacing legacy classify_speakers.py). Ran: `python3 scripts/generate_scenario_data.py --help`.
+- Final reference cleanup: only script message update; lint/build not rerun (prior failures still apply).
+- Doc rescan updates: SLICE_SCENARIOS.md component paths updated, shared prompts section added (replacing evaluation.ts), career-scenario path corrected.
+- Added persistent instruction to docs/CLAUDE.md to always update plans/logs and run tests (or record skips) without prompting.
+- Updated scripts/generate_training_data.py to accept *.audio_features.json alongside *.features.json; ran `python3 scripts/generate_training_data.py --help`.
+
+## 2026-01-28 07:41:13 CET
+- Verified docs/log contains entries for each cleanup/move phase (steps 27-83) and captures previous failures + resolutions (eslint missing, Google Fonts fetch).
+- Lint (final gate): `npm run lint` succeeded with warnings only (`@next/next/no-img-element` in ArchetypeSelector, OnboardingFlow, UserPreferences).
+- Build (final gate): `NEXT_DISABLE_GOOGLE_FONT_DOWNLOAD=1 npm run build` failed; Turbopack still attempted to fetch Geist/Geist Mono from Google Fonts; middleware deprecation warning persists.
+- Re-scan (old_scripts/training-data/middleware.ts): no unexpected references outside docs/log/codex or expected scripts/docs.
+- Untracked files check: no large untracked files found (largest untracked file ~27KB).
+- Summary of completed changes: docs updated for training-data pipeline, scenarios catalog, QA defaults, dashboard preview behavior, inner-game endpoints; scripts/generate_training_data.py and scripts/generate_scenario_data.py updated; lint config added; unused imports/vars cleaned across inner-game/profile/scenarios/qa; map-audit case fix; ingest script typing/regex cleanup.
+- Remaining follow-ups: resolve offline build by using local font files or adjusting Next/font usage; consider replacing `<img>` with `next/image` or disable rule; address middleware deprecation (proxy migration) when approved; optional QA rate limiting/logging TODOs.
+- Risks/migration caveats: production builds will fail without Google Fonts access until fonts are localized or fetch is configured; middleware deprecation warning indicates future Next.js behavior changes; docs mention tests that still do not exist.
+
+## 2026-01-28 07:50 CET - Inner Game Planning Session
+
+### Decisions Made
+
+**Open-ended questions redesign:**
+- Replace hurdles/deathbed (too similar) with divergent prompts
+- Selected: Shadow ("What pisses you off?"), Role Models (interactive picker), Peak Experience ("When felt most alive?")
+- Each dimension taps different psychological well
+- Include optional wisdom quotes (Jung shadow, etc.) in collapsible boxes
+
+**Cutting flow redesign:**
+- Remove pairwise comparison (tedious, doesn't produce meaningful ranking)
+- New flow: Card sort (Essential/Important/Nice-to-have) → Prioritize top 7 from Essential → Mark growth areas
+- Aspirational values are GOOD - don't filter them out, they're growth targets
+- All values kept (none removed), just categorized
+
+**Design principles:**
+- Depth over speed - 20 extra minutes is fine if valuable
+- Quotes/wisdom throughout but optional to read
+- Consistent visual format for wisdom boxes
+- Every step should feel enriching, not tedious
+
+**End steps additions:**
+- Mission statement generator (based on top 3 values)
+- Value-behavior bridge (one commitment per core value)
+- Export options (copy, wallpaper image)
+- 30-day revisit prompt
+
+**Role models:**
+- 5 daygame-adjacent figures + 10 broader figures (philosophers, athletes, etc.)
+- Each with: name, description, 2-3 values, quote
+- Interactive picker UI
+
+**Deferred to Backlog:**
+- Value-aware Q&A coaching (premium feature, test Ollama first)
+- Belief audit system (complex, build static first)
+- Pre-session check-in (separate PREPARATION slice)
+- Post-session reflection (part of JOURNALING slice)
+- Values journal entries (part of JOURNALING slice)
+- Community accountability (future)
+
+**Documentation:**
+- Created docs/claude/planning_style.md for plan formatting standards
+- Created PLAN_INNER_GAME_ACTIVE.md for current work
+- Created PLAN_INNER_GAME_BACKLOG.md for deferred ideas
+- Split approach prevents bloat while preserving good ideas
+
+**Feature categories defined:**
+- Discovery: Inner Game, Belief Audit
+- Practice: Scenarios, Cold Approach
+- Preparation: Pre-Session Check-in
+- Reflection: Journaling, Infield Reports
+- Learning: Q&A, Articles
+
+**Content strategy:**
+- Short quotes from transcribed videos + link to source = fair use
+- Public domain quotes for wisdom depth
+- Value conflicts: start with 20-30 common pairs, general wisdom applies
+- SEO articles linking back to features
+
+### Artifacts
+- `docs/claude/planning_style.md` (new)
+- `docs/plans/PLAN_INNER_GAME_ACTIVE.md` (new)
+- `docs/plans/PLAN_INNER_GAME_BACKLOG.md` (new)
+- `docs/plans/PLAN_INNER_GAME_IMPROVEMENTS.md` (to delete - superseded)

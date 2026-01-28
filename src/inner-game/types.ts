@@ -28,14 +28,16 @@ export type CategoryInfo = {
 
 /**
  * Step numbers in the inner game journey.
+ * Order: Values Selection → Shadow → Peak Experience → Hurdles → Cutting → Summary
  */
 export enum InnerGameStep {
   WELCOME = 0,
   VALUES = 1,
-  HURDLES = 2,
-  DEATHBED = 3,
-  CUTTING = 4,
-  COMPLETE = 5,
+  SHADOW = 2,
+  PEAK_EXPERIENCE = 3,
+  HURDLES = 4,
+  CUTTING = 5,
+  COMPLETE = 6,
 }
 
 export type InferredValue = {
@@ -52,16 +54,29 @@ export type InnerGameProgress = {
   currentStep: InnerGameStep
   currentSubstep: number  // For values step: which category (0-9)
   welcomeDismissed: boolean
-  step1Completed: boolean
-  step2Completed: boolean
-  step3Completed: boolean
-  cuttingCompleted: boolean
+  valuesCompleted: boolean        // Step 1: Values selection
+  shadowCompleted: boolean        // Step 2: Shadow prompt
+  peakExperienceCompleted: boolean // Step 3: Peak experience prompt
+  hurdlesCompleted: boolean       // Step 4: Hurdles prompt
+  cuttingCompleted: boolean       // Step 5: Cutting/prioritization
+  // Shadow step data
+  shadowResponse: string | null
+  shadowInferredValues: InferredValue[] | null
+  // Peak experience step data
+  peakExperienceResponse: string | null
+  peakExperienceInferredValues: InferredValue[] | null
+  // Hurdles step data (reframed - also used by premium model)
   hurdlesResponse: string | null
   hurdlesInferredValues: InferredValue[] | null
-  deathbedResponse: string | null
-  deathbedInferredValues: InferredValue[] | null
+  // Final results
   finalCoreValues: CoreValue[] | null
   aspirationalValues: { id: string }[] | null
+  // Legacy fields (deprecated - kept for backward compatibility during migration)
+  step1Completed?: boolean
+  step2Completed?: boolean
+  step3Completed?: boolean
+  deathbedResponse?: string | null
+  deathbedInferredValues?: InferredValue[] | null
 }
 
 // ============================================================================
@@ -93,20 +108,23 @@ export type UpdateProgressRequest = {
   currentStep?: InnerGameStep
   currentSubstep?: number
   welcomeDismissed?: boolean
-  step1Completed?: boolean
-  step2Completed?: boolean
-  step3Completed?: boolean
+  valuesCompleted?: boolean
+  shadowCompleted?: boolean
+  peakExperienceCompleted?: boolean
+  hurdlesCompleted?: boolean
   cuttingCompleted?: boolean
+  shadowResponse?: string
+  shadowInferredValues?: InferredValue[]
+  peakExperienceResponse?: string
+  peakExperienceInferredValues?: InferredValue[]
   hurdlesResponse?: string
   hurdlesInferredValues?: InferredValue[]
-  deathbedResponse?: string
-  deathbedInferredValues?: InferredValue[]
   finalCoreValues?: CoreValue[]
   aspirationalValues?: { id: string }[]
 }
 
 export type InferValuesRequest = {
-  context: "hurdles" | "deathbed"
+  context: "shadow" | "peak_experience" | "hurdles"
   response: string
 }
 

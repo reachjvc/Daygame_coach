@@ -4,20 +4,21 @@
  * No database imports allowed here.
  */
 
-import { CATEGORIES } from "../config"
 import { InnerGameStep, type InnerGameProgress } from "../types"
 
 /**
  * Calculate completion percentage for the entire journey.
+ * Steps: welcome, values, shadow, peak_experience, hurdles, cutting
  */
 export function calculateCompletionPercentage(progress: InnerGameProgress): number {
   let completed = 0
-  const total = 5 // welcome, values, hurdles, deathbed, cutting
+  const total = 6 // welcome, values, shadow, peak_experience, hurdles, cutting
 
   if (progress.welcomeDismissed) completed++
-  if (progress.step1Completed) completed++
-  if (progress.step2Completed) completed++
-  if (progress.step3Completed) completed++
+  if (progress.valuesCompleted) completed++
+  if (progress.shadowCompleted) completed++
+  if (progress.peakExperienceCompleted) completed++
+  if (progress.hurdlesCompleted) completed++
   if (progress.cuttingCompleted) completed++
 
   return Math.round((completed / total) * 100)
@@ -26,12 +27,15 @@ export function calculateCompletionPercentage(progress: InnerGameProgress): numb
 /**
  * Get the step number user should be on based on their progress.
  * Used when welcome card navigates to "continue where you left off".
+ *
+ * Step order: Values → Shadow → Peak Experience → Hurdles → Cutting → Complete
  */
 export function getResumeStep(progress: InnerGameProgress): InnerGameStep {
   if (progress.cuttingCompleted) return InnerGameStep.COMPLETE
-  if (progress.step3Completed) return InnerGameStep.CUTTING
-  if (progress.step2Completed) return InnerGameStep.DEATHBED
-  if (progress.step1Completed) return InnerGameStep.HURDLES
+  if (progress.hurdlesCompleted) return InnerGameStep.CUTTING
+  if (progress.peakExperienceCompleted) return InnerGameStep.HURDLES
+  if (progress.shadowCompleted) return InnerGameStep.PEAK_EXPERIENCE
+  if (progress.valuesCompleted) return InnerGameStep.SHADOW
   if (progress.welcomeDismissed) return InnerGameStep.VALUES
   return InnerGameStep.WELCOME
 }
@@ -43,9 +47,10 @@ export function getCompletedSteps(progress: InnerGameProgress): InnerGameStep[] 
   const completed: InnerGameStep[] = []
 
   if (progress.welcomeDismissed) completed.push(InnerGameStep.WELCOME)
-  if (progress.step1Completed) completed.push(InnerGameStep.VALUES)
-  if (progress.step2Completed) completed.push(InnerGameStep.HURDLES)
-  if (progress.step3Completed) completed.push(InnerGameStep.DEATHBED)
+  if (progress.valuesCompleted) completed.push(InnerGameStep.VALUES)
+  if (progress.shadowCompleted) completed.push(InnerGameStep.SHADOW)
+  if (progress.peakExperienceCompleted) completed.push(InnerGameStep.PEAK_EXPERIENCE)
+  if (progress.hurdlesCompleted) completed.push(InnerGameStep.HURDLES)
   if (progress.cuttingCompleted) completed.push(InnerGameStep.CUTTING)
 
   return completed
@@ -72,4 +77,20 @@ export function canNavigateToStep(progress: InnerGameProgress, targetStep: Inner
   if (targetStep === currentStep + 1) return true
 
   return false
+}
+
+/**
+ * Migrate legacy progress fields to new structure.
+ * Used during transition period to support old progress data.
+ */
+export function migrateProgress(progress: InnerGameProgress): InnerGameProgress {
+  return {
+    ...progress,
+    // Map legacy step1/2/3 completed to new field names
+    valuesCompleted: progress.valuesCompleted ?? progress.step1Completed ?? false,
+    shadowCompleted: progress.shadowCompleted ?? false,
+    peakExperienceCompleted: progress.peakExperienceCompleted ?? false,
+    hurdlesCompleted: progress.hurdlesCompleted ?? progress.step2Completed ?? false,
+    // Note: step3Completed was for deathbed, which is now deprecated
+  }
 }

@@ -2,9 +2,11 @@
 
 ## Slice Purpose
 
-Help a logged-in premium user clarify their personal values by selecting values grouped by category.
-
-This slice currently implements the **Values selection** experience.
+Help a logged-in premium user clarify their personal values through a multi-step flow:
+- Values selection by category
+- Progress tracking across steps
+- Pairwise value comparisons
+- AI-assisted value inference (hurdles/deathbed prompts)
 
 ---
 
@@ -31,6 +33,8 @@ UI requirements:
 **HTTP Method + Path:** `GET /api/inner-game/values`
 
 **Route File:** `app/api/inner-game/values/route.ts`
+
+Supports optional query param `?category=<name>` to filter by category.
 
 **Response JSON:**
 
@@ -64,6 +68,57 @@ UI requirements:
 { "ok": true }
 ```
 
+### Progress (Journey State)
+
+**HTTP Method + Path:** `GET /api/inner-game/progress`
+
+Returns current progress plus selected values count.
+
+**HTTP Method + Path:** `POST /api/inner-game/progress`
+
+Updates progress fields (currentStep, substep, inferred values, etc.).
+
+---
+
+### Infer Values (LLM)
+
+**HTTP Method + Path:** `POST /api/inner-game/infer-values`
+
+**Request JSON:**
+
+```json
+{
+  "context": "hurdles",
+  "response": "Longer free-text response..."
+}
+```
+
+**Response JSON:**
+
+```json
+{
+  "values": [
+    { "id": "confidence", "reason": "Mentions overcoming fear..." }
+  ]
+}
+```
+
+---
+
+### Value Comparisons
+
+**HTTP Method + Path:** `GET /api/inner-game/comparisons`
+
+Returns comparison history.
+
+**HTTP Method + Path:** `POST /api/inner-game/comparisons`
+
+Saves a new comparison result.
+
+**HTTP Method + Path:** `DELETE /api/inner-game/comparisons`
+
+Clears all comparisons for the user.
+
 ---
 
 ## Service Layer Contract
@@ -79,6 +134,10 @@ export async function saveInnerGameValueSelection(
 ): Promise<void>
 ```
 
+**Additional modules:**
+- `src/inner-game/modules/progress.ts` (get/update/reset progress)
+- `src/inner-game/modules/valueInference.ts` (infer values with Ollama)
+
 ---
 
 ## Data Source
@@ -93,8 +152,10 @@ export async function saveInnerGameValueSelection(
 
 ## DB Contract
 
-**Repo File:** `src/db/valuesRepo.ts`
+**Repo Files:** `src/db/valuesRepo.ts`, `src/db/innerGameProgressRepo.ts`, `src/db/valueComparisonRepo.ts`
 
 Tables used:
 - `values` (read)
 - `user_values` (upsert)
+- `inner_game_progress` (progress state)
+- `value_comparisons` (pairwise/aspirational comparisons)

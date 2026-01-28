@@ -6,7 +6,7 @@ import { inferValues, ValueInferenceError } from "@/src/inner-game/modules/value
 
 // Schema for infer values request
 const inferValuesSchema = z.object({
-  context: z.enum(["hurdles", "deathbed"]),
+  context: z.enum(["shadow", "peak_experience", "hurdles"]),
   response: z.string().min(10, "Please provide a more detailed response").max(5000),
 })
 

@@ -9,16 +9,31 @@ export type InnerGameProgressRow = {
   current_step: number
   current_substep: number
   welcome_dismissed: boolean
-  step1_completed: boolean
-  step2_completed: boolean
-  step3_completed: boolean
+  // New step completion flags
+  values_completed: boolean
+  shadow_completed: boolean
+  peak_experience_completed: boolean
+  hurdles_completed: boolean
   cutting_completed: boolean
+  // Shadow step data
+  shadow_response: string | null
+  shadow_inferred_values: InferredValue[] | null
+  // Peak experience step data
+  peak_experience_response: string | null
+  peak_experience_inferred_values: InferredValue[] | null
+  // Hurdles step data
   hurdles_response: string | null
   hurdles_inferred_values: InferredValue[] | null
-  deathbed_response: string | null
-  deathbed_inferred_values: InferredValue[] | null
+  // Final results
   final_core_values: CoreValue[] | null
   aspirational_values: { id: string }[] | null
+  // Legacy fields (kept for backward compatibility during migration)
+  step1_completed?: boolean
+  step2_completed?: boolean
+  step3_completed?: boolean
+  deathbed_response?: string | null
+  deathbed_inferred_values?: InferredValue[] | null
+  // Timestamps
   created_at: string
   updated_at: string
 }
@@ -59,7 +74,27 @@ export async function getProgress(userId: string): Promise<InnerGameProgressRow 
     throw new Error(`Failed to get progress: ${error.message}`)
   }
 
-  return data as InnerGameProgressRow
+  // Apply defaults for new columns that may not exist in DB yet
+  return applyDefaults(data as InnerGameProgressRow)
+}
+
+/**
+ * Apply defaults for new columns during migration period.
+ */
+function applyDefaults(row: InnerGameProgressRow): InnerGameProgressRow {
+  return {
+    ...row,
+    // Map legacy fields to new fields if new fields are missing
+    values_completed: row.values_completed ?? row.step1_completed ?? false,
+    shadow_completed: row.shadow_completed ?? false,
+    peak_experience_completed: row.peak_experience_completed ?? false,
+    hurdles_completed: row.hurdles_completed ?? row.step2_completed ?? false,
+    cutting_completed: row.cutting_completed ?? false,
+    shadow_response: row.shadow_response ?? null,
+    shadow_inferred_values: row.shadow_inferred_values ?? null,
+    peak_experience_response: row.peak_experience_response ?? null,
+    peak_experience_inferred_values: row.peak_experience_inferred_values ?? null,
+  }
 }
 
 /**
@@ -78,7 +113,7 @@ export async function createProgress(userId: string): Promise<InnerGameProgressR
     throw new Error(`Failed to create progress: ${error.message}`)
   }
 
-  return data as InnerGameProgressRow
+  return applyDefaults(data as InnerGameProgressRow)
 }
 
 /**
@@ -112,7 +147,7 @@ export async function updateProgress(
     throw new Error(`Failed to update progress: ${error.message}`)
   }
 
-  return data as InnerGameProgressRow
+  return applyDefaults(data as InnerGameProgressRow)
 }
 
 /**
@@ -137,7 +172,7 @@ export async function upsertProgress(
     throw new Error(`Failed to upsert progress: ${error.message}`)
   }
 
-  return result as InnerGameProgressRow
+  return applyDefaults(result as InnerGameProgressRow)
 }
 
 /**
@@ -152,16 +187,25 @@ export async function resetProgress(userId: string): Promise<InnerGameProgressRo
       current_step: 0,
       current_substep: 0,
       welcome_dismissed: false,
+      values_completed: false,
+      shadow_completed: false,
+      peak_experience_completed: false,
+      hurdles_completed: false,
+      cutting_completed: false,
+      shadow_response: null,
+      shadow_inferred_values: null,
+      peak_experience_response: null,
+      peak_experience_inferred_values: null,
+      hurdles_response: null,
+      hurdles_inferred_values: null,
+      final_core_values: null,
+      aspirational_values: null,
+      // Reset legacy fields too
       step1_completed: false,
       step2_completed: false,
       step3_completed: false,
-      cutting_completed: false,
-      hurdles_response: null,
-      hurdles_inferred_values: null,
       deathbed_response: null,
       deathbed_inferred_values: null,
-      final_core_values: null,
-      aspirational_values: null,
     })
     .eq("user_id", userId)
     .select()
@@ -171,5 +215,5 @@ export async function resetProgress(userId: string): Promise<InnerGameProgressRo
     throw new Error(`Failed to reset progress: ${error.message}`)
   }
 
-  return data as InnerGameProgressRow
+  return applyDefaults(data as InnerGameProgressRow)
 }

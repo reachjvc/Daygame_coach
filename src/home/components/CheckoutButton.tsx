@@ -18,7 +18,7 @@ interface CheckoutButtonProps {
   children?: ReactNode
   onClick?: () => void
   className?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 export function CheckoutButton({ productId, children, className = "", ...props }: CheckoutButtonProps) {

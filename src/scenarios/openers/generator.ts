@@ -18,7 +18,6 @@ import {
   getEnergyText,
   getEnergyAiDescription,
   getEnergyApproachability,
-  ENERGY_STATES,
 } from "@/src/encounters/data/energy";
 
 import {
@@ -26,7 +25,6 @@ import {
   type ActivityId,
   getBaseText,
   getValidPositions,
-  isValidPosition,
 } from "@/src/encounters/data/base-texts";
 import {
   type OutfitCategory,
@@ -35,7 +33,6 @@ import {
   sampleOutfitCategory,
   // New enhanced outfit system
   selectOutfitForScenario,
-  getEnvironmentTypeFromCode,
   getAccessoryTextForDifficulty,
   getHairTextForDifficulty,
 } from "@/src/encounters/data/outfits";
@@ -3962,7 +3959,7 @@ const ENERGY_POSITION_EXCLUSIONS: Partial<Record<EnergyState, Position[]>> = {
 
 /** Position weights - modified by energy */
 function samplePosition(activityId: ActivityId, energy: EnergyState): Position {
-  let validPositions = getValidPositions(activityId);
+  const validPositions = getValidPositions(activityId);
 
   // Filter out incompatible positions for this energy
   const exclusions = ENERGY_POSITION_EXCLUSIONS[energy] || [];

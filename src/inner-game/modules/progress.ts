@@ -21,16 +21,25 @@ function rowToProgress(row: InnerGameProgressRow): InnerGameProgress {
     currentStep: row.current_step as InnerGameStep,
     currentSubstep: row.current_substep,
     welcomeDismissed: row.welcome_dismissed,
+    valuesCompleted: row.values_completed,
+    shadowCompleted: row.shadow_completed,
+    peakExperienceCompleted: row.peak_experience_completed,
+    hurdlesCompleted: row.hurdles_completed,
+    cuttingCompleted: row.cutting_completed,
+    shadowResponse: row.shadow_response,
+    shadowInferredValues: row.shadow_inferred_values,
+    peakExperienceResponse: row.peak_experience_response,
+    peakExperienceInferredValues: row.peak_experience_inferred_values,
+    hurdlesResponse: row.hurdles_response,
+    hurdlesInferredValues: row.hurdles_inferred_values,
+    finalCoreValues: row.final_core_values,
+    aspirationalValues: row.aspirational_values,
+    // Legacy fields for backward compatibility
     step1Completed: row.step1_completed,
     step2Completed: row.step2_completed,
     step3Completed: row.step3_completed,
-    cuttingCompleted: row.cutting_completed,
-    hurdlesResponse: row.hurdles_response,
-    hurdlesInferredValues: row.hurdles_inferred_values,
     deathbedResponse: row.deathbed_response,
     deathbedInferredValues: row.deathbed_inferred_values,
-    finalCoreValues: row.final_core_values,
-    aspirationalValues: row.aspirational_values,
   }
 }
 
@@ -55,14 +64,17 @@ export async function updateUserProgress(
   if (updates.currentStep !== undefined) dbUpdates.current_step = updates.currentStep
   if (updates.currentSubstep !== undefined) dbUpdates.current_substep = updates.currentSubstep
   if (updates.welcomeDismissed !== undefined) dbUpdates.welcome_dismissed = updates.welcomeDismissed
-  if (updates.step1Completed !== undefined) dbUpdates.step1_completed = updates.step1Completed
-  if (updates.step2Completed !== undefined) dbUpdates.step2_completed = updates.step2Completed
-  if (updates.step3Completed !== undefined) dbUpdates.step3_completed = updates.step3Completed
+  if (updates.valuesCompleted !== undefined) dbUpdates.values_completed = updates.valuesCompleted
+  if (updates.shadowCompleted !== undefined) dbUpdates.shadow_completed = updates.shadowCompleted
+  if (updates.peakExperienceCompleted !== undefined) dbUpdates.peak_experience_completed = updates.peakExperienceCompleted
+  if (updates.hurdlesCompleted !== undefined) dbUpdates.hurdles_completed = updates.hurdlesCompleted
   if (updates.cuttingCompleted !== undefined) dbUpdates.cutting_completed = updates.cuttingCompleted
+  if (updates.shadowResponse !== undefined) dbUpdates.shadow_response = updates.shadowResponse
+  if (updates.shadowInferredValues !== undefined) dbUpdates.shadow_inferred_values = updates.shadowInferredValues
+  if (updates.peakExperienceResponse !== undefined) dbUpdates.peak_experience_response = updates.peakExperienceResponse
+  if (updates.peakExperienceInferredValues !== undefined) dbUpdates.peak_experience_inferred_values = updates.peakExperienceInferredValues
   if (updates.hurdlesResponse !== undefined) dbUpdates.hurdles_response = updates.hurdlesResponse
   if (updates.hurdlesInferredValues !== undefined) dbUpdates.hurdles_inferred_values = updates.hurdlesInferredValues
-  if (updates.deathbedResponse !== undefined) dbUpdates.deathbed_response = updates.deathbedResponse
-  if (updates.deathbedInferredValues !== undefined) dbUpdates.deathbed_inferred_values = updates.deathbedInferredValues
   if (updates.finalCoreValues !== undefined) dbUpdates.final_core_values = updates.finalCoreValues
   if (updates.aspirationalValues !== undefined) dbUpdates.aspirational_values = updates.aspirationalValues
 
@@ -92,10 +104,10 @@ export async function advanceToNextCategory(userId: string): Promise<{
   const nextSubstep = progress.currentSubstep + 1
 
   if (nextSubstep >= CATEGORIES.length) {
-    // All categories done, mark step 1 as complete
+    // All categories done, mark values as complete and go to Shadow step
     await updateUserProgress(userId, {
-      step1Completed: true,
-      currentStep: InnerGameStep.HURDLES,
+      valuesCompleted: true,
+      currentStep: InnerGameStep.SHADOW,
       currentSubstep: 0,
     })
     return { hasMore: false, nextSubstep: 0 }
@@ -122,71 +134,4 @@ export async function goToPreviousCategory(userId: string): Promise<{
 
   await updateUserProgress(userId, { currentSubstep: prevSubstep })
   return { success: true, prevSubstep }
-}
-
-/**
- * Calculate completion percentage for the entire journey.
- */
-export function calculateCompletionPercentage(progress: InnerGameProgress): number {
-  let completed = 0
-  const total = 5 // welcome, values, hurdles, deathbed, cutting
-
-  if (progress.welcomeDismissed) completed++
-  if (progress.step1Completed) completed++
-  if (progress.step2Completed) completed++
-  if (progress.step3Completed) completed++
-  if (progress.cuttingCompleted) completed++
-
-  return Math.round((completed / total) * 100)
-}
-
-/**
- * Get the step number user should be on based on their progress.
- * Used when welcome card navigates to "continue where you left off".
- */
-export function getResumeStep(progress: InnerGameProgress): InnerGameStep {
-  if (progress.cuttingCompleted) return InnerGameStep.COMPLETE
-  if (progress.step3Completed) return InnerGameStep.CUTTING
-  if (progress.step2Completed) return InnerGameStep.DEATHBED
-  if (progress.step1Completed) return InnerGameStep.HURDLES
-  if (progress.welcomeDismissed) return InnerGameStep.VALUES
-  return InnerGameStep.WELCOME
-}
-
-/**
- * Get list of completed step numbers for progress display.
- */
-export function getCompletedSteps(progress: InnerGameProgress): InnerGameStep[] {
-  const completed: InnerGameStep[] = []
-
-  if (progress.welcomeDismissed) completed.push(InnerGameStep.WELCOME)
-  if (progress.step1Completed) completed.push(InnerGameStep.VALUES)
-  if (progress.step2Completed) completed.push(InnerGameStep.HURDLES)
-  if (progress.step3Completed) completed.push(InnerGameStep.DEATHBED)
-  if (progress.cuttingCompleted) completed.push(InnerGameStep.CUTTING)
-
-  return completed
-}
-
-/**
- * Check if user can navigate to a specific step.
- * Users can go back to any completed step, or forward to the next incomplete step.
- */
-export function canNavigateToStep(progress: InnerGameProgress, targetStep: InnerGameStep): boolean {
-  const completedSteps = getCompletedSteps(progress)
-  const currentStep = progress.currentStep
-
-  // Can always go to welcome
-  if (targetStep === InnerGameStep.WELCOME) return true
-
-  // Can go to completed steps
-  if (completedSteps.includes(targetStep)) return true
-
-  // Can go to current step
-  if (targetStep === currentStep) return true
-
-  // Can go to next step if previous is completed
-  if (targetStep === currentStep + 1) return true
-
-  return false
 }

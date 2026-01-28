@@ -189,7 +189,7 @@ function classifySegmentType(text: string): SegmentType {
 
   const interactionSignals = [
     /\byou\b.*\?/, // questions to her
-    /\byou\b.*\!/, // direct statements
+    /\byou\b.*!/, // direct statements
     /^(so|well|okay|look|hey|alright)/i,
     /\bthat'?s\s+(cool|nice|cute|amazing|interesting|funny)/i,
     /what (do|are|have|can|would).*you/i,
@@ -619,9 +619,11 @@ async function main() {
           if (entry.trim()) names.push(entry.trim())
           continue
         }
-        if (entry && typeof entry === "object") {
-          const technique = (entry as any).technique
-          if (typeof technique === "string" && technique.trim()) names.push(technique.trim())
+        if (entry && typeof entry === "object" && "technique" in entry) {
+          const technique = (entry as { technique?: unknown }).technique
+          if (typeof technique === "string" && technique.trim()) {
+            names.push(technique.trim())
+          }
         }
       }
       return Array.from(new Set(names))
@@ -659,7 +661,6 @@ async function main() {
         continue
       }
 
-      let interactionCount = 0
       for (let i = 0; i < interactions.length; i++) {
         const interaction = interactions[i]
         if (!interaction || typeof interaction !== "object") continue
@@ -687,7 +688,6 @@ async function main() {
 
         if (phaseChunks.length > 0) {
           interactionChunks.push(...phaseChunks)
-          interactionCount++
         } else {
           // Fallback to simple formatting for interactions without turns
           const formatted = formatInteraction(row)
@@ -698,7 +698,6 @@ async function main() {
             segments.map((seg) => ({ ...seg, type: "INTERACTION" as const }))
           )
           interactionChunks.push(...chunks)
-          interactionCount++
         }
       }
 

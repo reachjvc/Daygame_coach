@@ -1,71 +1,24 @@
 "use client"
 
 import Link from "next/link"
-import { CheckCircle2, LayoutDashboard, LogOut, MessageCircle, Settings, Target, TrendingUp, Zap } from "lucide-react"
+import { CheckCircle2, MessageCircle, TrendingUp, Zap, LayoutDashboard, Target } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { AppHeader } from "@/components/AppHeader"
 import { CheckoutButton } from "@/src/home/components/CheckoutButton"
 import { PRODUCTS } from "@/src/home/products"
 
 interface HomePageProps {
   isLoggedIn?: boolean
+  hasPurchased?: boolean
 }
 
-export function HomePage({ isLoggedIn = false }: HomePageProps) {
+export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageProps) {
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur">
-        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-            <Target className="size-6 text-primary" />
-            <span>DayGame Coach</span>
-          </div>
-          <nav className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <>
-                <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-                  <Link href="/dashboard/settings">
-                    <Settings className="size-4 mr-2" />
-                    Settings
-                  </Link>
-                </Button>
-                <Button asChild variant="ghost" className="text-muted-foreground hover:text-foreground text-sm">
-                  <Link href="/auth/logout">
-                    <LogOut className="size-4 mr-2" />
-                    Log Out
-                  </Link>
-                </Button>
-                <Link href="/dashboard">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <LayoutDashboard className="size-4 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/dashboard">
-                  <Button variant="ghost" className="text-foreground hover:text-primary">
-                    <LayoutDashboard className="size-4 mr-2" />
-                    Dashboard
-                  </Button>
-                </Link>
-                <Link href="/auth/login">
-                  <Button variant="ghost" className="text-foreground hover:text-primary">
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/auth/sign-up">
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Get Started</Button>
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <AppHeader currentPage="home" isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
 
       {/* Hero Section */}
       <section className="w-full py-24 lg:py-32">

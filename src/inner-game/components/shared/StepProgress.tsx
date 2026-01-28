@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Compass, Target, Heart, Sparkles, Trophy } from "lucide-react"
+import { Check, Compass, Eye, Flame, Target, Sparkles, Trophy } from "lucide-react"
 import { InnerGameStep } from "../../types"
 
 type StepProgressProps = {
@@ -11,8 +11,9 @@ type StepProgressProps = {
 
 const STEPS = [
   { step: InnerGameStep.VALUES, label: "Values", icon: Compass },
+  { step: InnerGameStep.SHADOW, label: "Shadow", icon: Eye },
+  { step: InnerGameStep.PEAK_EXPERIENCE, label: "Peak", icon: Flame },
   { step: InnerGameStep.HURDLES, label: "Hurdles", icon: Target },
-  { step: InnerGameStep.DEATHBED, label: "Legacy", icon: Heart },
   { step: InnerGameStep.CUTTING, label: "Prioritize", icon: Sparkles },
   { step: InnerGameStep.COMPLETE, label: "Complete", icon: Trophy },
 ]
@@ -47,14 +48,14 @@ export function StepProgress({ currentStep, completedSteps, onStepClick }: StepP
               onClick={() => isClickable && onStepClick?.(step)}
               disabled={!isClickable}
               className={`
-                flex flex-col items-center gap-1.5 transition-all flex-1 max-w-[72px]
+                flex flex-col items-center gap-1.5 transition-all flex-1 max-w-[60px]
                 ${isClickable ? "cursor-pointer" : "cursor-default"}
                 ${isCurrent ? "scale-105" : ""}
               `}
             >
               <div
                 className={`
-                  w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center
+                  w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center
                   transition-all duration-200
                   ${isCompleted
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
@@ -65,14 +66,14 @@ export function StepProgress({ currentStep, completedSteps, onStepClick }: StepP
                 `}
               >
                 {isCompleted ? (
-                  <Check className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 ) : (
-                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
               </div>
               <span
                 className={`
-                  text-[10px] sm:text-xs text-center leading-tight font-medium
+                  text-[9px] sm:text-[10px] text-center leading-tight font-medium
                   ${isCurrent ? "text-primary" : isCompleted ? "text-muted-foreground" : "text-muted-foreground/70"}
                 `}
               >

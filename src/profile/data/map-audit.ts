@@ -251,11 +251,12 @@ export async function generateAuditReport(
     );
 
     switch (category) {
-      case 'mapped':
+      case 'mapped': {
         report.mapped.push(path);
         const region = countryToRegion[path.normalizedId];
         report.regionCounts[region] = (report.regionCounts[region] || 0) + 1;
         break;
+      }
       case 'arctic':
         report.arctic.push(path);
         break;

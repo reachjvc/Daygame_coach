@@ -6,7 +6,6 @@
 import { mergeSandboxSettings, type SandboxSettings } from "@/src/encounters"
 import { getStripe } from "./stripe"
 import {
-  getSandboxSettings,
   updateSandboxSettings as repoUpdateSandboxSettings,
   resetSandboxSettings as repoResetSandboxSettings,
   updateDifficulty as repoUpdateDifficulty,

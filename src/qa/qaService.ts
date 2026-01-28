@@ -25,9 +25,10 @@ import type {
  */
 export async function handleQARequest(
   request: QARequest,
-  _userId: string
+  userId: string
 ): Promise<QAResponse> {
   const startTime = Date.now()
+  void userId
 
   // Merge request options with defaults
   const retrievalOptions = {

@@ -4,7 +4,7 @@
  */
 
 import { INFERENCE_CONFIG, CATEGORIES } from "../config"
-import type { InferredValue, ValueItem } from "../types"
+import type { InferredValue } from "../types"
 
 /**
  * Build the list of all available values for the prompt.
@@ -60,9 +60,10 @@ Identify 3-5 values that would most help them overcome these challenges.`
 }
 
 /**
- * Build prompt for deathbed/legacy question.
+ * Build prompt for shadow question (opposite mapping).
+ * What you criticize in others reveals what you value.
  */
-function buildDeathbedPrompt(userResponse: string, selectedValues: string[]): {
+function buildShadowPrompt(userResponse: string, selectedValues: string[]): {
   systemPrompt: string
   userPrompt: string
 } {
@@ -71,34 +72,84 @@ function buildDeathbedPrompt(userResponse: string, selectedValues: string[]): {
     ? `\nThe user has already selected these values as resonating with them:\n${selectedValues.join(", ")}`
     : ""
 
-  const systemPrompt = `You are a values coach helping someone discover their core values through self-reflection.
+  const systemPrompt = `You are a values coach helping someone discover their core values through Carl Jung's shadow work.
 
-Your task is to identify 3-5 values that are most central to the legacy this person wants to leave based on their response.
+Your task is to identify 3-5 values that are HIDDEN in this person's frustrations. When someone criticizes a behavior, they're often revealing a value they hold dear. Use OPPOSITE MAPPING:
+- If they hate dishonesty → they value Honesty/Authenticity
+- If they hate weakness → they value Courage/Strength
+- If they hate neediness → they value Independence/Self-Sufficiency
+- If they hate arrogance → they value Humility/Respect
 
 Here are all available values organized by category:
 ${allValues}
 ${selectedList}
 
 Guidelines:
-- Focus on values that appear repeatedly or with strong emotional language
-- Look for what they want to BE remembered as, not just what they want to DO
-- Consider the relationships and qualities they mention
+- Look at what behaviors BOTHER them and infer the OPPOSITE value they're protecting
+- Focus on the emotional intensity—stronger reactions = deeper values
+- Connect the frustration to the underlying principle being violated
 - Return ONLY values from the list above (use exact spelling)
-- Keep reasons concise (1-2 sentences)
+- Keep reasons concise and show the opposite mapping (1-2 sentences)
 
 Respond ONLY with valid JSON in this exact format:
 {
   "values": [
-    { "id": "love", "reason": "You emphasized wanting your family to feel deeply loved and supported." },
-    { "id": "integrity", "reason": "..." }
+    { "id": "authenticity", "reason": "Your frustration with men who pretend to be someone they're not reveals how much you value being genuine." },
+    { "id": "courage", "reason": "..." }
   ]
 }`
 
-  const userPrompt = `Based on how this person wants to be remembered by their family, friends, and loved ones:
+  const userPrompt = `Based on what this person criticizes about other men in the dating world:
 
 "${userResponse}"
 
-Identify 3-5 values that are most central to this legacy they want to leave.`
+Identify 3-5 values that are hidden in their frustrations (use opposite mapping—what they reject reveals what they value).`
+
+  return { systemPrompt, userPrompt }
+}
+
+/**
+ * Build prompt for peak experience question.
+ * Values present when someone is at their best.
+ */
+function buildPeakExperiencePrompt(userResponse: string, selectedValues: string[]): {
+  systemPrompt: string
+  userPrompt: string
+} {
+  const allValues = getAllValuesForPrompt()
+  const selectedList = selectedValues.length > 0
+    ? `\nThe user has already selected these values as resonating with them:\n${selectedValues.join(", ")}`
+    : ""
+
+  const systemPrompt = `You are a values coach helping someone discover their core values through their peak experiences.
+
+Your task is to identify 3-5 values that were ACTIVE and ALIVE in this person's moment of flow and aliveness. These are values they already embody when at their best.
+
+Here are all available values organized by category:
+${allValues}
+${selectedList}
+
+Guidelines:
+- Look for what made them feel alive—those are values being expressed
+- Focus on the qualities they were embodying, not just what they were doing
+- Consider the emotions described (confidence, freedom, connection, etc.) and map to values
+- These are CORE values—ones they already have, not aspirational
+- Return ONLY values from the list above (use exact spelling)
+- Keep reasons concise and connected to their specific experience (1-2 sentences)
+
+Respond ONLY with valid JSON in this exact format:
+{
+  "values": [
+    { "id": "freedom", "reason": "In that moment, you described feeling unconstrained and fully self-directed." },
+    { "id": "excellence", "reason": "..." }
+  ]
+}`
+
+  const userPrompt = `Based on this person's description of a moment when they felt most alive, confident, and fully themselves:
+
+"${userResponse}"
+
+Identify 3-5 values that were present and active in this peak experience.`
 
   return { systemPrompt, userPrompt }
 }
@@ -187,6 +238,30 @@ function parseValuesResponse(content: string): InferredValue[] {
 }
 
 /**
+ * Infer values from user's shadow response (opposite mapping).
+ */
+export async function inferValuesFromShadow(
+  userResponse: string,
+  selectedValues: string[]
+): Promise<InferredValue[]> {
+  const { systemPrompt, userPrompt } = buildShadowPrompt(userResponse, selectedValues)
+  const content = await callOllama(systemPrompt, userPrompt)
+  return parseValuesResponse(content)
+}
+
+/**
+ * Infer values from user's peak experience response.
+ */
+export async function inferValuesFromPeakExperience(
+  userResponse: string,
+  selectedValues: string[]
+): Promise<InferredValue[]> {
+  const { systemPrompt, userPrompt } = buildPeakExperiencePrompt(userResponse, selectedValues)
+  const content = await callOllama(systemPrompt, userPrompt)
+  return parseValuesResponse(content)
+}
+
+/**
  * Infer values from user's hurdles response.
  */
 export async function inferValuesFromHurdles(
@@ -199,22 +274,10 @@ export async function inferValuesFromHurdles(
 }
 
 /**
- * Infer values from user's deathbed/legacy response.
- */
-export async function inferValuesFromDeathbed(
-  userResponse: string,
-  selectedValues: string[]
-): Promise<InferredValue[]> {
-  const { systemPrompt, userPrompt } = buildDeathbedPrompt(userResponse, selectedValues)
-  const content = await callOllama(systemPrompt, userPrompt)
-  return parseValuesResponse(content)
-}
-
-/**
  * Main entry point for value inference.
  */
 export async function inferValues(
-  context: "hurdles" | "deathbed",
+  context: "shadow" | "peak_experience" | "hurdles",
   userResponse: string,
   selectedValues: string[]
 ): Promise<InferredValue[]> {
@@ -222,10 +285,15 @@ export async function inferValues(
     throw new ValueInferenceError("Response cannot be empty", "EMPTY_RESPONSE")
   }
 
-  if (context === "hurdles") {
-    return inferValuesFromHurdles(userResponse, selectedValues)
-  } else {
-    return inferValuesFromDeathbed(userResponse, selectedValues)
+  switch (context) {
+    case "shadow":
+      return inferValuesFromShadow(userResponse, selectedValues)
+    case "peak_experience":
+      return inferValuesFromPeakExperience(userResponse, selectedValues)
+    case "hurdles":
+      return inferValuesFromHurdles(userResponse, selectedValues)
+    default:
+      throw new ValueInferenceError(`Unknown context: ${context}`, "INVALID_CONTEXT")
   }
 }
 

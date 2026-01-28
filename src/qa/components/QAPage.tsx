@@ -130,15 +130,14 @@ export function QAPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12">
-        <header className="space-y-3 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Q&A Coach</p>
-          <h1 className="text-4xl font-semibold text-foreground">DayGame Coach</h1>
-          <p className="mx-auto max-w-3xl text-base text-muted-foreground">
-            Ask for advice grounded in real coaching transcripts. Each answer includes sources and confidence scoring.
-          </p>
-        </header>
+    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12">
+      <header className="space-y-3 text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Q&A Coach</p>
+        <h1 className="text-4xl font-semibold text-foreground">Ask the Coach</h1>
+        <p className="mx-auto max-w-3xl text-base text-muted-foreground">
+          Ask for advice grounded in real coaching transcripts. Each answer includes sources and confidence scoring.
+        </p>
+      </header>
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] h-[calc(100vh-280px)]">
           {/* Left column: Chat */}
@@ -358,6 +357,5 @@ export function QAPage() {
           </div>
         </div>
       </div>
-    </div>
   )
 }

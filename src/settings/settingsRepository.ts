@@ -9,7 +9,7 @@ import {
   mergeSandboxSettings,
   type SandboxSettings,
 } from "@/src/encounters"
-import type { ProfileRow, ProfileUpdate, PurchaseRow } from "@/src/db"
+import type { ProfileRow, PurchaseRow } from "@/src/db"
 
 /**
  * Get sandbox settings for a user.

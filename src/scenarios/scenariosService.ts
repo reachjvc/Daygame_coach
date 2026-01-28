@@ -148,7 +148,7 @@ export class ScenariosService {
     request: GenerateEncounterRequest,
     userId: string
   ): Promise<GeneratedScenarioV2> {
-    const profile = (await getProfile(userId)) as any
+    const profile = await getProfile(userId)
 
     const regionId = isRegionId(profile?.preferred_region) ? profile?.preferred_region : undefined
     const secondaryRegionId = isRegionId(profile?.secondary_region) ? profile?.secondary_region : undefined
@@ -171,8 +171,9 @@ export class ScenariosService {
 
   async evaluateOpenerResponse(
     request: EvaluateOpenerRequest,
-    _userId: string
+    userId: string
   ): Promise<OpenerEvaluation> {
+    void userId
     if (typeof request.encounter === "undefined") {
       throw new Error("Encounter is required")
     }
@@ -181,7 +182,7 @@ export class ScenariosService {
   }
 
   async handleChatMessage(request: ChatRequest, userId: string): Promise<ChatResponse> {
-    const profile = (await getProfile(userId)) as any
+    const profile = await getProfile(userId)
 
     const userArchetypeKey =
       profile?.archetype?.toLowerCase().replace(/\s+/g, "") || "powerhouse"
@@ -239,7 +240,8 @@ export class ScenariosService {
           : getPracticeOpenersPrompt(archetype, location)
 
     const difficultyModifier = getDifficultyPromptModifier(difficulty)
-    const _fullSystemPrompt = `${systemPrompt}\n\n${difficultyModifier}`
+    void systemPrompt
+    void difficultyModifier
 
     // Generate placeholder response
     const placeholderResponse =

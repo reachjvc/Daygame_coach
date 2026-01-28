@@ -4,6 +4,7 @@ import { useState } from "react"
 import { InnerGameStep, type InferredValue } from "../types"
 import { NavigationButtons } from "./shared/NavigationButtons"
 import { StepProgress } from "./shared/StepProgress"
+import { WisdomBox } from "./shared/WisdomBox"
 import { Check, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -14,6 +15,9 @@ type HurdlesStepProps = {
   onBack: () => void
   onComplete: (response: string, inferredValues: InferredValue[]) => void
 }
+
+const STOIC_QUOTE = "The obstacle is the way."
+const STOIC_EXPLANATION = `Marcus Aurelius and the Stoics understood that our obstacles reveal our growth edges. The patterns and fears that hold you back aren't just problems—they're signposts pointing toward the values you need to develop. Understanding your hurdles helps us tailor your coaching to address what matters most.`
 
 export function HurdlesStep({
   initialResponse,
@@ -37,7 +41,7 @@ export function HurdlesStep({
     }
 
     if (response.length < 20) {
-      setError("Please provide a bit more detail about your hurdles.")
+      setError("Please provide more detail about your hurdles.")
       return
     }
 
@@ -86,15 +90,21 @@ export function HurdlesStep({
           {/* Question section */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">
-              What's Holding You Back?
+              Your Growth Edges
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              What are your biggest hurdles in daygame right now? What fears, doubts,
-              or challenges come up when you think about approaching? The more honest
-              and specific you are, the better we can identify values that will help
-              you overcome these obstacles.
+              What patterns or fears hold you back from being the man you want to be?
+              Think about the recurring obstacles—the things that keep showing up
+              and preventing you from taking action or being fully yourself.
             </p>
           </div>
+
+          {/* Wisdom box */}
+          <WisdomBox
+            quote={STOIC_QUOTE}
+            attribution="Marcus Aurelius"
+            explanation={STOIC_EXPLANATION}
+          />
 
           {/* Text area */}
           <div className="space-y-2">
@@ -104,7 +114,7 @@ export function HurdlesStep({
                 setResponse(e.target.value)
                 setError(null)
               }}
-              placeholder="I find it hard to approach because... My biggest fear is... What stops me most often is..."
+              placeholder="I keep falling into the pattern of... What holds me back most is... I notice I tend to..."
               className={`
                 w-full h-48 p-4 rounded-lg border resize-none
                 bg-card text-foreground placeholder:text-muted-foreground
@@ -134,11 +144,10 @@ export function HurdlesStep({
           {/* Results section */}
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground">
-              Values That Could Help You
+              Values That Address Your Hurdles
             </h2>
             <p className="text-muted-foreground">
-              Based on your hurdles, these values could be particularly meaningful
-              for your growth:
+              Based on what's holding you back, these values could help you break through:
             </p>
           </div>
 
@@ -161,7 +170,7 @@ export function HurdlesStep({
 
           {/* Inferred values */}
           <div className="space-y-3">
-            {inferredValues?.map((value, index) => (
+            {inferredValues?.map((value) => (
               <div
                 key={value.id}
                 className="bg-card rounded-lg p-4 border border-border"
@@ -187,7 +196,7 @@ export function HurdlesStep({
           <NavigationButtons
             onBack={onBack}
             onNext={handleContinue}
-            nextLabel="Continue"
+            nextLabel="Continue to Prioritization"
           />
         </>
       )}

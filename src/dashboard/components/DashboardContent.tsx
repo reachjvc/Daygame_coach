@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock } from "lucide-react";
+import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock, TrendingUp } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
@@ -149,6 +149,32 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
               {isPreviewMode && <Lock className="size-4" />}
               <span className="font-medium hidden sm:inline">
                 {isPreviewMode ? "Sign Up to Ask" : "Ask a Question"}
+              </span>
+              <ArrowRight className="size-5" />
+            </div>
+          </div>
+        </Card>
+      </Link>
+
+      {/* Progress Tracking Section */}
+      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/tracking"} className="group block mt-4">
+        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="size-14 rounded-full bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors shrink-0">
+                <TrendingUp className="size-7 text-green-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">Progress Tracking</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl">
+                  Track your real-world approaches, write field reports, and visualize your improvement over time. Start a session and watch your stats grow.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-green-500 group-hover:translate-x-1 transition-transform">
+              {isPreviewMode && <Lock className="size-4" />}
+              <span className="font-medium hidden sm:inline">
+                {isPreviewMode ? "Sign Up to Track" : "Start Tracking"}
               </span>
               <ArrowRight className="size-5" />
             </div>

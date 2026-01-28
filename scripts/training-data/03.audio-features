@@ -263,12 +263,48 @@ def load_whisper_json(path: Path) -> Dict[str, Any]:
 # Feature extraction
 # -------------------------
 
-def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, float]:
+def classify_pitch_gender(mean_hz: float, voiced_ratio: float) -> Dict[str, Any]:
+    """
+    Classify speaker gender based on fundamental frequency (F0).
+
+    Typical ranges:
+    - Male: ~85-180Hz (modal voice)
+    - Female: ~165-255Hz (modal voice)
+    - Overlap zone: 165-180Hz (ambiguous)
+
+    Returns: {"gender": "male"/"female"/"ambiguous", "confidence": 0.0-1.0}
+    """
+    if mean_hz <= 0 or voiced_ratio < 0.1:
+        return {"gender": "unknown", "confidence": 0.0}
+
+    # Clear male range: < 150Hz
+    if mean_hz < 150:
+        confidence = min(0.95, 0.7 + (150 - mean_hz) / 100)
+        return {"gender": "male", "confidence": confidence}
+
+    # Clear female range: > 200Hz
+    if mean_hz > 200:
+        confidence = min(0.95, 0.7 + (mean_hz - 200) / 100)
+        return {"gender": "female", "confidence": confidence}
+
+    # Ambiguous zone: 150-200Hz
+    # Lean male if < 175Hz, lean female if > 175Hz
+    if mean_hz < 175:
+        confidence = 0.4 + (175 - mean_hz) / 50 * 0.3  # 0.4-0.7
+        return {"gender": "male", "confidence": confidence}
+    else:
+        confidence = 0.4 + (mean_hz - 175) / 50 * 0.3  # 0.4-0.7
+        return {"gender": "female", "confidence": confidence}
+
+
+def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any]:
     """
     Fix for pitch.voiced_ratio:
     - Use librosa.pyin() (voiced_flag + voiced_prob) when available.
     - voiced_ratio becomes meaningful (not 1.0 everywhere).
     Also: avoid insane pitch spikes without hard clamping by percentile trimming.
+
+    Now also includes pitch_gender classification for speaker identification.
     """
     if librosa is None or y.size == 0:
         return {
@@ -279,6 +315,8 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, flo
             "range_hz": 0.0,
             "direction": 0.0,
             "voiced_ratio": 0.0,
+            "pitch_gender": "unknown",
+            "pitch_gender_confidence": 0.0,
         }
 
     try:
@@ -322,6 +360,8 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, flo
                 "range_hz": 0.0,
                 "direction": 0.0,
                 "voiced_ratio": voiced_ratio,
+                "pitch_gender": "unknown",
+                "pitch_gender_confidence": 0.0,
             }
 
         f0v = f0[voiced]
@@ -344,6 +384,9 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, flo
         if idx.size >= 2:
             slope = float(np.polyfit(idx, f0v, 1)[0])
 
+        # Classify gender based on pitch
+        gender_result = classify_pitch_gender(mean_hz, voiced_ratio)
+
         return {
             "mean_hz": mean_hz,
             "std_hz": std_hz,
@@ -352,6 +395,8 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, flo
             "range_hz": range_hz,
             "direction": slope,
             "voiced_ratio": voiced_ratio,
+            "pitch_gender": gender_result["gender"],
+            "pitch_gender_confidence": gender_result["confidence"],
         }
     except Exception:
         return {
@@ -362,6 +407,8 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, flo
             "range_hz": 0.0,
             "direction": 0.0,
             "voiced_ratio": 0.0,
+            "pitch_gender": "unknown",
+            "pitch_gender_confidence": 0.0,
         }
 
 
@@ -766,9 +813,37 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
         rel_dir = rel.parent
         stem = wav_path.stem
 
-        transcript_path = transcribe_root / rel_dir / f"{stem}.json"
-        if not transcript_path.exists():
-            print(f"[audio-features] WARN: missing transcript: {transcript_path}")
+        # The WAV file is named: <video_name>.audio.asr.clean16k.wav
+        # But transcripts are named: <video_name>.full.json
+        # Extract base video name by removing .audio.asr.* suffix
+        base_name = stem
+        for suffix in [".audio.asr.clean16k", ".audio.asr.raw16k", ".audio"]:
+            if base_name.endswith(suffix):
+                base_name = base_name[:-len(suffix)]
+                break
+
+        # Bug fix: WAV files are often missing the closing ] bracket before the audio suffix
+        # e.g., "Video Title [abc123.audio.asr.clean16k.wav" instead of "Video Title [abc123].audio..."
+        # If base_name ends with [<video_id> (no closing bracket), add it back
+        if '[' in base_name and not base_name.endswith(']'):
+            # Match pattern: ends with [ followed by alphanumeric/dash/underscore (video ID)
+            if re.search(r'\[[A-Za-z0-9_-]+$', base_name):
+                base_name = base_name + ']'
+
+        # Try multiple transcript naming patterns
+        transcript_candidates = [
+            transcribe_root / rel_dir / f"{base_name}.full.json",  # Primary
+            transcribe_root / rel_dir / f"{base_name}.full.whisperx.json",  # WhisperX
+            transcribe_root / rel_dir / f"{stem}.json",  # Legacy: exact stem match
+        ]
+        transcript_path = None
+        for candidate in transcript_candidates:
+            if candidate.exists():
+                transcript_path = candidate
+                break
+
+        if transcript_path is None:
+            print(f"[audio-features] WARN: missing transcript: {transcript_candidates[0]}")
             continue
 
         out_path = out_root / rel_dir / f"{stem}.audio_features.json"

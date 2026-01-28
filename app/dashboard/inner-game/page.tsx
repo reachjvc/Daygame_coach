@@ -1,7 +1,5 @@
-import Link from "next/link"
-import { ArrowLeft, Brain } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { createServerSupabaseClient } from "@/src/db/server"
+import { AppHeader } from "@/components/AppHeader"
 import { InnerGamePage } from "@/src/inner-game"
 
 export default async function DashboardInnerGamePage() {
@@ -15,26 +13,7 @@ export default async function DashboardInnerGamePage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
-            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <Brain className="size-6 text-primary" />
-              <span>Inner Game</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
-              </div>
-              <Button asChild variant="outline">
-                <Link href="/dashboard">
-                  <ArrowLeft className="size-4 mr-2" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-
+        <AppHeader currentPage="inner-game" isLoggedIn={false} isPreviewMode={true} />
         <main className="mx-auto max-w-2xl px-4 py-12">
           <InnerGamePage isPreviewMode={true} />
         </main>
@@ -52,26 +31,7 @@ export default async function DashboardInnerGamePage() {
   if (!profile?.has_purchased) {
     return (
       <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
-            <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <Brain className="size-6 text-primary" />
-              <span>Inner Game</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
-                <span className="text-sm text-amber-600 font-medium">Preview Mode</span>
-              </div>
-              <Button asChild variant="outline">
-                <Link href="/dashboard">
-                  <ArrowLeft className="size-4 mr-2" />
-                  Back to Dashboard
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </header>
-
+        <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={false} isPreviewMode={true} />
         <main className="mx-auto max-w-2xl px-4 py-12">
           <InnerGamePage isPreviewMode={true} />
         </main>
@@ -79,5 +39,11 @@ export default async function DashboardInnerGamePage() {
     )
   }
 
-  return <InnerGamePage isPreviewMode={false} />
+  // Full access
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={true} />
+      <InnerGamePage isPreviewMode={false} />
+    </div>
+  )
 }

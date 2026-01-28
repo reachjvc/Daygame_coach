@@ -1,0 +1,575 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "../hooks/useSession"
+import { Card } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Play,
+  Square,
+  Plus,
+  Target,
+  Clock,
+  TrendingUp,
+  MapPin,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Loader2,
+} from "lucide-react"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../types"
+import type { ApproachFormData } from "../types"
+import Link from "next/link"
+
+interface SessionTrackerPageProps {
+  userId: string
+}
+
+export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
+  const router = useRouter()
+  const { state, liveStats, startSession, endSession, addApproach, updateLastApproach } =
+    useSession({ userId })
+
+  const [showStartDialog, setShowStartDialog] = useState(false)
+  const [showEndDialog, setShowEndDialog] = useState(false)
+  const [showQuickLog, setShowQuickLog] = useState(false)
+  const [showStats, setShowStats] = useState(true)
+  const [goalInput, setGoalInput] = useState("")
+  const [selectedGoalPreset, setSelectedGoalPreset] = useState<number | null>(null)
+  const [locationInput, setLocationInput] = useState("")
+  const [preMood, setPreMood] = useState<number | null>(null)
+  const [quickLogData, setQuickLogData] = useState<ApproachFormData>({})
+
+  const GOAL_PRESETS = [
+    { value: 1, emoji: "👋", label: "1" },
+    { value: 3, emoji: "🎯", label: "3" },
+    { value: 5, emoji: "💪", label: "5" },
+    { value: 10, emoji: "🔥", label: "10" },
+  ] as const
+
+  if (state.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  const handleStartSession = async () => {
+    const goal = goalInput ? parseInt(goalInput, 10) : undefined
+    const success = await startSession(goal, locationInput || undefined)
+    if (success) {
+      setShowStartDialog(false)
+      setGoalInput("")
+      setSelectedGoalPreset(null)
+      setLocationInput("")
+      setPreMood(null)
+    }
+    // If failed, keep dialog open so user sees error
+  }
+
+  const handleEndSession = async () => {
+    // Navigate first to avoid flash of "Start Session" screen
+    router.push("/dashboard/tracking")
+    setShowEndDialog(false)
+    await endSession()
+  }
+
+  const handleTap = async () => {
+    await addApproach()
+    setShowQuickLog(true)
+    setQuickLogData({})
+  }
+
+  const handleQuickLogSubmit = async () => {
+    if (Object.keys(quickLogData).length > 0) {
+      await updateLastApproach(quickLogData)
+    }
+    setShowQuickLog(false)
+    setQuickLogData({})
+  }
+
+  const handleQuickLogSkip = () => {
+    setShowQuickLog(false)
+    setQuickLogData({})
+  }
+
+  // Not in session - show start screen
+  if (!state.isActive) {
+    return (
+      <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold mb-4">Session Tracker</h1>
+          <p className="text-muted-foreground max-w-md">
+            Track your approaches in real-time. Set a goal, hit the streets, and watch your progress.
+          </p>
+        </div>
+
+        <Button
+          size="lg"
+          className="h-20 px-12 text-xl gap-3"
+          onClick={() => setShowStartDialog(true)}
+        >
+          <Play className="size-6" />
+          Start Session
+        </Button>
+
+        {/* Start Session Dialog */}
+        <Dialog open={showStartDialog} onOpenChange={(open) => {
+          setShowStartDialog(open)
+          if (!open) {
+            setGoalInput("")
+            setSelectedGoalPreset(null)
+            setLocationInput("")
+            setPreMood(null)
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Start a Session</DialogTitle>
+              <DialogDescription>
+                Set an optional goal to keep yourself motivated.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {state.error && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  {state.error}
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <Label>Goal (optional)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {GOAL_PRESETS.map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      onClick={() => {
+                        setSelectedGoalPreset(preset.value)
+                        setGoalInput(String(preset.value))
+                      }}
+                      className={`flex items-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
+                        selectedGoalPreset === preset.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      <span className="text-xl">{preset.emoji}</span>
+                      <span className="font-semibold">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Target className="size-4 text-muted-foreground" />
+                  <Input
+                    id="goal"
+                    type="number"
+                    min="1"
+                    max="100"
+                    placeholder="Or enter custom goal..."
+                    value={goalInput}
+                    onChange={(e) => {
+                      setGoalInput(e.target.value)
+                      setSelectedGoalPreset(null)
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Pre-session mood */}
+              <div className="space-y-3">
+                <Label>How are you feeling? (optional)</Label>
+                <div className="flex gap-2">
+                  {MOOD_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setPreMood(preMood === option.value ? null : option.value)}
+                      className={`flex-1 py-3 rounded-lg border-2 transition-all text-2xl ${
+                        preMood === option.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                      title={option.label}
+                    >
+                      {option.emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="location">Location (optional)</Label>
+                <div className="flex items-center gap-2">
+                  <MapPin className="size-4 text-muted-foreground" />
+                  <Input
+                    id="location"
+                    placeholder="e.g., Downtown, Mall, Park"
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowStartDialog(false)
+                  setGoalInput("")
+                  setSelectedGoalPreset(null)
+                  setLocationInput("")
+                  setPreMood(null)
+                }}
+                disabled={state.isLoading}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleStartSession} disabled={state.isLoading}>
+                {state.isLoading ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : (
+                  <Play className="size-4 mr-2" />
+                )}
+                {state.isLoading ? "Starting..." : "Start"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    )
+  }
+
+  // Active session view
+  return (
+    <div className="min-h-screen pb-32">
+      {/* Header with session info */}
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b p-4">
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Clock className="size-4" />
+              <span className="font-mono">{liveStats.sessionDuration}</span>
+            </div>
+            {state.session?.primary_location && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
+                <MapPin className="size-4" />
+                <span>{state.session.primary_location}</span>
+              </div>
+            )}
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setShowEndDialog(true)}
+          >
+            <Square className="size-4 mr-2" />
+            End
+          </Button>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+        {/* Main Counter */}
+        <Card className="p-8">
+          <div className="text-center">
+            <div className="text-7xl font-bold mb-2">{liveStats.totalApproaches}</div>
+            <div className="text-muted-foreground">approaches</div>
+
+            {/* Goal Progress */}
+            {liveStats.goalProgress.target && (
+              <div className="mt-6">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-muted-foreground">Goal Progress</span>
+                  <span className="font-medium">
+                    {liveStats.goalProgress.current} / {liveStats.goalProgress.target}
+                  </span>
+                </div>
+                <div className="h-3 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={`h-full transition-all duration-500 ${
+                      liveStats.goalProgress.percentage >= 100
+                        ? "bg-green-500"
+                        : "bg-primary"
+                    }`}
+                    style={{ width: `${Math.min(100, liveStats.goalProgress.percentage)}%` }}
+                  />
+                </div>
+                {liveStats.goalProgress.percentage >= 100 && (
+                  <div className="mt-2 text-green-500 font-medium text-sm">
+                    Goal achieved! Keep going!
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Big Tap Button */}
+        <button
+          onClick={handleTap}
+          className="w-full h-32 rounded-2xl bg-primary hover:bg-primary/90 active:scale-95 transition-all duration-150 flex items-center justify-center text-primary-foreground shadow-lg"
+        >
+          <div className="flex items-center gap-3">
+            <Plus className="size-10" />
+            <span className="text-2xl font-bold">TAP FOR APPROACH</span>
+          </div>
+        </button>
+
+        {/* Collapsible Stats */}
+        <Card>
+          <button
+            onClick={() => setShowStats(!showStats)}
+            className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+          >
+            <span className="font-medium">Live Stats</span>
+            {showStats ? (
+              <ChevronUp className="size-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-5 text-muted-foreground" />
+            )}
+          </button>
+
+          {showStats && (
+            <div className="px-4 pb-4 space-y-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <TrendingUp className="size-4" />
+                    <span>Per Hour</span>
+                  </div>
+                  <div className="text-2xl font-bold">{liveStats.approachesPerHour}</div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                    <Clock className="size-4" />
+                    <span>Since Last</span>
+                  </div>
+                  <div className="text-2xl font-bold font-mono">
+                    {liveStats.timeSinceLastApproach || "--:--"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Outcome Breakdown */}
+              {liveStats.totalApproaches > 0 && (
+                <div>
+                  <div className="text-sm text-muted-foreground mb-2">Outcomes</div>
+                  <div className="flex flex-wrap gap-2">
+                    {OUTCOME_OPTIONS.map((option) => {
+                      const count = liveStats.outcomeBreakdown[option.value]
+                      if (count === 0) return null
+                      return (
+                        <Badge key={option.value} variant="secondary" className="text-sm">
+                          {option.emoji} {count}
+                        </Badge>
+                      )
+                    })}
+                    {Object.values(liveStats.outcomeBreakdown).every((v) => v === 0) && (
+                      <span className="text-sm text-muted-foreground">
+                        No outcomes logged yet
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+
+        {/* Recent Approaches */}
+        {state.approaches.length > 0 && (
+          <Card className="p-4">
+            <div className="text-sm font-medium mb-3">Recent Approaches</div>
+            <div className="space-y-2">
+              {state.approaches
+                .slice(-5)
+                .reverse()
+                .map((approach, index) => (
+                  <div
+                    key={approach.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-lg font-bold text-muted-foreground">
+                        #{state.approaches.length - index}
+                      </span>
+                      <span className="text-sm">
+                        {new Date(approach.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {approach.mood && (
+                        <span>{MOOD_OPTIONS.find((m) => m.value === approach.mood)?.emoji}</span>
+                      )}
+                      {approach.outcome && (
+                        <Badge
+                          variant="outline"
+                          className={
+                            OUTCOME_OPTIONS.find((o) => o.value === approach.outcome)?.color
+                          }
+                        >
+                          {OUTCOME_OPTIONS.find((o) => o.value === approach.outcome)?.label}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* Quick Log Bottom Sheet */}
+      {showQuickLog && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+          <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-xl p-4 animate-in slide-in-from-bottom">
+            <div className="max-w-lg mx-auto space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">Quick Log</h3>
+                <Button variant="ghost" size="sm" onClick={handleQuickLogSkip}>
+                  Skip
+                </Button>
+              </div>
+
+              {/* Outcome Selection */}
+              <div>
+                <Label className="text-sm text-muted-foreground mb-2 block">Outcome</Label>
+                <div className="flex flex-wrap gap-2">
+                  {OUTCOME_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() =>
+                        setQuickLogData((prev) => ({
+                          ...prev,
+                          outcome: prev.outcome === option.value ? undefined : option.value,
+                        }))
+                      }
+                      className={`px-4 py-2 rounded-lg border transition-colors ${
+                        quickLogData.outcome === option.value
+                          ? option.color
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {option.emoji} {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mood Selection */}
+              <div>
+                <Label className="text-sm text-muted-foreground mb-2 block">Your Mood</Label>
+                <div className="flex gap-2">
+                  {MOOD_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() =>
+                        setQuickLogData((prev) => ({
+                          ...prev,
+                          mood: prev.mood === option.value ? undefined : option.value,
+                        }))
+                      }
+                      className={`flex-1 py-3 rounded-lg border transition-colors text-2xl ${
+                        quickLogData.mood === option.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                      title={option.label}
+                    >
+                      {option.emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Quick Tags */}
+              <div>
+                <Label className="text-sm text-muted-foreground mb-2 block">Tags</Label>
+                <div className="flex flex-wrap gap-2">
+                  {Object.values(APPROACH_TAGS)
+                    .flat()
+                    .map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          const currentTags = quickLogData.tags || []
+                          const newTags = currentTags.includes(tag)
+                            ? currentTags.filter((t) => t !== tag)
+                            : [...currentTags, tag]
+                          setQuickLogData((prev) => ({ ...prev, tags: newTags }))
+                        }}
+                        className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                          quickLogData.tags?.includes(tag)
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                </div>
+              </div>
+
+              <Button className="w-full" onClick={handleQuickLogSubmit}>
+                Save
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* End Session Dialog */}
+      <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End Session?</DialogTitle>
+            <DialogDescription>
+              You&apos;ve logged {liveStats.totalApproaches} approaches in {liveStats.sessionDuration}.
+              {liveStats.goalProgress.target && liveStats.goalProgress.percentage >= 100 && (
+                <span className="block mt-2 text-green-500">
+                  You hit your goal!
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setShowEndDialog(false)}>
+              Keep Going
+            </Button>
+            <Link href={`/dashboard/tracking/report?session=${state.session?.id}`}>
+              <Button variant="secondary" className="w-full sm:w-auto">
+                <FileText className="size-4 mr-2" />
+                Write Field Report
+              </Button>
+            </Link>
+            <Button variant="destructive" onClick={handleEndSession}>
+              End Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

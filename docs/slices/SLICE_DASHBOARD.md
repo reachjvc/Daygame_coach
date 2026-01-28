@@ -6,7 +6,7 @@ The main dashboard page that logged-in users see after authentication. It serves
 1. **Navigation hub** - Links to training modules (Scenarios, Q&A, Inner Game)
 2. **Progress display** - Shows user level, XP, and scenarios completed
 3. **Quick preferences** - Embedded UserPreferences component for quick edits
-4. **Paywall gate** - Redirects unpaid users to pricing page (when enabled)
+4. **Paywall gate** - Shows preview mode for unpaid users with subscribe CTA
 5. **Onboarding gate** - Redirects users who haven't completed onboarding
 
 ---
@@ -26,9 +26,9 @@ The main dashboard page that logged-in users see after authentication. It serves
 ```
 User visits /dashboard
     │
-    ├─ Not logged in? → Redirect to /auth/login
+    ├─ Not logged in? → Render dashboard in Preview Mode (CTA to log in)
     │
-    ├─ Paywall enabled AND not purchased? → Show subscription required message
+    ├─ Not purchased? → Render dashboard in Preview Mode (CTA to subscribe)
     │
     ├─ Onboarding not completed? → Redirect to /preferences
     │
@@ -64,11 +64,7 @@ The dashboard fetches these fields from the `profiles` table:
 
 ### Feature Toggles
 
-The dashboard reads `toggles.json` for feature flags:
-
-| Toggle | Purpose |
-|--------|---------|
-| `enablePaywall` | Whether to enforce payment check |
+No feature flag toggles are currently read in the dashboard implementation.
 
 ---
 
@@ -147,11 +143,9 @@ app/dashboard/
 ├── qa/
 │   └── page.tsx                    # Q&A page (existing)
 ├── scenarios/
-│   └── page.tsx                    # Scenarios page (future)
+│   └── page.tsx                    # Scenarios page
 └── inner-game/
     └── page.tsx                    # Inner game page
-
-toggles.json                        # Feature toggles file (root)
 ```
 
 ---
@@ -159,12 +153,11 @@ toggles.json                        # Feature toggles file (root)
 ## Security Requirements
 
 ### Authentication
-- Redirect to `/auth/login` if not authenticated
+- Render Preview Mode if not authenticated
 
 ### Subscription Gate
-- If `toggles.enablePaywall === true` AND `profile.has_purchased === false`:
-  - Show "Subscription Required" message
-  - Link to pricing page
+- If `profile.has_purchased === false`:
+  - Render Preview Mode with Subscribe CTA
 
 ### Onboarding Gate
 - If `profile.onboarding_completed === false`:
@@ -178,36 +171,33 @@ toggles.json                        # Feature toggles file (root)
 
 ```typescript
 export default async function DashboardPage() {
-  // 1. Read toggles
-  const toggles = await getToggles()
-
-  // 2. Get auth user
+  // 1. Get auth user
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    redirect("/auth/login")
+    return <DashboardContent profileData={null} isPreviewMode />
   }
 
-  // 3. Get profile
+  // 2. Get profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("has_purchased, onboarding_completed, level, xp, ...")
     .eq("id", user.id)
     .single()
 
-  // 4. Paywall check
-  if (toggles.enablePaywall && !profile?.has_purchased) {
-    return <SubscriptionRequired />
+  // 3. Paywall check
+  if (!profile?.has_purchased) {
+    return <DashboardContent profileData={null} isPreviewMode />
   }
 
-  // 5. Onboarding check
+  // 4. Onboarding check
   if (!profile?.onboarding_completed) {
     redirect("/preferences")
   }
 
-  // 6. Render dashboard
-  return <DashboardContent profileData={profile} />
+  // 5. Render dashboard
+  return <DashboardContent profileData={profile} isPreviewMode={false} />
 }
 ```
 
@@ -243,15 +233,15 @@ export default async function DashboardPage() {
 - [ ] Create/update `app/dashboard/page.tsx`
 
 ### Phase 4: Feature Toggles
-- [ ] Create `toggles.json` in project root
+- [ ] (No feature toggles currently used in dashboard)
 
 ### Phase 5: Dependencies
 - [ ] Ensure Profile slice is complete (UserPreferences, LevelProgressBar)
 - [ ] Ensure Auth slice has signOut action
 
 ### Phase 6: Testing
-- [ ] Verify auth redirect works
-- [ ] Verify paywall check works
+- [ ] Verify unauthenticated preview mode works
+- [ ] Verify non-subscribed preview mode works
 - [ ] Verify onboarding redirect works
 - [ ] Verify training module links work
 - [ ] Verify preferences component embedded correctly

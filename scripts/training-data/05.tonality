@@ -24,7 +24,7 @@ Tones:
 - neutral
 
 INPUT:
-This script expects *.features.json files. It can run on:
+This script expects *.audio_features.json files. It can run on:
 - a single video file (by youtube id match)
 - a playlist folder
 - a channel folder
@@ -401,13 +401,13 @@ def _json_default(o):
 def output_path_for_tonality(in_file: Path, in_root: Path, out_root: Path) -> Path:
     """
     Mirror input structure under out_root, but rename:
-      *.features.json -> *.tonality.json
+      *.audio_features.json -> *.tonality.json
     """
     rel = in_file.relative_to(in_root)
     out_name = rel.name
 
-    if out_name.endswith(".features.json"):
-        out_name = out_name.replace(".features.json", ".tonality.json")
+    if out_name.endswith(".audio_features.json"):
+        out_name = out_name.replace(".audio_features.json", ".tonality.json")
     else:
         out_name = out_name + ".tonality.json"
 
@@ -601,11 +601,11 @@ def resolve_output_dir(name: str) -> Path:
 
 def find_feature_files(in_path: Path, video_id: Optional[str]) -> List[Path]:
     """
-    Find *.features.json files to process.
+    Find *.audio_features.json files to process.
     - If video_id provided: filter by matching substring in filename
-    - Otherwise: all *.features.json under in_path
+    - Otherwise: all *.audio_features.json under in_path
     """
-    all_files = sorted(in_path.rglob("*.features.json"))
+    all_files = sorted(in_path.rglob("*.audio_features.json"))
     if not video_id:
         return all_files
 
@@ -620,10 +620,10 @@ def find_feature_files(in_path: Path, video_id: Optional[str]) -> List[Path]:
 def ensure_features_exist_or_run_pipeline(name: Optional[str], input_dir: Path) -> None:
     """
     Best-effort "full pipeline" behavior:
-    - If *.features.json exist already -> do nothing
+    - If *.audio_features.json exist already -> do nothing
     - Else try running: scripts/training-data/03.audio-features (if it exists)
     """
-    existing = list(input_dir.rglob("*.features.json"))
+    existing = list(input_dir.rglob("*.audio_features.json"))
     if existing:
         return
 
@@ -637,7 +637,7 @@ def ensure_features_exist_or_run_pipeline(name: Optional[str], input_dir: Path) 
         return
 
     raise FileNotFoundError(
-        "[pipeline] No *.features.json found and 03.audio-features not found.\n"
+        "[pipeline] No *.audio_features.json found and 03.audio-features not found.\n"
         "Either generate features first, or add the extractor script at:\n"
         f"  {candidate}"
     )
@@ -664,7 +664,7 @@ Advanced examples:
 """
 
     parser = argparse.ArgumentParser(
-        description="Classify tone per rolling context window in *.features.json files.",
+        description="Classify tone per rolling context window in *.audio_features.json files.",
         epilog=examples,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -682,7 +682,7 @@ Advanced examples:
     parser.add_argument("--channel", help="Channel name (uses data/03.audio-features/<channel>)")
     parser.add_argument("--playlist", help="Playlist name (same behavior as --channel)")
     parser.add_argument("--name", help="Alias for --channel/--playlist")
-    parser.add_argument("--input", help="Direct features folder path (contains *.features.json)")
+    parser.add_argument("--input", help="Direct features folder path (contains *.audio_features.json)")
 
     # Scope
     parser.add_argument("--video", help="Run only one video by YouTube ID (matches filename substring)")
@@ -778,7 +778,7 @@ Advanced examples:
         files = find_feature_files(in_path, effective_video)
 
         if not files:
-            print(f"[tonality] No *.features.json found under: {in_path}")
+            print(f"[tonality] No *.audio_features.json found under: {in_path}")
             return
 
         print(f"[tonality] Input : {in_path}")

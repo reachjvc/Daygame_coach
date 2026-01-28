@@ -1,4 +1,5 @@
 import { searchSimilarEmbeddings, searchEmbeddingsByKeyword } from "@/src/db/server"
+import type { EmbeddingMetadata } from "@/src/db/types"
 import { QA_CONFIG } from "./config"
 import type { RetrievalOptions, RetrievedChunk } from "./types"
 
@@ -319,7 +320,7 @@ export async function retrieveRelevantChunks(
     : []
 
   const combinedCandidates = (() => {
-    const byId = new Map<string, { id: string; content: string; source: string; metadata: any; similarity: number }>()
+    const byId = new Map<string, { id: string; content: string; source: string; metadata: EmbeddingMetadata | null; similarity: number }>()
     for (const m of vectorMatches) {
       byId.set(m.id, m)
     }
@@ -401,11 +402,12 @@ export async function retrieveRelevantChunks(
     const nextSourceCount = (perSourceCount.get(sourceKey) ?? 0) + 1
     if (nextSourceCount > maxPerSource) continue
 
-    const coach =
+    const coach = String(
       match.metadata?.coach ??
       match.metadata?.channel ??
       deriveCoachFromSource(match.source) ??
       "Unknown Coach"
+    )
     const nextCoachCount = (perCoachCount.get(coach) ?? 0) + 1
     if (nextCoachCount > maxPerCoach) continue
 
@@ -426,25 +428,26 @@ export async function retrieveRelevantChunks(
   }
 
   // Transform to RetrievedChunk format, truncating if needed
-  const chunks: RetrievedChunk[] = selectedMatches.map((match) => ({
-    chunkId: match.id,
-    text: match.content.length > maxChunkChars
-      ? match.content.substring(0, maxChunkChars) + "..."
-      : match.content,
-    metadata: {
-      coach:
-        match.metadata?.coach ??
-        match.metadata?.channel ??
-        deriveCoachFromSource(match.source),
-      topic:
-        match.metadata?.topic ??
-        (typeof match.metadata?.video_title === "string" ? match.metadata.video_title : undefined) ??
-        deriveTopicFromSource(match.source),
-      source: match.source,
-      timestamp: match.metadata?.timestamp,
-    },
-    relevanceScore: match.similarity,
-  }))
+  const chunks: RetrievedChunk[] = selectedMatches.map((match) => {
+    const rawCoach = match.metadata?.coach ?? match.metadata?.channel ?? deriveCoachFromSource(match.source)
+    const rawTopic = match.metadata?.topic ??
+      (typeof match.metadata?.video_title === "string" ? match.metadata.video_title : undefined) ??
+      deriveTopicFromSource(match.source)
+
+    return {
+      chunkId: match.id,
+      text: match.content.length > maxChunkChars
+        ? match.content.substring(0, maxChunkChars) + "..."
+        : match.content,
+      metadata: {
+        coach: typeof rawCoach === "string" ? rawCoach : undefined,
+        topic: typeof rawTopic === "string" ? rawTopic : undefined,
+        source: match.source,
+        timestamp: typeof match.metadata?.timestamp === "string" ? match.metadata.timestamp : undefined,
+      },
+      relevanceScore: match.similarity,
+    }
+  })
 
   return chunks
 }

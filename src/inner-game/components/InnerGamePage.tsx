@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft, ChevronLeft, Loader2 } from "lucide-react"
 
 import {
   InnerGameStep,
@@ -12,11 +12,12 @@ import {
   type CoreValue,
 } from "../types"
 import { CATEGORIES } from "../config"
-import { getCompletedSteps, getResumeStep } from "../modules/progressUtils"
+import { getCompletedSteps, getResumeStep, migrateProgress } from "../modules/progressUtils"
 import { WelcomeCard } from "./WelcomeCard"
 import { ValuesStepPage } from "./ValuesStep"
+import { ShadowStep } from "./ShadowStep"
+import { PeakExperienceStep } from "./PeakExperienceStep"
 import { HurdlesStep } from "./HurdlesStep"
-import { DeathbedStep } from "./DeathbedStep"
 import { CuttingStepPage } from "./CuttingStep"
 import { SummaryPage } from "./SummaryPage"
 
@@ -42,14 +43,17 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
         currentStep: InnerGameStep.WELCOME,
         currentSubstep: 0,
         welcomeDismissed: false,
-        step1Completed: false,
-        step2Completed: false,
-        step3Completed: false,
+        valuesCompleted: false,
+        shadowCompleted: false,
+        peakExperienceCompleted: false,
+        hurdlesCompleted: false,
         cuttingCompleted: false,
+        shadowResponse: null,
+        shadowInferredValues: null,
+        peakExperienceResponse: null,
+        peakExperienceInferredValues: null,
         hurdlesResponse: null,
         hurdlesInferredValues: null,
-        deathbedResponse: null,
-        deathbedInferredValues: null,
         finalCoreValues: null,
         aspirationalValues: null,
       })
@@ -70,7 +74,9 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
         }
 
         const data = await res.json()
-        setProgress(data.progress)
+        // Migrate legacy progress if needed
+        const migratedProgress = migrateProgress(data.progress)
+        setProgress(migratedProgress)
         setSelectedValues(new Set(data.selectedValues))
 
         // Always show welcome card on session start
@@ -131,18 +137,17 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     setShowWelcome(false)
     if (!progress) return
 
-    // Treat "welcome dismissed" as true when computing the next step;
-    // otherwise first-time users would "resume" to WELCOME again.
+    // Treat "welcome dismissed" as true when computing the next step
     const resumeStep = getResumeStep({ ...progress, welcomeDismissed: true })
 
-    // Optimistically advance client state so the next step renders immediately.
+    // Optimistically advance client state
     setProgress(prev =>
       prev
         ? { ...prev, welcomeDismissed: true, currentStep: resumeStep }
         : prev
     )
 
-    // Keep server in sync (and also correct stale currentStep for returning users).
+    // Keep server in sync
     if (!progress.welcomeDismissed || progress.currentStep !== resumeStep) {
       await updateProgress({
         welcomeDismissed: true,
@@ -170,10 +175,10 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
 
     const nextSubstep = progress.currentSubstep + 1
     if (nextSubstep >= CATEGORIES.length) {
-      // Completed all categories
+      // Completed all categories -> go to Shadow step
       await updateProgress({
-        step1Completed: true,
-        currentStep: InnerGameStep.HURDLES,
+        valuesCompleted: true,
+        currentStep: InnerGameStep.SHADOW,
         currentSubstep: 0,
       })
     } else {
@@ -186,22 +191,32 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     await updateProgress({ currentSubstep: progress.currentSubstep - 1 })
   }
 
+  // Handle shadow completion
+  const handleShadowComplete = async (response: string, inferredValues: InferredValue[]) => {
+    await updateProgress({
+      shadowResponse: response,
+      shadowInferredValues: inferredValues,
+      shadowCompleted: true,
+      currentStep: InnerGameStep.PEAK_EXPERIENCE,
+    })
+  }
+
+  // Handle peak experience completion
+  const handlePeakExperienceComplete = async (response: string, inferredValues: InferredValue[]) => {
+    await updateProgress({
+      peakExperienceResponse: response,
+      peakExperienceInferredValues: inferredValues,
+      peakExperienceCompleted: true,
+      currentStep: InnerGameStep.HURDLES,
+    })
+  }
+
   // Handle hurdles completion
   const handleHurdlesComplete = async (response: string, inferredValues: InferredValue[]) => {
     await updateProgress({
       hurdlesResponse: response,
       hurdlesInferredValues: inferredValues,
-      step2Completed: true,
-      currentStep: InnerGameStep.DEATHBED,
-    })
-  }
-
-  // Handle deathbed completion
-  const handleDeathbedComplete = async (response: string, inferredValues: InferredValue[]) => {
-    await updateProgress({
-      deathbedResponse: response,
-      deathbedInferredValues: inferredValues,
-      step3Completed: true,
+      hurdlesCompleted: true,
       currentStep: InnerGameStep.CUTTING,
     })
   }
@@ -230,14 +245,17 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
           currentStep: InnerGameStep.WELCOME,
           currentSubstep: 0,
           welcomeDismissed: false,
-          step1Completed: false,
-          step2Completed: false,
-          step3Completed: false,
+          valuesCompleted: false,
+          shadowCompleted: false,
+          peakExperienceCompleted: false,
+          hurdlesCompleted: false,
           cuttingCompleted: false,
+          shadowResponse: null,
+          shadowInferredValues: null,
+          peakExperienceResponse: null,
+          peakExperienceInferredValues: null,
           hurdlesResponse: null,
           hurdlesInferredValues: null,
-          deathbedResponse: null,
-          deathbedInferredValues: null,
           finalCoreValues: null,
           aspirationalValues: null,
         }),
@@ -252,14 +270,14 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
       // Reload progress
       const res = await fetch("/api/inner-game/progress")
       const data = await res.json()
-      setProgress(data.progress)
+      setProgress(migrateProgress(data.progress))
       setShowWelcome(true)
     } catch (err) {
       console.error("Failed to restart:", err)
     }
   }
 
-  // Handle back navigation for question steps
+  // Handle back navigation
   const handleBackToValues = async () => {
     await updateProgress({
       currentStep: InnerGameStep.VALUES,
@@ -267,18 +285,22 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     })
   }
 
-  const handleBackToHurdles = async () => {
-    await updateProgress({ currentStep: InnerGameStep.HURDLES })
+  const handleBackToShadow = async () => {
+    await updateProgress({ currentStep: InnerGameStep.SHADOW })
   }
 
-  const handleBackToDeathbed = async () => {
-    await updateProgress({ currentStep: InnerGameStep.DEATHBED })
+  const handleBackToPeakExperience = async () => {
+    await updateProgress({ currentStep: InnerGameStep.PEAK_EXPERIENCE })
+  }
+
+  const handleBackToHurdles = async () => {
+    await updateProgress({ currentStep: InnerGameStep.HURDLES })
   }
 
   // Loading state
   if (loading) {
     return (
-      <div className={isPreviewMode ? "flex items-center justify-center py-12" : "min-h-screen bg-background flex items-center justify-center"}>
+      <div className="flex items-center justify-center py-12">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
           Loading...
@@ -290,23 +312,17 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   // Error state (not shown in preview mode)
   if (!isPreviewMode && (error || !progress)) {
     return (
-      <div className="min-h-screen bg-background py-12">
-        <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
-          <div className="max-w-2xl mx-auto px-4 py-4">
-            <Button asChild variant="outline">
-              <Link href="/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Dashboard
-              </Link>
-            </Button>
-          </div>
-        </header>
-        <div className="max-w-2xl mx-auto px-4 pt-20">
-          <h1 className="text-2xl font-bold mb-4 text-foreground">
-            Inner Game
-          </h1>
-          <p className="text-destructive">{error || "Failed to load"}</p>
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-6">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard">
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+          <h1 className="text-xl font-semibold">Inner Game</h1>
         </div>
+        <p className="text-destructive">{error || "Failed to load"}</p>
       </div>
     )
   }
@@ -317,7 +333,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
       <div className="py-8">
         <WelcomeCard
           progress={progress}
-          onDismiss={() => {}} // No-op in preview mode, button redirects to sign-up
+          onDismiss={() => {}} // No-op in preview mode
           completedCategories={0}
           isPreviewMode={true}
         />
@@ -330,24 +346,12 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   }
 
   const completedSteps = getCompletedSteps(progress)
-  const completedCategories = progress.step1Completed
+  const completedCategories = progress.valuesCompleted
     ? CATEGORIES.length
     : progress.currentSubstep
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 w-full bg-background/80 backdrop-blur z-10 border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <Button asChild variant="outline">
-            <Link href="/dashboard">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Dashboard
-            </Link>
-          </Button>
-        </div>
-      </header>
-
+    <>
       {/* Welcome modal */}
       {showWelcome && (
         <WelcomeCard
@@ -359,7 +363,17 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
       )}
 
       {/* Main content */}
-      <main className="max-w-2xl mx-auto px-4 pt-24 pb-12">
+      <main className="max-w-2xl mx-auto px-4 py-8">
+        {/* Page header with back button */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/dashboard">
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+          <h1 className="text-xl font-semibold">Inner Game</h1>
+        </div>
         {progress.currentStep === InnerGameStep.VALUES && (
           <ValuesStepPage
             currentSubstep={progress.currentSubstep}
@@ -372,23 +386,33 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
           />
         )}
 
+        {progress.currentStep === InnerGameStep.SHADOW && (
+          <ShadowStep
+            initialResponse={progress.shadowResponse}
+            initialInferredValues={progress.shadowInferredValues}
+            completedSteps={completedSteps}
+            onBack={handleBackToValues}
+            onComplete={handleShadowComplete}
+          />
+        )}
+
+        {progress.currentStep === InnerGameStep.PEAK_EXPERIENCE && (
+          <PeakExperienceStep
+            initialResponse={progress.peakExperienceResponse}
+            initialInferredValues={progress.peakExperienceInferredValues}
+            completedSteps={completedSteps}
+            onBack={handleBackToShadow}
+            onComplete={handlePeakExperienceComplete}
+          />
+        )}
+
         {progress.currentStep === InnerGameStep.HURDLES && (
           <HurdlesStep
             initialResponse={progress.hurdlesResponse}
             initialInferredValues={progress.hurdlesInferredValues}
             completedSteps={completedSteps}
-            onBack={handleBackToValues}
+            onBack={handleBackToPeakExperience}
             onComplete={handleHurdlesComplete}
-          />
-        )}
-
-        {progress.currentStep === InnerGameStep.DEATHBED && (
-          <DeathbedStep
-            initialResponse={progress.deathbedResponse}
-            initialInferredValues={progress.deathbedInferredValues}
-            completedSteps={completedSteps}
-            onBack={handleBackToHurdles}
-            onComplete={handleDeathbedComplete}
           />
         )}
 
@@ -396,9 +420,10 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
           <CuttingStepPage
             selectedValues={Array.from(selectedValues)}
             hurdlesInferredValues={progress.hurdlesInferredValues}
-            deathbedInferredValues={progress.deathbedInferredValues}
+            shadowInferredValues={progress.shadowInferredValues}
+            peakExperienceInferredValues={progress.peakExperienceInferredValues}
             completedSteps={completedSteps}
-            onBack={handleBackToDeathbed}
+            onBack={handleBackToHurdles}
             onComplete={handleCuttingComplete}
           />
         )}
@@ -421,6 +446,6 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
           </div>
         )}
       </main>
-    </div>
+    </>
   )
 }

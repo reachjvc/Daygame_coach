@@ -300,7 +300,8 @@ JSON response:"""
                 for item in analyses:
                     seg_type = item.get("type", "unknown")
                     is_new = bool(item.get("new_conversation", False))
-                    confidence = float(item.get("confidence", 0.5))
+                    raw_conf = item.get("confidence")
+                    confidence = float(raw_conf) if raw_conf is not None else 0.5
 
                     if is_new and seg_type == "approach":
                         conv_id += 1

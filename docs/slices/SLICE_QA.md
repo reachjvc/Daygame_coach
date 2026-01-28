@@ -38,14 +38,14 @@ The UI must render these sections from the API response:
 {
   "question": "<<USER_QUESTION_STRING>>",
   "retrieval": {
-    "topK": 5,
-    "minScore": 0.7,
-    "maxChunkChars": 2000
+    "topK": 8,
+    "minScore": 0.5,
+    "maxChunkChars": 8000
   },
   "generation": {
-    "provider": "ollama",
-    "model": "llama3.2",
-    "maxOutputTokens": 1024,
+    "provider": "claude",
+    "model": "claude-3-5-haiku-20241022",
+    "maxOutputTokens": 2048,
     "temperature": 0.7
   }
 }
@@ -56,12 +56,12 @@ The UI must render these sections from the API response:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `question` | string | Yes | The user's daygame question |
-| `retrieval.topK` | int | No | Number of chunks to retrieve (default: 5, max: 20) |
-| `retrieval.minScore` | float | No | Minimum similarity score (default: 0.7) |
-| `retrieval.maxChunkChars` | int | No | Max chars per chunk (default: 2000) |
-| `generation.provider` | string | No | LLM provider: "ollama", "openai", "claude" (default: "ollama") |
-| `generation.model` | string | No | Model name (default: "llama3.2") |
-| `generation.maxOutputTokens` | int | No | Max output tokens (default: 1024, max: 4096) |
+| `retrieval.topK` | int | No | Number of chunks to retrieve (default: 8, max: 20) |
+| `retrieval.minScore` | float | No | Minimum similarity score (default: 0.5) |
+| `retrieval.maxChunkChars` | int | No | Max chars per chunk (default: 8000) |
+| `generation.provider` | string | No | LLM provider: "ollama", "openai", "claude" (default: "claude") |
+| `generation.model` | string | No | Model name (default: `claude-3-5-haiku-20241022` for Claude, `gpt-4o-mini` for OpenAI, `llama3.1` for Ollama) |
+| `generation.maxOutputTokens` | int | No | Max output tokens (default: 2048, max: 4096) |
 | `generation.temperature` | float | No | Temperature 0.0-1.0 (default: 0.7) |
 
 ---
@@ -101,8 +101,8 @@ The UI must render these sections from the API response:
     ]
   },
   "meta": {
-    "provider": "ollama",
-    "model": "llama3.2",
+    "provider": "claude",
+    "model": "claude-3-5-haiku-20241022",
     "latencyMs": 1250,
     "tokensUsed": 856
   }
@@ -284,7 +284,7 @@ The route handler MUST only:
 1. Check authentication (reject if not logged in)
 2. Check subscription (reject if not premium)
 3. Validate request body with Zod schema
-4. Check rate limit (reject with 429 if exceeded)
+4. Rate limit (TODO - not implemented yet)
 5. Call `qaService.handleQARequest()`
 6. Log the request/response to database
 7. Return the response JSON
@@ -358,7 +358,7 @@ The route handler MUST NOT:
 **File:** `tests/api/qa.test.ts`
 - Test 401 for unauthenticated
 - Test 403 for non-premium
-- Test 429 for rate limit
+- Test 429 for rate limit (deferred until rate limiting is implemented)
 - Test 400 for invalid input
 - Test 200 with valid request
 - Test response schema matches contract

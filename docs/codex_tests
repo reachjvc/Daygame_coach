@@ -1,0 +1,91 @@
+# Codex Cleanup Test Matrix
+
+## Baseline tests (run after each cleanup/move phase)
+- `npm run lint`
+- `npm run build`
+
+## Script syntax checks (bash/python)
+- Bash: `bash -n scripts/**/*.sh scripts/training-data/* scripts/*.sh` (adjust globs if needed)
+- Python: `python3 -m py_compile $(rg --files -g "*.py" scripts)`
+
+## Training-data layout change tests
+- `node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify`
+- `./scripts/training-data/final_pipeline --sources docs/sources.txt --skip-ingest` (optional smoke test)
+
+## Middleware relocation tests
+- `npm run lint`
+- `npm run build`
+- `npm run dev` (manual smoke: verify middleware behavior if applicable)
+
+## QA compliance change tests
+- `npm run lint`
+- `npm run build`
+- Manual API check: `POST /api/qa` with auth + premium to ensure response contract
+
+## Optional automation stub links
+- TODO: Add CI job for lint/build + script syntax checks
+- TODO: Add API contract tests for QA/Scenarios/Inner-Game
+
+## Regression test entries (from failures)
+- Lint: ensure eslint is installed (node_modules/.bin/eslint) or run `npm install` before lint.
+- Build: Turbopack still fetches Google Fonts even with `NEXT_DISABLE_GOOGLE_FONT_DOWNLOAD=1`; switch to local font files or adjust font loading to unblock offline builds.
+
+## Executed tests (2026-01-28)
+- `npm run lint` (failed: eslint not found)
+- `npm run build` (failed: Google Fonts fetch; middleware deprecation warning)
+- `python3 scripts/generate_scenario_data.py --help` (ok)
+- `npm run lint` (ok; warnings only about `<img>` usage in profile components)
+- `NEXT_DISABLE_GOOGLE_FONT_DOWNLOAD=1 npm run build` (failed: Turbopack still attempted Google Fonts fetch)
+
+## Tests per change type
+- Docs-only updates: no automated tests required; optional `npm run lint`/`npm run build`.
+- Script text changes: run the script (at least `--help`); for logic changes, run with representative data.
+- Middleware changes: `npm run lint`, `npm run build`, and `npm run dev` smoke.
+- QA changes: `npm run lint`, `npm run build`, and API contract checks.
+
+## Known errors + coverage gaps
+- `npm run lint` fails if eslint dependencies are missing.
+- `npm run build` fails offline due to Google Fonts fetch; consider local fonts.
+- QA/Scenarios/Inner-Game automated tests are not implemented (tests dirs empty).
+- QA rate limiting/logging remain TODOs.
+
+---
+
+## CRITICAL: Verification Before Claiming "Done"
+
+**2026-01-28 Bug Report: Session Tracker "Start Session" silently failed**
+
+### What Happened
+- Session Tracker was reported as "complete" in Phase 1A-1D
+- When user clicked "Start Session" → entered goal/location → clicked "Start", nothing happened
+- Dialog closed and returned to start screen
+
+### Root Cause
+1. `useSession.ts` `startSession()` caught errors internally but never communicated failure to caller
+2. `SessionTrackerPage.tsx` `handleStartSession()` always closed dialog after `startSession()` completed
+3. No error UI was rendered to show what went wrong
+4. Likely cause: database migration not applied, causing 500 errors that were silently swallowed
+
+### Fix Applied
+1. Made `startSession()` return `boolean` indicating success/failure
+2. `handleStartSession()` now only closes dialog if `startSession()` returns `true`
+3. Added error display in the Start Session dialog
+4. Added loading state to prevent double-clicks
+
+### Lesson Learned
+**NEVER claim a feature is "done" without manual end-to-end testing of the happy path.**
+
+### Mandatory Checklist Before Marking Feature Complete
+- [ ] **Manual smoke test**: Actually click through the feature in the browser
+- [ ] **Check browser console**: Look for errors during the flow
+- [ ] **Check network tab**: Verify API calls return 200/201
+- [ ] **Check server logs**: Look for uncaught exceptions
+- [ ] **Error paths**: Deliberately trigger errors to verify they're displayed
+- [ ] **Database verification**: Confirm required tables exist and have data
+
+### Session Tracker Specific Tests
+- [ ] Start session → verify session appears in database
+- [ ] Tap for approach → verify approach logged
+- [ ] End session → verify session closed correctly
+- [ ] Check /api/tracking/session returns 200 (not 500)
+- [ ] Check /api/tracking/session/active returns session data

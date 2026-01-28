@@ -11,13 +11,13 @@ import {
   Trophy,
   TrendingUp,
   Target,
-  LogOut,
   RotateCcw,
   ExternalLink,
   AlertCircle,
   CheckCircle2,
   ChevronLeft,
 } from "lucide-react"
+import { AppHeader } from "@/components/AppHeader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -36,7 +36,6 @@ import type { SandboxSettings } from "@/src/encounters"
 import { PRODUCTS } from "@/src/home"
 import type { SettingsPageProps } from "../types"
 import { DIFFICULTY_OPTIONS, LEVEL_TITLES } from "../types"
-import { createBrowserSupabaseClient } from "@/src/db/supabase-client"
 
 interface SettingsPageClientProps extends SettingsPageProps {
   onUpdateSandboxSettings: (settings: Partial<SandboxSettings>) => Promise<void>
@@ -69,12 +68,6 @@ export function SettingsPage({
   const [currentDifficulty, setCurrentDifficulty] = useState(
     profile.difficulty || "beginner"
   )
-
-  const handleSignOut = async () => {
-    const supabase = createBrowserSupabaseClient()
-    await supabase.auth.signOut()
-    router.push("/")
-  }
 
   const handleSandboxToggle = (
     category: keyof SandboxSettings,
@@ -144,24 +137,17 @@ export function SettingsPage({
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-8">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
-            </Button>
-            <h1 className="text-xl font-semibold">Settings</h1>
-          </div>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign out
-          </Button>
-        </div>
-      </header>
+      <AppHeader currentPage="settings" isLoggedIn={true} hasPurchased={true} />
 
       <main className="mx-auto max-w-6xl px-8 py-8">
+        {/* Page header with back button */}
+        <div className="flex items-center gap-4 mb-6">
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <ChevronLeft className="mr-1 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-xl font-semibold">Settings</h1>
+        </div>
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
             <TabsTrigger value="profile" className="gap-2">

@@ -206,6 +206,7 @@ Return JSON with:
  * ⚠️ TODO: Implement after testing openers
  */
 export function getPracticePushPullPrompt(archetype: Archetype): PromptConfig {
+  void archetype;
   return {
     systemPrompt: "⚠️ TODO: Define push/pull system prompt with real examples",
     evaluationPrompt: "⚠️ TODO: Define push/pull evaluation criteria",

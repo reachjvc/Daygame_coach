@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CATEGORIES, TIME_ESTIMATES } from "../../config"
+import { CATEGORIES } from "../../config"
 import { InnerGameStep } from "../../types"
 import { CategoryCard } from "./CategoryCard"
 import { NavigationButtons } from "../shared/NavigationButtons"
@@ -29,8 +29,6 @@ export function ValuesStepPage({
   const [isSaving, setIsSaving] = useState(false)
   const category = CATEGORIES[currentSubstep]
   const isLastCategory = currentSubstep === CATEGORIES.length - 1
-  const remainingCategories = CATEGORIES.length - currentSubstep
-  const estimatedMinutes = remainingCategories * TIME_ESTIMATES.perCategory
 
   const handleNext = async () => {
     setIsSaving(true)

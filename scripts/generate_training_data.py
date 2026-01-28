@@ -25,7 +25,7 @@ def _json_default(o):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate JSONL training data from feature files.")
-    parser.add_argument("--input", required=True, help="Directory containing .features.json files")
+    parser.add_argument("--input", required=True, help="Directory containing feature JSON files")
     parser.add_argument("--output", required=True, help="Output .jsonl file path")
     args = parser.parse_args()
 
@@ -34,7 +34,9 @@ def main() -> None:
     output_file.parent.mkdir(parents=True, exist_ok=True)
 
     count = 0
-    files = list(sorted(input_dir.rglob("*.features.json")))
+    feature_files = set(input_dir.rglob("*.features.json"))
+    audio_feature_files = set(input_dir.rglob("*.audio_features.json"))
+    files = list(sorted(feature_files | audio_feature_files))
     print(f"🔍 Found {len(files)} feature files in {input_dir}")
 
     total_segments_processed = 0

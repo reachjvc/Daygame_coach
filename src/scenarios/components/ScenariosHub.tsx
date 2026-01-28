@@ -25,6 +25,7 @@ import {
   type ScenarioDef,
   type PhaseDef,
 } from "@/src/scenarios/catalog";
+import type { ChatScenarioType } from "@/src/scenarios/types";
 
 interface ScenariosHubProps {
   recommendedDifficulty: DifficultyLevel;
@@ -63,6 +64,10 @@ function getPhaseProgress(phase: PhaseDef) {
   const available = scenarios.filter(isAvailable).length;
   const total = scenarios.length;
   return { available, total };
+}
+
+function isVoiceChatScenario(id: ScenarioId): id is ChatScenarioType {
+  return id === "practice-career-response" || id === "practice-shittests";
 }
 
 export function ScenariosHub({
@@ -330,10 +335,10 @@ export function ScenariosHub({
       )}
 
       {/* Voice Chat Window for non-opener scenarios (only when not in preview mode) */}
-      {!isPreviewMode && activeScenario && (
+      {!isPreviewMode && activeScenario && isVoiceChatScenario(activeScenario) && (
         <VoiceChatWindow
           onClose={() => setActiveScenario(null)}
-          scenarioType={activeScenario as any}
+          scenarioType={activeScenario}
         />
       )}
     </div>

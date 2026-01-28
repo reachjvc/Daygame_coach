@@ -1,4 +1,5 @@
 # CLAUDE.md - READ THIS FIRST
+**Updated:** 28-01-2026 08:47
 
 This file contains rules that AI assistants MUST follow when working on this project.
 
@@ -160,24 +161,203 @@ Do NOT restructure unrelated parts of the codebase.
 
 The objective is to create the best possible product with no technical debt.
 
-Specifically:
+### Core Principles
+
+1. **Quality over speed, ALWAYS** - It is NEVER a priority to build fast MVPs. The priority is doing things RIGHT, with no technical debt. 20 extra hours of work for a better result is always worth it.
+
+2. **Best possible experience** - When building features, think about what would be the most fun, engaging, visually appealing version. If something could have animated cards, gamification, or rich visuals—do that, don't simplify.
+
+3. **Clean architecture is non-negotiable** - Always consider clean architecture and vertical slicing. If something feels like it might create technical debt or doesn't fit the existing patterns, ASK before proceeding.
+
+4. **Delete and recreate cleaner** - If a file/component needs significant changes, prefer deleting it and recreating it cleanly over patching it. Git history preserves the old version.
+
+### Deprecated Files Policy
+
+When files become unused:
+1. Move them to `deprecated/YYYY-MM-DD/` folder (e.g., `deprecated/2026-01-28/`)
+2. After 7 days without being called/used, they can be reviewed and deleted
+3. Run periodic cleanup: check `deprecated/` folders older than 7 days and remove them
+
+This allows a safety window for recovery while keeping the codebase clean.
+
+### Specific Guidelines
+
 - **Use the most accurate method** even if it's more complex (e.g., pyannote-audio for speaker diarization over simple pitch heuristics)
 - **Prefer local processing** when quality is comparable (e.g., Ollama over cloud APIs for cost savings without quality loss)
 - **Document trade-offs explicitly** when shortcuts are necessary
 - **Build for the future** - data pipelines should support voice-to-voice even before that feature exists
 - **Quality over speed** - a pipeline that takes 10 hours but produces excellent data beats a 1-hour pipeline with mediocre output
+- **Never simplify for speed** - If a feature could have a rich UI (e.g., gamified character picker with 15 animated cards), build that, don't reduce to a text input
 
 ---
 
-## CRITICAL: Keep Documentation Updated
+## CRITICAL: Documentation Structure (No Bloat)
 
-After completing any significant work, you MUST update the relevant documentation files:
+**Living documents over point-in-time reports.** Don't create new files—update existing ones.
 
-1. **CLAUDE.md** - Update the Migration Status section below
-2. **docs/slices/SLICE_*.md** - Update if slice contracts change
-3. **Any file that tracks progress** - Keep it current
+### Canonical Files (One Source of Truth)
 
-This ensures the next AI instance (or human) can pick up where you left off.
+| Topic | File | Purpose |
+|-------|------|---------|
+| AI rules | `docs/CLAUDE.md` | Rules, status, migration progress |
+| Planning style | `docs/claude/planning_style.md` | How to structure plans |
+| Feature specs | `docs/slices/SLICE_*.md` | One per feature slice |
+| Training pipeline | `docs/data/PIPELINE.md` | Plan, status, test results, issues |
+| Training data | `docs/data_docs/TRAINING_DATA.md` | Data sources, formats, quality |
+
+### Document Structure Standard
+
+Every planning/tracking doc MUST use this structure:
+```markdown
+# [Title]
+**Status:** 🟢 ACTIVE | 🔴 BLOCKED | ✅ DONE
+**Updated:** YYYY-MM-DD
+
+## Current State
+[What's the situation right now - 2-3 sentences max]
+
+## Blockers (if any)
+- [ ] Blocker 1: description
+
+## Plan
+### Phase N: [Name]
+- [ ] Step with status
+
+## Decisions Log
+| Date | Decision | Rationale |
+|------|----------|-----------|
+
+## Test Results (if applicable)
+[Consolidated results, not separate files]
+```
+
+### Anti-Bloat Rules
+
+1. **NO separate files for**:
+   - Test results → Add to the relevant plan doc
+   - Issues found → Add to the relevant plan doc
+   - Improvement plans → Update the existing plan, don't create a new one
+
+2. **Consolidate aggressively**:
+   - If two docs cover overlapping topics, merge them
+   - Delete the old file after merging (don't leave orphans)
+
+3. **When updating docs**:
+   - Update in place, don't append endlessly
+   - Replace outdated sections, don't add "UPDATE:" headers
+   - Keep total length under 500 lines per doc (split if needed)
+
+4. **Status over history**:
+   - Current state is more important than changelog
+   - Use git history for "what changed when"
+
+5. **Always timestamp updates**:
+   - Every doc MUST have `**Updated:** DD-MM-YYYY HH:MM` in header
+   - Update this timestamp EVERY time you modify the file
+   - Format: DD-MM-YYYY, 24-hour clock, Danish time (e.g., `28-01-2026 14:35`)
+
+### Before Referencing Any Doc
+
+**ALWAYS check the Status field first.** If a doc has:
+- `⚠️ OUTDATED` or `⚠️ PARTIALLY OUTDATED` → Warn user, check for superseding doc
+- `🔴 BLOCKED` → Note the blocker before proceeding
+- `📦 ARCHIVED` → Do not reference as current information
+
+If a doc says "See [other-doc] for current info" → Follow that reference instead.
+
+### Cleanup Checklist (Run Periodically)
+- [ ] Are there multiple docs about the same topic? → Merge
+- [ ] Are there "results" files separate from plans? → Merge into plan
+- [ ] Are there docs nobody reads? → Delete
+- [ ] Is any doc >500 lines? → Split or summarize
+- [ ] Are there docs with ⚠️ status >30 days old? → Fix or archive
+
+---
+
+## CRITICAL: Update Implementation Plans After Each Step
+
+When working from an implementation plan (e.g., `docs/data/ai-implementation-plan.md`):
+
+1. **After completing each step**, IMMEDIATELY update the plan to mark it complete
+2. **Record decisions** made during the step (e.g., "Decision: Use llama3.2")
+3. **Record any deviations** from the original plan
+4. **Add timestamps** to completed steps
+
+Format for completed steps:
+```markdown
+### Step X.X: [Title]
+**Status:** ✅ COMPLETED (YYYY-MM-DD)
+**Decision:** [What was decided]
+**Artifacts:** [Files created/modified]
+```
+
+This is NON-NEGOTIABLE. Plans MUST reflect reality at all times.
+
+---
+
+## CRITICAL: Always Update Plans, Logs, and Tests
+
+After any significant work, you MUST:
+1. Update the active plan with checkmarks + timestamps
+2. Update the relevant log (e.g., `docs/log`) with decisions and outcomes
+3. Run required tests for the changes; if skipped, record why and any risk
+
+This must happen automatically without waiting for user prompting.
+
+---
+
+## CRITICAL: Test Accuracy Before Recommending
+
+**Read `docs/data/TESTING_PROTOCOL.md` before any pipeline recommendation.**
+
+When evaluating LLM models, prompts, or strategies:
+1. **Coverage ≠ Accuracy** - 100% coverage of wrong answers is worthless
+2. **Create ground truth** - Manual annotation of 30+ segments
+3. **Test ALL candidates** on same ground truth
+4. **Meet thresholds** before recommending (see protocol for minimums)
+5. **Never say "acceptable for MVP"** in pipeline work - we run all files ONCE
+
+If accuracy is below threshold, DO NOT recommend. Investigate root cause first.
+
+---
+
+## CRITICAL: Never Skip Quality Improvements to "Just Proceed"
+
+**Quality over progress.** NEVER skip improving a script, stage, or component just to move forward in a pipeline.
+
+### The Anti-Pattern to Avoid
+When you see poor results (e.g., "only 4/137 segments classified"), the WRONG response is:
+- "This is acceptable because we can do a second pass later"
+- "Let's proceed and fix it in post"
+- "Good enough for now"
+
+The RIGHT response is:
+- **STOP and analyze** why the quality is poor
+- **Investigate alternatives** (different prompts, models, chunking strategies)
+- **Run comprehensive tests** before deciding
+- **Document the root cause** and solutions tried
+- **Only proceed** when quality meets the bar, OR when you've exhausted options and documented why
+
+### Specifically for LLM/AI Pipeline Stages
+These files (transcripts, training data) are the foundation of the entire product. Poor extraction = poor RAG = poor user experience. You MUST:
+
+1. **Maximize extraction quality** - If an LLM only classifies 3% of segments, that's a failure to investigate, not an acceptable result
+2. **Test multiple approaches** before settling (different prompts, chunk sizes, models, multi-pass strategies)
+3. **Quantify the gap** - What's the theoretical maximum? What are we achieving? Why the delta?
+4. **Never rationalize poor results** - "The topic extraction works" is not an excuse for 97% of segments being unclassified
+
+### The Goal
+Extract the **maximum possible value** from every source file. If a video has 10 teachable moments, we should capture 9-10 of them, not 2-3 and call it "acceptable."
+
+This mindset applies to ALL stages:
+- Transcription quality
+- Speaker diarization accuracy
+- Semantic analysis completeness
+- Topic extraction depth
+- Technique identification coverage
+- Interaction boundary detection
+
+**When in doubt, improve before proceeding.**
 
 ---
 
