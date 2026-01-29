@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
 import { DashboardContent } from "./DashboardContent"
 import type { DashboardProfileData } from "../types"
@@ -21,11 +21,7 @@ export async function DashboardPage() {
     )
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("has_purchased, onboarding_completed, level, xp, scenarios_completed, age_range_start, age_range_end, archetype, secondary_archetype, tertiary_archetype, dating_foreigners, user_is_foreign, preferred_region, secondary_region, experience_level, primary_goal")
-    .eq("id", user.id)
-    .single()
+  const profile = await getProfile(user.id)
 
   // Users must be premium (has_purchased) to access features
   if (!profile?.has_purchased) {
@@ -54,11 +50,11 @@ export async function DashboardPage() {
     secondary_archetype: profile.secondary_archetype,
     tertiary_archetype: profile.tertiary_archetype,
     dating_foreigners: profile.dating_foreigners ?? false,
-    user_is_foreign: profile.user_is_foreign,
-    preferred_region: profile.preferred_region,
-    secondary_region: profile.secondary_region,
-    experience_level: profile.experience_level,
-    primary_goal: profile.primary_goal,
+    user_is_foreign: profile.user_is_foreign ?? undefined,
+    preferred_region: profile.preferred_region ?? undefined,
+    secondary_region: profile.secondary_region ?? undefined,
+    experience_level: profile.experience_level ?? undefined,
+    primary_goal: profile.primary_goal ?? undefined,
   }
 
   return (

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { getSession, updateSession, getSessionWithApproaches, deleteSession } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { getSession, updateSession, getSessionWithApproaches, deleteSession } from "@/src/tracking/trackingService"
+import { UpdateSessionSchema } from "@/src/tracking/schemas"
 
 export async function GET(
   request: NextRequest,
@@ -59,11 +60,20 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { goal, primary_location } = body
+    const parsed = UpdateSessionSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { goal, primary_location } = parsed.data
 
     const updated = await updateSession(id, {
-      goal: goal !== undefined ? goal : undefined,
-      primary_location: primary_location !== undefined ? primary_location : undefined,
+      goal: goal ?? undefined,
+      primary_location: primary_location ?? undefined,
     })
 
     return NextResponse.json(updated)

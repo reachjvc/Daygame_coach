@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { createReview, getUserReviews } from "@/src/db/trackingRepo"
-import type { ReviewInsert, ReviewType } from "@/src/db/trackingTypes"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { createReview, getUserReviews } from "@/src/tracking/trackingService"
+import type { ReviewInsert, ReviewType } from "@/src/tracking/trackingService"
+import { CreateReviewSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const parsed = CreateReviewSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       review_type,
       template_id,
@@ -22,15 +32,8 @@ export async function POST(request: NextRequest) {
       previous_commitment,
       commitment_fulfilled,
       new_commitment,
-      is_draft = false,
-    } = body
-
-    if (!review_type || !fields || !period_start || !period_end) {
-      return NextResponse.json(
-        { error: "Missing required fields: review_type, fields, period_start, period_end" },
-        { status: 400 }
-      )
-    }
+      is_draft,
+    } = parsed.data
 
     const reviewData: ReviewInsert = {
       user_id: user.id,

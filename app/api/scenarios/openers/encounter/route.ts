@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient } from "@/src/db/server"
-import { hasPurchased } from "@/src/db/profilesRepo"
-import { scenariosService } from "@/src/scenarios"
+import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { generateOpenerEncounter } from "@/src/scenarios"
 
 const DifficultySchema = z.enum(["beginner", "intermediate", "advanced", "expert", "master"])
 const EnvironmentSchema = z.enum([
@@ -52,7 +51,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const encounter = await scenariosService.generateOpenerEncounter(parsed.data, user.id)
+  const encounter = await generateOpenerEncounter(parsed.data, user.id)
 
   return NextResponse.json({ encounter }, { status: 200 })
 }

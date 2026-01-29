@@ -1,0 +1,30 @@
+{
+  "id": "01-8020-rule",
+  "title": "The 80/20 Rule for Learning from Social Interactions",
+  "status": "draft",
+  "requiredContext": {
+    "research": [
+      "deprecated/2026-01-29/FIELD_REPORT_RESEARCH_PLAN.md",
+      "docs/brainstorm/FIELD_REPORT_SUMMARY.md"
+    ],
+    "styleGuide": "docs/articles/writing_style.md",
+    "articleIndex": "docs/articles/INDEX.md"
+  },
+  "sections": [
+    { "id": "intro", "topic": "Opening hook - most notes are useless" },
+    { "id": "bjj-analogy", "topic": "BJJ 'off the move' analysis concept" },
+    { "id": "emotional-tipping", "topic": "Emotional tipping points" },
+    { "id": "research", "topic": "Sports psychology research on debriefs" },
+    { "id": "practical", "topic": "Practical implementation" },
+    { "id": "objections", "topic": "Handling objections" },
+    { "id": "conclusion", "topic": "Meta-lesson and call to action" }
+  ],
+  "keyResearchPoints": [
+    "Skilled Seducer's '3 minutes before you lost her' concept",
+    "BJJ Scout method: analyze lead-up, not just the moment",
+    "Sports psychology: shorter debriefs work better",
+    "Memory research: emotionally significant moments encoded differently",
+    "Pareto principle applied to learning"
+  ],
+  "notes": "The intro section was marked as AI-sounding in feedback1. The BJJ section works well - preserve the specificity."
+}

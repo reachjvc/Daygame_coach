@@ -3,7 +3,7 @@ import { ArrowLeft, Target } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { createServerSupabaseClient } from "@/src/db/server"
-import type { DifficultyLevel } from "@/src/encounters/data/energy"
+import type { DifficultyLevel } from "../openers/data/energy"
 import { ScenariosHub } from "@/src/scenarios/components/ScenariosHub"
 
 function getRecommendedDifficulty(userLevel: number | null | undefined): DifficultyLevel {

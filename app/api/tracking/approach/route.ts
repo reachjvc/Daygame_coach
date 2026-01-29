@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { createApproach, getUserApproaches } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { createApproach, getUserApproaches } from "@/src/tracking/trackingService"
+import { CreateApproachSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,18 +13,28 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { session_id, outcome, tags, mood, note, latitude, longitude, timestamp } = body
+    const parsed = CreateApproachSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { session_id, outcome, set_type, tags, mood, note, latitude, longitude, timestamp } = parsed.data
 
     const approach = await createApproach({
       user_id: user.id,
-      session_id: session_id || undefined,
-      timestamp: timestamp || undefined,
-      outcome: outcome || undefined,
-      tags: tags || undefined,
-      mood: mood || undefined,
-      note: note || undefined,
-      latitude: latitude || undefined,
-      longitude: longitude || undefined,
+      session_id: session_id ?? undefined,
+      timestamp: timestamp ?? undefined,
+      outcome: outcome ?? undefined,
+      set_type: set_type ?? undefined,
+      tags: tags ?? undefined,
+      mood: mood ?? undefined,
+      note: note ?? undefined,
+      latitude: latitude ?? undefined,
+      longitude: longitude ?? undefined,
     })
 
     return NextResponse.json(approach)

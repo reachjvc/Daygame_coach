@@ -1,4 +1,6 @@
 # Vertical Slice: Settings
+**Status:** Reference
+**Updated:** 29-01-2026 07:46 (Danish time)
 
 ## Slice Purpose
 

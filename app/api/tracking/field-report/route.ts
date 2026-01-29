@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { createFieldReport, getUserFieldReports, getDraftFieldReports } from "@/src/db/trackingRepo"
-import type { FieldReportInsert } from "@/src/db/trackingTypes"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { createFieldReport, getUserFieldReports, getDraftFieldReports } from "@/src/tracking/trackingService"
+import type { FieldReportInsert } from "@/src/tracking/trackingService"
+import { CreateFieldReportSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,6 +14,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+    const parsed = CreateFieldReportSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
     const {
       template_id,
       session_id,
@@ -20,15 +30,8 @@ export async function POST(request: NextRequest) {
       approach_count,
       location,
       tags,
-      is_draft = false,
-    } = body
-
-    if (!fields || typeof fields !== "object") {
-      return NextResponse.json(
-        { error: "Fields are required" },
-        { status: 400 }
-      )
-    }
+      is_draft,
+    } = parsed.data
 
     const reportData: FieldReportInsert = {
       user_id: user.id,

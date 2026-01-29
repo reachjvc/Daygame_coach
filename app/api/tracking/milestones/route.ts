@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { getUserMilestones } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { getUserMilestones } from "@/src/tracking/trackingService"
 
 export async function GET() {
   try {

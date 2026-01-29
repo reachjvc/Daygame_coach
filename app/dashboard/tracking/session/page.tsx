@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/src/db/supabase"
+import { createServerSupabaseClient } from "@/src/db/server"
 import { redirect } from "next/navigation"
 import { SessionTrackerPage } from "@/src/tracking"
 

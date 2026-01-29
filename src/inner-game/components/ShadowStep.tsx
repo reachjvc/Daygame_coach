@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { InnerGameStep, type InferredValue } from "../types"
+import { useValueInference } from "../hooks/useValueInference"
 import { NavigationButtons } from "./shared/NavigationButtons"
 import { StepProgress } from "./shared/StepProgress"
 import { WisdomBox } from "./shared/WisdomBox"
@@ -26,50 +26,22 @@ export function ShadowStep({
   onBack,
   onComplete,
 }: ShadowStepProps) {
-  const [response, setResponse] = useState(initialResponse ?? "")
-  const [inferredValues, setInferredValues] = useState<InferredValue[] | null>(
-    initialInferredValues
-  )
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showResults, setShowResults] = useState(!!initialInferredValues)
-
-  const handleSubmit = async () => {
-    if (!response.trim()) {
-      setError("Please share your thoughts before continuing.")
-      return
-    }
-
-    if (response.length < 20) {
-      setError("Please provide a bit more detail about what frustrates you.")
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const res = await fetch("/api/inner-game/infer-values", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context: "shadow", response }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || "Failed to analyze your response")
-      }
-
-      const data = await res.json()
-      setInferredValues(data.values)
-      setShowResults(true)
-    } catch (err) {
-      console.error("Failed to infer values:", err)
-      setError(err instanceof Error ? err.message : "Something went wrong")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    response,
+    setResponse,
+    inferredValues,
+    isLoading,
+    error,
+    showResults,
+    setShowResults,
+    clearError,
+    inferValues,
+  } = useValueInference({
+    context: "shadow",
+    initialResponse,
+    initialInferredValues,
+    shortResponseError: "Please provide a bit more detail about what frustrates you.",
+  })
 
   const handleContinue = () => {
     if (inferredValues) {
@@ -112,7 +84,7 @@ export function ShadowStep({
               value={response}
               onChange={(e) => {
                 setResponse(e.target.value)
-                setError(null)
+                clearError()
               }}
               placeholder="I can't stand when guys... It really bothers me when... I lose respect for men who..."
               className={`
@@ -133,7 +105,7 @@ export function ShadowStep({
           {/* Navigation */}
           <NavigationButtons
             onBack={onBack}
-            onNext={handleSubmit}
+            onNext={inferValues}
             nextLabel="Analyze My Shadow"
             isLoading={isLoading}
             nextDisabled={response.length < 20}

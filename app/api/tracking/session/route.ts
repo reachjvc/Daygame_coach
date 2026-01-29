@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { createSession, getUserSessions } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { createSession, getUserSessions } from "@/src/tracking/trackingService"
+import { CreateSessionSchema } from "@/src/tracking/schemas"
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,12 +13,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { goal, primary_location } = body
+    const parsed = CreateSessionSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { goal, primary_location } = parsed.data
 
     const session = await createSession({
       user_id: user.id,
-      goal: goal || undefined,
-      primary_location: primary_location || undefined,
+      goal: goal ?? undefined,
+      primary_location: primary_location ?? undefined,
     })
 
     return NextResponse.json(session)

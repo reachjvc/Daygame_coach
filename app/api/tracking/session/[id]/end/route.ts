@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { getSession, endSession } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { getSession, endSession } from "@/src/tracking/trackingService"
 
 export async function POST(
   request: NextRequest,

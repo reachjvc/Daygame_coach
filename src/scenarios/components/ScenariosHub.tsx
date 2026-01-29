@@ -13,7 +13,7 @@ import {
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { DifficultyLevel } from "@/src/encounters/data/energy";
+import type { DifficultyLevel } from "../openers/data/energy";
 import { PracticeOpenersTrainer } from "@/src/scenarios/openers/OpenersTrainer";
 import { VoiceChatWindow } from "@/src/scenarios/components/ChatWindow";
 import { cn } from "@/lib/utils";

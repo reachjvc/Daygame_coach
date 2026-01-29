@@ -1,4 +1,6 @@
 # Plan: Comprehensive Values System Overhaul
+**Status:** Active
+**Updated:** 29-01-2026 07:46 (Danish time)
 
 ## Problem Statement
 

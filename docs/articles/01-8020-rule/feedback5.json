@@ -1,0 +1,12 @@
+{
+  "version": 5,
+  "articleId": "01-8020-rule",
+  "createdAt": "2026-01-29T19:38:05.859Z",
+  "flags": [
+    {
+      "type": "note",
+      "sectionId": "emotional-tipping",
+      "note": "this is an interesting type of thing. \"a forum post\", this should be flagged as a situation for review (in the future as well), because at least I the editor should have the option to link to that post, or to mention it more clearly. However, i might in the future get a document and only skim it and ship it, and then you might've flagged it without me seeing it, so in a case like this (which we need to add to relevant documents), we should flag it in a way that i will ALWAYS see and decide on, and if i try to publish the article, i should trigger a safety mechanism"
+    }
+  ]
+}

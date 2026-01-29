@@ -3,7 +3,8 @@ import type { CategoryInfo } from "./types"
 /**
  * Inner Game Configuration
  *
- * Values expanded from 222 to 355 based on comprehensive analysis against:
+ * 300 values across 11 categories (reduced from 355 after removing redundancies).
+ * Based on comprehensive analysis against:
  * - Schwartz Theory of Basic Values
  * - VIA Character Strengths (24 strengths)
  * - Rokeach Value Survey (36 values)
@@ -43,8 +44,7 @@ export const CATEGORIES: CategoryInfo[] = [
       "Acceptance", "Assurance", "Backbone", "Capable", "Certainty", "Confidence",
       "Conviction", "Dignity", "Grace", "Groundedness", "Humility", "Individuality",
       "Inner strength", "Maturity", "Poise", "Pride", "Self-acceptance", "Self-assurance",
-      "Self-awareness", "Self-esteem", "Self-possession", "Self-reliance", "Self-respect",
-      "Uniqueness"
+      "Self-awareness", "Self-esteem", "Self-possession", "Self-reliance", "Self-respect"
     ]
   },
   {
@@ -55,11 +55,11 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Ambition fuels growth and resilience. These values are about pushing through fear, taking bold action, and maintaining the fire that drives you forward despite obstacles.",
     daygameRelevance: "Approaching despite fear is the foundation of daygame. Every approach requires courage. Persistence through rejection, determination to keep going, and the intensity to stay present in challenging moments.",
     values: [
-      "Action", "Adventure", "Ambition", "Boldness", "Bravery", "Challenge", "Courage",
+      "Action", "Adventure", "Ambition", "Boldness", "Challenge", "Courage",
       "Daring", "Decisive", "Determination", "Drive", "Endurance", "Excitement", "Fearless",
-      "Ferocious", "Fierce", "Fortitude", "Grit", "Hustle", "Intensity", "Motivation",
+      "Ferocious", "Fierce", "Fortitude", "Grit", "Hustle", "Intensity",
       "Nerve", "Passion", "Persistence", "Proactive", "Relentless", "Resilience",
-      "Strength", "Tenacity", "Toughness", "Valor", "Vigor", "Willpower"
+      "Strength", "Tenacity", "Toughness", "Vigor", "Willpower"
     ]
   },
   {
@@ -71,11 +71,11 @@ export const CATEGORIES: CategoryInfo[] = [
     daygameRelevance: "Staying grounded during rejection is essential. Your emotional state is contagious—women sense your inner calm or chaos immediately. Peace within creates presence without.",
     values: [
       "Balance", "Calm", "Cheerfulness", "Comfort", "Contentment", "Equanimity",
-      "Feelings", "Gratitude", "Happiness", "Harmony", "Health", "Inner peace",
+      "Feelings", "Gratitude", "Happiness", "Harmony", "Health",
       "Lightness", "Mellow", "Mindfulness", "Moderation", "Optimism", "Patience",
-      "Peace", "Present", "Relaxation", "Restraint", "Satisfaction", "Security",
-      "Self-control", "Sensitivity", "Serenity", "Silence", "Solitude", "Stability",
-      "Stoicism", "Temperance", "Thankful", "Tranquility", "Unflappable"
+      "Peace", "Relaxation", "Restraint", "Satisfaction", "Security",
+      "Self-control", "Sensitivity", "Silence", "Solitude", "Stability",
+      "Stoicism", "Temperance"
     ]
   },
   {
@@ -87,9 +87,9 @@ export const CATEGORIES: CategoryInfo[] = [
     daygameRelevance: "Not needing validation from women is incredibly attractive. When you're not dependent on any particular outcome, you can be fully present and authentic. Freedom from outcome-dependence is freedom to connect.",
     values: [
       "Agency", "Assertiveness", "Autonomy", "Control", "Dominance", "Empower", "Famous",
-      "Freedom", "Independence", "Influence", "Leadership", "Liberty", "Potency", "Power",
+      "Freedom", "Independence", "Influence", "Leadership", "Power",
       "Prosperity", "Recognition", "Risk", "Self-determination", "Self-direction",
-      "Sovereignty", "Status", "Success", "Victory", "Wealth", "Winning"
+      "Sovereignty", "Status", "Success", "Wealth", "Winning"
     ]
   },
   {
@@ -100,13 +100,13 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Learning compounds over time. These values are about continuously improving, staying curious, and developing mastery through deliberate practice and reflection.",
     daygameRelevance: "Every interaction teaches you something. Improving with each approach, learning from mistakes, and developing genuine skill over time. The growth mindset transforms failure into feedback.",
     values: [
-      "Acumen", "Adaptability", "Astuteness", "Awareness", "Brilliance", "Calibration",
-      "Clever", "Common sense", "Consciousness", "Curiosity", "Development", "Discernment",
+      "Acumen", "Adaptability", "Astuteness", "Awareness", "Calibration",
+      "Clever", "Common sense", "Curiosity", "Discernment",
       "Discovery", "Experience", "Experimentation", "Exploration", "Genius", "Growth",
-      "Improvement", "Innovation", "Inquisitive", "Insightful", "Intelligence", "Intuitive",
+      "Innovation", "Insightful", "Intelligence", "Intuitive",
       "Knowledge", "Learning", "Logic", "Mastery", "Open-mindedness", "Perception",
-      "Perceptiveness", "Perspective", "Realistic", "Reason", "Reflective", "Reinvention",
-      "Resourcefulness", "Sagacity", "Savvy", "Self-improvement", "Shrewdness", "Skill",
+      "Perspective", "Realistic", "Reflective", "Reinvention",
+      "Resourcefulness", "Self-improvement", "Shrewdness", "Skill",
       "Smart", "Talent", "Understanding", "Versatility", "Wisdom"
     ]
   },
@@ -118,13 +118,12 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Structure brings freedom through mastery. These values center on creating order in your life, following through on commitments, and achieving excellence through consistent effort.",
     daygameRelevance: "Consistent practice compounds over time. Following through on leads, maintaining routines, and showing up even when you don't feel like it separates those who improve from those who stay stuck.",
     values: [
-      "Accomplishment", "Accuracy", "Achievement", "Alertness", "Careful", "Cleanliness",
-      "Clarity", "Commitment", "Competence", "Concentration", "Consistency", "Dedication",
+      "Accomplishment", "Accuracy", "Alertness", "Careful", "Cleanliness",
+      "Clarity", "Commitment", "Competence", "Consistency",
       "Diligence", "Discipline", "Effectiveness", "Efficiency", "Excellence", "Focus",
       "Hard work", "Methodical", "Meticulous", "Order", "Organization", "Performance",
       "Precision", "Prepared", "Productivity", "Professionalism", "Punctuality", "Quality",
-      "Reliable", "Results-oriented", "Rigor", "Simplicity", "Structure", "Thorough",
-      "Timeliness"
+      "Reliable", "Results-oriented", "Rigor", "Simplicity", "Structure", "Thorough"
     ]
   },
   {
@@ -135,11 +134,11 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Joy makes you magnetic. These values focus on bringing energy, creativity, and lightness to life—not taking everything so seriously and allowing yourself to play.",
     daygameRelevance: "Playfulness is incredibly attractive. Not taking yourself or the interaction too seriously, being able to joke and tease, bringing energy and fun to the conversation. Women want to feel good around you.",
     values: [
-      "Adventurousness", "Amusement", "Beauty", "Creation", "Creativity", "Delight",
-      "Energy", "Enjoyment", "Enthusiasm", "Exhilaration", "Expressiveness", "Festivity",
-      "Fun", "Imagination", "Irreverent", "Joy", "Levity", "Liveliness", "Merriment",
+      "Beauty", "Creation", "Creativity",
+      "Energy", "Enthusiasm", "Exhilaration", "Festivity",
+      "Fun", "Imagination", "Irreverent", "Joy",
       "Mischief", "Novelty", "Originality", "Playfulness", "Recreation", "Silliness",
-      "Spontaneous", "Surprise", "Vitality", "Whimsy", "Wonder", "Zest"
+      "Spontaneous", "Surprise", "Vitality", "Whimsy", "Wonder"
     ]
   },
   {
@@ -150,13 +149,13 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Connection enriches life. These values focus on building meaningful relationships, contributing to others, and creating bonds that matter.",
     daygameRelevance: "Genuine interest in women as people—not just targets—creates real connection. Empathy, kindness, and the ability to make others feel understood and valued. This is what transforms approaches into relationships.",
     values: [
-      "Affection", "Altruism", "Attentive", "Belongingness", "Bonding", "Camaraderie",
-      "Caring", "Charity", "Closeness", "Communication", "Community", "Compassion",
+      "Affection", "Altruism", "Attentive", "Camaraderie",
+      "Caring", "Charity", "Communication", "Community", "Compassion",
       "Connection", "Contribution", "Cooperation", "Cordiality", "Courtesy", "Empathy",
-      "Family", "Friendship", "Generosity", "Giving", "Hospitality", "Intimacy",
-      "Kindness", "Love", "Loyalty", "Nurturing", "Openness", "Rapport", "Relatedness",
-      "Selfless", "Service", "Sharing", "Support", "Sympathy", "Teamwork", "Tenderness",
-      "Thoughtful", "Togetherness", "Unity", "Welcoming"
+      "Family", "Friendship", "Generosity", "Hospitality", "Intimacy",
+      "Kindness", "Love", "Loyalty", "Nurturing", "Openness",
+      "Service", "Sharing", "Support", "Sympathy", "Teamwork", "Tenderness",
+      "Thoughtful", "Unity"
     ]
   },
   {
@@ -168,11 +167,11 @@ export const CATEGORIES: CategoryInfo[] = [
     daygameRelevance: "Being honest and avoiding manipulation creates authentic connections. When you're congruent—your words match your intentions—women trust you. Self-respect comes from living by your values.",
     values: [
       "Accountability", "Candor", "Credibility", "Decency", "Dependability", "Discretion",
-      "Equality", "Ethical", "Fairness", "Fidelity", "Forgiveness", "Goodness", "Goodwill",
-      "Honesty", "Honor", "Integrity", "Justice", "Lawful", "Nobility", "Ownership",
-      "Principled", "Prudence", "Rectitude", "Respect", "Responsibility", "Self-honesty",
+      "Equality", "Fairness", "Forgiveness", "Goodwill",
+      "Honesty", "Honor", "Integrity", "Justice", "Lawful", "Ownership",
+      "Principled", "Prudence", "Respect", "Responsibility", "Self-honesty",
       "Sincerity", "Stewardship", "Sustainability", "Tolerance", "Transparency", "Trust",
-      "Truth", "Virtue"
+      "Virtue"
     ]
   },
   {
@@ -183,9 +182,9 @@ export const CATEGORIES: CategoryInfo[] = [
     description: "Direction gives meaning. These values are about having something bigger than yourself to work toward, a vision for your life, and a sense of why you do what you do.",
     daygameRelevance: "Knowing what you want—in life and in dating—gives you direction. A man with purpose is attractive because he's going somewhere. You're not seeking completion from women; you're inviting them into an already full life.",
     values: [
-      "Aspiration", "Calling", "Destiny", "Devotion", "Direction", "Faith", "Foresight",
-      "Fulfillment", "Greatness", "Hope", "Inspiring", "Legacy", "Meaning", "Mission",
-      "Potential", "Purpose", "Reverence", "Sacredness", "Significance", "Spirit",
+      "Aspiration", "Calling", "Destiny", "Devotion", "Faith", "Foresight",
+      "Fulfillment", "Greatness", "Hope", "Inspiring", "Legacy", "Meaning",
+      "Potential", "Purpose", "Reverence",
       "Spirituality", "Traditional", "Transcendence", "Vision"
     ]
   }

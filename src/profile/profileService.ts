@@ -1,5 +1,13 @@
-import { createServerSupabaseClient } from "@/src/db/server"
-import { REGIONS } from "@/src/profile/data/regions"
+import { getProfile, updateProfile } from "@/src/db/server"
+import {
+  BOOLEAN_PREFERENCE_KEYS,
+  EXPERIENCE_LEVELS,
+  PRIMARY_GOALS,
+  VALID_REGION_IDS,
+  AGE_RANGE,
+  EXPERIENCE_TO_LEVEL,
+  DEFAULT_INITIAL_LEVEL,
+} from "@/src/profile/config"
 
 /**
  * Service layer for profile business logic.
@@ -39,77 +47,38 @@ export interface PreferenceUpdate {
 type ProfileDbUpdates = Record<string, unknown>
 
 // ============================================================================
-// Validation Sets
+// Internal DB Helpers (using profilesRepo)
 // ============================================================================
-
-const BOOLEAN_PREFERENCE_KEYS = new Set(["user_is_foreign", "dating_foreigners"])
-
-const EXPERIENCE_LEVELS = new Set([
-  "complete-beginner",
-  "newbie",
-  "intermediate",
-  "advanced",
-  "expert",
-])
-
-const PRIMARY_GOALS = new Set([
-  "get-numbers",
-  "have-conversations",
-  "build-confidence",
-  "find-dates",
-])
-
-const VALID_REGION_IDS = new Set<string>(REGIONS.map((region) => region.id))
-
-// ============================================================================
-// Internal DB Helpers
-// ============================================================================
-
-interface ProfileRecord {
-  preferred_region?: string | null
-  secondary_region?: string | null
-}
 
 /**
- * Get a user's profile (partial fields needed for service logic).
- * Internal helper - matches original actions.ts behavior.
+ * Get a user's profile.
+ * Wraps repo function with service-specific error handling.
  */
-async function getProfileFields(
-  userId: string,
-  fields: (keyof ProfileRecord)[]
-): Promise<ProfileRecord | null> {
-  const supabase = await createServerSupabaseClient()
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select(fields.join(","))
-    .eq("id", userId)
-    .single()
-
-  if (error) {
+async function getProfileForService(userId: string) {
+  try {
+    const profile = await getProfile(userId)
+    if (!profile) {
+      throw new ProfileServiceError("Profile not found", "PROFILE_NOT_FOUND")
+    }
+    return profile
+  } catch (error) {
+    if (error instanceof ProfileServiceError) throw error
     console.error("Error loading profile:", error)
     throw new ProfileServiceError("Failed to load profile", "PROFILE_LOAD_FAILED")
   }
-
-  return data as unknown as ProfileRecord | null
 }
 
 /**
  * Update a user's profile.
- * Internal helper - matches original actions.ts behavior with raw Supabase updates.
+ * Wraps repo function with service-specific error handling.
  */
 async function updateProfileDb(
   userId: string,
   updates: ProfileDbUpdates
 ): Promise<void> {
-  const supabase = await createServerSupabaseClient()
-
-  const { error } = await supabase
-    .from("profiles")
-    .update(updates)
-    .eq("id", userId)
-
-  if (error) {
+  try {
+    await updateProfile(userId, updates)
+  } catch (error) {
     console.error("Error updating profile:", error)
     throw new ProfileServiceError("Failed to update profile", "PROFILE_UPDATE_FAILED")
   }
@@ -123,20 +92,7 @@ async function updateProfileDb(
  * Map experience level to initial user level.
  */
 export function getInitialLevelFromExperience(experienceLevel: string): number {
-  switch (experienceLevel) {
-    case "complete-beginner":
-      return 1
-    case "newbie":
-      return 3
-    case "intermediate":
-      return 7
-    case "advanced":
-      return 12
-    case "expert":
-      return 18
-    default:
-      return 1
-  }
+  return EXPERIENCE_TO_LEVEL[experienceLevel] ?? DEFAULT_INITIAL_LEVEL
 }
 
 /**
@@ -165,8 +121,8 @@ export function validateAgeRange(start: number, end: number): { start: number; e
     throw new ProfileServiceError("Invalid age range", "INVALID_AGE_RANGE")
   }
 
-  const clampedStart = Math.max(18, Math.min(start, 45))
-  const clampedEnd = Math.max(18, Math.min(end, 45))
+  const clampedStart = Math.max(AGE_RANGE.MIN, Math.min(start, AGE_RANGE.MAX))
+  const clampedEnd = Math.max(AGE_RANGE.MIN, Math.min(end, AGE_RANGE.MAX))
 
   return {
     start: Math.min(clampedStart, clampedEnd),
@@ -227,10 +183,7 @@ export async function updateSecondaryRegionForUser(
   userId: string,
   secondaryRegion: string | null
 ): Promise<void> {
-  const profile = await getProfileFields(userId, ["preferred_region"])
-  if (!profile) {
-    throw new ProfileServiceError("Profile not found", "PROFILE_NOT_FOUND")
-  }
+  const profile = await getProfileForService(userId)
 
   const primaryRegion = profile.preferred_region || null
   const nextSecondary =
@@ -279,10 +232,7 @@ export async function updatePreferredRegionForUser(
 ): Promise<void> {
   validateRegion(regionId)
 
-  const profile = await getProfileFields(userId, ["secondary_region"])
-  if (!profile) {
-    throw new ProfileServiceError("Profile not found", "PROFILE_NOT_FOUND")
-  }
+  const profile = await getProfileForService(userId)
 
   const updates: ProfileDbUpdates = { preferred_region: regionId }
   if (profile.secondary_region === regionId) {
@@ -304,10 +254,7 @@ export async function updateSecondaryRegionDirectForUser(
     validateRegion(regionId)
   }
 
-  const profile = await getProfileFields(userId, ["preferred_region"])
-  if (!profile) {
-    throw new ProfileServiceError("Profile not found", "PROFILE_NOT_FOUND")
-  }
+  const profile = await getProfileForService(userId)
 
   const nextSecondary =
     regionId && regionId !== profile.preferred_region ? regionId : null

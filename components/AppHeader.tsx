@@ -1,9 +1,9 @@
 import Link from "next/link"
-import { HelpCircle, LayoutDashboard, LogOut, Settings, Target } from "lucide-react"
+import { Beaker, BookOpen, HelpCircle, LayoutDashboard, LogOut, Settings, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 
-type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "other"
+type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "other"
 
 interface AppHeaderProps {
   /** Current page identifier - used to hide redundant navigation links */
@@ -38,6 +38,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const showDashboard = currentPage !== "dashboard"
   const showAskCoach = currentPage !== "qa" && hasPurchased
+  const showArticles = currentPage !== "articles"
   const showSettings = currentPage !== "settings" && isLoggedIn
 
   return (
@@ -77,11 +78,27 @@ export function AppHeader({
                   </Link>
                 </Button>
               )}
+              {showArticles && (
+                <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+                  <Link href="/dashboard/articles">
+                    <BookOpen className="size-4 mr-2" />
+                    Articles
+                  </Link>
+                </Button>
+              )}
               {showSettings && (
                 <Button asChild variant="ghost" className="text-foreground hover:text-primary">
                   <Link href="/dashboard/settings">
                     <Settings className="size-4 mr-2" />
                     Settings
+                  </Link>
+                </Button>
+              )}
+              {process.env.NODE_ENV === "development" && (
+                <Button asChild variant="ghost" className="text-amber-500 hover:text-amber-400">
+                  <Link href="/test">
+                    <Beaker className="size-4 mr-2" />
+                    Test Pages
                   </Link>
                 </Button>
               )}
@@ -108,6 +125,14 @@ export function AppHeader({
                   <Link href="/dashboard">
                     <LayoutDashboard className="size-4 mr-2" />
                     Dashboard
+                  </Link>
+                </Button>
+              )}
+              {showArticles && (
+                <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+                  <Link href="/dashboard/articles">
+                    <BookOpen className="size-4 mr-2" />
+                    Articles
                   </Link>
                 </Button>
               )}

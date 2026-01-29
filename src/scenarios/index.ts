@@ -29,13 +29,14 @@ export {
 } from "./catalog"
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Service (main orchestration)
+// Service (main orchestration - function exports per CLAUDE.md)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export {
-  // Service instance
-  scenariosService,
-  ScenariosService,
+  // Functions
+  generateOpenerEncounter,
+  evaluateOpenerAttempt,
+  handleChatMessage,
   // Types
   type EnvironmentChoice,
   type GenerateEncounterRequest,

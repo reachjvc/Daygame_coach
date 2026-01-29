@@ -3,7 +3,7 @@
  * All settings-related business logic goes through here.
  */
 
-import { mergeSandboxSettings, type SandboxSettings } from "@/src/encounters"
+import { mergeSandboxSettings, type SandboxSettings } from "@/src/scenarios/config"
 import { getStripe } from "./stripe"
 import {
   updateSandboxSettings as repoUpdateSandboxSettings,
@@ -14,7 +14,7 @@ import {
   updateSubscriptionCancelledAt,
   getScenarioStats,
   getSettingsProfile,
-} from "./settingsRepository"
+} from "@/src/db/settingsRepo"
 import {
   type SubscriptionInfo,
   type UserStats,

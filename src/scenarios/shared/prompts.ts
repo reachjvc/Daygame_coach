@@ -12,7 +12,7 @@
  */
 
 import { Archetype } from "./archetypes";
-import type { CareerScenarioContext } from "../career/career-scenario";
+import type { CareerScenarioContext } from "../career/generator";
 import { SHITTESTS_BY_DIFFICULTY } from "../shittests/data/shit-tests";
 
 interface PromptConfig {

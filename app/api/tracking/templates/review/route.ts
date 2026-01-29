@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { getReviewTemplates } from "@/src/db/trackingRepo"
-import type { ReviewType } from "@/src/db/trackingTypes"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { getReviewTemplates } from "@/src/tracking/trackingService"
+import type { ReviewType } from "@/src/tracking/trackingService"
 
 export async function GET(request: NextRequest) {
   try {

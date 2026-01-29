@@ -1,4 +1,6 @@
 # Progress Tracking Ideas - Brainstorm
+**Status:** Research/Brainstorm
+**Updated:** 29-01-2026 07:46 (Danish time)
 
 ## Core Philosophy
 The goal is to help users actually improve at daygame, not gamify for engagement's sake. Progress tracking should serve reflection, accountability, and skill development.

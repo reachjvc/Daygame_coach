@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
 import { InnerGameStep, type InferredValue } from "../types"
+import { useValueInference } from "../hooks/useValueInference"
 import { NavigationButtons } from "./shared/NavigationButtons"
 import { StepProgress } from "./shared/StepProgress"
 import { WisdomBox } from "./shared/WisdomBox"
@@ -26,50 +26,22 @@ export function HurdlesStep({
   onBack,
   onComplete,
 }: HurdlesStepProps) {
-  const [response, setResponse] = useState(initialResponse ?? "")
-  const [inferredValues, setInferredValues] = useState<InferredValue[] | null>(
-    initialInferredValues
-  )
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [showResults, setShowResults] = useState(!!initialInferredValues)
-
-  const handleSubmit = async () => {
-    if (!response.trim()) {
-      setError("Please share your thoughts before continuing.")
-      return
-    }
-
-    if (response.length < 20) {
-      setError("Please provide more detail about your hurdles.")
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
-
-    try {
-      const res = await fetch("/api/inner-game/infer-values", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ context: "hurdles", response }),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || "Failed to analyze your response")
-      }
-
-      const data = await res.json()
-      setInferredValues(data.values)
-      setShowResults(true)
-    } catch (err) {
-      console.error("Failed to infer values:", err)
-      setError(err instanceof Error ? err.message : "Something went wrong")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    response,
+    setResponse,
+    inferredValues,
+    isLoading,
+    error,
+    showResults,
+    setShowResults,
+    clearError,
+    inferValues,
+  } = useValueInference({
+    context: "hurdles",
+    initialResponse,
+    initialInferredValues,
+    shortResponseError: "Please provide more detail about your hurdles.",
+  })
 
   const handleContinue = () => {
     if (inferredValues) {
@@ -112,7 +84,7 @@ export function HurdlesStep({
               value={response}
               onChange={(e) => {
                 setResponse(e.target.value)
-                setError(null)
+                clearError()
               }}
               placeholder="I keep falling into the pattern of... What holds me back most is... I notice I tend to..."
               className={`
@@ -133,7 +105,7 @@ export function HurdlesStep({
           {/* Navigation */}
           <NavigationButtons
             onBack={onBack}
-            onNext={handleSubmit}
+            onNext={inferValues}
             nextLabel="Analyze My Hurdles"
             isLoading={isLoading}
             nextDisabled={response.length < 20}

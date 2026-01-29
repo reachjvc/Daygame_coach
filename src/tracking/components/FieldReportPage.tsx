@@ -42,7 +42,7 @@ const TEMPLATE_COLORS: Record<string, string> = {
   custom: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
 export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const router = useRouter()
   const [templates, setTemplates] = useState<FieldReportTemplateRow[]>([])
@@ -489,7 +489,6 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
                   className="w-full border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10"
                   onClick={() => {
                     // TODO: Navigate to custom template builder
-                    console.log("Custom template clicked")
                   }}
                 >
                   Build Custom Template

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock, TrendingUp } from "lucide-react";
+import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock, TrendingUp, BookOpen } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
@@ -176,6 +176,29 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
               <span className="font-medium hidden sm:inline">
                 {isPreviewMode ? "Sign Up to Track" : "Start Tracking"}
               </span>
+              <ArrowRight className="size-5" />
+            </div>
+          </div>
+        </Card>
+      </Link>
+
+      {/* Articles & Research Section - Always accessible */}
+      <Link href="/dashboard/articles" className="group block mt-4">
+        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-5">
+              <div className="size-14 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors shrink-0">
+                <BookOpen className="size-7 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-foreground mb-1">Articles & Research</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed max-w-2xl">
+                  Research-backed articles on performance psychology, deliberate practice, and social dynamics. Content designed to add real value to your life.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-amber-500 group-hover:translate-x-1 transition-transform">
+              <span className="font-medium hidden sm:inline">Browse Articles</span>
               <ArrowRight className="size-5" />
             </div>
           </div>

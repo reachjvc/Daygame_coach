@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
-import type { SandboxSettings } from "@/src/encounters"
+import type { SandboxSettings } from "@/src/scenarios/config"
 import {
   handleUpdateSandboxSettings,
   handleResetSandboxSettings,

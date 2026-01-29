@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient } from "@/src/db/server"
-import { hasPurchased } from "@/src/db/profilesRepo"
-import { scenariosService } from "@/src/scenarios"
+import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { handleChatMessage } from "@/src/scenarios"
 
 const ScenarioTypeSchema = z.enum([
   "practice-openers",
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const response = await scenariosService.handleChatMessage(parsed.data, user.id)
+  const response = await handleChatMessage(parsed.data, user.id)
 
   return NextResponse.json(response, { status: 200 })
 }

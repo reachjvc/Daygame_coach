@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { updateApproach } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { updateApproach } from "@/src/tracking/trackingService"
+import { UpdateApproachSchema } from "@/src/tracking/schemas"
 
 export async function PATCH(
   request: NextRequest,
@@ -32,13 +33,23 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { outcome, tags, mood, note } = body
+    const parsed = UpdateApproachSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: "Invalid request body", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { outcome, set_type, tags, mood, note } = parsed.data
 
     const updated = await updateApproach(id, {
-      outcome: outcome !== undefined ? outcome : undefined,
-      tags: tags !== undefined ? tags : undefined,
-      mood: mood !== undefined ? mood : undefined,
-      note: note !== undefined ? note : undefined,
+      outcome: outcome ?? undefined,
+      set_type: set_type ?? undefined,
+      tags: tags ?? undefined,
+      mood: mood ?? undefined,
+      note: note ?? undefined,
     })
 
     return NextResponse.json(updated)

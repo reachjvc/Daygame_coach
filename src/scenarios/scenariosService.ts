@@ -3,12 +3,14 @@
  *
  * Main orchestration service for scenario-related operations.
  * Delegates to specialized modules for specific functionality.
+ *
+ * Uses function exports per CLAUDE.md pattern (not class singleton).
  */
 
 import { getProfile } from "@/src/db/profilesRepo"
 
-import type { ActivityId } from "@/src/encounters/data/base-texts"
-import type { DifficultyLevel as OpenersDifficultyLevel } from "@/src/encounters/data/energy"
+import type { ActivityId } from "./openers/data/base-texts"
+import type { DifficultyLevel as OpenersDifficultyLevel } from "./openers/data/energy"
 import {
   generateScenarioV2,
   getAvailableActivities,
@@ -28,24 +30,22 @@ import {
 import {
   generateCareerScenario,
   generateCareerScenarioIntro,
-} from "@/src/scenarios/career/career-scenario"
+} from "@/src/scenarios/career/generator"
 import {
   getPracticeCareerResponsePrompt,
   getPracticeOpenersPrompt,
   getPracticeShittestsPrompt,
 } from "@/src/scenarios/shared/prompts"
 
-import { generateShittestScenarioIntro } from "@/src/scenarios/chat/intros"
+import { generateShittestScenarioIntro } from "@/src/scenarios/shittests/generator"
 import {
   generatePlaceholderResponse,
   generatePlaceholderShittestResponse,
   generateCareerPlaceholderResponse,
 } from "@/src/scenarios/chat/responses"
-import {
-  evaluateOpenerResponse,
-  evaluateCareerResponse,
-  evaluateShittestResponse,
-} from "@/src/scenarios/chat/evaluators"
+import { evaluateOpenerResponse } from "@/src/scenarios/chat/evaluators"
+import { evaluateCareerResponse } from "@/src/scenarios/career/evaluator"
+import { evaluateShittestResponse } from "@/src/scenarios/shittests/evaluator"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -101,7 +101,7 @@ export type ChatResponse = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Helpers
+// Helpers (private)
 // ─────────────────────────────────────────────────────────────────────────────
 
 function isRegionId(value: unknown): value is RegionId {
@@ -140,142 +140,138 @@ function defaultHintForDifficulty(difficulty: OpenersDifficultyLevel): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Service Class
+// Public API (function exports)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export class ScenariosService {
-  async generateOpenerEncounter(
-    request: GenerateEncounterRequest,
-    userId: string
-  ): Promise<GeneratedScenarioV2> {
-    const profile = await getProfile(userId)
+export async function generateOpenerEncounter(
+  request: GenerateEncounterRequest,
+  userId: string
+): Promise<GeneratedScenarioV2> {
+  const profile = await getProfile(userId)
 
-    const regionId = isRegionId(profile?.preferred_region) ? profile?.preferred_region : undefined
-    const secondaryRegionId = isRegionId(profile?.secondary_region) ? profile?.secondary_region : undefined
+  const regionId = isRegionId(profile?.preferred_region) ? profile?.preferred_region : undefined
+  const secondaryRegionId = isRegionId(profile?.secondary_region) ? profile?.secondary_region : undefined
 
-    const activityId = pickActivityIdForEnvironment(request.environment)
+  const activityId = pickActivityIdForEnvironment(request.environment)
 
-    const includeHint = request.includeHint ?? defaultHintForDifficulty(request.difficulty)
+  const includeHint = request.includeHint ?? defaultHintForDifficulty(request.difficulty)
 
-    return generateScenarioV2({
-      difficulty: request.difficulty,
-      activityId,
-      regionId,
-      secondaryRegionId,
-      datingForeigners: profile?.dating_foreigners ?? false,
-      userIsForeign: profile?.user_is_foreign ?? false,
-      includeHooks: includeHint,
-      includeWeather: request.includeWeather ?? false,
-    })
+  return generateScenarioV2({
+    difficulty: request.difficulty,
+    activityId,
+    regionId,
+    secondaryRegionId,
+    datingForeigners: profile?.dating_foreigners ?? false,
+    userIsForeign: profile?.user_is_foreign ?? false,
+    includeHooks: includeHint,
+    includeWeather: request.includeWeather ?? false,
+  })
+}
+
+export async function evaluateOpenerAttempt(
+  request: EvaluateOpenerRequest,
+  userId: string
+): Promise<OpenerEvaluation> {
+  void userId
+  if (typeof request.encounter === "undefined") {
+    throw new Error("Encounter is required")
   }
 
-  async evaluateOpenerResponse(
-    request: EvaluateOpenerRequest,
-    userId: string
-  ): Promise<OpenerEvaluation> {
-    void userId
-    if (typeof request.encounter === "undefined") {
-      throw new Error("Encounter is required")
-    }
+  return evaluateOpener(request.opener, request.encounter)
+}
 
-    return evaluateOpener(request.opener, request.encounter)
-  }
+export async function handleChatMessage(request: ChatRequest, userId: string): Promise<ChatResponse> {
+  const profile = await getProfile(userId)
 
-  async handleChatMessage(request: ChatRequest, userId: string): Promise<ChatResponse> {
-    const profile = await getProfile(userId)
+  const userArchetypeKey =
+    profile?.archetype?.toLowerCase().replace(/\s+/g, "") || "powerhouse"
+  const archetype: Archetype = ARCHETYPES[userArchetypeKey] || ARCHETYPES.powerhouse
 
-    const userArchetypeKey =
-      profile?.archetype?.toLowerCase().replace(/\s+/g, "") || "powerhouse"
-    const archetype: Archetype = ARCHETYPES[userArchetypeKey] || ARCHETYPES.powerhouse
+  const userLevel = profile?.level || 1
+  const difficulty: ChatDifficultyLevel = getDifficultyForLevel(userLevel)
 
-    const userLevel = profile?.level || 1
-    const difficulty: ChatDifficultyLevel = getDifficultyForLevel(userLevel)
+  const scenario_type = request.scenario_type
+  const conversation_history = request.conversation_history || []
+  const isFirstMessage = conversation_history.length === 0
 
-    const scenario_type = request.scenario_type
-    const conversation_history = request.conversation_history || []
-    const isFirstMessage = conversation_history.length === 0
+  const scenarioSeed = request.session_id || `${userId}-${scenario_type}`
+  const careerScenario =
+    scenario_type === "practice-career-response"
+      ? generateCareerScenario(archetype, difficulty, scenarioSeed)
+      : null
 
-    const scenarioSeed = request.session_id || `${userId}-${scenario_type}`
-    const careerScenario =
-      scenario_type === "practice-career-response"
-        ? generateCareerScenario(archetype, difficulty, scenarioSeed)
-        : null
+  const location = "street"
 
-    const location = "street"
-
-    // Handle first message (intro)
-    if (isFirstMessage) {
-      if (scenario_type === "practice-career-response" && careerScenario) {
-        return {
-          text: generateCareerScenarioIntro(careerScenario),
-          archetype: archetype.name,
-          difficulty,
-          isIntroduction: true,
-        }
-      }
-
-      if (scenario_type === "practice-shittests") {
-        return {
-          text: generateShittestScenarioIntro(archetype, difficulty, location),
-          archetype: archetype.name,
-          difficulty,
-          isIntroduction: true,
-        }
-      }
-
+  // Handle first message (intro)
+  if (isFirstMessage) {
+    if (scenario_type === "practice-career-response" && careerScenario) {
       return {
-        text: generateWomanDescription(archetype, difficulty),
+        text: generateCareerScenarioIntro(careerScenario),
         archetype: archetype.name,
         difficulty,
         isIntroduction: true,
       }
     }
 
-    // Build system prompt (for future LLM integration)
-    const { systemPrompt } =
-      scenario_type === "practice-career-response" && careerScenario
-        ? getPracticeCareerResponsePrompt(archetype, careerScenario)
-        : scenario_type === "practice-shittests"
-          ? getPracticeShittestsPrompt(archetype, location)
-          : getPracticeOpenersPrompt(archetype, location)
-
-    const difficultyModifier = getDifficultyPromptModifier(difficulty)
-    void systemPrompt
-    void difficultyModifier
-
-    // Generate placeholder response
-    const placeholderResponse =
-      scenario_type === "practice-career-response" && careerScenario
-        ? generateCareerPlaceholderResponse(request.message, archetype.name, difficulty, careerScenario.jobTitle)
-        : scenario_type === "practice-shittests"
-          ? generatePlaceholderShittestResponse(
-              request.message,
-              archetype.name,
-              difficulty,
-              archetype.commonShittests
-            )
-          : generatePlaceholderResponse(request.message, archetype.name, difficulty)
-
-    // Evaluate user's response
-    const currentTurn = conversation_history.filter((entry) => entry.role === "user").length + 1
-
-    const evaluationResult =
-      scenario_type === "practice-career-response" && careerScenario
-        ? evaluateCareerResponse(request.message, careerScenario.jobTitle)
-        : scenario_type === "practice-shittests"
-          ? evaluateShittestResponse(request.message)
-          : evaluateOpenerResponse(request.message)
-
-    const milestoneEvaluation =
-      currentTurn % 5 === 0 ? { ...evaluationResult.milestone, turn: currentTurn } : undefined
+    if (scenario_type === "practice-shittests") {
+      return {
+        text: generateShittestScenarioIntro(archetype, difficulty, location),
+        archetype: archetype.name,
+        difficulty,
+        isIntroduction: true,
+      }
+    }
 
     return {
-      text: placeholderResponse,
+      text: generateWomanDescription(archetype, difficulty),
       archetype: archetype.name,
-      evaluation: evaluationResult.small,
-      milestoneEvaluation,
+      difficulty,
+      isIntroduction: true,
     }
   }
-}
 
-export const scenariosService = new ScenariosService()
+  // Build system prompt (for future LLM integration)
+  const { systemPrompt } =
+    scenario_type === "practice-career-response" && careerScenario
+      ? getPracticeCareerResponsePrompt(archetype, careerScenario)
+      : scenario_type === "practice-shittests"
+        ? getPracticeShittestsPrompt(archetype, location)
+        : getPracticeOpenersPrompt(archetype, location)
+
+  const difficultyModifier = getDifficultyPromptModifier(difficulty)
+  void systemPrompt
+  void difficultyModifier
+
+  // Generate placeholder response
+  const placeholderResponse =
+    scenario_type === "practice-career-response" && careerScenario
+      ? generateCareerPlaceholderResponse(request.message, archetype.name, difficulty, careerScenario.jobTitle)
+      : scenario_type === "practice-shittests"
+        ? generatePlaceholderShittestResponse(
+            request.message,
+            archetype.name,
+            difficulty,
+            archetype.commonShittests
+          )
+        : generatePlaceholderResponse(request.message, archetype.name, difficulty)
+
+  // Evaluate user's response
+  const currentTurn = conversation_history.filter((entry) => entry.role === "user").length + 1
+
+  const evaluationResult =
+    scenario_type === "practice-career-response" && careerScenario
+      ? evaluateCareerResponse(request.message, careerScenario.jobTitle)
+      : scenario_type === "practice-shittests"
+        ? evaluateShittestResponse(request.message)
+        : evaluateOpenerResponse(request.message)
+
+  const milestoneEvaluation =
+    currentTurn % 5 === 0 ? { ...evaluationResult.milestone, turn: currentTurn } : undefined
+
+  return {
+    text: placeholderResponse,
+    archetype: archetype.name,
+    evaluation: evaluationResult.small,
+    milestoneEvaluation,
+  }
+}

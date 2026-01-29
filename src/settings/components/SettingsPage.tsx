@@ -32,7 +32,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import type { SandboxSettings } from "@/src/encounters"
+import type { SandboxSettings } from "@/src/scenarios/config"
 import { PRODUCTS } from "@/src/home"
 import type { SettingsPageProps } from "../types"
 import { DIFFICULTY_OPTIONS, LEVEL_TITLES } from "../types"

@@ -3,16 +3,11 @@ node_modules
 .pnp
 .pnp.js
 
-#data
-data
 # Build
 .next
 out
 build
 dist
-
-# Hugging Face token (keep private)
-data/token/huggingface
 
 # Environment
 .env
@@ -21,10 +16,11 @@ data/token/huggingface
 .env.test.local
 .env.production.local
 
-# Debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # IDE
 .idea
@@ -44,10 +40,12 @@ next-env.d.ts
 .vercel
 
 # Training data (large local assets)
+data
 training-data
 training-data/**
 !training-data/
 !training-data/sources.txt
+data/token/huggingface
 
 # Sensitive: YouTube cookies export (never commit)
 www.youtube.com_cookies.txt
@@ -58,48 +56,21 @@ training-data.local-backup-*
 # Windows alternate data stream artifacts
 *:Zone.Identifier
 
-# Python virtual environments
+# Python
 .venv/
 venv/
 env/
-.ENV/
-
-.venv/
-venv/
+ENV/
 __pycache__/
+*.py[cod]
 *.pyc
+*.class
 
-# python
-.venv/
-venv/
-__pycache__/
-*.pyc
-
-# caches (torch / hf / etc)
+# Python caches
 .cache/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 
-# editor
-.vscode/
-.idea/
-.DS_Store
-.venv/
-
-# Python Virtual Environment
-.venv/
-venv/
-ENV/
-
-# Python Cache and Compiled files
-__pycache__/
-*.py[cod]
-*.class
-
-# Data and Logs
-*.log
-.DS_Store
-
-# local dependency clones
+# Local dependency clones
 /whisper.cpp/

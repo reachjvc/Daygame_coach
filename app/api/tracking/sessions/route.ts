@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createServerSupabaseClient } from "@/src/db/supabase"
-import { getSessionSummaries } from "@/src/db/trackingRepo"
+import { createServerSupabaseClient } from "@/src/db/server"
+import { getSessionSummaries } from "@/src/tracking/trackingService"
 
 export async function GET(request: NextRequest) {
   try {

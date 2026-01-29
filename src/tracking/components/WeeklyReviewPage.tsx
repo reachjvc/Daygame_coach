@@ -40,7 +40,7 @@ interface WeeklyStatsData {
   weekEnd: string
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
 export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const router = useRouter()
   const [templates, setTemplates] = useState<ReviewTemplateRow[]>([])

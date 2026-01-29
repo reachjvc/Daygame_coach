@@ -1,0 +1,38 @@
+Marcus Aurelius Pilot Prompts (ChatGPT Image Generation)
+
+Goal
+- Generate a 12-frame loop that feels alive (micro motion only) while keeping identity and composition locked.
+- Use PNG for review fidelity. Target size 1024 square
+
+IMPORTANT (consistency)
+- Same pose, same framing, same camera angle, same crop.
+- No big changes to expression, lighting direction, or costume.
+- No text, no watermark, no logos, no modern clothing, no laurel/helmet, no armor.
+
+PROMPT 1 — MASTER FRAME
+Painterly digital illustration portrait of Marcus Aurelius, Roman emperor. Curly grey-brown hair and beard, wearing dark Roman robes with gold trim, wise weathered face, Stoic calm expression. Looking slightly off-camera. Lighting: DRAMATIC warm golden-orange rim light glowing from behind, cool teal fill from front creating strong color contrast. Background: deep atmospheric teal and dark brown with visible floating embers and dust particles catching the light. Rich saturated colors, high contrast, cinematic drama. Mood: powerful, epic, timeless. Style should feel like a video game character select screen - vibrant and eye-catching, not muted. Top 50-60% of image: clear portrait, full detail. Bottom 40-50%: smooth gradient fading to pure black at the bottom edge. Aspect ratio: 1:1 (square). No text, no watermark, no modern clothing, no helmet, no laurel, no armor, no cropped head.
+
+PROMPT 2 — 12 VARIATIONS (USE MASTER FRAME AS REFERENCE)
+Using the master frame as a strict reference, create 12 images with extremely subtle differences only. Keep identity, pose, framing, and camera angle locked. Allow ONLY micro changes: ember drift, dust motes moving, tiny hair flutter, barely perceptible robe movement, very subtle rim-light shimmer, and a gentle breathing hint in shoulders/chest. No major changes to face, expression, or lighting direction. Output 12 images in one response, labeled 01-12.
+
+Optional micro-variation map (if you can control per-frame cues):
+01 neutral baseline
+02 embers drift slightly upward
+03 dust motes denser on left
+04 faint rim-light shimmer
+05 hair lifts subtly on right temple
+06 eyelids slightly lower (micro-blink start)
+07 eyelids return to neutral
+08 shoulder rise (breath in)
+09 shoulder settle (breath out)
+10 embers drift slightly downward
+11 dust motes denser on right
+12 rim-light shimmer again to loop back to 01
+
+Fallback if 12-at-once is not possible:
+- Generate 4 images per run (Set A: 01-04, Set B: 05-08, Set C: 09-12).
+- Always reuse the same master frame as reference to prevent identity drift.
+
+File naming (after download):
+marcus_loop_01.png ... marcus_loop_12.png
+Place in: public/marcus-test/

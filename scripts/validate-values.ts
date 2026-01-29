@@ -219,7 +219,7 @@ function findExactDuplicates() {
   }
 
   let duplicates = 0
-  for (const [normalized, locations] of seen) {
+  for (const locations of seen.values()) {
     if (locations.length > 1) {
       console.log(`  DUPLICATE: ${locations.join(" vs ")}`)
       duplicates++
@@ -243,13 +243,6 @@ function findNearDuplicates() {
 
   const all = getAllValues()
   const nearDuplicates: string[] = []
-
-  // Common patterns to check
-  const patterns = [
-    // Noun/adjective pairs
-    [/ness$/, ""], [/ity$/, ""], [/ment$/, ""], [/tion$/, ""],
-    [/ive$/, ""], [/ful$/, ""], [/ous$/, ""]
-  ]
 
   // Check each value against all others
   for (let i = 0; i < all.length; i++) {
@@ -441,7 +434,7 @@ console.log("╚" + "═".repeat(58) + "╝")
 const duplicates = findExactDuplicates()
 const nearDupes = findNearDuplicates()
 const missingRM = checkRoleModelCoverage()
-const naming = checkNamingConsistency()
+checkNamingConsistency()
 const balance = checkCategoryBalance()
 const preserved = checkNoValuesLost()
 

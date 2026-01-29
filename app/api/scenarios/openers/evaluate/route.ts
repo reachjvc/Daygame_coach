@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-import { createServerSupabaseClient } from "@/src/db/server"
-import { hasPurchased } from "@/src/db/profilesRepo"
-import { scenariosService } from "@/src/scenarios"
+import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
+import { evaluateOpenerAttempt } from "@/src/scenarios"
 
 const RequestSchema = z.object({
   opener: z.string().trim().min(1).max(280),
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
   }
 
-  const result = await scenariosService.evaluateOpenerResponse(parsed.data, user.id)
+  const result = await evaluateOpenerAttempt(parsed.data, user.id)
 
   return NextResponse.json(result, { status: 200 })
 }

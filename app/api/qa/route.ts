@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { createServerSupabaseClient } from "@/src/db/server"
+import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
 import { handleQARequest, VALIDATION_LIMITS } from "@/src/qa"
 
 /**
@@ -58,13 +58,9 @@ export async function POST(req: Request) {
     }
 
     // 2. Subscription gate
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("has_purchased")
-      .eq("id", user.id)
-      .single()
+    const isPurchased = await hasPurchased(user.id)
 
-    if (!profile?.has_purchased) {
+    if (!isPurchased) {
       return NextResponse.json(
         { error: "Premium subscription required" },
         { status: 403 }

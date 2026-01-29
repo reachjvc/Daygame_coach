@@ -4,6 +4,11 @@ scripts/training-data/07.LLM-conversations
 
 Conversation Boundary Detection for Daygame Transcripts (LLM / Ollama)
 
+v2.0 - Now with video type detection to prevent false positives:
+- Detects if video is "infield", "talking_head", or "podcast"
+- For non-infield videos, forces ALL segments to commentary (0 false positives)
+- Only uses LLM segment classification for actual infield footage
+
 Adds per-segment fields:
 - conversation_id: integer ID for each distinct approach
 - segment_type: "approach" | "commentary" | "transition"
@@ -153,6 +158,138 @@ APPROACH_EXCHANGE_PATTERNS = [
     r"\btype (your number|it) in\b",
     r"\b(i('ll| will) )?(text|message) you\b",
 ]
+
+
+# ---------------------------
+# Video Type Detection (v2.0)
+# ---------------------------
+
+# Keywords that strongly indicate talking_head content
+TALKING_HEAD_KEYWORDS = [
+    "guide", "advice", "tips", "mistakes", "how to", "mindset", "rant",
+    "motivation", "charisma", "communication", "texting", "messaging",
+    "psychology", "confidence", "anxiety", "introvert", "what to say",
+    "secrets", "rules", "principles", "theory", "breakdown", "podcast",
+    "interview", "q&a", "questions"
+]
+
+# Keywords that strongly indicate infield content
+INFIELD_KEYWORDS = [
+    "infield", "daygame session", "approaches", "number close",
+    "instant date", "street approach", "cold approach footage",
+    "brutal session", "field report"
+]
+
+
+def detect_video_type_from_title(title: str) -> Optional[str]:
+    """Fast heuristic detection from video title - no LLM needed."""
+    title_lower = title.lower()
+
+    # Check infield keywords first (higher priority)
+    if any(kw in title_lower for kw in INFIELD_KEYWORDS):
+        return "infield"
+
+    # Check talking_head keywords
+    if any(kw in title_lower for kw in TALKING_HEAD_KEYWORDS):
+        return "talking_head"
+
+    return None
+
+
+def detect_video_type_with_llm(segments: List[Dict], video_title: str) -> str:
+    """LLM-based video type detection by sampling segments."""
+
+    # First try heuristic - it's fast and reliable for clear cases
+    heuristic_type = detect_video_type_from_title(video_title)
+    if heuristic_type == "talking_head":
+        return "talking_head"
+    if heuristic_type == "infield":
+        return "infield"
+
+    # Sample segments for LLM analysis
+    sample_indices = list(range(min(5, len(segments))))
+    if len(segments) > 10:
+        mid = len(segments) // 2
+        sample_indices += list(range(mid - 2, mid + 3))
+    if len(segments) > 15:
+        sample_indices += list(range(len(segments) - 5, len(segments)))
+
+    sample_indices = sorted(set(i for i in sample_indices if 0 <= i < len(segments)))[:15]
+
+    sample_texts = []
+    for i in sample_indices:
+        text = segments[i].get("text", "")[:100]
+        sample_texts.append(f"[{i}] {text}")
+
+    prompt = f"""Classify this video's content type based on the title and sample segments.
+
+VIDEO TITLE: "{video_title}"
+
+SAMPLE SEGMENTS:
+{chr(10).join(sample_texts)}
+
+Content types:
+- "infield": Coach approaching women on the street. Contains ACTUAL openers like "excuse me, two seconds", real responses from women, number closes.
+- "talking_head": Coach talking to camera about theory, tips, or experiences. No actual approaches happening.
+- "podcast": Coach talking with a co-host or student in interview/discussion format. Two people discussing topics, NOT approaching women.
+
+KEY DISTINCTION: In "infield", the coach is DOING approaches. In "talking_head" and "podcast", the coach is TALKING ABOUT approaches.
+
+Respond with ONLY one word: infield, talking_head, or podcast
+
+Video type:"""
+
+    try:
+        response = requests.post(
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json={
+                "model": OLLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"temperature": 0.3, "num_predict": 50},
+            },
+            timeout=60,
+        )
+        if response.ok:
+            response_text = response.json().get("response", "").lower().strip()
+            for vtype in ["infield", "talking_head", "podcast"]:
+                if vtype in response_text:
+                    return vtype
+    except requests.exceptions.RequestException:
+        pass
+
+    # Default to infield if uncertain (safer to over-classify than miss real approaches)
+    return "infield"
+
+
+def force_commentary_for_non_infield(segments: List[Dict], video_type: str) -> List[Dict]:
+    """For talking_head/podcast videos, force ALL segments to commentary.
+
+    This guarantees 0 false positives for non-infield content.
+    """
+    for seg in segments:
+        seg["conversation_id"] = 0
+        seg["segment_type"] = "commentary"
+        seg["boundary_detection"] = {
+            "is_new_conversation": False,
+            "confidence": 0.95,
+            "method": f"forced_{video_type}",
+        }
+    return segments
+
+
+def extract_video_title_from_filename(filename: str) -> str:
+    """Extract video title from filename like 'Video Title [id].something.json'."""
+    # Remove extension(s)
+    name = filename
+    while "." in name:
+        name = name.rsplit(".", 1)[0]
+
+    # Extract title before [video_id]
+    match = re.match(r"(.+?)\s*\[", name)
+    if match:
+        return match.group(1).strip()
+    return name
 
 
 @dataclass
@@ -409,9 +546,25 @@ def process_file(input_path: Path, output_path: Path, use_llm: bool = True) -> D
     segments = data.get("segments", [])
     print(f"[LLM_conversations] Processing {input_path.name} ({len(segments)} segments)")
 
-    detector = ConversationDetector(use_llm=use_llm)
-    processed_segments = detector.detect_conversations(segments)
+    # Step 1: Detect video type (v2.0 improvement)
+    video_title = extract_video_title_from_filename(input_path.name)
+    print(f"[LLM_conversations] Video title: {video_title}")
+
+    video_type = detect_video_type_with_llm(segments, video_title)
+    print(f"[LLM_conversations] Detected video type: {video_type}")
+
+    # Step 2: Process based on video type
+    if video_type in ["talking_head", "podcast"]:
+        # Force all segments to commentary - guarantees 0 false positives
+        print(f"[LLM_conversations] Non-infield content - forcing all segments to commentary")
+        processed_segments = force_commentary_for_non_infield(segments, video_type)
+    else:
+        # Use LLM to detect conversation boundaries for infield content
+        detector = ConversationDetector(use_llm=use_llm)
+        processed_segments = detector.detect_conversations(segments)
+
     data["segments"] = processed_segments
+    data["video_type"] = video_type  # Store detected type
 
     conversation_ids = set()
     type_counts: Dict[str, int] = {}
@@ -425,6 +578,7 @@ def process_file(input_path: Path, output_path: Path, use_llm: bool = True) -> D
     data["conversation_summary"] = {
         "total_conversations": len(conversation_ids),
         "segment_type_counts": type_counts,
+        "video_type": video_type,
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
