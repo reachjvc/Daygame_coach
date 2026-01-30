@@ -3,9 +3,10 @@
  *
  * This module defines the scenario registry that drives the UI.
  * Placeholder scenarios have status "placeholder" and will be implemented later.
+ *
+ * Types are defined in types.ts.
  */
 
-import type { ComponentType } from "react"
 import {
   MessageSquare,
   TrendingUp,
@@ -18,52 +19,7 @@ import {
   Calendar,
 } from "lucide-react"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────────────────────
-
-export type ScenarioId =
-  | "practice-openers"
-  | "topic-pivot"
-  | "assumption-game"
-  | "her-question"
-  | "practice-career-response"
-  | "hobby-response"
-  | "compliment-delivery"
-  | "flirting-escalation"
-  | "practice-shittests"
-  | "boyfriend-mention"
-  | "time-pressure"
-  | "number-ask"
-  | "insta-close"
-  | "instant-date"
-  | "first-text"
-  | "date-proposal"
-  | "flake-recovery"
-  | "app-opener"
-  | "app-to-date"
-
-export type ScenarioStatus = "available" | "placeholder"
-
-export interface ScenarioDef {
-  id: ScenarioId
-  title: string
-  description: string
-  icon: ComponentType<{ className?: string }>
-  status: ScenarioStatus
-  /** If placeholder, show "Coming Soon" badge */
-  comingSoon?: boolean
-}
-
-export type PhaseId = "opening" | "hooking" | "vibing" | "resistance" | "closing"
-
-export interface PhaseDef {
-  id: PhaseId
-  title: string
-  icon: ComponentType<{ className?: string }>
-  description: string
-  scenarioIds: ScenarioId[]
-}
+import type { ScenarioId, ScenarioDef, PhaseId, PhaseDef } from "./types"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scenario Definitions
@@ -323,3 +279,9 @@ export function getAvailableScenarioIds(): ScenarioId[] {
     .filter((s) => s.status === "available")
     .map((s) => s.id)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Re-export types for convenience
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type { ScenarioId, ScenarioStatus, ScenarioDef, PhaseId, PhaseDef } from "./types"

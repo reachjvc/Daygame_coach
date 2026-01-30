@@ -82,7 +82,7 @@ export type ArticleSortBy = "newest" | "oldest" | "readTime"
  * Feedback types for marking article sections during review.
  * Used in iterative refinement workflow.
  */
-export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note"
+export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source"
 
 export interface FeedbackTypeConfig {
   label: string
@@ -136,6 +136,12 @@ export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
     tooltip: "Add a custom comment",
     color: "text-blue-600",
     bg: "bg-blue-500/20 border-blue-500/30"
+  },
+  source: {
+    label: "Needs Source",
+    tooltip: "This content needs a source citation - BLOCKS publishing",
+    color: "text-red-600 font-bold",
+    bg: "bg-red-500/30 border-red-500/50 border-2"
   }
 }
 

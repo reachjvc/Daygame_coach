@@ -1,6 +1,9 @@
 /**
  * ARCHETYPE CONFIGURATION
  *
+ * Archetype data and helpers.
+ * Type is defined in ../types.ts.
+ *
  * ⚠️ IMPORTANT: These are PLACEHOLDER archetypes
  *
  * YOU MUST VALIDATE AND CUSTOMIZE:
@@ -11,30 +14,7 @@
  * 5. Test with real scenarios and refine
  */
 
-export interface Archetype {
-  id: string;
-  name: string;
-  coreVibe: string;
-  screeningFor: string;
-  resonatesWith: string;
-
-  // ⚠️ TODO: Add realistic response examples from YOUR experience
-  typicalResponses: {
-    positive: string[];  // When she's receptive
-    neutral: string[];   // When she's unsure
-    negative: string[];  // When she's not interested
-  };
-
-  // ⚠️ TODO: Define how she speaks (formal? casual? emoji?)
-  communicationStyle: {
-    tone: "professional" | "casual" | "playful" | "intellectual" | "warm";
-    usesEmoji: boolean;
-    sentenceLength: "short" | "medium" | "long";
-  };
-
-  // ⚠️ TODO: Add specific shittests this archetype uses
-  commonShittests: string[];
-}
+import type { Archetype } from "../types"
 
 export const ARCHETYPES: Record<string, Archetype> = {
   powerhouse: {
@@ -242,10 +222,13 @@ export const ARCHETYPES: Record<string, Archetype> = {
       "I've heard that line in three different countries.",
     ],
   },
-};
+}
 
 // Helper to get random archetype (for variety in practice)
 export function getRandomArchetype(): Archetype {
-  const archetypes = Object.values(ARCHETYPES);
-  return archetypes[Math.floor(Math.random() * archetypes.length)];
+  const archetypes = Object.values(ARCHETYPES)
+  return archetypes[Math.floor(Math.random() * archetypes.length)]
 }
+
+// Re-export type for convenience
+export type { Archetype } from "../types"

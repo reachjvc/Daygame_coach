@@ -9,23 +9,31 @@
 
 import { getProfile } from "@/src/db/profilesRepo"
 
-import type { ActivityId } from "./openers/data/base-texts"
-import type { DifficultyLevel as OpenersDifficultyLevel } from "./openers/data/energy"
+import type {
+  DifficultyLevel,
+  EnvironmentChoice,
+  ChatRequest,
+  ChatResponse,
+  Archetype,
+} from "./types"
+import type {
+  ActivityId,
+  RegionId,
+  GeneratedScenarioV2,
+} from "./openers/types"
+
 import {
   generateScenarioV2,
   getAvailableActivities,
   REGION_IDS,
-  type RegionId,
-  type GeneratedScenarioV2,
 } from "@/src/scenarios/openers/generator"
 import { evaluateOpener } from "@/src/scenarios/openers/evaluator"
 
-import { ARCHETYPES, type Archetype } from "@/src/scenarios/shared/archetypes"
+import { ARCHETYPES } from "@/src/scenarios/shared/archetypes"
 import {
   generateWomanDescription,
   getDifficultyForLevel,
   getDifficultyPromptModifier,
-  type DifficultyLevel as ChatDifficultyLevel,
 } from "@/src/scenarios/shared/difficulty"
 import {
   generateCareerScenario,
@@ -43,26 +51,16 @@ import {
   generatePlaceholderShittestResponse,
   generateCareerPlaceholderResponse,
 } from "@/src/scenarios/chat/responses"
-import { evaluateOpenerResponse } from "@/src/scenarios/chat/evaluators"
+import { evaluateOpenerResponse } from "@/src/scenarios/chat/evaluator"
 import { evaluateCareerResponse } from "@/src/scenarios/career/evaluator"
 import { evaluateShittestResponse } from "@/src/scenarios/shittests/evaluator"
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Types
+// Service-specific Types (not exported to other modules)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type EnvironmentChoice =
-  | "any"
-  | "high-street"
-  | "mall"
-  | "coffee-shop"
-  | "transit"
-  | "park"
-  | "gym"
-  | "campus"
-
 export type GenerateEncounterRequest = {
-  difficulty: OpenersDifficultyLevel
+  difficulty: DifficultyLevel
   environment: EnvironmentChoice
   includeHint?: boolean
   includeWeather?: boolean
@@ -74,31 +72,6 @@ export type EvaluateOpenerRequest = {
 }
 
 export type OpenerEvaluation = Awaited<ReturnType<typeof evaluateOpener>>
-
-export type ChatHistoryMessage = { role: "user" | "assistant"; content: string }
-
-export type ChatRequest = {
-  message: string
-  session_id?: string
-  scenario_type: "practice-openers" | "practice-career-response" | "practice-shittests"
-  conversation_history?: ChatHistoryMessage[]
-}
-
-export type ChatResponse = {
-  text: string
-  archetype?: string
-  difficulty?: ChatDifficultyLevel
-  isIntroduction?: boolean
-  evaluation?: { score: number; feedback: string }
-  milestoneEvaluation?: {
-    score: number
-    feedback: string
-    strengths: string[]
-    improvements: string[]
-    suggestedNextLine?: string
-    turn: number
-  }
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers (private)
@@ -135,7 +108,7 @@ function pickActivityIdForEnvironment(environment: EnvironmentChoice): ActivityI
   return filtered[Math.floor(Math.random() * filtered.length)]
 }
 
-function defaultHintForDifficulty(difficulty: OpenersDifficultyLevel): boolean {
+function defaultHintForDifficulty(difficulty: DifficultyLevel): boolean {
   return difficulty === "beginner" || difficulty === "intermediate"
 }
 
@@ -188,7 +161,7 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
   const archetype: Archetype = ARCHETYPES[userArchetypeKey] || ARCHETYPES.powerhouse
 
   const userLevel = profile?.level || 1
-  const difficulty: ChatDifficultyLevel = getDifficultyForLevel(userLevel)
+  const difficulty: DifficultyLevel = getDifficultyForLevel(userLevel)
 
   const scenario_type = request.scenario_type
   const conversation_history = request.conversation_history || []
@@ -275,3 +248,15 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
     milestoneEvaluation,
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Re-export types for API routes
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type {
+  EnvironmentChoice,
+  ChatHistoryMessage,
+  ChatRequest,
+  ChatResponse,
+  DifficultyLevel,
+} from "./types"

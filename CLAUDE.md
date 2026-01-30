@@ -11,21 +11,10 @@
 ## Critical Rules
 
 1. **Verify implementations** - Test after every change. Never assume code works.
-2. **Changelog required** - Add entry to top of any doc you modify. Danish time: `TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'`
+2. **Changelog required** - Add entry to top of any doc you modify. Danish time: `TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'`. Keep 5 entries of updates.
 3. **Quality over speed** - 20 extra hours for better architecture is worth it
-4. **Delete over patch** - Prefer clean rewrites. Git has history.
+4. No fall back mechanisms. Do not allow a pipeline/script or whatever to run with a fallback. Rather fix the issue or prompt the user.
 
----
-
-## Risk Levels
-
-| Risk | Actions | Requires |
-|------|---------|----------|
-| LOW | Creating files, docs, types | Just do it |
-| MEDIUM | Config, API routes, auth, DB | Explain + confirm |
-| HIGH | Production data, secrets, schema, deletes | Explicit approval |
-
----
 
 ## Architecture (Non-Negotiable)
 
@@ -58,8 +47,6 @@ Specs in `docs/slices/SLICE_*.md`
 - [ ] Slice UI in `src/{slice}/components/`, not `components/`
 - [ ] Data files in `data/` subfolder, not slice root
 
----
-
 ## Proactive Cleanup (Required)
 
 **After major tasks**, report unused items:
@@ -67,15 +54,6 @@ Specs in `docs/slices/SLICE_*.md`
 - Orphan data folders
 - Test artifacts (`*-test/`, `*.backup*`, `test-*.py`)
 - Old logs (>7 days)
-
-**Pipeline flow:**
-```
-01.download → 02.transcribe → 03.audio-features → 04.content → 05.tonality → 06.speakers → 07.LLM-conversations → 08.interactions → 09.enrich → 10.ingest
-```
-
-Ask before deleting, but always identify candidates.
-
----
 
 ## Documentation
 

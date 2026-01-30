@@ -18,7 +18,8 @@ import {
   CircleDot,
   RotateCcw,
   FileEdit,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from "lucide-react"
 import { type FeedbackType, type ArticleFeedbackFlag, FEEDBACK_TYPES } from "@/src/articles/types"
 
@@ -52,6 +53,7 @@ const FEEDBACK_ICONS: Record<FeedbackType, React.ReactNode> = {
   angle: <RotateCcw className="size-3" />,
   ai: <Bot className="size-3" />,
   note: <MessageSquare className="size-3" />,
+  source: <AlertTriangle className="size-3" />,
 }
 
 const FEEDBACK_ICONS_LG: Record<FeedbackType, React.ReactNode> = {
@@ -61,6 +63,7 @@ const FEEDBACK_ICONS_LG: Record<FeedbackType, React.ReactNode> = {
   angle: <RotateCcw className="size-4" />,
   ai: <Bot className="size-4" />,
   note: <MessageSquare className="size-4" />,
+  source: <AlertTriangle className="size-4" />,
 }
 
 interface SelectionPopup {
@@ -89,6 +92,10 @@ export default function ArticleEditorPage() {
   const [sectionCommentModal, setSectionCommentModal] = useState<{ sectionId: string } | null>(null)
   const [sectionCommentText, setSectionCommentText] = useState("")
   const [draftingNew, setDraftingNew] = useState(false)
+  const [sourceModal, setSourceModal] = useState<{ sectionId: string; quote?: string } | null>(null)
+
+  // Count blocking flags (source flags that need review before publishing)
+  const blockingFlagsCount = flags.filter(f => f.type === "source").length
 
   // Fetch articles list on mount
   useEffect(() => {
@@ -349,6 +356,7 @@ export default function ArticleEditorPage() {
         h.type === "almost" ? "bg-yellow-200 dark:bg-yellow-900/50" :
         h.type === "angle" ? "bg-cyan-200 dark:bg-cyan-900/50" :
         h.type === "ai" ? "bg-orange-200 dark:bg-orange-900/50" :
+        h.type === "source" ? "bg-red-300 dark:bg-red-800/70 font-bold border-2 border-red-500" :
         "bg-blue-200 dark:bg-blue-900/50"
       segments.push(
         <mark key={`highlight-${i}`} className={`${highlightClass} rounded px-0.5`}>
@@ -402,6 +410,19 @@ export default function ArticleEditorPage() {
                 <div className="w-px h-6 bg-border mx-1" />
                 <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setCommentMode(true)} title="Add a custom comment">
                   <MessageSquare className="size-4 text-blue-600" />
+                </Button>
+                <div className="w-px h-6 bg-border mx-1" />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
+                  onClick={() => {
+                    setSourceModal({ sectionId: selection.sectionId, quote: selection.text })
+                    setSelection(null)
+                  }}
+                  title="Needs source citation - BLOCKS publishing"
+                >
+                  <AlertTriangle className="size-4 text-red-600 font-bold" />
                 </Button>
                 <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setSelection(null)}>
                   <X className="size-4" />
@@ -483,6 +504,72 @@ export default function ArticleEditorPage() {
         </div>
       )}
 
+      {/* Source citation modal - 3 options for how to cite */}
+      {sourceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSourceModal(null)}>
+          <div className="bg-popover border-2 border-red-500 rounded-lg shadow-lg p-4 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="size-5 text-red-600" />
+                <h3 className="font-bold text-red-600">Needs Source Citation</h3>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSourceModal(null)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+
+            {sourceModal.quote && (
+              <div className="text-sm text-muted-foreground bg-muted p-2 rounded mb-4 italic">
+                &quot;{sourceModal.quote.slice(0, 100)}{sourceModal.quote.length > 100 ? '...' : ''}&quot;
+              </div>
+            )}
+
+            <p className="text-sm text-muted-foreground mb-4">
+              This content needs a source. Choose how to handle it:
+            </p>
+
+            <div className="space-y-2">
+              <button
+                className="w-full text-left p-3 rounded border hover:bg-muted transition-colors"
+                onClick={() => {
+                  addFlag("source", sourceModal.sectionId, sourceModal.quote, "CITATION STYLE: General mention (e.g., 'Research suggests...', 'Experts recommend...')")
+                  setSourceModal(null)
+                }}
+              >
+                <div className="font-medium">1. General Mention</div>
+                <div className="text-sm text-muted-foreground">Vague attribution: &quot;Research suggests...&quot;, &quot;Experts say...&quot;</div>
+              </button>
+
+              <button
+                className="w-full text-left p-3 rounded border hover:bg-muted transition-colors"
+                onClick={() => {
+                  addFlag("source", sourceModal.sectionId, sourceModal.quote, "CITATION STYLE: Short source (e.g., 'According to [Author/Publication]...')")
+                  setSourceModal(null)
+                }}
+              >
+                <div className="font-medium">2. Short Citation</div>
+                <div className="text-sm text-muted-foreground">Named source: &quot;According to [Author]...&quot;, &quot;A study in [Journal]...&quot;</div>
+              </button>
+
+              <button
+                className="w-full text-left p-3 rounded border hover:bg-muted transition-colors"
+                onClick={() => {
+                  addFlag("source", sourceModal.sectionId, sourceModal.quote, "CITATION STYLE: In-depth (full citation with link, quote, and context)")
+                  setSourceModal(null)
+                }}
+              >
+                <div className="font-medium">3. In-Depth Citation</div>
+                <div className="text-sm text-muted-foreground">Full reference with link, direct quote, and context</div>
+              </button>
+            </div>
+
+            <p className="text-xs text-red-600 mt-4 font-medium">
+              ⚠️ This flag BLOCKS publishing until resolved
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -532,6 +619,19 @@ export default function ArticleEditorPage() {
             {loading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
           </div>
 
+          {/* Blocking flags warning */}
+          {blockingFlagsCount > 0 && (
+            <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border-2 border-red-500 rounded-lg flex items-center gap-3">
+              <AlertTriangle className="size-5 text-red-600 flex-shrink-0" />
+              <div>
+                <span className="font-bold text-red-600">
+                  {blockingFlagsCount} {blockingFlagsCount === 1 ? 'flag needs' : 'flags need'} review before publishing
+                </span>
+                <p className="text-sm text-red-600/80">Resolve all &quot;Needs Source&quot; flags to unblock publishing</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <Badge variant="outline" className="mb-2">
@@ -542,6 +642,12 @@ export default function ArticleEditorPage() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
+              {blockingFlagsCount > 0 && (
+                <Badge variant="destructive" className="font-bold">
+                  <AlertTriangle className="size-3 mr-1" />
+                  {blockingFlagsCount} blocking
+                </Badge>
+              )}
               <Badge variant="secondary">{flags.length} flags</Badge>
               <Button variant="outline" size="sm" onClick={() => setFlags([])}>Clear</Button>
               <Button variant="outline" size="sm" onClick={() => setShowExport(!showExport)}>
@@ -589,6 +695,7 @@ export default function ArticleEditorPage() {
             <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.angle.tooltip}><RotateCcw className="size-3 text-cyan-600" /> Angle</span>
             <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.ai.tooltip}><Bot className="size-3 text-orange-600" /> AI</span>
             <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.note.tooltip}><MessageSquare className="size-3 text-blue-600" /> Note</span>
+            <span className="inline-flex items-center gap-1 font-bold" title={FEEDBACK_TYPES.source.tooltip}><AlertTriangle className="size-3 text-red-600" /> <span className="text-red-600">Needs Source</span></span>
           </div>
         </div>
       </div>
@@ -621,6 +728,15 @@ export default function ArticleEditorPage() {
                       setSectionCommentText("")
                     }} title={FEEDBACK_TYPES.note.tooltip}>
                       <MessageSquare className="size-4 text-blue-600" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
+                      onClick={() => setSourceModal({ sectionId: section.id })}
+                      title={FEEDBACK_TYPES.source.tooltip}
+                    >
+                      <AlertTriangle className="size-4 text-red-600" />
                     </Button>
                   </div>
                 </div>
