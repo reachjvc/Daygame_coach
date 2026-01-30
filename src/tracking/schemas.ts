@@ -44,6 +44,12 @@ export const ReviewTypeSchema = z.enum(["weekly", "monthly", "quarterly"])
 export const CreateSessionSchema = z.object({
   goal: z.number().int().min(1).max(100).optional(),
   primary_location: z.string().max(200).optional(),
+  // Pre-session intentions
+  session_focus: z.string().max(500).optional(),
+  technique_focus: z.string().max(500).optional(),
+  if_then_plan: z.string().max(500).optional(),
+  custom_intention: z.string().max(500).optional(),
+  pre_session_mood: z.number().int().min(1).max(5).optional(),
 })
 
 export const UpdateSessionSchema = z.object({

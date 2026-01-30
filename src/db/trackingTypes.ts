@@ -21,6 +21,12 @@ export interface SessionRow {
   is_active: boolean
   with_wingman: boolean
   wingman_name: string | null
+  // Pre-session intentions (for AAR comparison in field reports)
+  session_focus: string | null
+  technique_focus: string | null
+  if_then_plan: string | null
+  custom_intention: string | null
+  pre_session_mood: number | null
   created_at: string
   updated_at: string
 }
@@ -32,6 +38,12 @@ export interface SessionInsert {
   primary_location?: string
   with_wingman?: boolean
   wingman_name?: string
+  // Pre-session intentions
+  session_focus?: string
+  technique_focus?: string
+  if_then_plan?: string
+  custom_intention?: string
+  pre_session_mood?: number
 }
 
 export interface SessionUpdate {
@@ -45,6 +57,12 @@ export interface SessionUpdate {
   is_active?: boolean
   with_wingman?: boolean
   wingman_name?: string
+  // Pre-session intentions
+  session_focus?: string
+  technique_focus?: string
+  if_then_plan?: string
+  custom_intention?: string
+  pre_session_mood?: number
 }
 
 export interface LocationPoint {

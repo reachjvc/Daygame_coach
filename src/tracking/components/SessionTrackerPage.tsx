@@ -51,6 +51,11 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const [locationInput, setLocationInput] = useState("")
   const [preMood, setPreMood] = useState<number | null>(null)
   const [quickLogData, setQuickLogData] = useState<ApproachFormData>({})
+  // Pre-session intention prompts
+  const [sessionFocus, setSessionFocus] = useState("")
+  const [techniqueFocus, setTechniqueFocus] = useState("")
+  const [ifThenPlan, setIfThenPlan] = useState("")
+  const [customIntention, setCustomIntention] = useState("")
 
   const GOAL_PRESETS = [
     { value: 1, emoji: "👋", label: "1" },
@@ -69,13 +74,25 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
   const handleStartSession = async () => {
     const goal = goalInput ? parseInt(goalInput, 10) : undefined
-    const success = await startSession(goal, locationInput || undefined)
+    const success = await startSession({
+      goal,
+      location: locationInput || undefined,
+      sessionFocus: sessionFocus || undefined,
+      techniqueFocus: techniqueFocus || undefined,
+      ifThenPlan: ifThenPlan || undefined,
+      customIntention: customIntention || undefined,
+      preMood: preMood || undefined,
+    })
     if (success) {
       setShowStartDialog(false)
       setGoalInput("")
       setSelectedGoalPreset(null)
       setLocationInput("")
       setPreMood(null)
+      setSessionFocus("")
+      setTechniqueFocus("")
+      setIfThenPlan("")
+      setCustomIntention("")
     }
     // If failed, keep dialog open so user sees error
   }
@@ -134,6 +151,10 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             setSelectedGoalPreset(null)
             setLocationInput("")
             setPreMood(null)
+            setSessionFocus("")
+            setTechniqueFocus("")
+            setIfThenPlan("")
+            setCustomIntention("")
           }
         }}>
           <DialogContent>
@@ -224,6 +245,54 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                   />
                 </div>
               </div>
+
+              {/* Pre-session intentions section */}
+              <div className="pt-4 border-t border-border space-y-4">
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">Set Your Intentions</h4>
+                  <p className="text-xs text-muted-foreground">Optional prompts to focus your session</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sessionFocus">What&apos;s your focus?</Label>
+                  <Input
+                    id="sessionFocus"
+                    placeholder="e.g., Be more playful, Hold eye contact longer"
+                    value={sessionFocus}
+                    onChange={(e) => setSessionFocus(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="techniqueFocus">Technique to practice</Label>
+                  <Input
+                    id="techniqueFocus"
+                    placeholder="e.g., Cold reads, Push-pull, Assumption stacking"
+                    value={techniqueFocus}
+                    onChange={(e) => setTechniqueFocus(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="ifThenPlan">If-Then plan</Label>
+                  <Input
+                    id="ifThenPlan"
+                    placeholder="e.g., If she seems distracted, I will use a cold read"
+                    value={ifThenPlan}
+                    onChange={(e) => setIfThenPlan(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="customIntention">Any other intention</Label>
+                  <Input
+                    id="customIntention"
+                    placeholder="Your own focus or reminder..."
+                    value={customIntention}
+                    onChange={(e) => setCustomIntention(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
 
             <DialogFooter>
@@ -235,6 +304,10 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                   setSelectedGoalPreset(null)
                   setLocationInput("")
                   setPreMood(null)
+                  setSessionFocus("")
+                  setTechniqueFocus("")
+                  setIfThenPlan("")
+                  setCustomIntention("")
                 }}
                 disabled={state.isLoading}
               >

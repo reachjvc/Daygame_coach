@@ -15,10 +15,20 @@ interface UseSessionOptions {
   onSessionEnded?: (session: SessionRow) => void
 }
 
+interface StartSessionOptions {
+  goal?: number
+  location?: string
+  sessionFocus?: string
+  techniqueFocus?: string
+  ifThenPlan?: string
+  customIntention?: string
+  preMood?: number
+}
+
 interface UseSessionReturn {
   state: SessionState
   liveStats: LiveStats
-  startSession: (goal?: number, location?: string) => Promise<boolean>
+  startSession: (options?: StartSessionOptions) => Promise<boolean>
   endSession: () => Promise<void>
   addApproach: (data?: ApproachFormData) => Promise<void>
   updateLastApproach: (data: ApproachFormData) => Promise<void>
@@ -78,14 +88,22 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
     }
   }
 
-  const startSession = useCallback(async (goal?: number, location?: string): Promise<boolean> => {
+  const startSession = useCallback(async (options?: StartSessionOptions): Promise<boolean> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
     try {
       const response = await fetch("/api/tracking/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, primary_location: location }),
+        body: JSON.stringify({
+          goal: options?.goal,
+          primary_location: options?.location,
+          session_focus: options?.sessionFocus,
+          technique_focus: options?.techniqueFocus,
+          if_then_plan: options?.ifThenPlan,
+          custom_intention: options?.customIntention,
+          pre_session_mood: options?.preMood,
+        }),
       })
 
       if (!response.ok) {

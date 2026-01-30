@@ -5,41 +5,29 @@ import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Zap, FileText, Microscope, Flame, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ChevronRight, ChevronDown } from "lucide-react"
+import {
+  Loader2,
+  FileText,
+  ArrowLeft,
+  Clock,
+  MapPin,
+  TrendingUp,
+  Check,
+  Settings2,
+  ArrowRight,
+} from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS } from "../types"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, type SessionSummaryData } from "../types"
+import { TEMPLATE_ICONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES } from "../config"
 import { FieldRenderer } from "./FieldRenderer"
+import { KeyStatsSection } from "./KeyStatsSection"
+import { PrinciplesSection } from "./PrinciplesSection"
+import { ResearchDomainsSection } from "./ResearchDomainsSection"
 
 interface FieldReportPageProps {
   userId: string
   sessionId?: string
-}
-
-interface SessionSummaryData {
-  approachCount: number
-  duration: number | null
-  location: string | null
-  outcomes: Record<ApproachOutcome, number>
-  averageMood: number | null
-  tags: string[]
-  startedAt: string
-}
-
-const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
-  "quick-log": <Zap className="size-5" />,
-  standard: <FileText className="size-5" />,
-  "deep-dive": <Microscope className="size-5" />,
-  blowout: <Flame className="size-5" />,
-  custom: <Settings2 className="size-5" />,
-}
-
-const TEMPLATE_COLORS: Record<string, string> = {
-  "quick-log": "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  standard: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  "deep-dive": "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  blowout: "bg-red-500/10 text-red-500 border-red-500/20",
-  custom: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
@@ -53,7 +41,6 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const [formValues, setFormValues] = useState<Record<string, unknown>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [expandedTemplate, setExpandedTemplate] = useState<string | null>(null)
 
   useEffect(() => {
     loadTemplates()
@@ -245,7 +232,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   // Template selection view
   if (!selectedTemplate) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
           <Link
             href="/dashboard/tracking"
@@ -258,6 +245,11 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           <p className="text-muted-foreground mt-2">
             {sessionData ? "Review your session and choose a template" : "Choose a template that fits your session"}
           </p>
+        </div>
+
+        {/* Key Stats - First thing users see */}
+        <div className="mb-12">
+          <KeyStatsSection />
         </div>
 
         {/* Session Summary Card */}
@@ -337,166 +329,162 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           </Card>
         )}
 
-        <div className="flex flex-col gap-3">
+        {/* Template Selection Header */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground">Choose Your Template</h2>
+          <p className="text-muted-foreground mt-1">Match the depth to your session</p>
+        </div>
+
+        {/* Visual Cards Grid - Layout 4 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {templates.map((template) => {
-            const colorClass = TEMPLATE_COLORS[template.slug] || "bg-primary/10 text-primary border-primary/20"
-            const isExpanded = expandedTemplate === template.id
+            const colors = TEMPLATE_COLORS[template.slug] || {
+              bg: "bg-primary/10 text-primary border-primary/20",
+              icon: "bg-primary text-primary-foreground",
+              gradient: "from-primary/30 via-primary/10 to-accent/20",
+            }
+            const tagline = TEMPLATE_TAGLINES[template.slug] || template.description
             const allFields = [
               ...template.static_fields,
               ...(template.dynamic_fields || []).filter(f =>
                 template.active_dynamic_fields?.includes(f.id)
               )
             ]
-            const previewFields = allFields.slice(0, 3)
-            const remainingCount = allFields.length - 3
 
             return (
-              <Card
+              <div
                 key={template.id}
-                className={`group cursor-pointer transition-all hover:shadow-md ${
-                  isExpanded ? "border-primary shadow-md" : "hover:border-primary/50"
-                }`}
-                onMouseEnter={() => setExpandedTemplate(template.id)}
-                onMouseLeave={() => setExpandedTemplate(null)}
+                onClick={() => setSelectedTemplate(template)}
+                className="group rounded-2xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-primary/10 bg-card"
               >
-                {/* Header */}
-                <div
-                  className="flex items-center gap-4 p-4"
-                  onClick={() => setSelectedTemplate(template)}
-                >
-                  <div className={`p-3 rounded-xl border ${colorClass}`}>
-                    {TEMPLATE_ICONS[template.slug] || <FileText className="size-5" />}
+                {/* Visual header with pattern */}
+                <div className={`h-32 relative overflow-hidden bg-gradient-to-br ${colors.gradient}`}>
+                  {/* Abstract pattern overlay */}
+                  <div className="absolute inset-0 opacity-30">
+                    <svg width="100%" height="100%" className="text-foreground">
+                      <defs>
+                        <pattern id={`pattern-${template.id}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                          <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill={`url(#pattern-${template.id})`} />
+                    </svg>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-base">{template.name}</h3>
-                      <Badge variant="secondary" className="text-xs">
-                        ~{template.estimated_minutes} min
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {allFields.length} fields
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {template.description}
-                    </p>
+
+                  {/* Floating icon */}
+                  <div className={`absolute top-6 left-6 p-4 rounded-2xl ${colors.icon} shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                    {TEMPLATE_ICONS[template.slug] || <FileText className="size-6" />}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <ChevronDown className={`size-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                    <ChevronRight className="size-5 text-muted-foreground group-hover:text-primary transition-colors" />
+
+                  {/* Time badge */}
+                  <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-sm font-medium">
+                    {template.estimated_minutes} min
                   </div>
+
+                  {/* Bottom gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
                 </div>
 
-                {/* Field Preview - Always visible */}
-                <div className="px-4 pb-3 border-t border-border/50">
-                  <div className="pt-3 space-y-1.5">
-                    {previewFields.map((field, idx) => (
-                      <div key={field.id} className="flex items-start gap-2 text-sm">
-                        <span className="text-muted-foreground/60 font-mono text-xs mt-0.5">{idx + 1}.</span>
-                        <span className={field.required ? "text-foreground" : "text-muted-foreground"}>
-                          {field.label}
-                          {field.required && <span className="text-primary ml-1">*</span>}
-                        </span>
-                      </div>
-                    ))}
-                    {!isExpanded && remainingCount > 0 && (
-                      <div className="text-xs text-muted-foreground pl-5">
-                        +{remainingCount} more field{remainingCount > 1 ? "s" : ""}...
-                      </div>
-                    )}
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-xl font-bold text-foreground mb-1">{template.name}</h3>
+                  <p className="text-muted-foreground text-sm italic mb-3">{tagline}</p>
+                  <p className="text-foreground/70 text-sm leading-relaxed mb-4">{template.description}</p>
+
+                  {/* Quick stats */}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                    <span>{allFields.length} fields</span>
+                    <span>•</span>
+                    <span>{allFields.filter(f => f.required).length} required</span>
                   </div>
+
+                  {/* CTA */}
+                  <button className="w-full py-3 rounded-xl text-primary-foreground font-semibold bg-primary opacity-90 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    Start Report
+                    <ArrowRight className="size-4" />
+                  </button>
                 </div>
-
-                {/* Expanded Fields */}
-                {isExpanded && remainingCount > 0 && (
-                  <div className="px-4 pb-4 space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
-                    {allFields.slice(3).map((field, idx) => (
-                      <div key={field.id} className="flex items-start gap-2 text-sm">
-                        <span className="text-muted-foreground/60 font-mono text-xs mt-0.5">{idx + 4}.</span>
-                        <span className={field.required ? "text-foreground" : "text-muted-foreground"}>
-                          {field.label}
-                          {field.required && <span className="text-primary ml-1">*</span>}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Use this template button on expand */}
-                {isExpanded && (
-                  <div className="px-4 pb-4 animate-in fade-in duration-200">
-                    <Button
-                      className="w-full"
-                      onClick={() => setSelectedTemplate(template)}
-                    >
-                      Use {template.name}
-                      <ChevronRight className="size-4 ml-2" />
-                    </Button>
-                  </div>
-                )}
-              </Card>
+              </div>
             )
           })}
 
           {/* Custom Field Report Option */}
-          <Card
-            className={`group cursor-pointer border-dashed border-2 transition-all hover:shadow-md ${
-              expandedTemplate === "custom" ? "border-emerald-500 shadow-md" : "hover:border-emerald-500/50"
-            }`}
-            onMouseEnter={() => setExpandedTemplate("custom")}
-            onMouseLeave={() => setExpandedTemplate(null)}
+          <div
+            onClick={() => {
+              // TODO: Navigate to custom template builder
+            }}
+            className="group rounded-2xl overflow-hidden border-2 border-dashed border-border hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-emerald-500/10 bg-card"
           >
-            <div className="flex items-center gap-4 p-4">
-              <div className={`p-3 rounded-xl border ${TEMPLATE_COLORS.custom}`}>
-                {TEMPLATE_ICONS.custom}
+            {/* Visual header with pattern */}
+            <div className="h-32 relative overflow-hidden bg-gradient-to-br from-emerald-500/30 via-emerald-500/10 to-teal-500/20">
+              {/* Abstract pattern overlay */}
+              <div className="absolute inset-0 opacity-30">
+                <svg width="100%" height="100%" className="text-foreground">
+                  <defs>
+                    <pattern id="pattern-custom" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                      <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#pattern-custom)" />
+                </svg>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-base">Custom Report</h3>
-                  <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 border-emerald-500/30">
-                    Build Your Own
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Create a personalized field report with the fields that matter most to you
-                </p>
+
+              {/* Floating icon */}
+              <div className="absolute top-6 left-6 p-4 rounded-2xl bg-emerald-500 text-white shadow-xl group-hover:scale-110 transition-transform duration-300">
+                <Settings2 className="size-6" />
               </div>
-              <ChevronRight className="size-5 text-muted-foreground group-hover:text-emerald-500 transition-colors" />
+
+              {/* Badge */}
+              <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-emerald-600 text-sm font-medium">
+                Build Your Own
+              </div>
+
+              {/* Bottom gradient */}
+              <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
             </div>
 
-            {/* Custom template preview */}
-            <div className="px-4 pb-3 border-t border-border/50">
-              <div className="pt-3 space-y-1.5">
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <Settings2 className="size-4 mt-0.5 text-emerald-500/60" />
-                  <span>Pick from 20+ field types</span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <Settings2 className="size-4 mt-0.5 text-emerald-500/60" />
-                  <span>Arrange in your preferred order</span>
-                </div>
-                <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                  <Settings2 className="size-4 mt-0.5 text-emerald-500/60" />
-                  <span>Save as reusable template</span>
-                </div>
-              </div>
-            </div>
+            {/* Content */}
+            <div className="p-5">
+              <h3 className="text-xl font-bold text-foreground mb-1">Custom Report</h3>
+              <p className="text-muted-foreground text-sm italic mb-3">Your fields, your way.</p>
+              <p className="text-foreground/70 text-sm leading-relaxed mb-4">
+                Create a personalized field report with the fields that matter most to you.
+              </p>
 
-            {expandedTemplate === "custom" && (
-              <div className="px-4 pb-4 animate-in fade-in duration-200">
-                <Button
-                  variant="outline"
-                  className="w-full border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10"
-                  onClick={() => {
-                    // TODO: Navigate to custom template builder
-                  }}
-                >
-                  Build Custom Template
-                  <ChevronRight className="size-4 ml-2" />
-                </Button>
+              {/* Features list */}
+              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                <span>20+ field types</span>
+                <span>•</span>
+                <span>Save as template</span>
               </div>
-            )}
-          </Card>
+
+              {/* CTA */}
+              <button className="w-full py-3 rounded-xl font-semibold border-2 border-emerald-500/50 text-emerald-600 hover:bg-emerald-500/10 transition-colors flex items-center justify-center gap-2">
+                Build Custom Template
+                <ArrowRight className="size-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="my-16">
+          <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+
+        {/* Principles Section */}
+        <div className="mb-16">
+          <PrinciplesSection />
+        </div>
+
+        {/* Divider */}
+        <div className="mb-16">
+          <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+        </div>
+
+        {/* Research Domains */}
+        <div className="mb-8">
+          <ResearchDomainsSection />
         </div>
       </div>
     )

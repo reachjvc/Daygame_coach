@@ -4,9 +4,11 @@
   "status": "draft",
   "requiredContext": {
     "research": [
-      "deprecated/2026-01-29/FIELD_REPORT_RESEARCH_PLAN.md",
-      "docs/brainstorm/FIELD_REPORT_SUMMARY.md"
+      "docs/RESEARCH/FIELD_REPORTS/DESIGN.md",
+      "docs/RESEARCH/FIELD_REPORTS/research/sports_psychology.md",
+      "docs/RESEARCH/FIELD_REPORTS/research/advanced_domains.md"
     ],
+    "researchIndex": "docs/RESEARCH/FIELD_REPORTS/_INDEX.md",
     "styleGuide": "docs/articles/writing_style.md",
     "articleIndex": "docs/articles/INDEX.md"
   },

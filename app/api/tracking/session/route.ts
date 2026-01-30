@@ -22,12 +22,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { goal, primary_location } = parsed.data
+    const {
+      goal,
+      primary_location,
+      session_focus,
+      technique_focus,
+      if_then_plan,
+      custom_intention,
+      pre_session_mood,
+    } = parsed.data
 
     const session = await createSession({
       user_id: user.id,
       goal: goal ?? undefined,
       primary_location: primary_location ?? undefined,
+      session_focus: session_focus ?? undefined,
+      technique_focus: technique_focus ?? undefined,
+      if_then_plan: if_then_plan ?? undefined,
+      custom_intention: custom_intention ?? undefined,
+      pre_session_mood: pre_session_mood ?? undefined,
     })
 
     return NextResponse.json(session)

@@ -1,3 +1,11 @@
+import {
+  Zap,
+  FileText,
+  Microscope,
+  Flame,
+  Settings2,
+} from "lucide-react"
+
 /**
  * Tracking slice configuration
  *
@@ -65,3 +73,50 @@ export const REVIEW_CONFIG = {
   /** Minimum sessions for meaningful weekly review */
   MIN_SESSIONS_FOR_REVIEW: 2,
 } as const
+
+// ============================================
+// Field Report Template Display
+// ============================================
+
+export const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
+  "quick-log": <Zap className="size-6" />,
+  standard: <FileText className="size-6" />,
+  "deep-dive": <Microscope className="size-6" />,
+  blowout: <Flame className="size-6" />,
+  custom: <Settings2 className="size-6" />,
+}
+
+export const TEMPLATE_COLORS: Record<string, { bg: string; icon: string; gradient: string }> = {
+  "quick-log": {
+    bg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    icon: "bg-amber-500 text-white",
+    gradient: "from-amber-500/30 via-amber-500/10 to-orange-500/20",
+  },
+  standard: {
+    bg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    icon: "bg-blue-500 text-white",
+    gradient: "from-blue-500/30 via-blue-500/10 to-indigo-500/20",
+  },
+  "deep-dive": {
+    bg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    icon: "bg-purple-500 text-white",
+    gradient: "from-purple-500/30 via-purple-500/10 to-pink-500/20",
+  },
+  blowout: {
+    bg: "bg-red-500/10 text-red-500 border-red-500/20",
+    icon: "bg-red-500 text-white",
+    gradient: "from-red-500/30 via-red-500/10 to-orange-500/20",
+  },
+  custom: {
+    bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    icon: "bg-emerald-500 text-white",
+    gradient: "from-emerald-500/30 via-emerald-500/10 to-teal-500/20",
+  },
+}
+
+export const TEMPLATE_TAGLINES: Record<string, string> = {
+  "quick-log": "30 seconds. Just the essentials.",
+  standard: "The sweet spot. Learn without overthinking.",
+  "deep-dive": "When you got close. Extract every lesson.",
+  blowout: "Rise from the ashes. Every master failed here first.",
+}

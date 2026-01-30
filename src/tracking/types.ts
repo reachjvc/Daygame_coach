@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import type {
   SessionRow,
   ApproachRow,
@@ -120,4 +121,63 @@ export interface LiveStats {
 export interface SessionGoal {
   target: number
   type: "approaches" | "time"
+}
+
+// ============================================
+// Field Report Types
+// ============================================
+
+export interface SessionSummaryData {
+  approachCount: number
+  duration: number | null
+  location: string | null
+  outcomes: Record<ApproachOutcome, number>
+  averageMood: number | null
+  tags: string[]
+  startedAt: string
+}
+
+// ============================================
+// Principles (Research-backed reflection)
+// ============================================
+
+export interface PrincipleCategory {
+  id: string
+  name: string
+  description: string
+}
+
+export interface Principle {
+  id: string
+  number: number
+  title: string
+  description: string
+  source: string
+  category: string
+  icon: ReactNode
+  insight?: string
+  stat?: string
+}
+
+// ============================================
+// Key Stats (Research stats display)
+// ============================================
+
+export interface KeyStatNerdBox {
+  primaryStudy: string
+  keyQuote?: string
+  whyItWorks: string[]
+  alsoSupportedBy: string[]
+  topPerformers?: string
+}
+
+export interface KeyStat {
+  id: string
+  value: string
+  label: string
+  detail: string
+  hoverPreview: string
+  fullDescription: string
+  icon: ReactNode
+  nerdBox: KeyStatNerdBox
 }

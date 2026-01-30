@@ -1,6 +1,8 @@
 # docs/sources.txt
 # Format (one per line):
 #   ChannelName|YouTubeURL
+
+# DO NOT EDIT!!!
 #
 # Example:
 daily_evolution|https://www.youtube.com/watch?v=utuuVOXJunM

@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "segment_enriched.schema.json",
+  "title": "Segment Enriched (04)",
+  "description": "Output schema for 04.segment-enrich - speaker labels and tone windows",
+  "type": "object",
+  "required": ["video_id", "source_file", "processed_at", "segments", "tone_windows", "speaker_cluster_labels", "metadata"],
+  "properties": {
+    "video_id": {
+      "type": "string",
+      "description": "Unique video identifier"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Path to input file from 03.audio-features"
+    },
+    "processed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of processing"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "start", "end", "text", "speaker"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Segment index"
+          },
+          "start": {
+            "type": "number",
+            "description": "Start time in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "End time in seconds"
+          },
+          "text": {
+            "type": "string",
+            "description": "Transcript text"
+          },
+          "speaker": {
+            "type": "object",
+            "required": ["label", "confidence", "method"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "enum": ["coach", "target", "voiceover", "other"]
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "method": {
+                "type": "string",
+                "description": "How label was determined (e.g., 'llm_cluster')"
+              }
+            }
+          },
+          "speaker_id": {
+            "type": "integer",
+            "description": "Original speaker cluster ID from audio features"
+          }
+        }
+      }
+    },
+    "tone_windows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "start", "end", "tone"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Window index"
+          },
+          "start": {
+            "type": "number",
+            "description": "Window start time in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "Window end time in seconds"
+          },
+          "tone": {
+            "type": "object",
+            "required": ["primary", "confidence"],
+            "properties": {
+              "primary": {
+                "type": "string",
+                "enum": ["playful", "confident", "warm", "nervous", "grounded", "direct", "flirty", "neutral"]
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "speaker_cluster_labels": {
+      "type": "object",
+      "description": "Mapping of speaker_id to label",
+      "additionalProperties": {
+        "type": "string",
+        "enum": ["coach", "target", "voiceover", "other"]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["pipeline_version", "prompt_version", "model_version", "schema_version"],
+      "properties": {
+        "pipeline_version": { "type": "string" },
+        "prompt_version": { "type": "string" },
+        "model_version": { "type": "string" },
+        "schema_version": { "type": "string" },
+        "input_checksum": { "type": "string" }
+      }
+    }
+  }
+}

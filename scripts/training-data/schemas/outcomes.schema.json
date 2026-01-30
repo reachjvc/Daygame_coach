@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "outcomes.schema.json",
+  "title": "Outcomes (06c)",
+  "description": "Output schema for 06c.outcomes - interaction outcomes and quality",
+  "type": "object",
+  "required": ["video_id", "source_file", "processed_at", "interactions", "summary", "metadata"],
+  "properties": {
+    "video_id": {
+      "type": "string",
+      "description": "Unique video identifier"
+    },
+    "source_file": {
+      "type": "string",
+      "description": "Path to input file from 06a.structure (or 06b.content)"
+    },
+    "processed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO timestamp of processing"
+    },
+    "interactions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["interaction_id", "conversation_id", "outcome", "outcome_confidence"],
+        "properties": {
+          "interaction_id": {
+            "type": "integer",
+            "description": "Must match interaction_id from 06a/06b"
+          },
+          "conversation_id": {
+            "type": "integer",
+            "description": "Must match conversation_id from 06a/06b"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": ["number", "instagram", "instant_date", "rejection", "soft_close", "blowout", "interrupted", "unknown"]
+          },
+          "outcome_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "interaction_quality": {
+            "type": "object",
+            "properties": {
+              "overall_score": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 10
+              },
+              "strengths": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "areas_for_improvement": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total_interactions", "outcomes_distribution"],
+      "properties": {
+        "total_interactions": { "type": "integer" },
+        "outcomes_distribution": {
+          "type": "object",
+          "additionalProperties": { "type": "integer" },
+          "description": "Count of each outcome type"
+        },
+        "average_quality_score": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["pipeline_version", "prompt_version", "model_version", "schema_version"],
+      "properties": {
+        "pipeline_version": { "type": "string" },
+        "prompt_version": { "type": "string" },
+        "model_version": { "type": "string" },
+        "schema_version": { "type": "string" },
+        "input_checksum": { "type": "string" }
+      }
+    }
+  }
+}

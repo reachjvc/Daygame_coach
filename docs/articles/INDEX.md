@@ -4,6 +4,7 @@
 **Updated:** 29-01-2026
 
 ## Changelog
+- 30-01-2026 - Updated research paths to new /docs/RESEARCH/FIELD_REPORTS/ structure
 - 29-01-2026 - Added manifest system for Claude context loading
 - 29-01-2026 09:15 - Initial creation with 6 research-backed article concepts
 
@@ -36,7 +37,7 @@ When asked to "work on articles" or "work on the newest article":
 
 When generating article ideas or content for this project, follow this sequence:
 
-1. **Read the research FIRST** - Immerse yourself in the actual findings, studies, and insights (e.g., FIELD_REPORT_RESEARCH_PLAN.md)
+1. **Read the research FIRST** - Start with `docs/RESEARCH/FIELD_REPORTS/DESIGN.md` for principles and templates. Load specific research files only when needed (see `_INDEX.md` for guidance).
 2. **Find what's genuinely valuable** - What surprised you? What's counterintuitive? What would actually help someone?
 3. **THEN consider SEO** - Only after you have valuable ideas, check SEO.md for discoverability optimization
 
@@ -218,7 +219,7 @@ When writing any of these articles:
 1. **Lead with the counterintuitive hook** - What surprises people or challenges assumptions
 2. **Cite the research** - Name researchers, link studies, show your work
 3. **Make it actionable** - End sections with practical steps, not just theory
-4. **Use the research document** - FIELD_REPORT_RESEARCH_PLAN.md has extensive citations and details
+4. **Use the research** - `docs/RESEARCH/FIELD_REPORTS/DESIGN.md` for core principles. Load domain-specific files from that folder as needed (see `_INDEX.md`)
 5. **Test against the value question** - Would someone share this even if it didn't rank?
 
 ### SEO Considerations (Apply AFTER value is established)
