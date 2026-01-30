@@ -401,13 +401,36 @@ export async function getSessionSummaries(
   userId: string,
   limit = 10
 ): Promise<SessionSummary[]> {
-  const sessions = await getUserSessions(userId, limit)
+  const supabase = await createServerSupabaseClient()
 
-  const summaries: SessionSummary[] = []
+  // Single query with embedded relation - fixes N+1 problem
+  // Previously: 1 query for sessions + 2 queries per session = 11+ queries for 5 sessions
+  // Now: 1 query total
+  const { data, error } = await supabase
+    .from("sessions")
+    .select(`
+      id,
+      started_at,
+      ended_at,
+      duration_minutes,
+      goal,
+      goal_met,
+      primary_location,
+      approaches (
+        outcome
+      )
+    `)
+    .eq("user_id", userId)
+    .order("started_at", { ascending: false })
+    .limit(limit)
 
-  for (const session of sessions) {
-    const withApproaches = await getSessionWithApproaches(session.id)
-    if (!withApproaches) continue
+  if (error) {
+    throw new Error(`Failed to get session summaries: ${error.message}`)
+  }
+
+  // Transform the joined data into SessionSummary format
+  return (data || []).map((session) => {
+    const approaches = session.approaches || []
 
     const outcomes = {
       blowout: 0,
@@ -417,26 +440,24 @@ export async function getSessionSummaries(
       instadate: 0,
     }
 
-    for (const approach of withApproaches.approaches) {
+    for (const approach of approaches) {
       if (approach.outcome && approach.outcome in outcomes) {
         outcomes[approach.outcome as keyof typeof outcomes]++
       }
     }
 
-    summaries.push({
+    return {
       id: session.id,
       started_at: session.started_at,
       ended_at: session.ended_at,
-      total_approaches: withApproaches.approaches.length,
+      total_approaches: approaches.length,
       duration_minutes: session.duration_minutes,
       goal: session.goal,
       goal_met: session.goal_met,
       primary_location: session.primary_location,
       outcomes,
-    })
-  }
-
-  return summaries
+    }
+  })
 }
 
 // ============================================
@@ -1181,6 +1202,48 @@ export async function getDailyStats(
   }
 
   return result
+}
+
+export interface SessionIntentionSuggestions {
+  sessionFocus: string[]
+  techniqueFocus: string[]
+  locations: string[]
+}
+
+export async function getSessionIntentionSuggestions(
+  userId: string
+): Promise<SessionIntentionSuggestions> {
+  const supabase = await createServerSupabaseClient()
+
+  // Get all completed sessions with intentions
+  const { data, error } = await supabase
+    .from("sessions")
+    .select("session_focus, technique_focus, primary_location")
+    .eq("user_id", userId)
+    .eq("is_active", false)
+    .order("started_at", { ascending: false })
+    .limit(100)
+
+  if (error) {
+    throw new Error(`Failed to get session intentions: ${error.message}`)
+  }
+
+  // Extract unique non-empty values, most recent first
+  const sessionFocusSet = new Set<string>()
+  const techniqueFocusSet = new Set<string>()
+  const locationsSet = new Set<string>()
+
+  for (const session of data || []) {
+    if (session.session_focus) sessionFocusSet.add(session.session_focus)
+    if (session.technique_focus) techniqueFocusSet.add(session.technique_focus)
+    if (session.primary_location) locationsSet.add(session.primary_location)
+  }
+
+  return {
+    sessionFocus: Array.from(sessionFocusSet).slice(0, 10),
+    techniqueFocus: Array.from(techniqueFocusSet).slice(0, 10),
+    locations: Array.from(locationsSet).slice(0, 10),
+  }
 }
 
 export async function getApproachesPerHour(

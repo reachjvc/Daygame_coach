@@ -1,17 +1,18 @@
 # Pipeline Restructuring Plan
 
 Status: Planning
+Updated: 31-01-2026 06:15 - Model testing deferred (not skipped) - should test alternatives for quality.
+Updated: 31-01-2026 06:00 - Synced docs with reality. Phase 1 script implemented + tested. Ready for test video selection.
 Updated: 31-01-2026 04:30 - Phase 0 COMPLETE. P0.9-P0.12 deferred. Starting Phase 1.
 Updated: 31-01-2026 04:15 - P0.8 complete. All prompts reviewed. Test set 5/20. Next: P0.9 validation harness.
 Updated: 31-01-2026 04:00 - P0.5 complete. label_guidelines.md created. Next: P0.8 prompt review.
 Updated: 31-01-2026 03:30 - P0.1-P0.4 complete. Current step: P0.5 Label guidelines.
-Updated: 31-01-2026 03:00 - Deleted obsolete files. Removed 06c steps. Clarified tone is audio-based.
 
 ## CURRENT STATUS
 
 ```
 Phase 0: Preparation     [x] COMPLETE (P0.9-P0.12 deferred to post-test)
-Phase 1: segment-enrich  [~] IN PROGRESS
+Phase 1: segment-enrich  [x] SCRIPT IMPLEMENTED + TESTED (ready for full test run)
 Phase 2: conversations   [ ] Not Started
 Phase 3: interactions    [ ] Not Started
 Phase 4: ingest          [ ] Not Started
@@ -19,7 +20,7 @@ Phase 5: full-run        [ ] Not Started
 Phase 6: cleanup         [ ] Not Started
 ```
 
-**Next Action**: Start Phase 0 → [../phases/phase_0_preparation.md](../phases/phase_0_preparation.md)
+**Next Action**: Select remaining 15 test videos, then run end-to-end test (P1→P4) on 20 videos.
 
 ---
 
@@ -84,7 +85,7 @@ Transform 456 audio-analyzed videos into enriched training data:
 
 ## MASTER STEP LIST
 
-Current Step: P1.1 Script plan ([P1](../phases/phase_1_segment_enrich.md#script-specification-plan-only))
+Current Step: P0.6 Test video selection (then end-to-end test run)
 
 - [x] P0.1 Environment verification (Ollama + llama3.1:8B + deps OK) ([P0](../phases/phase_0_preparation.md#step-1-environment-verification))
 - [x] P0.2 Config module plan finalized ([P0](../phases/phase_0_preparation.md#step-2-config-module-plan))
@@ -93,28 +94,26 @@ Current Step: P1.1 Script plan ([P1](../phases/phase_1_segment_enrich.md#script-
   - [x] P0.4a Update segment_enriched.schema.json: tone enum 8→5, method=audio_threshold
   - [x] P0.4b Delete outcomes.schema.json
 - [x] P0.5 Label guidelines COMPLETE (docs/overviews/label_guidelines.md) ([P0](../phases/phase_0_preparation.md#step-5-label-guidelines))
-- [ ] P0.6 Test video set selected (20 videos, stratified) ([P0](../phases/phase_0_preparation.md#step-6-test-video-selection-changed-from-gold-set))
+- [~] P0.6 Test video set selected (5/20 videos, need 15 more stratified) ([P0](../phases/phase_0_preparation.md#step-6-test-video-selection-changed-from-gold-set))
 - [x] P0.7 Taxonomy file COMPLETE, all subgaps 8a-8f resolved (v1.2.0) ([P0](../phases/phase_0_preparation.md#step-7-taxonomy-versioning-plan))
 - [x] P0.8 Prompt templates COMPLETE ([P0](../phases/phase_0_preparation.md#step-8-prompt-registry-plan))
   - [x] P0.8a Delete 04_tone_classification.md - DONE
   - [x] P0.8b Delete 06c_outcomes.md - DONE
   - [x] P0.8c Reviewed: 04_speaker OK, 05_video OK, 05_segment OK, 06b updated to v1.1.0
 - [~] P0.9 Validation harness - DEFERRED to post-test-run
-- [x] P0.10 Model testing - DONE (llama3.1 works)
+- [~] P0.10 Model testing - DEFERRED (llama3.1:8b in use, should test qwen2.5:7b/mistral:7b for potential quality improvement)
 - [~] P0.11 Pilot protocol - DEFERRED to post-test-run
 - [~] P0.12 Failure protocol - DEFERRED to post-test-run
 - [x] P0.13 User approved - Moving to Phase 1
-- [ ] P1.1 Script plan defined (CLI + state metadata) ([P1](../phases/phase_1_segment_enrich.md#script-specification-plan-only))
-- [ ] P1.2 Prompt templates + versioning planned (speaker + tone) ([P1](../phases/phase_1_segment_enrich.md#prompt-templates-plan))
-- [ ] P1.3 Speaker cluster analysis planned ([P1](../phases/phase_1_segment_enrich.md#speaker-cluster-analysis-plan))
-- [ ] P1.4 LLM cluster labeling planned ([P1](../phases/phase_1_segment_enrich.md#llm-cluster-labeling-plan))
-- [ ] P1.5 Tone window classification planned ([P1](../phases/phase_1_segment_enrich.md#tone-window-classification-plan))
-- [ ] P1.6 Edge case handling plan defined ([P1](../phases/phase_1_segment_enrich.md#edge-cases-plan))
-- [ ] P1.7 Test run plan (20 videos) defined ([P1](../phases/phase_1_segment_enrich.md#quality-gates-confidence-based))
-- [ ] P1.8 Confidence-based validation plan defined ([P1](../phases/phase_1_segment_enrich.md#validation--evaluation-confidence-based))
-- [ ] P1.9 Error triage + review queue plan defined ([P1](../phases/phase_1_segment_enrich.md#validation--evaluation-plan))
-- [ ] P1.10 Schema validation plan defined ([P1](../phases/phase_1_segment_enrich.md#validation--evaluation-plan))
-- [ ] P1.11 User approved (Phase 1) ([P1](../phases/phase_1_segment_enrich.md#exit-criteria))
+- [x] P1.1 Script IMPLEMENTED (04.segment-enrich exists + working) ([P1](../phases/phase_1_segment_enrich.md#script-specification-plan-only))
+- [x] P1.2 Prompt v1.1.0 (prompts/04_speaker_labeling.md) ([P1](../phases/phase_1_segment_enrich.md#prompt-templates-plan))
+- [x] P1.3 Speaker cluster analysis IMPLEMENTED ([P1](../phases/phase_1_segment_enrich.md#speaker-cluster-analysis-plan))
+- [x] P1.4 LLM cluster labeling IMPLEMENTED + fixed (v1.1.0) ([P1](../phases/phase_1_segment_enrich.md#llm-cluster-labeling-plan))
+- [x] P1.5 Tone window classification IMPLEMENTED (audio thresholds) ([P1](../phases/phase_1_segment_enrich.md#tone-window-classification-plan))
+- [x] P1.6 Edge case handling IMPLEMENTED (video type pre-detection) ([P1](../phases/phase_1_segment_enrich.md#edge-cases-plan))
+- [x] P1.7 Test run DONE (5 videos tested, bug fixed) ([P1](../phases/phase_1_segment_enrich.md#quality-gates-confidence-based))
+- [~] P1.8-P1.10 Validation - part of end-to-end test
+- [~] P1.11 User approved (Phase 1) - pending end-to-end test ([P1](../phases/phase_1_segment_enrich.md#exit-criteria))
 - [ ] P2.1 Script migration plan defined ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
 - [ ] P2.2 Input/output paths updated (plan) ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
 - [ ] P2.3 Fallbacks removed (plan) ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))

@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect, useRef } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useSession } from "../hooks/useSession"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -29,9 +29,125 @@ import {
   FileText,
   Loader2,
 } from "lucide-react"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../types"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../config"
 import type { ApproachFormData } from "../types"
 import Link from "next/link"
+
+// Combobox input component with dropdown suggestions
+interface ComboboxInputProps {
+  id: string
+  value: string
+  onChange: (value: string) => void
+  suggestions: string[]
+  placeholder: string
+}
+
+function ComboboxInput({ id, value, onChange, suggestions, placeholder }: ComboboxInputProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  const [inputFocused, setInputFocused] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const filteredSuggestions = suggestions.filter(
+    s => s.toLowerCase().includes(value.toLowerCase())
+  )
+
+  const showDropdown = (isOpen || inputFocused) && filteredSuggestions.length > 0
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="flex gap-2">
+        <Input
+          id={id}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setInputFocused(true)}
+          onBlur={() => setTimeout(() => setInputFocused(false), 150)}
+          className="flex-1"
+        />
+        {suggestions.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setIsOpen(!isOpen)}
+            className="shrink-0"
+          >
+            <ChevronDown className={`size-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          </Button>
+        )}
+      </div>
+      {showDropdown && (
+        <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+          {filteredSuggestions.map((suggestion, index) => (
+            <button
+              key={index}
+              type="button"
+              className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors"
+              onClick={() => {
+                onChange(suggestion)
+                setIsOpen(false)
+              }}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Default suggestions for new users or as starting points
+const DEFAULT_SUGGESTIONS = {
+  sessionFocus: [
+    "Be more playful",
+    "Hold eye contact longer",
+    "Speak slower",
+    "Take more pauses",
+    "Be more physical",
+    "Lead the conversation",
+    "Show more intent",
+    "Stay in set longer",
+    "Be more present",
+    "Express my personality more",
+  ],
+  techniqueFocus: [
+    "Cold reads",
+    "Push-pull",
+    "Assumption stacking",
+    "Roleplay",
+    "Teasing",
+    "Storytelling",
+    "Qualify her",
+    "Direct openers",
+    "Indirect openers",
+    "Situational openers",
+  ],
+  locations: [
+    "Downtown",
+    "Mall",
+    "Park",
+    "Coffee shop",
+    "Street",
+    "Bookstore",
+    "Supermarket",
+    "Train station",
+    "University area",
+    "Shopping district",
+  ],
+}
 
 interface SessionTrackerPageProps {
   userId: string
@@ -39,6 +155,7 @@ interface SessionTrackerPageProps {
 
 export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { state, liveStats, startSession, endSession, addApproach, updateLastApproach } =
     useSession({ userId })
 
@@ -57,12 +174,59 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const [ifThenPlan, setIfThenPlan] = useState("")
   const [customIntention, setCustomIntention] = useState("")
 
+  // Suggestions from previous sessions merged with defaults
+  const [suggestions, setSuggestions] = useState<{
+    sessionFocus: string[]
+    techniqueFocus: string[]
+    locations: string[]
+  }>(DEFAULT_SUGGESTIONS)
+
+  // Fetch user's previous values and merge with defaults
+  useEffect(() => {
+    async function fetchSuggestions() {
+      try {
+        const response = await fetch("/api/tracking/session/suggestions")
+        if (response.ok) {
+          const data = await response.json()
+          // Merge: user's previous values first, then defaults that aren't already included
+          const mergeWithDefaults = (userValues: string[], defaults: string[]) => {
+            const combined = [...userValues]
+            for (const def of defaults) {
+              if (!combined.some(v => v.toLowerCase() === def.toLowerCase())) {
+                combined.push(def)
+              }
+            }
+            return combined.slice(0, 15) // Limit total suggestions
+          }
+          setSuggestions({
+            sessionFocus: mergeWithDefaults(data.sessionFocus || [], DEFAULT_SUGGESTIONS.sessionFocus),
+            techniqueFocus: mergeWithDefaults(data.techniqueFocus || [], DEFAULT_SUGGESTIONS.techniqueFocus),
+            locations: mergeWithDefaults(data.locations || [], DEFAULT_SUGGESTIONS.locations),
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch suggestions:", error)
+        // Keep defaults on error
+      }
+    }
+    fetchSuggestions()
+  }, [])
+
   const GOAL_PRESETS = [
     { value: 1, emoji: "👋", label: "1" },
     { value: 3, emoji: "🎯", label: "3" },
     { value: 5, emoji: "💪", label: "5" },
     { value: 10, emoji: "🔥", label: "10" },
   ] as const
+
+  // Auto-open dialog when coming from reports page with autostart=true
+  useEffect(() => {
+    if (searchParams.get("autostart") === "true" && !state.isActive && !state.isLoading) {
+      setShowStartDialog(true)
+      // Clean up the URL
+      router.replace("/dashboard/tracking/session", { scroll: false })
+    }
+  }, [searchParams, state.isActive, state.isLoading, router])
 
   if (state.isLoading) {
     return (
@@ -236,12 +400,13 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               <div className="space-y-2">
                 <Label htmlFor="location">Location (optional)</Label>
                 <div className="flex items-center gap-2">
-                  <MapPin className="size-4 text-muted-foreground" />
-                  <Input
+                  <MapPin className="size-4 text-muted-foreground shrink-0" />
+                  <ComboboxInput
                     id="location"
                     placeholder="e.g., Downtown, Mall, Park"
                     value={locationInput}
-                    onChange={(e) => setLocationInput(e.target.value)}
+                    onChange={setLocationInput}
+                    suggestions={suggestions.locations}
                   />
                 </div>
               </div>
@@ -255,21 +420,23 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
                 <div className="space-y-2">
                   <Label htmlFor="sessionFocus">What&apos;s your focus?</Label>
-                  <Input
+                  <ComboboxInput
                     id="sessionFocus"
                     placeholder="e.g., Be more playful, Hold eye contact longer"
                     value={sessionFocus}
-                    onChange={(e) => setSessionFocus(e.target.value)}
+                    onChange={setSessionFocus}
+                    suggestions={suggestions.sessionFocus}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="techniqueFocus">Technique to practice</Label>
-                  <Input
+                  <ComboboxInput
                     id="techniqueFocus"
                     placeholder="e.g., Cold reads, Push-pull, Assumption stacking"
                     value={techniqueFocus}
-                    onChange={(e) => setTechniqueFocus(e.target.value)}
+                    onChange={setTechniqueFocus}
+                    suggestions={suggestions.techniqueFocus}
                   />
                 </div>
 

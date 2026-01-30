@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Plus, Minus, MapPin } from "lucide-react"
-import { OUTCOME_OPTIONS, APPROACH_TAGS } from "../types"
+import { OUTCOME_OPTIONS, APPROACH_TAGS } from "../config"
 import type { ApproachOutcome } from "@/src/db/trackingTypes"
 
 interface QuickAddModalProps {

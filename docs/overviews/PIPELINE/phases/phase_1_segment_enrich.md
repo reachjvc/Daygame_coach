@@ -1,6 +1,7 @@
 # Phase 1: 04.segment-enrich
 
-Status: In Progress
+Status: ✅ IMPLEMENTED (ready for end-to-end test)
+Updated: 31-01-2026 06:00 - Synced with reality. Script implemented + tested. Bug fixed.
 Updated: 31-01-2026 05:10 - Fixed speaker clustering: video type pre-detection + no-pitch segments kept separate.
 Updated: 31-01-2026 04:45 - Starting implementation. Tone is audio-based (5 tones), not LLM.
 Parent: [plan_pipeline.md](../plans/plan_pipeline.md)
@@ -9,17 +10,15 @@ Depends on: Phase 0 complete
 ## Checklist
 
 ```
-[ ] Step 1: Script plan defined (CLI + state metadata)
-[ ] Step 2: Prompt templates + versioning planned (speaker + tone)
-[ ] Step 3: Speaker cluster analysis planned
-[ ] Step 4: LLM cluster labeling planned
-[ ] Step 5: Tone window classification planned
-[ ] Step 6: Edge case handling plan defined
-[ ] Step 7: Pilot run plan (5-10 videos) defined
-[ ] Step 8: Gold set evaluation plan (speaker/tone) defined
-[ ] Step 9: Error triage + review queue plan defined
-[ ] Step 10: Schema validation plan defined
-[ ] Step 11: User approved
+[x] Step 1: Script IMPLEMENTED (scripts/training-data/04.segment-enrich)
+[x] Step 2: Prompt v1.1.0 created (prompts/04_speaker_labeling.md)
+[x] Step 3: Speaker cluster analysis IMPLEMENTED
+[x] Step 4: LLM cluster labeling IMPLEMENTED + bug fixed (v1.1.0)
+[x] Step 5: Tone window classification IMPLEMENTED (audio thresholds from tones research)
+[x] Step 6: Edge case handling IMPLEMENTED (video type pre-detection)
+[x] Step 7: Pilot run DONE (5 videos tested - see results below)
+[~] Step 8-10: Validation - part of end-to-end test on 20 videos
+[~] Step 11: User approved - pending end-to-end test
 ```
 
 ---

@@ -137,7 +137,7 @@ export interface ApproachUpdate {
 // Field Report Templates
 // ============================================
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'scale' | 'datetime' | 'list' | 'tags'
+export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'scale' | 'datetime' | 'list' | 'tags' | 'audio'
 
 export interface TemplateField {
   id: string

@@ -18,8 +18,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS, type SessionSummaryData } from "../types"
-import { TEMPLATE_ICONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES } from "../config"
+import type { SessionSummaryData } from "../types"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES } from "../config"
+import { TEMPLATE_ICONS } from "./templateIcons"
 import { FieldRenderer } from "./FieldRenderer"
 import { KeyStatsSection } from "./KeyStatsSection"
 import { PrinciplesSection } from "./PrinciplesSection"
@@ -523,52 +524,71 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   // Report form view
   const isValid = validateForm()
+  const colors = TEMPLATE_COLORS[selectedTemplate.slug] || {
+    bg: "bg-primary/10 text-primary border-primary/20",
+    icon: "bg-primary text-primary-foreground",
+    gradient: "from-primary/30 via-primary/10 to-accent/20",
+  }
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <button
-          onClick={handleCloseTemplate}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
-        >
-          <ArrowLeft className="size-4" />
-          Choose Different Template
-        </button>
-        <h1 className="text-3xl font-bold">{selectedTemplate.name}</h1>
-        <p className="text-muted-foreground mt-2">{selectedTemplate.description}</p>
-      </div>
+      {/* Back button */}
+      <button
+        onClick={handleCloseTemplate}
+        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+      >
+        <ArrowLeft className="size-4" />
+        Choose Different Template
+      </button>
 
-      {/* Session summary mini-card */}
-      {sessionData && (
-        <Card className="p-4 mb-6 bg-muted/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4 text-sm">
-              <span className="font-medium">{sessionData.approachCount} approaches</span>
-              {sessionData.duration && (
-                <span className="flex items-center gap-1 text-muted-foreground">
-                  <Clock className="size-3" />
-                  {sessionData.duration} min
-                </span>
-              )}
-              {sessionData.location && (
-                <span className="flex items-center gap-1 text-muted-foreground">
-                  <MapPin className="size-3" />
-                  {sessionData.location}
-                </span>
+      {/* Template header with gradient */}
+      <div className={`rounded-2xl overflow-hidden mb-6 border border-border/50`}>
+        <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
+          <div className="flex items-center gap-4">
+            <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
+              {TEMPLATE_ICONS[selectedTemplate.slug] || <FileText className="size-6" />}
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">{selectedTemplate.name}</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">
+                {TEMPLATE_TAGLINES[selectedTemplate.slug] || selectedTemplate.description}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Session summary mini-card */}
+        {sessionData && (
+          <div className="p-4 bg-card border-t border-border/50">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="font-semibold text-primary">{sessionData.approachCount} approaches</span>
+                {sessionData.duration && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <Clock className="size-3" />
+                    {sessionData.duration} min
+                  </span>
+                )}
+                {sessionData.location && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <MapPin className="size-3" />
+                    {sessionData.location}
+                  </span>
+                )}
+              </div>
+              {(sessionData.outcomes.number > 0 || sessionData.outcomes.instadate > 0) && (
+                <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300">
+                  <TrendingUp className="size-3 mr-1" />
+                  {sessionData.outcomes.number} numbers{sessionData.outcomes.instadate > 0 && `, ${sessionData.outcomes.instadate} instadates`}
+                </Badge>
               )}
             </div>
-            {(sessionData.outcomes.number > 0 || sessionData.outcomes.instadate > 0) && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                <TrendingUp className="size-3 mr-1" />
-                {sessionData.outcomes.number} numbers{sessionData.outcomes.instadate > 0 && `, ${sessionData.outcomes.instadate} instadates`}
-              </Badge>
-            )}
           </div>
-        </Card>
-      )}
+        )}
+      </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }}>
-        <Card className="p-6">
+        <Card className="p-6 rounded-2xl border-border/50">
           <div className="space-y-6">
             {fieldsToRender.map((field) => (
               <FieldRenderer
@@ -581,16 +601,16 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           </div>
 
           {submitError && (
-            <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
+            <div className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
               {submitError}
             </div>
           )}
 
-          <div className="flex gap-3 mt-8">
+          <div className="flex gap-3 mt-8 pt-6 border-t border-border/50">
             <Button
               type="button"
               variant="outline"
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl transition-all hover:bg-muted"
               disabled={isSubmitting}
               onClick={() => handleSubmit(true)}
             >
@@ -601,7 +621,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
             </Button>
             <Button
               type="submit"
-              className="flex-1"
+              className="flex-1 h-12 rounded-xl transition-all"
               disabled={isSubmitting || !isValid}
             >
               {isSubmitting ? (

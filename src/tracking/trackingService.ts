@@ -20,6 +20,8 @@ import {
   getUserSessions as repoGetUserSessions,
   getSessionSummaries as repoGetSessionSummaries,
   getSessionApproaches as repoGetSessionApproaches,
+  getSessionIntentionSuggestions as repoGetSessionIntentionSuggestions,
+  type SessionIntentionSuggestions,
   // Approaches
   createApproach as repoCreateApproach,
   updateApproach as repoUpdateApproach,
@@ -130,6 +132,12 @@ export async function getSessionSummaries(
 
 export async function getSessionApproaches(sessionId: string): Promise<ApproachRow[]> {
   return repoGetSessionApproaches(sessionId)
+}
+
+export async function getSessionIntentionSuggestions(
+  userId: string
+): Promise<SessionIntentionSuggestions> {
+  return repoGetSessionIntentionSuggestions(userId)
 }
 
 // ============================================
@@ -297,6 +305,7 @@ export type {
   SessionUpdate,
   SessionWithApproaches,
   SessionSummary,
+  SessionIntentionSuggestions,
   ApproachRow,
   ApproachInsert,
   ApproachUpdate,

@@ -1,13 +1,12 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { UserTrackingStatsRow, SessionSummary, MilestoneRow, DailyStats } from "@/src/db/trackingTypes"
+import type { UserTrackingStatsRow, SessionSummary, MilestoneRow } from "@/src/db/trackingTypes"
 
 interface TrackingStatsState {
   stats: UserTrackingStatsRow | null
   recentSessions: SessionSummary[]
   milestones: MilestoneRow[]
-  dailyStats: DailyStats[]
   isLoading: boolean
   error: string | null
 }
@@ -23,7 +22,6 @@ export function useTrackingStats(): UseTrackingStatsReturn {
     stats: null,
     recentSessions: [],
     milestones: [],
-    dailyStats: [],
     isLoading: true,
     error: null,
   })
@@ -32,23 +30,21 @@ export function useTrackingStats(): UseTrackingStatsReturn {
     try {
       setState((prev) => ({ ...prev, isLoading: true, error: null }))
 
-      const [statsRes, sessionsRes, milestonesRes, dailyRes] = await Promise.all([
+      // Parallel fetch - 3 requests instead of 4 (removed unused dailyStats)
+      const [statsRes, sessionsRes, milestonesRes] = await Promise.all([
         fetch("/api/tracking/stats"),
         fetch("/api/tracking/sessions?limit=5"),
         fetch("/api/tracking/milestones"),
-        fetch("/api/tracking/stats/daily?days=30"),
       ])
 
       const stats = statsRes.ok ? await statsRes.json() : null
       const sessions = sessionsRes.ok ? await sessionsRes.json() : []
       const milestones = milestonesRes.ok ? await milestonesRes.json() : []
-      const dailyStats = dailyRes.ok ? await dailyRes.json() : []
 
       setState({
         stats,
         recentSessions: sessions,
         milestones,
-        dailyStats,
         isLoading: false,
         error: null,
       })

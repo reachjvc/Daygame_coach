@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, FileText, Medal, Sparkles, User, Video } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, FileText, Medal, Sparkles, User, Video, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -34,6 +34,12 @@ const testPages = [
     href: "/test/field-reports",
     description: "Field reports component testing",
     icon: FileText,
+  },
+  {
+    name: "Field Report Showcase",
+    href: "/test/field-report-showcase",
+    description: "Template selection + form UI testing with different layouts",
+    icon: Palette,
   },
   {
     name: "Articles",

@@ -1,8 +1,9 @@
 # Vertical Slice: Progress Tracking
 **Status:** Active
-**Updated:** 29-01-2026 15:50 (Danish time)
+**Updated:** 30-01-2026 (Danish time)
 
 ## Changelog
+- 30-01-2026 - Performance optimization: Fixed N+1 query, removed unused fetch, architecture cleanup
 - 29-01-2026 15:50 - Initial documentation created
 
 ---
@@ -49,20 +50,31 @@ User (1) ─────────< Review (many: weekly, monthly, quarterly)
 
 ```
 src/tracking/
-├── types.ts              # Session, Approach, LiveStats types
-├── config.ts             # SESSION_CONFIG, MILESTONE_THRESHOLDS, etc.
+├── types.ts              # Types only (interfaces, type re-exports)
+├── config.ts             # Pure constants (no JSX) - SESSION_CONFIG, OUTCOME_OPTIONS, etc.
 ├── schemas.ts            # Zod validation schemas for API routes
 ├── index.ts              # Barrel exports
 ├── hooks/
+│   ├── index.ts          # Hook exports
 │   ├── useSession.ts     # Active session management
-│   └── useTrackingStats.ts # Stats fetching and caching
+│   └── useTrackingStats.ts # Stats fetching (3 parallel API calls)
+├── data/
+│   ├── index.ts          # Data exports
+│   ├── milestones.ts     # ALL_MILESTONES, TIER_INFO, helper functions
+│   ├── keyStats.tsx      # Research-backed stats data
+│   └── principles.tsx    # 25 reflection principles
 └── components/
-    ├── SessionTrackerPage.tsx  # Main tracking UI
-    ├── ProgressDashboard.tsx   # Stats overview
-    ├── FieldReportPage.tsx     # Field report form
-    ├── WeeklyReviewPage.tsx    # Weekly review form
-    ├── QuickAddModal.tsx       # Quick approach logging
-    └── FieldRenderer.tsx       # Dynamic form field renderer
+    ├── index.ts               # Component exports
+    ├── SessionTrackerPage.tsx # Main tracking UI
+    ├── ProgressDashboard.tsx  # Stats overview (~587 lines)
+    ├── FieldReportPage.tsx    # Field report form
+    ├── WeeklyReviewPage.tsx   # Weekly review form
+    ├── QuickAddModal.tsx      # Quick approach logging
+    ├── FieldRenderer.tsx      # Dynamic form field renderer
+    ├── KeyStatsSection.tsx    # Research stats display
+    ├── PrinciplesSection.tsx  # Principles display
+    ├── ResearchDomainsSection.tsx # Research domains
+    └── templateIcons.tsx      # Template icons (JSX)
 ```
 
 ---
@@ -257,11 +269,16 @@ const {
 
 ```typescript
 const {
-  state,         // { stats, recentSessions, milestones, dailyStats, isLoading, error }
+  state,         // { stats, recentSessions, milestones, isLoading, error }
   refresh,       // () => Promise<void>
   deleteSession, // (sessionId) => Promise<boolean>
 } = useTrackingStats()
 ```
+
+**Performance notes:**
+- Fetches 3 endpoints in parallel (stats, sessions, milestones)
+- Sessions endpoint uses optimized single JOIN query (not N+1)
+- dailyStats removed (was unused)
 
 ---
 
