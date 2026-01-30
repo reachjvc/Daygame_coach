@@ -572,6 +572,37 @@ def run_multi_k_discovery(filtered: list[SegmentFeatures]):
         json.dump(output, f, indent=2)
     print(f"\nResults saved to {output_file}")
 
+    # Deep dive into outliers
+    print("\n" + "=" * 80)
+    print("OUTLIER DEEP DIVE: Categorizing extreme pitch variation segments")
+    print("=" * 80)
+
+    # Group outliers by source file
+    file_counts = defaultdict(list)
+    for s in outlier_segments:
+        fname = s.file_path.split('/')[-1].replace('.audio_features.json', '')
+        file_counts[fname].append(s)
+
+    print(f"\nOutliers by source file (top 20):")
+    sorted_files = sorted(file_counts.items(), key=lambda x: len(x[1]), reverse=True)[:20]
+    for fname, segments in sorted_files:
+        avg_pm = np.mean([s.pitch_mean for s in segments])
+        avg_ps = np.mean([s.pitch_std for s in segments])
+        print(f"  {len(segments):>4} segments: {fname[:60]}...")
+        print(f"         avg pitch_mean={avg_pm:.0f} Hz, pitch_std={avg_ps:.0f} Hz")
+
+    # Categorize by pitch_mean (proxy for speaker type)
+    print(f"\nOutlier pitch_mean distribution:")
+    pm_ranges = [
+        (0, 200, "Low (likely male)"),
+        (200, 300, "Mid (could be either)"),
+        (300, 400, "High (likely female or animated male)"),
+        (400, 1000, "Very high (female/child/artifact)"),
+    ]
+    for lo, hi, label in pm_ranges:
+        count = len([s for s in outlier_segments if lo <= s.pitch_mean < hi])
+        print(f"  {label:40}: {count:>5} ({count/len(outlier_segments)*100:.1f}%)")
+
     return results
 
 
@@ -611,6 +642,219 @@ def interpret_profile(pitch_std, energy_dyn, syllable_rate, brightness):
     return " + ".join(labels)
 
 
+def run_feature_profiles(filtered: list[SegmentFeatures]):
+    """
+    Tone Discovery Phase 2: Feature profile analysis.
+    Analyzes extreme feature values and feature combinations.
+    """
+    print("\n\n=== TONE DISCOVERY: Feature Profile Analysis ===\n")
+
+    # Extract feature arrays
+    pitch_std = np.array([s.pitch_std for s in filtered])
+    energy_dyn = np.array([s.energy_dynamics for s in filtered])
+    syllable_rate = np.array([s.syllable_rate for s in filtered])
+    brightness = np.array([s.brightness for s in filtered])
+    pitch_mean = np.array([s.pitch_mean for s in filtered])
+
+    n = len(filtered)
+
+    # Step 16-20: Extreme feature profiles
+    print("=" * 80)
+    print("EXTREME FEATURE PROFILES")
+    print("=" * 80)
+
+    extremes = [
+        ("High pitch_std (>P95, animated)", pitch_std, np.percentile(pitch_std, 95), ">"),
+        ("Low pitch_std (<P5, monotone)", pitch_std, np.percentile(pitch_std, 5), "<"),
+        ("High syllable_rate (>P95, rushed)", syllable_rate, np.percentile(syllable_rate, 95), ">"),
+        ("Low syllable_rate (<P5, deliberate)", syllable_rate, np.percentile(syllable_rate, 5), "<"),
+        ("High brightness (>P90, bright)", brightness, np.percentile(brightness, 90), ">"),
+        ("Low brightness (<P10, soft)", brightness, np.percentile(brightness, 10), "<"),
+        ("High energy_dyn (>P90, dynamic)", energy_dyn, np.percentile(energy_dyn, 90), ">"),
+        ("Low energy_dyn (<P10, steady)", energy_dyn, np.percentile(energy_dyn, 10), "<"),
+    ]
+
+    print(f"\n{'Profile':<45} | {'Threshold':>10} | {'Count':>8} | {'%':>6}")
+    print("-" * 80)
+
+    extreme_results = []
+    for name, arr, thresh, op in extremes:
+        if op == ">":
+            mask = arr > thresh
+        else:
+            mask = arr < thresh
+        count = np.sum(mask)
+        pct = count / n * 100
+        print(f"{name:<45} | {thresh:>10.1f} | {count:>8} | {pct:>5.1f}%")
+        extreme_results.append({"name": name, "threshold": thresh, "count": int(count), "pct": pct})
+
+    # Step 21-23: 2D Feature Quadrant Analysis
+    print("\n" + "=" * 80)
+    print("2D FEATURE QUADRANT ANALYSIS")
+    print("=" * 80)
+
+    # Quadrant 1: pitch_std × energy_dynamics
+    print("\n--- Quadrant: pitch_std × energy_dynamics ---")
+    ps_med = np.median(pitch_std)
+    ed_med = np.median(energy_dyn)
+    print(f"Medians: pitch_std={ps_med:.1f}, energy_dyn={ed_med:.1f}\n")
+
+    quadrants_1 = [
+        ("High var + High dyn (ANIMATED)", (pitch_std > ps_med) & (energy_dyn > ed_med)),
+        ("High var + Low dyn (???)", (pitch_std > ps_med) & (energy_dyn <= ed_med)),
+        ("Low var + High dyn (ASSERTIVE?)", (pitch_std <= ps_med) & (energy_dyn > ed_med)),
+        ("Low var + Low dyn (SOFT/CALM)", (pitch_std <= ps_med) & (energy_dyn <= ed_med)),
+    ]
+
+    for name, mask in quadrants_1:
+        count = np.sum(mask)
+        pct = count / n * 100
+        # Get avg features for this quadrant
+        avg_ps = np.mean(pitch_std[mask])
+        avg_ed = np.mean(energy_dyn[mask])
+        avg_sr = np.mean(syllable_rate[mask])
+        print(f"  {name:35}: {count:>6} ({pct:>5.1f}%) | avg_syl_rate={avg_sr:.1f}")
+
+    # Quadrant 2: syllable_rate × pitch_std
+    print("\n--- Quadrant: syllable_rate × pitch_std ---")
+    sr_med = np.median(syllable_rate)
+    print(f"Medians: syllable_rate={sr_med:.1f}, pitch_std={ps_med:.1f}\n")
+
+    quadrants_2 = [
+        ("Fast + varied (EXCITED)", (syllable_rate > sr_med) & (pitch_std > ps_med)),
+        ("Fast + monotone (RUSHED/NERVOUS)", (syllable_rate > sr_med) & (pitch_std <= ps_med)),
+        ("Slow + varied (DRAMATIC)", (syllable_rate <= sr_med) & (pitch_std > ps_med)),
+        ("Slow + monotone (DELIBERATE)", (syllable_rate <= sr_med) & (pitch_std <= ps_med)),
+    ]
+
+    for name, mask in quadrants_2:
+        count = np.sum(mask)
+        pct = count / n * 100
+        avg_ed = np.mean(energy_dyn[mask])
+        print(f"  {name:35}: {count:>6} ({pct:>5.1f}%) | avg_energy_dyn={avg_ed:.1f}")
+
+    # Quadrant 3: brightness × energy_dynamics
+    print("\n--- Quadrant: brightness × energy_dynamics ---")
+    br_med = np.median(brightness)
+    print(f"Medians: brightness={br_med:.0f}, energy_dyn={ed_med:.1f}\n")
+
+    quadrants_3 = [
+        ("Bright + Dynamic (ENERGETIC)", (brightness > br_med) & (energy_dyn > ed_med)),
+        ("Bright + Steady (SHARP/TENSE)", (brightness > br_med) & (energy_dyn <= ed_med)),
+        ("Soft + Dynamic (???)", (brightness <= br_med) & (energy_dyn > ed_med)),
+        ("Soft + Steady (CALM/WARM?)", (brightness <= br_med) & (energy_dyn <= ed_med)),
+    ]
+
+    for name, mask in quadrants_3:
+        count = np.sum(mask)
+        pct = count / n * 100
+        print(f"  {name:35}: {count:>6} ({pct:>5.1f}%)")
+
+    # Step 24-25: Multi-feature combinations
+    print("\n" + "=" * 80)
+    print("MULTI-FEATURE COMBINATIONS (Potential Tones)")
+    print("=" * 80)
+
+    # Define potential tone profiles with thresholds
+    tone_profiles = [
+        {
+            "name": "playful",
+            "criteria": "pitch_std > 22 AND energy_dyn > 13",
+            "mask": (pitch_std > 22) & (energy_dyn > 13) & (pitch_std < 80),  # exclude outliers
+        },
+        {
+            "name": "confident",
+            "criteria": "pitch_std < 18 AND energy_dyn 8-13 AND syl_rate 5-6.5",
+            "mask": (pitch_std < 18) & (energy_dyn >= 8) & (energy_dyn <= 13) &
+                    (syllable_rate >= 5) & (syllable_rate <= 6.5),
+        },
+        {
+            "name": "nervous",
+            "criteria": "syl_rate > 6.8 AND pitch_std < 16",
+            "mask": (syllable_rate > 6.8) & (pitch_std < 16),
+        },
+        {
+            "name": "bright",
+            "criteria": "brightness > 1650",
+            "mask": (brightness > 1650),
+        },
+        {
+            "name": "monotone",
+            "criteria": "pitch_std < 8 AND energy_dyn < 9",
+            "mask": (pitch_std < 8) & (energy_dyn < 9),
+        },
+        {
+            "name": "rushed",
+            "criteria": "syl_rate > 7.2",
+            "mask": (syllable_rate > 7.2),
+        },
+        {
+            "name": "deliberate",
+            "criteria": "syl_rate < 4.5 AND pitch_std > 12",
+            "mask": (syllable_rate < 4.5) & (pitch_std > 12),
+        },
+        {
+            "name": "soft",
+            "criteria": "energy_dyn < 7 AND brightness < 1200",
+            "mask": (energy_dyn < 7) & (brightness < 1200),
+        },
+    ]
+
+    print(f"\n{'Tone':<15} | {'Criteria':<50} | {'Count':>8} | {'%':>6}")
+    print("-" * 90)
+
+    for profile in tone_profiles:
+        count = np.sum(profile["mask"])
+        pct = count / n * 100
+        print(f"{profile['name']:<15} | {profile['criteria']:<50} | {count:>8} | {pct:>5.1f}%")
+
+    # Check for overlap between profiles
+    print("\n--- Overlap Analysis ---")
+    playful_mask = (pitch_std > 22) & (energy_dyn > 13) & (pitch_std < 80)
+    confident_mask = (pitch_std < 18) & (energy_dyn >= 8) & (energy_dyn <= 13) & (syllable_rate >= 5) & (syllable_rate <= 6.5)
+    nervous_mask = (syllable_rate > 6.8) & (pitch_std < 16)
+    bright_mask = (brightness > 1650)
+
+    overlaps = [
+        ("playful ∩ bright", playful_mask, bright_mask),
+        ("confident ∩ bright", confident_mask, bright_mask),
+        ("nervous ∩ bright", nervous_mask, bright_mask),
+        ("playful ∩ nervous", playful_mask, nervous_mask),
+        ("confident ∩ nervous", confident_mask, nervous_mask),
+    ]
+
+    print(f"\n{'Overlap':<25} | {'Count':>8} | {'% of smaller':>12}")
+    print("-" * 55)
+    for name, mask1, mask2 in overlaps:
+        overlap = mask1 & mask2
+        count = np.sum(overlap)
+        smaller = min(np.sum(mask1), np.sum(mask2))
+        overlap_pct = count / smaller * 100 if smaller > 0 else 0
+        print(f"{name:<25} | {count:>8} | {overlap_pct:>11.1f}%")
+
+    # Calculate uncategorized segments
+    any_tone = playful_mask | confident_mask | nervous_mask | bright_mask
+    uncategorized = ~any_tone & (pitch_std < 80)  # exclude multi-speaker outliers
+    uncategorized_count = np.sum(uncategorized)
+    print(f"\nUncategorized segments: {uncategorized_count} ({uncategorized_count/n*100:.1f}%)")
+    print("  → These would be labeled 'neutral'")
+
+    # Save results
+    output = {
+        "extreme_profiles": extreme_results,
+        "tone_profiles": [
+            {"name": p["name"], "criteria": p["criteria"], "count": int(np.sum(p["mask"])),
+             "pct": float(np.sum(p["mask"]) / n * 100)}
+            for p in tone_profiles
+        ],
+    }
+
+    output_file = OUTPUT_DIR / "feature_profiles_results.json"
+    with open(output_file, 'w') as f:
+        json.dump(output, f, indent=2)
+    print(f"\nResults saved to {output_file}")
+
+
 if __name__ == "__main__":
     import sys
 
@@ -618,6 +862,15 @@ if __name__ == "__main__":
         # Run discovery analysis only
         filtered, results = run_analysis()
         run_multi_k_discovery(filtered)
+    elif len(sys.argv) > 1 and sys.argv[1] == "profiles":
+        # Run feature profile analysis
+        filtered, results = run_analysis()
+        run_feature_profiles(filtered)
+    elif len(sys.argv) > 1 and sys.argv[1] == "full":
+        # Run everything
+        filtered, results = run_analysis()
+        run_multi_k_discovery(filtered)
+        run_feature_profiles(filtered)
     else:
         # Original behavior
         filtered, results = run_analysis()

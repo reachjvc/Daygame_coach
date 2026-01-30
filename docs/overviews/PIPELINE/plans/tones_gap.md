@@ -307,17 +307,33 @@ Determine the optimal set of tones (target: 5-6) that are:
 
 ## Final Recommendation
 
-**Status**: Pending (complete after Step 50)
+**Status**: COMPLETE (from tones_discovery_plan.md analysis)
 
-### Proposed Tones
+### Proposed Tones (5)
 
-| Tone | Definition | Key Audio Features | Threshold Rules |
-|------|------------|-------------------|-----------------|
-| playful | | | |
-| confident | | | |
-| warm | | | |
-| nervous | | | |
-| neutral | | | |
+| Tone | % of Data | Key Audio Features | Threshold Rules |
+|------|-----------|-------------------|-----------------|
+| **playful** | 13% | High pitch_std, high energy_dyn | pitch_std > 22 AND energy_dyn > 13 |
+| **confident** | 14% | Low pitch_std, moderate energy_dyn, moderate rate | pitch_std < 18 AND energy_dyn 8-13 AND syl_rate 5-6.5 |
+| **nervous** | 14% | High syllable_rate, low pitch_std | syl_rate > 6.8 AND pitch_std < 16 |
+| **energetic** | 12% | High brightness OR high energy_dyn | brightness > 1700 OR energy_dyn > 15 |
+| **neutral** | 47% | Default | None of above |
+
+### Changes from Original 8
+
+| Change | Old | New | Rationale |
+|--------|-----|-----|-----------|
+| DROP | warm | - | Does not cluster; timbre-based |
+| DROP | grounded | - | Overlaps with confident |
+| DROP | direct | - | Semantic, not acoustic |
+| DROP | flirty | - | Overlaps with playful |
+| ADD | - | energetic | New discovery: brightness = vocal effort |
+
+### Supporting Research
+
+See consolidated summary: [TONES_RESEARCH_SUMMARY.md](../research/tones/TONES_RESEARCH_SUMMARY.md)
+
+Regenerate analysis data: `python scripts/training-data/analysis/tone_feature_analysis.py full`
 
 ### Validation Ready
 

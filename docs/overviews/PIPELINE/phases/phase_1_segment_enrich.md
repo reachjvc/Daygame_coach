@@ -1,6 +1,8 @@
 # Phase 1: 04.segment-enrich
 
-Status: Not Started
+Status: In Progress
+Updated: 31-01-2026 05:10 - Fixed speaker clustering: video type pre-detection + no-pitch segments kept separate.
+Updated: 31-01-2026 04:45 - Starting implementation. Tone is audio-based (5 tones), not LLM.
 Parent: [plan_pipeline.md](../plans/plan_pipeline.md)
 Depends on: Phase 0 complete
 
@@ -65,7 +67,7 @@ Replace rule-based 05.tonality and heuristic 06.speakers with LLM-based classifi
 2. **Analyze speaker clusters** (stats per speaker_id)
 3. **Label clusters via LLM** (coach/target/voiceover/other)
 4. **Build tone windows** (30s window, 10s hop)
-5. **Classify tone via LLM** (primary tone + confidence)
+5. **Classify tone via audio thresholds** (5 tones, NOT LLM)
 6. **Enrich segments** (speaker label + tone_window_id)
 7. **Write output** with metadata
 
@@ -74,8 +76,8 @@ Replace rule-based 05.tonality and heuristic 06.speakers with LLM-based classifi
 ## Prompt Templates (Plan)
 
 ### Storage
-- `prompts/04_speaker_labeling.md`
-- `prompts/04_tone_classification.md`
+- `prompts/04_speaker_labeling.md` (LLM prompt for speaker classification)
+- Note: Tone classification uses audio thresholds, no prompt needed
 
 ### Requirements
 - Include explicit JSON output format.
@@ -124,8 +126,16 @@ The following are collected but reviewed AFTER Phase 4 completes:
 
 ## Tone Window Classification (Plan)
 
-- 8 tones: playful, confident, warm, nervous, grounded, direct, flirty, neutral.
-- Each window gets primary tone + confidence.
+**IMPORTANT**: Tone is classified via AUDIO THRESHOLDS, not LLM.
+
+- 5 tones: playful, confident, nervous, energetic, neutral
+- Threshold rules (from tones_gap.md):
+  - playful: pitch_std > 22 AND energy_dyn > 13
+  - confident: pitch_std < 18 AND energy_dyn 8-13 AND syl_rate 5-6.5
+  - nervous: syl_rate > 6.8 AND pitch_std < 16
+  - energetic: brightness > 1700 OR energy_dyn > 15
+  - neutral: default (none of above)
+- Each window gets primary tone + confidence (distance from threshold)
 
 ---
 
@@ -135,6 +145,33 @@ The following are collected but reviewed AFTER Phase 4 completes:
 - Single-speaker videos mislabeled as target.
 - Very short clips with insufficient context for tone.
 - Non-speech segments (music, silence).
+
+## Issue: Inverted Speaker Ratios (FIXED 31-01-2026)
+
+### Problem
+Initial test run showed inverted coach/target ratios:
+- "ALWAYS BE CLOSING": coach:43, target:127 (should be reversed)
+- Many talking_head videos created phantom "target" clusters
+
+### Root Cause
+1. Pitch clustering assumed 2 speakers exist for all videos
+2. No-pitch segments (56 of 170 in one video) were assigned to largest cluster
+
+### Fix Applied (prompt v1.1.0)
+1. **Video type pre-detection** from title keywords before clustering
+   - `infield|approach|pickup` → multi-speaker mode
+   - `tips|how to|hack|mistakes` → single-speaker mode
+2. **Single-speaker path** for talking_head videos (all segments = coach)
+3. **No-pitch segments** kept separate (labeled "other" or "voiceover" by LLM)
+
+### Test Results After Fix
+| Video | Type | coach | target | other | Status |
+|-------|------|-------|--------|-------|--------|
+| HOW TO FEEL GOOD | talking_head | 107 | 0 | 0 | ✅ |
+| Critical Daygame Hack | talking_head | 140 | 0 | 0 | ✅ |
+| Fixing The Mistakes | talking_head | 186 | 0 | 0 | ✅ |
+| ALWAYS BE CLOSING | infield | 50 | 64 | 56 | ✅ |
+| Better Conversations | unknown | 25 | 92 | 8 | ⚠️ content-specific |
 
 ## Validation & Evaluation (Confidence-Based)
 

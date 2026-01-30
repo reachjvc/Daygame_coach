@@ -76,15 +76,22 @@ class Config:
     sample_rate: int = 22050
     feature_extractor: str = "librosa"
 
-    # Pitch range (C2..C6 by default)
-    pitch_fmin_hz: float = 65.41
-    pitch_fmax_hz: float = 1046.50
+    # Pitch range for speech (prevents octave doubling errors)
+    # Male F0: 85-180Hz, Female F0: 165-255Hz
+    # Setting fmax=350Hz prevents detecting harmonics (which are 2x fundamental)
+    pitch_fmin_hz: float = 65.0
+    pitch_fmax_hz: float = 350.0  # Changed from 1046.5 to prevent octave doubling
 
     # Pitch extraction method / robustness
     # NOTE: pyin gives voiced/unvoiced flags + probabilities -> fixes voiced_ratio == 1.0 issue
     pitch_method: str = "pyin"  # "pyin" (recommended) or "yin"
     pyin_voiced_prob_threshold: float = 0.35  # raise if you still see unrealistic highs
     pitch_trim_percentile: float = 2.0        # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
+
+    # Octave correction: if pitch > this threshold and there's a clear octave jump, halve it
+    # This catches any remaining octave doubling that slips through fmax constraint
+    pitch_octave_correction: bool = True
+    pitch_octave_threshold_hz: float = 250.0  # pitches above this get checked for octave errors
 
     # Quality thresholds
     low_energy_db: float = -35.0
@@ -186,6 +193,60 @@ def percentile_trim(values: np.ndarray, pct: float) -> np.ndarray:
     lo = np.percentile(values, pct)
     hi = np.percentile(values, 100.0 - pct)
     return values[(values >= lo) & (values <= hi)]
+
+
+def apply_octave_correction(f0: np.ndarray, threshold_hz: float = 250.0) -> np.ndarray:
+    """
+    Correct octave doubling errors in pitch values.
+
+    Pitch detection algorithms (pyin, yin) often detect the 1st harmonic (2x F0)
+    instead of the fundamental. This is especially common for male voices where:
+    - True F0 is ~85-150Hz
+    - Detected F0 is ~170-300Hz (octave-doubled)
+
+    Strategy:
+    1. If median pitch is in the "suspicious" range (170-280Hz) for speech,
+       AND there's low variance (suggesting single speaker),
+       apply octave correction to values > 170Hz
+    2. This is aggressive but correct for the common case of male coaches
+    """
+    if f0.size == 0:
+        return f0
+
+    f0_out = f0.copy()
+    voiced = np.isfinite(f0_out) & (f0_out > 0)
+
+    if np.sum(voiced) < 5:
+        return f0_out
+
+    f0_voiced = f0_out[voiced]
+    median_hz = float(np.median(f0_voiced))
+    std_hz = float(np.std(f0_voiced))
+
+    # Suspicious range: 170-280Hz with low variance suggests octave-doubled male voice
+    # True male voice: 85-180Hz, std typically 10-30Hz
+    # Octave-doubled male: 170-300Hz, similar std
+    # True female voice: 165-255Hz, but higher variance with male in conversation
+
+    suspicious_median = 170 < median_hz < 280
+    low_variance = std_hz < 50  # Single speaker typically has low variance
+
+    if suspicious_median and low_variance:
+        # This looks like an octave-doubled male voice
+        # Halve all values above 170Hz (male upper range)
+        octave_correction_threshold = 170.0
+
+        correction_mask = voiced & (f0_out > octave_correction_threshold)
+        if np.sum(correction_mask) > 0:
+            # Apply halving
+            f0_out[correction_mask] = f0_out[correction_mask] / 2.0
+
+    elif median_hz > 280:
+        # Very high median - definitely octave errors
+        # Halve everything
+        f0_out[voiced] = f0_out[voiced] / 2.0
+
+    return f0_out
 
 
 # -------------------------
@@ -331,6 +392,10 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
             voiced_flag = np.asarray(voiced_flag, dtype=bool)
             voiced_prob = np.asarray(voiced_prob, dtype=np.float32)
 
+            # Apply octave correction to fix any remaining octave doubling errors
+            if cfg.pitch_octave_correction:
+                f0 = apply_octave_correction(f0, cfg.pitch_octave_threshold_hz)
+
             # This is the ratio you actually want: fraction of frames pyin considers voiced.
             voiced_ratio = float(np.mean(voiced_flag)) if voiced_flag.size else 0.0
 
@@ -346,6 +411,11 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
                 sr=sr,
             )
             f0 = np.asarray(f0, dtype=np.float32)
+
+            # Apply octave correction to fix any remaining octave doubling errors
+            if cfg.pitch_octave_correction:
+                f0 = apply_octave_correction(f0, cfg.pitch_octave_threshold_hz)
+
             # With yin(), treat low-energy / garbage frames as unvoiced is hard.
             # We approximate: if f0 is finite and >0, mark voiced.
             voiced = np.isfinite(f0) & (f0 > 0)

@@ -69,6 +69,7 @@
     },
     "tone_windows": {
       "type": "array",
+      "description": "Tone classification via audio feature thresholds (see tones_gap.md)",
       "items": {
         "type": "object",
         "required": ["id", "start", "end", "tone"],
@@ -91,12 +92,19 @@
             "properties": {
               "primary": {
                 "type": "string",
-                "enum": ["playful", "confident", "warm", "nervous", "grounded", "direct", "flirty", "neutral"]
+                "enum": ["playful", "confident", "nervous", "energetic", "neutral"],
+                "description": "Classified via audio feature thresholds, not LLM"
               },
               "confidence": {
                 "type": "number",
                 "minimum": 0,
-                "maximum": 1
+                "maximum": 1,
+                "description": "How clearly segment matches tone thresholds (distance from decision boundary)"
+              },
+              "method": {
+                "type": "string",
+                "const": "audio_threshold",
+                "description": "Classification method - always audio_threshold for tones"
               }
             }
           }

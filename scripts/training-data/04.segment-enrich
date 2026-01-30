@@ -1,0 +1,600 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/04.segment-enrich
+
+Phase 1: Speaker labeling (LLM) + Tone classification (audio thresholds)
+
+Input:  data/03.audio-features/<source>/<video>/*.audio_features.json
+Output: data/04.segment-enrich/<source>/<video>/*.segment_enriched.json
+
+Use:
+  ./04.segment-enrich --input PATH           # Process single file
+  ./04.segment-enrich --sources              # Process all sources
+  ./04.segment-enrich --force                # Reprocess all
+  ./04.segment-enrich --dry-run              # Show what would be processed
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+import requests
+
+# === Configuration ===
+REPO_ROOT = Path(__file__).parent.parent.parent
+DATA_ROOT = REPO_ROOT / "data"
+INPUT_DIR = DATA_ROOT / "03.audio-features"
+OUTPUT_DIR = DATA_ROOT / "04.segment-enrich"
+STATE_FILE = DATA_ROOT / ".state" / ".04.segment-enrich.state.json"
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+OLLAMA_MODEL = "llama3.1:latest"
+OLLAMA_TIMEOUT = 120
+
+# Version tracking
+PIPELINE_VERSION = "2026-01-31"
+PROMPT_VERSION = "1.1.0"  # Added video type pre-detection
+SCHEMA_VERSION = "1.0.0"
+
+# Tone thresholds (from tones_gap.md)
+TONE_THRESHOLDS = {
+    "playful": {"pitch_std_min": 22, "energy_dyn_min": 13},
+    "confident": {"pitch_std_max": 18, "energy_dyn_min": 8, "energy_dyn_max": 13, "syl_rate_min": 5, "syl_rate_max": 6.5},
+    "nervous": {"syl_rate_min": 6.8, "pitch_std_max": 16},
+    "energetic": {"brightness_min": 1700, "energy_dyn_min": 15},  # OR condition
+}
+
+
+def file_checksum(path: Path) -> str:
+    """SHA256 checksum (first 16 chars)."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+
+def load_state() -> Dict:
+    """Load processing state."""
+    if STATE_FILE.exists():
+        return json.loads(STATE_FILE.read_text())
+    return {"processed": {}, "failed": {}}
+
+
+def save_state(state: Dict):
+    """Save processing state."""
+    STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+    STATE_FILE.write_text(json.dumps(state, indent=2))
+
+
+# === Video Type Pre-Detection ===
+
+# Keywords indicating talking_head (single speaker)
+TALKING_HEAD_KEYWORDS = [
+    "tips", "how to", "breakdown", "mindset", "analysis", "commentary",
+    "mistakes", "hack", "hacks", "advice", "guide", "tutorial",
+    "feel good", "confidence", "inner game", "psychology", "lesson"
+]
+
+# Keywords indicating infield (multi-speaker)
+INFIELD_KEYWORDS = [
+    "infield", "approach", "set", "pickup", "interaction", "number close",
+    "kiss close", "pull", "date", "daygame pickup"
+]
+
+
+def detect_video_type_from_title(title: str) -> Tuple[str, float]:
+    """
+    Pre-detect video type from title keywords.
+    Returns (video_type, confidence)
+
+    This runs BEFORE speaker clustering to determine if we should
+    expect single or multiple speakers.
+    """
+    title_lower = title.lower()
+
+    # Check for infield keywords (stronger signal)
+    for kw in INFIELD_KEYWORDS:
+        if kw in title_lower:
+            return "infield", 0.85
+
+    # Check for talking_head keywords
+    for kw in TALKING_HEAD_KEYWORDS:
+        if kw in title_lower:
+            return "talking_head", 0.80
+
+    # Default: assume infield (safer to check for multiple speakers)
+    return "unknown", 0.5
+
+
+# === Speaker Clustering ===
+
+def cluster_speakers_by_pitch(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
+    """
+    Group segments into speaker clusters based on pitch.
+    Returns {cluster_id: [segment_indices]}
+
+    If expected_speakers=1, returns all segments in one cluster.
+    """
+    # Single speaker mode - no clustering needed
+    if expected_speakers == 1:
+        return {"0": list(range(len(segments)))}
+
+    # Extract pitch data
+    pitch_data = []
+    for i, seg in enumerate(segments):
+        pitch = seg.get("features", {}).get("pitch", {})
+        mean_hz = pitch.get("mean_hz", 0)
+        if mean_hz > 0:
+            pitch_data.append((i, mean_hz))
+
+    if not pitch_data:
+        # No pitch data - return all as single cluster
+        return {"0": list(range(len(segments)))}
+
+    # Calculate pitch statistics to detect single vs multi speaker
+    pitches = [p[1] for p in pitch_data]
+    avg_pitch = sum(pitches) / len(pitches)
+    pitch_variance = sum((p - avg_pitch) ** 2 for p in pitches) / len(pitches)
+    pitch_std = pitch_variance ** 0.5
+
+    # If pitch standard deviation is low, likely single speaker
+    # Typical male-female pitch gap is 80-100Hz, so std < 30 suggests single speaker
+    if pitch_std < 30:
+        return {"0": list(range(len(segments)))}
+
+    # Simple k=2 clustering (male ~85-180Hz, female ~165-255Hz)
+    # Threshold at ~170Hz for male/female split
+    low_pitch = []  # Likely male (coach)
+    high_pitch = []  # Likely female (target)
+    no_pitch = []
+
+    for i, seg in enumerate(segments):
+        pitch = seg.get("features", {}).get("pitch", {})
+        mean_hz = pitch.get("mean_hz", 0)
+
+        if mean_hz <= 0:
+            no_pitch.append(i)
+        elif mean_hz < 170:
+            low_pitch.append(i)
+        else:
+            high_pitch.append(i)
+
+    clusters = {}
+    if low_pitch:
+        clusters["0"] = low_pitch
+    if high_pitch:
+        clusters["1"] = high_pitch
+    if no_pitch:
+        # Keep no-pitch as separate cluster (will be labeled "other")
+        # Don't merge with coach/target as these are often transitions or unclear speech
+        clusters["2"] = no_pitch
+
+    # If only one cluster has segments, return single cluster
+    if len(clusters) == 1:
+        return {"0": list(range(len(segments)))}
+
+    return clusters
+
+
+def get_cluster_stats(segments: List[Dict], indices: List[int]) -> Dict:
+    """Get statistics for a speaker cluster."""
+    cluster_segs = [segments[i] for i in indices]
+
+    pitches = [s["features"]["pitch"]["mean_hz"]
+               for s in cluster_segs
+               if s.get("features", {}).get("pitch", {}).get("mean_hz", 0) > 0]
+
+    durations = [s.get("duration_sec", s["end"] - s["start"]) for s in cluster_segs]
+
+    # Sample utterances (first 5 non-empty)
+    samples = []
+    for s in cluster_segs:
+        text = s.get("text", "").strip()
+        if text and len(samples) < 5:
+            samples.append(text[:100])
+
+    avg_pitch = sum(pitches) / len(pitches) if pitches else 0
+
+    return {
+        "segment_count": len(indices),
+        "total_duration": sum(durations),
+        "average_pitch_hz": round(avg_pitch, 1),
+        "likely_gender": "male" if avg_pitch < 170 else "female" if avg_pitch > 0 else "unknown",
+        "sample_utterances": samples
+    }
+
+
+# === LLM Speaker Labeling ===
+
+def build_speaker_prompt(clusters: Dict[str, Dict], video_title: str) -> str:
+    """Build prompt for LLM speaker labeling."""
+    prompt = f"""You are labeling speakers in a daygame video titled: "{video_title}"
+
+Speaker clusters from audio analysis:
+"""
+    for cluster_id, stats in clusters.items():
+        prompt += f"""
+Speaker {cluster_id}:
+- Segments: {stats['segment_count']}
+- Duration: {stats['total_duration']:.1f}s
+- Avg pitch: {stats['average_pitch_hz']}Hz ({stats['likely_gender']})
+- Sample utterances: {stats['sample_utterances']}
+"""
+
+    prompt += """
+Label each speaker as one of: coach, target, voiceover, other
+
+Rules:
+- coach: Male doing the approach, initiating, asking questions
+- target: Female being approached, responding
+- voiceover: Same person as coach but narrating/explaining (not in-scene)
+- other: Anyone else
+
+Return ONLY valid JSON:
+{"speaker_labels": {"0": {"label": "coach", "confidence": 0.9, "reasoning": "..."}, "1": {"label": "target", "confidence": 0.85, "reasoning": "..."}}}
+"""
+    return prompt
+
+
+def call_llm(prompt: str) -> Optional[Dict]:
+    """Call Ollama LLM and parse JSON response."""
+    try:
+        resp = requests.post(
+            OLLAMA_URL,
+            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
+            timeout=OLLAMA_TIMEOUT
+        )
+        resp.raise_for_status()
+
+        response_text = resp.json().get("response", "")
+
+        # Extract JSON from response
+        # Try to find JSON in the response
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            return json.loads(json_match.group())
+
+        return None
+    except Exception as e:
+        print(f"  LLM error: {e}", file=sys.stderr)
+        return None
+
+
+def label_speakers(segments: List[Dict], video_title: str) -> Tuple[Dict[str, str], Dict[str, float], str]:
+    """
+    Label speaker clusters using LLM.
+    Returns (labels_map, confidence_map, detected_video_type)
+    """
+    # Pre-detect video type from title
+    video_type, type_confidence = detect_video_type_from_title(video_title)
+
+    # Determine expected speaker count
+    if video_type == "talking_head":
+        expected_speakers = 1
+        print(f"    Video type: talking_head (confidence: {type_confidence})")
+    else:
+        expected_speakers = 2
+        print(f"    Video type: {video_type} (confidence: {type_confidence})")
+
+    # Cluster segments
+    clusters = cluster_speakers_by_pitch(segments, expected_speakers)
+
+    # If only one cluster, this is a single-speaker video
+    if len(clusters) == 1:
+        print("    Single speaker detected - labeling as coach")
+        return {"0": "coach"}, {"0": 0.90}, "talking_head"
+
+    # Get stats per cluster
+    cluster_stats = {}
+    for cluster_id, indices in clusters.items():
+        cluster_stats[cluster_id] = get_cluster_stats(segments, indices)
+
+    # Build prompt and call LLM
+    prompt = build_speaker_prompt(cluster_stats, video_title)
+    result = call_llm(prompt)
+
+    if not result or "speaker_labels" not in result:
+        # Fallback: use heuristics
+        print("  Warning: LLM failed, using pitch heuristics", file=sys.stderr)
+        labels = {}
+        confidences = {}
+        for cluster_id, stats in cluster_stats.items():
+            if stats["likely_gender"] == "male":
+                labels[cluster_id] = "coach"
+                confidences[cluster_id] = 0.6
+            elif stats["likely_gender"] == "female":
+                labels[cluster_id] = "target"
+                confidences[cluster_id] = 0.6
+            else:
+                labels[cluster_id] = "other"
+                confidences[cluster_id] = 0.3
+        return labels, confidences, video_type
+
+    # Parse LLM response
+    labels = {}
+    confidences = {}
+    for cluster_id, data in result["speaker_labels"].items():
+        label = data.get("label", "other")
+        if label not in ["coach", "target", "voiceover", "other"]:
+            label = "other"
+        labels[cluster_id] = label
+        confidences[cluster_id] = data.get("confidence", 0.5)
+
+    return labels, confidences, video_type
+
+
+# === Tone Classification (Audio Thresholds) ===
+
+def classify_tone_window(features: Dict) -> Tuple[str, float]:
+    """
+    Classify tone using audio feature thresholds.
+    Returns (tone, confidence)
+    """
+    pitch = features.get("pitch", {})
+    energy = features.get("energy", {})
+    tempo = features.get("tempo", {})
+    spectral = features.get("spectral", {})
+
+    pitch_std = pitch.get("std_hz", 0)
+    energy_dyn = energy.get("dynamics_db", 0)
+    syl_rate = tempo.get("syllable_rate", 0)
+    brightness = spectral.get("brightness_hz", 0)
+
+    scores = {}
+
+    # Playful: pitch_std > 22 AND energy_dyn > 13
+    if pitch_std > 22 and energy_dyn > 13:
+        score = min((pitch_std - 22) / 10, 1) * 0.5 + min((energy_dyn - 13) / 5, 1) * 0.5
+        scores["playful"] = score
+
+    # Confident: pitch_std < 18 AND energy_dyn 8-13 AND syl_rate 5-6.5
+    if pitch_std < 18 and 8 <= energy_dyn <= 13 and 5 <= syl_rate <= 6.5:
+        score = (1 - pitch_std / 18) * 0.4 + 0.3 + 0.3  # Simplified
+        scores["confident"] = min(score, 1.0)
+
+    # Nervous: syl_rate > 6.8 AND pitch_std < 16
+    if syl_rate > 6.8 and pitch_std < 16:
+        score = min((syl_rate - 6.8) / 2, 1) * 0.5 + (1 - pitch_std / 16) * 0.5
+        scores["nervous"] = score
+
+    # Energetic: brightness > 1700 OR energy_dyn > 15
+    if brightness > 1700 or energy_dyn > 15:
+        b_score = min((brightness - 1700) / 500, 1) if brightness > 1700 else 0
+        e_score = min((energy_dyn - 15) / 5, 1) if energy_dyn > 15 else 0
+        scores["energetic"] = max(b_score, e_score)
+
+    # Default to neutral if no strong signals
+    if not scores or max(scores.values()) < 0.3:
+        return "neutral", 0.7
+
+    # Return highest scoring tone
+    best_tone = max(scores.keys(), key=lambda k: scores[k])
+    return best_tone, min(scores[best_tone], 1.0)
+
+
+def build_tone_windows(segments: List[Dict], window_sec: float = 30, hop_sec: float = 10) -> List[Dict]:
+    """
+    Build tone windows with aggregated features.
+    """
+    if not segments:
+        return []
+
+    total_duration = segments[-1]["end"]
+    windows = []
+    window_id = 0
+
+    start = 0
+    while start < total_duration:
+        end = min(start + window_sec, total_duration)
+
+        # Get segments in this window
+        window_segs = [s for s in segments if s["start"] < end and s["end"] > start]
+
+        if window_segs:
+            # Aggregate features (weighted by duration in window)
+            agg_features = aggregate_features(window_segs, start, end)
+            tone, confidence = classify_tone_window(agg_features)
+
+            windows.append({
+                "id": window_id,
+                "start": round(start, 2),
+                "end": round(end, 2),
+                "tone": {
+                    "primary": tone,
+                    "confidence": round(confidence, 2),
+                    "method": "audio_threshold"
+                }
+            })
+            window_id += 1
+
+        start += hop_sec
+
+    return windows
+
+
+def aggregate_features(segments: List[Dict], win_start: float, win_end: float) -> Dict:
+    """Aggregate features across segments in a window."""
+    pitch_stds = []
+    energy_dyns = []
+    syl_rates = []
+    brightnesses = []
+
+    for seg in segments:
+        f = seg.get("features", {})
+        if f.get("pitch", {}).get("std_hz", 0) > 0:
+            pitch_stds.append(f["pitch"]["std_hz"])
+        if f.get("energy", {}).get("dynamics_db", 0) > 0:
+            energy_dyns.append(f["energy"]["dynamics_db"])
+        if f.get("tempo", {}).get("syllable_rate", 0) > 0:
+            syl_rates.append(f["tempo"]["syllable_rate"])
+        if f.get("spectral", {}).get("brightness_hz", 0) > 0:
+            brightnesses.append(f["spectral"]["brightness_hz"])
+
+    return {
+        "pitch": {"std_hz": sum(pitch_stds) / len(pitch_stds) if pitch_stds else 0},
+        "energy": {"dynamics_db": sum(energy_dyns) / len(energy_dyns) if energy_dyns else 0},
+        "tempo": {"syllable_rate": sum(syl_rates) / len(syl_rates) if syl_rates else 0},
+        "spectral": {"brightness_hz": sum(brightnesses) / len(brightnesses) if brightnesses else 0},
+    }
+
+
+# === Main Processing ===
+
+def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
+    """Process a single audio features file."""
+    # Determine output path
+    rel_path = input_path.relative_to(INPUT_DIR)
+    output_path = OUTPUT_DIR / rel_path.parent / rel_path.name.replace(".audio_features.json", ".segment_enriched.json")
+
+    # Skip if already processed (unless force)
+    if output_path.exists() and not force:
+        print(f"  Skipping (exists): {output_path.name}")
+        return output_path
+
+    # Load input
+    data = json.loads(input_path.read_text())
+    segments = data.get("segments", [])
+
+    if not segments:
+        print(f"  Skipping (no segments): {input_path.name}")
+        return None
+
+    # Extract video title from path
+    video_title = input_path.parent.name.split(" [")[0]
+
+    print(f"  Processing: {video_title[:50]}...")
+    print(f"    Segments: {len(segments)}")
+
+    # 1. Label speakers (includes video type pre-detection)
+    labels, confidences, detected_video_type = label_speakers(segments, video_title)
+
+    # Re-cluster with the knowledge from label_speakers
+    expected_speakers = 1 if detected_video_type == "talking_head" else 2
+    clusters = cluster_speakers_by_pitch(segments, expected_speakers)
+
+    print(f"    Clusters: {len(clusters)}, Labels: {labels}")
+
+    # 2. Map labels to segments
+    enriched_segments = []
+    for i, seg in enumerate(segments):
+        # Find which cluster this segment belongs to
+        cluster_id = None
+        for cid, indices in clusters.items():
+            if i in indices:
+                cluster_id = cid
+                break
+
+        label = labels.get(cluster_id, "other")
+        conf = confidences.get(cluster_id, 0.5)
+
+        enriched_segments.append({
+            "id": i,
+            "start": seg["start"],
+            "end": seg["end"],
+            "text": seg.get("text", ""),
+            "speaker": {
+                "label": label,
+                "confidence": round(conf, 2),
+                "method": "llm_cluster"
+            },
+            "speaker_id": int(cluster_id) if cluster_id else 0
+        })
+
+    # 3. Build tone windows
+    tone_windows = build_tone_windows(segments)
+    print(f"    Tone windows: {len(tone_windows)}")
+
+    # 4. Build output
+    output = {
+        "video_id": input_path.parent.name,
+        "source_file": str(input_path),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "segments": enriched_segments,
+        "tone_windows": tone_windows,
+        "speaker_cluster_labels": {k: v for k, v in labels.items()},
+        "detected_video_type": detected_video_type,
+        "metadata": {
+            "pipeline_version": PIPELINE_VERSION,
+            "prompt_version": PROMPT_VERSION,
+            "model_version": OLLAMA_MODEL,
+            "schema_version": SCHEMA_VERSION,
+            "input_checksum": file_checksum(input_path)
+        }
+    }
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(output, indent=2))
+
+    print(f"    Output: {output_path}")
+    return output_path
+
+
+def find_input_files(source: Optional[str] = None) -> List[Path]:
+    """Find all audio feature files to process."""
+    if source:
+        source_dir = INPUT_DIR / source
+    else:
+        source_dir = INPUT_DIR
+
+    files = []
+    for json_file in source_dir.rglob("*.audio_features.json"):
+        files.append(json_file)
+
+    return sorted(files)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Speaker + Tone enrichment for segments")
+    parser.add_argument("--input", type=Path, help="Process single file")
+    parser.add_argument("--source", type=str, help="Process specific source folder")
+    parser.add_argument("--sources", action="store_true", help="Process all sources")
+    parser.add_argument("--force", action="store_true", help="Reprocess all files")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be processed")
+    parser.add_argument("--limit", type=int, help="Limit number of files to process")
+
+    args = parser.parse_args()
+
+    # Determine files to process
+    if args.input:
+        files = [args.input]
+    elif args.source:
+        files = find_input_files(args.source)
+    elif args.sources:
+        files = find_input_files()
+    else:
+        parser.print_help()
+        return
+
+    if args.limit:
+        files = files[:args.limit]
+
+    print(f"Found {len(files)} files to process")
+
+    if args.dry_run:
+        for f in files:
+            print(f"  Would process: {f}")
+        return
+
+    # Process files
+    success = 0
+    failed = 0
+
+    for f in files:
+        try:
+            result = process_file(f, force=args.force)
+            if result:
+                success += 1
+        except Exception as e:
+            print(f"  ERROR: {f.name}: {e}", file=sys.stderr)
+            failed += 1
+
+    print(f"\nComplete: {success} success, {failed} failed")
+
+
+if __name__ == "__main__":
+    main()

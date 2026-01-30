@@ -4,42 +4,47 @@ import { useState, useEffect, useRef } from "react"
 import { ChevronDown, Sparkles } from "lucide-react"
 import { KEY_STATS_DATA } from "../data/keyStats"
 
-const TIMER_DURATION = 40 // seconds
+const TIMER_DURATION = 20 // seconds
 
 /**
  * Calculate the x,y position of a dot along the rectangular border
- * Progress goes: bottom-left → top-left → top-right → bottom-right → bottom-left
+ * Progress goes: bottom-center → left → top → right → back to bottom-center
  * @param progress - Current animation progress (0-1)
- * @param dimensions - Card width, height, perimeter
- * @param offset - Starting offset (0 = bottom-left, 0.5 = top-right)
+ * @param width - Card width
+ * @param height - Card height
  */
-function getDotPosition(
+function getCometPosition(
   progress: number,
-  dimensions: { width: number; height: number; perimeter: number },
-  offset: number
+  width: number,
+  height: number
 ): { x: number; y: number } {
-  const { width, height } = dimensions
   const padding = 2
   const w = width - padding * 2
   const h = height - padding * 2
+  const halfW = w / 2
   const totalLength = 2 * w + 2 * h
 
-  // Adjust progress with offset and wrap
-  const p = ((progress + offset) % 1) * totalLength
+  // Start from bottom-center
+  const p = (progress % 1) * totalLength
 
-  // Trace path: bottom-left → left edge up → top edge right → right edge down → bottom edge left
-  if (p < h) {
-    // Left edge (going up from bottom-left)
-    return { x: padding, y: height - padding - p }
-  } else if (p < h + w) {
-    // Top edge (going right)
-    return { x: padding + (p - h), y: padding }
-  } else if (p < 2 * h + w) {
-    // Right edge (going down)
-    return { x: width - padding, y: padding + (p - h - w) }
+  // Path: bottom-center → left on bottom → up left edge → across top → down right → back to center
+  // Segment lengths: halfW (to left corner) + h (up) + w (across top) + h (down) + halfW (back to center)
+
+  if (p < halfW) {
+    // Bottom edge: center to left corner
+    return { x: width / 2 - p, y: height - padding }
+  } else if (p < halfW + h) {
+    // Left edge: going up
+    return { x: padding, y: height - padding - (p - halfW) }
+  } else if (p < halfW + h + w) {
+    // Top edge: going right
+    return { x: padding + (p - halfW - h), y: padding }
+  } else if (p < halfW + h + w + h) {
+    // Right edge: going down
+    return { x: width - padding, y: padding + (p - halfW - h - w) }
   } else {
-    // Bottom edge (going left)
-    return { x: width - padding - (p - 2 * h - w), y: height - padding }
+    // Bottom edge: right corner back to center
+    return { x: width - padding - (p - halfW - h - w - h), y: height - padding }
   }
 }
 
@@ -49,17 +54,19 @@ function getDotPosition(
  * - Main highlighted stat with full research details
  * - Mini stat cards that swap when clicked
  * - Expandable "nerd box" with detailed citations
- * - Animated border timer (40s) that stops on interaction
+ * - Animated border comet (20s loop) - dots always animate
+ * - Click main card or any card: toggles expanded/collapsed research details
+ * - Auto-rotation pauses when expanded, resumes when collapsed
  */
 export function KeyStatsSection() {
   const [activeIndex, setActiveIndex] = useState(0)
-  const [isPaused, setIsPaused] = useState(false)
+  const [isUserInteracting, setIsUserInteracting] = useState(false) // User clicked a card or expanded details
   const [progress, setProgress] = useState(0)
   const [cardDimensions, setCardDimensions] = useState({ width: 0, height: 0, perimeter: 0 })
   const animationRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
-  const pausedProgressRef = useRef(0)
   const cardRef = useRef<HTMLDivElement>(null)
+  const detailsRef = useRef<HTMLDetailsElement>(null)
 
   // Measure card dimensions for SVG border
   useEffect(() => {
@@ -75,18 +82,11 @@ export function KeyStatsSection() {
     return () => window.removeEventListener('resize', measureCard)
   }, [])
 
-  // Handle the border animation
+  // Handle the border animation - dots always move, but only auto-switch when not interacting
   useEffect(() => {
-    if (isPaused) {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-      return
-    }
-
     const animate = (timestamp: number) => {
       if (!startTimeRef.current) {
-        startTimeRef.current = timestamp - (pausedProgressRef.current * TIMER_DURATION * 1000)
+        startTimeRef.current = timestamp
       }
 
       const elapsed = timestamp - startTimeRef.current
@@ -96,10 +96,12 @@ export function KeyStatsSection() {
       if (newProgress < 1) {
         animationRef.current = requestAnimationFrame(animate)
       } else {
-        // Advance to next stat and reset timer
-        setActiveIndex((prev) => (prev + 1) % KEY_STATS_DATA.length)
+        // Only advance to next stat if user is not interacting
+        if (!isUserInteracting) {
+          setActiveIndex((prev) => (prev + 1) % KEY_STATS_DATA.length)
+        }
+        // Reset timer regardless (dots keep looping)
         startTimeRef.current = null
-        pausedProgressRef.current = 0
         setProgress(0)
         animationRef.current = requestAnimationFrame(animate)
       }
@@ -112,25 +114,56 @@ export function KeyStatsSection() {
         cancelAnimationFrame(animationRef.current)
       }
     }
-  }, [isPaused])
+  }, [isUserInteracting])
 
-  // When user clicks a mini card, pause the timer
-  const handleStatClick = (index: number) => {
-    setIsPaused(true)
-    pausedProgressRef.current = progress
-    setActiveIndex(index)
-  }
-
-  // Resume timer when clicking the main card area (optional)
-  const handleMainCardClick = () => {
-    if (isPaused) {
-      startTimeRef.current = null
-      setIsPaused(false)
+  // Toggle details open/closed programmatically
+  const toggleDetails = () => {
+    if (detailsRef.current) {
+      const newOpen = !detailsRef.current.open
+      detailsRef.current.open = newOpen
+      setIsUserInteracting(newOpen)
     }
   }
 
+  // When user clicks a mini card
+  const handleStatClick = (index: number) => {
+    if (index === activeIndex) {
+      // Clicking already-selected card: toggle expanded state
+      toggleDetails()
+    } else {
+      // Clicking a different card: switch to it and expand
+      setActiveIndex(index)
+      if (detailsRef.current) {
+        detailsRef.current.open = true
+      }
+      setIsUserInteracting(true)
+    }
+  }
+
+  // Clicking the main card area toggles the details
+  const handleMainCardClick = (e: React.MouseEvent) => {
+    // Don't toggle if clicking inside the details content (let native behavior work for summary)
+    const target = e.target as HTMLElement
+    if (target.closest('summary')) {
+      // Let the native details toggle handle it
+      return
+    }
+    toggleDetails()
+  }
+
+  // Handle native details toggle (when clicking summary directly)
+  const handleDetailsToggle = (e: React.SyntheticEvent<HTMLDetailsElement>) => {
+    const isOpen = (e.target as HTMLDetailsElement).open
+    setIsUserInteracting(isOpen)
+  }
+
   const activeStat = KEY_STATS_DATA[activeIndex]
-  const otherStats = KEY_STATS_DATA.filter((_, i) => i !== activeIndex)
+  // Reorder so items after activeIndex come first, then items before it
+  // This creates a circular queue: when fact 1 rotates out, it goes to the back
+  const otherStats = [
+    ...KEY_STATS_DATA.slice(activeIndex + 1),
+    ...KEY_STATS_DATA.slice(0, activeIndex),
+  ]
 
   // Calculate which stat is coming up next
   const nextIndex = (activeIndex + 1) % KEY_STATS_DATA.length
@@ -149,7 +182,7 @@ export function KeyStatsSection() {
         className="relative w-full rounded-2xl cursor-pointer"
         onClick={handleMainCardClick}
       >
-        {/* SVG animated border with two chasing dots */}
+        {/* SVG animated border with comet tail effect */}
         {cardDimensions.perimeter > 0 && (
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
@@ -158,19 +191,22 @@ export function KeyStatsSection() {
           >
             <defs>
               {/* Glow filter for dots */}
-              <filter id="dotGlow" x="-100%" y="-100%" width="300%" height="300%">
-                <feGaussianBlur stdDeviation="6" result="coloredBlur" />
+              <filter id="cometGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
                 <feMerge>
-                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
-              {/* Gradient for dot trail effect */}
-              <radialGradient id="dotGradient">
-                <stop offset="0%" stopColor="#a855f7" />
-                <stop offset="50%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#6366f1" />
-              </radialGradient>
+              {/* Stronger glow for anchor dot */}
+              <filter id="anchorGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
             </defs>
             {/* Background border (faint) */}
             <rect
@@ -181,31 +217,47 @@ export function KeyStatsSection() {
               rx="14"
               ry="14"
               fill="none"
-              className="stroke-primary/15"
-              strokeWidth="2"
+              className="stroke-primary/10"
+              strokeWidth="1.5"
             />
-            {/* Dot 1 - starts bottom-left, moves clockwise */}
-            {!isPaused && (
+            {/* Anchor dot at bottom-center (always visible) */}
+            <circle
+              cx={cardDimensions.width / 2}
+              cy={cardDimensions.height - 2}
+              r="4"
+              className="fill-primary/60"
+              filter="url(#anchorGlow)"
+            />
+            {/* Comet trail and head - always animating */}
+            <>
+              {/* Trail dots (fading) */}
               <circle
-                cx={getDotPosition(progress, cardDimensions, 0).x}
-                cy={getDotPosition(progress, cardDimensions, 0).y}
-                r="5"
-                fill="url(#dotGradient)"
-                filter="url(#dotGlow)"
-                className="animate-pulse"
+                cx={getCometPosition(progress - 0.06, cardDimensions.width, cardDimensions.height).x}
+                cy={getCometPosition(progress - 0.06, cardDimensions.width, cardDimensions.height).y}
+                r="2"
+                className="fill-primary/15"
               />
-            )}
-            {/* Dot 2 - starts top-right (opposite), moves clockwise */}
-            {!isPaused && (
               <circle
-                cx={getDotPosition(progress, cardDimensions, 0.5).x}
-                cy={getDotPosition(progress, cardDimensions, 0.5).y}
-                r="5"
-                fill="url(#dotGradient)"
-                filter="url(#dotGlow)"
-                className="animate-pulse"
+                cx={getCometPosition(progress - 0.04, cardDimensions.width, cardDimensions.height).x}
+                cy={getCometPosition(progress - 0.04, cardDimensions.width, cardDimensions.height).y}
+                r="2.5"
+                className="fill-primary/30"
               />
-            )}
+              <circle
+                cx={getCometPosition(progress - 0.02, cardDimensions.width, cardDimensions.height).x}
+                cy={getCometPosition(progress - 0.02, cardDimensions.width, cardDimensions.height).y}
+                r="3.5"
+                className="fill-primary/50"
+              />
+              {/* Main comet head */}
+              <circle
+                cx={getCometPosition(progress, cardDimensions.width, cardDimensions.height).x}
+                cy={getCometPosition(progress, cardDimensions.width, cardDimensions.height).y}
+                r="5"
+                className="fill-primary"
+                filter="url(#cometGlow)"
+              />
+            </>
           </svg>
         )}
 
@@ -232,7 +284,7 @@ export function KeyStatsSection() {
         </div>
 
         {/* Nerd Box - Expandable Research Details */}
-        <details className="group">
+        <details ref={detailsRef} className="group" onToggle={handleDetailsToggle}>
           <summary className="flex items-center gap-2 cursor-pointer text-sm text-primary/80 hover:text-primary transition-colors select-none">
             <span className="text-base">📊</span>
             <span className="font-medium">Dive into the research</span>
@@ -295,7 +347,7 @@ export function KeyStatsSection() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {otherStats.map((stat) => {
           const originalIndex = KEY_STATS_DATA.findIndex((s) => s.id === stat.id)
-          const isComingUp = !isPaused && originalIndex === nextIndex
+          const isComingUp = !isUserInteracting && originalIndex === nextIndex
 
           return (
             <button

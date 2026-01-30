@@ -49,6 +49,21 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     }
   }, [sessionId])
 
+  // Handle browser back button - close template form instead of leaving page
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // If we have a selected template and user pressed back, close the form
+      if (selectedTemplate && !event.state?.templateOpen) {
+        setSelectedTemplate(null)
+        setFormValues({})
+        setSubmitError(null)
+      }
+    }
+
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
+  }, [selectedTemplate])
+
   const loadSessionData = async (id: string) => {
     try {
       const response = await fetch(`/api/tracking/session/${id}`)
@@ -170,6 +185,22 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   const handleFieldChange = (fieldId: string, value: unknown) => {
     setFormValues(prev => ({ ...prev, [fieldId]: value }))
+  }
+
+  // Select template and push history state so back button closes form
+  const handleSelectTemplate = (template: FieldReportTemplateRow) => {
+    setSelectedTemplate(template)
+    // Push a new history entry so back button closes the form
+    window.history.pushState({ templateOpen: true }, '')
+  }
+
+  // Close template form (used by back button in UI)
+  const handleCloseTemplate = () => {
+    setSelectedTemplate(null)
+    setFormValues({})
+    setSubmitError(null)
+    // Go back in history to remove our pushed state
+    window.history.back()
   }
 
   const handleSubmit = async (isDraft: boolean) => {
@@ -354,7 +385,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
             return (
               <div
                 key={template.id}
-                onClick={() => setSelectedTemplate(template)}
+                onClick={() => handleSelectTemplate(template)}
                 className="group rounded-2xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-primary/10 bg-card"
               >
                 {/* Visual header with pattern */}
@@ -497,11 +528,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
         <button
-          onClick={() => {
-            setSelectedTemplate(null)
-            setFormValues({})
-            setSubmitError(null)
-          }}
+          onClick={handleCloseTemplate}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
         >
           <ArrowLeft className="size-4" />

@@ -1,7 +1,7 @@
 # Prompt: Technique & Topic Extraction (06b)
 
-Version: 1.0.0
-Updated: 30-01-2026
+Version: 1.1.0
+Updated: 31-01-2026
 
 ## Task
 
@@ -79,38 +79,36 @@ Return valid JSON only:
 
 ## CRITICAL: Taxonomy-Only Extraction
 
-You MUST only use techniques and topics from the official taxonomy. If something doesn't match, do NOT invent new labels.
+You MUST only use techniques and topics from the official taxonomy (v1.2.0). If something doesn't match, do NOT invent new labels.
 
-### Techniques (42 total)
+### Techniques (31 total)
 
-**Openers**: direct_opener, indirect_opener, situational_opener, observation_opener, gambit
+**Openers (5)**: direct_opener, indirect_opener, situational_opener, observation_opener, gambit
 
-**Attraction**: push_pull, tease, cold_read, role_play, disqualification, neg, DHV, preselection, frame_control, buying_temperature, IOI_recognition, takeaway, reframe, false_disqualifier
+**Attraction (9)**: push_pull, tease, cold_read, role_play, disqualification, DHV, frame_control, takeaway, false_time_constraint
 
-**Connection**: qualification, statement_of_intent, grounding, storytelling, vulnerability, callback_humor, screening, appreciation
+**Connection (8)**: qualification, statement_of_intent, grounding, storytelling, vulnerability, callback_humor, screening, appreciation
 
-**Physical**: kino, proximity, false_time_constraint, compliance_test, compliance_ladder
+**Compliance (1)**: compliance
 
-**Closing**: number_close, instagram_close, soft_close, assumptive_close, instant_date, bounce, time_bridge
+**Closing (8)**: number_close, instagram_close, soft_close, assumptive_close, instant_date, bounce, time_bridge, logistics_check
 
-**Mechanics**: front_stop, side_stop, seated_approach
+### Topics (22 total)
 
-### Topics (34 total)
+**Personal (8)**: name, origin, career, education, hobby, travel, living_situation, ambitions
 
-**Personal**: origin, career, education, hobby, travel, living_situation, lifestyle, relationship_history, ambitions, social_circle
+**Appearance (1)**: appearance
 
-**Appearance**: appearance, style, hair, eyes, height, tattoos, fitness
+**Personality (4)**: personality, age, behavior, values
 
-**Personality**: personality, energy, age, behavior, values
+**Logistics (5)**: plans, contact, logistics, relationship, duration
 
-**Logistics**: plans, contact, logistics, relationship, texting
-
-**Context**: food_drinks, location, weather, events, humor, flirting, pets
+**Context (4)**: food_drinks, location, humor, flirting
 
 ## Decision Rules
 
-1. **One technique per turn maximum**: Choose the most prominent
-2. **Evidence required**: Quote or paraphrase the relevant text
+1. **Multiple techniques per turn allowed**: A turn can contain multiple techniques (e.g., tease + cold_read)
+2. **Evidence required**: Quote or paraphrase the relevant text for each technique/topic
 3. **Coach techniques only**: We're analyzing the coach's game
 4. **Multiple topics per turn OK**: Conversations often touch multiple topics
 
