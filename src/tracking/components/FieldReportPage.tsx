@@ -264,7 +264,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   // Template selection view
   if (!selectedTemplate) {
     return (
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8" data-testid="field-report-template-selection">
         <div className="mb-8">
           <Link
             href="/dashboard/tracking"
@@ -388,6 +388,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
                 key={template.id}
                 onClick={() => handleSelectTemplate(template)}
                 className="group rounded-2xl overflow-hidden border border-border hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-primary/10 bg-card"
+                data-testid={`template-card-${template.slug}`}
               >
                 {/* Visual header with pattern */}
                 <div className={`h-32 relative overflow-hidden bg-gradient-to-br ${colors.gradient}`}>
@@ -531,11 +532,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-4 py-8" data-testid="field-report-form">
       {/* Back button */}
       <button
         onClick={handleCloseTemplate}
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        data-testid="field-report-back"
       >
         <ArrowLeft className="size-4" />
         Choose Different Template
@@ -613,6 +615,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
               className="flex-1 h-12 rounded-xl transition-all hover:bg-muted"
               disabled={isSubmitting}
               onClick={() => handleSubmit(true)}
+              data-testid="field-report-save-draft"
             >
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin mr-2" />
@@ -623,6 +626,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
               type="submit"
               className="flex-1 h-12 rounded-xl transition-all"
               disabled={isSubmitting || !isValid}
+              data-testid="field-report-submit"
             >
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin mr-2" />

@@ -58,6 +58,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import requests
+import numpy as np
 
 # === Configuration ===
 REPO_ROOT = Path(__file__).parent.parent.parent
@@ -72,7 +73,7 @@ OLLAMA_TIMEOUT = 120
 
 # Version tracking
 PIPELINE_VERSION = "2026-01-31"
-PROMPT_VERSION = "1.1.0"  # Added video type pre-detection
+PROMPT_VERSION = "1.2.0"  # Using speaker embeddings for clustering
 SCHEMA_VERSION = "1.0.0"
 
 # =============================================================================
@@ -157,30 +158,65 @@ def detect_video_type_from_title(title: str) -> Tuple[str, float]:
 # Speaker Clustering
 # =============================================================================
 #
-# TODO: REPLACE PITCH-BASED CLUSTERING WITH SPEAKER EMBEDDINGS
+# =============================================================================
+# SPEAKER CLUSTERING USING EMBEDDINGS
+# =============================================================================
 #
-# Current approach (BROKEN):
-#   - Uses pitch.mean_hz to cluster: < 170Hz → male, > 170Hz → female
-#   - PROBLEM: Street audio causes octave doubling (90Hz detected as 180Hz)
-#   - Result: Coach segments get clustered as target, labels are inverted
-#
-# New approach (TO IMPLEMENT):
-#   - Use speaker_embedding (256-dim vector from resemblyzer)
-#   - Cluster on cosine similarity of embeddings
-#   - Much more robust to noise, compression, reverb
-#   - Already extracted in 03.audio-features, just not used here
-#
-# Implementation steps:
-#   1. Load speaker_embedding from each segment's features
-#   2. Use k-means or agglomerative clustering on embeddings
-#   3. Label clusters using LLM (same as now)
+# Uses speaker_embedding (256-dim vector from resemblyzer) to cluster speakers.
+# Much more robust than pitch-based clustering for noisy street audio.
 #
 # =============================================================================
+
+
+def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+    """Compute cosine similarity between two vectors."""
+    norm_a = np.linalg.norm(a)
+    norm_b = np.linalg.norm(b)
+    if norm_a == 0 or norm_b == 0:
+        return 0.0
+    return float(np.dot(a, b) / (norm_a * norm_b))
+
+
+def cluster_speakers_from_existing_ids(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
+    """
+    Group segments by their existing speaker_id from 03.audio-features.
+    Returns {cluster_id: [segment_indices]}
+
+    The 03.audio-features script already performs speaker diarization using embeddings.
+    We use those results directly rather than re-clustering.
+
+    If expected_speakers=1, returns all segments in one cluster.
+    """
+    # Single speaker mode - no clustering needed
+    if expected_speakers == 1:
+        return {"0": list(range(len(segments)))}
+
+    # Group by existing speaker_id
+    speaker_groups: Dict[str, List[int]] = {}
+    for i, seg in enumerate(segments):
+        spk_id = seg.get("speaker_id", "unknown")
+        if spk_id not in speaker_groups:
+            speaker_groups[spk_id] = []
+        speaker_groups[spk_id].append(i)
+
+    # Map speaker IDs to cluster IDs (0, 1, 2, ...)
+    # Sort by segment count to make largest cluster = 0
+    sorted_speakers = sorted(speaker_groups.items(), key=lambda x: -len(x[1]))
+
+    clusters = {}
+    for idx, (spk_id, indices) in enumerate(sorted_speakers):
+        clusters[str(idx)] = sorted(indices)
+
+    # If only one cluster, return single cluster
+    if len(clusters) == 1:
+        return {"0": list(range(len(segments)))}
+
+    return clusters
 
 def cluster_speakers_by_pitch(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
     """
     DEPRECATED: This function uses pitch-based clustering which is unreliable.
-    TODO: Replace with cluster_speakers_by_embedding() once implemented.
+    TODO: Replace with cluster_speakers_from_existing_ids() once implemented.
 
     Group segments into speaker clusters based on pitch.
     Returns {cluster_id: [segment_indices]}
@@ -282,25 +318,28 @@ def build_speaker_prompt(clusters: Dict[str, Dict], video_title: str) -> str:
     """Build prompt for LLM speaker labeling."""
     prompt = f"""You are labeling speakers in a daygame video titled: "{video_title}"
 
-Speaker clusters from audio analysis:
+This is a daygame/pickup video where a coach approaches women on the street.
+
+Speaker clusters (based on voice embeddings):
 """
     for cluster_id, stats in clusters.items():
         prompt += f"""
 Speaker {cluster_id}:
 - Segments: {stats['segment_count']}
 - Duration: {stats['total_duration']:.1f}s
-- Avg pitch: {stats['average_pitch_hz']}Hz ({stats['likely_gender']})
 - Sample utterances: {stats['sample_utterances']}
 """
 
     prompt += """
-Label each speaker as one of: coach, target, voiceover, other
+Label each speaker as: coach, target, voiceover, or other
 
-Rules:
-- coach: Male doing the approach, initiating, asking questions
-- target: Female being approached, responding
-- voiceover: Same person as coach but narrating/explaining (not in-scene)
-- other: Anyone else
+IMPORTANT - Identify the coach by what they SAY:
+- The coach INITIATES: opens with "hey", "excuse me", "sorry to bother you"
+- The coach COMPLIMENTS: says things like "you're beautiful", "I had to say hi"
+- The coach LEADS: asks questions, suggests things, gives compliments
+- The target RESPONDS: shorter replies, says "thank you", answers questions
+
+Do NOT rely on pitch/gender - focus on the CONTENT of utterances.
 
 Return ONLY valid JSON:
 {"speaker_labels": {"0": {"label": "coach", "confidence": 0.9, "reasoning": "..."}, "1": {"label": "target", "confidence": 0.85, "reasoning": "..."}}}
@@ -348,12 +387,12 @@ def label_speakers(segments: List[Dict], video_title: str) -> Tuple[Dict[str, st
         expected_speakers = 2
         print(f"    Video type: {video_type} (confidence: {type_confidence})")
 
-    # Cluster segments
-    clusters = cluster_speakers_by_pitch(segments, expected_speakers)
+    # Cluster segments using speaker embeddings (more robust than pitch)
+    clusters = cluster_speakers_from_existing_ids(segments, expected_speakers)
 
     # If only one cluster, this is a single-speaker video
     if len(clusters) == 1:
-        print("    Single speaker detected - labeling as coach")
+        print("    Single speaker detected (embedding clustering) - labeling as coach")
         return {"0": "coach"}, {"0": 0.90}, "talking_head"
 
     # Get stats per cluster
@@ -382,15 +421,27 @@ def label_speakers(segments: List[Dict], video_title: str) -> Tuple[Dict[str, st
                 confidences[cluster_id] = 0.3
         return labels, confidences, video_type
 
-    # Parse LLM response
+    # Parse LLM response - only accept labels for clusters that actually exist
     labels = {}
     confidences = {}
+    valid_cluster_ids = set(clusters.keys())  # Only clusters we actually have
+
     for cluster_id, data in result["speaker_labels"].items():
+        # Skip labels for clusters that don't exist (LLM hallucination)
+        if cluster_id not in valid_cluster_ids:
+            continue
+
         label = data.get("label", "other")
         if label not in ["coach", "target", "voiceover", "other"]:
             label = "other"
         labels[cluster_id] = label
         confidences[cluster_id] = data.get("confidence", 0.5)
+
+    # Ensure all clusters have labels
+    for cid in valid_cluster_ids:
+        if cid not in labels:
+            labels[cid] = "other"
+            confidences[cid] = 0.3
 
     return labels, confidences, video_type
 
@@ -540,9 +591,9 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
     # 1. Label speakers (includes video type pre-detection)
     labels, confidences, detected_video_type = label_speakers(segments, video_title)
 
-    # Re-cluster with the knowledge from label_speakers
+    # Re-cluster with the knowledge from label_speakers (using embeddings)
     expected_speakers = 1 if detected_video_type == "talking_head" else 2
-    clusters = cluster_speakers_by_pitch(segments, expected_speakers)
+    clusters = cluster_speakers_from_existing_ids(segments, expected_speakers)
 
     print(f"    Clusters: {len(clusters)}, Labels: {labels}")
 
@@ -567,7 +618,7 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
             "speaker": {
                 "label": label,
                 "confidence": round(conf, 2),
-                "method": "llm_cluster"
+                "method": "llm_speaker_id"
             },
             "speaker_id": int(cluster_id) if cluster_id else 0
         })

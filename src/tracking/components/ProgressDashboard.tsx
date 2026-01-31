@@ -76,7 +76,7 @@ export function ProgressDashboard() {
   const stats = state.stats
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8" data-testid="tracking-dashboard">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
@@ -85,7 +85,7 @@ export function ProgressDashboard() {
             Track your approaches, write reports, and watch yourself improve
           </p>
         </div>
-        <Link href="/dashboard/tracking/session?autostart=true">
+        <Link href="/dashboard/tracking/session?autostart=true" data-testid="new-session-link">
           <Button size="lg" className="gap-2">
             <Play className="size-5" />
             Start Session
@@ -95,7 +95,7 @@ export function ProgressDashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <Card className="p-4">
+        <Card className="p-4" data-testid="total-approaches">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <Target className="size-5 text-primary" />
@@ -107,7 +107,7 @@ export function ProgressDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4" data-testid="total-numbers">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-green-500/10">
               <TrendingUp className="size-5 text-green-500" />
@@ -119,7 +119,7 @@ export function ProgressDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4" data-testid="week-streak">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-orange-500/10">
               <Flame className="size-5 text-orange-500" />
@@ -131,7 +131,7 @@ export function ProgressDashboard() {
           </div>
         </Card>
 
-        <Card className="p-4">
+        <Card className="p-4" data-testid="total-sessions">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-purple-500/10">
               <Calendar className="size-5 text-purple-500" />
@@ -158,7 +158,7 @@ export function ProgressDashboard() {
                 <ArrowRight className="size-4 text-muted-foreground" />
               </div>
             </Link>
-            <Link href="/dashboard/tracking/report" className="block">
+            <Link href="/dashboard/tracking/report" className="block" data-testid="field-report-link">
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Clock className="size-5 text-primary" />
@@ -170,6 +170,7 @@ export function ProgressDashboard() {
             <button
               onClick={() => setQuickAddOpen(true)}
               className="w-full"
+              data-testid="quick-add-button"
             >
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
@@ -179,7 +180,7 @@ export function ProgressDashboard() {
                 <ArrowRight className="size-4 text-muted-foreground" />
               </div>
             </button>
-            <Link href="/dashboard/tracking/review" className="block">
+            <Link href="/dashboard/tracking/review" className="block" data-testid="weekly-review-link">
               <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <Calendar className="size-5 text-primary" />

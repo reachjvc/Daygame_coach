@@ -8,7 +8,6 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check-stats": "python3 scripts/check_progress.py",

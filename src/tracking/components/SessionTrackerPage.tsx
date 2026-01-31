@@ -652,7 +652,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             <div className="max-w-lg mx-auto space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Quick Log</h3>
-                <Button variant="ghost" size="sm" onClick={handleQuickLogSkip}>
+                <Button variant="ghost" size="sm" onClick={handleQuickLogSkip} data-testid="quick-log-dismiss">
                   Skip
                 </Button>
               </div>
@@ -675,6 +675,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                           ? option.color
                           : "border-border hover:border-primary/50"
                       }`}
+                      data-testid={`outcome-${option.value}`}
                     >
                       {option.emoji} {option.label}
                     </button>
@@ -701,6 +702,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                           : "border-border hover:border-primary/50"
                       }`}
                       title={option.label}
+                      data-testid={`mood-${option.value}`}
                     >
                       {option.emoji}
                     </button>
@@ -729,6 +731,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                             ? "border-primary bg-primary/10 text-primary"
                             : "border-border hover:border-primary/50"
                         }`}
+                        data-testid={`tag-${tag.toLowerCase().replace(/\s+/g, '-')}`}
                       >
                         {tag}
                       </button>

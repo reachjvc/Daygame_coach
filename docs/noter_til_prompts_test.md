@@ -248,3 +248,39 @@ npm run test:e2e -- tests/e2e/auth.spec.ts
 5. **Keep it scannable** - Docs should be reference material, not tutorials
 
 **Principle:** Testing docs should define WHAT to do and WHY, not HOW. Implementation belongs in the actual test files.
+
+
+
+31.01 ALENE, måske denne fra claude er god: ## Context
+
+I just cleaned up useless tests with help from Claude. Key decisions documented in docs/better_tests_plan.md.
+
+## My Testing Rules (Non-Negotiable)
+
+1. Read docs/testing_behavior.md before writing ANY tests
+2. NO MOCKS - use testcontainers for real dependencies
+3. Component tests are forbidden - use E2E instead
+4. Schema tests are encouraged - pure logic, no deps
+5. Every test must answer: "What bug does this catch?"
+
+## What I Have Now
+
+- 21 test files, 702 tests passing
+- Schema tests: excellent (pure Zod validation)
+- E2E tests: excellent (real Playwright flows)
+- API tests: acceptable (mock deps but test auth/validation)
+- Component unit tests: DELETED (useless, E2E covers same)
+
+## How to Work With Me on Tests
+
+1. PUSH BACK if I ask for tests that violate my rules
+2. Ask "what bug would this catch?" before writing any test
+3. Prefer E2E for UI behavior, schema tests for validation
+4. If something can't be tested without mocks, tell me - don't write mock-heavy tests
+5. Quality over coverage percentage
+
+## Current Test Coverage Gaps (Low Priority)
+
+- Repository layer could use integration tests with testcontainers
+- Inner Game E2E flow not fully covered
+- But: don't add tests just to add tests

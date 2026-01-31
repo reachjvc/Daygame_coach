@@ -9,23 +9,39 @@ test.describe('Session Tracking Flow', () => {
   // Run tests sequentially to avoid session conflicts (same user can only have one active session)
   test.describe.configure({ mode: 'serial' })
 
-  test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to session tracker
-    await login(page)
+  async function ensureCleanSession(page: import('@playwright/test').Page) {
     await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // If there's an active session, end it first to ensure clean state
+    // Wait for page content to load (either start button or active session view)
+    const startButton = page.getByTestId(SELECTORS.session.startButton)
     const endButton = page.getByTestId(SELECTORS.session.endButton)
+    await expect(startButton.or(endButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // If there's an active session, end it first to ensure clean state
     const hasActiveSession = await endButton.isVisible().catch(() => false)
     if (hasActiveSession) {
+      // Close quick log modal if open (might be left from previous test)
+      const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
+      if (await quickLogModal.isVisible().catch(() => false)) {
+        await page.getByTestId(SELECTORS.session.quickLogSave).click({ timeout: ACTION_TIMEOUT })
+        await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
+      }
+
       await endButton.click({ timeout: ACTION_TIMEOUT })
       await page.getByRole('button', { name: /end session/i }).click({ timeout: AUTH_TIMEOUT })
       await page.waitForURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
-      // Navigate back to session page
-      await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+      // Recursively ensure we have a clean session
+      await ensureCleanSession(page)
+      return
     }
+  }
+
+  test.beforeEach(async ({ page }) => {
+    // Arrange: Login and navigate to session tracker
+    await login(page)
+    await ensureCleanSession(page)
   })
 
   test('should display start session screen when no active session', async ({ page }) => {
@@ -202,8 +218,7 @@ test.describe('Session Tracking Flow', () => {
     await page.waitForURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
 
     // Navigate back to session page and start a new session
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+    await ensureCleanSession(page)
 
     const newStartButton = page.getByTestId(SELECTORS.session.startButton)
     await expect(newStartButton).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -235,8 +250,7 @@ test.describe('Session Tracking Flow', () => {
     await page.waitForURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
 
     // Navigate back to session page and start a new session
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+    await ensureCleanSession(page)
 
     const newStartButton = page.getByTestId(SELECTORS.session.startButton)
     await expect(newStartButton).toBeVisible({ timeout: AUTH_TIMEOUT })

@@ -168,7 +168,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex items-center justify-center min-h-[60vh]" data-testid="weekly-review-loading">
         <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     )
@@ -177,7 +177,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   // Template selection view
   if (!selectedTemplate) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8" data-testid="weekly-review-page">
         <div className="mb-8">
           <Link
             href="/dashboard/tracking"
@@ -194,7 +194,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
         {/* Weekly Stats Summary */}
         {weeklyStats && (
-          <Card className="p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <Card className="p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20" data-testid="weekly-stats-card">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="font-semibold text-lg">This Week&apos;s Progress</h2>
@@ -265,6 +265,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
                 key={template.id}
                 className="p-6 cursor-pointer hover:border-primary transition-colors"
                 onClick={() => setSelectedTemplate(template)}
+                data-testid={`weekly-template-${template.slug || template.id}`}
               >
                 <div className="flex items-start gap-4">
                   <div className="p-3 rounded-lg bg-primary/10 text-primary">
@@ -312,6 +313,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             setSubmitError(null)
           }}
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
+          data-testid="weekly-review-back"
         >
           <ArrowLeft className="size-4" />
           Choose Different Template
@@ -342,7 +344,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
         </Card>
       )}
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }}>
+      <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }} data-testid="weekly-review-form">
         <Card className="p-6">
           {/* Previous Commitment Check */}
           {previousCommitment && (
@@ -417,11 +419,12 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
               className="flex-1"
               disabled={isSubmitting}
               onClick={() => handleSubmit(true)}
+              data-testid="weekly-review-save-draft"
             >
               {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Save Draft
             </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
+            <Button type="submit" className="flex-1" disabled={isSubmitting} data-testid="weekly-review-submit">
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin mr-2" />
               ) : (

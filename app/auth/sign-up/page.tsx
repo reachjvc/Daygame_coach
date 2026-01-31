@@ -67,7 +67,7 @@ export default function SignUpPage() {
               <CardDescription>Create a new account to get started</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSignUp}>
+              <form onSubmit={handleSignUp} data-testid="signup-form">
                 <div className="flex flex-col gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="fullName">Full Name</Label>
@@ -78,6 +78,7 @@ export default function SignUpPage() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      data-testid="signup-fullname-input"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -89,6 +90,7 @@ export default function SignUpPage() {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      data-testid="signup-email-input"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -99,6 +101,7 @@ export default function SignUpPage() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      data-testid="signup-password-input"
                     />
                   </div>
                   <div className="grid gap-2">
@@ -109,10 +112,11 @@ export default function SignUpPage() {
                       required
                       value={repeatPassword}
                       onChange={(e) => setRepeatPassword(e.target.value)}
+                      data-testid="signup-repeat-password-input"
                     />
                   </div>
-                  {error && <p className="text-sm text-red-500">{error}</p>}
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  {error && <p className="text-sm text-red-500" data-testid="signup-error-message">{error}</p>}
+                  <Button type="submit" className="w-full" disabled={isLoading} data-testid="signup-submit-button">
                     {isLoading ? "Creating account..." : "Sign up"}
                   </Button>
                 </div>

@@ -1,0 +1,642 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/06a.structure
+
+Interaction Structure Extraction (renamed from 08.interactions in pipeline consolidation)
+
+Reads:
+  - Conversation-labeled JSONs:
+      data/05.conversations/<source>/<video>/*.conversations.json
+
+Writes:
+  - Extracted interactions (one JSON object per line):
+      data/06a.structure/<source>/<video>/*.interactions.jsonl
+
+Use:
+
+  A) One source (video / playlist / channel):
+     ./scripts/training-data/06a.structure "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+
+  B) Batch from sources file:
+     ./scripts/training-data/06a.structure --sources
+     ./scripts/training-data/06a.structure --sources docs/sources.txt
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shlex
+from dataclasses import dataclass
+from enum import Enum
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+
+class InteractionPhase(Enum):
+    OPENER = "opener"
+    HOOK = "hook"
+    VIBE = "vibe"
+    CLOSE = "close"
+    UNKNOWN = "unknown"
+
+
+class Outcome(Enum):
+    NUMBER = "number"
+    INSTAGRAM = "instagram"
+    INSTANT_DATE = "instant_date"
+    DATE = "date"
+    REJECTED = "rejected"
+    BLOWOUT = "blowout"
+    WALKED_AWAY = "walked_away"
+    UNKNOWN = "unknown"
+
+
+@dataclass
+class Turn:
+    speaker: str  # coach/target/voiceover/unknown
+    text: str
+    start: float
+    end: float
+    phase: InteractionPhase
+    audio_clip: Dict
+    tone: Optional[Dict] = None
+    features: Optional[Dict] = None
+    speaker_cluster_id: Optional[str] = None
+    semantic_tags: Optional[Dict] = None
+
+
+@dataclass
+class Interaction:
+    id: str
+    conversation_id: int
+    source_video: str
+    start_time: float
+    end_time: float
+    turns: List[Turn]
+    outcome: Outcome
+    outcome_confidence: float
+    content_summary: Dict[str, int]
+    techniques: List[str]
+    topics: List[str]
+
+
+OPENER_PATTERNS = [
+    r"excuse me",
+    r"hey,? (one|two|quick) sec",
+    r"i (just )?(saw|noticed) you",
+    r"this is (so )?random",
+    r"i had to (come|stop|say)",
+    r"you caught my (eye|attention)",
+    r"i like your (style|outfit|hair|jacket|coat|dress|shoes|boots|energy|vibe)",
+    r"you look (really |very |so )?(nice|cool|cute|adorable|elegant)",
+    r"hey,? how are you",
+    r"hi,? who are you",
+]
+
+CLOSE_PATTERNS = [
+    r"(can i |let me |i('ll| will) )?(get|have|take) your (number|instagram|insta|snap)",
+    r"(give|put in) (me )?your number",
+    r"what's your (number|instagram|insta)",
+    r"we should (hang out|grab|get)",
+    r"let('s| us) (exchange|swap) (numbers|instagrams)",
+]
+
+SUCCESS_PATTERNS = [
+    r"(yeah|yes|sure|okay),? (here|it's|my)",
+    r"i('ll| will) (give|put|type)",
+    r"(just )?call me",
+    r"(here you go|there you go)",
+    r"(what's|give me) your(s| number)",
+]
+
+REJECTION_PATTERNS = [
+    r"i have a boyfriend",
+    r"i('m| am) (married|engaged|taken|seeing someone)",
+    r"(no|sorry),? (thanks|thank you|i('m| am) (good|okay|fine))",
+    r"i('m| am) (not interested|in a hurry|busy)",
+    r"(leave me alone|go away|not interested)",
+]
+
+BLOWOUT_PATTERNS = [
+    r"(walks away|walked away|she left)",
+    r"(ignored|ignoring)",
+    r"(no response|didn't respond)",
+    r"\[walks away\]",
+]
+
+INSTANT_DATE_PATTERNS = [
+    r"(grab|get) (a )?(coffee|drink|cocktail)",
+    r"join me for",
+    r"let's (go|walk|grab)",
+    r"come with me",
+    r"instant date",
+]
+
+
+def compile_patterns(patterns: List[str]) -> List[re.Pattern]:
+    return [re.compile(p, re.IGNORECASE) for p in patterns]
+
+
+class InteractionExtractor:
+    def __init__(self) -> None:
+        self.opener_re = compile_patterns(OPENER_PATTERNS)
+        self.close_re = compile_patterns(CLOSE_PATTERNS)
+        self.success_re = compile_patterns(SUCCESS_PATTERNS)
+        self.rejection_re = compile_patterns(REJECTION_PATTERNS)
+        self.blowout_re = compile_patterns(BLOWOUT_PATTERNS)
+        self.instant_date_re = compile_patterns(INSTANT_DATE_PATTERNS)
+
+    def group_by_conversation_id(self, segments: List[Dict]) -> Dict[int, List[Dict]]:
+        """Group segments by conversation_id (from 07.LLM-conversations)."""
+        groups: Dict[int, List[Dict]] = {}
+        for seg in segments:
+            conv_id = seg.get("conversation_id", 0)
+            if conv_id and int(conv_id) > 0:
+                cid = int(conv_id)
+                groups.setdefault(cid, []).append(seg)
+        return groups
+
+    def has_conversation_ids(self, segments: List[Dict]) -> bool:
+        """Check if segments have conversation_id assigned."""
+        return any(int(seg.get("conversation_id", 0) or 0) > 0 for seg in segments)
+
+    def find_interaction_starts(self, segments: List[Dict]) -> List[int]:
+        """Fallback: find interaction starts using opener patterns."""
+        starts: List[int] = []
+        for i, seg in enumerate(segments):
+            text = (seg.get("text", "") or "").lower()
+            for pattern in self.opener_re:
+                if pattern.search(text):
+                    if i == 0 or self._is_conversation_break(segments, i):
+                        starts.append(i)
+                        break
+        return starts
+
+    def _is_conversation_break(self, segments: List[Dict], index: int) -> bool:
+        if index == 0:
+            return True
+        curr_seg = segments[index]
+        prev_seg = segments[index - 1]
+
+        if curr_seg.get("boundary_detection", {}).get("is_new_conversation", False):
+            return True
+
+        curr_start = float(curr_seg.get("start", 0) or 0)
+        prev_end = float(prev_seg.get("end", 0) or 0)
+        if curr_start - prev_end > 3.0:
+            return True
+
+        prev_type = str(prev_seg.get("segment_type", ""))
+        curr_type = str(curr_seg.get("segment_type", ""))
+        if prev_type == "commentary" and curr_type == "approach":
+            return True
+
+        return False
+
+    def extract_interaction_from_group(self, conversation_id: int, segments: List[Dict]) -> Optional[Interaction]:
+        if len(segments) < 2:
+            return None
+
+        turns: List[Turn] = []
+        current_phase = InteractionPhase.OPENER
+        all_techniques: List[str] = []
+        all_topics: List[str] = []
+
+        for seg in segments:
+            text = (seg.get("text", "") or "").strip()
+            speaker_info = seg.get("speaker") or {}
+            speaker = str(speaker_info.get("label", "unknown"))
+            audio_clip = seg.get("audio_clip") or {
+                "file": "",
+                "start": seg.get("start", 0.0),
+                "end": seg.get("end", 0.0),
+            }
+
+            semantic_tags = seg.get("semantic_tags") or {}
+            if semantic_tags.get("phase") and semantic_tags["phase"] != "unknown":
+                phase_str = str(semantic_tags["phase"])
+                phase = (
+                    InteractionPhase(phase_str)
+                    if phase_str in {p.value for p in InteractionPhase}
+                    else current_phase
+                )
+            else:
+                phase = self._determine_phase(text, current_phase, speaker)
+            current_phase = phase
+
+            all_techniques.extend(list(semantic_tags.get("techniques", []) or []))
+            all_topics.extend(list(semantic_tags.get("topics", []) or []))
+
+            turns.append(
+                Turn(
+                    speaker=speaker,
+                    text=text,
+                    start=float(seg.get("start", 0.0) or 0.0),
+                    end=float(seg.get("end", 0.0) or 0.0),
+                    phase=phase,
+                    audio_clip=audio_clip,
+                    tone=seg.get("tone"),
+                    features=seg.get("features"),
+                    speaker_cluster_id=seg.get("speaker_cluster_id"),
+                    semantic_tags=semantic_tags if semantic_tags else None,
+                )
+            )
+
+        outcome, confidence = self._determine_outcome(turns)
+        return Interaction(
+            id=f"interaction_{conversation_id}",
+            conversation_id=conversation_id,
+            source_video="",
+            start_time=turns[0].start if turns else 0.0,
+            end_time=turns[-1].end if turns else 0.0,
+            turns=turns,
+            outcome=outcome,
+            outcome_confidence=confidence,
+            content_summary=self._summarize_content(segments),
+            techniques=sorted(set(all_techniques)),
+            topics=sorted(set(all_topics)),
+        )
+
+    def extract_interaction(
+        self, segments: List[Dict], start_idx: int, next_start_idx: Optional[int] = None
+    ) -> Optional[Interaction]:
+        end_idx = next_start_idx if next_start_idx is not None else len(segments)
+        interaction_segments = segments[start_idx:end_idx]
+        if len(interaction_segments) < 2:
+            return None
+
+        turns: List[Turn] = []
+        current_phase = InteractionPhase.OPENER
+
+        for seg in interaction_segments:
+            text = (seg.get("text", "") or "").strip()
+            speaker_info = seg.get("speaker") or {}
+            speaker = str(speaker_info.get("label", "unknown"))
+            audio_clip = seg.get("audio_clip") or {
+                "file": "",
+                "start": seg.get("start", 0.0),
+                "end": seg.get("end", 0.0),
+            }
+
+            phase = self._determine_phase(text, current_phase, speaker)
+            current_phase = phase
+
+            turns.append(
+                Turn(
+                    speaker=speaker,
+                    text=text,
+                    start=float(seg.get("start", 0.0) or 0.0),
+                    end=float(seg.get("end", 0.0) or 0.0),
+                    phase=phase,
+                    audio_clip=audio_clip,
+                    tone=seg.get("tone"),
+                    features=seg.get("features"),
+                    speaker_cluster_id=seg.get("speaker_cluster_id"),
+                )
+            )
+
+        outcome, confidence = self._determine_outcome(turns)
+        return Interaction(
+            id=f"interaction_{start_idx}",
+            conversation_id=0,
+            source_video="",
+            start_time=turns[0].start if turns else 0.0,
+            end_time=turns[-1].end if turns else 0.0,
+            turns=turns,
+            outcome=outcome,
+            outcome_confidence=confidence,
+            content_summary=self._summarize_content(interaction_segments),
+            techniques=[],
+            topics=[],
+        )
+
+    def _summarize_content(self, segments: List[Dict]) -> Dict[str, int]:
+        summary: Dict[str, int] = {}
+        for seg in segments:
+            content_type = seg.get("content_type") or {}
+            t = str(content_type.get("type", "unknown"))
+            summary[t] = summary.get(t, 0) + 1
+        return summary
+
+    def _determine_phase(self, text: str, current_phase: InteractionPhase, speaker: str) -> InteractionPhase:
+        text_lower = (text or "").lower()
+        for pattern in self.close_re:
+            if pattern.search(text_lower):
+                return InteractionPhase.CLOSE
+
+        if current_phase == InteractionPhase.OPENER:
+            if speaker == "target" and len(text.split()) > 5:
+                return InteractionPhase.HOOK
+            return InteractionPhase.OPENER
+
+        if current_phase == InteractionPhase.HOOK:
+            if speaker == "target" and ("?" in text or len(text.split()) > 10):
+                return InteractionPhase.VIBE
+            return InteractionPhase.HOOK
+
+        if current_phase == InteractionPhase.CLOSE:
+            return InteractionPhase.CLOSE
+
+        if current_phase == InteractionPhase.VIBE:
+            return InteractionPhase.VIBE
+
+        return current_phase
+
+    def _determine_outcome(self, turns: List[Turn]) -> Tuple[Outcome, float]:
+        last_turns = turns[-5:] if len(turns) >= 5 else turns
+        combined_text = " ".join((t.text or "").lower() for t in last_turns)
+        all_text = " ".join((t.text or "").lower() for t in turns)
+
+        for pattern in self.instant_date_re:
+            if pattern.search(all_text):
+                if re.search(r"(let's do it|yeah|okay|sure|sounds good)", combined_text):
+                    return Outcome.INSTANT_DATE, 0.85
+
+        for pattern in self.success_re:
+            if pattern.search(combined_text):
+                if re.search(r"instagram|insta", all_text):
+                    return Outcome.INSTAGRAM, 0.8
+                return Outcome.NUMBER, 0.8
+
+        for pattern in self.rejection_re:
+            if pattern.search(combined_text):
+                return Outcome.REJECTED, 0.8
+
+        for pattern in self.blowout_re:
+            if pattern.search(combined_text):
+                return Outcome.BLOWOUT, 0.7
+
+        return Outcome.UNKNOWN, 0.3
+
+
+def _json_default(o):
+    try:
+        import numpy as np
+
+        if isinstance(o, np.generic):
+            return o.item()
+    except Exception:
+        pass
+    raise TypeError(f"Object of type {o.__class__.__name__} is not JSON serializable")
+
+
+def process_file(input_path: Path, output_path: Path, extractor: InteractionExtractor) -> int:
+    with input_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    segments = data.get("segments", []) or []
+    interactions: List[Interaction] = []
+
+    if extractor.has_conversation_ids(segments):
+        groups = extractor.group_by_conversation_id(segments)
+        for conv_id in sorted(groups.keys()):
+            interaction = extractor.extract_interaction_from_group(conv_id, groups[conv_id])
+            if interaction:
+                interaction.source_video = str(input_path)
+                interactions.append(interaction)
+    else:
+        starts = extractor.find_interaction_starts(segments)
+        for i, start_idx in enumerate(starts):
+            next_idx = starts[i + 1] if i + 1 < len(starts) else None
+            interaction = extractor.extract_interaction(segments, start_idx, next_idx)
+            if interaction:
+                interaction.source_video = str(input_path)
+                interactions.append(interaction)
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        for interaction in interactions:
+            obj = {
+                "id": interaction.id,
+                "conversation_id": interaction.conversation_id,
+                "source_video": interaction.source_video,
+                "start_time": interaction.start_time,
+                "end_time": interaction.end_time,
+                "outcome": interaction.outcome.value,
+                "outcome_confidence": interaction.outcome_confidence,
+                "content_summary": interaction.content_summary,
+                "techniques": interaction.techniques,
+                "topics": interaction.topics,
+                "turns": [
+                    {
+                        "speaker": t.speaker,
+                        "text": t.text,
+                        "start": t.start,
+                        "end": t.end,
+                        "phase": t.phase.value,
+                        "audio_clip": t.audio_clip,
+                        "tone": t.tone,
+                        "features": t.features,
+                        "speaker_cluster_id": t.speaker_cluster_id,
+                        "semantic_tags": t.semantic_tags,
+                    }
+                    for t in interaction.turns
+                ],
+            }
+            f.write(json.dumps(obj, default=_json_default) + "\n")
+
+    print(f"[06a.structure] {input_path.name}: {len(interactions)} interactions")
+    return len(interactions)
+
+
+def repo_root() -> Path:
+    # scripts/training-data/<thisfile> -> repo root = parents[2]
+    return Path(__file__).resolve().parents[2]
+
+
+def conversations_root() -> Path:
+    return repo_root() / "data" / "05.conversations"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "06a.structure"
+
+
+def infer_name_from_input(input_path: Path) -> Optional[str]:
+    try:
+        parts = input_path.resolve().parts
+    except OSError:
+        return None
+
+    if "data" not in parts:
+        return None
+    i = parts.index("data")
+    if i + 2 >= len(parts):
+        return None
+    stage = parts[i + 1]
+    name = parts[i + 2]
+    if stage in {"05.conversations", "06a.structure"}:
+        return name
+    return None
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                sources.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def resolve_existing_path(p: Path) -> Optional[Path]:
+    if p.exists():
+        return p.resolve()
+    p2 = repo_root() / p
+    if p2.exists():
+        return p2.resolve()
+    return None
+
+
+def extract_video_id_from_url(url: str) -> Optional[str]:
+    url = (url or "").strip()
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def compute_output_file_for_input_file(input_file: Path, out_dir: Path) -> Path:
+    stem = input_file.stem
+    for suffix in [".features", ".conversations", ".tagged", ".classified", ".tonality"]:
+        if stem.endswith(suffix):
+            stem = stem[: -len(suffix)]
+    return out_dir / f"{stem}.interactions.jsonl"
+
+
+def find_input_files(in_dir: Path, video_filter: Optional[str]) -> List[Path]:
+    preferred = sorted(in_dir.rglob("*.conversations.json"))
+    files = preferred if preferred else sorted(in_dir.rglob("*.json"))
+    if not video_filter:
+        return files
+    needle = video_filter.strip()
+    return [f for f in files if needle in f.name or needle in f.as_posix()]
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Extract interactions from conversation-labeled JSON files.")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/07.LLM-conversations).")
+    parser.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URLs filter by ID unless --video is set.")
+    parser.add_argument("--channel", help="Alias for the positional name argument.")
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+    )
+
+    parser.add_argument("--input", help="Input JSON file or directory (defaults to data/07.LLM-conversations/<name>).")
+    parser.add_argument("--output", help="Output JSONL file or directory (defaults to data/08.interactions/<name>).")
+    parser.add_argument("--video", help="Optional filename substring filter when --input is a directory.")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite already-written outputs.")
+    parser.add_argument("--dry-run", action="store_true", help="Print what would happen, don’t write files.")
+
+    args = parser.parse_args()
+
+    if args.name and args.channel:
+        raise SystemExit("Provide either positional <name> OR --channel, not both.")
+    name = (args.channel or args.name or "").strip() or None
+
+    extractor = InteractionExtractor()
+
+    def run_one(input_path: Path, output_path: Path, video_filter: Optional[str]) -> None:
+        if input_path.is_dir():
+            files = find_input_files(input_path, video_filter=video_filter)
+            if not files:
+                print(f"[06a.structure] No input JSON files found under: {input_path}")
+                return
+
+            written = 0
+            skipped = 0
+            for src in files:
+                rel_path = src.relative_to(input_path)
+                dest_dir = output_path / rel_path.parent
+                dest = compute_output_file_for_input_file(src, dest_dir)
+                if dest.exists() and not args.overwrite:
+                    skipped += 1
+                    continue
+                if args.dry_run:
+                    print(f"[dry-run] Would write: {dest}")
+                    written += 1
+                    continue
+                process_file(src, dest, extractor)
+                written += 1
+
+            print("[06a.structure] Done.")
+            print(f"  written : {written}")
+            print(f"  skipped : {skipped}")
+            return
+
+        # Single file input
+        dest = output_path if output_path.suffix else compute_output_file_for_input_file(input_path, output_path)
+        if dest.exists() and not args.overwrite:
+            print(f"[06a.structure] Output exists, skipping: {dest}")
+            return
+        if args.dry_run:
+            print(f"[dry-run] Would write: {dest}")
+            return
+        process_file(input_path, dest, extractor)
+
+    if args.sources:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = (repo_root() / sources_path).resolve()
+        if not sources_path.exists():
+            raise SystemExit(f"Missing sources file: {sources_path}")
+
+        for src_name, src_url in parse_sources_file(sources_path):
+            in_dir = conversations_root() / src_name
+            out_dir = output_root() / src_name
+            video_filter = args.video or extract_video_id_from_url(src_url)
+            run_one(in_dir, out_dir, video_filter=video_filter)
+        return
+
+    if args.input:
+        resolved = resolve_existing_path(Path(args.input))
+        if not resolved and name:
+            resolved = resolve_existing_path(conversations_root() / args.input)
+        if not resolved:
+            raise SystemExit(f"Input not found: {args.input}")
+        input_path = resolved
+    else:
+        if not name:
+            raise SystemExit("Missing input: provide --input or a <name>/--channel.")
+        input_path = conversations_root() / name
+        if not input_path.exists():
+            raise SystemExit(f"Expected conversations folder not found: {input_path}")
+
+    inferred_name = infer_name_from_input(input_path)
+    if not name:
+        name = inferred_name
+
+    if args.output:
+        output_path = resolve_existing_path(Path(args.output)) or (repo_root() / args.output).resolve()
+    else:
+        if not name:
+            raise SystemExit("Missing output: provide --output, or use an input under data/<stage>/<name>.")
+        output_path = output_root() / name
+
+    video_filter = args.video or extract_video_id_from_url(args.youtube_url or "")
+    run_one(input_path, output_path, video_filter=video_filter)
+
+
+if __name__ == "__main__":
+    main()
+

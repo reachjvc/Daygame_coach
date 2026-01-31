@@ -34,12 +34,7 @@ Prefers audio inputs:
 Writes:
   data/02.transcribe/<source>/<video>/<video>.full.<engine>.json
   plus <video>.full.json (copy of primary engine)
-
-Sidecars:
-  *.txt / *.srt / *.vtt / *.tsv
-  plus when present:
-    *.words.tsv (word timestamps)
-    *.spk.tsv   (speaker labels)
+  plus <video>.full.txt (plain text, used by 10.ingest for embeddings)
 
 Diarization:
 - OFF by default.
@@ -246,107 +241,9 @@ def cleanup_after_engine_run(engine: Optional["BaseEngine"]) -> None:
 # Output formats
 # --------------------------
 
-def _sec_to_srt_timestamp(t: float) -> str:
-    t = max(0.0, float(t))
-    hours = int(t // 3600)
-    minutes = int((t % 3600) // 60)
-    seconds = int(t % 60)
-    millis = int(round((t - int(t)) * 1000.0))
-    if millis >= 1000:
-        millis = 999
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d},{millis:03d}"
-
-
-def _sec_to_vtt_timestamp(t: float) -> str:
-    t = max(0.0, float(t))
-    hours = int(t // 3600)
-    minutes = int((t % 3600) // 60)
-    seconds = int(t % 60)
-    millis = int(round((t - int(t)) * 1000.0))
-    if millis >= 1000:
-        millis = 999
-    return f"{hours:02d}:{minutes:02d}:{seconds:02d}.{millis:03d}"
-
-
 def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
     text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
     path.write_text(text + ("\n" if text else ""), encoding="utf-8")
-
-
-def write_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines: List[str] = []
-    for s in segments:
-        start = float(s.get("start", 0.0))
-        end = float(s.get("end", 0.0))
-        text = str(s.get("text", "")).replace("\t", " ").strip()
-        lines.append(f"{start:.3f}\t{end:.3f}\t{text}")
-    path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
-
-
-def write_srt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines: List[str] = []
-    idx = 1
-    for s in segments:
-        text = str(s.get("text", "")).strip()
-        if not text:
-            continue
-        start = _sec_to_srt_timestamp(float(s.get("start", 0.0)))
-        end = _sec_to_srt_timestamp(float(s.get("end", 0.0)))
-        lines += [str(idx), f"{start} --> {end}", text, ""]
-        idx += 1
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-def write_vtt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines: List[str] = ["WEBVTT", ""]
-    for s in segments:
-        text = str(s.get("text", "")).strip()
-        if not text:
-            continue
-        start = _sec_to_vtt_timestamp(float(s.get("start", 0.0)))
-        end = _sec_to_vtt_timestamp(float(s.get("end", 0.0)))
-        lines += [f"{start} --> {end}", text, ""]
-    path.write_text("\n".join(lines), encoding="utf-8")
-
-
-def write_spk_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines: List[str] = []
-    for s in segments:
-        if "speaker" not in s:
-            continue
-        start = float(s.get("start", 0.0))
-        end = float(s.get("end", 0.0))
-        spk = str(s.get("speaker", "UNKNOWN"))
-        text = str(s.get("text", "")).replace("\t", " ").strip()
-        lines.append(f"{start:.3f}\t{end:.3f}\t{spk}\t{text}")
-    if lines:
-        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def write_words_tsv(path: Path, segments: List[Dict[str, Any]]) -> None:
-    lines: List[str] = []
-    for s in segments:
-        words = s.get("words")
-        if not isinstance(words, list):
-            continue
-        for w in words:
-            if not isinstance(w, dict):
-                continue
-            word = str(w.get("word", "")).replace("\t", " ").strip()
-            if not word:
-                continue
-            try:
-                ws = float(w.get("start", 0.0))
-                we = float(w.get("end", 0.0))
-            except Exception:
-                continue
-            spk = str(w.get("speaker", "") or "")
-            if spk:
-                lines.append(f"{ws:.3f}\t{we:.3f}\t{spk}\t{word}")
-            else:
-                lines.append(f"{ws:.3f}\t{we:.3f}\t{word}")
-    if lines:
-        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
@@ -357,13 +254,10 @@ def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> N
         encoding="utf-8",
     )
 
+    # Only write .json (above) and .txt (used by 10.ingest for embeddings)
+    # Removed: .srt, .vtt, .tsv, .spk.tsv, .words.tsv (unused by pipeline)
     base = out_json_path.with_suffix("")  # remove ".json"
     write_txt(base.with_name(base.name + ".txt"), segments)
-    write_srt(base.with_name(base.name + ".srt"), segments)
-    write_vtt(base.with_name(base.name + ".vtt"), segments)
-    write_tsv(base.with_name(base.name + ".tsv"), segments)
-    write_spk_tsv(base.with_name(base.name + ".spk.tsv"), segments)
-    write_words_tsv(base.with_name(base.name + ".words.tsv"), segments)
 
 
 # --------------------------

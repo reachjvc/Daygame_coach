@@ -300,7 +300,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
+      <div className="flex items-center justify-center py-12" data-testid="inner-game-loading">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin" />
           Loading...
@@ -363,7 +363,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
       )}
 
       {/* Main content */}
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto px-4 py-8" data-testid="inner-game-page">
         {/* Page header with back button */}
         <div className="flex items-center gap-4 mb-6">
           <Button asChild variant="ghost" size="sm">

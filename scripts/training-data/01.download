@@ -91,6 +91,14 @@ SESSION_MAX_VIDEOS_MAX="${SESSION_MAX_VIDEOS_MAX:-40}"
 SESSION_PAUSE_MIN_SEC="${SESSION_PAUSE_MIN_SEC:-7200}"   # 2 hours
 SESSION_PAUSE_MAX_SEC="${SESSION_PAUSE_MAX_SEC:-21600}"  # 6 hours
 
+# --------------------------
+# Video download (DISABLED by default - pipeline only uses audio)
+# --------------------------
+# To enable video download for future visual analysis:
+#   SKIP_VIDEO=0 ./scripts/training-data/01.download ...
+# Or set in environment: export SKIP_VIDEO=0
+SKIP_VIDEO="${SKIP_VIDEO:-1}"
+
 # Extra delay between processing each line in --sources mode (with jitter)
 SLEEP_BETWEEN_SOURCES_MIN_SEC="${SLEEP_BETWEEN_SOURCES_MIN_SEC:-60}"
 SLEEP_BETWEEN_SOURCES_MAX_SEC="${SLEEP_BETWEEN_SOURCES_MAX_SEC:-180}"
@@ -638,32 +646,37 @@ download_one() {
 
   make_asr_files "$output_dir"
 
-  # VIDEO
-  : > "$log_video"
-  VIDEO_FORMAT="${VIDEO_FORMAT:-best[ext=mp4]/best}"
-  if [[ "${HIGH_QUALITY_VIDEO:-0}" == "1" ]]; then
-    VIDEO_FORMAT="bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bv*+ba/b"
-  fi
+  # VIDEO (disabled by default - pipeline only uses audio)
+  # Enable with: SKIP_VIDEO=0 ./scripts/training-data/01.download ...
+  if [[ "${SKIP_VIDEO:-1}" != "1" ]]; then
+    : > "$log_video"
+    VIDEO_FORMAT="${VIDEO_FORMAT:-best[ext=mp4]/best}"
+    if [[ "${HIGH_QUALITY_VIDEO:-0}" == "1" ]]; then
+      VIDEO_FORMAT="bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/bv*+ba/b"
+    fi
 
-  dl_with_backoff "$log_video" \
-    "$DOWNLOADER" \
-      --format "$VIDEO_FORMAT" \
-      --merge-output-format mp4 \
-      --output "${base}.%(ext)s" \
-      --write-info-json \
-      --download-archive "$archive_video" \
-      --no-post-overwrites \
-      "${common_dl_args[@]}" \
-      "${js_runtime_args[@]}" \
-      "${extractor_args[@]}" \
-      "${cookies_args[@]}" \
-      "$youtube_url" || {
-        rc=$?
-        echo "⚠️ Video step ended (code $rc). Log: $log_video"
-        [[ "$rc" -eq 77 ]] && return 77
-        [[ "$rc" -eq 78 ]] && return 78
-      }
-  make_asr_files "$output_dir"
+    dl_with_backoff "$log_video" \
+      "$DOWNLOADER" \
+        --format "$VIDEO_FORMAT" \
+        --merge-output-format mp4 \
+        --output "${base}.%(ext)s" \
+        --write-info-json \
+        --download-archive "$archive_video" \
+        --no-post-overwrites \
+        "${common_dl_args[@]}" \
+        "${js_runtime_args[@]}" \
+        "${extractor_args[@]}" \
+        "${cookies_args[@]}" \
+        "$youtube_url" || {
+          rc=$?
+          echo "⚠️ Video step ended (code $rc). Log: $log_video"
+          [[ "$rc" -eq 77 ]] && return 77
+          [[ "$rc" -eq 78 ]] && return 78
+        }
+    make_asr_files "$output_dir"
+  else
+    echo "⏭️ Skipping video download (SKIP_VIDEO=1). Audio-only mode."
+  fi
 
   # Anti-detection: increment session counter
   increment_session_count

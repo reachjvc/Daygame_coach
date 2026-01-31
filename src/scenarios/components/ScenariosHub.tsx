@@ -127,11 +127,11 @@ export function ScenariosHub({
   );
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="scenarios-hub">
       {/* Signup Prompt Modal */}
       {showSignupPrompt && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative">
+          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative" data-testid="scenarios-signup-prompt">
             <button
               onClick={() => setShowSignupPrompt(false)}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"

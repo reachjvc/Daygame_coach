@@ -22,7 +22,7 @@ const breadthColors: Record<string, string> = {
 
 function PillarCard({ pillar }: { pillar: ContentPillar }) {
   return (
-    <Card className="h-full hover:border-primary/50 transition-colors">
+    <Card className="h-full hover:border-primary/50 transition-colors" data-testid={`pillar-card-${pillar.id}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -45,9 +45,9 @@ function PillarCard({ pillar }: { pillar: ContentPillar }) {
 
 export function ArticlesPage() {
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12">
+    <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12" data-testid="articles-page">
       {/* Header */}
-      <header className="space-y-3 text-center">
+      <header className="space-y-3 text-center" data-testid="articles-header">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
           Articles & Research
         </p>
@@ -79,7 +79,7 @@ export function ArticlesPage() {
       </Card>
 
       {/* Content Pillars */}
-      <section>
+      <section data-testid="content-pillars">
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-foreground mb-2">Content Pillars</h2>
           <p className="text-muted-foreground">
@@ -94,7 +94,7 @@ export function ArticlesPage() {
       </section>
 
       {/* Article Types */}
-      <section>
+      <section data-testid="article-types">
         <div className="mb-6">
           <h2 className="text-2xl font-semibold text-foreground mb-2">Article Types</h2>
           <p className="text-muted-foreground">
@@ -103,7 +103,7 @@ export function ArticlesPage() {
         </div>
         <div className="grid sm:grid-cols-3 gap-4">
           {Object.entries(ARTICLE_TIERS).map(([key, tier]) => (
-            <Card key={key} className="h-full">
+            <Card key={key} className="h-full" data-testid={`article-type-${key}`}>
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-lg bg-muted flex items-center justify-center">

@@ -130,7 +130,7 @@ export function QAPage() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12">
+    <div className="mx-auto flex max-w-6xl flex-col gap-10 px-4 py-12" data-testid="qa-page">
       <header className="space-y-3 text-center">
         <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Q&A Coach</p>
         <h1 className="text-4xl font-semibold text-foreground">Ask the Coach</h1>
@@ -161,10 +161,10 @@ export function QAPage() {
 
             <CardContent className="flex flex-1 flex-col gap-4 px-0 pb-6 overflow-hidden">
               {showSamples && (
-                <div className="px-6 pb-4 border-b border-border">
+                <div className="px-6 pb-4 border-b border-border" data-testid="qa-samples">
                   <p className="text-xs font-medium text-foreground mb-2">Sample prompts:</p>
                   <div className="space-y-2">
-                    {SAMPLE_QUESTIONS.map((example) => (
+                    {SAMPLE_QUESTIONS.map((example, index) => (
                       <div key={example} className="flex items-center justify-between gap-2 rounded-lg bg-muted/40 px-3 py-2">
                         <span className="text-xs text-foreground flex-1">{example}</span>
                         <Button
@@ -173,6 +173,7 @@ export function QAPage() {
                           variant="outline"
                           onClick={() => handleExampleClick(example)}
                           className="flex-shrink-0"
+                          data-testid={`qa-sample-${index}`}
                         >
                           Use
                         </Button>
@@ -227,6 +228,7 @@ export function QAPage() {
                 </label>
                 <textarea
                   id="qa-question"
+                  data-testid="qa-input"
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={handleKeyDown}
@@ -235,7 +237,7 @@ export function QAPage() {
                   disabled={isLoading}
                 />
                 <div className="mt-4 flex items-center gap-3">
-                  <Button type="submit" disabled={isLoading || !input.trim()}>
+                  <Button type="submit" disabled={isLoading || !input.trim()} data-testid="qa-submit">
                     {isLoading ? "Thinking..." : "Ask the coach"}
                   </Button>
                 </div>
@@ -307,7 +309,7 @@ export function QAPage() {
 
             {/* Sources */}
             {(messages.length > 1 || isLoading) && (
-              <Card className="border-primary/20 overflow-hidden flex flex-col flex-1">
+              <Card className="border-primary/20 overflow-hidden flex flex-col flex-1" data-testid="qa-sources">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base">Sources</CardTitle>
                   <CardDescription className="text-xs">
