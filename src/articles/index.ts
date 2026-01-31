@@ -9,11 +9,6 @@ export type {
   ArticleStatus,
   ArticleTier,
   ContentPillar,
-  // Content alternatives
-  ContentUnit,
-  ContentAlternative,
-  GenerateAlternativesRequest,
-  GenerateAlternativesResponse,
   // Feedback types
   FeedbackType,
   FeedbackTypeConfig,
@@ -30,9 +25,6 @@ export {
   SCALABLE_FORMATS,
   ARTICLES_CONFIG,
 } from "./config"
-
-// Service
-export { generateAlternatives } from "./articlesService"
 
 // Components
 export { ArticlesPage } from "./components/ArticlesPage"

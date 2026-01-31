@@ -1,6 +1,8 @@
 # Pipeline Plan
 
 Status: Active
+Updated: 31-01-2026 22:09 - Added "One Script at a Time" philosophy, extensive gate review process
+Updated: 31-01-2026 20:01 - Added GATE + spot-checks for 03.audio-features (every script now has a gate)
 Updated: 31-01-2026 19:50 - Added gate validation rules and extended spot-check requirements
 Updated: 31-01-2026 20:00 - Consolidated from 14 files. Conflicts resolved with user.
 
@@ -108,14 +110,42 @@ Each script reads from the previous script's output folder.
 
 ---
 
-## Quality Approach (Pragmatic)
+## Quality Approach (One Script at a Time)
 
-**No strict % targets.** Quality is validated through:
+### Core Principle: Quality Over Speed
+
+**The objective is to make sure each script works correctly, not to get through the pipeline fast.**
+
+Think like a senior developer who has built these pipelines many times and has seen them fail further downstream because earlier steps had subtle bugs that weren't caught. Every bug not caught at step N becomes 10x harder to debug at step N+3.
+
+### One Script at a Time
+
+- **Complete one script fully** before moving to the next
+- **Extensive verification** - not just summary tables and "APPROVED?"
+- **Understand the data** - read actual segments, verify logic, spot anomalies
+- **Question everything** - if something looks off, investigate before proceeding
+
+### Gate Review Philosophy
+
+A gate review is NOT:
+- ❌ Two summary tables + "Reply APPROVED"
+- ❌ Rushing to the next step
+- ❌ Assuming the script worked because it ran without errors
+
+A gate review IS:
+- ✅ Deep inspection of actual output data
+- ✅ Reading individual segments to verify correctness
+- ✅ Comparing expected vs actual behavior
+- ✅ Catching edge cases before they propagate downstream
+- ✅ User understanding what the data looks like before approving
+
+### Validation Layers
 
 1. **Pre-gate validation**: Automated rules that MUST pass before presenting to user
 2. **Distribution review**: At each gate, Claude presents label distributions
 3. **Mandatory spot-checks**: Script-specific requirements (not just samples)
 4. **Full minority review**: ALL minority labels shown, not sampled
+5. **User deep-dive**: User reviews actual data, not just summaries
 
 ### Pre-Gate Validation Rules (HARD FAIL)
 
@@ -126,6 +156,12 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 - No `"unknown"` values in required classification fields
 - Schema validation passes
 - All files processed without errors
+
+**03.audio-features specific:**
+- `pitch_range_hz[1]` must be 350.0 (NOT 1046.5 - old format)
+- `speaker_embedding` must be present for segments >= 0.8s duration
+- `processing.embedder` must be "resemblyzer"
+- At least 70% of segments must have non-null speaker_embedding
 
 **04.segment-enrich specific:**
 - `detected_video_type` must be `infield`, `talking_head`, or `podcast` (NOT `unknown`)
@@ -147,6 +183,12 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 
 Claude MUST present these items - not samples, but ALL instances:
 
+**03.audio-features:**
+1. **Per-video summary table**: segments count, embeddings present, embeddings null, pitch_range used
+2. **ALL segments with null embeddings** - show segment index, duration, text (short segments expected)
+3. **Speaker ID distribution** per video - how many spk_0, spk_1, unknown
+4. **Sample 3 segments per video** with full feature values (pitch, energy, tempo, spectral)
+
 **04.segment-enrich:**
 1. **ALL segments labeled as minority speakers** (target, voiceover, other) - show full text
 2. **ALL videos with <10% target segments** if type is "infield" - likely mislabeling
@@ -163,10 +205,42 @@ Claude MUST present these items - not samples, but ALL instances:
 2. **ALL interactions with 0 techniques** - might need review
 3. **Sample 3 complete interactions** per video with full content
 
+### Gate Review Process
+
+**⚠️ IMPORTANT: Do not rush to approval. The goal is verification, not speed.**
+
+For EVERY gate:
+
+1. **Run all automated validations** - fix any failures before proceeding
+2. **Generate summary tables** - but these are just the starting point
+3. **Deep-dive into actual data**:
+   - Read 5-10 actual segments from each video
+   - Verify labels/classifications make sense
+   - Look for patterns that indicate bugs
+4. **Present findings to user** including:
+   - What you checked
+   - What you found
+   - Any concerns or anomalies
+   - Sample data for user to review
+5. **Wait for user to ask questions** - they may want to see more data
+6. **Only request approval after user is satisfied**
+
+### What Claude Should Ask During Gate Review
+
+- "Here's segment X - does this label look correct to you?"
+- "I noticed pattern Y - is this expected?"
+- "Want me to show more examples of Z?"
+- "Should I investigate this anomaly further?"
+
 ### Gate Report Template
 
 ```
 ## Gate Report: [Script Name]
+
+### ⚠️ Reminder
+This gate review is about VERIFYING the script works correctly.
+Take time to understand the data before approving.
+Bugs caught now save 10x debugging time later.
 
 ### Pre-Gate Validation
 - [ ] No fallback methods used
@@ -174,26 +248,38 @@ Claude MUST present these items - not samples, but ALL instances:
 - [ ] Schema validation passed
 - [ ] [Script-specific checks passed]
 
-### Summary
-- Processed: X files
-- Errors: X (MUST BE 0 to proceed)
+### Processing Summary
+- Files processed: X
+- Errors: X (MUST BE 0)
 - Skipped: X
 
-### Per-Video Summary Table
-| Video | Type | Segments | Coach | Target | Other | Flags |
-|-------|------|----------|-------|--------|-------|-------|
+### Data Inspection (Deep-Dive)
 
-### Distributions
-- [Label type]: X% label_a, Y% label_b, Z% label_c
+#### Per-Video Summary
+[Table with key metrics]
 
-### Mandatory Review Items
-[ALL items from the script-specific requirements above]
+#### Actual Data Samples
+[Show 3-5 actual segments per video with full context]
+[User should be able to verify correctness by reading these]
 
-### Flagged Items
-[Items that passed validation but need human review]
+#### Mandatory Review Items
+[ALL items from script-specific requirements]
+[Show actual data, not just counts]
 
-### Your Action
-Reply: APPROVED or describe issues
+#### Anomalies & Concerns
+[Anything that looks off, even if it passed validation]
+[Better to flag false positives than miss real bugs]
+
+### Questions for User
+- [Specific questions about data correctness]
+- [Areas where user input would help]
+
+### Next Steps
+User options:
+1. Ask to see more data
+2. Ask questions about specific items
+3. Request fixes for issues found
+4. APPROVED - only when satisfied with data quality
 ```
 
 ---
@@ -224,7 +310,8 @@ Run full pipeline on all remaining videos.
 - [x] resemblyzer installed for speaker embeddings
 
 ### Phase A: 5 Test Videos [IN PROGRESS]
-- [ ] 03.audio-features regenerated (need speaker_embedding for all 456)
+- [ ] 03.audio-features run on 5 videos
+- [ ] **GATE: User approves 03 output**
 - [ ] 04.segment-enrich run on 5 videos
 - [ ] **GATE: User approves 04 output**
 - [ ] 05.conversations run on 5 videos

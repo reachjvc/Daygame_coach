@@ -1,7 +1,8 @@
 # Pipeline Status
 
+Updated: 31-01-2026 22:09 - Added quality-first approach to plan. Next: thorough 03.audio-features review.
+Updated: 31-01-2026 20:05 - Gate reports generated for 03 and 04. Issues found with 04 labeling.
 Updated: 31-01-2026 19:50 - 04.segment-enrich completed on 5 videos. Awaiting gate approval.
-Updated: 31-01-2026 20:00 - Fresh start after consolidation. Restarting 5-video test.
 
 ---
 
@@ -18,12 +19,22 @@ Phase D: Cleanup          [NOT STARTED]
 
 ## Current Gate
 
-**AWAITING APPROVAL**: 04.segment-enrich completed on 5 test videos
+**FOCUS**: 03.audio-features on 5 test videos (one script at a time)
 
-Gate report presented with:
-- Pre-gate validation: PASSED (no unknown types, no heuristics)
-- All 35 target segments shown for review
-- Video 5 keyword fix applied (added "conversations" to TALKING_HEAD_KEYWORDS)
+### What Needs Thorough Verification:
+1. Speaker embeddings are being generated correctly
+2. Speaker clustering (spk_0, spk_1) makes sense
+3. Feature extraction (pitch, energy, tempo) has reasonable values
+4. No old-format files are being used
+
+### Known State:
+- 5 test videos have NEW format (pitch_fmax=350, embeddings present)
+- 449 other videos have OLD format (need regeneration for Phase B/C)
+- There are duplicate files (raw16k vs clean16k) that need cleanup
+
+### After 03 is Approved:
+- Then move to 04.segment-enrich verification
+- 04 has known issues: 5 mislabeled segments in infield video
 
 ---
 

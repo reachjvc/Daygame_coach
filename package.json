@@ -15,6 +15,7 @@
     "check-stats": "python3 scripts/check_progress.py",
     "ingest": "node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts",
     "seed:values": "tsx scripts/seed_values.ts",
+    "audit": "bash scripts/audit-session.sh",
     "prepare": "husky"
   },
   "dependencies": {

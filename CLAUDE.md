@@ -20,6 +20,8 @@
 | 3 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
 | 4 | Did I modify any doc? | Add changelog entry with today's date |
 
+if in doubt, ask user if documents should be updated or not .
+
 **The doc is the source of truth, not your summary.**
 
 ---
@@ -39,6 +41,16 @@ CORRECT ORDER:
 2. Update doc               ← Do this FIRST
 3. Tell user "Done!"        ← Only after doc is updated
 ```
+
+**Why This Matters (Consequences):**
+| When you skip doc updates... | What happens |
+|------------------------------|--------------|
+| User starts new session | Next Claude has no context, asks same questions again |
+| User shares project with teammate | Teammate reads stale docs, makes wrong assumptions |
+| User returns after 2 weeks | Forgets what was done, doc doesn't help |
+| Pipeline doc not updated | Next pipeline run uses wrong assumptions, fails silently |
+
+**Real cost:** Every skipped doc update = 15-30 min of user's future time wasted.
 
 ### 2. Test-Driven Workflow
 
@@ -111,7 +123,6 @@ Pre-commit hook (`.husky/pre-commit`) runs `npm test` automatically.
 
 - **Living docs** - Update existing files, don't create new
 - **One source** - Specs in `docs/slices/SLICE_*.md`
-- **Max 500 lines** - Split if longer
 - **Status headers** - Every doc needs `Status:` and `Updated:`
 
 ---
@@ -123,3 +134,5 @@ Report unused items:
 - Orphan data folders
 - Test artifacts (`*-test/`, `*.backup*`, `test-*.py`)
 - Old logs (>7 days)
+
+

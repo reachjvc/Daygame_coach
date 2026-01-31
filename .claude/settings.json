@@ -3,7 +3,13 @@
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "echo '[REMINDER] After this edit, update relevant doc before summarizing'"
+        "command": "echo '⚠️ REMINDER: Update relevant doc BEFORE summarizing to user'"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "echo '📝 File modified. Did you update the corresponding doc?'"
       }
     ]
   }

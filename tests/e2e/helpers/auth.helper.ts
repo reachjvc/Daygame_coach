@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test'
 import { SELECTORS } from './selectors'
-import { TEST_USER, validateTestConfig } from '../fixtures/test-user'
+import { TEST_USER, TEST_USER_B, validateTestConfig, validateSecondUserConfig } from '../fixtures/test-user'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
@@ -49,5 +49,29 @@ export async function ensureLoggedIn(page: Page): Promise<void> {
 
   if (currentUrl.includes('/auth/login') || currentUrl === 'about:blank') {
     await login(page)
+  }
+}
+
+/**
+ * Logs in as the second test user (User B).
+ * Used for RLS isolation tests to verify users can't see each other's data.
+ */
+export async function loginAsUserB(page: Page): Promise<void> {
+  validateSecondUserConfig()
+
+  await page.goto('/auth/login', { timeout: AUTH_TIMEOUT })
+
+  await page.getByTestId(SELECTORS.auth.emailInput).fill(TEST_USER_B.email, { timeout: ACTION_TIMEOUT })
+  await page.getByTestId(SELECTORS.auth.passwordInput).fill(TEST_USER_B.password, { timeout: ACTION_TIMEOUT })
+  await page.getByTestId(SELECTORS.auth.submitButton).click({ timeout: ACTION_TIMEOUT })
+
+  // Wait for redirect to complete
+  await page.waitForURL(/\/(dashboard|redirect|preferences)/, { timeout: AUTH_TIMEOUT })
+
+  // Verify no error message is shown
+  const errorVisible = await page.getByTestId(SELECTORS.auth.errorMessage).isVisible().catch(() => false)
+  if (errorVisible) {
+    const errorText = await page.getByTestId(SELECTORS.auth.errorMessage).textContent()
+    throw new Error(`Login as User B failed with error: ${errorText}`)
   }
 }

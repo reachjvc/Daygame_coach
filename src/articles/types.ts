@@ -82,7 +82,7 @@ export type ArticleSortBy = "newest" | "oldest" | "readTime"
  * Feedback types for marking article sections during review.
  * Used in iterative refinement workflow.
  */
-export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source"
+export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source" | "alternatives"
 
 export interface FeedbackTypeConfig {
   label: string
@@ -99,6 +99,7 @@ export interface FeedbackTypeConfig {
  * - angle: Wrong direction, rewrite from here onwards
  * - ai: Too obviously AI, complete rewrite needed
  * - note: Custom comment
+ * - alternatives: Request 3 alternative versions
  */
 export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
   excellent: {
@@ -142,6 +143,12 @@ export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
     tooltip: "This content needs a source citation - BLOCKS publishing",
     color: "text-red-600 font-bold",
     bg: "bg-red-500/30 border-red-500/50 border-2"
+  },
+  alternatives: {
+    label: "3 Alternatives",
+    tooltip: "Request 3 alternative versions with different approaches",
+    color: "text-pink-600",
+    bg: "bg-pink-500/20 border-pink-500/30"
   }
 }
 
@@ -150,48 +157,6 @@ export interface ArticleFeedbackFlag {
   quote?: string
   note?: string
   sectionId: string
-}
-
-// ============================================
-// Content alternatives (AI generation)
-// ============================================
-
-export type ContentUnit = "sentence" | "paragraph" | "section"
-
-export interface ContentAlternative {
-  /** The alternative content */
-  content: string
-  /** What approach/angle this alternative takes */
-  approach: string
-  /** Brief explanation of why this works */
-  rationale: string
-}
-
-export interface GenerateAlternativesRequest {
-  /** The original content to generate alternatives for */
-  originalContent: string
-  /** What type of content unit this is */
-  unit: ContentUnit
-  /** Optional surrounding context for better alternatives */
-  context?: {
-    /** What comes before this content */
-    before?: string
-    /** What comes after this content */
-    after?: string
-    /** The article title/topic */
-    articleTitle?: string
-    /** The article pillar for tone guidance */
-    pillar?: ArticlePillar
-  }
-}
-
-export interface GenerateAlternativesResponse {
-  alternatives: ContentAlternative[]
-  /** Processing metadata */
-  meta: {
-    model: string
-    latencyMs: number
-  }
 }
 
 // ============================================

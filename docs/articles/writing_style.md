@@ -4,6 +4,7 @@
 **Updated:** 29-01-2026
 
 ## Changelog
+- 31-01-2026 22:05 - Added revision rules (scope matching, flag meanings, alternatives over best guess)
 - 29-01-2026 18:30 - Added scientific voice principle (third person, research-backed)
 - 29-01-2026 09:45 - Added core principle, opening preference, trimmed fluff
 
@@ -46,6 +47,31 @@ If something feels "dead" — generic, safe, could-be-written-by-anyone — kill
 > Feedback makes you worse. Not always, not most of the time, but often enough that it should concern you. A meta-analysis of 607 studies found that one-third of the time, receiving feedback actually decreased performance.
 
 *What works: Unexpected claim. Specific. Makes you want to know more.*
+
+---
+
+## Revision Rules
+
+**Match the scope of revision to the scope of the flag.**
+
+- Flag on a **sentence/phrase** → Rewrite that sentence. Offer 2-3 alternatives.
+- Flag on a **whole section** → Rewrite the section. Try a different angle entirely.
+- Mixed flags (liked some parts, flagged others) → Preserve what works, replace what doesn't.
+
+**What each flag means for revision:**
+
+| Flag | Scope: Sentence | Scope: Section |
+|------|-----------------|----------------|
+| Excellent | Keep exactly | Keep exactly |
+| Good | Keep as-is | Keep as-is |
+| Almost | Small tweak | Small tweaks |
+| AI | 2-3 alternative sentences | New angle, different structure |
+| Angle | 2-3 alternative sentences | Start over, fresh direction |
+| Note | Follow the specific instruction | Follow the specific instruction |
+
+**The test:** If a flag asks for change and your revision is >80% the same words, you didn't revise — you edited. When something is flagged AI or Angle, the structure itself is the problem. Polishing broken structure produces polished broken structure.
+
+**Default to alternatives over "best guess."** Especially for AI/Angle flags, give options rather than picking one. Let the editor choose.
 
 ---
 

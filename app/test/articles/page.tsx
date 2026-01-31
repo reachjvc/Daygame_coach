@@ -19,7 +19,8 @@ import {
   RotateCcw,
   FileEdit,
   Loader2,
-  AlertTriangle
+  AlertTriangle,
+  Shuffle,
 } from "lucide-react"
 import { type FeedbackType, type ArticleFeedbackFlag, FEEDBACK_TYPES } from "@/src/articles/types"
 
@@ -45,6 +46,7 @@ interface LoadedArticle {
   sections: ArticleSection[]
 }
 
+
 // Icon mapping for feedback types
 const FEEDBACK_ICONS: Record<FeedbackType, React.ReactNode> = {
   excellent: <Star className="size-3" />,
@@ -53,6 +55,7 @@ const FEEDBACK_ICONS: Record<FeedbackType, React.ReactNode> = {
   angle: <RotateCcw className="size-3" />,
   ai: <Bot className="size-3" />,
   note: <MessageSquare className="size-3" />,
+  alternatives: <Shuffle className="size-3" />,
   source: <AlertTriangle className="size-3" />,
 }
 
@@ -63,8 +66,10 @@ const FEEDBACK_ICONS_LG: Record<FeedbackType, React.ReactNode> = {
   angle: <RotateCcw className="size-4" />,
   ai: <Bot className="size-4" />,
   note: <MessageSquare className="size-4" />,
+  alternatives: <Shuffle className="size-4" />,
   source: <AlertTriangle className="size-4" />,
 }
+
 
 interface SelectionPopup {
   x: number
@@ -179,7 +184,9 @@ export default function ArticleEditorPage() {
     let y: number
 
     if (selectedText && selectedText.length > 0) {
-      text = selectedText
+      // Normalize whitespace: collapse multiple spaces/newlines into single space
+      // This handles cross-paragraph selections and browser whitespace quirks
+      text = selectedText.replace(/\s+/g, ' ')
       const range = sel?.getRangeAt(0)
       const rect = range?.getBoundingClientRect()
       if (!rect) return
@@ -331,13 +338,61 @@ export default function ArticleEditorPage() {
     }
 
     const result = text
+    // Normalize text for searching (collapse whitespace)
+    const normalizedText = text.replace(/\s+/g, ' ')
     const highlights: { start: number; end: number; type: FeedbackType }[] = []
 
     sectionFlags.forEach(flag => {
       if (!flag.quote) return
-      const idx = result.indexOf(flag.quote)
+      // Try exact match first
+      let idx = result.indexOf(flag.quote)
       if (idx !== -1) {
-        highlights.push({ start: idx, end: idx + flag.quote.length, type: flag.type })
+        highlights.push({
+          start: idx,
+          end: idx + flag.quote.length,
+          type: flag.type,
+        })
+      } else {
+        // Try normalized match (handles whitespace differences)
+        const normalizedQuote = flag.quote.replace(/\s+/g, ' ')
+        const normalizedIdx = normalizedText.indexOf(normalizedQuote)
+        if (normalizedIdx !== -1) {
+          // Map normalized position back to original text
+          // Count actual characters up to the normalized position
+          let originalPos = 0
+          let normalizedPos = 0
+          while (normalizedPos < normalizedIdx && originalPos < text.length) {
+            if (/\s/.test(text[originalPos])) {
+              // Skip consecutive whitespace in original
+              while (originalPos < text.length && /\s/.test(text[originalPos])) {
+                originalPos++
+              }
+              normalizedPos++ // One space in normalized
+            } else {
+              originalPos++
+              normalizedPos++
+            }
+          }
+          // Find end position similarly
+          let endOriginalPos = originalPos
+          let endNormalizedPos = 0
+          while (endNormalizedPos < normalizedQuote.length && endOriginalPos < text.length) {
+            if (/\s/.test(text[endOriginalPos])) {
+              while (endOriginalPos < text.length && /\s/.test(text[endOriginalPos])) {
+                endOriginalPos++
+              }
+              endNormalizedPos++
+            } else {
+              endOriginalPos++
+              endNormalizedPos++
+            }
+          }
+          highlights.push({
+            start: originalPos,
+            end: endOriginalPos,
+            type: flag.type,
+          })
+        }
       }
     })
 
@@ -350,7 +405,7 @@ export default function ArticleEditorPage() {
       if (h.start > lastEnd) {
         segments.push(<span key={`text-${i}`}>{result.slice(lastEnd, h.start)}</span>)
       }
-      const highlightClass =
+      const baseClass =
         h.type === "excellent" ? "bg-purple-200 dark:bg-purple-900/50" :
         h.type === "good" ? "bg-green-200 dark:bg-green-900/50" :
         h.type === "almost" ? "bg-yellow-200 dark:bg-yellow-900/50" :
@@ -358,8 +413,12 @@ export default function ArticleEditorPage() {
         h.type === "ai" ? "bg-orange-200 dark:bg-orange-900/50" :
         h.type === "source" ? "bg-red-300 dark:bg-red-800/70 font-bold border-2 border-red-500" :
         "bg-blue-200 dark:bg-blue-900/50"
+
       segments.push(
-        <mark key={`highlight-${i}`} className={`${highlightClass} rounded px-0.5`}>
+        <mark
+          key={`highlight-${i}`}
+          className={`${baseClass} rounded px-0.5`}
+        >
           {result.slice(h.start, h.end)}
         </mark>
       )
@@ -407,6 +466,7 @@ export default function ArticleEditorPage() {
                 <div className="w-px h-6 bg-border mx-1" />
                 <FeedbackButton type="angle" onClick={() => addFlag("angle", selection.sectionId, selection.text)} size="lg" />
                 <FeedbackButton type="ai" onClick={() => addFlag("ai", selection.sectionId, selection.text)} size="lg" />
+                <FeedbackButton type="alternatives" onClick={() => addFlag("alternatives", selection.sectionId, selection.text)} size="lg" />
                 <div className="w-px h-6 bg-border mx-1" />
                 <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setCommentMode(true)} title="Add a custom comment">
                   <MessageSquare className="size-4 text-blue-600" />
@@ -572,9 +632,9 @@ export default function ArticleEditorPage() {
 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="mx-auto px-4 py-4 max-w-4xl">
           {/* Article & Version Selectors */}
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-muted-foreground">Article:</label>
               <select
@@ -616,7 +676,7 @@ export default function ArticleEditorPage() {
               </select>
             </div>
 
-            {loading && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+            {loading && <Loader2 className="size-4 animate-spin text-muted-foreground ml-auto" />}
           </div>
 
           {/* Blocking flags warning */}
@@ -685,9 +745,9 @@ export default function ArticleEditorPage() {
       </div>
 
       {/* Instructions */}
-      <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="mx-auto px-4 py-4 max-w-4xl">
         <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-          <strong>How to use:</strong> Right-click any paragraph to flag it (or select specific text first). Hover over buttons to see what each does.
+          <strong>How to use:</strong> Right-click any paragraph to flag it (or select specific text first). You can select multiple sentences. Hover over buttons to see what each does.
           <div className="flex flex-wrap gap-3 mt-2">
             <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.excellent.tooltip}><Star className="size-3 text-purple-600" /> Excellent</span>
             <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.good.tooltip}><Sparkles className="size-3 text-green-600" /> Good</span>
@@ -701,83 +761,84 @@ export default function ArticleEditorPage() {
       </div>
 
       {/* Article sections */}
-      <div className="max-w-4xl mx-auto px-4 pb-12">
-        {loading && !loadedArticle ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="size-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : loadedArticle?.sections.map((section, idx) => {
-          const sectionFlags = getFlagsForSection(section.id)
+      <div className="mx-auto px-4 pb-12 max-w-4xl">
+          {loading && !loadedArticle ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="size-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : loadedArticle?.sections.map((section, idx) => {
+            const sectionFlags = getFlagsForSection(section.id)
 
-          return (
-            <Card key={section.id} className="mb-6 group">
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-mono text-muted-foreground">
-                    Section {idx + 1}: {section.id}
-                  </CardTitle>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-xs text-muted-foreground mr-2">Whole section:</span>
-                    <FeedbackButton type="excellent" onClick={() => addFlag("excellent", section.id)} />
-                    <FeedbackButton type="good" onClick={() => addFlag("good", section.id)} />
-                    <FeedbackButton type="almost" onClick={() => addFlag("almost", section.id)} />
-                    <FeedbackButton type="angle" onClick={() => addFlag("angle", section.id)} />
-                    <FeedbackButton type="ai" onClick={() => addFlag("ai", section.id)} />
-                    <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => {
-                      setSectionCommentModal({ sectionId: section.id })
-                      setSectionCommentText("")
-                    }} title={FEEDBACK_TYPES.note.tooltip}>
-                      <MessageSquare className="size-4 text-blue-600" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-7 px-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
-                      onClick={() => setSourceModal({ sectionId: section.id })}
-                      title={FEEDBACK_TYPES.source.tooltip}
-                    >
-                      <AlertTriangle className="size-4 text-red-600" />
-                    </Button>
+            return (
+              <Card key={section.id} className="mb-6 group">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-mono text-muted-foreground">
+                      Section {idx + 1}: {section.id}
+                    </CardTitle>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span className="text-xs text-muted-foreground mr-2">Whole section:</span>
+                      <FeedbackButton type="excellent" onClick={() => addFlag("excellent", section.id)} />
+                      <FeedbackButton type="good" onClick={() => addFlag("good", section.id)} />
+                      <FeedbackButton type="almost" onClick={() => addFlag("almost", section.id)} />
+                      <FeedbackButton type="angle" onClick={() => addFlag("angle", section.id)} />
+                      <FeedbackButton type="ai" onClick={() => addFlag("ai", section.id)} />
+                      <FeedbackButton type="alternatives" onClick={() => addFlag("alternatives", section.id)} />
+                      <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => {
+                        setSectionCommentModal({ sectionId: section.id })
+                        setSectionCommentText("")
+                      }} title={FEEDBACK_TYPES.note.tooltip}>
+                        <MessageSquare className="size-4 text-blue-600" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
+                        onClick={() => setSourceModal({ sectionId: section.id })}
+                        title={FEEDBACK_TYPES.source.tooltip}
+                      >
+                        <AlertTriangle className="size-4 text-red-600" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {sectionFlags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {sectionFlags.map((flag, i) => {
-                      const globalIdx = flags.indexOf(flag)
-                      const config = FEEDBACK_TYPES[flag.type]
-                      return (
-                        <Badge
-                          key={i}
-                          variant="outline"
-                          className={`${config.bg} cursor-pointer max-w-xs`}
-                          onClick={() => removeFlag(globalIdx)}
-                        >
-                          {FEEDBACK_ICONS[flag.type]}
-                          <span className="ml-1 truncate">
-                            {flag.quote ? `"${flag.quote.slice(0, 20)}${flag.quote.length > 20 ? '...' : ''}"` : config.label}
-                            {flag.note && `: ${flag.note.slice(0, 20)}${flag.note.length > 20 ? '...' : ''}`}
-                          </span>
-                          <X className="size-3 ml-1 opacity-50" />
-                        </Badge>
-                      )
-                    })}
-                  </div>
-                )}
+                </CardHeader>
+                <CardContent>
+                  {sectionFlags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {sectionFlags.map((flag, i) => {
+                        const globalIdx = flags.indexOf(flag)
+                        const config = FEEDBACK_TYPES[flag.type]
 
-                <div className="prose prose-neutral dark:prose-invert max-w-none select-text" onContextMenu={(e) => handleContextMenu(e, section.id)}>
-                  {section.content.split('\n\n').map((paragraph, pIdx) => (
-                    <p key={pIdx} className="text-base leading-relaxed mb-4 last:mb-0">
-                      {renderHighlightedText(paragraph, section.id)}
-                    </p>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+                        return (
+                          <Badge
+                            key={i}
+                            variant="outline"
+                            className={`${config.bg} max-w-xs`}
+                          >
+                            {FEEDBACK_ICONS[flag.type]}
+                            <span className="ml-1 truncate">
+                              {flag.quote ? `"${flag.quote.slice(0, 30)}${flag.quote.length > 30 ? '...' : ''}"` : config.label}
+                              {flag.note && `: ${flag.note.slice(0, 20)}${flag.note.length > 20 ? '...' : ''}`}
+                            </span>
+                            <X className="size-3 ml-1 opacity-50 cursor-pointer" onClick={() => removeFlag(globalIdx)} />
+                          </Badge>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <div className="prose prose-neutral dark:prose-invert max-w-none select-text" onContextMenu={(e) => handleContextMenu(e, section.id)}>
+                    {section.content.split('\n\n').map((paragraph, pIdx) => (
+                      <p key={pIdx} className="text-base leading-relaxed mb-4 last:mb-0">
+                        {renderHighlightedText(paragraph, section.id)}
+                      </p>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
     </div>
   )
 }

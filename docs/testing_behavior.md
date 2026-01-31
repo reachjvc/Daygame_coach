@@ -1,11 +1,26 @@
 # Testing Behavior
 
 **Status:** Active
-**Updated:** 30-01-2026 21:15
+**Updated:** 31-01-2026 20:01
 
 ## Changelog
+- 31-01-2026 20:01 - Added mandatory read requirement and related test plans reference
 - 31-01-2026 19:46 - Added architecture compliance tests and husky pre-commit hooks section
 - 30-01-2026 21:15 - Comprehensive rewrite: deterministic testing, testcontainers, TDD workflow, edge cases
+
+---
+
+## Mandatory: Read Before Writing Tests
+
+**Before writing ANY new tests, you MUST:**
+
+1. Read this document (`docs/testing_behavior.md`) in full
+2. Read `CLAUDE.md` testing rules
+3. Check relevant test plan:
+   - `docs/better_tests_plan.md` - Integration & security tests
+   - `docs/supplementary_unit_tests_plan.md` - Pure function unit tests
+
+**This is non-negotiable.** Tests written without reading these docs will likely violate project standards.
 
 ---
 
@@ -129,4 +144,15 @@ Install hooks after cloning: `npm install` (runs `husky` via prepare script)
 
 ## Pre-Commit Requirement
 
-**All tests must pass before returning to user.** Claude must run `npm test` and see green before completing any task. 
+**All tests must pass before returning to user.** Claude must run `npm test` and see green before completing any task.
+
+---
+
+## Related Test Plans
+
+| Plan | Purpose | Location |
+|------|---------|----------|
+| **Integration & Security** | Testcontainers, RLS, auth, error handling | `docs/better_tests_plan.md` |
+| **Unit Tests** | Pure function coverage | `docs/supplementary_unit_tests_plan.md` |
+
+Both plans complement this document. Check them before adding new test files. 
