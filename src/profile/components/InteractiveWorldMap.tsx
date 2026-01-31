@@ -10,6 +10,7 @@ import {
   isLocked,
 } from "@/src/profile/data/regions";
 import { normalizeCountryId, getDisplayName, isNoiseId } from "@/src/profile/data/map-audit";
+import { MAP_CONFIG, MAP_STYLES, MAP_MESSAGES } from "../config";
 
 interface InteractiveWorldMapProps {
   selectedRegion: string | null;
@@ -20,35 +21,6 @@ interface InteractiveWorldMapProps {
   isInteractive?: boolean;
   showCountryFocus?: boolean;
 }
-
-const MAP_VIEWBOX = "0 0 950 620";
-
-const MAP_STYLES = {
-  baseFill: "#cfe4ff",
-  baseStroke: "rgba(17, 24, 39, 0.6)",
-  hoverFill: "#fb923c",
-  hoverStroke: "transparent",
-  activeFill: "#f97316",
-  activeStroke: "transparent",
-  focusFill: "#ef4444",
-  focusStroke: "#dc2626",
-  primaryMutedFill: "#fa8f45",
-  primaryMutedStroke: "#e0f2fe",
-  secondaryFill: "#fa8f45",
-  secondaryStroke: "#f5852f",
-  secondaryFocusFill: "#f46969",
-  secondaryFocusStroke: "#ef5252",
-  arcticFill: "#93c5fd",
-  arcticStroke: "#e0f2fe",
-  arcticHoverFill: "#60a5fa",
-  arcticHoverStroke: "#bae6fd",
-};
-
-const LOCKED_MESSAGE =
-  "Exotic - and very cold choice - not currently available as a dateable region.";
-const LOCKED_SMALL_MESSAGE =
-  "Small or remote territory - not currently available as a dateable region.";
-const COUNTRY_PREVIEW_LIMIT = 6;
 
 export function InteractiveWorldMap({
   selectedRegion,
@@ -103,7 +75,7 @@ export function InteractiveWorldMap({
     const svg = container.querySelector("svg");
     if (!svg) return;
 
-    svg.setAttribute("viewBox", MAP_VIEWBOX);
+    svg.setAttribute("viewBox", MAP_CONFIG.viewBox);
     svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
     svg.removeAttribute("width");
     svg.removeAttribute("height");
@@ -436,8 +408,8 @@ export function InteractiveWorldMap({
     });
 
     return {
-      items: ordered.slice(0, COUNTRY_PREVIEW_LIMIT),
-      hasMore: ordered.length > COUNTRY_PREVIEW_LIMIT,
+      items: ordered.slice(0, MAP_CONFIG.countryPreviewLimit),
+      hasMore: ordered.length > MAP_CONFIG.countryPreviewLimit,
       fallback: null as string | null,
     };
   };
@@ -486,7 +458,7 @@ export function InteractiveWorldMap({
                 {hoveredCountryName && (
                   <p className="mb-2 text-sm text-muted-foreground">{hoveredCountryName}</p>
                 )}
-                <p className="text-sm font-semibold text-foreground">{LOCKED_MESSAGE}</p>
+                <p className="text-sm font-semibold text-foreground">{MAP_MESSAGES.locked}</p>
               </>
             ) : hoveredLocked ? (
               <>
@@ -494,7 +466,7 @@ export function InteractiveWorldMap({
                 {hoveredCountryName && (
                   <p className="mb-2 text-sm text-muted-foreground">{hoveredCountryName}</p>
                 )}
-                <p className="text-sm font-semibold text-foreground">{LOCKED_SMALL_MESSAGE}</p>
+                <p className="text-sm font-semibold text-foreground">{MAP_MESSAGES.lockedSmall}</p>
               </>
             ) : (
               <>

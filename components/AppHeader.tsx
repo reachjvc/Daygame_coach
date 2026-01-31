@@ -63,7 +63,7 @@ export function AppHeader({
             <>
               {/* Logged in navigation */}
               {showDashboard && (
-                <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+                <Button asChild variant="ghost" className="text-foreground hover:text-primary" data-testid="header-dashboard-link">
                   <Link href="/dashboard">
                     <LayoutDashboard className="size-4 mr-2" />
                     Dashboard
@@ -87,7 +87,7 @@ export function AppHeader({
                 </Button>
               )}
               {showSettings && (
-                <Button asChild variant="ghost" className="text-foreground hover:text-primary">
+                <Button asChild variant="ghost" className="text-foreground hover:text-primary" data-testid="header-settings-link">
                   <Link href="/dashboard/settings">
                     <Settings className="size-4 mr-2" />
                     Settings
@@ -103,7 +103,7 @@ export function AppHeader({
                 </Button>
               )}
               <form action={signOut}>
-                <Button variant="ghost" type="submit" className="text-foreground hover:text-primary">
+                <Button variant="ghost" type="submit" className="text-foreground hover:text-primary" data-testid="header-logout-button">
                   <LogOut className="size-4 mr-2" />
                   Log Out
                 </Button>

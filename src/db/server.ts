@@ -32,3 +32,11 @@ export {
   updateUserProgress,
   getCurrentUserProfile,
 } from "./profilesRepo"
+
+export {
+  requireAuth,
+  requirePremium,
+  type AuthResult,
+  type AuthSuccess,
+  type AuthFailure,
+} from "./auth"

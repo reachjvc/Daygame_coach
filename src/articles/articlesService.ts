@@ -38,7 +38,7 @@ const AlternativesResponseSchema = zodSchema(
 // Prompt building
 // ============================================
 
-const PILLAR_TONE_GUIDANCE: Record<ArticlePillar, string> = {
+export const PILLAR_TONE_GUIDANCE: Record<ArticlePillar, string> = {
   learning:
     "Write in an educational, research-backed tone. Use concrete examples and cite principles from psychology, sports science, or learning theory where relevant.",
   "inner-game":
@@ -69,7 +69,7 @@ const UNIT_GUIDANCE: Record<ContentUnit, string> = {
     `Generate exactly 3 alternative sections. Each MUST use a different rhetorical strategy as its organizing principle.\n${RHETORICAL_STRATEGIES}`,
 }
 
-function buildSystemPrompt(unit: ContentUnit, pillar?: ArticlePillar): string {
+export function buildSystemPrompt(unit: ContentUnit, pillar?: ArticlePillar): string {
   const toneGuidance = pillar ? PILLAR_TONE_GUIDANCE[pillar] : "Write in a clear, engaging style."
 
   return `You are an expert content writer helping to refine article content.
@@ -95,7 +95,7 @@ Rules:
 - The "approach" field must name which rhetorical strategy you used`
 }
 
-function buildUserPrompt(request: GenerateAlternativesRequest): string {
+export function buildUserPrompt(request: GenerateAlternativesRequest): string {
   const { originalContent, unit, context } = request
 
   let prompt = `Original ${unit}:\n${originalContent}`
@@ -173,7 +173,7 @@ const RevisedDraftSchema = zodSchema(
   })
 )
 
-function formatFeedbackForPrompt(
+export function formatFeedbackForPrompt(
   sections: ArticleSection[],
   feedback: ArticleFeedbackFlag[]
 ): string {
@@ -206,7 +206,7 @@ function formatFeedbackForPrompt(
     .join("\n---\n\n")
 }
 
-function buildRevisionSystemPrompt(styleGuide?: string): string {
+export function buildRevisionSystemPrompt(styleGuide?: string): string {
   const styleSection = styleGuide
     ? `\n\nSTYLE GUIDE:\n${styleGuide}`
     : ""

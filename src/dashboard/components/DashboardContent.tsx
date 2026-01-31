@@ -29,7 +29,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
   }, [profileData?.primary_goal]);
 
   return (
-    <main className="mx-auto max-w-6xl px-8 py-24">
+    <main className="mx-auto max-w-6xl px-8 py-24" data-testid="dashboard-content">
       <div className="text-center mb-16">
         <h1 className="text-balance text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
           {isPreviewMode ? "Explore the Dashboard" : "Welcome Back!"}
@@ -72,7 +72,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Scenarios */}
-        <Link href="/dashboard/scenarios" className="group">
+        <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
           <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Target className="size-10 text-primary" />
@@ -109,7 +109,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         </Card>
 
         {/* Inner Game */}
-        <Link href="/dashboard/inner-game" className="group">
+        <Link href="/dashboard/inner-game" className="group" data-testid="dashboard-inner-game-link">
           <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Brain className="size-10 text-primary" />
@@ -131,7 +131,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
       </div>
 
       {/* Ask Your Coach - QA Section */}
-      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/qa"} className="group block mt-8">
+      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/qa"} className="group block mt-8" data-testid="dashboard-qa-link">
         <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
@@ -157,7 +157,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
       </Link>
 
       {/* Progress Tracking Section */}
-      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/tracking"} className="group block mt-4">
+      <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/tracking"} className="group block mt-4" data-testid="dashboard-tracking-link">
         <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">

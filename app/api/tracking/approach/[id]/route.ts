@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerSupabaseClient } from "@/src/db/server"
+import { getApproachOwner } from "@/src/db/trackingRepo"
 import { updateApproach } from "@/src/tracking/trackingService"
 import { UpdateApproachSchema } from "@/src/tracking/schemas"
 
@@ -18,17 +19,13 @@ export async function PATCH(
     const { id } = await params
 
     // Verify ownership
-    const { data: approach, error: fetchError } = await supabase
-      .from("approaches")
-      .select("user_id")
-      .eq("id", id)
-      .single()
+    const ownerId = await getApproachOwner(id)
 
-    if (fetchError || !approach) {
+    if (!ownerId) {
       return NextResponse.json({ error: "Approach not found" }, { status: 404 })
     }
 
-    if (approach.user_id !== user.id) {
+    if (ownerId !== user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 

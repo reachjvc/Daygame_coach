@@ -7,11 +7,13 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
+    exclude: ['tests/integration/**/*', 'node_modules/**/*'],
     globals: true,
+    setupFiles: ['./tests/setup.ts'],
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './'),
     },
   },
 })

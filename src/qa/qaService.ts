@@ -103,7 +103,7 @@ export async function handleQARequest(
 /**
  * Create a response when no relevant context is found.
  */
-function createNoContextResponse(provider: string, startTime: number): QAResponse {
+export function createNoContextResponse(provider: string, startTime: number): QAResponse {
   return {
     answer:
       "I couldn't find any relevant training transcript chunks to answer this. My knowledge is grounded in the indexed daygame coaching transcripts, and I can only answer confidently when I can retrieve matching sources.",
@@ -138,7 +138,7 @@ function createNoContextResponse(provider: string, startTime: number): QARespons
 /**
  * Convert retrieved chunks to source format for response.
  */
-function chunksToSources(chunks: RetrievedChunk[]): Source[] {
+export function chunksToSources(chunks: RetrievedChunk[]): Source[] {
   return chunks.map((chunk) => ({
     chunkId: chunk.chunkId,
     text: chunk.text,
@@ -147,7 +147,7 @@ function chunksToSources(chunks: RetrievedChunk[]): Source[] {
   }))
 }
 
-function addCoachNamesToSourceCitations(answer: string, chunks: RetrievedChunk[]): string {
+export function addCoachNamesToSourceCitations(answer: string, chunks: RetrievedChunk[]): string {
   const coachByIndex = new Map<number, string>()
   chunks.forEach((chunk, idx) => {
     coachByIndex.set(idx + 1, chunk.metadata.coach || "Unknown Coach")
@@ -165,7 +165,7 @@ function addCoachNamesToSourceCitations(answer: string, chunks: RetrievedChunk[]
 /**
  * Create meta-cognition section from reasoning and chunks.
  */
-function createMetaCognition(
+export function createMetaCognition(
   reasoning: string,
   chunks: RetrievedChunk[],
   suggestedFollowUps: string[]
@@ -206,7 +206,7 @@ function createMetaCognition(
 /**
  * Get the default model for a provider.
  */
-function getDefaultModel(provider: "ollama" | "openai" | "claude"): string {
+export function getDefaultModel(provider: "ollama" | "openai" | "claude"): string {
   switch (provider) {
     case "ollama":
       return QA_CONFIG.ollama.chatModel

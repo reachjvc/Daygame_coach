@@ -12,6 +12,38 @@ Use:
   ./04.segment-enrich --sources              # Process all sources
   ./04.segment-enrich --force                # Reprocess all
   ./04.segment-enrich --dry-run              # Show what would be processed
+
+================================================================================
+TONE CLASSIFICATION - THE POINT OF IT ALL
+================================================================================
+
+We classify each segment into exactly ONE of 5 tones based on audio features.
+Research: docs/overviews/PIPELINE/research/tones/TONES_RESEARCH_SUMMARY.md
+
+THE 5 TONES:
+┌────────────┬─────┬─────────────────────────────────────────────────────────┐
+│ Tone       │  %  │ What it sounds like                                     │
+├────────────┼─────┼─────────────────────────────────────────────────────────┤
+│ playful    │ 13% │ Animated, dynamic delivery - pitch varies, high energy  │
+│ confident  │ 14% │ Measured, steady delivery - controlled pace and energy  │
+│ nervous    │ 14% │ Fast, monotone delivery - rushed speech, flat pitch     │
+│ energetic  │ 12% │ High vocal effort/arousal - bright, loud                │
+│ neutral    │ 47% │ Modal baseline - none of the above                      │
+└────────────┴─────┴─────────────────────────────────────────────────────────┘
+
+DROPPED TONES (and why):
+- warm      → No acoustic cluster exists (timbre-based, we don't measure timbre)
+- grounded  → Same as confident
+- direct    → Semantic, not acoustic
+- flirty    → Same as playful
+
+FEATURES USED FOR TONE DETECTION:
+- pitch_std (Hz)      : Pitch variability - high = animated, low = monotone
+- energy_dyn (dB)     : Loudness dynamics - high = expressive, low = flat
+- syllable_rate (/s)  : Speaking speed - high = rushed, low = measured
+- brightness (Hz)     : Spectral centroid - high = bright/effortful
+
+================================================================================
 """
 
 from __future__ import annotations
@@ -43,12 +75,23 @@ PIPELINE_VERSION = "2026-01-31"
 PROMPT_VERSION = "1.1.0"  # Added video type pre-detection
 SCHEMA_VERSION = "1.0.0"
 
-# Tone thresholds (from tones_gap.md)
+# =============================================================================
+# TONE THRESHOLDS - How we detect each of the 5 tones
+# =============================================================================
+# See docstring above for the full explanation of why these 5 tones.
+#
+# Detection logic:
+#   playful   = pitch varies a lot (std > 22) AND loud dynamics (dyn > 13)
+#   confident = pitch steady (std < 18) AND moderate dynamics AND measured pace
+#   nervous   = fast speech (rate > 6.8) AND monotone (std < 16)
+#   energetic = bright voice (> 1700Hz) OR very loud dynamics (> 15dB)
+#   neutral   = none of the above (this is the default, ~47% of segments)
+#
 TONE_THRESHOLDS = {
-    "playful": {"pitch_std_min": 22, "energy_dyn_min": 13},
+    "playful":   {"pitch_std_min": 22, "energy_dyn_min": 13},
     "confident": {"pitch_std_max": 18, "energy_dyn_min": 8, "energy_dyn_max": 13, "syl_rate_min": 5, "syl_rate_max": 6.5},
-    "nervous": {"syl_rate_min": 6.8, "pitch_std_max": 16},
-    "energetic": {"brightness_min": 1700, "energy_dyn_min": 15},  # OR condition
+    "nervous":   {"syl_rate_min": 6.8, "pitch_std_max": 16},
+    "energetic": {"brightness_min": 1700, "energy_dyn_min": 15},  # OR condition (either triggers it)
 }
 
 
@@ -110,10 +153,35 @@ def detect_video_type_from_title(title: str) -> Tuple[str, float]:
     return "unknown", 0.5
 
 
-# === Speaker Clustering ===
+# =============================================================================
+# Speaker Clustering
+# =============================================================================
+#
+# TODO: REPLACE PITCH-BASED CLUSTERING WITH SPEAKER EMBEDDINGS
+#
+# Current approach (BROKEN):
+#   - Uses pitch.mean_hz to cluster: < 170Hz → male, > 170Hz → female
+#   - PROBLEM: Street audio causes octave doubling (90Hz detected as 180Hz)
+#   - Result: Coach segments get clustered as target, labels are inverted
+#
+# New approach (TO IMPLEMENT):
+#   - Use speaker_embedding (256-dim vector from resemblyzer)
+#   - Cluster on cosine similarity of embeddings
+#   - Much more robust to noise, compression, reverb
+#   - Already extracted in 03.audio-features, just not used here
+#
+# Implementation steps:
+#   1. Load speaker_embedding from each segment's features
+#   2. Use k-means or agglomerative clustering on embeddings
+#   3. Label clusters using LLM (same as now)
+#
+# =============================================================================
 
 def cluster_speakers_by_pitch(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
     """
+    DEPRECATED: This function uses pitch-based clustering which is unreliable.
+    TODO: Replace with cluster_speakers_by_embedding() once implemented.
+
     Group segments into speaker clusters based on pitch.
     Returns {cluster_id: [segment_indices]}
 

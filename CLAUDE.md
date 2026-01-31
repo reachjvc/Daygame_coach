@@ -1,19 +1,26 @@
 # CLAUDE.md
 
 ## Changelog
+- 30-01-2026 20:07 - Added rule to read testing_behavior.md before writing tests
+- 30-01-2026 19:57 - Added mandatory test-driven workflow
 - 29-01-2026 20:45 - Restored compliance checklist
 - 29-01-2026 20:40 - Simplified: removed verbose examples, merged sections
 - 29-01-2026 20:33 - Added proactive cleanup section with pipeline data flow
-- 29-01-2026 10:30 - Added service export pattern standard
-- 29-01-2026 08:10 - Added changelog format, auto-approve note
-- 29-01-2026 08:05 - Tightened architecture section
 
 ## Critical Rules
 
-1. **Verify implementations** - Test after every change. Never assume code works.
+1. **Test-driven workflow (mandatory)**
+   - **Always read `docs/testing_behavior.md` before writing any new tests**
+   - Run `npm test` between every implementation step
+   - All tests must pass before proceeding to next step
+   - If a test fails: fix the error, then add a regression test that would have caught it
+   - Never skip tests or proceed with failing tests
 2. **Changelog required** - Add entry to top of any doc you modify. Danish time: `TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'`. Keep 5 entries of updates.
 3. **Quality over speed** - 20 extra hours for better architecture is worth it
-4. No fall back mechanisms. Do not allow a pipeline/script or whatever to run with a fallback. Rather fix the issue or prompt the user.
+4. **No fallback mechanisms** - Do not allow a pipeline/script to run with a fallback. Fix the issue or prompt the user.
+
+Testing
+i expect no action to be beyong 2 second. i would rather fail fast and get error code, therefore include thorough code which you also review yourself, if the logging show an error iterate by fixing the error and include a test that would have spotted that error. 
 
 
 ## Architecture (Non-Negotiable)

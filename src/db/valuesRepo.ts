@@ -39,6 +39,21 @@ export async function listValues(): Promise<ValueRow[]> {
   throw new Error(`Failed to list values: ${error.message}`)
 }
 
+export async function getUserValueIds(userId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("user_values")
+    .select("value_id")
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to get user values: ${error.message}`)
+  }
+
+  return (data ?? []).map(v => v.value_id)
+}
+
 export async function upsertUserValues(
   userId: string,
   valueIds: string[]

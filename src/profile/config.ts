@@ -63,3 +63,38 @@ export const EXPERIENCE_TO_LEVEL: Record<string, number> = {
 }
 
 export const DEFAULT_INITIAL_LEVEL = 1
+
+// ============================================================================
+// Interactive World Map Configuration
+// ============================================================================
+
+export const MAP_CONFIG = {
+  viewBox: "0 0 950 620",
+  countryPreviewLimit: 6,
+} as const
+
+export const MAP_STYLES = {
+  baseFill: "#cfe4ff",
+  baseStroke: "rgba(17, 24, 39, 0.6)",
+  hoverFill: "#fb923c",
+  hoverStroke: "transparent",
+  activeFill: "#f97316",
+  activeStroke: "transparent",
+  focusFill: "#ef4444",
+  focusStroke: "#dc2626",
+  primaryMutedFill: "#fa8f45",
+  primaryMutedStroke: "#e0f2fe",
+  secondaryFill: "#fa8f45",
+  secondaryStroke: "#f5852f",
+  secondaryFocusFill: "#f46969",
+  secondaryFocusStroke: "#ef5252",
+  arcticFill: "#93c5fd",
+  arcticStroke: "#e0f2fe",
+  arcticHoverFill: "#60a5fa",
+  arcticHoverStroke: "#bae6fd",
+} as const
+
+export const MAP_MESSAGES = {
+  locked: "Exotic - and very cold choice - not currently available as a dateable region.",
+  lockedSmall: "Small or remote territory - not currently available as a dateable region.",
+} as const

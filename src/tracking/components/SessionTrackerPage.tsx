@@ -29,7 +29,7 @@ import {
   FileText,
   Loader2,
 } from "lucide-react"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../config"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS, DEFAULT_SESSION_SUGGESTIONS } from "../config"
 import type { ApproachFormData } from "../types"
 import Link from "next/link"
 
@@ -109,45 +109,6 @@ function ComboboxInput({ id, value, onChange, suggestions, placeholder }: Combob
   )
 }
 
-// Default suggestions for new users or as starting points
-const DEFAULT_SUGGESTIONS = {
-  sessionFocus: [
-    "Be more playful",
-    "Hold eye contact longer",
-    "Speak slower",
-    "Take more pauses",
-    "Be more physical",
-    "Lead the conversation",
-    "Show more intent",
-    "Stay in set longer",
-    "Be more present",
-    "Express my personality more",
-  ],
-  techniqueFocus: [
-    "Cold reads",
-    "Push-pull",
-    "Assumption stacking",
-    "Roleplay",
-    "Teasing",
-    "Storytelling",
-    "Qualify her",
-    "Direct openers",
-    "Indirect openers",
-    "Situational openers",
-  ],
-  locations: [
-    "Downtown",
-    "Mall",
-    "Park",
-    "Coffee shop",
-    "Street",
-    "Bookstore",
-    "Supermarket",
-    "Train station",
-    "University area",
-    "Shopping district",
-  ],
-}
 
 interface SessionTrackerPageProps {
   userId: string
@@ -179,7 +140,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     sessionFocus: string[]
     techniqueFocus: string[]
     locations: string[]
-  }>(DEFAULT_SUGGESTIONS)
+  }>(DEFAULT_SESSION_SUGGESTIONS)
 
   // Fetch user's previous values and merge with defaults
   useEffect(() => {
@@ -199,9 +160,9 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             return combined.slice(0, 15) // Limit total suggestions
           }
           setSuggestions({
-            sessionFocus: mergeWithDefaults(data.sessionFocus || [], DEFAULT_SUGGESTIONS.sessionFocus),
-            techniqueFocus: mergeWithDefaults(data.techniqueFocus || [], DEFAULT_SUGGESTIONS.techniqueFocus),
-            locations: mergeWithDefaults(data.locations || [], DEFAULT_SUGGESTIONS.locations),
+            sessionFocus: mergeWithDefaults(data.sessionFocus || [], DEFAULT_SESSION_SUGGESTIONS.sessionFocus),
+            techniqueFocus: mergeWithDefaults(data.techniqueFocus || [], DEFAULT_SESSION_SUGGESTIONS.techniqueFocus),
+            locations: mergeWithDefaults(data.locations || [], DEFAULT_SESSION_SUGGESTIONS.locations),
           })
         }
       } catch (error) {
@@ -302,6 +263,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
           size="lg"
           className="h-20 px-12 text-xl gap-3"
           onClick={() => setShowStartDialog(true)}
+          data-testid="start-session-button"
         >
           <Play className="size-6" />
           Start Session
@@ -371,6 +333,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                       setGoalInput(e.target.value)
                       setSelectedGoalPreset(null)
                     }}
+                    data-testid="session-goal-input"
                   />
                 </div>
               </div>
@@ -480,7 +443,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               >
                 Cancel
               </Button>
-              <Button onClick={handleStartSession} disabled={state.isLoading}>
+              <Button data-testid="start-session-confirm" onClick={handleStartSession} disabled={state.isLoading}>
                 {state.isLoading ? (
                   <Loader2 className="size-4 mr-2 animate-spin" />
                 ) : (
@@ -504,7 +467,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="size-4" />
-              <span className="font-mono">{liveStats.sessionDuration}</span>
+              <span className="font-mono" data-testid="session-duration">{liveStats.sessionDuration}</span>
             </div>
             {state.session?.primary_location && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
@@ -517,6 +480,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             variant="destructive"
             size="sm"
             onClick={() => setShowEndDialog(true)}
+            data-testid="end-session-button"
           >
             <Square className="size-4 mr-2" />
             End
@@ -528,7 +492,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
         {/* Main Counter */}
         <Card className="p-8">
           <div className="text-center">
-            <div className="text-7xl font-bold mb-2">{liveStats.totalApproaches}</div>
+            <div data-testid="approach-counter" className="text-7xl font-bold mb-2">{liveStats.totalApproaches}</div>
             <div className="text-muted-foreground">approaches</div>
 
             {/* Goal Progress */}
@@ -564,6 +528,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
         <button
           onClick={handleTap}
           className="w-full h-32 rounded-2xl bg-primary hover:bg-primary/90 active:scale-95 transition-all duration-150 flex items-center justify-center text-primary-foreground shadow-lg"
+          data-testid="tap-approach-button"
         >
           <div className="flex items-center gap-3">
             <Plus className="size-10" />
@@ -682,7 +647,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
       {/* Quick Log Bottom Sheet */}
       {showQuickLog && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" data-testid="quick-log-modal">
           <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-xl p-4 animate-in slide-in-from-bottom">
             <div className="max-w-lg mx-auto space-y-4">
               <div className="flex items-center justify-between">
@@ -771,7 +736,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                 </div>
               </div>
 
-              <Button className="w-full" onClick={handleQuickLogSubmit}>
+              <Button className="w-full" onClick={handleQuickLogSubmit} data-testid="quick-log-save">
                 Save
               </Button>
             </div>

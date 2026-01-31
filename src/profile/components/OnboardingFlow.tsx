@@ -125,9 +125,9 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
       <div className="w-full max-w-4xl">
         {/* Progress Indicator */}
-        <div className="mb-8">
+        <div className="mb-8" data-testid="onboarding-progress">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Step {step} of 5</span>
+            <span className="text-sm text-muted-foreground" data-testid="onboarding-step-indicator">Step {step} of 5</span>
             <span className="text-sm text-muted-foreground">
               {Math.round(((step - 1) / 5) * 100)}% Complete
             </span>
@@ -413,6 +413,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
               onClick={handleBack}
               disabled={step === 1}
               className="h-auto px-6 py-2 border-border bg-transparent"
+              data-testid="onboarding-back-button"
             >
               <ChevronLeft className="size-4 mr-2" />
               Back
@@ -425,6 +426,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                 onClick={handleNext}
                 disabled={!canProceed()}
                 className="h-auto px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                data-testid="onboarding-next-button"
               >
                 Next
                 <ChevronRight className="size-4 ml-2" />
@@ -435,6 +437,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                 variant="default"
                 disabled={!canProceed()}
                 className="h-auto px-6 py-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                data-testid="onboarding-complete-button"
               >
                 Complete Setup
                 <ChevronRight className="size-4 ml-2" />

@@ -8,7 +8,10 @@ export {
   handleReactivateSubscription,
   createBillingPortalSession,
   getSettingsPageData,
-  SettingsServiceError,
+  createSettingsError,
+  isSettingsError,
+  type SettingsServiceError,
+  type SettingsErrorCode,
 } from "./settingsService"
 
 // Server actions (for use in pages)

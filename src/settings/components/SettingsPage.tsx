@@ -150,11 +150,11 @@ export function SettingsPage({
         </div>
         <Tabs defaultValue="profile" className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
-            <TabsTrigger value="profile" className="gap-2">
+            <TabsTrigger value="profile" className="gap-2" data-testid="settings-tab-profile">
               <User className="h-4 w-4" />
               <span className="hidden sm:inline">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="sandbox" className="gap-2">
+            <TabsTrigger value="sandbox" className="gap-2" data-testid="settings-tab-sandbox">
               <Sliders className="h-4 w-4" />
               <span className="hidden sm:inline">Sandbox</span>
             </TabsTrigger>
@@ -182,7 +182,7 @@ export function SettingsPage({
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div>
                     <Label className="text-muted-foreground">Email</Label>
-                    <p className="mt-1 font-medium">{user.email}</p>
+                    <p className="mt-1 font-medium" data-testid="profile-user-email">{user.email}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Member Since</Label>
@@ -320,6 +320,7 @@ export function SettingsPage({
                     size="sm"
                     onClick={() => setShowResetDialog(true)}
                     disabled={isPending}
+                    data-testid="sandbox-reset-button"
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reset All
@@ -777,6 +778,7 @@ function SettingToggle({
         checked={checked}
         onCheckedChange={onCheckedChange}
         disabled={disabled}
+        data-testid={`sandbox-toggle-${id}`}
       />
     </div>
   )

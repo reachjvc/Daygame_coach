@@ -182,3 +182,50 @@ export const MOOD_EMOJI_OPTIONS = [
   { value: 3, emoji: "😊", label: "Good" },
   { value: 4, emoji: "🔥", label: "On Fire" },
 ] as const
+
+// ============================================
+// Default Session Intention Suggestions
+// ============================================
+
+export const DEFAULT_SESSION_SUGGESTIONS: {
+  sessionFocus: string[]
+  techniqueFocus: string[]
+  locations: string[]
+} = {
+  sessionFocus: [
+    "Be more playful",
+    "Hold eye contact longer",
+    "Speak slower",
+    "Take more pauses",
+    "Be more physical",
+    "Lead the conversation",
+    "Show more intent",
+    "Stay in set longer",
+    "Be more present",
+    "Express my personality more",
+  ],
+  techniqueFocus: [
+    "Cold reads",
+    "Push-pull",
+    "Assumption stacking",
+    "Roleplay",
+    "Teasing",
+    "Storytelling",
+    "Qualify her",
+    "Direct openers",
+    "Indirect openers",
+    "Situational openers",
+  ],
+  locations: [
+    "Downtown",
+    "Mall",
+    "Park",
+    "Coffee shop",
+    "Street",
+    "Bookstore",
+    "Supermarket",
+    "Train station",
+    "University area",
+    "Shopping district",
+  ],
+}

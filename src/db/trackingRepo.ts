@@ -1,7 +1,7 @@
 import { createServerSupabaseClient } from "./supabase"
 
 // Helper to get ISO week string (e.g., "2026-W04")
-function getISOWeekString(date: Date): string {
+export function getISOWeekString(date: Date): string {
   const d = new Date(date)
   d.setHours(0, 0, 0, 0)
   // Set to nearest Thursday: current date + 4 - current day number
@@ -12,7 +12,7 @@ function getISOWeekString(date: Date): string {
 }
 
 // Helper to check if two ISO weeks are consecutive
-function areWeeksConsecutive(week1: string, week2: string): boolean {
+export function areWeeksConsecutive(week1: string, week2: string): boolean {
   if (!week1 || !week2) return false
   const [year1, w1] = week1.split('-W').map(Number)
   const [year2, w2] = week2.split('-W').map(Number)
@@ -26,7 +26,7 @@ function areWeeksConsecutive(week1: string, week2: string): boolean {
 }
 
 // Helper to check if a week qualifies as "active" (2+ sessions OR 5+ approaches)
-function isWeekActive(sessions: number, approaches: number): boolean {
+export function isWeekActive(sessions: number, approaches: number): boolean {
   return sessions >= 2 || approaches >= 5
 }
 
@@ -59,6 +59,27 @@ import type {
   StickingPointUpdate,
   DailyStats,
 } from "./trackingTypes"
+
+// ============================================
+// Approach Ownership
+// ============================================
+
+export async function getApproachOwner(approachId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("approaches")
+    .select("user_id")
+    .eq("id", approachId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") return null
+    throw new Error(`Failed to get approach: ${error.message}`)
+  }
+
+  return data?.user_id ?? null
+}
 
 // ============================================
 // Sessions

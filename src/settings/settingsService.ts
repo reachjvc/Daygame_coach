@@ -24,14 +24,28 @@ import {
 } from "./types"
 import { SETTINGS_CONFIG } from "./config"
 
-export class SettingsServiceError extends Error {
-  constructor(
-    message: string,
-    public code: "INVALID_INPUT" | "NOT_FOUND" | "UNAUTHORIZED" | "STRIPE_ERROR"
-  ) {
-    super(message)
-    this.name = "SettingsServiceError"
-  }
+export type SettingsErrorCode = "INVALID_INPUT" | "NOT_FOUND" | "UNAUTHORIZED" | "STRIPE_ERROR"
+
+export interface SettingsServiceError extends Error {
+  code: SettingsErrorCode
+}
+
+export function createSettingsError(
+  message: string,
+  code: SettingsErrorCode
+): SettingsServiceError {
+  const error = new Error(message) as SettingsServiceError
+  error.name = "SettingsServiceError"
+  error.code = code
+  return error
+}
+
+export function isSettingsError(error: unknown): error is SettingsServiceError {
+  return (
+    error instanceof Error &&
+    error.name === "SettingsServiceError" &&
+    "code" in error
+  )
 }
 
 // ============================================
@@ -67,7 +81,7 @@ export async function handleUpdateDifficulty(
   difficulty: string
 ): Promise<void> {
   if (!VALID_DIFFICULTIES.includes(difficulty as DifficultyLevel)) {
-    throw new SettingsServiceError("Invalid difficulty level", "INVALID_INPUT")
+    throw createSettingsError("Invalid difficulty level", "INVALID_INPUT")
   }
 
   await repoUpdateDifficulty(userId, difficulty)
@@ -128,7 +142,7 @@ export async function handleCancelSubscription(userId: string): Promise<void> {
   const purchase = await getActiveSubscriptionPurchase(userId)
 
   if (!purchase?.stripe_subscription_id) {
-    throw new SettingsServiceError("No active subscription found", "NOT_FOUND")
+    throw createSettingsError("No active subscription found", "NOT_FOUND")
   }
 
   try {
@@ -142,7 +156,7 @@ export async function handleCancelSubscription(userId: string): Promise<void> {
     await updateSubscriptionCancelledAt(userId, new Date().toISOString())
   } catch (err) {
     console.error("Error canceling subscription:", err)
-    throw new SettingsServiceError("Failed to cancel subscription", "STRIPE_ERROR")
+    throw createSettingsError("Failed to cancel subscription", "STRIPE_ERROR")
   }
 }
 
@@ -153,7 +167,7 @@ export async function handleReactivateSubscription(userId: string): Promise<void
   const purchase = await getActiveSubscriptionPurchase(userId)
 
   if (!purchase?.stripe_subscription_id) {
-    throw new SettingsServiceError("No subscription found", "NOT_FOUND")
+    throw createSettingsError("No subscription found", "NOT_FOUND")
   }
 
   try {
@@ -166,7 +180,7 @@ export async function handleReactivateSubscription(userId: string): Promise<void
     await updateSubscriptionCancelledAt(userId, null)
   } catch (err) {
     console.error("Error reactivating subscription:", err)
-    throw new SettingsServiceError("Failed to reactivate subscription", "STRIPE_ERROR")
+    throw createSettingsError("Failed to reactivate subscription", "STRIPE_ERROR")
   }
 }
 
@@ -179,7 +193,7 @@ export async function createBillingPortalSession(
   const purchase = await getActiveSubscriptionPurchase(userId)
 
   if (!purchase?.stripe_subscription_id) {
-    throw new SettingsServiceError("No active subscription found", "NOT_FOUND")
+    throw createSettingsError("No active subscription found", "NOT_FOUND")
   }
 
   try {
@@ -196,7 +210,7 @@ export async function createBillingPortalSession(
     return { url: session.url }
   } catch (err) {
     console.error("Error creating billing portal session:", err)
-    throw new SettingsServiceError("Failed to access billing portal", "STRIPE_ERROR")
+    throw createSettingsError("Failed to access billing portal", "STRIPE_ERROR")
   }
 }
 
