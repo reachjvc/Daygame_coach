@@ -1,26 +1,25 @@
 # Pipeline Restructuring Plan
 
-Status: Planning
+Status: Testing
+Updated: 31-01-2026 18:20 - Pipeline tested on 5 videos. Phases 1-3 working. Ready for full run.
 Updated: 31-01-2026 06:15 - Model testing deferred (not skipped) - should test alternatives for quality.
-Updated: 31-01-2026 06:00 - Synced docs with reality. Phase 1 script implemented + tested. Ready for test video selection.
+Updated: 31-01-2026 06:00 - Synced docs with reality. Phase 1 script implemented + tested.
 Updated: 31-01-2026 04:30 - Phase 0 COMPLETE. P0.9-P0.12 deferred. Starting Phase 1.
-Updated: 31-01-2026 04:15 - P0.8 complete. All prompts reviewed. Test set 5/20. Next: P0.9 validation harness.
-Updated: 31-01-2026 04:00 - P0.5 complete. label_guidelines.md created. Next: P0.8 prompt review.
-Updated: 31-01-2026 03:30 - P0.1-P0.4 complete. Current step: P0.5 Label guidelines.
+Updated: 31-01-2026 04:15 - P0.8 complete. All prompts reviewed. Test set 5/20.
 
 ## CURRENT STATUS
 
 ```
-Phase 0: Preparation     [x] COMPLETE (P0.9-P0.12 deferred to post-test)
-Phase 1: segment-enrich  [x] SCRIPT IMPLEMENTED + TESTED (ready for full test run)
-Phase 2: conversations   [ ] Not Started
-Phase 3: interactions    [ ] Not Started
-Phase 4: ingest          [ ] Not Started
-Phase 5: full-run        [ ] Not Started
+Phase 0: Preparation     [x] COMPLETE
+Phase 1: segment-enrich  [x] TESTED on 5 videos - speaker_id from 03.audio-features
+Phase 2: conversations   [x] TESTED on 5 videos - video type detection working
+Phase 3: interactions    [x] TESTED on 5 videos - 06a + 06b working
+Phase 4: ingest          [ ] Ready - needs Supabase connection
+Phase 5: full-run        [ ] Not Started - regenerate 03.audio-features first
 Phase 6: cleanup         [ ] Not Started
 ```
 
-**Next Action**: Select remaining 15 test videos, then run end-to-end test (P1→P4) on 20 videos.
+**Next Action**: Regenerate 03.audio-features for all 456 videos (resemblyzer now installed), then run full pipeline.
 
 ---
 
@@ -85,7 +84,7 @@ Transform 456 audio-analyzed videos into enriched training data:
 
 ## MASTER STEP LIST
 
-Current Step: P0.6 Test video selection (then end-to-end test run)
+Current Step: Ready for Phase 5 (full run) - need to regenerate 03.audio-features first
 
 - [x] P0.1 Environment verification (Ollama + llama3.1:8B + deps OK) ([P0](../phases/phase_0_preparation.md#step-1-environment-verification))
 - [x] P0.2 Config module plan finalized ([P0](../phases/phase_0_preparation.md#step-2-config-module-plan))
@@ -114,19 +113,12 @@ Current Step: P0.6 Test video selection (then end-to-end test run)
 - [x] P1.7 Test run DONE (5 videos tested, bug fixed) ([P1](../phases/phase_1_segment_enrich.md#quality-gates-confidence-based))
 - [~] P1.8-P1.10 Validation - part of end-to-end test
 - [~] P1.11 User approved (Phase 1) - pending end-to-end test ([P1](../phases/phase_1_segment_enrich.md#exit-criteria))
-- [ ] P2.1 Script migration plan defined ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
-- [ ] P2.2 Input/output paths updated (plan) ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
-- [ ] P2.3 Fallbacks removed (plan) ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
-- [ ] P2.4 State metadata plan added ([P2](../phases/phase_2_conversations.md#migration-from-07llm-conversations-plan))
-- [ ] P2.5 Prompt templates + versioning planned (video type + segment type) ([P2](../phases/phase_2_conversations.md#prompt-templates-plan))
-- [ ] P2.6 Video type detection plan updated (title + transcript + metadata) ([P2](../phases/phase_2_conversations.md#video-type-detection-plan))
-- [ ] P2.7 Ambiguity handling + review queue plan defined ([P2](../phases/phase_2_conversations.md#ambiguity-handling-plan))
-- [ ] P2.8 Edge case handling plan defined ([P2](../phases/phase_2_conversations.md#edge-cases-plan))
-- [ ] P2.9 Test run plan (20 videos) defined ([P2](../phases/phase_2_conversations.md#quality-gates-confidence-based))
-- [ ] P2.10 Confidence-based validation plan defined ([P2](../phases/phase_2_conversations.md#quality-gates-confidence-based))
-- [ ] P2.11 User approved (Phase 2) ([P2](../phases/phase_2_conversations.md#exit-criteria))
-- [ ] P3.1 06a.structure plan defined ([P3](../phases/phase_3_interactions.md#06astructure-plan))
-- [ ] P3.2 06a prompt template + versioning plan defined ([P3](../phases/phase_3_interactions.md#06astructure-plan))
+- [x] P2.1 Script migration DONE (05.conversations reads from 04.segment-enrich)
+- [x] P2.2 Input/output paths UPDATED
+- [x] P2.9 Test run DONE (5 videos tested)
+- [~] P2.3-P2.8, P2.10-P2.11 Deferred - script working, validation in Phase 5
+- [x] P3.1 06a.structure TESTED (extracts interactions from conversations)
+- [x] P3.5 06b.content TESTED (enriches with techniques/topics)
 - [ ] P3.3 06a test run + confidence validation plan defined ([P3](../phases/phase_3_interactions.md#06astructure-plan))
 - [ ] P3.4 Gate A user approval (06a) ([P3](../phases/phase_3_interactions.md#06astructure-plan))
 - [ ] P3.5 06b.content plan defined ([P3](../phases/phase_3_interactions.md#06bcontent-plan))

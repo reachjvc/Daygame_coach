@@ -78,3 +78,4 @@ __pycache__/
 # Test artifacts
 playwright-report/
 test-results/
+tests/integration/.test-connection.json

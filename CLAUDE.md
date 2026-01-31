@@ -1,46 +1,90 @@
 # CLAUDE.md
 
 ## Changelog
+- 31-01-2026 19:50 - Restructured for better Claude compliance: pre-response checklist, stronger framing
+- 31-01-2026 19:35 - Added doc-before-summary rule with strict order
 - 30-01-2026 20:07 - Added rule to read testing_behavior.md before writing tests
 - 30-01-2026 19:57 - Added mandatory test-driven workflow
 - 29-01-2026 20:45 - Restored compliance checklist
-- 29-01-2026 20:40 - Simplified: removed verbose examples, merged sections
-- 29-01-2026 20:33 - Added proactive cleanup section with pipeline data flow
+
+---
+
+## ⛔ PRE-RESPONSE CHECKLIST (Complete Before Every Summary)
+
+**STOP. Before summarizing to user, verify:**
+
+| # | Check | If Yes |
+|---|-------|--------|
+| 1 | Did I write/modify code? | Run `npm test` first |
+| 2 | Did I complete a task from a doc? | Update that doc NOW (before this message) |
+| 3 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
+| 4 | Did I modify any doc? | Add changelog entry with today's date |
+
+**The doc is the source of truth, not your summary.**
+
+---
 
 ## Critical Rules
 
-1. **Test-driven workflow (mandatory)**
-   - **Always read `docs/testing_behavior.md` before writing any new tests**
-   - Run `npm test` between every implementation step
-   - All tests must pass before proceeding to next step
-   - If a test fails: fix the error, then add a regression test that would have caught it
-   - Never skip tests or proceed with failing tests
-2. **Changelog required** - Add entry to top of any doc you modify. Danish time: `TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'`. Keep 5 entries of updates.
-3. **Quality over speed** - 20 extra hours for better architecture is worth it
-4. **No fallback mechanisms** - Do not allow a pipeline/script to run with a fallback. Fix the issue or prompt the user.
+### 1. Doc-Before-Summary (MOST VIOLATED - PAY ATTENTION)
 
-Testing
-i expect no action to be beyong 2 second. i would rather fail fast and get error code, therefore include thorough code which you also review yourself, if the logging show an error iterate by fixing the error and include a test that would have spotted that error. 
+```
+WRONG ORDER:
+1. Implement feature
+2. Tell user "Done!"        ← User sees this
+3. (forget to update doc)   ← Doc is now stale
 
+CORRECT ORDER:
+1. Implement feature
+2. Update doc               ← Do this FIRST
+3. Tell user "Done!"        ← Only after doc is updated
+```
 
-## Architecture (Non-Negotiable)
+### 2. Test-Driven Workflow
+
+- **Before writing tests**: Read `docs/testing_behavior.md`
+- **Between every step**: Run `npm test`
+- **If test fails**: Fix production code, add regression test
+- **Never proceed** with failing tests
+
+### 3. Changelog Required
+
+Every doc modification needs a changelog entry at the top:
+```
+TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'
+```
+Keep only 5 most recent entries.
+
+### 4. No Fallback Mechanisms
+
+Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the user.
+
+### 5. Quality Over Speed
+
+20 extra hours for better architecture is worth it.
+
+---
+
+## Architecture (Enforced by tests/unit/architecture.test.ts)
 
 ### Slice Structure
 ```
 src/{slice}/
-├── types.ts          # All types
+├── types.ts          # All types (enforced)
 ├── config.ts         # Constants
-├── {slice}Service.ts # Business logic (function exports, not classes)
+├── {slice}Service.ts # Business logic (enforced)
 ├── components/       # Slice UI
 └── data/            # Data files
 ```
 
-### Rules
-- **Business logic** → `*Service.ts` only (not in API routes or components)
-- **Database** → `src/db/*Repo.ts` only
-- **API routes** → Thin wrappers: auth + validate + call service (max 30 lines)
-- **Types** → One `types.ts` per slice, not scattered
-- **Shared UI** → `components/ui/` (shadcn only)
+### Rules (Automated Enforcement)
+| Rule | Enforcement |
+|------|-------------|
+| Business logic in `*Service.ts` only | Architecture test |
+| Database in `src/db/*Repo.ts` only | Architecture test |
+| API routes max 50 lines | Architecture test |
+| Types in `types.ts` per slice | Architecture test |
+| Shared UI in `components/ui/` | Manual review |
 
 ### Slices
 `src/qa/` · `src/inner-game/` · `src/scenarios/` · `src/tracking/` · `src/profile/` · `src/settings/` · `src/db/`
@@ -48,19 +92,20 @@ src/{slice}/
 Specs in `docs/slices/SLICE_*.md`
 
 ### Compliance Checklist (Before PR)
-- [ ] No business logic in `app/api/` routes (only auth + validate + call service)
+- [ ] No business logic in `app/api/` routes
 - [ ] No direct Supabase calls outside `src/db/`
-- [ ] All slice types in `types.ts`, not scattered
-- [ ] Slice UI in `src/{slice}/components/`, not `components/`
-- [ ] Data files in `data/` subfolder, not slice root
+- [ ] All slice types in `types.ts`
+- [ ] Slice UI in `src/{slice}/components/`
 
-## Proactive Cleanup (Required)
+---
 
-**After major tasks**, report unused items:
-- Unused scripts (not in pipeline flow)
-- Orphan data folders
-- Test artifacts (`*-test/`, `*.backup*`, `test-*.py`)
-- Old logs (>7 days)
+## Testing
+
+Expect fast failures (<2 seconds). Fail fast, get error codes, iterate by fixing errors and adding regression tests.
+
+Pre-commit hook (`.husky/pre-commit`) runs `npm test` automatically.
+
+---
 
 ## Documentation
 
@@ -68,3 +113,13 @@ Specs in `docs/slices/SLICE_*.md`
 - **One source** - Specs in `docs/slices/SLICE_*.md`
 - **Max 500 lines** - Split if longer
 - **Status headers** - Every doc needs `Status:` and `Updated:`
+
+---
+
+## Proactive Cleanup (After Major Tasks)
+
+Report unused items:
+- Unused scripts (not in pipeline flow)
+- Orphan data folders
+- Test artifacts (`*-test/`, `*.backup*`, `test-*.py`)
+- Old logs (>7 days)

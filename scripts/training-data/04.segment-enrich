@@ -120,7 +120,9 @@ def save_state(state: Dict):
 TALKING_HEAD_KEYWORDS = [
     "tips", "how to", "breakdown", "mindset", "analysis", "commentary",
     "mistakes", "hack", "hacks", "advice", "guide", "tutorial",
-    "feel good", "confidence", "inner game", "psychology", "lesson"
+    "feel good", "confidence", "inner game", "psychology", "lesson",
+    "conversations", "conversation", "secret", "secrets", "why", "what is",
+    "explained", "simple", "steps", "step", "minutes", "seconds"
 ]
 
 # Keywords indicating infield (multi-speaker)
@@ -150,8 +152,9 @@ def detect_video_type_from_title(title: str) -> Tuple[str, float]:
         if kw in title_lower:
             return "talking_head", 0.80
 
-    # Default: assume infield (safer to check for multiple speakers)
-    return "unknown", 0.5
+    # Default: assume talking_head (most videos are coach-to-camera)
+    # Infield videos almost always have "infield" or "approach" in title
+    return "talking_head", 0.60
 
 
 # =============================================================================

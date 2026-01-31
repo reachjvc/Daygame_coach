@@ -1,0 +1,28 @@
+#!/bin/sh
+
+echo "🔍 Running pre-commit checks..."
+
+# Run unit tests (includes architecture compliance)
+echo "📦 Running unit tests..."
+npm test -- --reporter=dot
+if [ $? -ne 0 ]; then
+  echo "❌ Unit tests failed. Commit aborted."
+  exit 1
+fi
+
+# Check for changelog entries in modified docs
+echo "📝 Checking documentation changes..."
+MODIFIED_DOCS=$(git diff --cached --name-only --diff-filter=M | grep -E '^docs/.*\.md$' | grep -v '/archive/' | grep -v '/articles/')
+
+if [ -n "$MODIFIED_DOCS" ]; then
+  TODAY=$(TZ='Europe/Copenhagen' date '+%d-%m-%Y')
+
+  for doc in $MODIFIED_DOCS; do
+    if ! grep -q "$TODAY" "$doc" 2>/dev/null; then
+      echo "⚠️  Warning: $doc was modified but may be missing today's changelog entry ($TODAY)"
+      echo "   CLAUDE.md requires: Add entry to top of any doc you modify"
+    fi
+  done
+fi
+
+echo "✅ Pre-commit checks passed!"

@@ -4,6 +4,7 @@
 **Updated:** 30-01-2026 21:15
 
 ## Changelog
+- 31-01-2026 19:46 - Added architecture compliance tests and husky pre-commit hooks section
 - 30-01-2026 21:15 - Comprehensive rewrite: deterministic testing, testcontainers, TDD workflow, edge cases
 
 ---
@@ -104,6 +105,28 @@ The test script (`scripts/run-tests.sh`) must:
 | Dependency injection | Swap real deps for test containers |
 | Explicit error types | Test specific error conditions |
 
+## Architecture Compliance Tests
+
+`tests/unit/architecture.test.ts` enforces CLAUDE.md rules automatically:
+
+| Check | Rule Enforced |
+|-------|---------------|
+| API route length | Max 50 lines (CLAUDE.md says 30, buffer added) |
+| No Supabase outside db/ | Database access only via `src/db/` |
+| Slice types in types.ts | Types centralized per slice |
+| Doc headers | Status/Updated required in docs |
+
+**Allowlists**: Existing violations are grandfathered in `ALLOWED_LONG_ROUTES` and `ALLOWED_TYPE_EXPORTS` sets. Remove items as violations get fixed.
+
+## Pre-Commit Hooks (Husky)
+
+`.husky/pre-commit` runs automatically on `git commit`:
+
+1. **Runs `npm test`** - all unit tests including architecture compliance
+2. **Checks changelog entries** - warns if modified docs are missing today's date
+
+Install hooks after cloning: `npm install` (runs `husky` via prepare script)
+
 ## Pre-Commit Requirement
 
-**All tests must pass before returning to user.** Claude must run `scripts/run-tests.sh` and see green before completing any task. 
+**All tests must pass before returning to user.** Claude must run `npm test` and see green before completing any task. 

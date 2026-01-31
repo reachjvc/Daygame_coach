@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "echo '[REMINDER] After this edit, update relevant doc before summarizing'"
+      }
+    ]
+  }
+}
