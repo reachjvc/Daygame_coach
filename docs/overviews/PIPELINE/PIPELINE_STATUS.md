@@ -1,16 +1,16 @@
 # Pipeline Status
 
+Updated: 02-02-2026 20:30 - MAJOR: Switched to pyannote diarization. All 5 test videos processed.
+Updated: 01-02-2026 21:00 - Redesigned speaker ID. Removed incremental clustering from 03, added global clustering to 04.
 Updated: 01-02-2026 19:35 - Fixed 04.segment-enrich mislabeling with turn-taking corrections. 8 segments corrected.
 Updated: 31-01-2026 22:09 - Added quality-first approach to plan. Next: thorough 03.audio-features review.
-Updated: 31-01-2026 20:05 - Gate reports generated for 03 and 04. Issues found with 04 labeling.
-Updated: 31-01-2026 19:50 - 04.segment-enrich completed on 5 videos. Awaiting gate approval.
 
 ---
 
 ## Current State
 
 ```
-Phase A: 5 Test Videos    [IN PROGRESS]
+Phase A: 5 Test Videos    [READY FOR REVIEW]
 Phase B: 15 More Videos   [NOT STARTED]
 Phase C: 436 Remaining    [NOT STARTED]
 Phase D: Cleanup          [NOT STARTED]
@@ -20,25 +20,45 @@ Phase D: Cleanup          [NOT STARTED]
 
 ## Current Gate
 
-**FOCUS**: 04.segment-enrich verification on infield video
+**FOCUS**: Review speaker ID results from pyannote diarization
 
-### What Was Fixed (01-02-2026):
-Added `apply_turn_taking_corrections()` to 04.segment-enrich that fixes mislabeled short responses:
-- Segment 2: "I'm fine." → now target ✅
-- Segment 11: "It's good." → now target ✅
-- Segment 15: "Alyssa." → now target ✅
-- Segment 17: "Nice to meet you, too." → now target ✅
-- Plus 4 more corrections (29, 100, 130)
+### Architecture Change (02-02-2026 20:30):
 
-### Current Results:
-- Infield video: 170 segments, 43 target (25.3%), 127 coach
-- Methods: 163 llm_speaker_id, 8 turn_taking_correction
-- All talking_head videos: coach only (as expected)
+**Problem**: Resemblyzer embeddings couldn't distinguish coach from target in noisy street audio.
+Clustering approaches (incremental in 03, global in 04) both failed to separate speakers.
+
+**Solution**: Switched to pyannote diarization at transcription stage:
+- 02.transcribe: Pyannote diarization ON by default (outputs SPEAKER_00, SPEAKER_01)
+- 03.audio-features: Passes through `pyannote_speaker` field
+- 04.segment-enrich: Maps pyannote speakers to coach/target using:
+  - Speaking time (majority speaker = coach)
+  - Text patterns for refinement
+
+**Key changes**:
+1. 02.transcribe: Enabled `--whisperx-diarize` by default, improved overlap algorithm
+2. 03.audio-features: Added `pyannote_speaker` passthrough from transcript
+3. 04.segment-enrich: Rewrote `identify_speakers_global()` to use pyannote IDs
+4. Removed embedding-based clustering (was unreliable for street audio)
+
+### Test Results (5 Videos):
+
+| Video | Type | Segments | Pyannote Speakers | Final Labels |
+|-------|------|----------|-------------------|--------------|
+| ALWAYS BE CLOSING | infield | 170 | SPEAKER_00: 143, SPEAKER_01: 27 | coach: 110, target: 60 |
+| Critical Daygame Hack | talking_head | 140 | (single speaker) | coach: 140 |
+| Fixing Mistakes | talking_head | 186 | (single speaker) | coach: 186 |
+| HOW TO FEEL GOOD | talking_head | 107 | (single speaker) | coach: 107 |
+| Better Conversations | talking_head | 125 | (single speaker) | coach: 125 |
+
+**Infield Details**:
+- Pyannote correctly detected 2 speakers (277s vs 27s speaking time)
+- Text patterns refined 33 additional segments to "target" (short responses)
+- Some mislabeling remains (e.g., coach's opener phrases sometimes flagged as target)
 
 ### Next Steps:
-1. Re-run 04.segment-enrich on remaining 4 test videos (talking_head)
-2. Present gate report for all 5 videos
-3. User APPROVED → proceed to 05.conversations
+1. **User review**: Check sample segments from infield video
+2. **Decision needed**: Is current accuracy acceptable for training data?
+3. If approved → run 05.conversations on 5 videos
 
 ---
 
@@ -47,9 +67,9 @@ Added `apply_turn_taking_corrections()` to 04.segment-enrich that fixes mislabel
 | Script | Status | Files | Notes |
 |--------|--------|-------|-------|
 | 01.download | DONE | 2753 | Audio files ready |
-| 02.transcribe | DONE | 2303 | Transcripts ready |
-| 03.audio-features | DONE | 456 | speaker_embedding confirmed present, NEW format |
-| 04.segment-enrich | FIXED | 1/5 | Turn-taking corrections added, infield video reprocessed |
+| 02.transcribe | UPDATED | 5/456 | Pyannote diarization ON by default. 5 test videos reprocessed. |
+| 03.audio-features | UPDATED | 5/456 | Added pyannote_speaker passthrough. 5 test videos reprocessed. |
+| 04.segment-enrich | UPDATED | 5/456 | Pyannote-based speaker ID. 5 test videos processed. |
 | 05.conversations | PENDING | 0 | Will run after 04 approval |
 | 06a.structure | PENDING | 0 | Will run after 05 |
 | 06b.content | PENDING | 0 | Will run after 06a |
@@ -73,20 +93,27 @@ Source: `data/03.audio-features/daily_evolution/`
 
 ## Next Actions
 
-1. **Re-run 04.segment-enrich** on remaining 4 talking_head videos
-2. **Generate gate report** for all 5 test videos
-3. **Present for user approval** - user must say "APPROVED"
-4. After approval → run 05.conversations on 5 videos
+1. **User review**: Check speaker labels in infield video - is accuracy acceptable?
+2. **Decision point**: Approve current approach or request improvements
+3. After approval → run 05.conversations on 5 videos
+4. Re-run 02, 03, 04 on remaining 451 videos (optional batch)
 
 ---
 
 ## Recent Changes
 
+### 02-02-2026 20:30
+- **MAJOR**: Switched from embedding-based clustering to pyannote diarization
+- 02.transcribe: Enabled pyannote diarization by default, simplified to whisperx-only engine
+- 03.audio-features: Added `pyannote_speaker` passthrough field
+- 04.segment-enrich: Rewrote speaker ID to use pyannote IDs + text patterns
+- Removed all embedding-based clustering code (was unreliable for street audio)
+- Processed all 5 test videos successfully
+
 ### 01-02-2026 19:35
-- Added `apply_turn_taking_corrections()` to 04.segment-enrich script
-- Fixed 8 mislabeled segments in infield video (short responses now correctly labeled as target)
+- Added `apply_turn_taking_corrections()` to 04.segment-enrich script (now superseded by pyannote approach)
+- Fixed 8 mislabeled segments in infield video
 - Root cause: LLM labels at CLUSTER level, missed segment-level turn-taking patterns
-- Fix: Post-processing rules catch obvious response patterns
 
 ### 31-01-2026 20:00
 - Consolidated 14 pipeline docs into 2 files (PIPELINE_PLAN.md + PIPELINE_STATUS.md)

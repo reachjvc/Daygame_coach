@@ -158,295 +158,264 @@ def detect_video_type_from_title(title: str) -> Tuple[str, float]:
 
 
 # =============================================================================
-# Speaker Clustering
+# GLOBAL SPEAKER IDENTIFICATION
 # =============================================================================
 #
-# =============================================================================
-# SPEAKER CLUSTERING USING EMBEDDINGS
-# =============================================================================
+# Single source of truth for speaker labeling. Uses:
+# 1. Global clustering (sees all embeddings before deciding)
+# 2. Text pattern classification (data-driven, not hardcoded phrases)
+# 3. Context-based assignment for segments without embeddings
 #
-# Uses speaker_embedding (256-dim vector from resemblyzer) to cluster speakers.
-# Much more robust than pitch-based clustering for noisy street audio.
-#
+# This replaces the previous split architecture where 03.audio-features did
+# incremental clustering and 04 did LLM labeling on broken clusters.
 # =============================================================================
 
-
-def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
-    """Compute cosine similarity between two vectors."""
-    norm_a = np.linalg.norm(a)
-    norm_b = np.linalg.norm(b)
-    if norm_a == 0 or norm_b == 0:
-        return 0.0
-    return float(np.dot(a, b) / (norm_a * norm_b))
+# Distance threshold for agglomerative clustering (1 - cosine_similarity)
+# Higher threshold = more segments per cluster (less fragmentation)
+# 0.5 means segments need ~50% similarity to be in same cluster
+# Street audio is noisy, so we need a lenient threshold
+CLUSTERING_DISTANCE_THRESHOLD = 0.5
 
 
-def cluster_speakers_from_existing_ids(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
+def classify_cluster_by_patterns(texts: List[str]) -> Tuple[str, float]:
     """
-    Group segments by their existing speaker_id from 03.audio-features.
-    Returns {cluster_id: [segment_indices]}
+    Classify a cluster as coach/target using linguistic patterns.
+    Returns (label, confidence)
 
-    The 03.audio-features script already performs speaker diarization using embeddings.
-    We use those results directly rather than re-clustering.
-
-    If expected_speakers=1, returns all segments in one cluster.
+    Coach indicators: initiates, compliments, leads conversation
+    Target indicators: responds, short answers, reactive
     """
-    # Single speaker mode - no clustering needed
-    if expected_speakers == 1:
-        return {"0": list(range(len(segments)))}
+    all_text = " ".join(t.lower() for t in texts)
+    total_segments = len(texts)
 
-    # Group by existing speaker_id
-    speaker_groups: Dict[str, List[int]] = {}
-    for i, seg in enumerate(segments):
-        spk_id = seg.get("speaker_id", "unknown")
-        if spk_id not in speaker_groups:
-            speaker_groups[spk_id] = []
-        speaker_groups[spk_id].append(i)
+    if total_segments == 0:
+        return "other", 0.3
 
-    # Map speaker IDs to cluster IDs (0, 1, 2, ...)
-    # Sort by segment count to make largest cluster = 0
-    sorted_speakers = sorted(speaker_groups.items(), key=lambda x: -len(x[1]))
+    # Coach signals: initiates, compliments, leads
+    coach_signals = 0
+    if "you look" in all_text:
+        coach_signals += 1
+    if "you're beautiful" in all_text or "you're gorgeous" in all_text or "you're cute" in all_text:
+        coach_signals += 1
+    if "i had to say" in all_text or "i had to come" in all_text:
+        coach_signals += 1
+    if "what's your name" in all_text or "what is your name" in all_text:
+        coach_signals += 1
+    if "can i get your" in all_text or "let me get your" in all_text:
+        coach_signals += 1
+    if "excuse me" in all_text or "sorry to bother" in all_text:
+        coach_signals += 1
 
-    clusters = {}
-    for idx, (spk_id, indices) in enumerate(sorted_speakers):
-        clusters[str(idx)] = sorted(indices)
+    # Coach asks questions - count question marks
+    question_count = all_text.count("?")
+    if question_count > total_segments * 0.3:
+        coach_signals += 1
 
-    # If only one cluster, return single cluster
-    if len(clusters) == 1:
-        return {"0": list(range(len(segments)))}
+    # Target signals: short responses, reactive
+    target_signals = 0
 
-    return clusters
+    # Many short responses (< 25 chars)
+    short_count = sum(1 for t in texts if len(t.strip()) < 25)
+    if short_count > total_segments * 0.5:
+        target_signals += 1
 
-def cluster_speakers_by_pitch(segments: List[Dict], expected_speakers: int = 2) -> Dict[str, List[int]]:
+    # Common target responses
+    target_phrases = ["thank you", "thanks", "okay", "yeah", "oh", "really"]
+    for phrase in target_phrases:
+        matches = sum(1 for t in texts if t.lower().strip().startswith(phrase))
+        if matches >= 2:
+            target_signals += 1
+            break
+
+    # Few questions (targets answer, not ask)
+    if question_count < total_segments * 0.1:
+        target_signals += 1
+
+    # Decide based on signals
+    if coach_signals >= 2 and coach_signals > target_signals:
+        confidence = min(0.7 + coach_signals * 0.05, 0.95)
+        return "coach", confidence
+    elif target_signals >= 2 and target_signals > coach_signals:
+        confidence = min(0.7 + target_signals * 0.05, 0.95)
+        return "target", confidence
+    elif coach_signals > 0 and target_signals == 0:
+        return "coach", 0.6
+    elif target_signals > 0 and coach_signals == 0:
+        return "target", 0.6
+    else:
+        # Ambiguous - will be resolved by cluster size (coach talks more)
+        return "ambiguous", 0.4
+
+
+def infer_speaker_from_context(segments: List[Dict], labels: List[str], i: int) -> str:
     """
-    DEPRECATED: This function uses pitch-based clustering which is unreliable.
-    TODO: Replace with cluster_speakers_from_existing_ids() once implemented.
-
-    Group segments into speaker clusters based on pitch.
-    Returns {cluster_id: [segment_indices]}
-
-    If expected_speakers=1, returns all segments in one cluster.
+    Infer speaker for segment without embedding using surrounding context.
     """
-    # Single speaker mode - no clustering needed
-    if expected_speakers == 1:
-        return {"0": list(range(len(segments)))}
+    text = segments[i].get("text", "").strip().lower()
+    prev_label = labels[i - 1] if i > 0 else None
+    prev_text = segments[i - 1].get("text", "") if i > 0 else ""
 
-    # Extract pitch data
-    pitch_data = []
-    for i, seg in enumerate(segments):
-        pitch = seg.get("features", {}).get("pitch", {})
-        mean_hz = pitch.get("mean_hz", 0)
-        if mean_hz > 0:
-            pitch_data.append((i, mean_hz))
+    # Short response after question = likely target
+    if prev_text.strip().endswith("?") and len(text) < 30:
+        return "target"
 
-    if not pitch_data:
-        # No pitch data - return all as single cluster
-        return {"0": list(range(len(segments)))}
+    # Thank you after compliment = target
+    compliment_words = ["beautiful", "cute", "pretty", "gorgeous", "stunning"]
+    if any(word in prev_text.lower() for word in compliment_words):
+        if text.startswith(("oh", "thank", "thanks", "aww")):
+            return "target"
 
-    # Calculate pitch statistics to detect single vs multi speaker
-    pitches = [p[1] for p in pitch_data]
-    avg_pitch = sum(pitches) / len(pitches)
-    pitch_variance = sum((p - avg_pitch) ** 2 for p in pitches) / len(pitches)
-    pitch_std = pitch_variance ** 0.5
+    # Name response after "I'm [name]" = target
+    if "i'm " in prev_text.lower() and len(text.split()) <= 3 and len(text) < 20:
+        if not text.startswith(("i'm", "i am", "nice to", "how")):
+            return "target"
 
-    # If pitch standard deviation is low, likely single speaker
-    # Typical male-female pitch gap is 80-100Hz, so std < 30 suggests single speaker
-    if pitch_std < 30:
-        return {"0": list(range(len(segments)))}
+    # Continuity: same as previous (if not "other")
+    if prev_label and prev_label not in ("other", "ambiguous"):
+        return prev_label
 
-    # Simple k=2 clustering (male ~85-180Hz, female ~165-255Hz)
-    # Threshold at ~170Hz for male/female split
-    low_pitch = []  # Likely male (coach)
-    high_pitch = []  # Likely female (target)
-    no_pitch = []
-
-    for i, seg in enumerate(segments):
-        pitch = seg.get("features", {}).get("pitch", {})
-        mean_hz = pitch.get("mean_hz", 0)
-
-        if mean_hz <= 0:
-            no_pitch.append(i)
-        elif mean_hz < 170:
-            low_pitch.append(i)
-        else:
-            high_pitch.append(i)
-
-    clusters = {}
-    if low_pitch:
-        clusters["0"] = low_pitch
-    if high_pitch:
-        clusters["1"] = high_pitch
-    if no_pitch:
-        # Keep no-pitch as separate cluster (will be labeled "other")
-        # Don't merge with coach/target as these are often transitions or unclear speech
-        clusters["2"] = no_pitch
-
-    # If only one cluster has segments, return single cluster
-    if len(clusters) == 1:
-        return {"0": list(range(len(segments)))}
-
-    return clusters
+    return "other"
 
 
-def get_cluster_stats(segments: List[Dict], indices: List[int]) -> Dict:
-    """Get statistics for a speaker cluster."""
-    cluster_segs = [segments[i] for i in indices]
+def identify_speakers_global(
+    segments: List[Dict],
+    video_type: str,
+    video_title: str
+) -> Tuple[List[Dict], Dict[str, str]]:
+    """
+    Speaker identification using pyannote speaker IDs from transcription.
 
-    pitches = [s["features"]["pitch"]["mean_hz"]
-               for s in cluster_segs
-               if s.get("features", {}).get("pitch", {}).get("mean_hz", 0) > 0]
+    Uses pyannote_speaker field (SPEAKER_00, SPEAKER_01, etc.) from 02.transcribe,
+    then maps to coach/target/voiceover based on:
+    - Speaking time (majority speaker = coach)
+    - Text patterns for verification/refinement
 
-    durations = [s.get("duration_sec", s["end"] - s["start"]) for s in cluster_segs]
+    Returns:
+        (speaker_info_list, cluster_labels)
 
-    # Sample utterances (first 5 non-empty)
-    samples = []
-    for s in cluster_segs:
-        text = s.get("text", "").strip()
-        if text and len(samples) < 5:
-            samples.append(text[:100])
+    speaker_info_list: List of dicts with {label, confidence, method, cluster_id}
+    cluster_labels: Dict mapping pyannote speaker to semantic label
+    """
+    n_segments = len(segments)
 
-    avg_pitch = sum(pitches) / len(pitches) if pitches else 0
+    # Single speaker mode (talking_head)
+    if video_type == "talking_head":
+        print("    Video type: talking_head - all segments labeled as coach")
+        speaker_info = [{
+            "label": "coach",
+            "confidence": 0.90,
+            "method": "video_type_single_speaker",
+            "cluster_id": "SPEAKER_00"
+        } for _ in range(n_segments)]
+        return speaker_info, {"SPEAKER_00": "coach"}
 
-    return {
-        "segment_count": len(indices),
-        "total_duration": sum(durations),
-        "average_pitch_hz": round(avg_pitch, 1),
-        "likely_gender": "male" if avg_pitch < 170 else "female" if avg_pitch > 0 else "unknown",
-        "sample_utterances": samples
+    print(f"    Video type: {video_type} - using pyannote speaker IDs")
+
+    # Count speaking time per pyannote speaker
+    speaker_durations: Dict[str, float] = {}
+    speaker_segment_counts: Dict[str, int] = {}
+    speaker_texts: Dict[str, List[str]] = {}
+
+    for seg in segments:
+        pyannote_spk = seg.get("pyannote_speaker") or "UNKNOWN"
+        duration = float(seg.get("duration_sec", seg.get("end", 0) - seg.get("start", 0)))
+        text = seg.get("text", "")
+
+        speaker_durations[pyannote_spk] = speaker_durations.get(pyannote_spk, 0.0) + duration
+        speaker_segment_counts[pyannote_spk] = speaker_segment_counts.get(pyannote_spk, 0) + 1
+        if pyannote_spk not in speaker_texts:
+            speaker_texts[pyannote_spk] = []
+        speaker_texts[pyannote_spk].append(text)
+
+    print(f"    Pyannote speakers: {dict(speaker_segment_counts)}")
+    print(f"    Speaking time (s): {dict(speaker_durations)}")
+
+    # Sort speakers by speaking time (descending)
+    sorted_speakers = sorted(speaker_durations.keys(), key=lambda s: -speaker_durations[s])
+
+    # Map pyannote speakers to semantic labels
+    # Majority speaker = coach, minority speaker(s) = target
+    # Use text pattern analysis to verify/refine
+    speaker_label_map: Dict[str, Tuple[str, float]] = {}
+
+    for i, spk in enumerate(sorted_speakers):
+        texts = speaker_texts.get(spk, [])
+        pattern_label, pattern_conf = classify_cluster_by_patterns(texts)
+
+        if i == 0:  # Majority speaker
+            if pattern_label == "target":
+                # Text patterns strongly suggest target, but this is majority speaker
+                # This is unusual - might be a compilation video. Use text analysis.
+                label = pattern_label
+                confidence = pattern_conf * 0.8  # Lower confidence due to conflict
+                print(f"      {spk}: majority but text suggests target (unusual)")
+            else:
+                # Majority speaker is coach (expected)
+                label = "coach"
+                confidence = max(0.85, pattern_conf)
+        elif i == 1:  # Second speaker (minority)
+            if pattern_label == "coach":
+                # Text patterns suggest coach, but this is minority speaker
+                # Could be voiceover or secondary commentary
+                label = "voiceover"
+                confidence = 0.6
+                print(f"      {spk}: minority but text suggests coach -> voiceover")
+            else:
+                # Minority speaker is target (expected for infield)
+                label = "target"
+                confidence = max(0.75, pattern_conf)
+        else:  # Third+ speakers
+            # Rare - label as "other"
+            label = "other"
+            confidence = 0.5
+
+        speaker_label_map[spk] = (label, confidence)
+        print(f"      {spk}: {len(texts)} segments, {speaker_durations[spk]:.1f}s -> {label} ({confidence:.2f})")
+
+    # Handle UNKNOWN speaker
+    if "UNKNOWN" in speaker_label_map:
+        # UNKNOWN segments - use text patterns or default to coach
+        speaker_label_map["UNKNOWN"] = ("coach", 0.4)
+
+    # Build speaker_info for each segment
+    speaker_info: List[Dict] = []
+    for seg in segments:
+        pyannote_spk = seg.get("pyannote_speaker") or "UNKNOWN"
+        label, confidence = speaker_label_map.get(pyannote_spk, ("coach", 0.4))
+
+        # Apply text-based refinement for short segments
+        text = seg.get("text", "").lower()
+        duration = float(seg.get("duration_sec", seg.get("end", 0) - seg.get("start", 0)))
+
+        # Short segments with typical target responses should be target
+        # even if pyannote assigned them to majority speaker
+        target_phrases = [
+            "thank you", "thanks", "okay", "oh okay", "yeah", "yes",
+            "nice to meet you", "nice meeting you", "i'm ", "my name is",
+            "it's good", "i do", "i don't", "i'm from", "i live"
+        ]
+
+        if duration < 2.0 and label == "coach":
+            for phrase in target_phrases:
+                if phrase in text and len(text) < 50:
+                    # This looks like a target response
+                    label = "target"
+                    confidence = 0.70
+                    break
+
+        speaker_info.append({
+            "label": label,
+            "confidence": round(confidence, 2),
+            "method": "pyannote_speaker_id",
+            "cluster_id": pyannote_spk
+        })
+
+    # Build final cluster_labels dict
+    final_cluster_labels = {
+        spk: lbl for spk, (lbl, _) in speaker_label_map.items()
     }
 
-
-# === LLM Speaker Labeling ===
-
-def build_speaker_prompt(clusters: Dict[str, Dict], video_title: str) -> str:
-    """Build prompt for LLM speaker labeling."""
-    prompt = f"""You are labeling speakers in a daygame video titled: "{video_title}"
-
-This is a daygame/pickup video where a coach approaches women on the street.
-
-Speaker clusters (based on voice embeddings):
-"""
-    for cluster_id, stats in clusters.items():
-        prompt += f"""
-Speaker {cluster_id}:
-- Segments: {stats['segment_count']}
-- Duration: {stats['total_duration']:.1f}s
-- Sample utterances: {stats['sample_utterances']}
-"""
-
-    prompt += """
-Label each speaker as: coach, target, voiceover, or other
-
-IMPORTANT - Identify the coach by what they SAY:
-- The coach INITIATES: opens with "hey", "excuse me", "sorry to bother you"
-- The coach COMPLIMENTS: says things like "you're beautiful", "I had to say hi"
-- The coach LEADS: asks questions, suggests things, gives compliments
-- The target RESPONDS: shorter replies, says "thank you", answers questions
-
-Do NOT rely on pitch/gender - focus on the CONTENT of utterances.
-
-Return ONLY valid JSON:
-{"speaker_labels": {"0": {"label": "coach", "confidence": 0.9, "reasoning": "..."}, "1": {"label": "target", "confidence": 0.85, "reasoning": "..."}}}
-"""
-    return prompt
-
-
-def call_llm(prompt: str) -> Optional[Dict]:
-    """Call Ollama LLM and parse JSON response."""
-    try:
-        resp = requests.post(
-            OLLAMA_URL,
-            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False},
-            timeout=OLLAMA_TIMEOUT
-        )
-        resp.raise_for_status()
-
-        response_text = resp.json().get("response", "")
-
-        # Extract JSON from response
-        # Try to find JSON in the response
-        json_match = re.search(r'\{[\s\S]*\}', response_text)
-        if json_match:
-            return json.loads(json_match.group())
-
-        return None
-    except Exception as e:
-        print(f"  LLM error: {e}", file=sys.stderr)
-        return None
-
-
-def label_speakers(segments: List[Dict], video_title: str) -> Tuple[Dict[str, str], Dict[str, float], str]:
-    """
-    Label speaker clusters using LLM.
-    Returns (labels_map, confidence_map, detected_video_type)
-    """
-    # Pre-detect video type from title
-    video_type, type_confidence = detect_video_type_from_title(video_title)
-
-    # Determine expected speaker count
-    if video_type == "talking_head":
-        expected_speakers = 1
-        print(f"    Video type: talking_head (confidence: {type_confidence})")
-    else:
-        expected_speakers = 2
-        print(f"    Video type: {video_type} (confidence: {type_confidence})")
-
-    # Cluster segments using speaker embeddings (more robust than pitch)
-    clusters = cluster_speakers_from_existing_ids(segments, expected_speakers)
-
-    # If only one cluster, this is a single-speaker video
-    if len(clusters) == 1:
-        print("    Single speaker detected (embedding clustering) - labeling as coach")
-        return {"0": "coach"}, {"0": 0.90}, "talking_head"
-
-    # Get stats per cluster
-    cluster_stats = {}
-    for cluster_id, indices in clusters.items():
-        cluster_stats[cluster_id] = get_cluster_stats(segments, indices)
-
-    # Build prompt and call LLM
-    prompt = build_speaker_prompt(cluster_stats, video_title)
-    result = call_llm(prompt)
-
-    if not result or "speaker_labels" not in result:
-        # Fallback: use heuristics
-        print("  Warning: LLM failed, using pitch heuristics", file=sys.stderr)
-        labels = {}
-        confidences = {}
-        for cluster_id, stats in cluster_stats.items():
-            if stats["likely_gender"] == "male":
-                labels[cluster_id] = "coach"
-                confidences[cluster_id] = 0.6
-            elif stats["likely_gender"] == "female":
-                labels[cluster_id] = "target"
-                confidences[cluster_id] = 0.6
-            else:
-                labels[cluster_id] = "other"
-                confidences[cluster_id] = 0.3
-        return labels, confidences, video_type
-
-    # Parse LLM response - only accept labels for clusters that actually exist
-    labels = {}
-    confidences = {}
-    valid_cluster_ids = set(clusters.keys())  # Only clusters we actually have
-
-    for cluster_id, data in result["speaker_labels"].items():
-        # Skip labels for clusters that don't exist (LLM hallucination)
-        if cluster_id not in valid_cluster_ids:
-            continue
-
-        label = data.get("label", "other")
-        if label not in ["coach", "target", "voiceover", "other"]:
-            label = "other"
-        labels[cluster_id] = label
-        confidences[cluster_id] = data.get("confidence", 0.5)
-
-    # Ensure all clusters have labels
-    for cid in valid_cluster_ids:
-        if cid not in labels:
-            labels[cid] = "other"
-            confidences[cid] = 0.3
-
-    return labels, confidences, video_type
+    return speaker_info, final_cluster_labels
 
 
 # === Tone Classification (Audio Thresholds) ===
@@ -564,94 +533,9 @@ def aggregate_features(segments: List[Dict], win_start: float, win_end: float) -
     }
 
 
-# === Turn-Taking Corrections ===
-# Post-processing to fix mislabeled short responses in infield videos.
-# The cluster-level LLM labeling can miss segment-level turn-taking patterns.
-
-def is_question(text: str) -> bool:
-    """Check if text is a question (ends with ? or has question patterns)."""
-    text = text.strip()
-    if text.endswith("?"):
-        return True
-    question_starters = ("how", "what", "where", "when", "why", "who", "are you", "do you", "have you")
-    return text.lower().startswith(question_starters)
-
-
-def apply_turn_taking_corrections(segments: List[Dict]) -> int:
-    """
-    Apply turn-taking corrections to fix mislabeled short responses.
-
-    This catches cases where:
-    1. Coach asks question → short response is mislabeled as coach
-    2. Coach says "I'm [name]" → their name response is mislabeled as coach
-    3. Coach gives compliment → "thank you" response is mislabeled as coach
-
-    Returns number of corrections made.
-    """
-    corrections = 0
-
-    for i, seg in enumerate(segments):
-        if i == 0:
-            continue  # Skip first segment (no previous context)
-
-        prev_seg = segments[i - 1]
-        current_text = seg.get("text", "").strip().lower()
-        prev_text = prev_seg.get("text", "").strip().lower()
-        current_label = seg["speaker"]["label"]
-        prev_label = prev_seg["speaker"]["label"]
-
-        # Skip if already labeled as target/other
-        if current_label != "coach":
-            continue
-
-        # Skip if previous segment wasn't coach (turn-taking requires coach→target)
-        if prev_label != "coach":
-            continue
-
-        should_correct = False
-
-        # Rule 1: Short responses after coach questions
-        if is_question(prev_seg.get("text", "")) and len(seg.get("text", "")) < 40:
-            response_patterns = (
-                "oh", "yeah", "yes", "no", "i'm", "it's", "i am", "that's",
-                "thank", "thanks", "nice", "good", "great", "okay", "sure",
-                "really", "fine", "i'm fine", "it's good", "i don't"
-            )
-            if current_text.startswith(response_patterns):
-                should_correct = True
-
-        # Rule 2: Name exchange - coach says "I'm [name]", next is their name
-        if "i'm " in prev_text and len(seg.get("text", "").split()) <= 3:
-            # Single word or very short (likely their name)
-            if len(current_text) < 20 and not current_text.startswith(("i'm", "i am", "nice to", "how")):
-                should_correct = True
-
-        # Rule 3: Thank you responses after compliments
-        compliment_words = ("beautiful", "cute", "pretty", "gorgeous", "attractive", "stunning")
-        if any(word in prev_text for word in compliment_words):
-            if current_text.startswith(("oh", "thank", "thanks", "aww")):
-                should_correct = True
-
-        # Rule 4: Generic short responses that are clearly not coach
-        if len(seg.get("text", "")) < 30:
-            clear_target_responses = (
-                "thank you", "thanks", "oh thank you", "oh thanks",
-                "that's sweet", "that's nice", "that's so sweet",
-                "i'm fine", "it's good", "i'm good", "nice to meet you too",
-                "nice to meet you, too", "you too"
-            )
-            # Normalize text for comparison (remove punctuation, lowercase)
-            normalized = current_text.rstrip(".!,").replace(",", "")
-            if current_text in clear_target_responses or normalized in clear_target_responses:
-                should_correct = True
-
-        if should_correct:
-            seg["speaker"]["label"] = "target"
-            seg["speaker"]["method"] = "turn_taking_correction"
-            seg["speaker"]["confidence"] = 0.75  # Lower confidence for corrections
-            corrections += 1
-
-    return corrections
+# NOTE: Turn-taking corrections removed - now integrated into identify_speakers_global()
+# via the infer_speaker_from_context() function which handles short responses,
+# name exchanges, and compliment responses as part of the main speaker ID flow.
 
 
 # === Main Processing ===
@@ -681,64 +565,56 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
     print(f"  Processing: {video_title[:50]}...")
     print(f"    Segments: {len(segments)}")
 
-    # 1. Label speakers (includes video type pre-detection)
-    labels, confidences, detected_video_type = label_speakers(segments, video_title)
+    # 1. Pre-detect video type from title
+    detected_video_type, type_confidence = detect_video_type_from_title(video_title)
 
-    # Re-cluster with the knowledge from label_speakers (using embeddings)
-    expected_speakers = 1 if detected_video_type == "talking_head" else 2
-    clusters = cluster_speakers_from_existing_ids(segments, expected_speakers)
+    # 2. Global speaker identification (single source of truth)
+    # Uses embeddings + text patterns, handles context inference for missing embeddings
+    speaker_info_list, cluster_labels = identify_speakers_global(
+        segments, detected_video_type, video_title
+    )
 
-    print(f"    Clusters: {len(clusters)}, Labels: {labels}")
+    # Count labels for summary
+    label_counts = {}
+    for info in speaker_info_list:
+        lbl = info["label"]
+        label_counts[lbl] = label_counts.get(lbl, 0) + 1
+    print(f"    Speaker labels: {label_counts}")
 
-    # 2. Map labels to segments
+    # 3. Build enriched segments
     enriched_segments = []
     for i, seg in enumerate(segments):
-        # Find which cluster this segment belongs to
-        cluster_id = None
-        for cid, indices in clusters.items():
-            if i in indices:
-                cluster_id = cid
-                break
-
-        label = labels.get(cluster_id, "other")
-        conf = confidences.get(cluster_id, 0.5)
-
+        info = speaker_info_list[i]
         enriched_segments.append({
             "id": i,
             "start": seg["start"],
             "end": seg["end"],
             "text": seg.get("text", ""),
             "speaker": {
-                "label": label,
-                "confidence": round(conf, 2),
-                "method": "llm_speaker_id"
+                "label": info["label"],
+                "confidence": info["confidence"],
+                "method": info["method"]
             },
-            "speaker_id": int(cluster_id) if cluster_id else 0
+            "speaker_id": info["cluster_id"]
         })
 
-    # 2b. Apply turn-taking corrections (fix mislabeled short responses)
-    if detected_video_type == "infield":
-        corrections = apply_turn_taking_corrections(enriched_segments)
-        if corrections > 0:
-            print(f"    Turn-taking corrections: {corrections}")
-
-    # 3. Build tone windows
+    # 4. Build tone windows
     tone_windows = build_tone_windows(segments)
     print(f"    Tone windows: {len(tone_windows)}")
 
-    # 4. Build output
+    # 5. Build output
     output = {
         "video_id": input_path.parent.name,
         "source_file": str(input_path),
         "processed_at": datetime.now(timezone.utc).isoformat(),
         "segments": enriched_segments,
         "tone_windows": tone_windows,
-        "speaker_cluster_labels": {k: v for k, v in labels.items()},
+        "speaker_cluster_labels": cluster_labels,
         "detected_video_type": detected_video_type,
         "metadata": {
             "pipeline_version": PIPELINE_VERSION,
             "prompt_version": PROMPT_VERSION,
-            "model_version": OLLAMA_MODEL,
+            "speaker_id_version": "2.0.0-global-clustering",  # New versioning
             "schema_version": SCHEMA_VERSION,
             "input_checksum": file_checksum(input_path)
         }

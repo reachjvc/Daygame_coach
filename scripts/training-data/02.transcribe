@@ -37,8 +37,8 @@ Writes:
   plus <video>.full.txt (plain text, used by 10.ingest for embeddings)
 
 Diarization:
-- OFF by default.
-- enable with --whisperx-diarize (requires HF token + pyannote; may require torch<2.6 or unsafe torch.load)
+- ON by default (requires HF token + pyannote).
+- disable with --no-whisperx-diarize if needed
 """
 
 from __future__ import annotations
@@ -594,7 +594,11 @@ def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
     return segs
 
 
-def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec: float = 0.25) -> List[Dict[str, Any]]:
+def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec: float = 0.05) -> List[Dict[str, Any]]:
+    """
+    Merge adjacent speaker turns and filter very short segments.
+    Note: min_dur_sec reduced from 0.25 to 0.05 to preserve short responses (common in infield audio).
+    """
     turns = [t for t in turns if float(t.get("end", 0.0)) > float(t.get("start", 0.0))]
     turns.sort(key=lambda x: (float(x["start"]), float(x["end"])))
     merged: List[Dict[str, Any]] = []
@@ -736,16 +740,79 @@ class WhisperXAlignEngine(BaseEngine):
 
     @staticmethod
     def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[str, Any]]) -> None:
+        """
+        Assign speaker to each segment based on overlap with diarization turns.
+
+        Key insight for infield audio: pyannote detects overlapping speaker turns where
+        short interjections (target) appear WITHIN longer turns (coach). For short segments
+        (<3s), we prioritize matching with short speaker turns that are contained within
+        the segment's timespan, as these represent direct responses.
+        """
+        # Sort turns by start time and identify "minority" speaker (usually target with less speaking time)
+        speaker_durations: Dict[str, float] = {}
+        for d in turns:
+            spk = str(d.get("speaker", "UNKNOWN"))
+            dur = float(d["end"]) - float(d["start"])
+            speaker_durations[spk] = speaker_durations.get(spk, 0.0) + dur
+
+        # Minority speaker is the one with less total speaking time
+        minority_speaker = min(speaker_durations, key=speaker_durations.get) if speaker_durations else "UNKNOWN"
+
         for seg in segments:
             s0 = float(seg.get("start", 0.0))
             s1 = float(seg.get("end", 0.0))
+            seg_dur = s1 - s0
+
             best_spk = "UNKNOWN"
-            best_ov = 0.0
-            for d in turns:
-                ov = max(0.0, min(s1, float(d["end"])) - max(s0, float(d["start"])))
-                if ov > best_ov:
-                    best_ov = ov
-                    best_spk = str(d.get("speaker", "UNKNOWN"))
+            best_score = -1.0
+
+            # For short segments, check if there's a minority speaker turn that overlaps significantly
+            if seg_dur < 3.0:
+                for d in turns:
+                    d_start = float(d["start"])
+                    d_end = float(d["end"])
+                    spk = str(d.get("speaker", "UNKNOWN"))
+
+                    # Only consider minority speaker turns for this check
+                    if spk != minority_speaker:
+                        continue
+
+                    # Calculate overlap with segment
+                    ov = max(0.0, min(s1, d_end) - max(s0, d_start))
+                    if ov <= 0:
+                        continue
+
+                    # If this minority turn overlaps >= 50% with the segment, use it
+                    d_dur = d_end - d_start
+                    overlap_ratio_of_turn = ov / max(d_dur, 0.01)
+                    if overlap_ratio_of_turn >= 0.5:
+                        best_spk = spk
+                        best_score = 1.0  # High priority match
+                        break
+
+            # If no minority speaker match found, use standard overlap scoring
+            if best_score < 0:
+                for d in turns:
+                    d_start = float(d["start"])
+                    d_end = float(d["end"])
+                    d_dur = d_end - d_start
+                    spk = str(d.get("speaker", "UNKNOWN"))
+
+                    ov = max(0.0, min(s1, d_end) - max(s0, d_start))
+                    if ov <= 0:
+                        continue
+
+                    # Simple overlap ratio as primary score
+                    overlap_ratio = ov / max(seg_dur, 0.01)
+
+                    # Small bonus for better duration match
+                    duration_match = min(seg_dur, d_dur) / max(seg_dur, d_dur, 0.01)
+                    score = overlap_ratio * (0.8 + 0.2 * duration_match)
+
+                    if score > best_score:
+                        best_score = score
+                        best_spk = spk
+
             seg["speaker"] = best_spk
             if isinstance(seg.get("words"), list):
                 for w in seg["words"]:
@@ -927,6 +994,8 @@ def _run_engine_in_subprocess(args: argparse.Namespace, engine_name: str, audio_
     cmd += ["--whisperx-batch-size", str(args.whisperx_batch_size)]
     if args.whisperx_diarize:
         cmd += ["--whisperx-diarize"]
+    if getattr(args, "no_whisperx_diarize", False):
+        cmd += ["--no-whisperx-diarize"]
     if args.whisperx_diarize_after:
         cmd += ["--whisperx-diarize-after"]
     if args.whisperx_diarize_first:
@@ -1097,17 +1166,17 @@ if __name__ == "__main__":
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
     p.add_argument("--no-trim-repeat-tail", action="store_true", help="Disable repeated-tail trimming guardrail.")
 
-    # IMPORTANT: default runs EVERYTHING
+    # Engine selection (whisperx is default since it has diarization)
     p.add_argument(
         "--engines",
-        default="whisperx,faster,whisper",
-        help="Comma-separated list: whisperx,faster,whisper (default: run all).",
+        default="whisperx",
+        help="Comma-separated list: whisperx,faster,whisper (default: whisperx only).",
     )
     p.add_argument(
         "--primary-engine",
-        default="whisper",
+        default="whisperx",
         choices=["whisperx", "faster", "whisper"],
-        help="Which engine is copied to *.full.json (default: whisper).",
+        help="Which engine is copied to *.full.json (default: whisperx).",
     )
 
     p.add_argument("--beam-size", type=int, default=int(os.environ.get("WHISPER_BEAM_SIZE", "3")))
@@ -1140,8 +1209,9 @@ if __name__ == "__main__":
     p.add_argument("--whisperx-batch-size", type=int, default=int(os.environ.get("WHISPERX_BATCH_SIZE", "16")))
     p.add_argument("--whisperx-vad-filter", action="store_true", help="Enable VAD filter for whisperx ASR stage (default OFF).")
 
-    # diarization (optional)
-    p.add_argument("--whisperx-diarize", action="store_true", help="Enable diarization (pyannote, requires HF token).")
+    # diarization (ON by default)
+    p.add_argument("--whisperx-diarize", action="store_true", default=True, help="Enable diarization (pyannote, requires HF token). ON by default.")
+    p.add_argument("--no-whisperx-diarize", action="store_true", help="Disable diarization.")
     p.add_argument("--whisperx-diarize-first", action="store_true")
     p.add_argument("--whisperx-diarize-after", action="store_true")
     p.add_argument("--whisperx-hf-token", default=os.environ.get("WHISPERX_HF_TOKEN", ""))
@@ -1170,7 +1240,11 @@ if __name__ == "__main__":
     whisperx_device = _auto_device(args.whisperx_device)
     whisperx_compute = (args.whisperx_compute_type or "").strip().lower() or ("int8_float16" if whisperx_device == "cuda" else "int8")
 
-    # diarization mode (kept for CLI compatibility)
+    # diarization mode
+    diarize_enabled = bool(args.whisperx_diarize)
+    if getattr(args, "no_whisperx_diarize", False):
+        diarize_enabled = False
+
     diarize_first = True
     if args.whisperx_diarize_after:
         diarize_first = False
@@ -1199,7 +1273,7 @@ if __name__ == "__main__":
                 beam_size=int(args.beam_size),
                 temperature=float(args.temperature),
                 batch_size=int(args.whisperx_batch_size),
-                diarize=bool(args.whisperx_diarize),
+                diarize=diarize_enabled,
                 diarize_first=bool(diarize_first),
                 hf_token=str(args.whisperx_hf_token or ""),
                 vad_filter=bool(args.whisperx_vad_filter),
@@ -1258,7 +1332,7 @@ if __name__ == "__main__":
         if torch is not None and torch.cuda.is_available() and len(enabled_names) > 1:
             isolate_engines = True
 
-    log(f"[02.transcribe] Engines enabled: {', '.join(enabled_names)} | primary={primary_engine} | overwrite={bool(args.overwrite)}")
+    log(f"[02.transcribe] Engines enabled: {', '.join(enabled_names)} | primary={primary_engine} | diarize={diarize_enabled} | overwrite={bool(args.overwrite)}")
 
     # hidden subprocess-run
     if hasattr(args, "_engine_run") and hasattr(args, "_engine_out"):

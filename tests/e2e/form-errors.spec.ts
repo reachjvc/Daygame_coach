@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login } from './helpers/auth.helper'
+import { login, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -12,6 +12,9 @@ import { SELECTORS } from './helpers/selectors'
 const AUTH_TIMEOUT = 15000
 
 test.describe('Error Handling: Form Validation', () => {
+  // Run tests serially to avoid parallel conflicts with auth state and route handlers
+  test.describe.configure({ mode: 'serial' })
+
   test.describe('Login Form', () => {
     test('shows error for invalid email format', async ({ page }) => {
       // Arrange: Navigate to login page
@@ -107,6 +110,11 @@ test.describe('Error Handling: Form Validation', () => {
       await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     })
 
+    // Cleanup route handlers after each test to prevent route stacking
+    test.afterEach(async ({ page }) => {
+      await page.unrouteAll({ behavior: 'wait' })
+    })
+
     test('submit button disabled when input is empty', async ({ page }) => {
       // Skip if user doesn't have subscription (redirected away from QA)
       test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
@@ -161,6 +169,11 @@ test.describe('Error Handling: Form Validation', () => {
       await login(page)
     })
 
+    // Cleanup any sessions that may have been created during tests
+    test.afterEach(async ({ page }) => {
+      await ensureNoActiveSessionViaAPI(page)
+    })
+
     test('session start dialog validates goal input', async ({ page }) => {
       // Arrange: Navigate to session page
       await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
@@ -189,6 +202,8 @@ test.describe('Error Handling: Form Validation', () => {
 
         // If confirm button exists and is visible, check if it handles invalid input
         if (await confirmButton.isVisible()) {
+          // Scroll into view to handle viewport issues
+          await confirmButton.scrollIntoViewIfNeeded()
           await confirmButton.click()
 
           // Form should either not submit or show error

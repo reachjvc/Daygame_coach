@@ -630,84 +630,9 @@ def try_embed_segment(
         return None
 
 
-def assign_speaker(
-    emb: Optional[np.ndarray],
-    speakers: List[Dict[str, Any]],
-    prev_speaker_id: Optional[str],
-    seg_duration_sec: float,
-    cfg: Config,
-) -> Tuple[str, Optional[float]]:
-    """
-    Goal:
-      - Keep speaker count low (2 by default).
-      - When uncertain, return "unknown" instead of inventing spk_2.
-      - Allow 3rd speaker only when segment is long enough and clearly distinct.
-    speakers: list of dicts with keys: id, centroid (np.ndarray), count
-    returns: (speaker_id, similarity)
-    """
-    if emb is None:
-        # No embedding -> don't create speakers.
-        # Prefer continuity; otherwise unknown.
-        return (prev_speaker_id or "unknown", None)
-
-    # If we have prev speaker, see if it's still plausible
-    if prev_speaker_id is not None:
-        for spk in speakers:
-            if spk["id"] == prev_speaker_id:
-                sim_prev = cosine_sim(emb, spk["centroid"])
-                if sim_prev >= cfg.speaker_sim_threshold_prev:
-                    return (prev_speaker_id, sim_prev)
-
-    # Choose best matching speaker
-    best_id = None
-    best_sim = -1.0
-    for spk in speakers:
-        sim = cosine_sim(emb, spk["centroid"])
-        if sim > best_sim:
-            best_sim = sim
-            best_id = spk["id"]
-
-    # If good match, assign it
-    if best_id is not None and best_sim >= cfg.speaker_sim_threshold:
-        return (best_id, best_sim)
-
-    # Decide whether to create a new speaker or fallback to "unknown"
-    # 1) If we have fewer than the preferred max (usually 2), allow creating a new speaker
-    if len(speakers) < cfg.prefer_max_speakers:
-        new_id = f"spk_{len(speakers)}"
-        speakers.append({"id": new_id, "centroid": emb.copy(), "count": 1})
-        return (new_id, None)
-
-    # 2) If we'd be creating a third speaker (or beyond), require strong evidence
-    if len(speakers) < cfg.max_speakers:
-        is_third_candidate = (len(speakers) >= cfg.prefer_max_speakers)
-        if is_third_candidate:
-            if seg_duration_sec >= cfg.third_speaker_min_sec and best_sim >= 0.0 and best_sim <= cfg.third_speaker_create_max_sim:
-                new_id = f"spk_{len(speakers)}"
-                speakers.append({"id": new_id, "centroid": emb.copy(), "count": 1})
-                return (new_id, None)
-
-    # 3) Otherwise: don't invent new speakers. Use unknown.
-    return ("unknown", best_sim if best_id is not None else None)
-
-
-def update_speaker_centroid(speakers: List[Dict[str, Any]], speaker_id: str, emb: Optional[np.ndarray]) -> None:
-    if emb is None:
-        return
-    if speaker_id == "unknown":
-        return
-
-    for spk in speakers:
-        if spk["id"] == speaker_id:
-            c = spk["centroid"]
-            n = int(spk["count"])
-            # running average centroid
-            spk["centroid"] = (c * n + emb) / float(n + 1)
-            spk["count"] = n + 1
-            return
-
-    # If missing, create it
-    speakers.append({"id": speaker_id, "centroid": emb.copy(), "count": 1})
+# NOTE: Speaker clustering removed. 04.segment-enrich now handles all speaker identification
+# using global clustering (sees all embeddings before deciding) instead of incremental.
+# Embeddings are still computed and stored here for use by 04.
 
 
 # -------------------------
@@ -727,8 +652,7 @@ def build_audio_features(
     segments_in = transcript.get("segments", []) or []
 
     encoder = get_speaker_encoder(cfg)
-    speakers: List[Dict[str, Any]] = []
-    prev_speaker_id: Optional[str] = None
+    # NOTE: No longer tracking speakers here - 04.segment-enrich does global clustering
 
     segments_out: List[Dict[str, Any]] = []
 
@@ -736,6 +660,8 @@ def build_audio_features(
         start = float(seg.get("start", 0.0))
         end = float(seg.get("end", 0.0))
         text = str(seg.get("text", "") or "").strip()
+        # Pass through pyannote speaker ID from transcript (e.g., SPEAKER_00, SPEAKER_01)
+        pyannote_speaker = seg.get("speaker")  # May be None if no diarization
         if not text:
             continue
         if end <= start:
@@ -771,22 +697,8 @@ def build_audio_features(
             cfg=cfg,
         )
 
-        # Speaker embedding
+        # Speaker embedding (clustering done in 04.segment-enrich)
         emb = try_embed_segment(encoder, y_orig, sr_orig, start, end, cfg)
-
-        speaker_id, sim = assign_speaker(
-            emb=emb,
-            speakers=speakers,
-            prev_speaker_id=prev_speaker_id,
-            seg_duration_sec=dur,
-            cfg=cfg,
-        )
-
-        update_speaker_centroid(speakers, speaker_id, emb)
-
-        # Keep continuity only if it's a real speaker id
-        if speaker_id != "unknown":
-            prev_speaker_id = speaker_id
 
         speaker_embedding_obj = None
         if emb is not None:
@@ -807,7 +719,9 @@ def build_audio_features(
                 "end": r3(end),
                 "duration_sec": r3(dur),
                 "text": text,
-                "speaker_id": speaker_id,
+                # Pyannote speaker ID from transcript (SPEAKER_00, SPEAKER_01, etc.)
+                # Will be mapped to coach/target/voiceover in 04.segment-enrich
+                "pyannote_speaker": pyannote_speaker,
                 "features": {
                     "pitch": pitch,
                     "energy": energy_out,
@@ -838,12 +752,7 @@ def build_audio_features(
             "pitch_trim_percentile": cfg.pitch_trim_percentile,
             "embedder": cfg.embedder,
             "embedder_sample_rate": cfg.embedder_sample_rate,
-            "speaker_sim_threshold": cfg.speaker_sim_threshold,
-            "speaker_sim_threshold_prev": cfg.speaker_sim_threshold_prev,
-            "max_speakers": cfg.max_speakers,
-            "prefer_max_speakers": cfg.prefer_max_speakers,
-            "third_speaker_min_sec": cfg.third_speaker_min_sec,
-            "third_speaker_create_max_sim": cfg.third_speaker_create_max_sim,
+            # NOTE: Speaker clustering config removed - done in 04.segment-enrich now
             "min_embed_raw_sec": cfg.min_embed_raw_sec,
             "min_embed_window_sec": cfg.min_embed_window_sec,
             "embed_pad_sec": cfg.embed_pad_sec,

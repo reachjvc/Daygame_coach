@@ -21,58 +21,130 @@ import {
 
 describe("SafeArticleIdSchema - Path Traversal Prevention", () => {
   test("accepts valid alphanumeric ID with hyphens", () => {
-    const result = SafeArticleIdSchema.safeParse("01-8020-rule")
+    // Arrange
+    const input = "01-8020-rule"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("accepts valid ID with underscores", () => {
-    const result = SafeArticleIdSchema.safeParse("article_draft_v2")
+    // Arrange
+    const input = "article_draft_v2"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
+    expect(result.success).toBe(true)
+  })
+
+  test("accepts ID at exactly 100 characters (boundary)", () => {
+    // Arrange
+    const input = "a".repeat(100)
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects path traversal: ../", () => {
-    const result = SafeArticleIdSchema.safeParse("../../../etc/passwd")
+    // Arrange
+    const input = "../../../etc/passwd"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects path traversal: ..\\", () => {
-    const result = SafeArticleIdSchema.safeParse("..\\..\\windows\\system32")
+    // Arrange
+    const input = "..\\..\\windows\\system32"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects forward slashes", () => {
-    const result = SafeArticleIdSchema.safeParse("articles/secret")
+    // Arrange
+    const input = "articles/secret"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects backslashes", () => {
-    const result = SafeArticleIdSchema.safeParse("articles\\secret")
+    // Arrange
+    const input = "articles\\secret"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects dots in ID", () => {
-    const result = SafeArticleIdSchema.safeParse("article.json")
+    // Arrange
+    const input = "article.json"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects empty string", () => {
-    const result = SafeArticleIdSchema.safeParse("")
+    // Arrange
+    const input = ""
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects ID over 100 characters", () => {
-    const result = SafeArticleIdSchema.safeParse("a".repeat(101))
+    // Arrange
+    const input = "a".repeat(101)
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects spaces", () => {
-    const result = SafeArticleIdSchema.safeParse("article name")
+    // Arrange
+    const input = "article name"
+
+    // Act
+    const result = SafeArticleIdSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("FeedbackTypeSchema", () => {
   test("accepts all valid feedback types", () => {
+    // Arrange
     const validTypes = [
       "excellent",
       "good",
@@ -84,27 +156,55 @@ describe("FeedbackTypeSchema", () => {
       "alternatives",
       "negative",
     ]
+
+    // Act & Assert
     for (const type of validTypes) {
       expect(FeedbackTypeSchema.safeParse(type).success).toBe(true)
     }
   })
 
   test("rejects invalid feedback type", () => {
-    const result = FeedbackTypeSchema.safeParse("invalid")
+    // Arrange
+    const input = "invalid"
+
+    // Act
+    const result = FeedbackTypeSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("PhaseActionSchema", () => {
   test("accepts all valid phase actions", () => {
-    const validActions = ["lock-contract", "lock-outline", "lock-structure", "unlock-structure"]
+    // Arrange
+    const validActions = ["lock-contract", "lock-outline", "lock-structure"]
+
+    // Act & Assert
     for (const action of validActions) {
       expect(PhaseActionSchema.safeParse(action).success).toBe(true)
     }
   })
 
   test("rejects invalid action", () => {
-    const result = PhaseActionSchema.safeParse("delete-article")
+    // Arrange
+    const input = "delete-article"
+
+    // Act
+    const result = PhaseActionSchema.safeParse(input)
+
+    // Assert
+    expect(result.success).toBe(false)
+  })
+
+  test("rejects unlock-structure (handled by separate route)", () => {
+    // Arrange
+    const input = "unlock-structure"
+
+    // Act
+    const result = PhaseActionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
@@ -120,131 +220,226 @@ describe("ArticleContractSchema", () => {
   }
 
   test("accepts valid contract", () => {
-    const result = ArticleContractSchema.safeParse(validContract)
+    // Arrange
+    const input = validContract
+
+    // Act
+    const result = ArticleContractSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects contract with missing title", () => {
+    // Arrange
     const { title, ...noTitle } = validContract
+
+    // Act
     const result = ArticleContractSchema.safeParse(noTitle)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects contract with empty thesis", () => {
-    const result = ArticleContractSchema.safeParse({ ...validContract, thesis: "" })
+    // Arrange
+    const input = { ...validContract, thesis: "" }
+
+    // Act
+    const result = ArticleContractSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects contract with too many mustInclude items", () => {
-    const result = ArticleContractSchema.safeParse({
+    // Arrange
+    const input = {
       ...validContract,
       mustInclude: Array(21).fill("item"),
-    })
+    }
+
+    // Act
+    const result = ArticleContractSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("OutlineSectionSchema", () => {
   test("accepts valid section", () => {
-    const result = OutlineSectionSchema.safeParse({
+    // Arrange
+    const input = {
       id: "intro",
       purpose: "Introduce the core concept",
-    })
+    }
+
+    // Act
+    const result = OutlineSectionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("accepts section with notes", () => {
-    const result = OutlineSectionSchema.safeParse({
+    // Arrange
+    const input = {
       id: "conclusion",
       purpose: "Summarize key takeaways",
       notes: "Keep it actionable",
-    })
+    }
+
+    // Act
+    const result = OutlineSectionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects section with invalid ID characters", () => {
-    const result = OutlineSectionSchema.safeParse({
+    // Arrange
+    const input = {
       id: "section/intro",
       purpose: "Test",
-    })
+    }
+
+    // Act
+    const result = OutlineSectionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects section with empty purpose", () => {
-    const result = OutlineSectionSchema.safeParse({
+    // Arrange
+    const input = {
       id: "intro",
       purpose: "",
-    })
+    }
+
+    // Act
+    const result = OutlineSectionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("ArticleOutlineSchema", () => {
   test("accepts valid outline", () => {
-    const result = ArticleOutlineSchema.safeParse({
+    // Arrange
+    const input = {
       sections: [
         { id: "intro", purpose: "Introduce topic" },
         { id: "body", purpose: "Main content" },
       ],
-    })
+    }
+
+    // Act
+    const result = ArticleOutlineSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects outline with no sections", () => {
-    const result = ArticleOutlineSchema.safeParse({ sections: [] })
+    // Arrange
+    const input = { sections: [] }
+
+    // Act
+    const result = ArticleOutlineSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects outline with too many sections", () => {
+    // Arrange
     const sections = Array(21)
       .fill(null)
       .map((_, i) => ({ id: `section-${i}`, purpose: "Test" }))
-    const result = ArticleOutlineSchema.safeParse({ sections })
+    const input = { sections }
+
+    // Act
+    const result = ArticleOutlineSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("ArticleFeedbackFlagSchema", () => {
   test("accepts valid flag with quote and note", () => {
-    const result = ArticleFeedbackFlagSchema.safeParse({
+    // Arrange
+    const input = {
       type: "excellent",
       sectionId: "intro",
       quote: "This is great",
       note: "Perfect example of the principle",
-    })
+    }
+
+    // Act
+    const result = ArticleFeedbackFlagSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("accepts flag without optional fields", () => {
-    const result = ArticleFeedbackFlagSchema.safeParse({
+    // Arrange
+    const input = {
       type: "good",
       sectionId: "body",
-    })
+    }
+
+    // Act
+    const result = ArticleFeedbackFlagSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects flag with invalid type", () => {
-    const result = ArticleFeedbackFlagSchema.safeParse({
+    // Arrange
+    const input = {
       type: "amazing",
       sectionId: "intro",
-    })
+    }
+
+    // Act
+    const result = ArticleFeedbackFlagSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects flag with empty sectionId", () => {
-    const result = ArticleFeedbackFlagSchema.safeParse({
+    // Arrange
+    const input = {
       type: "good",
       sectionId: "",
-    })
+    }
+
+    // Act
+    const result = ArticleFeedbackFlagSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects flag with quote over 500 chars", () => {
-    const result = ArticleFeedbackFlagSchema.safeParse({
+    // Arrange
+    const input = {
       type: "note",
       sectionId: "intro",
       quote: "x".repeat(501),
-    })
+    }
+
+    // Act
+    const result = ArticleFeedbackFlagSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
@@ -264,38 +459,63 @@ describe("LearningSuggestionSchema", () => {
   }
 
   test("accepts valid suggestion", () => {
-    const result = LearningSuggestionSchema.safeParse(validSuggestion)
+    // Arrange
+    const input = validSuggestion
+
+    // Act
+    const result = LearningSuggestionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects suggestion with invalid type", () => {
-    const result = LearningSuggestionSchema.safeParse({
+    // Arrange
+    const input = {
       ...validSuggestion,
       type: "neutral",
-    })
+    }
+
+    // Act
+    const result = LearningSuggestionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects suggestion with invalid confidence", () => {
-    const result = LearningSuggestionSchema.safeParse({
+    // Arrange
+    const input = {
       ...validSuggestion,
       confidence: "very-high",
-    })
+    }
+
+    // Act
+    const result = LearningSuggestionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects suggestion with invalid originalFlag", () => {
-    const result = LearningSuggestionSchema.safeParse({
+    // Arrange
+    const input = {
       ...validSuggestion,
       originalFlag: { type: "invalid", sectionId: "" },
-    })
+    }
+
+    // Act
+    const result = LearningSuggestionSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("PhaseTransitionRequestSchema", () => {
   test("accepts lock-contract with contract", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       action: "lock-contract",
       contract: {
@@ -306,115 +526,207 @@ describe("PhaseTransitionRequestSchema", () => {
         mustNotInclude: [],
         tone: "Test tone",
       },
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects lock-contract without contract", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       action: "lock-contract",
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("accepts lock-outline with outline", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       action: "lock-outline",
       outline: {
         sections: [{ id: "intro", purpose: "Introduce topic" }],
       },
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects lock-outline without outline", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       action: "lock-outline",
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("accepts lock-structure without extra data", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       action: "lock-structure",
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects path traversal in articleId", () => {
-    const result = PhaseTransitionRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "../secret",
       action: "lock-structure",
-    })
+    }
+
+    // Act
+    const result = PhaseTransitionRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("UnlockStructureRequestSchema", () => {
   test("accepts valid unlock request", () => {
-    const result = UnlockStructureRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       reason: "Need to add a new section for better flow",
-    })
+    }
+
+    // Act
+    const result = UnlockStructureRequestSchema.safeParse(input)
+
+    // Assert
+    expect(result.success).toBe(true)
+  })
+
+  test("accepts reason at exactly 10 characters (boundary)", () => {
+    // Arrange
+    const input = {
+      articleId: "01-8020-rule",
+      reason: "1234567890", // exactly 10 chars
+    }
+
+    // Act
+    const result = UnlockStructureRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects reason under 10 characters", () => {
-    const result = UnlockStructureRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
-      reason: "Too short",
-    })
+      reason: "Too short", // 9 chars
+    }
+
+    // Act
+    const result = UnlockStructureRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects reason over 1000 characters", () => {
-    const result = UnlockStructureRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "01-8020-rule",
       reason: "x".repeat(1001),
-    })
+    }
+
+    // Act
+    const result = UnlockStructureRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects path traversal in articleId", () => {
-    const result = UnlockStructureRequestSchema.safeParse({
+    // Arrange
+    const input = {
       articleId: "../../etc/passwd",
       reason: "This is a valid reason",
-    })
+    }
+
+    // Act
+    const result = UnlockStructureRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("AnalyzeCommentsRequestSchema", () => {
   test("accepts valid flags array", () => {
-    const result = AnalyzeCommentsRequestSchema.safeParse({
+    // Arrange
+    const input = {
       flags: [
         { type: "excellent", sectionId: "intro", note: "Great intro" },
         { type: "note", sectionId: "body", note: "Consider rewording" },
       ],
-    })
+    }
+
+    // Act
+    const result = AnalyzeCommentsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects empty flags array", () => {
-    const result = AnalyzeCommentsRequestSchema.safeParse({ flags: [] })
+    // Arrange
+    const input = { flags: [] }
+
+    // Act
+    const result = AnalyzeCommentsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 
   test("rejects flags with invalid type", () => {
-    const result = AnalyzeCommentsRequestSchema.safeParse({
+    // Arrange
+    const input = {
       flags: [{ type: "invalid", sectionId: "intro" }],
-    })
+    }
+
+    // Act
+    const result = AnalyzeCommentsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })
 
 describe("ApproveLearningsRequestSchema", () => {
   test("accepts valid approved suggestions", () => {
-    const result = ApproveLearningsRequestSchema.safeParse({
+    // Arrange
+    const input = {
       approvedSuggestions: [
         {
           type: "positive",
@@ -425,21 +737,38 @@ describe("ApproveLearningsRequestSchema", () => {
           confidence: "high",
         },
       ],
-    })
+    }
+
+    // Act
+    const result = ApproveLearningsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("accepts empty approved suggestions (skip all)", () => {
-    const result = ApproveLearningsRequestSchema.safeParse({
+    // Arrange
+    const input = {
       approvedSuggestions: [],
-    })
+    }
+
+    // Act
+    const result = ApproveLearningsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(true)
   })
 
   test("rejects malformed suggestion in array", () => {
-    const result = ApproveLearningsRequestSchema.safeParse({
+    // Arrange
+    const input = {
       approvedSuggestions: [{ type: "invalid" }],
-    })
+    }
+
+    // Act
+    const result = ApproveLearningsRequestSchema.safeParse(input)
+
+    // Assert
     expect(result.success).toBe(false)
   })
 })

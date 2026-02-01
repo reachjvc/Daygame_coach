@@ -1,15 +1,14 @@
 # Plan: Improve Test Coverage with Integration & Error Tests
 
-**Status:** In Progress - Phase 4 Complete (error-path E2E tests) + Rate limiting tests BLOCKED
-**Updated:** 01-02-2026 12:05
+**Status:** In Progress - Phase 4 Complete + Verified + Isolation Fixed (error-path E2E tests) + Rate limiting tests BLOCKED
+**Updated:** 01-02-2026 20:18
 
 ## Changelog
+- 01-02-2026 20:18 - Fixed test isolation issues: added serial mode + afterEach cleanup to error-path tests. Created safeguard test (e2e-isolation.test.ts) to catch future isolation violations
+- 01-02-2026 19:44 - Fixed error-path tests: wrong routes (/qa→/dashboard/qa, /tracking→/dashboard/tracking), added subscription checks, session state handling. 12 pass, 9 skipped (QA needs subscription)
 - 01-02-2026 12:05 - Phase 4 complete: error-path E2E tests (error-handling: 6, auth-errors: 6, form-errors: 8)
 - 01-02-2026 11:10 - Fixed false-pass anti-pattern in security tests: 9 silent `return` statements replaced with proper test data setup via API helpers
 - 31-01-2026 22:07 - Created second test user (scripts/create-test-user-b.ts). Removed useless rate limit tests (blocked until rate limiting implemented)
-- 31-01-2026 21:46 - Phase 3 complete: 26 security E2E tests (auth: 6, input: 20). RLS/IDOR: 12 tests now work with TEST_USER_B
-- 31-01-2026 21:30 - Phase 2.2-2.4 complete: 71 integration tests passing
-- 31-01-2026 19:53 - Phase 2.1 complete: 28 integration tests passing
 
 ---
 
@@ -273,13 +272,15 @@ TEST_USER_B_PASSWORD=your-password
 
 ---
 
-## Phase 4: Error-Path E2E Tests ✅ COMPLETE
+## Phase 4: Error-Path E2E Tests ✅ COMPLETE + VERIFIED
 
 **Goal:** App degrades gracefully when backend fails.
 
 **Approach:** Playwright route interception to simulate failures.
 
 **Note:** This uses network-level simulation, not mocking. The frontend is real; we're testing how it handles errors. This is acceptable per testing philosophy (see testing_behavior.md).
+
+**Important:** QA tests require the test user to have `has_purchased = true`. Tests properly skip via `test.skip()` if the user lacks subscription access, ensuring no false passes.
 
 ### 4.1 API Error Handling ✅ COMPLETE
 
@@ -336,6 +337,31 @@ TEST_USER_B_PASSWORD=your-password
 | Invalid email format | Enter "notanemail" | Inline error shown |
 | Server validation error | API returns 422 | Field error displayed |
 
+### 4.4 Test Isolation Fixes ✅ COMPLETE
+
+**Problem:** Error-path tests passed individually but caused ~50 failures when run with full E2E suite (test isolation issues).
+
+**Root causes identified:**
+- Missing `test.describe.configure({ mode: 'serial' })` - tests ran in parallel with shared auth state
+- No `test.afterEach()` cleanup - route handlers and sessions leaked between tests
+- Route interceptions stacked across parallel tests
+
+**Fixes applied:**
+| File | Changes |
+|------|---------|
+| `auth-errors.spec.ts` | Added serial mode + afterEach with `page.unrouteAll()` |
+| `form-errors.spec.ts` | Added serial mode + afterEach with `page.unrouteAll()` + session cleanup |
+| `error-handling.spec.ts` | Added serial mode + afterEach with `page.unrouteAll()` + session cleanup |
+
+**Safeguard test created:** `tests/unit/e2e-isolation.test.ts`
+
+This static analysis test enforces isolation rules and catches violations at commit time (pre-commit hook runs `npm test`):
+- Stateful tests (login, route interception) must use serial mode
+- Tests with route interceptions must have cleanup or serial mode
+- Tests that create sessions must have cleanup
+
+**Pre-existing tests:** 13 tests were grandfathered into an allowlist. They should be migrated to serial mode gradually.
+
 ---
 
 ## Phase 5: Documentation Updates
@@ -387,9 +413,11 @@ Mark this plan as successor, reference new test types.
 | **Test Setup Scripts** |||
 | `scripts/create-test-user-b.ts` | ✅ Created | Setup |
 | **Error Handling Tests** |||
-| `tests/e2e/error-handling.spec.ts` | ✅ Created | P3 |
-| `tests/e2e/auth-errors.spec.ts` | ✅ Created | P3 |
-| `tests/e2e/form-errors.spec.ts` | ✅ Created | P3 |
+| `tests/e2e/error-handling.spec.ts` | ✅ Created + Isolation Fixed | P3 |
+| `tests/e2e/auth-errors.spec.ts` | ✅ Created + Isolation Fixed | P3 |
+| `tests/e2e/form-errors.spec.ts` | ✅ Created + Isolation Fixed | P3 |
+| **Test Isolation Safeguard** |||
+| `tests/unit/e2e-isolation.test.ts` | ✅ Created | P1 |
 | **Documentation** |||
 | `docs/testing_behavior.md` | Update | P1 |
 | `docs/better_tests_plan.md` | Update | P1 |

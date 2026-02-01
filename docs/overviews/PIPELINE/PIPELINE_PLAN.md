@@ -1,10 +1,10 @@
 # Pipeline Plan
 
 Status: Active
+Updated: 01-02-2026 21:00 - MAJOR: Consolidated speaker ID in 04. Removed clustering from 03, added global clustering to 04.
 Updated: 31-01-2026 22:09 - Added "One Script at a Time" philosophy, extensive gate review process
 Updated: 31-01-2026 20:01 - Added GATE + spot-checks for 03.audio-features (every script now has a gate)
 Updated: 31-01-2026 19:50 - Added gate validation rules and extended spot-check requirements
-Updated: 31-01-2026 20:00 - Consolidated from 14 files. Conflicts resolved with user.
 
 ---
 
@@ -46,8 +46,8 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 ```
 01.download       → Raw audio + metadata
 02.transcribe     → Whisper → .full.json + .txt
-03.audio-features → Pitch, energy, tempo, speaker_embedding (resemblyzer)
-04.segment-enrich → Speaker labels (LLM) + tone (audio thresholds)
+03.audio-features → Pitch, energy, tempo, speaker_embedding (NO clustering)
+04.segment-enrich → Speaker ID (global clustering + text patterns) + tone
 05.conversations  → Video type + conversation boundaries
 06a.structure     → Interaction boundaries + phases
 06b.content       → Techniques + topics
@@ -82,11 +82,14 @@ Each script reads from the previous script's output folder.
 - **Input**: `data/02.transcribe/**/*.full.json`
 - **Output**: `data/03.audio-features/{source}/{title}.audio_features.json`
 - **Features**: pitch, energy, tempo, spectral, speaker_embedding (256-dim)
+- **Note**: No speaker clustering here - embeddings only. Clustering done in 04.
 
 ### 04.segment-enrich
 - **Input**: `data/03.audio-features/**/*.audio_features.json`
 - **Output**: `data/04.segment-enrich/{source}/{title}.segment_enriched.json`
-- **Does**: LLM labels speaker clusters, audio thresholds classify tone
+- **Speaker ID**: Global clustering (AgglomerativeClustering on embeddings) + text pattern classification
+- **Tone**: Audio thresholds (playful/confident/nervous/energetic/neutral)
+- **Note**: Single source of truth for all speaker labeling (coach/target/voiceover/other)
 
 ### 05.conversations
 - **Input**: `data/04.segment-enrich/**/*.segment_enriched.json`

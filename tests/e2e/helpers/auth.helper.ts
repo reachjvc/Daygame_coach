@@ -14,10 +14,12 @@ export async function ensureNoActiveSessionViaAPI(page: Page): Promise<void> {
   const activeResponse = await page.request.get('/api/tracking/session/active')
 
   if (activeResponse.ok()) {
-    const activeSession = await activeResponse.json()
-    if (activeSession?.id) {
+    const data = await activeResponse.json()
+    // API returns { session: { id: ... } } structure
+    const sessionId = data?.session?.id || data?.id
+    if (sessionId) {
       // End the active session
-      await page.request.post(`/api/tracking/session/${activeSession.id}/end`, {
+      await page.request.post(`/api/tracking/session/${sessionId}/end`, {
         data: {},
       })
     }

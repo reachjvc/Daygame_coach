@@ -12,6 +12,14 @@ import { SELECTORS } from './helpers/selectors'
 const AUTH_TIMEOUT = 15000
 
 test.describe('Error Handling: Authentication Errors', () => {
+  // Run tests serially to avoid parallel conflicts with auth state and route handlers
+  test.describe.configure({ mode: 'serial' })
+
+  // Cleanup route handlers after each test to prevent route stacking
+  test.afterEach(async ({ page }) => {
+    await page.unrouteAll({ behavior: 'wait' })
+  })
+
   test('401 on API call mid-session shows error', async ({ page }) => {
     // Arrange: Login and navigate to a protected page
     await login(page)
