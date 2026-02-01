@@ -564,6 +564,96 @@ def aggregate_features(segments: List[Dict], win_start: float, win_end: float) -
     }
 
 
+# === Turn-Taking Corrections ===
+# Post-processing to fix mislabeled short responses in infield videos.
+# The cluster-level LLM labeling can miss segment-level turn-taking patterns.
+
+def is_question(text: str) -> bool:
+    """Check if text is a question (ends with ? or has question patterns)."""
+    text = text.strip()
+    if text.endswith("?"):
+        return True
+    question_starters = ("how", "what", "where", "when", "why", "who", "are you", "do you", "have you")
+    return text.lower().startswith(question_starters)
+
+
+def apply_turn_taking_corrections(segments: List[Dict]) -> int:
+    """
+    Apply turn-taking corrections to fix mislabeled short responses.
+
+    This catches cases where:
+    1. Coach asks question → short response is mislabeled as coach
+    2. Coach says "I'm [name]" → their name response is mislabeled as coach
+    3. Coach gives compliment → "thank you" response is mislabeled as coach
+
+    Returns number of corrections made.
+    """
+    corrections = 0
+
+    for i, seg in enumerate(segments):
+        if i == 0:
+            continue  # Skip first segment (no previous context)
+
+        prev_seg = segments[i - 1]
+        current_text = seg.get("text", "").strip().lower()
+        prev_text = prev_seg.get("text", "").strip().lower()
+        current_label = seg["speaker"]["label"]
+        prev_label = prev_seg["speaker"]["label"]
+
+        # Skip if already labeled as target/other
+        if current_label != "coach":
+            continue
+
+        # Skip if previous segment wasn't coach (turn-taking requires coach→target)
+        if prev_label != "coach":
+            continue
+
+        should_correct = False
+
+        # Rule 1: Short responses after coach questions
+        if is_question(prev_seg.get("text", "")) and len(seg.get("text", "")) < 40:
+            response_patterns = (
+                "oh", "yeah", "yes", "no", "i'm", "it's", "i am", "that's",
+                "thank", "thanks", "nice", "good", "great", "okay", "sure",
+                "really", "fine", "i'm fine", "it's good", "i don't"
+            )
+            if current_text.startswith(response_patterns):
+                should_correct = True
+
+        # Rule 2: Name exchange - coach says "I'm [name]", next is their name
+        if "i'm " in prev_text and len(seg.get("text", "").split()) <= 3:
+            # Single word or very short (likely their name)
+            if len(current_text) < 20 and not current_text.startswith(("i'm", "i am", "nice to", "how")):
+                should_correct = True
+
+        # Rule 3: Thank you responses after compliments
+        compliment_words = ("beautiful", "cute", "pretty", "gorgeous", "attractive", "stunning")
+        if any(word in prev_text for word in compliment_words):
+            if current_text.startswith(("oh", "thank", "thanks", "aww")):
+                should_correct = True
+
+        # Rule 4: Generic short responses that are clearly not coach
+        if len(seg.get("text", "")) < 30:
+            clear_target_responses = (
+                "thank you", "thanks", "oh thank you", "oh thanks",
+                "that's sweet", "that's nice", "that's so sweet",
+                "i'm fine", "it's good", "i'm good", "nice to meet you too",
+                "nice to meet you, too", "you too"
+            )
+            # Normalize text for comparison (remove punctuation, lowercase)
+            normalized = current_text.rstrip(".!,").replace(",", "")
+            if current_text in clear_target_responses or normalized in clear_target_responses:
+                should_correct = True
+
+        if should_correct:
+            seg["speaker"]["label"] = "target"
+            seg["speaker"]["method"] = "turn_taking_correction"
+            seg["speaker"]["confidence"] = 0.75  # Lower confidence for corrections
+            corrections += 1
+
+    return corrections
+
+
 # === Main Processing ===
 
 def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
@@ -625,6 +715,12 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
             },
             "speaker_id": int(cluster_id) if cluster_id else 0
         })
+
+    # 2b. Apply turn-taking corrections (fix mislabeled short responses)
+    if detected_video_type == "infield":
+        corrections = apply_turn_taking_corrections(enriched_segments)
+        if corrections > 0:
+            print(f"    Turn-taking corrections: {corrections}")
 
     # 3. Build tone windows
     tone_windows = build_tone_windows(segments)

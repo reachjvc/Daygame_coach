@@ -1,0 +1,17 @@
+{
+  "version": 7,
+  "articleId": "01-8020-rule",
+  "createdAt": "2026-01-31T21:28:42.234Z",
+  "flags": [
+    {
+      "type": "note",
+      "sectionId": "intro",
+      "quote": "Most of what you write in your notes is useless. Not wrong, not harmful — just useless. Twenty interactions documented. Maybe two worth revisiting. Eighteen entries of \"she smiled, I said X, she said Y\" that will never produce a single insight no matter how many times you reread them.",
+      "note": "this is too AI, but the reason is that no1 would ever write this in a field report. Also, the opening isnt strong, because it doesnt match the title very well. What is this article trying to be? for field reports? for journaling in general? for all social interactions? consider who would even write notes about interactions, only that would happen in a field report, which is fine, but then the rest of it needs to look different too"
+    },
+    {
+      "type": "ai",
+      "sectionId": "intro"
+    }
+  ]
+}

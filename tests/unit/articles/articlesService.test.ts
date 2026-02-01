@@ -3,11 +3,14 @@ import {
   formatFeedbackForPrompt,
   buildRevisionSystemPrompt,
   PILLAR_TONE_GUIDANCE,
+  insertLearningIntoStyleGuide,
+  updateStyleGuideChangelog,
 } from "@/src/articles/articlesService"
 import type {
   ArticlePillar,
   ArticleSection,
   ArticleFeedbackFlag,
+  LearningSuggestion,
 } from "@/src/articles/types"
 
 // ============================================================================
@@ -227,5 +230,183 @@ describe("buildRevisionSystemPrompt", () => {
 
     // Assert
     expect(prompt).not.toContain("STYLE GUIDE:")
+  })
+})
+
+// ============================================================================
+// insertLearningIntoStyleGuide
+// ============================================================================
+
+describe("insertLearningIntoStyleGuide", () => {
+  const createSuggestion = (
+    type: "positive" | "anti-pattern",
+    targetSection: string,
+    suggestedText: string
+  ): LearningSuggestion => ({
+    type,
+    targetSection,
+    suggestedText,
+    reasoning: "Test reasoning",
+    confidence: "high",
+    originalFlag: {
+      type: "excellent",
+      sectionId: "test",
+      note: "Test note"
+    }
+  })
+
+  test("should insert positive learning into What We Know section", () => {
+    // Arrange
+    const styleGuide = `# Writing Style Guide
+
+## Changelog
+- 01-02-2026 - Test entry
+
+## What We Know
+
+Existing content here.
+
+## Anti-patterns
+
+Other content.`
+    const suggestion = createSuggestion("positive", "What We Know", "New learning about specificity.")
+
+    // Act
+    const result = insertLearningIntoStyleGuide(styleGuide, suggestion)
+
+    // Assert
+    expect(result).toContain("Existing content here.")
+    expect(result).toContain("New learning about specificity.")
+    // The new learning should come after "What We Know" but before "Anti-patterns"
+    const whatWeKnowPos = result.indexOf("## What We Know")
+    const newLearningPos = result.indexOf("New learning about specificity.")
+    const antiPatternsPos = result.indexOf("## Anti-patterns")
+    expect(newLearningPos).toBeGreaterThan(whatWeKnowPos)
+    expect(newLearningPos).toBeLessThan(antiPatternsPos)
+  })
+
+  test("should insert anti-pattern into Anti-patterns section", () => {
+    // Arrange
+    const styleGuide = `# Writing Style Guide
+
+## What We Know
+
+Some content.
+
+## Anti-patterns
+
+Existing anti-patterns.
+
+## Still Testing`
+    const suggestion = createSuggestion("anti-pattern", "Anti-patterns", "Avoid 'Let's dive in'.")
+
+    // Act
+    const result = insertLearningIntoStyleGuide(styleGuide, suggestion)
+
+    // Assert
+    expect(result).toContain("Existing anti-patterns.")
+    expect(result).toContain("Avoid 'Let's dive in'.")
+    // Should be in Anti-patterns section
+    const antiPatternsPos = result.indexOf("## Anti-patterns")
+    const newLearningPos = result.indexOf("Avoid 'Let's dive in'.")
+    const stillTestingPos = result.indexOf("## Still Testing")
+    expect(newLearningPos).toBeGreaterThan(antiPatternsPos)
+    expect(newLearningPos).toBeLessThan(stillTestingPos)
+  })
+
+  test("should append to end if target section not found", () => {
+    // Arrange
+    const styleGuide = `# Writing Style Guide
+
+## What We Know
+
+Some content.`
+    const suggestion = createSuggestion("positive", "Nonexistent Section", "New content.")
+
+    // Act
+    const result = insertLearningIntoStyleGuide(styleGuide, suggestion)
+
+    // Assert
+    expect(result).toContain("## Nonexistent Section")
+    expect(result).toContain("New content.")
+    // Should be at the end
+    expect(result.endsWith("New content.\n")).toBe(true)
+  })
+
+  test("should preserve existing content when inserting", () => {
+    // Arrange
+    const styleGuide = `## What We Know
+
+Point 1.
+
+Point 2.
+
+## Other`
+    const suggestion = createSuggestion("positive", "What We Know", "Point 3.")
+
+    // Act
+    const result = insertLearningIntoStyleGuide(styleGuide, suggestion)
+
+    // Assert
+    expect(result).toContain("Point 1.")
+    expect(result).toContain("Point 2.")
+    expect(result).toContain("Point 3.")
+    expect(result).toContain("## Other")
+  })
+})
+
+// ============================================================================
+// updateStyleGuideChangelog
+// ============================================================================
+
+describe("updateStyleGuideChangelog", () => {
+  test("should add changelog entry at the top of the changelog", () => {
+    // Arrange
+    const styleGuide = `# Writing Style Guide
+
+## Changelog
+- 31-01-2026 - Previous entry
+
+## Content`
+    const change = "Added new learning"
+
+    // Act
+    const result = updateStyleGuideChangelog(styleGuide, change)
+
+    // Assert
+    expect(result).toContain("Added new learning")
+    // New entry should come before the old one
+    const newEntryPos = result.indexOf("Added new learning")
+    const oldEntryPos = result.indexOf("Previous entry")
+    expect(newEntryPos).toBeLessThan(oldEntryPos)
+  })
+
+  test("should return unchanged if no changelog section", () => {
+    // Arrange
+    const styleGuide = `# Writing Style Guide
+
+## Content
+
+No changelog here.`
+    const change = "Test change"
+
+    // Act
+    const result = updateStyleGuideChangelog(styleGuide, change)
+
+    // Assert
+    expect(result).toBe(styleGuide)
+  })
+
+  test("should format date in Danish format", () => {
+    // Arrange
+    const styleGuide = `## Changelog
+- Old entry`
+    const change = "Test"
+
+    // Act
+    const result = updateStyleGuideChangelog(styleGuide, change)
+
+    // Assert - should contain a date pattern like DD-MM-YYYY
+    expect(result).toMatch(/\d{2}-\d{2}-\d{4}/)
   })
 })

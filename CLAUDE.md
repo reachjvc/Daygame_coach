@@ -1,11 +1,44 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Changelog
+- 01-02-2026 12:30 - Added tech stack, development commands, test organization, articles slice
 - 31-01-2026 19:50 - Restructured for better Claude compliance: pre-response checklist, stronger framing
 - 31-01-2026 19:35 - Added doc-before-summary rule with strict order
 - 30-01-2026 20:07 - Added rule to read testing_behavior.md before writing tests
 - 30-01-2026 19:57 - Added mandatory test-driven workflow
-- 29-01-2026 20:45 - Restored compliance checklist
+
+---
+
+## Tech Stack
+
+Next.js 16 app with Supabase (PostgreSQL + Auth), AI SDK (Anthropic/OpenAI), Tailwind CSS, Radix UI components, Zod validation, Stripe payments.
+
+---
+
+## Development Commands
+
+```bash
+# Development
+npm run dev              # Start dev server (localhost:3000)
+npm run build            # Production build
+npm run lint             # ESLint
+
+# Testing
+npm test                 # Unit tests (Vitest) - run after EVERY code change
+npm run test:watch       # Unit tests in watch mode
+npm run test:integration # Integration tests with testcontainers
+npm run test:e2e         # E2E tests (Playwright) - requires dev server
+npm run test:all         # Run all test suites
+
+# Run single test file
+npx vitest run tests/unit/articles/articlesService.test.ts
+npx playwright test tests/e2e/auth-errors.spec.ts
+
+# Run tests matching pattern
+npx vitest run -t "should calculate"
+```
 
 ---
 
@@ -99,7 +132,7 @@ src/{slice}/
 | Shared UI in `components/ui/` | Manual review |
 
 ### Slices
-`src/qa/` · `src/inner-game/` · `src/scenarios/` · `src/tracking/` · `src/profile/` · `src/settings/` · `src/db/`
+`src/articles/` · `src/qa/` · `src/inner-game/` · `src/scenarios/` · `src/tracking/` · `src/profile/` · `src/settings/` · `src/db/`
 
 Specs in `docs/slices/SLICE_*.md`
 
@@ -116,6 +149,16 @@ Specs in `docs/slices/SLICE_*.md`
 Expect fast failures (<2 seconds). Fail fast, get error codes, iterate by fixing errors and adding regression tests.
 
 Pre-commit hook (`.husky/pre-commit`) runs `npm test` automatically.
+
+### Test File Organization
+| Pattern | Runner | Location |
+|---------|--------|----------|
+| `*.test.ts` | Vitest | `tests/unit/` |
+| `*.integration.test.ts` | Vitest | `tests/integration/` |
+| `*.spec.ts` | Playwright | `tests/e2e/` |
+
+### Database Layer (`src/db/`)
+All database access via `*Repo.ts` files. Direct Supabase imports outside `src/db/` will fail architecture tests.
 
 ---
 

@@ -6,6 +6,75 @@ const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external auth service latency
 
 /**
+ * Ensures clean session state via API.
+ * Ends any active session so tests can create fresh data.
+ * Use this in security tests that need to create sessions via API.
+ */
+export async function ensureNoActiveSessionViaAPI(page: Page): Promise<void> {
+  const activeResponse = await page.request.get('/api/tracking/session/active')
+
+  if (activeResponse.ok()) {
+    const activeSession = await activeResponse.json()
+    if (activeSession?.id) {
+      // End the active session
+      await page.request.post(`/api/tracking/session/${activeSession.id}/end`, {
+        data: {},
+      })
+    }
+  }
+  // If no active session (404) or error, that's fine - we're in clean state
+}
+
+/**
+ * Creates a test session via API, ensuring clean state first.
+ * Returns the session ID or throws if creation fails.
+ */
+export async function createTestSessionViaAPI(
+  page: Page,
+  location: string = 'Test Location'
+): Promise<string> {
+  // First ensure no active session
+  await ensureNoActiveSessionViaAPI(page)
+
+  const createResponse = await page.request.post('/api/tracking/session', {
+    data: { goal: 3, location },
+  })
+
+  if (!createResponse.ok()) {
+    const errorText = await createResponse.text()
+    throw new Error(`Failed to create test session: ${createResponse.status()} - ${errorText}`)
+  }
+
+  const session = await createResponse.json()
+  return session.id
+}
+
+/**
+ * Creates a test approach via API for a given session.
+ * Returns the approach ID or throws if creation fails.
+ */
+export async function createTestApproachViaAPI(
+  page: Page,
+  sessionId: string,
+  outcome: string = 'ignored'
+): Promise<string> {
+  const response = await page.request.post('/api/tracking/approach', {
+    data: {
+      session_id: sessionId,
+      outcome,
+    },
+  })
+
+  if (!response.ok()) {
+    const errorText = await response.text()
+    throw new Error(`Failed to create test approach: ${response.status()} - ${errorText}`)
+  }
+
+  const approach = await response.json()
+  return approach.id
+}
+
+/**
  * Logs in a user with the test credentials.
  * Waits for redirect to dashboard, redirect page, or preferences.
  * Throws if login shows an error.

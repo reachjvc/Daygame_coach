@@ -21,14 +21,27 @@ import {
   Loader2,
   AlertTriangle,
   Shuffle,
+  ThumbsDown,
 } from "lucide-react"
-import { type FeedbackType, type ArticleFeedbackFlag, FEEDBACK_TYPES } from "@/src/articles/types"
+import {
+  type FeedbackType,
+  type ArticleFeedbackFlag,
+  type ArticlePhase,
+  type ArticleContract,
+  type ArticleOutline,
+  type StructureUnlock,
+  type PhaseLocks,
+  type LearningSuggestion,
+  FEEDBACK_TYPES,
+  PHASE_LABELS
+} from "@/src/articles/types"
 
 // Types for API responses
 interface ArticleInfo {
   id: string
   title: string
   status: string
+  phase: ArticlePhase
   drafts: string[]
   feedbacks: string[]
   hasManifest: boolean
@@ -44,6 +57,12 @@ interface LoadedArticle {
   version: number
   title: string
   sections: ArticleSection[]
+  // Progressive commitment fields
+  phase: ArticlePhase
+  contract: ArticleContract | null
+  outline: ArticleOutline | null
+  phaseLocks: PhaseLocks
+  structureUnlocks: StructureUnlock[]
 }
 
 
@@ -57,6 +76,7 @@ const FEEDBACK_ICONS: Record<FeedbackType, React.ReactNode> = {
   note: <MessageSquare className="size-3" />,
   alternatives: <Shuffle className="size-3" />,
   source: <AlertTriangle className="size-3" />,
+  negative: <ThumbsDown className="size-3" />,
 }
 
 const FEEDBACK_ICONS_LG: Record<FeedbackType, React.ReactNode> = {
@@ -68,8 +88,431 @@ const FEEDBACK_ICONS_LG: Record<FeedbackType, React.ReactNode> = {
   note: <MessageSquare className="size-4" />,
   alternatives: <Shuffle className="size-4" />,
   source: <AlertTriangle className="size-4" />,
+  negative: <ThumbsDown className="size-4" />,
 }
 
+// Phase indicator component
+function PhaseIndicator({ currentPhase, phaseLocks }: { currentPhase: ArticlePhase; phaseLocks: PhaseLocks }) {
+  const phases: ArticlePhase[] = [1, 2, 3, 4]
+
+  return (
+    <div className="flex items-center gap-1 text-sm">
+      {phases.map((phase, idx) => {
+        const isActive = phase === currentPhase
+        const isCompleted = phase < currentPhase
+        const isLocked = phase === 1 ? !!phaseLocks.contractLockedAt :
+                        phase === 2 ? !!phaseLocks.structureLockedAt : false
+
+        return (
+          <div key={phase} className="flex items-center">
+            <div
+              className={`
+                px-2 py-1 rounded text-xs font-medium transition-colors
+                ${isActive ? 'bg-primary text-primary-foreground' : ''}
+                ${isCompleted ? 'bg-green-500/20 text-green-600' : ''}
+                ${!isActive && !isCompleted ? 'bg-muted text-muted-foreground' : ''}
+              `}
+              title={isLocked ? `Locked at ${isLocked}` : undefined}
+            >
+              {PHASE_LABELS[phase]}
+              {isLocked && <span className="ml-1">🔒</span>}
+            </div>
+            {idx < phases.length - 1 && (
+              <span className={`mx-1 ${isCompleted ? 'text-green-600' : 'text-muted-foreground'}`}>→</span>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// Contract display (read-only, collapsible)
+function ContractDisplay({ contract, isCollapsed, onToggle, onUnlock }: {
+  contract: ArticleContract
+  isCollapsed: boolean
+  onToggle: () => void
+  onUnlock?: () => void
+}) {
+  return (
+    <div className="border rounded-lg bg-muted/30">
+      <button
+        onClick={onToggle}
+        className="w-full px-4 py-2 flex items-center justify-between text-left hover:bg-muted/50 transition-colors"
+      >
+        <span className="font-medium text-sm flex items-center gap-2">
+          📜 Article Contract
+          <span className="text-xs text-muted-foreground">(locked)</span>
+        </span>
+        {isCollapsed ? <ChevronDown className="size-4" /> : <ChevronUp className="size-4" />}
+      </button>
+
+      {!isCollapsed && (
+        <div className="px-4 pb-4 space-y-3 text-sm">
+          <div>
+            <span className="text-muted-foreground">Thesis:</span>
+            <p className="font-medium">{contract.thesis}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Target Reader:</span>
+            <p>{contract.targetReader}</p>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Must Include:</span>
+            <ul className="list-disc list-inside text-xs mt-1">
+              {contract.mustInclude.map((item, i) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+          {contract.mustNotInclude.length > 0 && (
+            <div>
+              <span className="text-muted-foreground">Must NOT Include:</span>
+              <ul className="list-disc list-inside text-xs mt-1 text-red-600">
+                {contract.mustNotInclude.map((item, i) => (
+                  <li key={i}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+          <div>
+            <span className="text-muted-foreground">Tone:</span>
+            <p className="text-xs">{contract.tone}</p>
+          </div>
+
+          {onUnlock && (
+            <div className="pt-2 border-t mt-3">
+              <button
+                onClick={(e) => { e.stopPropagation(); onUnlock(); }}
+                className="text-xs text-red-600 hover:text-red-700 hover:underline flex items-center gap-1"
+              >
+                🔓 Unlock Structure (reset to outline phase)
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Contract form (Phase 1 - editable)
+function ContractForm({ contract, onSave, saving }: {
+  contract: ArticleContract
+  onSave: (contract: ArticleContract) => void
+  saving: boolean
+}) {
+  const [form, setForm] = useState<ArticleContract>(contract)
+  const [mustIncludeInput, setMustIncludeInput] = useState("")
+  const [mustNotIncludeInput, setMustNotIncludeInput] = useState("")
+
+  const addMustInclude = () => {
+    if (mustIncludeInput.trim()) {
+      setForm(prev => ({ ...prev, mustInclude: [...prev.mustInclude, mustIncludeInput.trim()] }))
+      setMustIncludeInput("")
+    }
+  }
+
+  const addMustNotInclude = () => {
+    if (mustNotIncludeInput.trim()) {
+      setForm(prev => ({ ...prev, mustNotInclude: [...prev.mustNotInclude, mustNotIncludeInput.trim()] }))
+      setMustNotIncludeInput("")
+    }
+  }
+
+  const removeMustInclude = (idx: number) => {
+    setForm(prev => ({ ...prev, mustInclude: prev.mustInclude.filter((_, i) => i !== idx) }))
+  }
+
+  const removeMustNotInclude = (idx: number) => {
+    setForm(prev => ({ ...prev, mustNotInclude: prev.mustNotInclude.filter((_, i) => i !== idx) }))
+  }
+
+  const isValid = form.title.trim() && form.thesis.trim() && form.targetReader.trim() && form.mustInclude.length > 0
+
+  return (
+    <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">📝</span>
+        <h3 className="font-bold">Phase 1: Define Article Contract</h3>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Lock in the core decisions before writing. This prevents drift during revisions.
+      </p>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium block mb-1">Title</label>
+          <input
+            type="text"
+            value={form.title}
+            onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+            className="w-full p-2 rounded border bg-background text-sm"
+            placeholder="The article title"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Thesis (one sentence)</label>
+          <textarea
+            value={form.thesis}
+            onChange={(e) => setForm(prev => ({ ...prev, thesis: e.target.value }))}
+            className="w-full p-2 rounded border bg-background text-sm resize-none"
+            rows={2}
+            placeholder="The core claim this article makes"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Target Reader</label>
+          <input
+            type="text"
+            value={form.targetReader}
+            onChange={(e) => setForm(prev => ({ ...prev, targetReader: e.target.value }))}
+            className="w-full p-2 rounded border bg-background text-sm"
+            placeholder="Who is this for?"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Must Include</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={mustIncludeInput}
+              onChange={(e) => setMustIncludeInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMustInclude())}
+              className="flex-1 p-2 rounded border bg-background text-sm"
+              placeholder="Add non-negotiable point..."
+            />
+            <Button size="sm" onClick={addMustInclude} disabled={!mustIncludeInput.trim()}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {form.mustInclude.map((item, i) => (
+              <Badge key={i} variant="secondary" className="text-xs">
+                {item}
+                <X className="size-3 ml-1 cursor-pointer" onClick={() => removeMustInclude(i)} />
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Must NOT Include (scope boundaries)</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={mustNotIncludeInput}
+              onChange={(e) => setMustNotIncludeInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addMustNotInclude())}
+              className="flex-1 p-2 rounded border bg-background text-sm"
+              placeholder="Explicit scope boundary..."
+            />
+            <Button size="sm" variant="outline" onClick={addMustNotInclude} disabled={!mustNotIncludeInput.trim()}>Add</Button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {form.mustNotInclude.map((item, i) => (
+              <Badge key={i} variant="outline" className="text-xs text-red-600 border-red-300">
+                {item}
+                <X className="size-3 ml-1 cursor-pointer" onClick={() => removeMustNotInclude(i)} />
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium block mb-1">Tone</label>
+          <input
+            type="text"
+            value={form.tone}
+            onChange={(e) => setForm(prev => ({ ...prev, tone: e.target.value }))}
+            className="w-full p-2 rounded border bg-background text-sm"
+            placeholder="e.g., 'Analytical and credible', 'Conversational but not casual'"
+          />
+        </div>
+      </div>
+
+      <div className="pt-4 border-t flex justify-end">
+        <Button
+          onClick={() => onSave(form)}
+          disabled={!isValid || saving}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {saving ? <Loader2 className="size-4 mr-1 animate-spin" /> : null}
+          🔒 Lock Contract & Continue to Outline
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// Outline editor (Phase 2 - editable)
+function OutlineEditor({ outline, onSave, saving }: {
+  outline: ArticleOutline
+  onSave: (outline: ArticleOutline) => void
+  saving: boolean
+}) {
+  const [sections, setSections] = useState<Array<{ id: string; purpose: string; notes?: string }>>(
+    outline.sections || []
+  )
+  const [newSectionId, setNewSectionId] = useState("")
+  const [newSectionPurpose, setNewSectionPurpose] = useState("")
+
+  const addSection = () => {
+    if (newSectionId.trim() && newSectionPurpose.trim()) {
+      setSections(prev => [...prev, { id: newSectionId.trim(), purpose: newSectionPurpose.trim() }])
+      setNewSectionId("")
+      setNewSectionPurpose("")
+    }
+  }
+
+  const removeSection = (idx: number) => {
+    setSections(prev => prev.filter((_, i) => i !== idx))
+  }
+
+  const updateSection = (idx: number, field: 'purpose' | 'notes', value: string) => {
+    setSections(prev => prev.map((s, i) => i === idx ? { ...s, [field]: value } : s))
+  }
+
+  const moveSection = (idx: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && idx > 0) {
+      setSections(prev => {
+        const newSections = [...prev]
+        ;[newSections[idx - 1], newSections[idx]] = [newSections[idx], newSections[idx - 1]]
+        return newSections
+      })
+    } else if (direction === 'down' && idx < sections.length - 1) {
+      setSections(prev => {
+        const newSections = [...prev]
+        ;[newSections[idx], newSections[idx + 1]] = [newSections[idx + 1], newSections[idx]]
+        return newSections
+      })
+    }
+  }
+
+  const isValid = sections.length >= 2
+
+  return (
+    <div className="border rounded-lg p-4 bg-muted/30 space-y-4">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">📋</span>
+        <h3 className="font-bold">Phase 2: Define Outline</h3>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Define what each section must accomplish (not the content, just the purpose).
+      </p>
+
+      <div className="space-y-3">
+        {sections.map((section, idx) => (
+          <div key={idx} className="p-3 border rounded bg-background">
+            <div className="flex items-start gap-2">
+              <div className="flex flex-col gap-1">
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => moveSection(idx, 'up')} disabled={idx === 0}>
+                  <ChevronUp className="size-3" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => moveSection(idx, 'down')} disabled={idx === sections.length - 1}>
+                  <ChevronDown className="size-3" />
+                </Button>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-mono text-xs bg-muted px-2 py-0.5 rounded">{section.id}</span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 ml-auto text-red-500" onClick={() => removeSection(idx)}>
+                    <X className="size-3" />
+                  </Button>
+                </div>
+                <input
+                  type="text"
+                  value={section.purpose}
+                  onChange={(e) => updateSection(idx, 'purpose', e.target.value)}
+                  className="w-full p-2 rounded border bg-background text-sm mb-1"
+                  placeholder="What must this section accomplish?"
+                />
+                <input
+                  type="text"
+                  value={section.notes || ''}
+                  onChange={(e) => updateSection(idx, 'notes', e.target.value)}
+                  className="w-full p-1 rounded border bg-muted/50 text-xs text-muted-foreground"
+                  placeholder="Optional notes..."
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+
+        <div className="p-3 border-2 border-dashed rounded bg-muted/10">
+          <div className="flex gap-2 mb-2">
+            <input
+              type="text"
+              value={newSectionId}
+              onChange={(e) => setNewSectionId(e.target.value)}
+              className="w-32 p-2 rounded border bg-background text-sm font-mono"
+              placeholder="section-id"
+            />
+            <input
+              type="text"
+              value={newSectionPurpose}
+              onChange={(e) => setNewSectionPurpose(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSection())}
+              className="flex-1 p-2 rounded border bg-background text-sm"
+              placeholder="What must this section accomplish?"
+            />
+            <Button size="sm" onClick={addSection} disabled={!newSectionId.trim() || !newSectionPurpose.trim()}>
+              Add Section
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-4 border-t flex justify-end">
+        <Button
+          onClick={() => onSave({ sections, lockedAt: new Date().toISOString() })}
+          disabled={!isValid || saving}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          {saving ? <Loader2 className="size-4 mr-1 animate-spin" /> : null}
+          🔒 Lock Outline & Start Draft
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// Unlock history panel
+function UnlockHistory({ unlocks }: { unlocks: StructureUnlock[] }) {
+  const [isExpanded, setIsExpanded] = useState(false)
+
+  if (unlocks.length === 0) return null
+
+  return (
+    <div className="border rounded-lg bg-yellow-500/10 border-yellow-500/30">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full px-4 py-2 flex items-center justify-between text-left hover:bg-yellow-500/20 transition-colors"
+      >
+        <span className="font-medium text-sm flex items-center gap-2 text-yellow-600">
+          🔓 Structure Unlocks ({unlocks.length})
+        </span>
+        {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+      </button>
+
+      {isExpanded && (
+        <div className="px-4 pb-4 space-y-2">
+          {unlocks.map((unlock, i) => (
+            <div key={i} className="text-xs p-2 bg-background rounded border">
+              <div className="text-muted-foreground">
+                {new Date(unlock.timestamp).toLocaleDateString()}
+              </div>
+              <div className="font-medium">{unlock.reason}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface SelectionPopup {
   x: number
@@ -98,6 +541,24 @@ export default function ArticleEditorPage() {
   const [sectionCommentText, setSectionCommentText] = useState("")
   const [draftingNew, setDraftingNew] = useState(false)
   const [sourceModal, setSourceModal] = useState<{ sectionId: string; quote?: string } | null>(null)
+  // Progressive commitment state
+  const [contractCollapsed, setContractCollapsed] = useState(true)
+  const [unlockModal, setUnlockModal] = useState(false)
+  const [unlockReason, setUnlockReason] = useState("")
+  const [unlocking, setUnlocking] = useState(false)
+  const [savingPhase, setSavingPhase] = useState(false)
+  // Sub-menu state for AI, Excellent, Negative, and generic flags with optional notes
+  const [subMenu, setSubMenu] = useState<"ai" | "excellent" | "negative" | "good" | "almost" | "angle" | "alternatives" | null>(null)
+  const [subMenuComment, setSubMenuComment] = useState("")
+  // Track recently added flags for visual feedback
+  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null)
+  // Learning suggestions modal state
+  const [suggestionsModal, setSuggestionsModal] = useState(false)
+  const [learningSuggestions, setLearningSuggestions] = useState<LearningSuggestion[]>([])
+  const [selectedSuggestions, setSelectedSuggestions] = useState<Set<number>>(new Set())
+  const [editedSuggestions, setEditedSuggestions] = useState<Record<number, string>>({})
+  const [analyzingComments, setAnalyzingComments] = useState(false)
+  const [approvingLearnings, setApprovingLearnings] = useState(false)
 
   // Count blocking flags (source flags that need review before publishing)
   const blockingFlagsCount = flags.filter(f => f.type === "source").length
@@ -146,6 +607,12 @@ export default function ArticleEditorPage() {
           version: data.version,
           title: data.title,
           sections: data.sections,
+          // Progressive commitment fields
+          phase: data.phase || 1,
+          contract: data.contract || null,
+          outline: data.outline || null,
+          phaseLocks: data.phaseLocks || {},
+          structureUnlocks: data.structureUnlocks || [],
         })
         // Clear flags when switching drafts
         setFlags([])
@@ -162,15 +629,160 @@ export default function ArticleEditorPage() {
   const selectedArticle = articles.find((a) => a.id === selectedArticleId)
   const availableDrafts = selectedArticle?.drafts || []
 
-  const addFlag = (type: FeedbackType, sectionId: string, quote?: string, note?: string) => {
+  const addFlag = (type: FeedbackType, sectionId: string, quote?: string, note?: string, closePopup = false) => {
     setFlags(prev => [...prev, { type, sectionId, quote, note }])
-    setSelection(null)
+    // Show visual feedback
+    setRecentlyAdded(type)
+    setTimeout(() => setRecentlyAdded(null), 1500)
+    // Reset sub-menu state
+    setSubMenu(null)
+    setSubMenuComment("")
     setCommentMode(false)
     setCommentText("")
+    // Only close popup if explicitly requested
+    if (closePopup) {
+      setSelection(null)
+    }
   }
 
   const removeFlag = (index: number) => {
     setFlags(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // Shared helper to refresh article data after phase transitions
+  const refreshArticleData = useCallback(async () => {
+    if (!loadedArticle) return
+    try {
+      const res = await fetch(
+        `/api/test/articles?id=${loadedArticle.id}&draft=${loadedArticle.version}`
+      )
+      if (!res.ok) {
+        console.error("Failed to refresh article data")
+        return
+      }
+      const data = await res.json()
+      setLoadedArticle({
+        id: data.id,
+        version: data.version,
+        title: data.title,
+        sections: data.sections,
+        phase: data.phase || 1,
+        contract: data.contract || null,
+        outline: data.outline || null,
+        phaseLocks: data.phaseLocks || {},
+        structureUnlocks: data.structureUnlocks || [],
+      })
+      // Sync selectedDraftVersion if version changed
+      if (data.version !== selectedDraftVersion) {
+        setSelectedDraftVersion(data.version)
+      }
+    } catch (error) {
+      console.error("Failed to refresh article data:", error)
+    }
+  }, [loadedArticle, selectedDraftVersion])
+
+  // Unlock structure to allow changes (Phase 4 → Phase 2)
+  const handleUnlockStructure = async () => {
+    if (!loadedArticle || !unlockReason.trim()) return
+
+    setUnlocking(true)
+    try {
+      const response = await fetch("/api/test/articles/unlock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: loadedArticle.id,
+          reason: unlockReason.trim()
+        })
+      })
+
+      if (response.ok) {
+        await refreshArticleData()
+        setUnlockModal(false)
+        setUnlockReason("")
+      }
+    } catch (error) {
+      console.error("Failed to unlock structure:", error)
+    } finally {
+      setUnlocking(false)
+    }
+  }
+
+  // Save contract and advance to Phase 2
+  const handleSaveContract = async (contract: ArticleContract) => {
+    if (!loadedArticle) return
+
+    setSavingPhase(true)
+    try {
+      const response = await fetch("/api/test/articles/phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: loadedArticle.id,
+          action: "lock-contract",
+          contract
+        })
+      })
+
+      if (response.ok) {
+        await refreshArticleData()
+      }
+    } catch (error) {
+      console.error("Failed to save contract:", error)
+    } finally {
+      setSavingPhase(false)
+    }
+  }
+
+  // Save outline and advance to Phase 3
+  const handleSaveOutline = async (outline: ArticleOutline) => {
+    if (!loadedArticle) return
+
+    setSavingPhase(true)
+    try {
+      const response = await fetch("/api/test/articles/phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: loadedArticle.id,
+          action: "lock-outline",
+          outline
+        })
+      })
+
+      if (response.ok) {
+        await refreshArticleData()
+      }
+    } catch (error) {
+      console.error("Failed to save outline:", error)
+    } finally {
+      setSavingPhase(false)
+    }
+  }
+
+  // Advance from Phase 3 to Phase 4
+  const handleLockStructure = async () => {
+    if (!loadedArticle) return
+
+    setSavingPhase(true)
+    try {
+      const response = await fetch("/api/test/articles/phase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          articleId: loadedArticle.id,
+          action: "lock-structure"
+        })
+      })
+
+      if (response.ok) {
+        await refreshArticleData()
+      }
+    } catch (error) {
+      console.error("Failed to lock structure:", error)
+    } finally {
+      setSavingPhase(false)
+    }
   }
 
   const handleContextMenu = useCallback((e: React.MouseEvent, sectionId: string) => {
@@ -205,6 +817,8 @@ export default function ArticleEditorPage() {
       setSelection({ x, y, text, sectionId })
       setCommentMode(false)
       setCommentText("")
+      setSubMenu(null)
+      setSubMenuComment("")
     }
   }, [])
 
@@ -213,15 +827,17 @@ export default function ArticleEditorPage() {
       const target = e.target as HTMLElement
       if (!target.closest('.selection-popup')) {
         setTimeout(() => {
-          if (!commentMode) {
+          if (!commentMode && !subMenu) {
             setSelection(null)
+            setSubMenu(null)
+            setSubMenuComment("")
           }
         }, 100)
       }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
-  }, [commentMode])
+  }, [commentMode, subMenu])
 
   const exportFeedback = () => {
     if (!loadedArticle) return "No article loaded"
@@ -280,10 +896,87 @@ export default function ArticleEditorPage() {
       if (response.ok) {
         setSaved(true)
         setTimeout(() => setSaved(false), 2000)
+
+        // Check for flags with notes and analyze them for learnings
+        const flagsWithNotes = flags.filter(f => f.note && f.note.trim().length > 0)
+        if (flagsWithNotes.length > 0) {
+          setAnalyzingComments(true)
+          try {
+            const analyzeResponse = await fetch("/api/test/analyze-comments", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ flags })
+            })
+            if (analyzeResponse.ok) {
+              const { suggestions } = await analyzeResponse.json()
+              if (suggestions && suggestions.length > 0) {
+                setLearningSuggestions(suggestions)
+                // Pre-select all suggestions
+                setSelectedSuggestions(new Set(suggestions.map((_: LearningSuggestion, i: number) => i)))
+                setEditedSuggestions({})
+                setSuggestionsModal(true)
+              }
+            }
+          } catch (analyzeError) {
+            console.error("Failed to analyze comments:", analyzeError)
+            // Don't block - feedback was already saved
+          } finally {
+            setAnalyzingComments(false)
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to save:", error)
     }
+  }
+
+  const approveLearnings = async () => {
+    if (selectedSuggestions.size === 0) {
+      setSuggestionsModal(false)
+      return
+    }
+
+    setApprovingLearnings(true)
+    try {
+      const approvedSuggestions = learningSuggestions
+        .filter((_, i) => selectedSuggestions.has(i))
+        .map((s, i) => ({
+          ...s,
+          suggestedText: editedSuggestions[learningSuggestions.indexOf(s)] ?? s.suggestedText
+        }))
+
+      const response = await fetch("/api/test/analyze-comments", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approvedSuggestions })
+      })
+
+      if (response.ok) {
+        setSuggestionsModal(false)
+        setLearningSuggestions([])
+        setSelectedSuggestions(new Set())
+        setEditedSuggestions({})
+        // Show success feedback
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2000)
+      }
+    } catch (error) {
+      console.error("Failed to approve learnings:", error)
+    } finally {
+      setApprovingLearnings(false)
+    }
+  }
+
+  const toggleSuggestion = (index: number) => {
+    setSelectedSuggestions(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
   }
 
   const saveAndDraftNew = async () => {
@@ -291,7 +984,7 @@ export default function ArticleEditorPage() {
     setDraftingNew(true)
     try {
       // Save the feedback (both .md and .json)
-      await fetch("/api/test/save-feedback", {
+      const saveResponse = await fetch("/api/test/save-feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -300,6 +993,11 @@ export default function ArticleEditorPage() {
           flags: flags
         })
       })
+
+      if (!saveResponse.ok) {
+        alert("Failed to save feedback. Please try again.")
+        return
+      }
 
       // Save pending draft request for Claude Code to process
       const pendingResponse = await fetch("/api/test/pending-draft", {
@@ -313,17 +1011,21 @@ export default function ArticleEditorPage() {
         })
       })
 
-      if (pendingResponse.ok) {
-        setSaved(true)
-        setTimeout(() => setSaved(false), 2000)
-        alert(
-          "Feedback saved!\n\n" +
-          "To generate the next draft, tell Claude Code:\n" +
-          "\"process the pending article draft\""
-        )
+      if (!pendingResponse.ok) {
+        alert("Feedback saved, but failed to create pending draft request.")
+        return
       }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+      alert(
+        "Feedback saved!\n\n" +
+        "To generate the next draft, tell Claude Code:\n" +
+        "\"process the pending article draft\""
+      )
     } catch (error) {
       console.error("Failed to save and draft:", error)
+      alert("An error occurred. Please try again.")
     } finally {
       setDraftingNew(false)
     }
@@ -411,6 +1113,8 @@ export default function ArticleEditorPage() {
         h.type === "almost" ? "bg-yellow-200 dark:bg-yellow-900/50" :
         h.type === "angle" ? "bg-cyan-200 dark:bg-cyan-900/50" :
         h.type === "ai" ? "bg-orange-200 dark:bg-orange-900/50" :
+        h.type === "alternatives" ? "bg-pink-200 dark:bg-pink-900/50" :
+        h.type === "negative" ? "bg-rose-200 dark:bg-rose-900/50" :
         h.type === "source" ? "bg-red-300 dark:bg-red-800/70 font-bold border-2 border-red-500" :
         "bg-blue-200 dark:bg-blue-900/50"
 
@@ -458,15 +1162,56 @@ export default function ArticleEditorPage() {
           style={{ left: selection.x, top: selection.y }}
         >
           <div className="bg-popover border rounded-lg shadow-lg p-2 flex flex-col gap-2">
-            {!commentMode ? (
+            {/* Visual feedback for recently added flag */}
+            {recentlyAdded && (
+              <div className={`text-xs px-2 py-1 rounded ${FEEDBACK_TYPES[recentlyAdded].bg} ${FEEDBACK_TYPES[recentlyAdded].color} flex items-center gap-1`}>
+                <Check className="size-3" /> Added {FEEDBACK_TYPES[recentlyAdded].label}
+              </div>
+            )}
+
+            {/* Main buttons */}
+            {!commentMode && !subMenu && (
               <div className="flex items-center gap-1">
-                <FeedbackButton type="excellent" onClick={() => addFlag("excellent", selection.sectionId, selection.text)} size="lg" />
-                <FeedbackButton type="good" onClick={() => addFlag("good", selection.sectionId, selection.text)} size="lg" />
-                <FeedbackButton type="almost" onClick={() => addFlag("almost", selection.sectionId, selection.text)} size="lg" />
+                {/* Excellent - opens sub-menu */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2"
+                  onClick={() => setSubMenu("excellent")}
+                  title="Mark as excellent - extract learnings"
+                >
+                  <Star className="size-4 text-purple-600" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setSubMenu("good")} title="Mark as good">
+                  <Sparkles className="size-4 text-green-600" />
+                </Button>
+                <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setSubMenu("almost")} title="Mark as almost there">
+                  <CircleDot className="size-4 text-yellow-600" />
+                </Button>
                 <div className="w-px h-6 bg-border mx-1" />
-                <FeedbackButton type="angle" onClick={() => addFlag("angle", selection.sectionId, selection.text)} size="lg" />
-                <FeedbackButton type="ai" onClick={() => addFlag("ai", selection.sectionId, selection.text)} size="lg" />
-                <FeedbackButton type="alternatives" onClick={() => addFlag("alternatives", selection.sectionId, selection.text)} size="lg" />
+                <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setSubMenu("angle")} title="Wrong angle - needs rewrite">
+                  <RotateCcw className="size-4 text-cyan-600" />
+                </Button>
+                {/* AI - opens sub-menu */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2"
+                  onClick={() => setSubMenu("ai")}
+                  title="Mark as AI-sounding"
+                >
+                  <Bot className="size-4 text-orange-600" />
+                </Button>
+                {/* Negative learning - opens sub-menu */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2"
+                  onClick={() => setSubMenu("negative")}
+                  title="Anti-pattern - what NOT to do"
+                >
+                  <ThumbsDown className="size-4 text-rose-600" />
+                </Button>
                 <div className="w-px h-6 bg-border mx-1" />
                 <Button size="sm" variant="ghost" className="h-8 px-2" onClick={() => setCommentMode(true)} title="Add a custom comment">
                   <MessageSquare className="size-4 text-blue-600" />
@@ -478,7 +1223,6 @@ export default function ArticleEditorPage() {
                   className="h-8 px-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/30 dark:hover:bg-red-900/50"
                   onClick={() => {
                     setSourceModal({ sectionId: selection.sectionId, quote: selection.text })
-                    setSelection(null)
                   }}
                   title="Needs source citation - BLOCKS publishing"
                 >
@@ -488,7 +1232,207 @@ export default function ArticleEditorPage() {
                   <X className="size-4" />
                 </Button>
               </div>
-            ) : (
+            )}
+
+            {/* AI sub-menu */}
+            {subMenu === "ai" && (
+              <div className="flex flex-col gap-2 min-w-[280px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-1">
+                    <Bot className="size-4 text-orange-600" /> AI Flag Options
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSubMenu(null)}>
+                    <X className="size-3" />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  &quot;{selection.text.slice(0, 50)}{selection.text.length > 50 ? '...' : ''}&quot;
+                </div>
+                <div className="space-y-1">
+                  <button
+                    className="w-full text-left p-2 rounded border hover:bg-muted transition-colors text-sm"
+                    onClick={() => addFlag("ai", selection.sectionId, selection.text)}
+                  >
+                    <div className="font-medium">Just flag as AI</div>
+                    <div className="text-xs text-muted-foreground">Mark for rewrite, no additional context</div>
+                  </button>
+                  <button
+                    className="w-full text-left p-2 rounded border hover:bg-muted transition-colors text-sm"
+                    onClick={() => {
+                      setSubMenu(null)
+                      setCommentMode(true)
+                    }}
+                  >
+                    <div className="font-medium">AI + Comment</div>
+                    <div className="text-xs text-muted-foreground">Add note explaining what&apos;s wrong</div>
+                  </button>
+                  <button
+                    className="w-full text-left p-2 rounded border hover:bg-muted transition-colors text-sm"
+                    onClick={() => {
+                      addFlag("ai", selection.sectionId, selection.text)
+                      addFlag("alternatives", selection.sectionId, selection.text)
+                    }}
+                  >
+                    <div className="font-medium">AI + Request 3 Alternatives</div>
+                    <div className="text-xs text-muted-foreground">Flag as AI and request alternative versions</div>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Excellent sub-menu */}
+            {subMenu === "excellent" && (
+              <div className="flex flex-col gap-2 min-w-[280px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-1">
+                    <Star className="size-4 text-purple-600" /> Excellent - What Works?
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSubMenu(null)}>
+                    <X className="size-3" />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  &quot;{selection.text.slice(0, 50)}{selection.text.length > 50 ? '...' : ''}&quot;
+                </div>
+                <div className="space-y-1">
+                  <button
+                    className="w-full text-left p-2 rounded border hover:bg-muted transition-colors text-sm"
+                    onClick={() => addFlag("excellent", selection.sectionId, selection.text)}
+                  >
+                    <div className="font-medium">Just mark Excellent</div>
+                    <div className="text-xs text-muted-foreground">Extract to learnings without note</div>
+                  </button>
+                </div>
+                <div className="border-t pt-2 mt-1">
+                  <div className="text-xs text-muted-foreground mb-1">Why does this work? (goes to learnings)</div>
+                  <textarea
+                    autoFocus
+                    placeholder="e.g., 'Specific detail makes it credible', 'Unexpected angle grabs attention'..."
+                    value={subMenuComment}
+                    onChange={(e) => setSubMenuComment(e.target.value)}
+                    className="text-sm p-2 rounded border bg-background resize-none w-full"
+                    rows={2}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        addFlag("excellent", selection.sectionId, selection.text, subMenuComment.trim() || undefined)
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => addFlag("excellent", selection.sectionId, selection.text, subMenuComment.trim() || undefined)}
+                  >
+                    {subMenuComment.trim() ? "Add with Learning Note" : "Add without Note"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Negative learning sub-menu */}
+            {subMenu === "negative" && (
+              <div className="flex flex-col gap-2 min-w-[280px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-1">
+                    <ThumbsDown className="size-4 text-rose-600" /> Don&apos;t Do This
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSubMenu(null)}>
+                    <X className="size-3" />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  &quot;{selection.text.slice(0, 50)}{selection.text.length > 50 ? '...' : ''}&quot;
+                </div>
+                <div className="border-t pt-2 mt-1">
+                  <div className="text-xs text-rose-600 font-medium mb-1">Why is this bad? (required - goes to learnings)</div>
+                  <textarea
+                    autoFocus
+                    placeholder="e.g., 'Too vague, no specifics', 'Generic phrasing anyone could write', 'Announces instead of delivers'..."
+                    value={subMenuComment}
+                    onChange={(e) => setSubMenuComment(e.target.value)}
+                    className="text-sm p-2 rounded border bg-background resize-none w-full"
+                    rows={2}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        if (subMenuComment.trim()) {
+                          addFlag("negative", selection.sectionId, selection.text, subMenuComment.trim())
+                        }
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full mt-2"
+                    disabled={!subMenuComment.trim()}
+                    onClick={() => {
+                      if (subMenuComment.trim()) {
+                        addFlag("negative", selection.sectionId, selection.text, subMenuComment.trim())
+                      }
+                    }}
+                  >
+                    Add Anti-Pattern to Learnings
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Generic sub-menu for good, almost, angle, alternatives */}
+            {(subMenu === "good" || subMenu === "almost" || subMenu === "angle" || subMenu === "alternatives") && (
+              <div className="flex flex-col gap-2 min-w-[280px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium flex items-center gap-1">
+                    {subMenu === "good" && <><Sparkles className="size-4 text-green-600" /> Good</>}
+                    {subMenu === "almost" && <><CircleDot className="size-4 text-yellow-600" /> Almost</>}
+                    {subMenu === "angle" && <><RotateCcw className="size-4 text-cyan-600" /> Wrong Angle</>}
+                    {subMenu === "alternatives" && <><Shuffle className="size-4 text-pink-600" /> 3 Alternatives</>}
+                  </span>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setSubMenu(null)}>
+                    <X className="size-3" />
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground truncate">
+                  &quot;{selection.text.slice(0, 50)}{selection.text.length > 50 ? '...' : ''}&quot;
+                </div>
+                <div className="space-y-1">
+                  <button
+                    className="w-full text-left p-2 rounded border hover:bg-muted transition-colors text-sm"
+                    onClick={() => addFlag(subMenu, selection.sectionId, selection.text)}
+                  >
+                    <div className="font-medium">Just add flag</div>
+                    <div className="text-xs text-muted-foreground">No additional comment</div>
+                  </button>
+                </div>
+                <div className="border-t pt-2 mt-1">
+                  <div className="text-xs text-muted-foreground mb-1">Add comment (optional)</div>
+                  <textarea
+                    autoFocus
+                    placeholder="Why are you flagging this?..."
+                    value={subMenuComment}
+                    onChange={(e) => setSubMenuComment(e.target.value)}
+                    className="text-sm p-2 rounded border bg-background resize-none w-full"
+                    rows={2}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault()
+                        addFlag(subMenu, selection.sectionId, selection.text, subMenuComment.trim() || undefined)
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full mt-2"
+                    onClick={() => addFlag(subMenu, selection.sectionId, selection.text, subMenuComment.trim() || undefined)}
+                  >
+                    {subMenuComment.trim() ? "Add with Comment" : "Add without Comment"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Comment mode (for Note flag) */}
+            {commentMode && !subMenu && (
               <div className="flex flex-col gap-2 min-w-[250px]">
                 <div className="text-xs text-muted-foreground truncate max-w-[250px]">
                   &quot;{selection.text.slice(0, 40)}{selection.text.length > 40 ? '...' : ''}&quot;
@@ -630,6 +1574,165 @@ export default function ArticleEditorPage() {
         </div>
       )}
 
+      {/* Unlock Structure Modal */}
+      {unlockModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setUnlockModal(false)}>
+          <div className="bg-popover border-2 border-red-500 rounded-lg shadow-lg p-4 w-full max-w-lg mx-4" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🔓</span>
+                <h3 className="font-bold text-red-600">Unlock Structure</h3>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setUnlockModal(false)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded p-3 mb-4">
+              <p className="text-sm text-yellow-600 font-medium">
+                ⚠️ This will reset to Phase 2 (Outline)
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Current prose will be preserved but marked as outdated. You&apos;ll need to revise the outline before continuing.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="text-sm font-medium mb-2 block">
+                Why does the structure need to change?
+              </label>
+              <textarea
+                autoFocus
+                placeholder="e.g., 'Feedback suggests the research section should come before the analogy', 'Need to add a new section on common mistakes'..."
+                value={unlockReason}
+                onChange={(e) => setUnlockReason(e.target.value)}
+                className="text-sm p-3 rounded border bg-background resize-none w-full"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button size="sm" variant="ghost" onClick={() => setUnlockModal(false)}>Cancel</Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                disabled={!unlockReason.trim() || unlocking}
+                onClick={handleUnlockStructure}
+              >
+                {unlocking ? <Loader2 className="size-4 mr-1 animate-spin" /> : null}
+                Unlock & Reset to Phase 2
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Learning Suggestions Modal */}
+      {suggestionsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setSuggestionsModal(false)}>
+          <div className="bg-popover border rounded-lg shadow-lg p-4 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="size-5 text-purple-600" />
+                <h3 className="font-bold text-lg">Suggested Learnings</h3>
+              </div>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setSuggestionsModal(false)}>
+                <X className="size-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-4">
+              Based on your comments, these insights could be added to the writing style guide.
+            </p>
+
+            <div className="space-y-4">
+              {learningSuggestions
+                .filter(s => s.originalFlag?.note)
+                .map((suggestion, idx) => (
+                <div
+                  key={idx}
+                  className={`border rounded-lg p-4 transition-colors ${
+                    selectedSuggestions.has(idx) ? 'border-purple-500 bg-purple-500/5' : 'border-muted'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedSuggestions.has(idx)}
+                      onChange={() => toggleSuggestion(idx)}
+                      className="mt-1 size-4"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant={suggestion.type === 'positive' ? 'default' : 'destructive'}>
+                          {suggestion.type === 'positive' ? '✅ Positive' : '❌ Anti-pattern'}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {suggestion.confidence} confidence
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          → {suggestion.targetSection}
+                        </span>
+                      </div>
+
+                      <div className="text-sm text-muted-foreground mb-2">
+                        Your comment on <strong>{suggestion.originalFlag?.type}</strong> flag:
+                        <br />
+                        <em>&ldquo;{suggestion.originalFlag?.note}&rdquo;</em>
+                      </div>
+
+                      <div className="bg-muted rounded p-2 mb-2">
+                        <div className="text-xs text-muted-foreground mb-1">Suggested text:</div>
+                        <textarea
+                          value={editedSuggestions[idx] ?? suggestion.suggestedText}
+                          onChange={(e) => setEditedSuggestions(prev => ({
+                            ...prev,
+                            [idx]: e.target.value
+                          }))}
+                          className="w-full p-2 text-sm bg-background rounded border resize-none"
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="text-xs text-muted-foreground">
+                        <strong>Why:</strong> {suggestion.reasoning}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center mt-6 pt-4 border-t">
+              <span className="text-sm text-muted-foreground">
+                {selectedSuggestions.size} of {learningSuggestions.length} selected
+              </span>
+              <div className="flex gap-2">
+                <Button variant="ghost" onClick={() => {
+                  if (selectedSuggestions.size > 0 &&
+                      !confirm(`Skip ${selectedSuggestions.size} selected learning${selectedSuggestions.size > 1 ? 's' : ''}? They won't be added to the style guide.`)) {
+                    return
+                  }
+                  setSuggestionsModal(false)
+                  setLearningSuggestions([])
+                  setSelectedSuggestions(new Set())
+                }}>
+                  Skip All
+                </Button>
+                <Button
+                  onClick={approveLearnings}
+                  disabled={selectedSuggestions.size === 0 || approvingLearnings}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  {approvingLearnings ? <Loader2 className="size-4 mr-1 animate-spin" /> : null}
+                  Add to Style Guide
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="mx-auto px-4 py-4 max-w-4xl">
@@ -679,6 +1782,35 @@ export default function ArticleEditorPage() {
             {loading && <Loader2 className="size-4 animate-spin text-muted-foreground ml-auto" />}
           </div>
 
+          {/* Phase indicator */}
+          {loadedArticle && (
+            <div className="mb-4">
+              <PhaseIndicator
+                currentPhase={loadedArticle.phase}
+                phaseLocks={loadedArticle.phaseLocks}
+              />
+            </div>
+          )}
+
+          {/* Contract display (Phase 4 - read-only) */}
+          {loadedArticle?.contract && loadedArticle.phase === 4 && (
+            <div className="mb-4">
+              <ContractDisplay
+                contract={loadedArticle.contract}
+                isCollapsed={contractCollapsed}
+                onToggle={() => setContractCollapsed(!contractCollapsed)}
+                onUnlock={() => setUnlockModal(true)}
+              />
+            </div>
+          )}
+
+          {/* Unlock history */}
+          {loadedArticle && loadedArticle.structureUnlocks.length > 0 && (
+            <div className="mb-4">
+              <UnlockHistory unlocks={loadedArticle.structureUnlocks} />
+            </div>
+          )}
+
           {/* Blocking flags warning */}
           {blockingFlagsCount > 0 && (
             <div className="mb-4 p-3 bg-red-100 dark:bg-red-900/30 border-2 border-red-500 rounded-lg flex items-center gap-3">
@@ -726,9 +1858,9 @@ export default function ArticleEditorPage() {
                     {copied ? <Check className="size-4 mr-1" /> : <Copy className="size-4 mr-1" />}
                     {copied ? "Copied!" : "Copy"}
                   </Button>
-                  <Button size="sm" variant="outline" onClick={saveFeedback} title="Save feedback and keep current draft">
-                    {saved ? <Check className="size-4 mr-1" /> : <Save className="size-4 mr-1" />}
-                    {saved ? "Saved!" : "Export"}
+                  <Button size="sm" variant="outline" onClick={saveFeedback} disabled={analyzingComments} title="Save feedback and analyze for learnings">
+                    {analyzingComments ? <Loader2 className="size-4 mr-1 animate-spin" /> : saved ? <Check className="size-4 mr-1" /> : <Save className="size-4 mr-1" />}
+                    {analyzingComments ? "Analyzing..." : saved ? "Saved!" : "Export"}
                   </Button>
                   <Button size="sm" variant="default" onClick={saveAndDraftNew} disabled={draftingNew} title="Save feedback for Claude Code to generate new draft">
                     {draftingNew ? <RotateCcw className="size-4 mr-1 animate-spin" /> : <FileEdit className="size-4 mr-1" />}
@@ -744,23 +1876,91 @@ export default function ArticleEditorPage() {
         </div>
       </div>
 
-      {/* Instructions */}
-      <div className="mx-auto px-4 py-4 max-w-4xl">
-        <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
-          <strong>How to use:</strong> Right-click any paragraph to flag it (or select specific text first). You can select multiple sentences. Hover over buttons to see what each does.
-          <div className="flex flex-wrap gap-3 mt-2">
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.excellent.tooltip}><Star className="size-3 text-purple-600" /> Excellent</span>
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.good.tooltip}><Sparkles className="size-3 text-green-600" /> Good</span>
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.almost.tooltip}><CircleDot className="size-3 text-yellow-600" /> Almost</span>
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.angle.tooltip}><RotateCcw className="size-3 text-cyan-600" /> Angle</span>
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.ai.tooltip}><Bot className="size-3 text-orange-600" /> AI</span>
-            <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.note.tooltip}><MessageSquare className="size-3 text-blue-600" /> Note</span>
-            <span className="inline-flex items-center gap-1 font-bold" title={FEEDBACK_TYPES.source.tooltip}><AlertTriangle className="size-3 text-red-600" /> <span className="text-red-600">Needs Source</span></span>
+      {/* Phase 1: Contract Form */}
+      {loadedArticle && loadedArticle.phase === 1 && (
+        <div className="mx-auto px-4 py-4 max-w-4xl">
+          <ContractForm
+            contract={loadedArticle.contract || {
+              title: loadedArticle.title,
+              thesis: "",
+              targetReader: "",
+              mustInclude: [],
+              mustNotInclude: [],
+              tone: "Conversational but credible"
+            }}
+            onSave={handleSaveContract}
+            saving={savingPhase}
+          />
+        </div>
+      )}
+
+      {/* Phase 2: Outline Editor */}
+      {loadedArticle && loadedArticle.phase === 2 && (
+        <div className="mx-auto px-4 py-4 max-w-4xl">
+          {/* Show locked contract above */}
+          {loadedArticle.contract && (
+            <div className="mb-4">
+              <ContractDisplay
+                contract={loadedArticle.contract}
+                isCollapsed={contractCollapsed}
+                onToggle={() => setContractCollapsed(!contractCollapsed)}
+              />
+            </div>
+          )}
+          <OutlineEditor
+            outline={loadedArticle.outline || { sections: [] }}
+            onSave={handleSaveOutline}
+            saving={savingPhase}
+          />
+        </div>
+      )}
+
+      {/* Phase 3: First Draft - show structure lock button */}
+      {loadedArticle && loadedArticle.phase === 3 && (
+        <div className="mx-auto px-4 py-4 max-w-4xl">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-blue-600">Phase 3: First Draft</h3>
+                <p className="text-sm text-muted-foreground">
+                  Review the draft below. When the structure looks good, lock it to begin refinement.
+                </p>
+              </div>
+              <Button
+                onClick={handleLockStructure}
+                disabled={savingPhase}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {savingPhase ? <Loader2 className="size-4 mr-1 animate-spin" /> : null}
+                🔒 Lock Structure & Begin Refinement
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Article sections */}
+      {/* Instructions (Phase 3 & 4 only) */}
+      {loadedArticle && (loadedArticle.phase === 3 || loadedArticle.phase === 4) && (
+        <div className="mx-auto px-4 py-4 max-w-4xl">
+          <div className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-3">
+            <strong>How to use:</strong> Right-click any paragraph to flag it (or select specific text first). You can select multiple sentences. Hover over buttons to see what each does.
+            <div className="flex flex-wrap gap-3 mt-2">
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.excellent.tooltip}><Star className="size-3 text-purple-600" /> Excellent</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.good.tooltip}><Sparkles className="size-3 text-green-600" /> Good</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.almost.tooltip}><CircleDot className="size-3 text-yellow-600" /> Almost</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.angle.tooltip}><RotateCcw className="size-3 text-cyan-600" /> Angle</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.ai.tooltip}><Bot className="size-3 text-orange-600" /> AI</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.negative.tooltip}><ThumbsDown className="size-3 text-rose-600" /> Don&apos;t</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.alternatives.tooltip}><Shuffle className="size-3 text-pink-600" /> 3 Alts</span>
+              <span className="inline-flex items-center gap-1" title={FEEDBACK_TYPES.note.tooltip}><MessageSquare className="size-3 text-blue-600" /> Note</span>
+              <span className="inline-flex items-center gap-1 font-bold" title={FEEDBACK_TYPES.source.tooltip}><AlertTriangle className="size-3 text-red-600" /> <span className="text-red-600">Needs Source</span></span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Article sections (Phase 3 & 4 only) */}
+      {loadedArticle && (loadedArticle.phase === 3 || loadedArticle.phase === 4) && (
       <div className="mx-auto px-4 pb-12 max-w-4xl">
           {loading && !loadedArticle ? (
             <div className="flex items-center justify-center py-12">
@@ -839,6 +2039,7 @@ export default function ArticleEditorPage() {
             )
           })}
         </div>
+      )}
     </div>
   )
 }

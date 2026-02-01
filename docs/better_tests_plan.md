@@ -1,9 +1,11 @@
 # Plan: Improve Test Coverage with Integration & Error Tests
 
-**Status:** In Progress - Phase 3 Complete (security tests) + Rate limiting tests BLOCKED
-**Updated:** 31-01-2026 22:07
+**Status:** In Progress - Phase 4 Complete (error-path E2E tests) + Rate limiting tests BLOCKED
+**Updated:** 01-02-2026 12:05
 
 ## Changelog
+- 01-02-2026 12:05 - Phase 4 complete: error-path E2E tests (error-handling: 6, auth-errors: 6, form-errors: 8)
+- 01-02-2026 11:10 - Fixed false-pass anti-pattern in security tests: 9 silent `return` statements replaced with proper test data setup via API helpers
 - 31-01-2026 22:07 - Created second test user (scripts/create-test-user-b.ts). Removed useless rate limit tests (blocked until rate limiting implemented)
 - 31-01-2026 21:46 - Phase 3 complete: 26 security E2E tests (auth: 6, input: 20). RLS/IDOR: 12 tests now work with TEST_USER_B
 - 31-01-2026 21:30 - Phase 2.2-2.4 complete: 71 integration tests passing
@@ -271,7 +273,7 @@ TEST_USER_B_PASSWORD=your-password
 
 ---
 
-## Phase 4: Error-Path E2E Tests
+## Phase 4: Error-Path E2E Tests ✅ COMPLETE
 
 **Goal:** App degrades gracefully when backend fails.
 
@@ -279,28 +281,54 @@ TEST_USER_B_PASSWORD=your-password
 
 **Note:** This uses network-level simulation, not mocking. The frontend is real; we're testing how it handles errors. This is acceptable per testing philosophy (see testing_behavior.md).
 
-### 4.1 API Error Handling
+### 4.1 API Error Handling ✅ COMPLETE
 
 **File:** `tests/e2e/error-handling.spec.ts`
 
+**Tests implemented (6 tests):**
+- [x] QA page shows error message in chat when API returns 500
+- [x] QA page shows error when API times out
+- [x] QA page does not crash on malformed API response
+- [x] Session start shows error when API returns 500
+- [x] Approach add shows error when API returns 500 (with optimistic rollback)
+- [x] Dashboard handles stats API failure gracefully
+
 | Test Case | Setup | Expected |
 |-----------|-------|----------|
-| 500 on session start | Intercept `/api/tracking/session` → 500 | Error toast, no crash |
+| 500 on session start | Intercept `/api/tracking/session` → 500 | Page handles error, no crash |
 | 500 on QA submit | Intercept `/api/qa` → 500 | Error message in chat |
-| Timeout on dashboard | Intercept → delay 30s | Loading spinner, then timeout message |
+| Timeout on QA | Intercept → delay 35s | Loading state, then error |
 
-### 4.2 Auth Error Handling
+### 4.2 Auth Error Handling ✅ COMPLETE
 
 **File:** `tests/e2e/auth-errors.spec.ts`
 
+**Tests implemented (6 tests):**
+- [x] 401 on API call mid-session shows error (inline, not redirect)
+- [x] Clearing cookies shows error on next action
+- [x] Login with invalid credentials shows error message
+- [x] Login with empty credentials shows validation error
+- [x] Signup with existing email shows error
+- [x] Signup with mismatched passwords shows error
+
 | Test Case | Setup | Expected |
 |-----------|-------|----------|
-| 401 mid-session | Intercept any API → 401 | Redirect to login |
-| Token expired | Clear auth cookie | Redirect to login |
+| 401 mid-session | Intercept any API → 401 | Error shown inline |
+| Token expired | Clear auth cookie | Error on next action |
 
-### 4.3 Form Validation Errors
+### 4.3 Form Validation Errors ✅ COMPLETE
 
 **File:** `tests/e2e/form-errors.spec.ts`
+
+**Tests implemented (8 tests):**
+- [x] Login form shows error for invalid email format
+- [x] Login form shows error for short password
+- [x] Signup form shows error for password mismatch
+- [x] Signup form shows error for weak password
+- [x] Signup form shows error for empty required fields
+- [x] QA submit button disabled when input is empty
+- [x] QA submit button enabled when input has content
+- [x] QA shows error when server returns validation error (422)
 
 | Test Case | Setup | Expected |
 |-----------|-------|----------|
@@ -359,9 +387,9 @@ Mark this plan as successor, reference new test types.
 | **Test Setup Scripts** |||
 | `scripts/create-test-user-b.ts` | ✅ Created | Setup |
 | **Error Handling Tests** |||
-| `tests/e2e/error-handling.spec.ts` | Create | P3 |
-| `tests/e2e/auth-errors.spec.ts` | Create | P3 |
-| `tests/e2e/form-errors.spec.ts` | Create | P3 |
+| `tests/e2e/error-handling.spec.ts` | ✅ Created | P3 |
+| `tests/e2e/auth-errors.spec.ts` | ✅ Created | P3 |
+| `tests/e2e/form-errors.spec.ts` | ✅ Created | P3 |
 | **Documentation** |||
 | `docs/testing_behavior.md` | Update | P1 |
 | `docs/better_tests_plan.md` | Update | P1 |

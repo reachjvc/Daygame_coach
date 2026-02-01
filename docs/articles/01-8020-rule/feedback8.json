@@ -1,0 +1,18 @@
+{
+  "version": 8,
+  "articleId": "01-8020-rule",
+  "createdAt": "2026-01-31T21:33:28.491Z",
+  "flags": [
+    {
+      "type": "excellent",
+      "sectionId": "intro",
+      "quote": "Anders Ericsson's research on deliberate practice found the same asymmetry: most time spent \"practicing\" generates nothing. The gains cluster in specific moments of struggle. Everything outside those moments is maintenance at best."
+    },
+    {
+      "type": "note",
+      "sectionId": "intro",
+      "quote": "Anders Ericsson's research on deliberate practice found the same asymmetry: most time spent \"practicing\" generates nothing. The gains cluster in specific moments of struggle. Everything outside those moments is maintenance at best.",
+      "note": "this works because its so specific, and such an interesting fact. It does not necessarily fit everywhere, but when it does fit, its a great way of doing it"
+    }
+  ]
+}

@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test'
-import { login, loginAsUserB } from './helpers/auth.helper'
+import {
+  login,
+  loginAsUserB,
+  ensureNoActiveSessionViaAPI,
+  createTestSessionViaAPI,
+  createTestApproachViaAPI,
+} from './helpers/auth.helper'
 import { validateSecondUserConfig } from './fixtures/test-user'
 
 /**
@@ -41,36 +47,7 @@ test.describe('Security: IDOR Protection', () => {
     try {
       // Arrange: User A logs in and creates a session
       await login(pageA)
-
-      // Check for existing sessions first
-      const sessionsResponse = await pageA.request.get('/api/tracking/sessions')
-      const sessions = await sessionsResponse.json()
-
-      let sessionId: string
-      if (Array.isArray(sessions) && sessions.length > 0) {
-        // Use existing session
-        sessionId = sessions[0].id
-      } else {
-        // Create a new session
-        const createResponse = await pageA.request.post('/api/tracking/session', {
-          data: { goal: 3, location: 'IDOR Test Location' },
-        })
-
-        if (!createResponse.ok()) {
-          // Check for active session
-          const activeResponse = await pageA.request.get('/api/tracking/session/active')
-          if (activeResponse.ok()) {
-            const activeSession = await activeResponse.json()
-            sessionId = activeSession.id
-          } else {
-            console.log('Cannot get or create session, skipping test')
-            return
-          }
-        } else {
-          const session = await createResponse.json()
-          sessionId = session.id
-        }
-      }
+      const sessionId = await createTestSessionViaAPI(pageA, 'IDOR Test Location')
 
       // Act: User B logs in and tries to access User A's session by ID
       await loginAsUserB(pageB)
@@ -80,6 +57,8 @@ test.describe('Security: IDOR Protection', () => {
       // Should get 404 (RLS hides it) or 403 (forbidden)
       expect([403, 404]).toContain(idor_response.status())
     } finally {
+      // Cleanup: End User A's session
+      await ensureNoActiveSessionViaAPI(pageA)
       await contextA.close()
       await contextB.close()
     }
@@ -95,44 +74,10 @@ test.describe('Security: IDOR Protection', () => {
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User A logs in and creates an approach
+      // Arrange: User A logs in and creates a session with an approach
       await login(pageA)
-
-      // First, ensure we have an active session
-      let sessionId: string
-      const activeResponse = await pageA.request.get('/api/tracking/session/active')
-
-      if (activeResponse.ok()) {
-        const activeSession = await activeResponse.json()
-        sessionId = activeSession.id
-      } else {
-        // Create a new session
-        const createResponse = await pageA.request.post('/api/tracking/session', {
-          data: { goal: 3, location: 'IDOR Approach Test' },
-        })
-        if (!createResponse.ok()) {
-          console.log('Cannot create session, skipping test')
-          return
-        }
-        const session = await createResponse.json()
-        sessionId = session.id
-      }
-
-      // Create an approach
-      const approachResponse = await pageA.request.post('/api/tracking/approach', {
-        data: {
-          session_id: sessionId,
-          outcome: 'ignored',
-        },
-      })
-
-      if (!approachResponse.ok()) {
-        console.log('Cannot create approach, skipping test')
-        return
-      }
-
-      const approach = await approachResponse.json()
-      const approachId = approach.id
+      const sessionId = await createTestSessionViaAPI(pageA, 'IDOR Approach Test')
+      const approachId = await createTestApproachViaAPI(pageA, sessionId, 'ignored')
 
       // Act: User B logs in and tries to delete User A's approach
       await loginAsUserB(pageB)
@@ -142,7 +87,6 @@ test.describe('Security: IDOR Protection', () => {
       expect([403, 404, 405]).toContain(deleteResponse.status())
 
       // Verify: User A's approach still exists
-      // (We can't directly GET an approach, but we can check session still has it)
       const verifyResponse = await pageA.request.get(`/api/tracking/session/${sessionId}`)
       if (verifyResponse.ok()) {
         const sessionData = await verifyResponse.json()
@@ -154,6 +98,8 @@ test.describe('Security: IDOR Protection', () => {
         }
       }
     } finally {
+      // Cleanup: End User A's session
+      await ensureNoActiveSessionViaAPI(pageA)
       await contextA.close()
       await contextB.close()
     }
@@ -168,31 +114,12 @@ test.describe('Security: IDOR Protection', () => {
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
+    const originalLocation = 'IDOR Update Test'
+
     try {
       // Arrange: User A logs in and creates a session
       await login(pageA)
-
-      // Get or create a session
-      let sessionId: string
-      let originalLocation: string
-
-      const activeResponse = await pageA.request.get('/api/tracking/session/active')
-      if (activeResponse.ok()) {
-        const activeSession = await activeResponse.json()
-        sessionId = activeSession.id
-        originalLocation = activeSession.location || 'Original Location'
-      } else {
-        const createResponse = await pageA.request.post('/api/tracking/session', {
-          data: { goal: 3, location: 'IDOR Update Test' },
-        })
-        if (!createResponse.ok()) {
-          console.log('Cannot create session, skipping test')
-          return
-        }
-        const session = await createResponse.json()
-        sessionId = session.id
-        originalLocation = session.location
-      }
+      const sessionId = await createTestSessionViaAPI(pageA, originalLocation)
 
       // Act: User B logs in and tries to update User A's session
       await loginAsUserB(pageB)
@@ -210,6 +137,8 @@ test.describe('Security: IDOR Protection', () => {
         expect(sessionData.location).not.toBe('HACKED BY USER B')
       }
     } finally {
+      // Cleanup: End User A's session
+      await ensureNoActiveSessionViaAPI(pageA)
       await contextA.close()
       await contextB.close()
     }
@@ -227,29 +156,7 @@ test.describe('Security: IDOR Protection', () => {
     try {
       // Arrange: User A logs in and creates a session
       await login(pageA)
-
-      // Create a new session (need an active one to test ending)
-      const createResponse = await pageA.request.post('/api/tracking/session', {
-        data: { goal: 3, location: 'IDOR End Test' },
-      })
-
-      if (!createResponse.ok()) {
-        // Check if there's already an active session
-        const activeResponse = await pageA.request.get('/api/tracking/session/active')
-        if (!activeResponse.ok()) {
-          console.log('Cannot create or get active session, skipping test')
-          return
-        }
-      }
-
-      const activeCheck = await pageA.request.get('/api/tracking/session/active')
-      if (!activeCheck.ok()) {
-        console.log('No active session to test with, skipping')
-        return
-      }
-
-      const activeSession = await activeCheck.json()
-      const sessionId = activeSession.id
+      const sessionId = await createTestSessionViaAPI(pageA, 'IDOR End Test')
 
       // Act: User B logs in and tries to end User A's session
       await loginAsUserB(pageB)
@@ -265,6 +172,8 @@ test.describe('Security: IDOR Protection', () => {
       const stillActiveResponse = await pageA.request.get('/api/tracking/session/active')
       expect(stillActiveResponse.ok()).toBe(true)
     } finally {
+      // Cleanup: End User A's session
+      await ensureNoActiveSessionViaAPI(pageA)
       await contextA.close()
       await contextB.close()
     }
@@ -308,14 +217,16 @@ test.describe('Security: IDOR Protection', () => {
       // Arrange: User A logs in and gets their progress
       await login(pageA)
       const userAProgressResponse = await pageA.request.get('/api/inner-game/progress')
-      const userAProgress = await userAProgressResponse.json()
 
-      if (!userAProgress?.user_id) {
-        console.log('User A has no progress, skipping test')
-        return
+      // Get User A's user_id - if no progress exists, use a fake UUID to test IDOR anyway
+      let userAId: string
+      if (userAProgressResponse.ok()) {
+        const userAProgress = await userAProgressResponse.json()
+        userAId = userAProgress?.user_id || '00000000-0000-0000-0000-000000000001'
+      } else {
+        // Even without progress, we can test that User B can't access arbitrary user_ids
+        userAId = '00000000-0000-0000-0000-000000000001'
       }
-
-      const userAId = userAProgress.user_id
 
       // Act: User B logs in and tries to access User A's progress by ID
       await loginAsUserB(pageB)
@@ -324,13 +235,15 @@ test.describe('Security: IDOR Protection', () => {
       const idorResponse = await pageB.request.get(`/api/inner-game/progress?user_id=${userAId}`)
 
       // Assert: User B should get their OWN progress, not User A's
+      // The API should ignore the user_id param and return User B's data based on auth
       if (idorResponse.ok()) {
         const responseData = await idorResponse.json()
-        // If data is returned, it should NOT be User A's data
+        // If data is returned with a user_id, it should NOT be User A's data
         if (responseData?.user_id) {
           expect(responseData.user_id).not.toBe(userAId)
         }
       }
+      // 404 or error is also acceptable - means the param was ignored or rejected
     } finally {
       await contextA.close()
       await contextB.close()

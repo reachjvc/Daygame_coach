@@ -1,5 +1,11 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test'
-import { login, logout, loginAsUserB } from './helpers/auth.helper'
+import {
+  login,
+  logout,
+  loginAsUserB,
+  ensureNoActiveSessionViaAPI,
+  createTestSessionViaAPI,
+} from './helpers/auth.helper'
 import { validateSecondUserConfig } from './fixtures/test-user'
 
 /**
@@ -155,18 +161,7 @@ test.describe('Security: RLS Data Isolation', () => {
     try {
       // Act: User A logs in and creates a session
       await login(pageA)
-      const createResponse = await pageA.request.post('/api/tracking/session', {
-        data: { goal: 3, location: 'RLS Test Location' },
-      })
-
-      // Skip if session creation fails (might already have active session)
-      if (!createResponse.ok()) {
-        console.log('Skipping test - could not create session (may already have active)')
-        return
-      }
-
-      const session = await createResponse.json()
-      const sessionId = session.id
+      const sessionId = await createTestSessionViaAPI(pageA, 'RLS Test Location')
 
       // Act: User B logs in and tries to end User A's session
       await loginAsUserB(pageB)
@@ -177,12 +172,9 @@ test.describe('Security: RLS Data Isolation', () => {
       // Assert: User B should NOT be able to end User A's session
       // Should get 404 (not found due to RLS) or 403 (forbidden)
       expect([403, 404]).toContain(maliciousResponse.status())
-
-      // Cleanup: User A ends their own session
-      await pageA.request.post(`/api/tracking/session/${sessionId}/end`, {
-        data: {},
-      })
     } finally {
+      // Cleanup: End User A's session
+      await ensureNoActiveSessionViaAPI(pageA)
       await contextA.close()
       await contextB.close()
     }

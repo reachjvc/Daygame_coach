@@ -23,6 +23,7 @@ const ALLOWED_LONG_ROUTES = new Set([
   'app/api/articles/alternatives/route.ts',
   'app/api/inner-game/comparisons/route.ts',
   'app/api/inner-game/values/route.ts',
+  'app/api/test/analyze-comments/route.ts',
   'app/api/test/articles/route.ts',
   'app/api/test/generate-draft/route.ts',
   'app/api/test/save-feedback/route.ts',
@@ -34,6 +35,7 @@ const ALLOWED_LONG_ROUTES = new Set([
 ])
 
 const ALLOWED_TYPE_EXPORTS = new Set([
+  'src/articles/schemas.ts',
   'src/qa/providers/index.ts',
   'src/qa/schemas.ts',
   'src/inner-game/data/roleModels.ts',

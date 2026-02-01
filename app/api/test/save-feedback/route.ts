@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { readFile, writeFile, mkdir, readdir } from "fs/promises"
+import { writeFile, mkdir, readdir } from "fs/promises"
 import path from "path"
 import type { ArticleFeedbackFlag } from "@/src/articles/types"
 
@@ -13,8 +13,7 @@ import type { ArticleFeedbackFlag } from "@/src/articles/types"
  *   ├── feedback1.json  - Feedback on draft1 (machine-readable)
  *   ├── draft2.md       - Second draft (after feedback1)
  *   ├── feedback2.md    - Feedback on draft2 (human-readable)
- *   ├── feedback2.json  - Feedback on draft2 (machine-readable)
- *   └── learnings.md    - Accumulated learnings from EXCELLENT sections
+ *   └── feedback2.json  - Feedback on draft2 (machine-readable)
  *
  * The iterative workflow:
  * 1. User reviews draftN.md
@@ -22,7 +21,8 @@ import type { ArticleFeedbackFlag } from "@/src/articles/types"
  * 3. User clicks "Export" → saves feedbackN.md + feedbackN.json
  * 4. User clicks "Export & Draft New" → saves feedback, triggers AI to create draft(N+1).md
  *
- * EXCELLENT sections are extracted to learnings.md to build a "what works" reference.
+ * Learnings are extracted via AI analysis in /api/test/analyze-comments and saved to
+ * docs/articles/writing_style.md (global style guide).
  */
 
 async function getLatestVersion(dirPath: string): Promise<number> {
@@ -39,37 +39,6 @@ async function getLatestVersion(dirPath: string): Promise<number> {
   } catch {
     return 0
   }
-}
-
-async function extractLearnings(feedback: string, articleId: string, dirPath: string): Promise<void> {
-  // Extract EXCELLENT sections from feedback
-  const excellentPattern = /\*\*Excellent\*\*[^]*?(?=\n\*\*|\n---|\n##|$)/gi
-  const matches = feedback.match(excellentPattern)
-
-  if (!matches || matches.length === 0) return
-
-  const learningsPath = path.join(dirPath, "learnings.md")
-  let existingLearnings = ""
-
-  try {
-    existingLearnings = await readFile(learningsPath, "utf-8")
-  } catch {
-    // File doesn't exist, create header
-    existingLearnings = `# Learnings: ${articleId}\n\nAccumulated insights from EXCELLENT sections - what makes writing work.\n\n---\n`
-  }
-
-  const timestamp = new Date().toLocaleString("da-DK", {
-    timeZone: "Europe/Copenhagen",
-    dateStyle: "short",
-    timeStyle: "short"
-  })
-
-  let newLearnings = `\n## Session: ${timestamp}\n\n`
-  matches.forEach((match, i) => {
-    newLearnings += `### Learning ${i + 1}\n${match.trim()}\n\n`
-  })
-
-  await writeFile(learningsPath, existingLearnings + newLearnings, "utf-8")
 }
 
 export async function POST(request: Request) {
@@ -130,8 +99,8 @@ export async function POST(request: Request) {
       await writeFile(jsonPath, JSON.stringify(jsonContent, null, 2), "utf-8")
     }
 
-    // Extract learnings from EXCELLENT sections
-    await extractLearnings(feedback, articleId, dirPath)
+    // Learnings are now extracted via AI analysis in /api/test/analyze-comments
+    // and saved to the global writing_style.md
 
     return NextResponse.json({
       success: true,

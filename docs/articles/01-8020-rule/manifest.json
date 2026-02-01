@@ -12,15 +12,6 @@
     "styleGuide": "docs/articles/writing_style.md",
     "articleIndex": "docs/articles/INDEX.md"
   },
-  "sections": [
-    { "id": "intro", "topic": "Opening hook - most notes are useless" },
-    { "id": "bjj-analogy", "topic": "BJJ 'off the move' analysis concept" },
-    { "id": "emotional-tipping", "topic": "Emotional tipping points" },
-    { "id": "research", "topic": "Sports psychology research on debriefs" },
-    { "id": "practical", "topic": "Practical implementation" },
-    { "id": "objections", "topic": "Handling objections" },
-    { "id": "conclusion", "topic": "Meta-lesson and call to action" }
-  ],
   "keyResearchPoints": [
     "Skilled Seducer's '3 minutes before you lost her' concept",
     "BJJ Scout method: analyze lead-up, not just the moment",
@@ -28,5 +19,41 @@
     "Memory research: emotionally significant moments encoded differently",
     "Pareto principle applied to learning"
   ],
-  "notes": "The intro section was marked as AI-sounding in feedback1. The BJJ section works well - preserve the specificity."
+  "notes": "The intro section was marked as AI-sounding in feedback1. The BJJ section works well - preserve the specificity.",
+
+  "phase": 4,
+  "phaseLocks": {
+    "contractLockedAt": "2026-02-01T10:00:00Z",
+    "structureLockedAt": "2026-02-01T10:00:00Z"
+  },
+  "contract": {
+    "title": "The 80/20 Rule for Learning from Social Interactions",
+    "thesis": "Most of a field report teaches you nothing - learning is concentrated in the 20% of moments where something actually shifted.",
+    "targetReader": "Practitioners who write field reports and want to extract more learning from fewer notes.",
+    "mustInclude": [
+      "The 80/20 rule applied to learning (Pareto principle)",
+      "BJJ 'off the move' analysis as concrete analogy",
+      "Emotional tipping points concept",
+      "Sports psychology research on focused debriefs"
+    ],
+    "mustNotInclude": [
+      "Specific lines or routines",
+      "Manipulation tactics",
+      "Generic self-improvement fluff"
+    ],
+    "tone": "Analytical and credible. Third-person perspective with concrete examples."
+  },
+  "outline": {
+    "sections": [
+      { "id": "intro", "purpose": "Hook the reader with the counterintuitive claim that most notes are useless" },
+      { "id": "bjj-analogy", "purpose": "Make the abstract concrete with BJJ 'off the move' analysis" },
+      { "id": "emotional-tipping", "purpose": "Show HOW to identify the 20% - emotional markers" },
+      { "id": "research", "purpose": "Add credibility with sports psychology evidence" },
+      { "id": "practical", "purpose": "Give reader actionable steps to implement" },
+      { "id": "objections", "purpose": "Address 'but what if I miss something important?'" },
+      { "id": "conclusion", "purpose": "Reinforce thesis and create urgency to apply it" }
+    ],
+    "lockedAt": "2026-02-01T10:00:00Z"
+  },
+  "structureUnlocks": []
 }

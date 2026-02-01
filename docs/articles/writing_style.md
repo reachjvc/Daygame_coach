@@ -4,6 +4,7 @@
 **Updated:** 29-01-2026
 
 ## Changelog
+- 01-02-2026 - Migrated learnings from article reviews; added specificity+research pattern
 - 31-01-2026 22:05 - Added revision rules (scope matching, flag meanings, alternatives over best guess)
 - 29-01-2026 18:30 - Added scientific voice principle (third person, research-backed)
 - 29-01-2026 09:45 - Added core principle, opening preference, trimmed fluff
@@ -25,6 +26,8 @@ If something feels "dead" — generic, safe, could-be-written-by-anyone — kill
 **Opening style:** Cold open with a claim (~60% of cases). Lead with the surprising thing.
 
 **Voice:** Scientific third-person. AI is not a first-person enjoyer — don't write "I stopped writing field reports" or fake personal anecdotes. Instead, reference research, cite studies, describe what practitioners do. The authority comes from evidence, not fabricated experience.
+
+**Specificity with research:** Citing specific researchers by name + concrete findings (e.g., "Anders Ericsson's research on deliberate practice found...") creates credibility. Generic claims ("research shows...") feel hollow. The specificity signals genuine knowledge rather than filler.
 
 **Anti-patterns:**
 - Excessive structure (headers and bullets everywhere)

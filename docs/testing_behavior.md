@@ -4,6 +4,7 @@
 **Updated:** 31-01-2026 20:01
 
 ## Changelog
+- 01-02-2026 11:10 - Added "False Pass Anti-Pattern" section documenting silent skip violations
 - 31-01-2026 20:01 - Added mandatory read requirement and related test plans reference
 - 31-01-2026 19:46 - Added architecture compliance tests and husky pre-commit hooks section
 - 30-01-2026 21:15 - Comprehensive rewrite: deterministic testing, testcontainers, TDD workflow, edge cases
@@ -37,6 +38,35 @@
 | `setTimeout` delays | Explicit waits for conditions |
 | Network race conditions | Testcontainers with controlled state |
 | Shared mutable state | Isolated test setup/teardown |
+
+### 2. False Pass Anti-Pattern (CRITICAL)
+
+**Never use silent `return` to skip test logic.** This creates false confidence.
+
+```typescript
+// ❌ WRONG - Test passes green but tests nothing
+if (!response.ok()) {
+  console.log('Cannot create data, skipping test')
+  return  // Shows as PASSED
+}
+
+// ✅ CORRECT - Use proper test.skip() with reason
+test.skip(!precondition, 'Reason why test cannot run')
+
+// ✅ CORRECT - Create test data deterministically
+const sessionId = await createTestSessionViaAPI(page, 'Test Location')
+// If this throws, test fails (good - we know setup failed)
+```
+
+**Why this matters:**
+- Silent returns show ✅ green in test report
+- You think you have security coverage when you don't
+- Real security bugs go undetected
+
+**Pattern for E2E tests needing API data:**
+1. Create helper functions that throw on failure (see `tests/e2e/helpers/auth.helper.ts`)
+2. Use helpers: `createTestSessionViaAPI()`, `createTestApproachViaAPI()`
+3. Clean up in `finally` block: `ensureNoActiveSessionViaAPI()`
 
 ### 2. Real Dependencies via Testcontainers
 

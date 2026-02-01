@@ -1,18 +1,13 @@
 import { NextResponse } from "next/server"
 import { readFile, readdir } from "fs/promises"
 import path from "path"
-
-interface ArticleManifest {
-  id: string
-  title: string
-  status: string
-  sections: Array<{ id: string; topic: string }>
-}
+import type { ArticleManifest, ArticlePhase } from "@/src/articles/types"
 
 interface ArticleInfo {
   id: string
   title: string
   status: string
+  phase: ArticlePhase
   drafts: string[]
   feedbacks: string[]
   hasManifest: boolean
@@ -62,6 +57,7 @@ async function listArticles(articlesDir: string) {
     // Check for manifest
     let title = folder.name
     let status = "unknown"
+    let phase: ArticlePhase = 1
     const hasManifest = files.includes("manifest.json")
 
     if (hasManifest) {
@@ -73,6 +69,7 @@ async function listArticles(articlesDir: string) {
         const manifest = JSON.parse(manifestContent) as ArticleManifest
         title = manifest.title
         status = manifest.status
+        phase = manifest.phase || 1
       } catch {
         // Ignore parse errors
       }
@@ -94,6 +91,7 @@ async function listArticles(articlesDir: string) {
       id: folder.name,
       title,
       status,
+      phase,
       drafts,
       feedbacks,
       hasManifest,
@@ -173,6 +171,12 @@ async function getDraftContent(
     title,
     sections,
     rawContent: draftContent,
+    // Progressive commitment fields
+    phase: manifest?.phase || 1,
+    contract: manifest?.contract || null,
+    outline: manifest?.outline || null,
+    phaseLocks: manifest?.phaseLocks || {},
+    structureUnlocks: manifest?.structureUnlocks || [],
   })
 }
 
@@ -221,8 +225,12 @@ function parseDraftIntoSections(
   }
 
   // Map to sections with IDs from manifest or generated
+  // Support both new outline.sections format and legacy sections format
+  const outlineSections = manifest?.outline?.sections
+  const legacySections = manifest?.sections
+
   return processedParts.map((content, index) => {
-    const sectionId = manifest?.sections?.[index]?.id || `section-${index + 1}`
+    const sectionId = outlineSections?.[index]?.id || legacySections?.[index]?.id || `section-${index + 1}`
     return { id: sectionId, content }
   })
 }

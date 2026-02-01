@@ -82,7 +82,7 @@ export type ArticleSortBy = "newest" | "oldest" | "readTime"
  * Feedback types for marking article sections during review.
  * Used in iterative refinement workflow.
  */
-export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source" | "alternatives"
+export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source" | "alternatives" | "negative"
 
 export interface FeedbackTypeConfig {
   label: string
@@ -100,6 +100,7 @@ export interface FeedbackTypeConfig {
  * - ai: Too obviously AI, complete rewrite needed
  * - note: Custom comment
  * - alternatives: Request 3 alternative versions
+ * - negative: Anti-pattern - what NOT to do (extracted to learnings)
  */
 export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
   excellent: {
@@ -149,6 +150,12 @@ export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
     tooltip: "Request 3 alternative versions with different approaches",
     color: "text-pink-600",
     bg: "bg-pink-500/20 border-pink-500/30"
+  },
+  negative: {
+    label: "Don't Do This",
+    tooltip: "Anti-pattern - extract to learnings as what NOT to do",
+    color: "text-rose-600",
+    bg: "bg-rose-500/20 border-rose-500/30"
   }
 }
 
@@ -157,6 +164,166 @@ export interface ArticleFeedbackFlag {
   quote?: string
   note?: string
   sectionId: string
+}
+
+// ============================================
+// Learning Suggestion types (for AI-analyzed comments)
+// ============================================
+
+export type LearningSuggestionType = "positive" | "anti-pattern"
+export type LearningConfidence = "high" | "medium" | "low"
+
+/**
+ * A suggested learning extracted from a flag comment by AI analysis.
+ * Only medium/high confidence suggestions are shown to the user.
+ */
+export interface LearningSuggestion {
+  type: LearningSuggestionType
+  originalFlag: ArticleFeedbackFlag
+  suggestedText: string       // The formatted learning to add to writing_style.md
+  targetSection: string       // Which section (e.g., "Anti-patterns", "What We Know")
+  reasoning: string           // Why AI thinks this is a learning
+  confidence: LearningConfidence
+}
+
+export interface AnalyzeCommentsRequest {
+  flags: ArticleFeedbackFlag[]
+}
+
+export interface AnalyzeCommentsResponse {
+  suggestions: LearningSuggestion[]
+}
+
+export interface ApproveLearningsRequest {
+  approvedSuggestions: LearningSuggestion[]
+}
+
+export interface ApproveLearningsResponse {
+  success: boolean
+  updatedSections: string[]
+}
+
+// ============================================
+// Progressive Commitment types
+// ============================================
+
+/**
+ * Article workflow phases for progressive commitment.
+ * Phase 1: Contract - Define title, thesis, scope
+ * Phase 2: Outline - Define section purposes
+ * Phase 3: First Draft - Write prose
+ * Phase 4: Refinement - Iterate on prose only (structure locked)
+ */
+export type ArticlePhase = 1 | 2 | 3 | 4
+
+export const PHASE_LABELS: Record<ArticlePhase, string> = {
+  1: "Contract",
+  2: "Outline",
+  3: "Draft",
+  4: "Refine"
+}
+
+/**
+ * Article contract - locked after Phase 1.
+ * Defines the article's identity and constraints.
+ */
+export interface ArticleContract {
+  title: string
+  thesis: string              // One sentence: the core claim
+  targetReader: string        // Who is this for?
+  mustInclude: string[]       // Non-negotiable points
+  mustNotInclude: string[]    // Explicit scope boundaries
+  tone: string                // e.g., "Scientific third-person"
+}
+
+/**
+ * Outline section - defines what a section must accomplish.
+ */
+export interface OutlineSection {
+  id: string
+  purpose: string             // What this section must accomplish
+  notes?: string              // Optional guidance
+}
+
+/**
+ * Article outline - locked after Phase 2.
+ */
+export interface ArticleOutline {
+  sections: OutlineSection[]
+  lockedAt?: string           // ISO timestamp
+}
+
+/**
+ * Structure unlock record - logged when user unlocks structure in Phase 4.
+ */
+export interface StructureUnlock {
+  timestamp: string           // ISO timestamp
+  reason: string              // User-provided reason
+  previousOutline: ArticleOutline  // Snapshot before unlock
+}
+
+/**
+ * Phase lock timestamps.
+ */
+export interface PhaseLocks {
+  contractLockedAt?: string   // ISO timestamp
+  structureLockedAt?: string  // ISO timestamp
+}
+
+/**
+ * Article manifest - source of truth for article metadata and progressive state.
+ */
+export interface ArticleManifest {
+  // Identity
+  id: string
+  title: string
+  status: "draft" | "published" | "archived"
+
+  // Context for generation
+  requiredContext: {
+    research: string[]
+    researchIndex: string
+    styleGuide: string
+    articleIndex: string
+  }
+
+  // Legacy section format (pre-progressive commitment)
+  sections?: Array<{ id: string; topic: string }>
+  keyResearchPoints?: string[]
+  notes?: string
+
+  // Progressive commitment (Phase 1+)
+  phase: ArticlePhase
+  phaseLocks: PhaseLocks
+  contract?: ArticleContract
+  outline?: ArticleOutline
+  structureUnlocks: StructureUnlock[]
+}
+
+/**
+ * Default contract for new articles or migration.
+ */
+export const DEFAULT_CONTRACT: ArticleContract = {
+  title: "",
+  thesis: "",
+  targetReader: "",
+  mustInclude: [],
+  mustNotInclude: [],
+  tone: "Conversational but credible"
+}
+
+/**
+ * Actions for phase transitions.
+ */
+export type PhaseAction = "lock-contract" | "lock-outline" | "lock-structure" | "unlock-structure"
+
+/**
+ * Result of a phase transition attempt.
+ */
+export interface PhaseTransitionResult {
+  success: boolean
+  newPhase: number
+  error?: string
 }
 
 // ============================================
@@ -179,6 +346,8 @@ export interface GenerateRevisedDraftRequest {
   feedback: ArticleFeedbackFlag[]
   /** Optional writing style guidance */
   styleGuide?: string
+  /** Optional article contract for constraint checking */
+  contract?: ArticleContract
 }
 
 export interface GenerateRevisedDraftResponse {
