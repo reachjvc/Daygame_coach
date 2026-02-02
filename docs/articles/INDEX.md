@@ -4,6 +4,7 @@
 **Updated:** 29-01-2026
 
 ## Changelog
+- 02-02-2026 - Added Backlog section linking to emotional-management backlog (88 articles)
 - 30-01-2026 - Updated research paths to new /docs/RESEARCH/FIELD_REPORTS/ structure
 - 29-01-2026 - Added manifest system for Claude context loading
 - 29-01-2026 09:15 - Initial creation with 6 research-backed article concepts
@@ -28,6 +29,23 @@ When asked to "work on articles" or "work on the newest article":
 | Article | Folder | Status |
 |---------|--------|--------|
 | The 80/20 Rule | `01-8020-rule/` | Draft 1, needs revision based on feedback |
+
+---
+
+## Article Backlogs
+
+Pre-planned article ideas with full contract details (thesis, target reader, must-include, outline).
+
+| Backlog | Source | Articles | Link |
+|---------|--------|----------|------|
+| Emotional Management | `docs/research/emotional-management.md` | 88 | [backlog/emotional-management.md](backlog/emotional-management.md) |
+
+**To write an article from a backlog:**
+1. Read the backlog file and find the article by title or ID
+2. Read the source research document (specified Parts)
+3. Read this file + writing style guide
+4. Create folder `docs/articles/{id}/` with `manifest.json` from the backlog entry
+5. Follow article workflow (Phase 1 → 4)
 
 ---
 

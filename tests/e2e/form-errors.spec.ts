@@ -202,9 +202,8 @@ test.describe('Error Handling: Form Validation', () => {
 
         // If confirm button exists and is visible, check if it handles invalid input
         if (await confirmButton.isVisible()) {
-          // Scroll into view to handle viewport issues
-          await confirmButton.scrollIntoViewIfNeeded()
-          await confirmButton.click()
+          // Use dispatchEvent (bypasses viewport issues in modals)
+          await confirmButton.dispatchEvent('click')
 
           // Form should either not submit or show error
           // Wait a bit and check we didn't successfully start a session

@@ -11,6 +11,14 @@
 
 ---
 
+## Types of articles & target segment
+**tier one** Our core segment, currently, are men age 25-40 that want to improve their dating life, specifically through daygame. 
+**tier two** men that generally want to improve their dating life
+**tier three** men that generally want to improve their life
+
+The tiers function as ways to think about our writing. We want some articles to have a broad appeal, and many smaller articles to focus narrowly on our core segment.
+
+
 ## Core Principle
 
 **The content must be ALIVE.** Vibrant. Quality you want to dive into.

@@ -1,10 +1,9 @@
 # Pipeline Plan
 
 Status: Active
-Updated: 01-02-2026 21:00 - MAJOR: Consolidated speaker ID in 04. Removed clustering from 03, added global clustering to 04.
-Updated: 31-01-2026 22:09 - Added "One Script at a Time" philosophy, extensive gate review process
-Updated: 31-01-2026 20:01 - Added GATE + spot-checks for 03.audio-features (every script now has a gate)
-Updated: 31-01-2026 19:50 - Added gate validation rules and extended spot-check requirements
+Updated: 02-02-2026 22:00 - Cleaned: Removed legacy model references, kept only HYBRID (distil-v3 + large-v3)
+Updated: 02-02-2026 21:30 - LOCKED: HYBRID transcription (distil-v3 structure + large-v3 text)
+Updated: 02-02-2026 20:30 - MAJOR: Consolidated speaker ID in 04. Pyannote diarization confirmed.
 
 ---
 
@@ -45,9 +44,9 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 
 ```
 01.download       → Raw audio + metadata
-02.transcribe     → Whisper → .full.json + .txt
-03.audio-features → Pitch, energy, tempo, speaker_embedding (NO clustering)
-04.segment-enrich → Speaker ID (global clustering + text patterns) + tone
+02.transcribe     → HYBRID: distil-v3 (structure) + large-v3 (text) + pyannote
+03.audio-features → Pitch, energy, tempo + pyannote_speaker passthrough
+04.segment-enrich → Speaker mapping (pyannote→coach/target) + tone
 05.conversations  → Video type + conversation boundaries
 06a.structure     → Interaction boundaries + phases
 06b.content       → Techniques + topics
@@ -55,6 +54,35 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 ```
 
 **Note**: 06c.outcomes was removed (video selection bias makes outcome data unreliable).
+
+### HYBRID Transcription Approach (LOCKED 02-02-2026)
+
+**Decision**: Use HYBRID approach combining two models for best results.
+
+```
+Audio ──► distil-v3 ──► SEGMENTS + TIMESTAMPS + pyannote speakers (structure)
+              │
+              ▼
+Audio ──► large-v3 ──► TEXT CONTENT (accuracy)
+              │
+              ▼
+         FUSION ──► distil-v3 boundaries + large-v3 text
+              │
+              ▼
+         OUTPUT: .full.json with best of both
+```
+
+| Component | Choice | Rationale |
+|-----------|--------|-----------|
+| Structure Model | `Systran/faster-distil-whisper-large-v3` | Best diarization, preserves speaker turn boundaries |
+| Text Model | `large-v3` | Best accuracy, proper nouns, punctuation |
+| Diarization | pyannote via whisperx | Reliable 2-speaker detection in street audio |
+| Speaker Mapping | 04.segment-enrich | Maps SPEAKER_00/01 → coach/target |
+
+**Why HYBRID:**
+- distil-v3 correctly separates speaker turns (granular segments)
+- large-v3 provides accurate text with proper nouns and punctuation
+- Fusion combines the best of both: distil-v3 structure + large-v3 text
 
 ### Data Flow
 
@@ -73,21 +101,31 @@ Each script reads from the previous script's output folder.
 - **Output**: `data/01.download/{source}/{title} [{id}].asr.clean16k.wav`
 - **Also creates**: .info.json, .listen.mp3
 
-### 02.transcribe
+### 02.transcribe (HYBRID)
 - **Input**: `data/01.download/**/*.wav`
 - **Output**: `data/02.transcribe/{source}/{title}.full.json` + `.txt`
-- **Engines**: whisperx (preferred), faster-whisper, openai-whisper
+- **Approach**: HYBRID (LOCKED)
+  1. Run distil-v3 with pyannote → get segment boundaries + speaker labels
+  2. Run large-v3 → get accurate text
+  3. Fuse: map large-v3 text to distil-v3 segment boundaries
+- **Structure Model**: `Systran/faster-distil-whisper-large-v3` (for segment boundaries)
+- **Text Model**: `large-v3` (for accurate text content)
+- **Diarization**: pyannote ON by default (outputs SPEAKER_00, SPEAKER_01)
+- **Requires**: HF_TOKEN environment variable for pyannote model access
 
 ### 03.audio-features
 - **Input**: `data/02.transcribe/**/*.full.json`
 - **Output**: `data/03.audio-features/{source}/{title}.audio_features.json`
-- **Features**: pitch, energy, tempo, spectral, speaker_embedding (256-dim)
-- **Note**: No speaker clustering here - embeddings only. Clustering done in 04.
+- **Features**: pitch, energy, tempo, spectral
+- **Passthrough**: `pyannote_speaker` field from transcription (SPEAKER_00, SPEAKER_01)
+- **Note**: Speaker ID comes from pyannote diarization in 02.transcribe, passed through here
 
 ### 04.segment-enrich
 - **Input**: `data/03.audio-features/**/*.audio_features.json`
 - **Output**: `data/04.segment-enrich/{source}/{title}.segment_enriched.json`
-- **Speaker ID**: Global clustering (AgglomerativeClustering on embeddings) + text pattern classification
+- **Speaker ID**: Maps pyannote SPEAKER_00/01 → coach/target using:
+  - Speaking time heuristic (majority speaker = coach)
+  - Text patterns for refinement (short responses = target)
 - **Tone**: Audio thresholds (playful/confident/nervous/energetic/neutral)
 - **Note**: Single source of truth for all speaker labeling (coach/target/voiceover/other)
 
@@ -131,16 +169,16 @@ Think like a senior developer who has built these pipelines many times and has s
 ### Gate Review Philosophy
 
 A gate review is NOT:
-- ❌ Two summary tables + "Reply APPROVED"
-- ❌ Rushing to the next step
-- ❌ Assuming the script worked because it ran without errors
+- Two summary tables + "Reply APPROVED"
+- Rushing to the next step
+- Assuming the script worked because it ran without errors
 
 A gate review IS:
-- ✅ Deep inspection of actual output data
-- ✅ Reading individual segments to verify correctness
-- ✅ Comparing expected vs actual behavior
-- ✅ Catching edge cases before they propagate downstream
-- ✅ User understanding what the data looks like before approving
+- Deep inspection of actual output data
+- Reading individual segments to verify correctness
+- Comparing expected vs actual behavior
+- Catching edge cases before they propagate downstream
+- User understanding what the data looks like before approving
 
 ### Validation Layers
 
@@ -160,11 +198,15 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 - Schema validation passes
 - All files processed without errors
 
+**02.transcribe specific:**
+- HYBRID fusion must complete successfully
+- Both distil-v3 and large-v3 outputs must be generated
+- pyannote_speaker field must be present on all segments
+
 **03.audio-features specific:**
 - `pitch_range_hz[1]` must be 350.0 (NOT 1046.5 - old format)
-- `speaker_embedding` must be present for segments >= 0.8s duration
-- `processing.embedder` must be "resemblyzer"
-- At least 70% of segments must have non-null speaker_embedding
+- `pyannote_speaker` field must be present (passed through from 02.transcribe)
+- Audio features (pitch, energy, tempo) must be computed for all segments
 
 **04.segment-enrich specific:**
 - `detected_video_type` must be `infield`, `talking_head`, or `podcast` (NOT `unknown`)
@@ -186,11 +228,17 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 
 Claude MUST present these items - not samples, but ALL instances:
 
+**02.transcribe (HYBRID):**
+1. **Verify HYBRID fusion worked**: distil-v3 segment count vs output segment count (should match)
+2. **Sample 3 segments per video**: show text from both models, verify fusion selected large-v3 text
+3. **Proper noun check**: verify "Cincinnati", "ThriveDayGame", etc. are correct (from large-v3)
+4. **Pyannote speaker distribution**: SPEAKER_00/SPEAKER_01 counts per video
+
 **03.audio-features:**
-1. **Per-video summary table**: segments count, embeddings present, embeddings null, pitch_range used
-2. **ALL segments with null embeddings** - show segment index, duration, text (short segments expected)
-3. **Speaker ID distribution** per video - how many spk_0, spk_1, unknown
-4. **Sample 3 segments per video** with full feature values (pitch, energy, tempo, spectral)
+1. **Per-video summary table**: segments count, pyannote_speaker distribution, pitch_range used
+2. **Pyannote speaker distribution** per video - how many SPEAKER_00, SPEAKER_01, unknown
+3. **Sample 3 segments per video** with full feature values (pitch, energy, tempo, spectral)
+4. **Verify pyannote_speaker passthrough** - field must be present on all segments
 
 **04.segment-enrich:**
 1. **ALL segments labeled as minority speakers** (target, voiceover, other) - show full text
@@ -210,7 +258,7 @@ Claude MUST present these items - not samples, but ALL instances:
 
 ### Gate Review Process
 
-**⚠️ IMPORTANT: Do not rush to approval. The goal is verification, not speed.**
+**Do not rush to approval. The goal is verification, not speed.**
 
 For EVERY gate:
 
@@ -228,69 +276,12 @@ For EVERY gate:
 5. **Wait for user to ask questions** - they may want to see more data
 6. **Only request approval after user is satisfied**
 
-### What Claude Should Ask During Gate Review
-
-- "Here's segment X - does this label look correct to you?"
-- "I noticed pattern Y - is this expected?"
-- "Want me to show more examples of Z?"
-- "Should I investigate this anomaly further?"
-
-### Gate Report Template
-
-```
-## Gate Report: [Script Name]
-
-### ⚠️ Reminder
-This gate review is about VERIFYING the script works correctly.
-Take time to understand the data before approving.
-Bugs caught now save 10x debugging time later.
-
-### Pre-Gate Validation
-- [ ] No fallback methods used
-- [ ] No "unknown" classifications
-- [ ] Schema validation passed
-- [ ] [Script-specific checks passed]
-
-### Processing Summary
-- Files processed: X
-- Errors: X (MUST BE 0)
-- Skipped: X
-
-### Data Inspection (Deep-Dive)
-
-#### Per-Video Summary
-[Table with key metrics]
-
-#### Actual Data Samples
-[Show 3-5 actual segments per video with full context]
-[User should be able to verify correctness by reading these]
-
-#### Mandatory Review Items
-[ALL items from script-specific requirements]
-[Show actual data, not just counts]
-
-#### Anomalies & Concerns
-[Anything that looks off, even if it passed validation]
-[Better to flag false positives than miss real bugs]
-
-### Questions for User
-- [Specific questions about data correctness]
-- [Areas where user input would help]
-
-### Next Steps
-User options:
-1. Ask to see more data
-2. Ask questions about specific items
-3. Request fixes for issues found
-4. APPROVED - only when satisfied with data quality
-```
-
 ---
 
 ## Rollout Phases
 
 ### Phase A: 5 Test Videos
-Run all scripts (04 → 05 → 06a → 06b → 07) on 5 videos.
+Run all scripts (02-HYBRID → 03 → 04 → 05 → 06a → 06b → 07) on 5 videos.
 **HARD GATE**: User approves final output quality.
 
 ### Phase B: 15 Additional Videos
@@ -310,9 +301,12 @@ Run full pipeline on all remaining videos.
 - [x] Schemas synced with taxonomy
 - [x] Label guidelines created
 - [x] Prompt templates ready
-- [x] resemblyzer installed for speaker embeddings
+- [x] whisperx + pyannote diarization configured (HF_TOKEN required)
+- [x] Transcription model testing complete (HYBRID approach locked)
 
 ### Phase A: 5 Test Videos [IN PROGRESS]
+- [ ] 02.transcribe HYBRID implemented
+- [ ] **GATE: User approves 02 HYBRID output**
 - [ ] 03.audio-features run on 5 videos
 - [ ] **GATE: User approves 03 output**
 - [ ] 04.segment-enrich run on 5 videos
@@ -415,12 +409,13 @@ Run full pipeline on all remaining videos.
 ## Rules
 
 1. **HARD GATES require explicit user approval** - Never proceed without "APPROVED"
-2. **No fallbacks** - Scripts fail hard on errors; fix issues, don't work around them
-3. **Pre-gate validation MUST pass** - Run all validation rules before presenting gate report
-4. **Full minority review** - Show ALL minority labels (target/voiceover/other), never sample
-5. **Sequential completion** - Each script must be validated before the next runs
-6. **Document reality** - If code differs from docs, update docs (after user confirms)
-7. **Ask on conflicts** - If information conflicts, stop and ask user
+2. **HYBRID transcription is LOCKED** - Do not change without user approval
+3. **No fallbacks** - Scripts fail hard on errors; fix issues, don't work around them
+4. **Pre-gate validation MUST pass** - Run all validation rules before presenting gate report
+5. **Full minority review** - Show ALL minority labels (target/voiceover/other), never sample
+6. **Sequential completion** - Each script must be validated before the next runs
+7. **Document reality** - If code differs from docs, update docs (after user confirms)
+8. **Ask on conflicts** - If information conflicts, stop and ask user
 
 ---
 

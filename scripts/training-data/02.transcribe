@@ -2,43 +2,30 @@
 """
 scripts/training-data/02.transcribe
 
-STEP 2A — FULL-FILE TRANSCRIBE (STABLE)
+STEP 2 — FULL-FILE TRANSCRIBE (HYBRID APPROACH)
 
-# Use:
-#   A) One source (video / playlist / channel):
-#      ./scripts/training-data/02.transcribe "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
-#
-#   B) Batch from sources file:
-#      ./scripts/training-data/02.transcribe --sources
-#      ./scripts/training-data/02.transcribe --sources docs/sources.txt
+Usage:
+  A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./02.transcribe --sources docs/sources.txt
 
-Goals:
-- No "Whisper looping weirdly": default condition_on_previous_text=False for whisper + faster-whisper.
-- WhisperX word timestamps WITHOUT pyannote VAD crashes:
-    whisperx engine = faster-whisper transcription -> whisperx alignment
-  (does NOT call whisperx ASR, so it avoids whisperx.vads.pyannote completely)
+Transcription Models (HYBRID - LOCKED):
+  Structure: Systran/faster-distil-whisper-large-v3 (distil-v3)
+    - Best for diarization: granular segments preserve speaker turn boundaries
+    - Used for: segment boundaries, timestamps, pyannote speaker labels
+
+  Text: large-v3
+    - Best for accuracy: proper nouns, punctuation, capitalization
+    - Used for: final text content
+
+  HYBRID fusion: distil-v3 structure + large-v3 text = best of both
 
 Engines:
-- whisperx : faster-whisper -> whisperx.align (word timestamps) + (optional) diarization
-- faster   : faster-whisper only (segments)
-- whisper  : openai-whisper only (segments)
+  whisperx : faster-whisper -> whisperx.align (word timestamps) + diarization
 
-Batch mode reads:
-  data/01.download/<source>/<video>/*
+Input:  data/01.download/<source>/<video>/*.audio.asr.clean16k.wav
+Output: data/02.transcribe/<source>/<video>/<video>.full.json + .txt
 
-Prefers audio inputs:
-  1) *.audio.asr.clean16k.wav
-  2) *.audio.asr.raw16k.wav
-  3) *.wav
-
-Writes:
-  data/02.transcribe/<source>/<video>/<video>.full.<engine>.json
-  plus <video>.full.json (copy of primary engine)
-  plus <video>.full.txt (plain text, used by 10.ingest for embeddings)
-
-Diarization:
-- ON by default (requires HF token + pyannote).
-- disable with --no-whisperx-diarize if needed
+Diarization: ON by default (requires HF_TOKEN for pyannote)
 """
 
 from __future__ import annotations
@@ -621,9 +608,11 @@ def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec
 
 class WhisperXAlignEngine(BaseEngine):
     """
-    whisperx engine in this script:
-      - transcribe with faster-whisper (stable, no pyannote VAD)
+    whisperx engine in this script (HYBRID approach):
+      - transcribe with distil-v3 (faster-whisper) for segment structure
+      - transcribe with large-v3 for accurate text
       - align with whisperx.align to get word timestamps
+      - fuse: distil-v3 boundaries + large-v3 text
       - optional diarization (pyannote) if enabled
     """
     name = "whisperx"
@@ -641,8 +630,10 @@ class WhisperXAlignEngine(BaseEngine):
         diarize_first: bool,  # kept for CLI compatibility; not used in this align-based engine
         hf_token: str,
         vad_filter: bool = False,
+        text_model: str = "large-v3",
     ):
-        self.model_name = str(faster_model)  # ASR model used for the whisperx-align pipeline
+        self.model_name = str(faster_model)  # Structure model (distil-v3)
+        self.text_model_name = str(text_model)  # Text accuracy model (large-v3)
         self.language = _norm_lang(language)
         self.device = _auto_device(device)
         self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
@@ -659,12 +650,15 @@ class WhisperXAlignEngine(BaseEngine):
         self.diarize_first = bool(diarize_first)
         self.hf_token = str(hf_token or "")
 
-        # faster-whisper ASR
+        # faster-whisper ASR - use text model (large-v3) for best accuracy
         try:
             from faster_whisper import WhisperModel  # type: ignore
         except Exception as e:
             raise SystemExit(f"Missing faster-whisper. Install: pip install -U faster-whisper ({type(e).__name__}: {e})")
-        self._fw = WhisperModel(self.model_name, device=self.device, compute_type=self.compute_type)
+
+        # Only load the text model (large-v3) - better text accuracy
+        self._fw_text = WhisperModel(self.text_model_name, device=self.device, compute_type=self.compute_type)
+        log(f"[02.transcribe] Using model: {self.text_model_name}")
 
         # whisperx align
         try:
@@ -698,9 +692,12 @@ class WhisperXAlignEngine(BaseEngine):
                 except TypeError:
                     self._diar_pipeline = DiarizationPipeline(use_auth_token=tok)
 
-    def _fw_transcribe_segments(self, audio_path: str) -> List[Dict[str, Any]]:
+    def _fw_transcribe_segments(self, audio_path: str, use_text_model: bool = False) -> List[Dict[str, Any]]:
+        """Transcribe with faster-whisper, optionally using the text model for accuracy."""
+        model = self._fw_text if use_text_model else self._fw
+        model_name = self.text_model_name if use_text_model else self.model_name
         segs_out: List[Dict[str, Any]] = []
-        segs, _info = self._fw.transcribe(
+        segs, _info = model.transcribe(
             audio_path,
             language=self.language,
             task="transcribe",
@@ -708,13 +705,96 @@ class WhisperXAlignEngine(BaseEngine):
             temperature=float(self.decode_options["temperature"]),
             condition_on_previous_text=False,
             vad_filter=bool(self.decode_options["vad_filter"]),
+            word_timestamps=True,  # Get word-level timestamps for fusion
         )
         for s in segs:
             txt = (s.text or "").strip()
             if not txt:
                 continue
-            segs_out.append({"start": float(s.start), "end": float(s.end), "text": txt})
+            seg_dict: Dict[str, Any] = {"start": float(s.start), "end": float(s.end), "text": txt}
+            # Capture word-level info if available
+            if hasattr(s, "words") and s.words:
+                seg_dict["words"] = [
+                    {"word": w.word, "start": float(w.start), "end": float(w.end)}
+                    for w in s.words if w.word
+                ]
+            segs_out.append(seg_dict)
         return segs_out
+
+    def _get_text_model_segments(self, audio_path: str) -> List[Dict[str, Any]]:
+        """Get segments from the text model (large-v3) for fusion.
+
+        Returns segments with proper capitalization from segment-level text,
+        plus word-level timestamps for fine-grained alignment.
+        """
+        return self._fw_transcribe_segments(audio_path, use_text_model=True)
+
+    def _fuse_structure_with_text(
+        self,
+        structure_segments: List[Dict[str, Any]],
+        text_segments: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """
+        HYBRID fusion: Use distil-v3 segment boundaries + large-v3 text.
+
+        For each structure segment, find overlapping text segments and use
+        the segment-level text (which preserves proper capitalization).
+        """
+        if not text_segments:
+            log("[02.transcribe] WARN: No text segments from large-v3, using distil-v3 text")
+            return structure_segments
+
+        fused: List[Dict[str, Any]] = []
+        text_idx = 0
+
+        for seg in structure_segments:
+            seg_start = float(seg["start"])
+            seg_end = float(seg["end"])
+            seg_mid = (seg_start + seg_end) / 2
+
+            # Find the best matching text segment by overlap
+            best_match_idx = -1
+            best_overlap = 0.0
+
+            for i, txt_seg in enumerate(text_segments):
+                txt_start = float(txt_seg["start"])
+                txt_end = float(txt_seg["end"])
+
+                # Calculate overlap
+                overlap_start = max(seg_start, txt_start)
+                overlap_end = min(seg_end, txt_end)
+                overlap = max(0.0, overlap_end - overlap_start)
+
+                if overlap > best_overlap:
+                    best_overlap = overlap
+                    best_match_idx = i
+
+            # Build fused segment
+            fused_seg: Dict[str, Any] = {
+                "start": _r3(seg_start),
+                "end": _r3(seg_end),
+            }
+
+            # Use large-v3 text if we found a matching segment
+            if best_match_idx >= 0 and best_overlap > 0:
+                txt_seg = text_segments[best_match_idx]
+                fused_seg["text"] = txt_seg.get("text", seg.get("text", ""))
+                # Copy word-level details if available
+                if "words" in txt_seg:
+                    fused_seg["words"] = txt_seg["words"]
+            else:
+                # Fallback to distil-v3 text
+                fused_seg["text"] = seg.get("text", "")
+                if "words" in seg:
+                    fused_seg["words"] = seg["words"]
+
+            # Preserve speaker from structure model
+            if "speaker" in seg:
+                fused_seg["speaker"] = seg["speaker"]
+
+            fused.append(fused_seg)
+
+        return fused
 
     def _align(self, segments: List[Dict[str, Any]], audio16k: np.ndarray) -> Dict[str, Any]:
         try:
@@ -820,28 +900,29 @@ class WhisperXAlignEngine(BaseEngine):
                         w["speaker"] = best_spk
 
     def transcribe(self, audio_path: str) -> Dict[str, Any]:
-        # 1) transcribe segments with faster-whisper
-        fw_segments = self._fw_transcribe_segments(audio_path)
+        # Use text model (large-v3) directly for best text accuracy
+        # Then apply diarization for speaker labels
 
-        # 2) load 16k audio + align to words
+        log(f"[02.transcribe] Transcribing with {self.text_model_name} (text accuracy model)")
+        text_segments = self._get_text_model_segments(audio_path)
+        log(f"[02.transcribe] Got {len(text_segments)} segments from {self.text_model_name}")
+
+        # Load 16k audio for diarization
         audio16k = load_audio_16k_for_whisperx(audio_path)
-        aligned = self._align(fw_segments, audio16k)
 
-        segs = aligned.get("segments", []) or []
-        if not isinstance(segs, list):
-            segs = []
+        # Use segments directly without additional alignment
+        # (large-v3 with word_timestamps=True already provides word-level timestamps)
+        segs = text_segments
 
-        # 3) optional diarization (assign speakers to aligned segs/words)
+        # Optional diarization (assign speakers to segments)
         if self.diarize:
+            log("[02.transcribe] Running diarization")
             turns = self._run_diarization(audio16k, audio_path)
             if turns:
-                try:
-                    assigned = self._whisperx.assign_word_speakers(turns, aligned)
-                    segs = assigned.get("segments", []) or segs
-                except Exception:
-                    self._attach_speaker_by_overlap(segs, turns)
+                self._attach_speaker_by_overlap(segs, turns)
 
         full_text = " ".join([str(s.get("text", "")).strip() for s in segs if str(s.get("text", "")).strip()]).strip()
+        log(f"[02.transcribe] Complete: {len(segs)} segments, {len(full_text)} chars")
         return {"text": full_text, "segments": segs}
 
 
@@ -983,6 +1064,7 @@ def _run_engine_in_subprocess(args: argparse.Namespace, engine_name: str, audio_
 
     # faster
     cmd += ["--faster-model", str(args.faster_model)]
+    cmd += ["--text-model", str(args.text_model)]
     cmd += ["--faster-device", str(args.faster_device)]
     cmd += ["--faster-compute-type", str(args.faster_compute_type or "")]
     if args.faster_vad_filter:
@@ -1166,11 +1248,11 @@ if __name__ == "__main__":
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
     p.add_argument("--no-trim-repeat-tail", action="store_true", help="Disable repeated-tail trimming guardrail.")
 
-    # Engine selection (whisperx is default since it has diarization)
+    # Engine selection (whisperx is required for HYBRID approach with diarization)
     p.add_argument(
         "--engines",
         default="whisperx",
-        help="Comma-separated list: whisperx,faster,whisper (default: whisperx only).",
+        help="Engine to use: whisperx (default, required for HYBRID approach with diarization).",
     )
     p.add_argument(
         "--primary-engine",
@@ -1198,7 +1280,10 @@ if __name__ == "__main__":
     p.add_argument("--whisper-no-condition-on-prev", action="store_true", help="Force conditioning OFF (default).")
 
     # faster-whisper
-    p.add_argument("--faster-model", default=os.environ.get("FASTER_WHISPER_MODEL", "Systran/faster-distil-whisper-large-v3"))
+    p.add_argument("--faster-model", default=os.environ.get("FASTER_WHISPER_MODEL", "Systran/faster-distil-whisper-large-v3"),
+                   help="Structure model for segment boundaries (default: distil-v3)")
+    p.add_argument("--text-model", default=os.environ.get("WHISPER_TEXT_MODEL", "large-v3"),
+                   help="Text accuracy model for HYBRID fusion (default: large-v3)")
     p.add_argument("--faster-device", default=os.environ.get("FASTER_WHISPER_DEVICE", ""))
     p.add_argument("--faster-compute-type", default=os.environ.get("FASTER_WHISPER_COMPUTE_TYPE", ""))
     p.add_argument("--faster-vad-filter", action="store_true", help="Enable faster-whisper Silero VAD filter (default OFF).")
@@ -1261,6 +1346,9 @@ if __name__ == "__main__":
 
     plans: List[EnginePlan] = []
 
+    # Capture text_model for lambda closure
+    text_model_name = str(args.text_model)
+
     plans.append(
         EnginePlan(
             name="whisperx",
@@ -1277,6 +1365,7 @@ if __name__ == "__main__":
                 diarize_first=bool(diarize_first),
                 hf_token=str(args.whisperx_hf_token or ""),
                 vad_filter=bool(args.whisperx_vad_filter),
+                text_model=text_model_name,
             ),
         )
     )

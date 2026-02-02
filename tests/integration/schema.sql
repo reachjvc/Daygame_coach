@@ -82,14 +82,17 @@ CREATE INDEX idx_scenarios_user_id ON scenarios(user_id);
 
 -- ============================================
 -- Value comparisons table
+-- Updated 02-02-2026: Schema aligned with valueComparisonRepo.ts
 -- ============================================
 
 CREATE TABLE value_comparisons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  value_a TEXT NOT NULL,
-  value_b TEXT NOT NULL,
-  winner TEXT NOT NULL,
+  value_a_id TEXT NOT NULL,
+  value_b_id TEXT NOT NULL,
+  chosen_value_id TEXT NOT NULL,
+  comparison_type TEXT NOT NULL CHECK (comparison_type IN ('pairwise', 'aspirational_vs_current')),
+  round_number INTEGER,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -354,3 +357,46 @@ CREATE TABLE sticking_points (
 );
 
 CREATE INDEX idx_sticking_points_user_id ON sticking_points(user_id);
+
+-- ============================================
+-- Embeddings table (RAG training data)
+-- Note: Using DOUBLE PRECISION[] instead of vector type for testcontainers
+-- ============================================
+
+CREATE TABLE embeddings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  content TEXT NOT NULL,
+  source TEXT NOT NULL,
+  embedding DOUBLE PRECISION[] NOT NULL,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_embeddings_source ON embeddings(source);
+
+-- ============================================
+-- Values table (reference data for inner game)
+-- Added 02-02-2026 for valuesRepo tests
+-- ============================================
+
+CREATE TABLE values (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  category TEXT NOT NULL,
+  display_name TEXT,
+  description TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================
+-- User values junction table
+-- ============================================
+
+CREATE TABLE user_values (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  value_id UUID NOT NULL REFERENCES values(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, value_id)
+);
+
+CREATE INDEX idx_user_values_user_id ON user_values(user_id);

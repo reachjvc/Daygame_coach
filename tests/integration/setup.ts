@@ -127,6 +127,7 @@ export async function truncateAllTables(): Promise<void> {
 
   try {
     // Truncate in correct order to handle foreign key constraints
+    // user_values must come before profiles and values due to FKs
     await client.query(`
       TRUNCATE TABLE
         milestones,
@@ -138,9 +139,12 @@ export async function truncateAllTables(): Promise<void> {
         user_tracking_stats,
         inner_game_progress,
         value_comparisons,
+        user_values,
         scenarios,
         purchases,
-        profiles
+        profiles,
+        values,
+        embeddings
       RESTART IDENTITY CASCADE
     `)
   } finally {

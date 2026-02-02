@@ -60,3 +60,11 @@ export const VALIDATION_LIMITS = {
   maxTopK: 20,
   maxOutputTokens: 4096,
 }
+
+/**
+ * Timeout configuration.
+ */
+export const TIMEOUT_CONFIG = {
+  /** Maximum time to wait for QA API response (ms) */
+  qaRequestTimeoutMs: 30000,
+}

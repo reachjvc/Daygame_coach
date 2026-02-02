@@ -1,29 +1,7 @@
 # Testing Behavior
 
 **Status:** Active
-**Updated:** 31-01-2026 20:01
-
-## Changelog
-- 01-02-2026 11:10 - Added "False Pass Anti-Pattern" section documenting silent skip violations
-- 31-01-2026 20:01 - Added mandatory read requirement and related test plans reference
-- 31-01-2026 19:46 - Added architecture compliance tests and husky pre-commit hooks section
-- 30-01-2026 21:15 - Comprehensive rewrite: deterministic testing, testcontainers, TDD workflow, edge cases
-
----
-
-## Mandatory: Read Before Writing Tests
-
-**Before writing ANY new tests, you MUST:**
-
-1. Read this document (`docs/testing_behavior.md`) in full
-2. Read `CLAUDE.md` testing rules
-3. Check relevant test plan:
-   - `docs/better_tests_plan.md` - Integration & security tests
-   - `docs/supplementary_unit_tests_plan.md` - Pure function unit tests
-
-**This is non-negotiable.** Tests written without reading these docs will likely violate project standards.
-
----
+**Updated:** 02-02-2026
 
 ## Core Principles
 
@@ -68,15 +46,56 @@ const sessionId = await createTestSessionViaAPI(page, 'Test Location')
 2. Use helpers: `createTestSessionViaAPI()`, `createTestApproachViaAPI()`
 3. Clean up in `finally` block: `ensureNoActiveSessionViaAPI()`
 
-### 2. Real Dependencies via Testcontainers
+### 3. Real Dependencies via Testcontainers
 
 **No mocking of external services.** Use testcontainers for:
 - Database (PostgreSQL/Supabase)
 - Redis/cache layers
 
-### 3. Sensitive Information
+### 4. Sensitive Information
 
 **All secrets in `.env`** - never hardcode credentials in test files.
+
+### 5. Don't Test What You Just Created (False Confidence Pattern)
+
+**The problem:** Tests that insert data and then query it back only test that INSERT/SELECT work - not your production code.
+
+| Anti-pattern | What it actually tests |
+|--------------|------------------------|
+| Raw SQL INSERT → Raw SQL SELECT | PostgreSQL works |
+| `if (condition) { insert }` in test | Your test logic, not production logic |
+| Test creates data → asserts on same data | Nothing useful |
+
+```typescript
+// ❌ WRONG - Tests that PostgreSQL works, not your code
+await client.query(`INSERT INTO users (name) VALUES ('test')`)
+const result = await client.query(`SELECT * FROM users`)
+expect(result.rows).toHaveLength(1)  // Always passes!
+
+// ✅ CORRECT - Tests your actual production function
+import { createUser, getUsers } from '@/db/usersRepo'
+await createUser({ name: 'test' })
+const users = await getUsers()
+expect(users).toHaveLength(1)  // Tests real code path
+```
+
+**Solution:** Tests should call the **same functions users trigger**. If users call `saveComparison()`, tests should call `saveComparison()`, not `INSERT INTO value_comparisons`.
+
+### 6. Schema Tests vs Function Tests (Know the Difference)
+
+**Schema tests** (raw SQL against testcontainers):
+- Validate constraints, FKs, cascades
+- Don't test production code
+- Good for catching database drift
+
+**Function tests** (call actual repo/service functions):
+- Validate business logic, error handling
+- Require solving dependency injection for Supabase client
+- Better coverage but harder to set up
+
+**If you can't call production functions**, document what the test actually validates. Don't claim it tests the repo when it only tests the schema.
+
+See `tests/integration/db/*.integration.test.ts` headers for examples of proper documentation.
 
 ## Test Structure: Arrange-Act-Assert
 Every test follows AAA pattern with explicit comments:
@@ -110,13 +129,6 @@ test('should increment approach counter when tapping', async ({ page }) => {
 
 ## E2E Testing with Playwright
 
-### Configuration (headless=false required)
-playwright.config.ts always use 
-
-### Selector Strategy
-
-Use `data-testid` exclusively - no CSS classes or text content:
-
 ## Unit/Integration Testing with Vitest
 
 ### Test File Naming
@@ -140,49 +152,3 @@ The test script (`scripts/run-tests.sh`) must:
 2. Fail fast on first error
 3. Exit with non-zero code if any test fails
 4. Be updated whenever new test types are added
-
-## Production Code Testability
-
-### Design for Testability
-
-| Pattern | Why |
-|---------|-----|
-| Dependency injection | Swap real deps for test containers |
-| Explicit error types | Test specific error conditions |
-
-## Architecture Compliance Tests
-
-`tests/unit/architecture.test.ts` enforces CLAUDE.md rules automatically:
-
-| Check | Rule Enforced |
-|-------|---------------|
-| API route length | Max 50 lines (CLAUDE.md says 30, buffer added) |
-| No Supabase outside db/ | Database access only via `src/db/` |
-| Slice types in types.ts | Types centralized per slice |
-| Doc headers | Status/Updated required in docs |
-
-**Allowlists**: Existing violations are grandfathered in `ALLOWED_LONG_ROUTES` and `ALLOWED_TYPE_EXPORTS` sets. Remove items as violations get fixed.
-
-## Pre-Commit Hooks (Husky)
-
-`.husky/pre-commit` runs automatically on `git commit`:
-
-1. **Runs `npm test`** - all unit tests including architecture compliance
-2. **Checks changelog entries** - warns if modified docs are missing today's date
-
-Install hooks after cloning: `npm install` (runs `husky` via prepare script)
-
-## Pre-Commit Requirement
-
-**All tests must pass before returning to user.** Claude must run `npm test` and see green before completing any task.
-
----
-
-## Related Test Plans
-
-| Plan | Purpose | Location |
-|------|---------|----------|
-| **Integration & Security** | Testcontainers, RLS, auth, error handling | `docs/better_tests_plan.md` |
-| **Unit Tests** | Pure function coverage | `docs/supplementary_unit_tests_plan.md` |
-
-Both plans complement this document. Check them before adding new test files. 

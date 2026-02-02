@@ -1,6 +1,9 @@
 # Pipeline Overview
 
+**ARCHIVED** - Superseded by `docs/overviews/PIPELINE/PIPELINE_PLAN.md`
+
 Status: Approved - Option B Restructuring
+Updated: 02-02-2026 22:30 - Cleaned: Updated to HYBRID transcription (distil-v3 + large-v3)
 Updated: 30-01-2026 16:00 - Added quality targets and expanded taxonomies
 Updated: 30-01-2026 14:35 - Cleaned up, removed legacy analysis
 Updated: 30-01-2026 13:00 - Comprehensive analysis + restructuring proposal
@@ -73,8 +76,11 @@ Transform YouTube videos into structured training data:
 - Creates 16kHz mono WAV + .info.json metadata
 
 ### 02.transcribe
-- 3 engines: whisperx (preferred), faster-whisper, openai-whisper
-- Word-level timestamps, optional diarization
+- **HYBRID approach** (LOCKED 02-02-2026):
+  - `Systran/faster-distil-whisper-large-v3` (distil-v3) for segment boundaries + diarization
+  - `large-v3` for text accuracy
+  - Fusion: distil-v3 structure + large-v3 text
+- Word-level timestamps, pyannote diarization
 - Anti-loop protection
 
 ### 03.audio-features

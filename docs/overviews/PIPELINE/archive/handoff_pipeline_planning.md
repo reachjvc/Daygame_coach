@@ -1,5 +1,8 @@
 # Handoff: Pipeline Implementation
 
+**ARCHIVED** - Superseded by `docs/overviews/PIPELINE/PIPELINE_STATUS.md`
+
+**Updated:** 02-02-2026 22:30 - Cleaned: Updated to HYBRID transcription (distil-v3 + large-v3)
 **Updated:** 31-01-2026 18:20 - Pipeline tested on 5 videos, speaker embeddings working
 **Updated:** 31-01-2026 17:40 - Clarified next steps
 **Updated:** 31-01-2026 17:35 - Script reorganization COMPLETE
@@ -57,7 +60,7 @@ Phase 6: cleanup         [ ] Not Started
 ```
 scripts/training-data/
 ├── 01.download        → Audio files
-├── 02.transcribe      → Whisper → .full.json + .txt
+├── 02.transcribe      → HYBRID (distil-v3 + large-v3) → .full.json + .txt
 ├── 03.audio-features  → pitch, energy, tempo, speaker_embedding (resemblyzer)
 ├── 04.segment-enrich  → Speaker labels (LLM) + tone (audio thresholds)
 ├── 05.conversations   → Video type + conversation boundaries
@@ -76,7 +79,7 @@ Data flows: `01 → 02 → 03 → 04 → 05 → 06a → 06b → 07`
 1. **Regenerate 03.audio-features for all 456 videos** (resemblyzer is now installed)
 2. **Run full pipeline on all 456 videos** (Phases 1-4)
 3. **Test 07.ingest.ts** with Supabase connection
-4. **Test transcript engines** (whisperx vs faster vs whisper) - deferred
+4. ~~**Test transcript engines**~~ - RESOLVED: **HYBRID approach locked** (distil-v3 + large-v3) - see PIPELINE_PLAN.md
 
 ---
 
@@ -92,7 +95,7 @@ Data flows: `01 → 02 → 03 → 04 → 05 → 06a → 06b → 07`
 
 ## User Decisions Already Made
 
-- **Transcript engines:** Run quality comparison test BEFORE picking default (deferred)
+- **Transcription:** HYBRID approach locked (distil-v3 for structure + large-v3 for text) - see PIPELINE_PLAN.md
 - **Old scripts:** Moved to `old/` folder, retrieve if needed
 - **Speaker clustering:** Use existing `speaker_id` from 03.audio-features
 

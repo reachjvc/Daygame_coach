@@ -5,6 +5,7 @@ import { FormEvent, KeyboardEvent, useEffect, useMemo, useRef, useState } from "
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { QAResponse, Source, ConfidenceResult, MetaCognition } from "../types"
+import { TIMEOUT_CONFIG } from "../config"
 
 type Message = {
   role: "user" | "assistant"
@@ -66,13 +67,19 @@ export function QAPage() {
     setInput("")
 
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_CONFIG.qaRequestTimeoutMs)
+
       const response = await fetch("/api/qa", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question: trimmed,
         }),
+        signal: controller.signal,
       })
+
+      clearTimeout(timeoutId)
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => null)
@@ -101,10 +108,12 @@ export function QAPage() {
       setLatestMetaCognition(data.metaCognition || null)
       setLatestConfidence(data.confidence || null)
     } catch (fetchError) {
-      const message =
-        fetchError instanceof Error
-          ? fetchError.message
-          : "Unexpected error"
+      let message: string
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
+        message = "Request timed out. Please try again."
+      } else {
+        message = fetchError instanceof Error ? fetchError.message : "Unexpected error"
+      }
       setError(message)
       setMessages((prev) => [
         ...prev,
