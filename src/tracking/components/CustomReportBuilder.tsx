@@ -26,27 +26,13 @@ import {
   Clock,
   MapPin,
   TrendingUp,
-  Calendar,
 } from "lucide-react"
 
-import type { FieldDefinition, FieldCategory } from "@/src/tracking/types"
-import { FIELD_LIBRARY, CATEGORY_INFO, TEMPLATE_COLORS } from "@/src/tracking/config"
+import type { FieldDefinition, FieldCategory, SessionSummaryData } from "@/src/tracking/types"
+import { FIELD_LIBRARY, CATEGORY_INFO, TEMPLATE_COLORS, SESSION_IMPORT_FIELD_IDS } from "@/src/tracking/config"
 import { CATEGORY_ICONS } from "@/src/tracking/components/templateIcons"
-
-// Session data passed from parent
-interface SessionSummaryData {
-  approachCount: number
-  duration?: number
-  location?: string
-  startMood?: number
-  outcomes: {
-    blowout: number
-    short: number
-    good: number
-    number: number
-    instadate: number
-  }
-}
+import { SessionImportSection } from "./SessionImportSection"
+import { DatePicker } from "./DatePicker"
 
 interface CustomReportBuilderProps {
   sessionData?: SessionSummaryData | null
@@ -122,8 +108,11 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
   const [activeCategory, setActiveCategory] = useState<FieldCategory | "all">("all")
   const [showFieldPicker, setShowFieldPicker] = useState(true)
 
-  // Report date (separate from title)
-  const [reportDate, setReportDate] = useState<Date | null>(null)
+  // Report date (separate from title) - defaults to today
+  const [reportDate, setReportDate] = useState<Date>(new Date())
+
+  // Post-session mood (from SessionImportSection)
+  const [postSessionMood, setPostSessionMood] = useState<number | null>(null)
 
   // Save state
   const [isSaving, setIsSaving] = useState(false)
@@ -204,6 +193,23 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
     setIsSaving(true)
     setSaveError(null)
 
+    // Build fields array with post-session mood
+    const allFields = [
+      ...filledFields.map(f => ({
+        id: f.field.id,
+        label: f.field.label,
+        type: f.field.type,
+        value: f.value,
+      })),
+      // Include post-session mood if set
+      ...(postSessionMood !== null ? [{
+        id: SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD,
+        label: "How are you feeling now?",
+        type: "number" as const,
+        value: postSessionMood,
+      }] : []),
+    ]
+
     try {
       const response = await fetch("/api/tracking/templates/custom", {
         method: "POST",
@@ -215,12 +221,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
             title: mainFieldTitle,
             value: mainFieldValue,
           },
-          fields: filledFields.map(f => ({
-            id: f.field.id,
-            label: f.field.label,
-            type: f.field.type,
-            value: f.value,
-          })),
+          fields: allFields,
         }),
       })
 
@@ -429,51 +430,11 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
                 Report Title
                 <span className="text-muted-foreground font-normal ml-1">(optional)</span>
               </label>
-              <div className="flex items-center gap-2">
-                {/* Date display box - clickable to change date */}
-                {reportDate && (
-                  <label
-                    data-testid="report-date-display"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 shadow-sm cursor-pointer hover:border-primary/40 transition-colors"
-                  >
-                    <span className="text-sm font-medium text-foreground">
-                      {reportDate.toLocaleDateString('en-US', { weekday: 'short' })}
-                      <span className="text-muted-foreground mx-1">-</span>
-                      {reportDate.getDate()}
-                      <span className="text-muted-foreground mx-1">-</span>
-                      {reportDate.toLocaleDateString('en-US', { month: 'short' })}
-                    </span>
-                    <input
-                      type="date"
-                      data-testid="report-date-picker"
-                      value={reportDate.toISOString().split('T')[0]}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setReportDate(new Date(e.target.value + 'T12:00:00'))
-                        }
-                      }}
-                      className="sr-only"
-                    />
-                  </label>
-                )}
-                <button
-                  type="button"
-                  data-testid="report-today-button"
-                  onClick={() => setReportDate(new Date())}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    reportDate
-                      ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-primary/30 text-primary hover:bg-primary/10'
-                  }`}
-                >
-                  {reportDate ? (
-                    <Check className="size-3" />
-                  ) : (
-                    <Calendar className="size-3" />
-                  )}
-                  Today
-                </button>
-              </div>
+              <DatePicker
+                date={reportDate}
+                onDateChange={setReportDate}
+                data-testid="report-date-display"
+              />
             </div>
             <Input
               value={mainFieldTitle}
@@ -499,6 +460,13 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
               className="resize-none text-base"
             />
           </div>
+
+          {/* Session Import Section - shows session context and current mood picker */}
+          <SessionImportSection
+            sessionData={sessionData ?? null}
+            postSessionMood={postSessionMood}
+            onPostSessionMoodChange={setPostSessionMood}
+          />
         </Card>
 
         {/* Filled fields */}

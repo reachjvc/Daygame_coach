@@ -70,7 +70,14 @@ export interface SessionGoal {
 // Field Report Types
 // ============================================
 
+export interface ApproachMoodEntry {
+  approachNumber: number
+  mood: number | null
+  timestamp: string
+}
+
 export interface SessionSummaryData {
+  // Basic stats
   approachCount: number
   duration: number | null
   location: string | null
@@ -78,6 +85,15 @@ export interface SessionSummaryData {
   averageMood: number | null
   tags: string[]
   startedAt: string
+  // Pre-session intentions
+  goal: number | null
+  preSessionMood: number | null
+  sessionFocus: string | null
+  techniqueFocus: string | null
+  ifThenPlan: string | null
+  customIntention: string | null
+  // Per-approach mood timeline
+  approachMoods: ApproachMoodEntry[]
 }
 
 // ============================================

@@ -144,8 +144,6 @@ RETRY_SLEEP="${RETRY_SLEEP:-2}"
 
 # ASR audio standardization
 ASR_SAMPLE_RATE="${ASR_SAMPLE_RATE:-16000}"
-
-ASR_CLEAN_FILTERS="${ASR_CLEAN_FILTERS:-highpass=f=80,lowpass=f=8000,afftdn=nf=-25,alimiter=limit=0.97}"
 ASR_RESYNC_FILTER="${ASR_RESYNC_FILTER:-aresample=async=1:first_pts=0}"
 
 MAKE_PREVIEW_MP3="${MAKE_PREVIEW_MP3:-1}"
@@ -487,7 +485,7 @@ dl_with_backoff() {
 }
 
 # --------------------------
-# ASR building (same as your logic)
+# ASR building
 # --------------------------
 make_asr_outputs_for_input() {
   local in_audio="$1"
@@ -495,7 +493,6 @@ make_asr_outputs_for_input() {
 
   local stem="${in_audio%.*}"
   local raw_out="${stem}.asr.raw16k.wav"
-  local clean_out="${stem}.asr.clean16k.wav"
   local mp3_out="${stem}.listen.mp3"
 
   if [[ ! -f "$raw_out" ]]; then
@@ -505,39 +502,6 @@ make_asr_outputs_for_input() {
       -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
       -af "$ASR_RESYNC_FILTER" \
       "$raw_out" || echo "⚠️ RAW WAV failed: $raw_out" >>"$log_file"
-  fi
-
-  if [[ ! -f "$clean_out" ]]; then
-    run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
-      -i "$in_audio" \
-      -map 0:a:0? -vn -sn -dn \
-      -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
-      -af "$ASR_CLEAN_FILTERS,$ASR_RESYNC_FILTER" \
-      "$clean_out" || echo "⚠️ CLEAN WAV failed: $clean_out" >>"$log_file"
-  fi
-
-  if [[ -f "$raw_out" && -f "$clean_out" && "$FFPROBE_OK" -eq 1 ]]; then
-    local d_raw d_clean min_ok
-    d_raw="$(ffprobe_duration_sec "$raw_out")"
-    d_clean="$(ffprobe_duration_sec "$clean_out")"
-    min_ok="$(awk -v r="$d_raw" 'BEGIN{printf "%.3f", (r - 0.500)}')"
-
-    if awk -v c="$d_clean" -v m="$min_ok" 'BEGIN{exit !(c < m)}'; then
-      local safer_filters="highpass=f=80,lowpass=f=8000,alimiter=limit=0.97"
-      rm -f "$clean_out" 2>/dev/null || true
-      run_ffmpeg "$log_file" -hide_banner -loglevel warning -y \
-        -i "$in_audio" \
-        -map 0:a:0? -vn -sn -dn \
-        -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
-        -af "$safer_filters,$ASR_RESYNC_FILTER" \
-        "$clean_out" || true
-
-      d_clean="$(ffprobe_duration_sec "$clean_out")"
-      min_ok="$(awk -v r="$d_raw" 'BEGIN{printf "%.3f", (r - 0.500)}')"
-      if awk -v c="$d_clean" -v m="$min_ok" 'BEGIN{exit !(c < m)}'; then
-        cp -f "$raw_out" "$clean_out"
-      fi
-    fi
   fi
 
   if [[ "$MAKE_PREVIEW_MP3" == "1" && ! -f "$mp3_out" ]]; then

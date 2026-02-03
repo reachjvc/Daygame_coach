@@ -43,6 +43,7 @@ export function ProgressDashboard() {
   const { state, deleteSession, refresh } = useTrackingStats()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [sessionsExpanded, setSessionsExpanded] = useState(false)
+  const [achievementsListExpanded, setAchievementsListExpanded] = useState(false)
   const [achievementsExpanded, setAchievementsExpanded] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
 
@@ -193,57 +194,77 @@ export function ProgressDashboard() {
         </Card>
 
         {/* Recent Milestones */}
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">Recent Achievements</h2>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setAchievementsExpanded(true)}
-              className="gap-1"
+        <div className="relative">
+          <Card className="p-6 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-lg">Recent Achievements</h2>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAchievementsExpanded(true)}
+                className="gap-1"
+              >
+                <Trophy className="size-4" />
+                View All
+              </Button>
+            </div>
+            {state.milestones.length > 0 ? (
+              <div className="space-y-3" data-testid="recent-achievements-list">
+                {(achievementsListExpanded ? state.milestones : state.milestones.slice(0, 3)).map((milestone) => {
+                  const info = getMilestoneInfo(milestone.milestone_type)
+                  return (
+                    <div
+                      key={milestone.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${getTierBg(info.tier)}`}
+                      data-testid="achievement-item"
+                    >
+                      {/* Achievement Badge */}
+                      <div className={`relative size-12 rounded-full bg-gradient-to-br ${getTierColor(info.tier)} flex items-center justify-center shadow-lg shrink-0`}>
+                        <span className="text-xl">{info.emoji}</span>
+                        {/* Shine effect */}
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/30 to-transparent" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold truncate">
+                          {info.label}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {info.description}
+                        </div>
+                        <div className="text-xs text-muted-foreground/70 capitalize mt-0.5">
+                          {info.tier} • {new Date(milestone.achieved_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Award className="size-12 mx-auto mb-3 opacity-30" />
+                <p>No achievements yet</p>
+                <p className="text-sm">Start approaching to earn your first!</p>
+              </div>
+            )}
+          </Card>
+          {/* Floating expand button for achievements */}
+          {state.milestones.length > 3 && (
+            <button
+              onClick={() => setAchievementsListExpanded(!achievementsListExpanded)}
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 group flex items-center gap-2 pl-4 pr-3 py-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 hover:shadow-xl"
+              data-testid="achievements-expand-button"
             >
-              <Trophy className="size-4" />
-              View All
-            </Button>
-          </div>
-          {state.milestones.length > 0 ? (
-            <div className="space-y-3">
-              {state.milestones.slice(0, 5).map((milestone) => {
-                const info = getMilestoneInfo(milestone.milestone_type)
-                return (
-                  <div
-                    key={milestone.id}
-                    className={`flex items-center gap-3 p-3 rounded-lg ${getTierBg(info.tier)}`}
-                  >
-                    {/* Achievement Badge */}
-                    <div className={`relative size-12 rounded-full bg-gradient-to-br ${getTierColor(info.tier)} flex items-center justify-center shadow-lg shrink-0`}>
-                      <span className="text-xl">{info.emoji}</span>
-                      {/* Shine effect */}
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-white/30 to-transparent" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold truncate">
-                        {info.label}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {info.description}
-                      </div>
-                      <div className="text-xs text-muted-foreground/70 capitalize mt-0.5">
-                        {info.tier} • {new Date(milestone.achieved_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Award className="size-12 mx-auto mb-3 opacity-30" />
-              <p>No achievements yet</p>
-              <p className="text-sm">Start approaching to earn your first!</p>
-            </div>
+              <span className="text-sm font-medium">
+                {achievementsListExpanded ? "Show less" : `${state.milestones.length - 3} more`}
+              </span>
+              {achievementsListExpanded ? (
+                <ChevronUp className="size-4" />
+              ) : (
+                <ChevronDown className="size-4" />
+              )}
+            </button>
           )}
-        </Card>
+        </div>
 
         {/* All Achievements Modal */}
         {achievementsExpanded && (

@@ -25,15 +25,28 @@ interface StartSessionOptions {
   preMood?: number
 }
 
+interface EndedSessionInfo {
+  id: string
+  approachCount: number
+  duration: string
+  endedAt: string
+}
+
 interface UseSessionReturn {
   state: SessionState
   liveStats: LiveStats
+  endedSession: EndedSessionInfo | null
   startSession: (options?: StartSessionOptions) => Promise<boolean>
   endSession: () => Promise<void>
   addApproach: (data?: ApproachFormData) => Promise<void>
   updateLastApproach: (data: ApproachFormData) => Promise<void>
   setGoal: (goal: number) => Promise<void>
+  revalidateSession: () => Promise<void>
+  reactivateSession: () => Promise<boolean>
+  clearEndedSession: () => void
 }
+
+const ENDED_SESSION_STORAGE_KEY = "daygame_ended_session"
 
 export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessionOptions): UseSessionReturn {
   const [state, setState] = useState<SessionState>({
@@ -44,8 +57,30 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
     error: null,
   })
 
+  const [endedSession, setEndedSession] = useState<EndedSessionInfo | null>(null)
+
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const [, forceUpdate] = useState(0)
+
+  // Load ended session from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem(ENDED_SESSION_STORAGE_KEY)
+      if (stored) {
+        const parsed = JSON.parse(stored) as EndedSessionInfo
+        // Only show if ended within the last hour
+        const endedAt = new Date(parsed.endedAt)
+        const hourAgo = new Date(Date.now() - 60 * 60 * 1000)
+        if (endedAt > hourAgo) {
+          setEndedSession(parsed)
+        } else {
+          sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+        }
+      }
+    } catch {
+      sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+    }
+  }, [])
 
   // Force re-render every second for live timers
   useEffect(() => {
@@ -64,6 +99,20 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   // Load active session on mount
   useEffect(() => {
     loadActiveSession()
+  }, [userId])
+
+  // Revalidate session when page is restored from bfcache (back/forward navigation)
+  // This prevents "zombie sessions" where old React state shows an ended session as active
+  useEffect(() => {
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        // Page was restored from bfcache - revalidate session status
+        loadActiveSession()
+      }
+    }
+
+    window.addEventListener("pageshow", handlePageShow)
+    return () => window.removeEventListener("pageshow", handlePageShow)
   }, [userId])
 
   const loadActiveSession = async () => {
@@ -134,10 +183,16 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   const endSession = useCallback(async () => {
     if (!state.session) return
 
+    // Capture session info before clearing state
+    const sessionId = state.session.id
+    const approachCount = state.approaches.length
+    const startedAt = new Date(state.session.started_at)
+    const duration = formatDuration(Date.now() - startedAt.getTime())
+
     setState((prev) => ({ ...prev, isLoading: true }))
 
     try {
-      const response = await fetch(`/api/tracking/session/${state.session.id}/end`, {
+      const response = await fetch(`/api/tracking/session/${sessionId}/end`, {
         method: "POST",
       })
 
@@ -145,7 +200,17 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
         throw new Error("Failed to end session")
       }
 
-      const endedSession = await response.json()
+      const endedSessionData = await response.json()
+
+      // Store ended session info for "Session Ended" UI
+      const endedInfo: EndedSessionInfo = {
+        id: sessionId,
+        approachCount,
+        duration,
+        endedAt: new Date().toISOString(),
+      }
+      sessionStorage.setItem(ENDED_SESSION_STORAGE_KEY, JSON.stringify(endedInfo))
+      setEndedSession(endedInfo)
 
       setState({
         session: null,
@@ -155,7 +220,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
         error: null,
       })
 
-      onSessionEnded?.(endedSession)
+      onSessionEnded?.(endedSessionData)
     } catch (error) {
       setState((prev) => ({
         ...prev,
@@ -163,7 +228,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
         error: error instanceof Error ? error.message : "Failed to end session",
       }))
     }
-  }, [state.session, onSessionEnded])
+  }, [state.session, state.approaches.length, onSessionEnded])
 
   const addApproach = useCallback(async (data?: ApproachFormData) => {
     if (!state.session) return
@@ -290,17 +355,73 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
     }
   }, [state.session])
 
+  // Allow manual revalidation of session status
+  const revalidateSession = useCallback(async () => {
+    await loadActiveSession()
+  }, [])
+
+  // Re-activate an ended session (for editing)
+  const reactivateSession = useCallback(async (): Promise<boolean> => {
+    if (!endedSession) return false
+
+    setState((prev) => ({ ...prev, isLoading: true, error: null }))
+
+    try {
+      const response = await fetch(`/api/tracking/session/${endedSession.id}/reactivate`, {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to reactivate session")
+      }
+
+      const { session, approaches } = await response.json()
+
+      // Clear ended session info
+      sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+      setEndedSession(null)
+
+      setState({
+        session,
+        approaches: approaches || [],
+        isActive: true,
+        isLoading: false,
+        error: null,
+      })
+
+      return true
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to reactivate session",
+      }))
+      return false
+    }
+  }, [endedSession])
+
+  // Clear ended session info (dismiss the banner)
+  const clearEndedSession = useCallback(() => {
+    sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+    setEndedSession(null)
+  }, [])
+
   // Calculate live stats
   const liveStats = calculateLiveStats(state)
 
   return {
     state,
     liveStats,
+    endedSession,
     startSession,
     endSession,
     addApproach,
     updateLastApproach,
     setGoal,
+    revalidateSession,
+    reactivateSession,
+    clearEndedSession,
   }
 }
 

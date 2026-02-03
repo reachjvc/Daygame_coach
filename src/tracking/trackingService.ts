@@ -15,6 +15,7 @@ import {
   getActiveSession as repoGetActiveSession,
   updateSession as repoUpdateSession,
   endSession as repoEndSession,
+  reactivateSession as repoReactivateSession,
   deleteSession as repoDeleteSession,
   getSessionWithApproaches as repoGetSessionWithApproaches,
   getUserSessions as repoGetUserSessions,
@@ -115,6 +116,10 @@ export async function updateSession(
 
 export async function endSession(sessionId: string): Promise<SessionRow> {
   return repoEndSession(sessionId)
+}
+
+export async function reactivateSession(sessionId: string): Promise<SessionWithApproaches> {
+  return repoReactivateSession(sessionId)
 }
 
 export async function deleteSession(sessionId: string, userId: string): Promise<void> {

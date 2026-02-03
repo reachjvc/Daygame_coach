@@ -9,22 +9,19 @@ Usage:
   B) Batch sources:  ./02.transcribe --sources docs/sources.txt
   C) Single file:    ./02.transcribe --audio path/to/audio.wav --out output.full.json
 
-Transcription Model (LOCKED 02-02-2026):
-  large-v3 with condition_on_previous_text=True
-    - Best for accuracy: proper nouns, punctuation, capitalization
-    - Produces raw segments with word-level timestamps
+Transcription Model (UPDATED 03-02-2026):
+  large-v3 with condition_on_previous_text=False (default)
+    - Prevents hallucination loops (repeated phrases)
+    - Uses raw audio to capture quieter voices (e.g., women's responses in infield)
+    - Trade-off: Minor capitalization inconsistencies on proper nouns
 
-Hallucination Remediation (Manual):
-  Videos with hallucination (3+ consecutive repeated sentences) are flagged
-  to `.flagged.json` for manual review. To remediate, re-run with:
-    ./02.transcribe --audio <path> --out <output> --no-condition-on-prev --overwrite
-  This disables the feedback loop that causes hallucination propagation.
-  Trade-off: May have minor capitalization inconsistencies on proper nouns.
+  To enable condition_on_previous_text (better capitalization, risk of hallucination):
+    ./02.transcribe --audio <path> --out <output> --condition-on-prev
 
 Note: This script ONLY does transcription. Alignment and diarization are
       handled by subsequent scripts (03.align, 04.diarize).
 
-Input:  data/01.download/<source>/<video>/*.audio.asr.clean16k.wav
+Input:  data/01.download/<source>/<video>/*.audio.asr.raw16k.wav
 Output: data/02.transcribe/<source>/<video>/<video>.full.json + .txt
 """
 
@@ -442,28 +439,12 @@ class FasterWhisperEngine(BaseEngine):
 # Audio selection
 # --------------------------
 
-def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Optional[Path]:
-    clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
+def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "raw") -> Optional[Path]:
     raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
     legacy = sorted(video_dir.glob("*.wav"))
 
-    if prefer == "raw" and raw:
-        return raw[0]
     if prefer == "legacy" and legacy:
         return legacy[0]
-
-    if clean:
-        clean_path = clean[0]
-        if raw:
-            raw_path = raw[0]
-            d_clean = wav_duration_sec_fast(clean_path)
-            d_raw = wav_duration_sec_fast(raw_path)
-            if d_clean is not None and d_raw is not None and d_clean < (0.95 * d_raw):
-                log("[02.transcribe] WARN: clean audio appears truncated vs raw -> using raw instead.")
-                log(f"[02.transcribe]   clean: {d_clean:.2f}s")
-                log(f"[02.transcribe]   raw  : {d_raw:.2f}s")
-                return raw_path
-        return clean_path
 
     if raw:
         return raw[0]
@@ -641,7 +622,7 @@ if __name__ == "__main__":
     p.add_argument("--out", help="Single-file output .full.json.")
 
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
-    p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
+    p.add_argument("--prefer-audio", choices=["raw", "legacy"], default="raw")
 
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
 
@@ -654,13 +635,13 @@ if __name__ == "__main__":
     p.add_argument("--temperature", type=float, default=float(os.environ.get("WHISPER_TEMPERATURE", "0.0")))
     p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
     p.add_argument("--vad-filter", action="store_true", help="Enable Silero VAD filter (default OFF).")
-    p.add_argument("--no-condition-on-prev", action="store_true", help="Disable condition_on_previous_text.")
+    p.add_argument("--condition-on-prev", action="store_true", help="Enable condition_on_previous_text (better caps, risk of hallucination).")
 
     args = p.parse_args()
 
     device = _auto_device(args.device)
     compute_type = (args.compute_type or "").strip().lower() or ("int8_float16" if device == "cuda" else "int8")
-    condition_on_prev = not args.no_condition_on_prev
+    condition_on_prev = args.condition_on_prev
 
     log(f"[02.transcribe] Model: {args.model} | device={device} | condition_on_previous_text={condition_on_prev}")
 

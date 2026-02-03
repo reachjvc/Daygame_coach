@@ -38,14 +38,8 @@ const TEMPLATES: TemplateData[] = [
     description: "Minimum viable logging. Capture that it happened.",
     icon: "zap",
     estimated_minutes: 1,
+    // Note: Post-session mood is handled by SessionImportSection (standardized 5-emoji picker)
     static_fields: [
-      {
-        id: "mood",
-        type: "select",
-        label: "How do you feel?",
-        options: ["😤", "😐", "😊", "🔥"],
-        required: true,
-      },
       {
         id: "approaches",
         type: "number",
@@ -88,14 +82,8 @@ const TEMPLATES: TemplateData[] = [
     description: "Quick learning loop. Extract the key lesson.",
     icon: "file-text",
     estimated_minutes: 3,
+    // Note: Post-session mood is handled by SessionImportSection (standardized 5-emoji picker)
     static_fields: [
-      {
-        id: "mood",
-        type: "select",
-        label: "How do you feel?",
-        options: ["😤", "😐", "😊", "🔥"],
-        required: true,
-      },
       {
         id: "approaches",
         type: "number",
@@ -159,14 +147,8 @@ const TEMPLATES: TemplateData[] = [
     description: "Full forensic analysis for notable sessions.",
     icon: "microscope",
     estimated_minutes: 10,
+    // Note: Post-session mood is handled by SessionImportSection (standardized 5-emoji picker)
     static_fields: [
-      {
-        id: "mood",
-        type: "select",
-        label: "How do you feel?",
-        options: ["😤", "😐", "😊", "🔥"],
-        required: true,
-      },
       {
         id: "approaches",
         type: "number",
@@ -280,14 +262,8 @@ const TEMPLATES: TemplateData[] = [
     description: "Turn harsh rejections into growth fuel",
     icon: "flame",
     estimated_minutes: 5,
+    // Note: Post-session mood is handled by SessionImportSection (standardized 5-emoji picker)
     static_fields: [
-      {
-        id: "mood",
-        type: "select",
-        label: "How do you feel?",
-        options: ["😤", "😐", "😊", "🔥"],
-        required: true,
-      },
       {
         id: "approaches",
         type: "number",
@@ -354,6 +330,24 @@ async function main() {
 
   console.log("Seeding field report templates...")
 
+  // Step 1: Delete orphaned system templates (idempotency)
+  const validSlugs = TEMPLATES.map((t) => t.slug)
+  const { data: orphans } = await supabase
+    .from("field_report_templates")
+    .select("slug")
+    .eq("is_system", true)
+    .not("slug", "in", `(${validSlugs.join(",")})`)
+
+  if (orphans && orphans.length > 0) {
+    console.log(`  Removing ${orphans.length} orphaned template(s): ${orphans.map((o) => o.slug).join(", ")}`)
+    await supabase
+      .from("field_report_templates")
+      .delete()
+      .eq("is_system", true)
+      .not("slug", "in", `(${validSlugs.join(",")})`)
+  }
+
+  // Step 2: Upsert templates
   for (const template of TEMPLATES) {
     console.log(`  Processing: ${template.name} (${template.slug})`)
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -20,18 +20,19 @@ import {
   Star,
   X,
   Heart,
-  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { SessionSummaryData } from "../types"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES } from "../config"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES, SESSION_IMPORT_FIELD_IDS } from "../config"
 import { TEMPLATE_ICONS } from "./templateIcons"
 import { FieldRenderer } from "./FieldRenderer"
+import { SessionImportSection } from "./SessionImportSection"
 import { KeyStatsSection } from "./KeyStatsSection"
 import { PrinciplesSection } from "./PrinciplesSection"
 import { ResearchDomainsSection } from "./ResearchDomainsSection"
 import { CustomReportBuilder } from "./CustomReportBuilder"
+import { DatePicker } from "./DatePicker"
 
 interface FieldReportPageProps {
   userId: string
@@ -62,7 +63,11 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const [isTogglingFavorite, setIsTogglingFavorite] = useState<string | null>(null)
   const [showCustomBuilder, setShowCustomBuilder] = useState(false)
   const [reportTitle, setReportTitle] = useState("")
-  const [reportDate, setReportDate] = useState<Date | null>(null)
+  const [reportDate, setReportDate] = useState<Date>(new Date())
+  const [postSessionMood, setPostSessionMood] = useState<number | null>(null)
+
+  // Ref for scrolling to template section when coming from ended session
+  const templateSectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadTemplates()
@@ -75,6 +80,17 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     // This prevents browser back from navigating away entirely when closing modals
     window.history.replaceState({ fieldReportHome: true }, '')
   }, [sessionId])
+
+  // Scroll to template section when coming from ended session
+  useEffect(() => {
+    if (sessionId && !isLoading && templateSectionRef.current) {
+      // Small delay to ensure DOM is fully rendered
+      const timeoutId = setTimeout(() => {
+        templateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 100)
+      return () => clearTimeout(timeoutId)
+    }
+  }, [sessionId, isLoading])
 
   const loadRecentlyUsedTemplate = async () => {
     try {
@@ -149,8 +165,9 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         setSelectedTemplate(null)
         setFormValues({})
         setReportTitle("")
-        setReportDate(null)
+        setReportDate(new Date())
         setSubmitError(null)
+        setPostSessionMood(null)
         // Restore the home state if we went too far back
         if (!event.state?.fieldReportHome) {
           window.history.replaceState({ fieldReportHome: true }, '')
@@ -182,6 +199,13 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         let moodCount = 0
         const tagsSet = new Set<string>()
 
+        // Build approach mood timeline
+        const approachMoods = session.approaches.map((approach, index) => ({
+          approachNumber: index + 1,
+          mood: approach.mood,
+          timestamp: approach.timestamp,
+        }))
+
         for (const approach of session.approaches) {
           if (approach.outcome) {
             outcomes[approach.outcome]++
@@ -196,6 +220,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         }
 
         setSessionData({
+          // Basic stats
           approachCount: session.approaches.length,
           duration: session.duration_minutes,
           location: session.primary_location,
@@ -203,6 +228,15 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           averageMood: moodCount > 0 ? Math.round(moodSum / moodCount) : null,
           tags: Array.from(tagsSet),
           startedAt: session.started_at,
+          // Pre-session intentions
+          goal: session.goal,
+          preSessionMood: session.pre_session_mood,
+          sessionFocus: session.session_focus,
+          techniqueFocus: session.technique_focus,
+          ifThenPlan: session.if_then_plan,
+          customIntention: session.custom_intention,
+          // Per-approach mood timeline
+          approachMoods,
         })
       }
     } catch (error) {
@@ -261,6 +295,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   }, [templates, favoriteTemplateIds, recentlyUsedTemplateId])
 
   // Get all fields to render (static + active dynamic)
+  // When session data exists, filter out approach count fields since they're shown in Session Context
   const fieldsToRender = useMemo((): TemplateField[] => {
     if (!selectedTemplate) return []
 
@@ -269,9 +304,20 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     const activeIds = selectedTemplate.active_dynamic_fields || []
 
     const activeDynamic = dynamicFields.filter(f => activeIds.includes(f.id))
+    let allFields = [...staticFields, ...activeDynamic]
 
-    return [...staticFields, ...activeDynamic]
-  }, [selectedTemplate])
+    // Filter out approach-related number fields when session data exists
+    // (approach count is already displayed in Session Context section)
+    if (sessionData) {
+      allFields = allFields.filter(field => {
+        const fieldIdLower = field.id.toLowerCase()
+        const isApproachField = fieldIdLower.includes("approach") && field.type === "number"
+        return !isApproachField
+      })
+    }
+
+    return allFields
+  }, [selectedTemplate, sessionData])
 
   // Pre-fill form values when template is selected
   useEffect(() => {
@@ -331,8 +377,9 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     setSelectedTemplate(null)
     setFormValues({})
     setReportTitle("")
-    setReportDate(null)
+    setReportDate(new Date())
     setSubmitError(null)
+    setPostSessionMood(null)
     // Go back in history to remove our pushed state
     window.history.back()
   }
@@ -340,6 +387,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const handleSubmit = async (isDraft: boolean) => {
     setIsSubmitting(true)
     setSubmitError(null)
+
+    // Include post-session mood in fields
+    const fieldsWithMood = {
+      ...formValues,
+      ...(postSessionMood !== null && { [SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD]: postSessionMood }),
+    }
 
     try {
       const response = await fetch("/api/tracking/field-report", {
@@ -350,7 +403,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           session_id: sessionId,
           title: reportTitle || undefined,
           report_date: reportDate?.toISOString() || undefined,
-          fields: formValues,
+          fields: fieldsWithMood,
           approach_count: sessionData?.approachCount,
           location: sessionData?.location,
           tags: sessionData?.tags,
@@ -511,7 +564,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         )}
 
         {/* Template Selection Header */}
-        <div className="mb-6">
+        <div ref={templateSectionRef} className="mb-6 scroll-mt-6">
           <h2 className="text-2xl font-bold text-foreground">Choose Your Template</h2>
           <p className="text-muted-foreground mt-1">Match the depth to your session</p>
         </div>
@@ -921,53 +974,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">
                 Report Title
-                <span className="text-muted-foreground font-normal ml-1">(optional)</span>
               </label>
-              <div className="flex items-center gap-2">
-                {/* Date display box - clickable to change date */}
-                {reportDate && (
-                  <label
-                    data-testid="report-date-display"
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 shadow-sm cursor-pointer hover:border-primary/40 transition-colors"
-                  >
-                    <span className="text-sm font-medium text-foreground">
-                      {reportDate.toLocaleDateString('en-US', { weekday: 'short' })}
-                      <span className="text-muted-foreground mx-1">-</span>
-                      {reportDate.getDate()}
-                      <span className="text-muted-foreground mx-1">-</span>
-                      {reportDate.toLocaleDateString('en-US', { month: 'short' })}
-                    </span>
-                    <input
-                      type="date"
-                      data-testid="report-date-picker"
-                      value={reportDate.toISOString().split('T')[0]}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          setReportDate(new Date(e.target.value + 'T12:00:00'))
-                        }
-                      }}
-                      className="sr-only"
-                    />
-                  </label>
-                )}
-                <button
-                  type="button"
-                  data-testid="report-today-button"
-                  onClick={() => setReportDate(new Date())}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
-                    reportDate
-                      ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-primary/30 text-primary hover:bg-primary/10'
-                  }`}
-                >
-                  {reportDate ? (
-                    <Check className="size-3" />
-                  ) : (
-                    <Calendar className="size-3" />
-                  )}
-                  Today
-                </button>
-              </div>
+              <DatePicker
+                date={reportDate}
+                onDateChange={setReportDate}
+                data-testid="report-date-display"
+              />
             </div>
             <Input
               value={reportTitle}
@@ -976,6 +988,13 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
               className="text-lg font-medium"
             />
           </div>
+
+          {/* Session Import Section - shows session context and current mood picker */}
+          <SessionImportSection
+            sessionData={sessionData}
+            postSessionMood={postSessionMood}
+            onPostSessionMoodChange={setPostSessionMood}
+          />
 
           <div className="space-y-6">
             {fieldsToRender.map((field) => (

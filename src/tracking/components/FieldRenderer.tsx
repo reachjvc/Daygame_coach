@@ -29,8 +29,8 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
   const [tagInput, setTagInput] = useState("")
 
   const inputClassName = cn(
-    "transition-all duration-200",
-    variant === "card" && "bg-background/50 border-border/50 focus:border-primary"
+    "transition-all duration-200 bg-background border-border/50",
+    variant === "card" && "bg-background/50 focus:border-primary"
   )
 
   const renderField = () => {
@@ -39,6 +39,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         return (
           <Input
             id={field.id}
+            data-testid={`field-input-${field.id}`}
             placeholder={field.placeholder}
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
@@ -50,6 +51,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         return (
           <textarea
             id={field.id}
+            data-testid={`field-input-${field.id}`}
             placeholder={field.placeholder}
             value={(value as string) || ""}
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
@@ -65,6 +67,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         return (
           <Input
             id={field.id}
+            data-testid={`field-input-${field.id}`}
             type="number"
             placeholder={field.placeholder}
             value={value !== undefined && value !== null ? String(value) : ""}
@@ -79,11 +82,12 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         // Special emoji mood picker
         if (isEmojiOptions(field.options)) {
           return (
-            <div className="flex gap-2 sm:gap-3">
-              {field.options?.map((option) => (
+            <div className="flex gap-2 sm:gap-3" data-testid={`field-select-${field.id}`}>
+              {field.options?.map((option, index) => (
                 <button
                   key={option}
                   type="button"
+                  data-testid={`field-option-${field.id}-${index}`}
                   onClick={() => onChange(option)}
                   className={cn(
                     "text-2xl sm:text-3xl p-2 sm:p-3 rounded-xl transition-all duration-200 hover:scale-110",
@@ -100,11 +104,12 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         }
         // Regular button group select
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-testid={`field-select-${field.id}`}>
             {field.options?.map((option) => (
               <Button
                 key={option}
                 type="button"
+                data-testid={`field-option-${field.id}-${option.toLowerCase().replace(/\s+/g, '-')}`}
                 variant={value === option ? "default" : "outline"}
                 size="sm"
                 onClick={() => onChange(option)}
@@ -120,13 +125,14 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
       case "multiselect": {
         const selectedValues = (value as string[]) || []
         return (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2" data-testid={`field-multiselect-${field.id}`}>
             {field.options?.map((option) => {
               const isSelected = selectedValues.includes(option)
               return (
                 <Button
                   key={option}
                   type="button"
+                  data-testid={`field-option-${field.id}-${option.toLowerCase().replace(/\s+/g, '-')}`}
                   variant={isSelected ? "default" : "outline"}
                   size="sm"
                   onClick={() => {
@@ -152,11 +158,12 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         const max = field.max ?? 5
         const scaleOptions = Array.from({ length: max - min + 1 }, (_, i) => min + i)
         return (
-          <div className="flex gap-2">
+          <div className="flex gap-2" data-testid={`field-scale-${field.id}`}>
             {scaleOptions.map((num) => (
               <button
                 key={num}
                 type="button"
+                data-testid={`field-scale-${field.id}-${num}`}
                 onClick={() => onChange(num)}
                 className={cn(
                   "w-11 h-11 rounded-xl font-semibold transition-all duration-200",
@@ -176,6 +183,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         return (
           <Input
             id={field.id}
+            data-testid={`field-input-${field.id}`}
             type="datetime-local"
             value={(value as string) || ""}
             onChange={(e) => onChange(e.target.value)}
@@ -186,10 +194,11 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         const listItems = (value as string[]) || []
         const count = field.count || 3
         return (
-          <div className="space-y-2">
+          <div className="space-y-2" data-testid={`field-list-${field.id}`}>
             {Array.from({ length: count }, (_, i) => (
               <Input
                 key={i}
+                data-testid={`field-list-${field.id}-${i}`}
                 placeholder={`${field.placeholder || "Item"} ${i + 1}`}
                 value={listItems[i] || ""}
                 onChange={(e) => {
@@ -206,13 +215,14 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
       case "tags": {
         const tags = (value as string[]) || []
         return (
-          <div className="space-y-2">
-            <div className="flex flex-wrap gap-2">
+          <div className="space-y-2" data-testid={`field-tags-${field.id}`}>
+            <div className="flex flex-wrap gap-2" data-testid={`field-tags-list-${field.id}`}>
               {tags.map((tag, i) => (
-                <Badge key={i} variant="secondary" className="flex items-center gap-1">
+                <Badge key={i} variant="secondary" className="flex items-center gap-1" data-testid={`field-tag-${field.id}-${i}`}>
                   {tag}
                   <button
                     type="button"
+                    data-testid={`field-tag-remove-${field.id}-${i}`}
                     onClick={() => onChange(tags.filter((_, idx) => idx !== i))}
                     className="ml-1 hover:text-destructive"
                   >
@@ -223,6 +233,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
             </div>
             <div className="flex gap-2">
               <Input
+                data-testid={`field-tags-input-${field.id}`}
                 placeholder={field.placeholder || "Add tag..."}
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
@@ -240,6 +251,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
                 type="button"
                 variant="outline"
                 size="icon"
+                data-testid={`field-tags-add-${field.id}`}
                 onClick={() => {
                   if (tagInput.trim() && !tags.includes(tagInput.trim())) {
                     onChange([...tags, tagInput.trim()])

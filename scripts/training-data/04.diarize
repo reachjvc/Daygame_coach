@@ -2,7 +2,7 @@
 """
 scripts/training-data/04.diarize
 
-STEP 4 — SPEAKER DIARIZATION (pyannote)
+STEP 4 — SPEAKER DIARIZATION (DiariZen)
 
 Usage:
   A) Single source:  ./04.diarize "daily_evolution" "https://youtube.com/watch?v=..."
@@ -10,9 +10,7 @@ Usage:
   C) Single file:    ./04.diarize --input path/to/aligned.full.json --audio path/to/audio.wav --out output.full.json
 
 Takes aligned transcription from 03.align and adds speaker labels (SPEAKER_00, SPEAKER_01)
-using pyannote speaker diarization.
-
-Requires HF_TOKEN environment variable for pyannote model access.
+using DiariZen speaker diarization (faster than pyannote, similar accuracy).
 
 Input:  data/03.align/<source>/<video>/<video>.full.json
 Output: data/04.diarize/<source>/<video>/<video>.full.json
@@ -47,8 +45,8 @@ except Exception:
 
 def _apply_torch_safe_globals_allowlist() -> None:
     """
-    If you DO use pyannote (diarization), torch 2.6+ may block unpickling.
-    Add all required classes to safe globals to allow model loading.
+    PyTorch 2.6+ blocks unpickling by default. Add required classes
+    to safe globals to allow model loading for DiariZen/pyannote.
     """
     if torch is None:
         return
@@ -185,17 +183,6 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
         t.join(timeout=1.0)
 
 
-def _get_hf_token(cli_token: str = "") -> str:
-    tok = (cli_token or "").strip()
-    if tok:
-        return tok
-    for k in ("HF_TOKEN", "HUGGINGFACE_TOKEN", "WHISPERX_HF_TOKEN"):
-        v = (os.environ.get(k) or "").strip()
-        if v:
-            return v
-    return ""
-
-
 # --------------------------
 # Audio loading
 # --------------------------
@@ -243,13 +230,10 @@ def resample_to_16k(y: np.ndarray, sr: int) -> np.ndarray:
     raise SystemExit("Need torchaudio or librosa to resample to 16k.")
 
 
-def load_audio_16k_for_whisperx(audio_path: str) -> np.ndarray:
-    try:
-        import whisperx  # type: ignore
-        return whisperx.load_audio(audio_path)
-    except Exception:
-        y, sr = load_audio_mono(audio_path)
-        return resample_to_16k(y, sr)
+def load_audio_16k(audio_path: str) -> np.ndarray:
+    """Load audio and resample to 16kHz mono."""
+    y, sr = load_audio_mono(audio_path)
+    return resample_to_16k(y, sr)
 
 
 # --------------------------
@@ -319,7 +303,27 @@ def _segments_from_any(segments_in: Any, duration_sec: float) -> List[Dict[str, 
 # --------------------------
 
 def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
+    """
+    Normalize diarization output from various formats to a list of segments.
+    Supports: DiariZen (pyannote Annotation), pandas DataFrame, list of dicts.
+    """
     segs: List[Dict[str, Any]] = []
+
+    # DiariZen returns a pyannote Annotation object with itertracks method
+    if hasattr(diar_out, "itertracks"):
+        try:
+            for turn, _, speaker in diar_out.itertracks(yield_label=True):
+                segs.append({
+                    "start": float(turn.start),
+                    "end": float(turn.end),
+                    "speaker": f"SPEAKER_{speaker}" if str(speaker).isdigit() else str(speaker),
+                })
+            segs.sort(key=lambda x: (x["start"], x["end"]))
+            return segs
+        except Exception:
+            pass
+
+    # Pandas DataFrame format
     try:
         import pandas as pd  # type: ignore
         if isinstance(diar_out, pd.DataFrame):
@@ -330,6 +334,7 @@ def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
     except Exception:
         pass
 
+    # List of dicts format
     if isinstance(diar_out, list):
         for it in diar_out:
             if not isinstance(it, dict):
@@ -340,6 +345,7 @@ def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
         segs.sort(key=lambda x: (x["start"], x["end"]))
         return segs
 
+    # Dict with segments key
     if isinstance(diar_out, dict) and isinstance(diar_out.get("segments"), list):
         return _normalize_diar_output(diar_out["segments"])
 
@@ -450,46 +456,36 @@ def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[
 # --------------------------
 
 class DiarizeEngine:
-    """Speaker diarization using pyannote."""
+    """Speaker diarization using DiariZen."""
 
-    def __init__(self, device: str = "", hf_token: str = ""):
+    def __init__(self, device: str = "", model_name: str = ""):
         self.device = _auto_device(device)
-        self.hf_token = _get_hf_token(hf_token)
-
-        if not self.hf_token:
-            raise SystemExit("Diarization requires HF token. Set HF_TOKEN or pass --hf-token.")
+        self.model_name = model_name or "BUT-FIT/diarizen-wavlm-large-s80-md"
 
         try:
-            import whisperx  # type: ignore
-            self._whisperx = whisperx
+            from diarizen.pipelines.inference import DiariZenPipeline  # type: ignore
+            self._DiariZenPipeline = DiariZenPipeline
+        except ImportError as e:
+            raise SystemExit(
+                f"Missing diarizen. Install: pip install diarizen\n"
+                f"Or follow instructions at: https://github.com/BUTSpeechFIT/DiariZen\n"
+                f"({type(e).__name__}: {e})"
+            )
+
+        # Load DiariZen pipeline
+        try:
+            self._diar_pipeline = self._DiariZenPipeline.from_pretrained(self.model_name)
+            if torch is not None and self.device == "cuda" and torch.cuda.is_available():
+                self._diar_pipeline = self._diar_pipeline.to(torch.device("cuda"))
         except Exception as e:
-            raise SystemExit(f"Missing whisperx. Install: pip install -U whisperx ({type(e).__name__}: {e})")
+            raise SystemExit(f"Failed to load DiariZen model '{self.model_name}': {type(e).__name__}: {e}")
 
-        # Load diarization pipeline
-        try:
-            from whisperx.diarize import DiarizationPipeline
-        except ImportError:
-            DiarizationPipeline = getattr(self._whisperx, "DiarizationPipeline", None)
-            if DiarizationPipeline is None:
-                raise SystemExit("DiarizationPipeline not found. Install whisperx with diarization support.")
-
-        try:
-            self._diar_pipeline = DiarizationPipeline(use_auth_token=self.hf_token, device=self.device)
-        except TypeError:
-            try:
-                self._diar_pipeline = DiarizationPipeline(device=self.device, use_auth_token=self.hf_token)
-            except TypeError:
-                self._diar_pipeline = DiarizationPipeline(use_auth_token=self.hf_token)
-
-        log(f"[04.diarize] Loaded diarization pipeline on device={self.device}")
+        log(f"[04.diarize] Loaded DiariZen pipeline (model={self.model_name}, device={self.device})")
 
     def diarize(self, segments: List[Dict[str, Any]], audio16k: np.ndarray, audio_path: str) -> List[Dict[str, Any]]:
         """Add speaker labels to segments."""
-        # Run diarization
-        try:
-            diar_out = self._diar_pipeline(audio_path)
-        except Exception:
-            diar_out = self._diar_pipeline(audio16k)
+        # Run DiariZen diarization
+        diar_out = self._diar_pipeline(audio_path)
 
         turns = _normalize_diar_output(diar_out)
         turns = _merge_turns(turns)
@@ -498,15 +494,9 @@ class DiarizeEngine:
             log("[04.diarize] WARN: No diarization turns detected")
             return segments
 
-        # Try whisperx assign_word_speakers first
-        try:
-            aligned_dict = {"segments": segments}
-            assigned = self._whisperx.assign_word_speakers(turns, aligned_dict)
-            return assigned.get("segments", []) or segments
-        except Exception:
-            # Fallback to overlap-based assignment
-            _attach_speaker_by_overlap(segments, turns)
-            return segments
+        # Use overlap-based assignment
+        _attach_speaker_by_overlap(segments, turns)
+        return segments
 
 
 # --------------------------
@@ -578,7 +568,7 @@ def diarize_transcription(
     log(f"[04.diarize] Input: {len(segments)} segments from {aligned_json.name}")
 
     # Load audio
-    audio16k = load_audio_16k_for_whisperx(str(audio_path))
+    audio16k = load_audio_16k(str(audio_path))
     duration_sec = len(audio16k) / 16000.0
     log(f"[04.diarize] Audio: {audio_path.name} ({duration_sec:.1f}s)")
 
@@ -699,7 +689,7 @@ def batch_for_source(
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
-        description="Speaker diarization using pyannote.",
+        description="Speaker diarization using DiariZen.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
@@ -714,15 +704,15 @@ if __name__ == "__main__":
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
     p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
 
-    p.add_argument("--device", default=os.environ.get("WHISPERX_DEVICE", ""))
-    p.add_argument("--hf-token", default=os.environ.get("HF_TOKEN", ""), help="Hugging Face token for pyannote.")
+    p.add_argument("--device", default=os.environ.get("DIARIZE_DEVICE", ""))
+    p.add_argument("--model", default=os.environ.get("DIARIZE_MODEL", ""), help="DiariZen model name (default: BUT-FIT/diarizen-wavlm-large-s80-md)")
 
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
 
     args = p.parse_args()
 
     # Initialize engine
-    engine = DiarizeEngine(device=args.device, hf_token=args.hf_token)
+    engine = DiarizeEngine(device=args.device, model_name=args.model)
 
     # Single-file mode
     if args.input:

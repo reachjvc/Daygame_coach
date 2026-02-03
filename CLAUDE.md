@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Changelog
+- 03-02-2026 - Added idempotent seed scripts rule
+- 03-02-2026 - Fixed code-review subagent to use general-purpose (code-review type doesn't exist)
 - 03-02-2026 - Added code-review subagent rule for major code changes
 - 01-02-2026 12:30 - Added tech stack, development commands, test organization, articles slice
 - 31-01-2026 19:50 - Restructured for better Claude compliance: pre-response checklist, stronger framing
-- 31-01-2026 19:35 - Added doc-before-summary rule with strict order
-- 30-01-2026 20:07 - Added rule to read testing_behavior.md before writing tests
 
 ---
 
@@ -109,18 +109,26 @@ Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the use
 
 20 extra hours for better architecture is worth it.
 
-### 6. Code Review Subagent (After Major Changes)
+### 6. Idempotent Seed Scripts
+
+Seed scripts must be **idempotent**: delete orphans first, then upsert. Running twice = same result.
+
+### 7. Code Review Subagent (After Major Changes)
 
 **When to run:** After completing prompts involving major code changes (new features, refactors, significant bug fixes).
 
-**How to invoke:** Use the Task tool with `subagent_type: "code-review"`
+**How to invoke:** Use the Task tool with:
+```
+subagent_type: "general-purpose"
+prompt: "Code review for recent changes. 1) Read docs/testing_behavior.md. 2) Run git diff to find changed files. 3) For each changed file: identify new exports, functions, components, types, and config. 4) Check tests/unit/ and tests/e2e/ for corresponding test coverage. 5) Run npm test to verify existing tests pass. 6) Report: what's tested, what's NOT tested (be specific: function names, edge cases, integration points), code quality notes. Do NOT implement tests - only identify gaps."
+```
 
-**What it does:**
-1. Reads `docs/testing_behavior.md` for testing principles
-2. Identifies changed files via `git diff`
-3. Checks test coverage for changed code
-4. Runs `npm test` to verify tests pass
-5. Suggests missing tests (does NOT write them)
+**What it identifies:**
+- New exports/functions without unit tests
+- New components without E2E coverage
+- Untested edge cases (null handling, boundary values)
+- Missing integration points (API payloads, state persistence)
+- Code quality issues (magic numbers, missing validation)
 
 **What counts as "major code changes":**
 - New service functions or components

@@ -117,8 +117,17 @@ interface SessionTrackerPageProps {
 export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { state, liveStats, startSession, endSession, addApproach, updateLastApproach } =
-    useSession({ userId })
+  const {
+    state,
+    liveStats,
+    endedSession,
+    startSession,
+    endSession,
+    addApproach,
+    updateLastApproach,
+    reactivateSession,
+    clearEndedSession,
+  } = useSession({ userId })
 
   const [showStartDialog, setShowStartDialog] = useState(false)
   const [showEndDialog, setShowEndDialog] = useState(false)

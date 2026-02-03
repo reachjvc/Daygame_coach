@@ -38,10 +38,10 @@ export const OUTCOME_OPTIONS: { value: ApproachOutcome; label: string; emoji: st
 // ============================================
 
 export const MOOD_OPTIONS = [
-  { value: 1, emoji: "😫", label: "Rough" },
-  { value: 2, emoji: "😕", label: "Low" },
+  { value: 1, emoji: "😤", label: "Frustrated" },
+  { value: 2, emoji: "🙄", label: "Meh" },
   { value: 3, emoji: "😐", label: "Neutral" },
-  { value: 4, emoji: "🙂", label: "Good" },
+  { value: 4, emoji: "😊", label: "Good" },
   { value: 5, emoji: "🔥", label: "On fire" },
 ]
 
@@ -116,6 +116,16 @@ export const FIELD_REPORT_CONFIG = {
 } as const
 
 // ============================================
+// Session Import Layer
+// ============================================
+
+/** Reserved field IDs for session import layer (used across all templates) */
+export const SESSION_IMPORT_FIELD_IDS = {
+  /** Post-session mood - "How are you feeling now?" */
+  POST_SESSION_MOOD: "_post_session_mood",
+} as const
+
+// ============================================
 // Review Settings
 // ============================================
 
@@ -177,9 +187,10 @@ export const TEMPLATE_TAGLINES: Record<string, string> = {
 
 export const MOOD_EMOJI_OPTIONS = [
   { value: 1, emoji: "😤", label: "Frustrated" },
-  { value: 2, emoji: "😐", label: "Neutral" },
-  { value: 3, emoji: "😊", label: "Good" },
-  { value: 4, emoji: "🔥", label: "On Fire" },
+  { value: 2, emoji: "🙄", label: "Meh" },
+  { value: 3, emoji: "😐", label: "Neutral" },
+  { value: 4, emoji: "😊", label: "Good" },
+  { value: 5, emoji: "🔥", label: "On Fire" },
 ] as const
 
 // ============================================
@@ -236,16 +247,8 @@ export const CATEGORY_INFO: Record<FieldCategory, CategoryInfo> = {
  */
 export const FIELD_LIBRARY: FieldDefinition[] = [
   // ============ QUICK CAPTURE ============
-  {
-    id: "mood",
-    type: "select",
-    label: "How do you feel?",
-    options: ["😤", "😐", "😊", "🔥"],
-    required: true,
-    category: "quick_capture",
-    description: "Quick emotional temperature check",
-    usedIn: ["Quick Log", "Standard", "Deep Dive", "Phoenix", "The Pulse"],
-  },
+  // NOTE: "mood" field removed - post-session mood is now handled by SessionImportSection
+  // with the standardized 5-emoji "How are you feeling now?" picker
   {
     id: "approaches",
     type: "number",
@@ -786,7 +789,6 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
  * These appear muted in the UI but are easily addable.
  */
 export const SUGGESTED_FIELD_IDS = [
-  "mood",
   "approaches",
   "best_moment",
   "why_ended",

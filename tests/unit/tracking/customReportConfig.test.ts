@@ -8,6 +8,7 @@ import {
   FIELD_LIBRARY,
   CATEGORY_INFO,
   SUGGESTED_FIELD_IDS,
+  SESSION_IMPORT_FIELD_IDS,
 } from "@/src/tracking/config"
 import type { FieldCategory, FieldDefinition } from "@/src/tracking/types"
 
@@ -233,7 +234,8 @@ describe("Custom Report Builder Config", () => {
 
     test("should include essential fields", () => {
       // Arrange: Fields that should be suggested for new users
-      const essentialFields = ["mood", "approaches"]
+      // Note: "mood" removed - post-session mood is now handled by SessionImportSection
+      const essentialFields = ["approaches", "best_moment"]
 
       // Act & Assert
       for (const essential of essentialFields) {
@@ -278,6 +280,48 @@ describe("Custom Report Builder Config", () => {
           `Category "${category}" should have at least one field`
         ).toBeGreaterThan(0)
       }
+    })
+  })
+
+  describe("SESSION_IMPORT_FIELD_IDS", () => {
+    test("should have POST_SESSION_MOOD defined", () => {
+      // Assert
+      expect(SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD).toBeDefined()
+      expect(typeof SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD).toBe("string")
+    })
+
+    test("POST_SESSION_MOOD should use reserved prefix", () => {
+      // Arrange: Reserved IDs should start with underscore to avoid collisions
+      const reservedPrefix = "_"
+
+      // Assert
+      expect(
+        SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD.startsWith(reservedPrefix),
+        `Reserved field ID should start with "${reservedPrefix}" to avoid collisions with FIELD_LIBRARY`
+      ).toBe(true)
+    })
+
+    test("SESSION_IMPORT_FIELD_IDS should not collide with FIELD_LIBRARY", () => {
+      // Arrange
+      const fieldLibraryIds = new Set(FIELD_LIBRARY.map((f) => f.id))
+      const sessionImportIds = Object.values(SESSION_IMPORT_FIELD_IDS)
+
+      // Act & Assert
+      for (const reservedId of sessionImportIds) {
+        expect(
+          fieldLibraryIds.has(reservedId),
+          `Reserved field ID "${reservedId}" collides with FIELD_LIBRARY`
+        ).toBe(false)
+      }
+    })
+
+    test("all SESSION_IMPORT_FIELD_IDS should be unique", () => {
+      // Arrange
+      const ids = Object.values(SESSION_IMPORT_FIELD_IDS)
+      const uniqueIds = new Set(ids)
+
+      // Assert
+      expect(uniqueIds.size).toBe(ids.length)
     })
   })
 })

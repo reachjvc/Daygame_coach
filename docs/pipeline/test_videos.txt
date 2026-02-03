@@ -1,0 +1,16 @@
+# Pipeline Test Videos
+# Updated: 03-02-2026
+# Format: source|video_id|duration|title
+
+# R1 - Round 1 (5 videos)
+# Selected for diversity: different sources, coaches, video styles
+# All are infield or approach-related content
+
+daily_evolution|dz8w8XUBDXU|9min|Purpose | Masculinity | Fitness | Pickup
+coach_kyle_infield|4x9bvKaVWBc|12min|How to approach a woman when she's with her friends
+social_stoic|G2sWa8X0EjA|10min|How To Approach Groups Of Girls (The Complete Guide)
+austen_summers_meets_girls|H3_8iPikhDw|7min|A Basic Daygame Approach Anyone Can Do
+natural_lifestyles_meetingGirlsIRL|WSFSpbFCPZo|15min|How to get Rejected like a BOSS - James Marshall Infield
+
+# R2 - Round 2 (15 additional videos)
+# To be selected after R1 passes

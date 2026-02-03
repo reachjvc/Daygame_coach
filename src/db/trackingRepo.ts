@@ -194,6 +194,32 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
   return updatedSession
 }
 
+export async function reactivateSession(sessionId: string): Promise<SessionWithApproaches> {
+  const session = await getSessionWithApproaches(sessionId)
+  if (!session) {
+    throw new Error("Session not found")
+  }
+
+  if (session.is_active) {
+    throw new Error("Session is already active")
+  }
+
+  // Reactivate the session
+  await updateSession(sessionId, {
+    is_active: true,
+    ended_at: null,
+    // Keep the stats as they were - user can continue from where they left off
+  })
+
+  // Return the reactivated session with approaches
+  const reactivated = await getSessionWithApproaches(sessionId)
+  if (!reactivated) {
+    throw new Error("Failed to reactivate session")
+  }
+
+  return reactivated
+}
+
 // Called when a session ends to update stats and check milestones
 async function updateSessionStats(
   userId: string,

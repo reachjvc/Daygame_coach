@@ -10,6 +10,7 @@ import {
   CreateFieldReportSchema,
   CreateReviewSchema,
 } from "@/src/tracking/schemas"
+import type { ApproachMoodEntry, SessionSummaryData } from "@/src/tracking/types"
 
 // ============================================================================
 // Enum Schemas
@@ -1132,5 +1133,185 @@ describe("CreateReviewSchema", () => {
       // Assert
       expect(result.success).toBe(false)
     })
+  })
+})
+
+// ============================================================================
+// Type Shape Tests (compile-time validated, runtime structure verified)
+// ============================================================================
+
+describe("ApproachMoodEntry type shape", () => {
+  test("should accept valid ApproachMoodEntry with mood", () => {
+    // Arrange
+    const entry: ApproachMoodEntry = {
+      approachNumber: 1,
+      mood: 4,
+      timestamp: "2024-01-15T14:30:00Z",
+    }
+
+    // Assert: Type compiles and has expected properties
+    expect(entry.approachNumber).toBe(1)
+    expect(entry.mood).toBe(4)
+    expect(entry.timestamp).toBe("2024-01-15T14:30:00Z")
+  })
+
+  test("should accept ApproachMoodEntry with null mood", () => {
+    // Arrange
+    const entry: ApproachMoodEntry = {
+      approachNumber: 3,
+      mood: null,
+      timestamp: "2024-01-15T15:00:00Z",
+    }
+
+    // Assert
+    expect(entry.mood).toBeNull()
+  })
+
+  test("should accept zero-indexed approach number", () => {
+    // Arrange
+    const entry: ApproachMoodEntry = {
+      approachNumber: 0,
+      mood: 1,
+      timestamp: "2024-01-15T14:00:00Z",
+    }
+
+    // Assert
+    expect(entry.approachNumber).toBe(0)
+  })
+
+  test("should accept mood at boundaries (1-5)", () => {
+    // Arrange
+    const minMood: ApproachMoodEntry = {
+      approachNumber: 1,
+      mood: 1,
+      timestamp: "2024-01-15T14:00:00Z",
+    }
+    const maxMood: ApproachMoodEntry = {
+      approachNumber: 2,
+      mood: 5,
+      timestamp: "2024-01-15T14:05:00Z",
+    }
+
+    // Assert
+    expect(minMood.mood).toBe(1)
+    expect(maxMood.mood).toBe(5)
+  })
+})
+
+describe("SessionSummaryData type shape", () => {
+  const validSessionSummary: SessionSummaryData = {
+    approachCount: 10,
+    duration: 3600,
+    location: "Copenhagen",
+    outcomes: {
+      blowout: 2,
+      short: 3,
+      good: 3,
+      number: 1,
+      instadate: 1,
+    },
+    averageMood: 3.5,
+    tags: ["day", "solo"],
+    startedAt: "2024-01-15T14:00:00Z",
+    goal: 15,
+    preSessionMood: 4,
+    sessionFocus: "Be more playful",
+    techniqueFocus: "Cold reads",
+    ifThenPlan: "If nervous, then breathe",
+    customIntention: "Have fun today",
+    approachMoods: [
+      { approachNumber: 1, mood: 3, timestamp: "2024-01-15T14:10:00Z" },
+      { approachNumber: 2, mood: 4, timestamp: "2024-01-15T14:20:00Z" },
+    ],
+  }
+
+  test("should accept full SessionSummaryData", () => {
+    // Assert: All required properties exist
+    expect(validSessionSummary.approachCount).toBe(10)
+    expect(validSessionSummary.duration).toBe(3600)
+    expect(validSessionSummary.location).toBe("Copenhagen")
+    expect(validSessionSummary.outcomes.number).toBe(1)
+    expect(validSessionSummary.averageMood).toBe(3.5)
+    expect(validSessionSummary.tags).toContain("day")
+    expect(validSessionSummary.startedAt).toBeDefined()
+  })
+
+  test("should accept all pre-session intention fields", () => {
+    // Assert: Pre-session fields
+    expect(validSessionSummary.goal).toBe(15)
+    expect(validSessionSummary.preSessionMood).toBe(4)
+    expect(validSessionSummary.sessionFocus).toBe("Be more playful")
+    expect(validSessionSummary.techniqueFocus).toBe("Cold reads")
+    expect(validSessionSummary.ifThenPlan).toBe("If nervous, then breathe")
+    expect(validSessionSummary.customIntention).toBe("Have fun today")
+  })
+
+  test("should accept approachMoods timeline", () => {
+    // Assert
+    expect(validSessionSummary.approachMoods).toHaveLength(2)
+    expect(validSessionSummary.approachMoods[0].approachNumber).toBe(1)
+    expect(validSessionSummary.approachMoods[1].mood).toBe(4)
+  })
+
+  test("should accept SessionSummaryData with all null optional fields", () => {
+    // Arrange: Minimal session with nulls
+    const minimalSession: SessionSummaryData = {
+      approachCount: 0,
+      duration: null,
+      location: null,
+      outcomes: {
+        blowout: 0,
+        short: 0,
+        good: 0,
+        number: 0,
+        instadate: 0,
+      },
+      averageMood: null,
+      tags: [],
+      startedAt: "2024-01-15T14:00:00Z",
+      goal: null,
+      preSessionMood: null,
+      sessionFocus: null,
+      techniqueFocus: null,
+      ifThenPlan: null,
+      customIntention: null,
+      approachMoods: [],
+    }
+
+    // Assert
+    expect(minimalSession.approachCount).toBe(0)
+    expect(minimalSession.duration).toBeNull()
+    expect(minimalSession.goal).toBeNull()
+    expect(minimalSession.preSessionMood).toBeNull()
+    expect(minimalSession.sessionFocus).toBeNull()
+    expect(minimalSession.approachMoods).toHaveLength(0)
+  })
+
+  test("should accept empty approachMoods array", () => {
+    // Arrange
+    const session: SessionSummaryData = {
+      ...validSessionSummary,
+      approachMoods: [],
+    }
+
+    // Assert
+    expect(session.approachMoods).toEqual([])
+  })
+
+  test("should accept mixed null/non-null moods in approachMoods", () => {
+    // Arrange: Some approaches have mood, some don't
+    const session: SessionSummaryData = {
+      ...validSessionSummary,
+      approachMoods: [
+        { approachNumber: 1, mood: 3, timestamp: "2024-01-15T14:10:00Z" },
+        { approachNumber: 2, mood: null, timestamp: "2024-01-15T14:20:00Z" },
+        { approachNumber: 3, mood: 5, timestamp: "2024-01-15T14:30:00Z" },
+      ],
+    }
+
+    // Assert
+    expect(session.approachMoods[0].mood).toBe(3)
+    expect(session.approachMoods[1].mood).toBeNull()
+    expect(session.approachMoods[2].mood).toBe(5)
   })
 })
