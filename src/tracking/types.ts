@@ -124,3 +124,61 @@ export interface KeyStat {
   icon: ReactNode
   nerdBox: KeyStatNerdBox
 }
+
+// ============================================
+// Custom Report Builder Types
+// ============================================
+
+/**
+ * Field categories for organizing the field library.
+ * Used in the custom report builder to group fields.
+ */
+export type FieldCategory =
+  | "quick_capture"     // Fast fields for quick logs
+  | "emotional"         // Mood, feelings, emotional processing
+  | "analysis"          // Deep thinking, patterns, insights
+  | "action"            // What to do next, changes, plans
+  | "context"           // Location, time, energy, external factors
+  | "skill"             // Technique, deliberate practice
+  | "cognitive"         // CBT, reframes, thought patterns
+
+/**
+ * Extended field definition with category and metadata.
+ * Used in the custom report builder's field library.
+ */
+export interface FieldDefinition {
+  id: string
+  type: "text" | "textarea" | "number" | "select" | "multiselect" | "scale" | "datetime" | "list" | "tags" | "audio"
+  label: string
+  placeholder?: string
+  required?: boolean
+  options?: string[]  // For select/multiselect
+  min?: number        // For scale/number
+  max?: number        // For scale/number
+  rows?: number       // For textarea
+  count?: number      // For list type
+  category: FieldCategory
+  description: string
+  usedIn: string[]    // Template names that use this field
+}
+
+/**
+ * Category metadata for display in the field library.
+ * Icons are handled separately in categoryIcons.tsx
+ */
+export interface CategoryInfo {
+  label: string
+  color: string
+  description: string
+}
+
+/**
+ * Configuration for a custom report template.
+ * Used when saving/loading user's custom report configurations.
+ */
+export interface CustomReportConfig {
+  name: string
+  description?: string
+  fields: FieldDefinition[]
+  estimatedMinutes?: number
+}

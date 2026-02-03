@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06a.structure
+scripts/training-data/08a.structure
 
 Interaction Structure Extraction (renamed from 08.interactions in pipeline consolidation)
 
 Reads:
   - Conversation-labeled JSONs:
-      data/05.conversations/<source>/<video>/*.conversations.json
+      data/07.conversations/<source>/<video>/*.conversations.json
 
 Writes:
   - Extracted interactions (one JSON object per line):
-      data/06a.structure/<source>/<video>/*.interactions.jsonl
+      data/08a.structure/<source>/<video>/*.interactions.jsonl
 
 Use:
 
   A) One source (video / playlist / channel):
-     ./scripts/training-data/06a.structure "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+     ./scripts/training-data/08a.structure "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 
   B) Batch from sources file:
-     ./scripts/training-data/06a.structure --sources
-     ./scripts/training-data/06a.structure --sources docs/sources.txt
+     ./scripts/training-data/08a.structure --sources
+     ./scripts/training-data/08a.structure --sources docs/sources.txt
 """
 
 from __future__ import annotations
@@ -437,7 +437,7 @@ def process_file(input_path: Path, output_path: Path, extractor: InteractionExtr
             }
             f.write(json.dumps(obj, default=_json_default) + "\n")
 
-    print(f"[06a.structure] {input_path.name}: {len(interactions)} interactions")
+    print(f"[08a.structure] {input_path.name}: {len(interactions)} interactions")
     return len(interactions)
 
 
@@ -447,11 +447,11 @@ def repo_root() -> Path:
 
 
 def conversations_root() -> Path:
-    return repo_root() / "data" / "05.conversations"
+    return repo_root() / "data" / "07.conversations"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06a.structure"
+    return repo_root() / "data" / "08a.structure"
 
 
 def infer_name_from_input(input_path: Path) -> Optional[str]:
@@ -467,7 +467,7 @@ def infer_name_from_input(input_path: Path) -> Optional[str]:
         return None
     stage = parts[i + 1]
     name = parts[i + 2]
-    if stage in {"05.conversations", "06a.structure"}:
+    if stage in {"07.conversations", "08a.structure"}:
         return name
     return None
 
@@ -560,7 +560,7 @@ def main() -> None:
         if input_path.is_dir():
             files = find_input_files(input_path, video_filter=video_filter)
             if not files:
-                print(f"[06a.structure] No input JSON files found under: {input_path}")
+                print(f"[08a.structure] No input JSON files found under: {input_path}")
                 return
 
             written = 0
@@ -579,7 +579,7 @@ def main() -> None:
                 process_file(src, dest, extractor)
                 written += 1
 
-            print("[06a.structure] Done.")
+            print("[08a.structure] Done.")
             print(f"  written : {written}")
             print(f"  skipped : {skipped}")
             return
@@ -587,7 +587,7 @@ def main() -> None:
         # Single file input
         dest = output_path if output_path.suffix else compute_output_file_for_input_file(input_path, output_path)
         if dest.exists() and not args.overwrite:
-            print(f"[06a.structure] Output exists, skipping: {dest}")
+            print(f"[08a.structure] Output exists, skipping: {dest}")
             return
         if args.dry_run:
             print(f"[dry-run] Would write: {dest}")

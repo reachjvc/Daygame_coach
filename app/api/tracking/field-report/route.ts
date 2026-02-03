@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
     const {
       template_id,
       session_id,
+      title,
+      report_date,
       fields,
       approach_count,
       location,
@@ -37,12 +39,13 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       template_id,
       session_id,
+      title,
       fields,
       approach_count,
       location,
       tags,
       is_draft,
-      reported_at: new Date().toISOString(),
+      reported_at: report_date || new Date().toISOString(),
     }
 
     const report = await createFieldReport(reportData)

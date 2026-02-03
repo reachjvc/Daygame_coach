@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06b.content
+scripts/training-data/08b.content
 
 Content Enrichment using Ollama LLM (renamed from 09.enrich in pipeline consolidation)
 
 Reads:
   - Interaction JSONL files:
-      data/06a.structure/<source>/<video>/*.interactions.jsonl
+      data/08a.structure/<source>/<video>/*.interactions.jsonl
 
 Writes:
   - Enriched ground truth JSON:
-      data/06b.content/<source>/<video>/*.enriched.json
+      data/08b.content/<source>/<video>/*.enriched.json
 
 The enrichment adds:
   - Refined phase boundaries (opener/hook/vibe/close) with turn indices
@@ -22,11 +22,11 @@ The enrichment adds:
 Use:
 
   A) One source (video / playlist / channel):
-     ./scripts/training-data/06b.content "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+     ./scripts/training-data/08b.content "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 
   B) Batch from sources file:
-     ./scripts/training-data/06b.content --sources
-     ./scripts/training-data/06b.content --sources docs/sources.txt
+     ./scripts/training-data/08b.content --sources
+     ./scripts/training-data/08b.content --sources docs/sources.txt
 
 Environment:
   OLLAMA_API_URL=http://localhost:11434
@@ -182,7 +182,7 @@ def call_ollama(prompt: str, retries: int = 3, timeout: int = 120) -> Optional[s
             if attempt < retries - 1:
                 time.sleep(2 ** attempt)  # Exponential backoff
                 continue
-            print(f"[06b.content] Ollama error: {e}")
+            print(f"[08b.content] Ollama error: {e}")
     return None
 
 
@@ -306,8 +306,8 @@ def parse_llm_response(response: str) -> Optional[Dict]:
                         json_str = response[start:i + 1]
                         return json.loads(json_str)
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[06b.content] JSON parse error: {e}")
-        print(f"[06b.content] Response preview: {response[:500]}...")
+        print(f"[08b.content] JSON parse error: {e}")
+        print(f"[08b.content] Response preview: {response[:500]}...")
 
     return None
 
@@ -358,7 +358,7 @@ def enrich_interaction(interaction: Dict, interaction_idx: int) -> Dict:
 def process_interaction_file(input_path: Path, output_path: Path) -> Dict:
     """Process a single interactions JSONL file and create enriched output."""
 
-    print(f"[06b.content] Processing: {input_path.name}")
+    print(f"[08b.content] Processing: {input_path.name}")
 
     # Load interactions from JSONL
     interactions = []
@@ -372,10 +372,10 @@ def process_interaction_file(input_path: Path, output_path: Path) -> Dict:
                     continue
 
     if not interactions:
-        print(f"[06b.content] No interactions found in {input_path}")
+        print(f"[08b.content] No interactions found in {input_path}")
         return {}
 
-    print(f"[06b.content] Found {len(interactions)} interactions to enrich")
+    print(f"[08b.content] Found {len(interactions)} interactions to enrich")
 
     # Derive metadata from path
     video_name = input_path.stem.replace(".interactions", "")
@@ -385,7 +385,7 @@ def process_interaction_file(input_path: Path, output_path: Path) -> Dict:
     enriched_interactions = []
 
     for idx, interaction in enumerate(interactions, start=1):
-        print(f"[06b.content]   [{idx}/{len(interactions)}] Enriching interaction {interaction.get('id', idx)}...")
+        print(f"[08b.content]   [{idx}/{len(interactions)}] Enriching interaction {interaction.get('id', idx)}...")
 
         # Get LLM enrichment
         enrichment = enrich_interaction(interaction, idx)
@@ -413,7 +413,7 @@ def process_interaction_file(input_path: Path, output_path: Path) -> Dict:
         enriched_interactions.append(enriched)
 
         desc_preview = enrichment.get("description", "")[:50]
-        print(f"[06b.content]       -> {enrichment.get('interaction_type', 'approach')}: {desc_preview}")
+        print(f"[08b.content]       -> {enrichment.get('interaction_type', 'approach')}: {desc_preview}")
 
     # Build summary statistics
     approach_count = sum(1 for i in enriched_interactions if i.get("type") == "approach")
@@ -459,8 +459,8 @@ def process_interaction_file(input_path: Path, output_path: Path) -> Dict:
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
 
-    print(f"[06b.content] Saved: {output_path}")
-    print(f"[06b.content]   {approach_count} approaches, {commentary_count} commentary sections")
+    print(f"[08b.content] Saved: {output_path}")
+    print(f"[08b.content]   {approach_count} approaches, {commentary_count} commentary sections")
 
     return output
 
@@ -475,11 +475,11 @@ def repo_root() -> Path:
 
 
 def structure_root() -> Path:
-    return repo_root() / "data" / "06a.structure"
+    return repo_root() / "data" / "08a.structure"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06b.content"
+    return repo_root() / "data" / "08b.content"
 
 
 def infer_name_from_input(input_path: Path) -> Optional[str]:
@@ -495,7 +495,7 @@ def infer_name_from_input(input_path: Path) -> Optional[str]:
         return None
     stage = parts[i + 1]
     name = parts[i + 2]
-    if stage in {"05.conversations", "06a.structure", "06b.content"}:
+    if stage in {"07.conversations", "08a.structure", "08b.content"}:
         return name
     return None
 
@@ -614,22 +614,22 @@ def main() -> None:
     try:
         response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
         if not response.ok:
-            print(f"[06b.content] Warning: Ollama not responding properly")
+            print(f"[08b.content] Warning: Ollama not responding properly")
     except requests.exceptions.RequestException:
-        print(f"[06b.content] Error: Cannot connect to Ollama at {OLLAMA_BASE_URL}")
-        print(f"[06b.content] Make sure Ollama is running: ollama serve")
+        print(f"[08b.content] Error: Cannot connect to Ollama at {OLLAMA_BASE_URL}")
+        print(f"[08b.content] Make sure Ollama is running: ollama serve")
         return
 
     def run_one(input_path: Path, output_path: Path, video_filter: Optional[str]) -> None:
         if input_path.is_dir():
             files = find_input_files(input_path, video_filter=video_filter)
             if not files:
-                print(f"[06b.content] No interaction files found under: {input_path}")
+                print(f"[08b.content] No interaction files found under: {input_path}")
                 return
 
-            print(f"[06b.content] Input : {input_path}")
-            print(f"[06b.content] Output: {output_path}")
-            print(f"[06b.content] Files : {len(files)}")
+            print(f"[08b.content] Input : {input_path}")
+            print(f"[08b.content] Output: {output_path}")
+            print(f"[08b.content] Files : {len(files)}")
 
             written = 0
             skipped = 0
@@ -647,12 +647,12 @@ def main() -> None:
                     written += 1
                     continue
 
-                print(f"\n[06b.content] {src.name} -> {dest.name}")
+                print(f"\n[08b.content] {src.name} -> {dest.name}")
                 process_interaction_file(src, dest)
                 written += 1
 
             print("")
-            print("[06b.content] Done.")
+            print("[08b.content] Done.")
             print(f"  written : {written}")
             print(f"  skipped : {skipped}")
             return
@@ -661,14 +661,14 @@ def main() -> None:
         dest = output_path if output_path.suffix else compute_output_file_for_input_file(input_path, output_path)
 
         if dest.exists() and not args.overwrite:
-            print(f"[06b.content] Output exists, skipping: {dest}")
+            print(f"[08b.content] Output exists, skipping: {dest}")
             return
 
         if args.dry_run:
             print(f"[dry-run] Would write: {dest}")
             return
 
-        print(f"[06b.content] {input_path} -> {dest}")
+        print(f"[08b.content] {input_path} -> {dest}")
         process_interaction_file(input_path, dest)
 
     if args.sources:
@@ -681,7 +681,7 @@ def main() -> None:
         for src_name, src_url in parse_sources_file(sources_path):
             in_dir = structure_root() / src_name
             if not in_dir.exists():
-                print(f"[06b.content] Skipping {src_name}: no 08.interactions output found")
+                print(f"[08b.content] Skipping {src_name}: no 08a.structure output found")
                 continue
             out_dir = output_root() / src_name
             video_filter = args.video or extract_video_id_from_url(src_url)

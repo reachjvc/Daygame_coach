@@ -1,0 +1,791 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/04.diarize
+
+STEP 4 — SPEAKER DIARIZATION (pyannote)
+
+Usage:
+  A) Single source:  ./04.diarize "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./04.diarize --sources docs/sources.txt
+  C) Single file:    ./04.diarize --input path/to/aligned.full.json --audio path/to/audio.wav --out output.full.json
+
+Takes aligned transcription from 03.align and adds speaker labels (SPEAKER_00, SPEAKER_01)
+using pyannote speaker diarization.
+
+Requires HF_TOKEN environment variable for pyannote model access.
+
+Input:  data/03.align/<source>/<video>/<video>.full.json
+Output: data/04.diarize/<source>/<video>/<video>.full.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import shlex
+import sys
+import threading
+import time
+from contextlib import contextmanager
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Tuple
+
+import numpy as np
+
+# --------------------------
+# Torch import + safe-globals allowlist
+# --------------------------
+
+try:
+    import torch  # type: ignore
+except Exception:
+    torch = None
+
+
+def _apply_torch_safe_globals_allowlist() -> None:
+    """
+    If you DO use pyannote (diarization), torch 2.6+ may block unpickling.
+    Add all required classes to safe globals to allow model loading.
+    """
+    if torch is None:
+        return
+    if not (hasattr(torch, "serialization") and hasattr(torch.serialization, "add_safe_globals")):
+        return
+    try:
+        import typing
+        from omegaconf import ListConfig, DictConfig
+        from omegaconf.base import ContainerMetadata
+
+        safe_globals: List[Any] = [
+            typing.Any,
+            ListConfig,
+            DictConfig,
+            ContainerMetadata,
+        ]
+        if hasattr(torch, "torch_version") and hasattr(torch.torch_version, "TorchVersion"):
+            safe_globals.append(torch.torch_version.TorchVersion)
+        try:
+            from pyannote.audio.core.task import Specifications, Problem, Resolution
+            safe_globals.extend([Specifications, Problem, Resolution])
+        except ImportError:
+            pass
+        torch.serialization.add_safe_globals(safe_globals)
+    except Exception:
+        pass
+
+
+_apply_torch_safe_globals_allowlist()
+
+# Optional audio loaders
+try:
+    import torchaudio  # type: ignore
+except Exception:
+    torchaudio = None
+
+try:
+    import soundfile as sf  # type: ignore
+except Exception:
+    sf = None
+
+try:
+    import librosa  # type: ignore
+except Exception:
+    librosa = None
+
+
+# --------------------------
+# Small helpers
+# --------------------------
+
+def log(msg: str) -> None:
+    print(msg, flush=True)
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def now_iso() -> str:
+    return datetime.utcnow().replace(microsecond=0).isoformat() + "Z"
+
+
+def safe_name(name: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (name or "").strip())
+    return cleaned.strip("_") or "source"
+
+
+def extract_video_id(url: str) -> Optional[str]:
+    url = (url or "").strip()
+    if not url:
+        return None
+    m = re.search(r"[?&]v=([^&]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"youtu\.be/([^?&/]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    out: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            name = name.strip()
+            url = url.strip()
+            if name and url:
+                out.append((name, url))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            out.append((parts[0], parts[1]))
+    return out
+
+
+def _r3(x: float) -> float:
+    return float(np.round(float(x), 3))
+
+
+def _auto_device(preferred: str = "") -> str:
+    preferred = (preferred or "").strip().lower()
+    if preferred in {"cuda", "cpu"}:
+        if preferred == "cuda":
+            if torch is not None and torch.cuda.is_available():
+                return "cuda"
+            return "cpu"
+        return "cpu"
+    if torch is not None and torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
+@contextmanager
+def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
+    stop = threading.Event()
+    start = time.monotonic()
+
+    def _runner() -> None:
+        while not stop.wait(interval_sec):
+            elapsed = int(time.monotonic() - start)
+            log(f"[04.diarize] … {label}: still running ({elapsed}s)")
+
+    t = threading.Thread(target=_runner, daemon=True)
+    t.start()
+    try:
+        yield
+    finally:
+        stop.set()
+        t.join(timeout=1.0)
+
+
+def _get_hf_token(cli_token: str = "") -> str:
+    tok = (cli_token or "").strip()
+    if tok:
+        return tok
+    for k in ("HF_TOKEN", "HUGGINGFACE_TOKEN", "WHISPERX_HF_TOKEN"):
+        v = (os.environ.get(k) or "").strip()
+        if v:
+            return v
+    return ""
+
+
+# --------------------------
+# Audio loading
+# --------------------------
+
+def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
+    if torchaudio is not None and torch is not None:
+        try:
+            waveform, sr = torchaudio.load(path)
+            waveform = waveform.to(torch.float32)
+            if waveform.ndim == 2 and waveform.shape[0] > 1:
+                waveform = waveform.mean(dim=0, keepdim=True)
+            if waveform.ndim == 2:
+                waveform = waveform.squeeze(0)
+            y = waveform.detach().cpu().numpy().astype(np.float32)
+            return y, int(sr)
+        except Exception:
+            pass
+
+    if sf is not None:
+        y, sr = sf.read(path, dtype="float32", always_2d=True)
+        if y.shape[1] > 1:
+            y = y.mean(axis=1, keepdims=True)
+        y = y[:, 0].astype(np.float32)
+        return y, int(sr)
+
+    if librosa is not None:
+        y, sr = librosa.load(path, sr=None, mono=True)
+        return y.astype(np.float32), int(sr)
+
+    raise SystemExit("No audio loader available. Install soundfile or librosa (or torchaudio).")
+
+
+def resample_to_16k(y: np.ndarray, sr: int) -> np.ndarray:
+    if sr == 16000:
+        return y.astype(np.float32)
+    if torchaudio is not None and torch is not None:
+        try:
+            yt = torch.from_numpy(y).to(torch.float32)
+            yt = torchaudio.functional.resample(yt, orig_freq=sr, new_freq=16000)
+            return yt.detach().cpu().numpy().astype(np.float32)
+        except Exception:
+            pass
+    if librosa is not None:
+        return librosa.resample(y.astype(np.float32), orig_sr=sr, target_sr=16000).astype(np.float32)
+    raise SystemExit("Need torchaudio or librosa to resample to 16k.")
+
+
+def load_audio_16k_for_whisperx(audio_path: str) -> np.ndarray:
+    try:
+        import whisperx  # type: ignore
+        return whisperx.load_audio(audio_path)
+    except Exception:
+        y, sr = load_audio_mono(audio_path)
+        return resample_to_16k(y, sr)
+
+
+# --------------------------
+# Segment normalization
+# --------------------------
+
+def _normalize_word_list(words: Any, duration_sec: float) -> Optional[List[Dict[str, Any]]]:
+    if not isinstance(words, list):
+        return None
+    out: List[Dict[str, Any]] = []
+    for w in words:
+        if not isinstance(w, dict):
+            continue
+        word = str(w.get("word", "")).strip()
+        if not word:
+            continue
+        ww: Dict[str, Any] = {"word": word}
+        try:
+            ws = float(w.get("start", -1.0))
+            we = float(w.get("end", -1.0))
+        except Exception:
+            ws, we = -1.0, -1.0
+        if ws >= 0.0 and we > ws:
+            ws = max(0.0, min(ws, duration_sec))
+            we = max(0.0, min(we, duration_sec))
+            ww["start"] = _r3(ws)
+            ww["end"] = _r3(we)
+        if "speaker" in w:
+            ww["speaker"] = str(w.get("speaker"))
+        out.append(ww)
+    return out or None
+
+
+def _segments_from_any(segments_in: Any, duration_sec: float) -> List[Dict[str, Any]]:
+    if not isinstance(segments_in, list):
+        return []
+    out: List[Dict[str, Any]] = []
+    for seg in segments_in:
+        if not isinstance(seg, dict):
+            continue
+        txt = str(seg.get("text", "") or "").strip()
+        if not txt:
+            continue
+        try:
+            s = float(seg.get("start", 0.0))
+            e = float(seg.get("end", 0.0))
+        except Exception:
+            continue
+        s = max(0.0, min(s, duration_sec))
+        e = max(0.0, min(e, duration_sec))
+        if e <= s:
+            continue
+        o: Dict[str, Any] = {"start": _r3(s), "end": _r3(e), "text": txt}
+        if "speaker" in seg:
+            o["speaker"] = str(seg.get("speaker"))
+        if "words" in seg:
+            wn = _normalize_word_list(seg.get("words"), duration_sec)
+            if wn:
+                o["words"] = wn
+        out.append(o)
+    out.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    return out
+
+
+# --------------------------
+# Diarization helpers
+# --------------------------
+
+def _normalize_diar_output(diar_out: Any) -> List[Dict[str, Any]]:
+    segs: List[Dict[str, Any]] = []
+    try:
+        import pandas as pd  # type: ignore
+        if isinstance(diar_out, pd.DataFrame):
+            for _, row in diar_out.iterrows():
+                segs.append({"start": float(row["start"]), "end": float(row["end"]), "speaker": str(row["speaker"])})
+            segs.sort(key=lambda x: (x["start"], x["end"]))
+            return segs
+    except Exception:
+        pass
+
+    if isinstance(diar_out, list):
+        for it in diar_out:
+            if not isinstance(it, dict):
+                continue
+            if "start" in it and "end" in it:
+                spk = it.get("speaker", it.get("label", "UNKNOWN"))
+                segs.append({"start": float(it["start"]), "end": float(it["end"]), "speaker": str(spk)})
+        segs.sort(key=lambda x: (x["start"], x["end"]))
+        return segs
+
+    if isinstance(diar_out, dict) and isinstance(diar_out.get("segments"), list):
+        return _normalize_diar_output(diar_out["segments"])
+
+    return segs
+
+
+def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec: float = 0.05) -> List[Dict[str, Any]]:
+    """
+    Merge adjacent speaker turns and filter very short segments.
+    Note: min_dur_sec reduced from 0.25 to 0.05 to preserve short responses (common in infield audio).
+    """
+    turns = [t for t in turns if float(t.get("end", 0.0)) > float(t.get("start", 0.0))]
+    turns.sort(key=lambda x: (float(x["start"]), float(x["end"])))
+    merged: List[Dict[str, Any]] = []
+    for t in turns:
+        s = float(t["start"])
+        e = float(t["end"])
+        spk = str(t.get("speaker", "UNKNOWN"))
+        if (e - s) < min_dur_sec:
+            continue
+        if not merged:
+            merged.append({"start": s, "end": e, "speaker": spk})
+            continue
+        prev = merged[-1]
+        if spk == prev["speaker"] and s <= float(prev["end"]) + gap_sec:
+            prev["end"] = max(float(prev["end"]), e)
+        else:
+            merged.append({"start": s, "end": e, "speaker": spk})
+    return merged
+
+
+def _attach_speaker_by_overlap(segments: List[Dict[str, Any]], turns: List[Dict[str, Any]]) -> None:
+    """
+    Assign speaker to each segment based on overlap with diarization turns.
+
+    Key insight for infield audio: pyannote detects overlapping speaker turns where
+    short interjections (target) appear WITHIN longer turns (coach). For short segments
+    (<3s), we prioritize matching with short speaker turns that are contained within
+    the segment's timespan, as these represent direct responses.
+    """
+    # Identify "minority" speaker (usually target with less speaking time)
+    speaker_durations: Dict[str, float] = {}
+    for d in turns:
+        spk = str(d.get("speaker", "UNKNOWN"))
+        dur = float(d["end"]) - float(d["start"])
+        speaker_durations[spk] = speaker_durations.get(spk, 0.0) + dur
+
+    minority_speaker = min(speaker_durations, key=speaker_durations.get) if speaker_durations else "UNKNOWN"
+
+    for seg in segments:
+        s0 = float(seg.get("start", 0.0))
+        s1 = float(seg.get("end", 0.0))
+        seg_dur = s1 - s0
+
+        best_spk = "UNKNOWN"
+        best_score = -1.0
+
+        # For short segments, check if there's a minority speaker turn that overlaps significantly
+        if seg_dur < 3.0:
+            for d in turns:
+                d_start = float(d["start"])
+                d_end = float(d["end"])
+                spk = str(d.get("speaker", "UNKNOWN"))
+
+                if spk != minority_speaker:
+                    continue
+
+                ov = max(0.0, min(s1, d_end) - max(s0, d_start))
+                if ov <= 0:
+                    continue
+
+                d_dur = d_end - d_start
+                overlap_ratio_of_turn = ov / max(d_dur, 0.01)
+                if overlap_ratio_of_turn >= 0.5:
+                    best_spk = spk
+                    best_score = 1.0
+                    break
+
+        # If no minority speaker match found, use standard overlap scoring
+        if best_score < 0:
+            for d in turns:
+                d_start = float(d["start"])
+                d_end = float(d["end"])
+                d_dur = d_end - d_start
+                spk = str(d.get("speaker", "UNKNOWN"))
+
+                ov = max(0.0, min(s1, d_end) - max(s0, d_start))
+                if ov <= 0:
+                    continue
+
+                overlap_ratio = ov / max(seg_dur, 0.01)
+                duration_match = min(seg_dur, d_dur) / max(seg_dur, d_dur, 0.01)
+                score = overlap_ratio * (0.8 + 0.2 * duration_match)
+
+                if score > best_score:
+                    best_score = score
+                    best_spk = spk
+
+        seg["speaker"] = best_spk
+        if isinstance(seg.get("words"), list):
+            for w in seg["words"]:
+                if isinstance(w, dict):
+                    w["speaker"] = best_spk
+
+
+# --------------------------
+# Diarization engine
+# --------------------------
+
+class DiarizeEngine:
+    """Speaker diarization using pyannote."""
+
+    def __init__(self, device: str = "", hf_token: str = ""):
+        self.device = _auto_device(device)
+        self.hf_token = _get_hf_token(hf_token)
+
+        if not self.hf_token:
+            raise SystemExit("Diarization requires HF token. Set HF_TOKEN or pass --hf-token.")
+
+        try:
+            import whisperx  # type: ignore
+            self._whisperx = whisperx
+        except Exception as e:
+            raise SystemExit(f"Missing whisperx. Install: pip install -U whisperx ({type(e).__name__}: {e})")
+
+        # Load diarization pipeline
+        try:
+            from whisperx.diarize import DiarizationPipeline
+        except ImportError:
+            DiarizationPipeline = getattr(self._whisperx, "DiarizationPipeline", None)
+            if DiarizationPipeline is None:
+                raise SystemExit("DiarizationPipeline not found. Install whisperx with diarization support.")
+
+        try:
+            self._diar_pipeline = DiarizationPipeline(use_auth_token=self.hf_token, device=self.device)
+        except TypeError:
+            try:
+                self._diar_pipeline = DiarizationPipeline(device=self.device, use_auth_token=self.hf_token)
+            except TypeError:
+                self._diar_pipeline = DiarizationPipeline(use_auth_token=self.hf_token)
+
+        log(f"[04.diarize] Loaded diarization pipeline on device={self.device}")
+
+    def diarize(self, segments: List[Dict[str, Any]], audio16k: np.ndarray, audio_path: str) -> List[Dict[str, Any]]:
+        """Add speaker labels to segments."""
+        # Run diarization
+        try:
+            diar_out = self._diar_pipeline(audio_path)
+        except Exception:
+            diar_out = self._diar_pipeline(audio16k)
+
+        turns = _normalize_diar_output(diar_out)
+        turns = _merge_turns(turns)
+
+        if not turns:
+            log("[04.diarize] WARN: No diarization turns detected")
+            return segments
+
+        # Try whisperx assign_word_speakers first
+        try:
+            aligned_dict = {"segments": segments}
+            assigned = self._whisperx.assign_word_speakers(turns, aligned_dict)
+            return assigned.get("segments", []) or segments
+        except Exception:
+            # Fallback to overlap-based assignment
+            _attach_speaker_by_overlap(segments, turns)
+            return segments
+
+
+# --------------------------
+# Output writing
+# --------------------------
+
+def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
+
+
+def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+    full_text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    out_json_path.write_text(
+        json.dumps({"text": full_text, "segments": segments}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    base = out_json_path.with_suffix("")
+    write_txt(base.with_name(base.name + ".txt"), segments)
+
+
+# --------------------------
+# Audio selection
+# --------------------------
+
+def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Optional[Path]:
+    clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
+    raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
+    legacy = sorted(video_dir.glob("*.wav"))
+
+    if prefer == "raw" and raw:
+        return raw[0]
+    if prefer == "legacy" and legacy:
+        return legacy[0]
+
+    if clean:
+        return clean[0]
+    if raw:
+        return raw[0]
+    if legacy:
+        return legacy[0]
+    return None
+
+
+# --------------------------
+# Core processing
+# --------------------------
+
+def diarize_transcription(
+    aligned_json: Path,
+    audio_path: Path,
+    out_json: Path,
+    engine: DiarizeEngine,
+    progress_interval: float = 15.0,
+) -> None:
+    """Add speaker labels to aligned transcription."""
+    t0 = time.monotonic()
+
+    # Load aligned transcription
+    data = json.loads(aligned_json.read_text(encoding="utf-8"))
+    segments = data.get("segments", [])
+
+    if not segments:
+        log(f"[04.diarize] WARN: No segments in {aligned_json.name}")
+        _write_all_outputs(out_json, [])
+        return
+
+    log(f"[04.diarize] Input: {len(segments)} segments from {aligned_json.name}")
+
+    # Load audio
+    audio16k = load_audio_16k_for_whisperx(str(audio_path))
+    duration_sec = len(audio16k) / 16000.0
+    log(f"[04.diarize] Audio: {audio_path.name} ({duration_sec:.1f}s)")
+
+    # Diarize
+    with heartbeat("diarization", interval_sec=progress_interval):
+        diarized_segments = engine.diarize(segments, audio16k, str(audio_path))
+
+    # Normalize
+    diarized_segments = _segments_from_any(diarized_segments, duration_sec)
+
+    # Count speakers
+    speakers = set(s.get("speaker", "UNKNOWN") for s in diarized_segments)
+    log(f"[04.diarize] Output: {len(diarized_segments)} segments, {len(speakers)} speakers: {sorted(speakers)}")
+
+    # Write output
+    _write_all_outputs(out_json, diarized_segments)
+
+    elapsed = time.monotonic() - t0
+    log(f"[04.diarize] DONE: {out_json.name} ({elapsed:.1f}s)")
+
+
+# --------------------------
+# Batch processing
+# --------------------------
+
+def batch_for_source(
+    source_name: str,
+    youtube_url: str,
+    overwrite: bool,
+    prefer_audio: str,
+    engine: DiarizeEngine,
+    progress_interval: float,
+) -> int:
+    root = repo_root()
+    safe_source = safe_name(source_name)
+
+    # Input from 03.align
+    align_root = root / "data" / "03.align" / safe_source
+    # Audio from 01.download
+    downloads_root = root / "data" / "01.download" / safe_source
+    # Output to 04.diarize
+    out_root = root / "data" / "04.diarize" / safe_source
+
+    if not align_root.exists():
+        log(f"[04.diarize] No aligned data found: {align_root}")
+        return 0
+
+    if not downloads_root.exists():
+        log(f"[04.diarize] No downloads found: {downloads_root}")
+        return 0
+
+    video_id = extract_video_id(youtube_url)
+    video_dirs = sorted([p for p in align_root.iterdir() if p.is_dir()])
+    if video_id:
+        video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
+
+    if not video_dirs:
+        log(f"[04.diarize] No video folders found under: {align_root}")
+        return 0
+
+    processed = 0
+    skipped = 0
+    failed = 0
+
+    for video_dir in video_dirs:
+        try:
+            # Find aligned JSON
+            aligned_files = sorted(video_dir.glob("*.full.json"))
+            if not aligned_files:
+                log(f"[04.diarize] WARN: No aligned file found in: {video_dir}")
+                continue
+
+            aligned_json = aligned_files[0]
+
+            # Find corresponding audio
+            download_video_dir = downloads_root / video_dir.name
+            if not download_video_dir.exists():
+                log(f"[04.diarize] WARN: No download folder for: {video_dir.name}")
+                continue
+
+            audio_path = _pick_best_audio_in_video_dir(download_video_dir, prefer=prefer_audio)
+            if audio_path is None:
+                log(f"[04.diarize] WARN: No audio found for: {video_dir.name}")
+                continue
+
+            # Output
+            out_video_dir = out_root / video_dir.name
+            out_video_dir.mkdir(parents=True, exist_ok=True)
+            out_json = out_video_dir / f"{video_dir.name}.full.json"
+
+            if out_json.exists() and not overwrite:
+                skipped += 1
+                continue
+
+            log(f"[04.diarize] VIDEO: {video_dir.name}")
+            diarize_transcription(
+                aligned_json=aligned_json,
+                audio_path=audio_path,
+                out_json=out_json,
+                engine=engine,
+                progress_interval=progress_interval,
+            )
+            processed += 1
+
+        except Exception as e:
+            failed += 1
+            log(f"[04.diarize] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[04.diarize]        {type(e).__name__}: {e}")
+            continue
+
+    log(f"[04.diarize] Done: processed={processed} skipped={skipped} failed={failed}")
+    return processed
+
+
+# --------------------------
+# CLI
+# --------------------------
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser(
+        description="Speaker diarization using pyannote.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/03.align).")
+    p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
+
+    p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--input", help="Single-file input aligned JSON.")
+    p.add_argument("--audio", help="Single-file input audio path.")
+    p.add_argument("--out", help="Single-file output .full.json.")
+
+    p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
+    p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
+
+    p.add_argument("--device", default=os.environ.get("WHISPERX_DEVICE", ""))
+    p.add_argument("--hf-token", default=os.environ.get("HF_TOKEN", ""), help="Hugging Face token for pyannote.")
+
+    p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
+
+    args = p.parse_args()
+
+    # Initialize engine
+    engine = DiarizeEngine(device=args.device, hf_token=args.hf_token)
+
+    # Single-file mode
+    if args.input:
+        if not args.audio:
+            raise SystemExit("--input requires --audio")
+        if not args.out:
+            raise SystemExit("--input requires --out")
+
+        input_path = Path(args.input)
+        audio_path = Path(args.audio)
+        out_path = Path(args.out)
+
+        if not input_path.exists():
+            raise SystemExit(f"Input not found: {input_path}")
+        if not audio_path.exists():
+            raise SystemExit(f"Audio not found: {audio_path}")
+
+        if out_path.exists() and not args.overwrite:
+            log(f"[04.diarize] SKIP: exists ({out_path.name})")
+            raise SystemExit(0)
+
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        diarize_transcription(
+            aligned_json=input_path,
+            audio_path=audio_path,
+            out_json=out_path,
+            engine=engine,
+            progress_interval=args.progress_interval,
+        )
+        raise SystemExit(0)
+
+    # Batch sources file
+    if args.sources is not None:
+        sources_path = Path(args.sources)
+        if not sources_path.is_absolute():
+            sources_path = repo_root() / sources_path
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+        total = 0
+        for source_name, youtube_url in parse_sources_file(sources_path):
+            total += batch_for_source(
+                source_name=source_name,
+                youtube_url=youtube_url,
+                overwrite=bool(args.overwrite),
+                prefer_audio=str(args.prefer_audio),
+                engine=engine,
+                progress_interval=args.progress_interval,
+            )
+        log(f"[04.diarize] ✅ ALL SOURCES DONE: total_processed={total}")
+        raise SystemExit(0)
+
+    # Normal batch mode
+    if not args.source_name or not args.youtube_url:
+        raise SystemExit(
+            "Provide either --input/--audio/--out, or --sources [file], or:\n"
+            "./scripts/training-data/04.diarize <source_name> <youtube_url>"
+        )
+
+    batch_for_source(
+        source_name=str(args.source_name),
+        youtube_url=str(args.youtube_url),
+        overwrite=bool(args.overwrite),
+        prefer_audio=str(args.prefer_audio),
+        engine=engine,
+        progress_interval=args.progress_interval,
+    )

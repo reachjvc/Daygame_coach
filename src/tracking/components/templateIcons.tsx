@@ -6,7 +6,14 @@ import {
   Settings2,
   Star,
   Lock,
+  Heart,
+  Brain,
+  Target,
+  Activity,
+  Eye,
+  Lightbulb,
 } from "lucide-react"
+import type { FieldCategory } from "../types"
 
 /**
  * Template icons for field reports.
@@ -20,4 +27,43 @@ export const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
   custom: <Settings2 className="size-6" />,
   favorite: <Star className="size-6" />,
   "favorite-locked": <Lock className="size-6" />,
+}
+
+/**
+ * Category icons for the custom report builder field library.
+ * Separated from config.ts because it contains JSX.
+ */
+export const CATEGORY_ICONS: Record<FieldCategory, React.ReactNode> = {
+  quick_capture: <Zap className="size-4" />,
+  emotional: <Heart className="size-4" />,
+  analysis: <Brain className="size-4" />,
+  action: <Target className="size-4" />,
+  skill: <Activity className="size-4" />,
+  context: <Eye className="size-4" />,
+  cognitive: <Lightbulb className="size-4" />,
+}
+
+/**
+ * Component to render a category icon by key.
+ * Use this instead of directly accessing CATEGORY_ICONS when you need a component.
+ */
+export function CategoryIcon({
+  category,
+  className,
+}: {
+  category: FieldCategory
+  className?: string
+}) {
+  const icon = CATEGORY_ICONS[category]
+  if (!icon) return null
+  // Clone the icon element with additional className if provided
+  if (className && typeof icon === "object" && "props" in icon) {
+    const iconElement = icon as React.ReactElement
+    return (
+      <span className={className}>
+        {iconElement}
+      </span>
+    )
+  }
+  return <>{icon}</>
 }

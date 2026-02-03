@@ -1,15 +1,62 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(npm test*)",
+      "Bash(npm test *)",
+      "Bash(npm run test*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run build*)",
+      "Bash(npm run dev*)",
+      "Bash(npm run lint*)",
+      "Bash(npm install*)",
+      "Bash(npm list*)",
+      "Bash(npm outdated*)",
+      "Bash(npm view*)",
+      "Bash(npm audit*)",
+      "Bash(npx vitest*)",
+      "Bash(npx playwright*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git branch)",
+      "Bash(git branch -a*)",
+      "Bash(git branch -v*)",
+      "Bash(git branch --list*)",
+      "Bash(git remote*)",
+      "Bash(git fetch*)",
+      "Bash(git rev-parse*)",
+      "Bash(git ls-files*)",
+      "Bash(git blame*)",
+      "Bash(git stash list*)",
+      "Bash(git config --get*)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(ls*)",
+      "Bash(pwd)",
+      "Bash(which*)",
+      "Bash(mkdir*)",
+      "Bash(TZ=*)",
+      "Bash(node --version*)",
+      "Bash(npm --version*)",
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "echo '⚠️ REMINDER: Update relevant doc BEFORE summarizing to user'"
+        "command": "echo '\u26a0\ufe0f REMINDER: Update relevant doc BEFORE summarizing to user'"
       }
     ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write",
-        "command": "echo '📝 File modified. Did you update the corresponding doc?'"
+        "command": "echo '\ud83d\udcdd File modified. Did you update the corresponding doc?'"
       }
     ]
   }

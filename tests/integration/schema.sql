@@ -2,7 +2,9 @@
 -- This schema mirrors the Supabase production schema.
 -- IMPORTANT: Keep this in sync with Supabase migrations!
 --
--- Last synced: 31-01-2026
+-- Last synced: 03-02-2026
+-- Changelog:
+-- - 03-02-2026: Added title column to field_reports table
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -228,6 +230,7 @@ CREATE TABLE field_reports (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
   template_id UUID REFERENCES field_report_templates(id),
+  title TEXT,
   fields JSONB NOT NULL DEFAULT '{}'::JSONB,
   approach_count INTEGER,
   location TEXT,

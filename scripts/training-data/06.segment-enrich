@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/04.segment-enrich
+scripts/training-data/06.segment-enrich
 
 Phase 1: Speaker labeling (LLM) + Tone classification (audio thresholds)
 
-Input:  data/03.audio-features/<source>/<video>/*.audio_features.json
-Output: data/04.segment-enrich/<source>/<video>/*.segment_enriched.json
+Input:  data/05.audio-features/<source>/<video>/*.audio_features.json
+Output: data/06.segment-enrich/<source>/<video>/*.segment_enriched.json
 
 Use:
   ./04.segment-enrich --input PATH           # Process single file
@@ -63,9 +63,9 @@ import numpy as np
 # === Configuration ===
 REPO_ROOT = Path(__file__).parent.parent.parent
 DATA_ROOT = REPO_ROOT / "data"
-INPUT_DIR = DATA_ROOT / "03.audio-features"
-OUTPUT_DIR = DATA_ROOT / "04.segment-enrich"
-STATE_FILE = DATA_ROOT / ".state" / ".04.segment-enrich.state.json"
+INPUT_DIR = DATA_ROOT / "05.audio-features"
+OUTPUT_DIR = DATA_ROOT / "06.segment-enrich"
+STATE_FILE = DATA_ROOT / ".state" / ".06.segment-enrich.state.json"
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "llama3.1:latest"

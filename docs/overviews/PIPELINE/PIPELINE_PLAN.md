@@ -1,11 +1,12 @@
 # Pipeline Plan
 
 Status: Active
+Updated: 03-02-2026 - Added test round organization (r1, r2); test_r2 = 5 infield videos
+Updated: 03-02-2026 - MAJOR: Split 02.transcribe into 02/03/04; renumbered pipeline to 9 scripts
 Updated: 02-02-2026 - Fixed output paths to show nested folder structure (video/video.full.json)
 Updated: 02-02-2026 14:00 - LOCKED: large-v3 only decision finalized (HYBRID rejected after quality testing)
 Updated: 02-02-2026 12:30 - CLARIFIED: Actual implementation is large-v3 only; testing if HYBRID adds value
 Updated: 02-02-2026 22:00 - Cleaned: Removed legacy model references
-Updated: 02-02-2026 20:30 - MAJOR: Consolidated speaker ID in 04. Pyannote diarization confirmed.
 
 ---
 
@@ -42,44 +43,46 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 
 ---
 
-## Pipeline Structure (7 Scripts)
+## Pipeline Structure (9 Scripts)
 
 ```
 01.download       → Raw audio + metadata
-02.transcribe     → large-v3 + whisperx.align + pyannote
-03.audio-features → Pitch, energy, tempo + pyannote_speaker passthrough
-04.segment-enrich → Speaker mapping (pyannote→coach/target) + tone
-05.conversations  → Video type + conversation boundaries
-06a.structure     → Interaction boundaries + phases
-06b.content       → Techniques + topics
-07.ingest.ts      → Supabase vector store
+02.transcribe     → large-v3 transcription (word timestamps)
+03.align          → whisperx.align (sentence-level segments)
+04.diarize        → pyannote speaker diarization
+05.audio-features → Pitch, energy, tempo + pyannote_speaker passthrough
+06.segment-enrich → Speaker mapping (pyannote→coach/target) + tone
+07.conversations  → Video type + conversation boundaries
+08a.structure     → Interaction boundaries + phases
+08b.content       → Techniques + topics
+09.ingest.ts      → Supabase vector store
 ```
 
 **Note**: 06c.outcomes was removed (video selection bias makes outcome data unreliable).
 
 ### Transcription Approach (LOCKED)
 
-**Decision**: large-v3 only + whisperx.align + pyannote diarization
+**Decision**: Split into 3 scripts: 02.transcribe → 03.align → 04.diarize
 
 ```
-Audio ──► large-v3 (condition_on_previous_text=True)
+Audio ──► 02.transcribe (large-v3, condition_on_previous_text=True)
+              │
+              ▼ [segments with word timestamps]
+         03.align (whisperx.align) ──► sentence-level segments
               │
               ▼
-         whisperx.align ──► sentence-level segments
+         04.diarize (pyannote) ──► speaker diarization
               │
               ▼
-         pyannote ──► speaker diarization
-              │
-              ▼
-         OUTPUT: .full.json
+         OUTPUT: data/04.diarize/{source}/{video}/{video}.full.json
 ```
 
-| Component | Value |
-|-----------|-------|
-| Transcription Model | `large-v3` with `condition_on_previous_text=True` |
-| Segmentation | `whisperx.align` (splits into sentence-level for diarization) |
-| Diarization | pyannote via whisperx |
-| Speaker Mapping | 04.segment-enrich |
+| Component | Script | Value |
+|-----------|--------|-------|
+| Transcription Model | 02.transcribe | `large-v3` with `condition_on_previous_text=True` |
+| Segmentation | 03.align | `whisperx.align` (splits into sentence-level) |
+| Diarization | 04.diarize | pyannote via whisperx |
+| Speaker Mapping | 06.segment-enrich | Maps SPEAKER_00/01 → coach/target |
 
 **Why HYBRID was rejected (quality testing 02-02-2026):**
 - distil-v3 had critical errors: wrong cities, wrong words, wrong brand names
@@ -90,7 +93,7 @@ Audio ──► large-v3 (condition_on_previous_text=True)
 ### Data Flow
 
 ```
-01 → 02 → 03 → 04 → 05 → 06a → 06b → 07
+01 → 02 → 03 → 04 → 05 → 06 → 07 → 08a → 08b → 09
 ```
 
 Each script reads from the previous script's output folder.
@@ -107,47 +110,54 @@ Each script reads from the previous script's output folder.
 ### 02.transcribe
 - **Input**: `data/01.download/{source}/{video}/*.wav`
 - **Output**: `data/02.transcribe/{source}/{video}/{video}.full.json` + `.txt`
-- **Approach**: large-v3 only (LOCKED)
-  1. Run large-v3 with `condition_on_previous_text=True` for accurate text
-  2. Align with whisperx.align for sentence-level segments
-  3. Run pyannote for speaker diarization
-- **Model**: `large-v3` (best accuracy: proper nouns, punctuation, capitalization)
-- **Diarization**: pyannote ON by default (outputs SPEAKER_00, SPEAKER_01)
+- **Model**: `large-v3` with `condition_on_previous_text=True`
+- **Does**: Transcription only (word timestamps), no alignment or diarization
+- **Note**: Output segments have word-level timestamps but are not sentence-aligned
+
+### 03.align
+- **Input**: `data/02.transcribe/{source}/{video}/*.full.json`
+- **Output**: `data/03.align/{source}/{video}/{video}.full.json`
+- **Does**: whisperx.align to split segments into sentence-level boundaries
+- **Note**: Required before diarization for accurate speaker assignment
+
+### 04.diarize
+- **Input**: `data/03.align/{source}/{video}/*.full.json`
+- **Output**: `data/04.diarize/{source}/{video}/{video}.full.json`
+- **Does**: pyannote speaker diarization (outputs SPEAKER_00, SPEAKER_01)
 - **Requires**: HF_TOKEN environment variable for pyannote model access
 
-### 03.audio-features
-- **Input**: `data/02.transcribe/{source}/{video}/*.full.json`
-- **Output**: `data/03.audio-features/{source}/{video}/{video}.audio_features.json`
+### 05.audio-features
+- **Input**: `data/04.diarize/{source}/{video}/*.full.json`
+- **Output**: `data/05.audio-features/{source}/{video}/{video}.audio_features.json`
 - **Features**: pitch, energy, tempo, spectral
-- **Passthrough**: `pyannote_speaker` field from transcription (SPEAKER_00, SPEAKER_01)
-- **Note**: Speaker ID comes from pyannote diarization in 02.transcribe, passed through here
+- **Passthrough**: `pyannote_speaker` field from diarization (SPEAKER_00, SPEAKER_01)
 
-### 04.segment-enrich
-- **Input**: `data/03.audio-features/**/*.audio_features.json`
-- **Output**: `data/04.segment-enrich/{source}/{title}.segment_enriched.json`
+### 06.segment-enrich
+- **Input**: `data/05.audio-features/**/*.audio_features.json`
+- **Output**: `data/06.segment-enrich/{source}/{title}.segment_enriched.json`
 - **Speaker ID**: Maps pyannote SPEAKER_00/01 → coach/target using:
   - Speaking time heuristic (majority speaker = coach)
   - Text patterns for refinement (short responses = target)
 - **Tone**: Audio thresholds (playful/confident/nervous/energetic/neutral)
 - **Note**: Single source of truth for all speaker labeling (coach/target/voiceover/other)
 
-### 05.conversations
-- **Input**: `data/04.segment-enrich/**/*.segment_enriched.json`
-- **Output**: `data/05.conversations/{source}/{title}.conversations.json`
+### 07.conversations
+- **Input**: `data/06.segment-enrich/**/*.segment_enriched.json`
+- **Output**: `data/07.conversations/{source}/{title}.conversations.json`
 - **Does**: Video type detection, conversation boundary detection
 
-### 06a.structure
-- **Input**: `data/05.conversations/**/*.conversations.json`
-- **Output**: `data/06a.structure/{source}/{title}.interactions.jsonl`
+### 08a.structure
+- **Input**: `data/07.conversations/**/*.conversations.json`
+- **Output**: `data/08a.structure/{source}/{title}.interactions.jsonl`
 - **Does**: Extract interaction boundaries + phases (open/pre_hook/post_hook/close)
 
-### 06b.content
-- **Input**: `data/06a.structure/**/*.interactions.jsonl`
-- **Output**: `data/06b.content/{source}/{title}.enriched.json`
+### 08b.content
+- **Input**: `data/08a.structure/**/*.interactions.jsonl`
+- **Output**: `data/08b.content/{source}/{title}.enriched.json`
 - **Does**: Extract techniques + topics per interaction
 
-### 07.ingest.ts
-- **Input**: `data/06b.content/**/*.enriched.json`
+### 09.ingest.ts
+- **Input**: `data/08b.content/**/*.enriched.json`
 - **Output**: Supabase embeddings table
 - **Does**: Generate embeddings, store with metadata
 
@@ -202,28 +212,36 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 
 **02.transcribe specific:**
 - large-v3 transcription must complete successfully
-- pyannote_speaker field must be present on all segments
+- Word timestamps must be present on all segments
 - Proper nouns should be correctly capitalized (verify on spot-check)
 
-**03.audio-features specific:**
+**03.align specific:**
+- whisperx.align must complete successfully
+- Segments must be sentence-level (shorter than raw transcription segments)
+
+**04.diarize specific:**
+- pyannote diarization must complete successfully
+- pyannote_speaker field must be present on all segments (SPEAKER_00, SPEAKER_01)
+
+**05.audio-features specific:**
 - `pitch_range_hz[1]` must be 350.0 (NOT 1046.5 - old format)
-- `pyannote_speaker` field must be present (passed through from 02.transcribe)
+- `pyannote_speaker` field must be present (passed through from 04.diarize)
 - Audio features (pitch, energy, tempo) must be computed for all segments
 
-**04.segment-enrich specific:**
+**06.segment-enrich specific:**
 - `detected_video_type` must be `infield`, `talking_head`, or `podcast` (NOT `unknown`)
 - All speaker labels must use `method: "llm_speaker_id"` (no pitch heuristics)
 - If video has <3 "target" segments but type is "infield", flag for review
 
-**05.conversations specific:**
+**07.conversations specific:**
 - Each conversation must have at least 2 segments
 - Conversation boundaries must not overlap
 
-**06a.structure specific:**
+**08a.structure specific:**
 - Each interaction must have at least one phase assigned
 - Phases must be in valid order (open → pre_hook → post_hook → close)
 
-**06b.content specific:**
+**08b.content specific:**
 - Each interaction must have at least one technique OR one topic
 
 ### Mandatory Spot-Check Requirements
@@ -234,26 +252,36 @@ Claude MUST present these items - not samples, but ALL instances:
 1. **Verify transcription completed**: segment count per video, total duration covered
 2. **Sample 3 segments per video**: check text quality and capitalization
 3. **Proper noun check**: verify city names, brand names, celebrity names are correct
-4. **Pyannote speaker distribution**: SPEAKER_00/SPEAKER_01 counts per video
+4. **Word timestamps check**: verify words array present with timing info
 
-**03.audio-features:**
+**03.align:**
+1. **Verify alignment completed**: segment count per video (should be more than 02)
+2. **Segment length check**: verify segments are sentence-level (not multi-sentence)
+3. **Sample 3 segments per video**: check sentence boundaries are reasonable
+
+**04.diarize:**
+1. **Verify diarization completed**: all segments have pyannote_speaker field
+2. **Pyannote speaker distribution**: SPEAKER_00/SPEAKER_01 counts per video
+3. **Sample 3 segments per video**: check speaker labels are present
+
+**05.audio-features:**
 1. **Per-video summary table**: segments count, pyannote_speaker distribution, pitch_range used
 2. **Pyannote speaker distribution** per video - how many SPEAKER_00, SPEAKER_01, unknown
 3. **Sample 3 segments per video** with full feature values (pitch, energy, tempo, spectral)
 4. **Verify pyannote_speaker passthrough** - field must be present on all segments
 
-**04.segment-enrich:**
+**06.segment-enrich:**
 1. **ALL segments labeled as minority speakers** (target, voiceover, other) - show full text
 2. **ALL videos with <10% target segments** if type is "infield" - likely mislabeling
 3. **Flag suspect labels**: target segments containing coach phrases ("here's what", "you got to", "I'm going to")
 4. **Per-video summary**: video_type, speaker distribution, segment counts
 
-**05.conversations:**
+**07.conversations:**
 1. **ALL single-segment conversations** - likely boundary errors
 2. **ALL videos with >10 conversations** - might be over-segmented
 3. **Conversation length distribution** per video
 
-**06a.structure / 06b.content:**
+**08a.structure / 08b.content:**
 1. **ALL interactions with only 1 phase** - might be incomplete
 2. **ALL interactions with 0 techniques** - might need review
 3. **Sample 3 complete interactions** per video with full content
@@ -283,7 +311,7 @@ For EVERY gate:
 ## Rollout Phases
 
 ### Phase A: 5 Test Videos
-Run all scripts (02-HYBRID → 03 → 04 → 05 → 06a → 06b → 07) on 5 videos.
+Run all scripts (02 → 03 → 04 → 05 → 06 → 07 → 08a → 08b → 09) on 5 videos.
 **HARD GATE**: User approves final output quality.
 
 ### Phase B: 15 Additional Videos
@@ -293,6 +321,33 @@ Run full pipeline on 15 more videos.
 ### Phase C: Remaining 436 Videos
 Run full pipeline on all remaining videos.
 **HARD GATE**: User approves final dataset.
+
+---
+
+## Test Round Organization
+
+Test data is organized by rounds to enable reproducible verification:
+
+```
+data/test/
+├── pilot/video_list.json    # Historical 20-video manifest (ARCHIVED)
+├── r1/                      # Phase A verification (5 daily_evolution videos)
+│   ├── 01.download/
+│   ├── 02.transcribe/
+│   └── video_list.json
+└── r2/                      # Current test round (5 infield videos)
+    ├── 01.download/         # Symlinks to main data folders
+    └── video_list.json
+```
+
+**Round Progression**:
+- `r1`: Original Phase A test (5 videos from daily_evolution, all transcribed)
+- `r2`: Current focus - 5 infield videos including problematic case (-CZtcqqEDdk)
+
+**Each round manifest (`video_list.json`) tracks**:
+- Video selection criteria and rationale
+- Per-video pipeline progress (which scripts have run)
+- Known issues for problematic videos
 
 ---
 
@@ -307,19 +362,21 @@ Run full pipeline on all remaining videos.
 - [x] Transcription model testing complete (large-v3 only approach locked)
 
 ### Phase A: 5 Test Videos [COMPLETE]
-- [x] 02.transcribe verified on 5 videos (large-v3 + whisperx.align + pyannote)
-- [x] **GATE: User approves 02 output** (proper nouns, diarization verified)
-- [ ] 03.audio-features run on 5 videos
-- [ ] **GATE: User approves 03 output**
-- [ ] 04.segment-enrich run on 5 videos
-- [ ] **GATE: User approves 04 output**
-- [ ] 05.conversations run on 5 videos
+- [x] 02.transcribe verified on 5 videos (large-v3)
+- [x] 03.align verified on 5 videos (whisperx.align)
+- [x] 04.diarize verified on 5 videos (pyannote)
+- [x] **GATE: User approves 02→03→04 output** (proper nouns, diarization verified)
+- [ ] 05.audio-features run on 5 videos
 - [ ] **GATE: User approves 05 output**
-- [ ] 06a.structure run on 5 videos
-- [ ] **GATE: User approves 06a output**
-- [ ] 06b.content run on 5 videos
-- [ ] **GATE: User approves 06b output**
-- [ ] 07.ingest run on 5 videos
+- [ ] 06.segment-enrich run on 5 videos
+- [ ] **GATE: User approves 06 output**
+- [ ] 07.conversations run on 5 videos
+- [ ] **GATE: User approves 07 output**
+- [ ] 08a.structure run on 5 videos
+- [ ] **GATE: User approves 08a output**
+- [ ] 08b.content run on 5 videos
+- [ ] **GATE: User approves 08b output**
+- [ ] 09.ingest run on 5 videos
 - [ ] **GATE: User approves ingested data**
 
 ### Phase B: 15 Additional Videos [NOT STARTED]

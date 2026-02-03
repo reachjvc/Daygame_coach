@@ -1,14 +1,14 @@
 /**
- * scripts/training-data/07.ingest.ts
+ * scripts/training-data/09.ingest.ts
  *
  * Ingest training data into the vector store (Supabase embeddings).
  * (Renamed from 10.ingest.ts in pipeline consolidation)
  *
  * Reads:
  *   - Transcript .txt files:
- *       data/02.transcribe/**\/*.txt
- *   - Enriched ground-truth JSON files (from step 06b.content):
- *       data/06b.content/**\/*.enriched.json
+ *       data/04.diarize/**\/*.txt
+ *   - Enriched ground-truth JSON files (from step 08b.content):
+ *       data/08b.content/**\/*.enriched.json
  *
  * Writes:
  *   - Supabase embeddings (via `storeEmbeddings`)
@@ -18,22 +18,22 @@
  *
  * Use:
  *   # enriched interactions (default)
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/07.ingest.ts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.ingest.ts
  *
  *   # transcripts
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/07.ingest.ts --mode transcripts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.ingest.ts --mode transcripts
  *
  *   # utilities
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/07.ingest.ts --dry-run
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/07.ingest.ts --verify
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/07.ingest.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.ingest.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.ingest.ts --verify
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.ingest.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)
  *   - Uses `src/qa/config` + Supabase env vars (see `src/db/server`)
  *
  * Note:
- *   - Interactions mode ingests from `data/06b.content` (step 06b output).
+ *   - Interactions mode ingests from `data/08b.content` (step 08b output).
  */
 
 import fs from "fs"
@@ -400,8 +400,8 @@ async function main() {
 
   const { QA_CONFIG } = await import("../../src/qa/config")
 
-  const transcriptsDir = path.join(process.cwd(), "data", "02.transcribe")
-  const enrichedDir = path.join(process.cwd(), "data", "06b.content")
+  const transcriptsDir = path.join(process.cwd(), "data", "04.diarize")
+  const enrichedDir = path.join(process.cwd(), "data", "08b.content")
 
   const chunkSize = QA_CONFIG.rag.chunkSize
   const chunkOverlap = QA_CONFIG.rag.chunkOverlap
@@ -438,7 +438,7 @@ async function main() {
 
     const transcriptFiles = await listTxtFiles(transcriptsDir)
     if (transcriptFiles.length === 0) {
-      console.log("No transcript .txt files found under data/02.transcribe")
+      console.log("No transcript .txt files found under data/04.diarize")
       return
     }
 
@@ -468,7 +468,7 @@ async function main() {
 
     const enrichedFiles = await listJsonlFiles(enrichedDir, ".enriched.json")
     if (enrichedFiles.length === 0) {
-      console.log("No .enriched.json files found under data/06b.content")
+      console.log("No .enriched.json files found under data/08b.content")
       return
     }
 

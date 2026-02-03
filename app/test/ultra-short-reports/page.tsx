@@ -40,6 +40,30 @@ import {
   Brain,
   Search,
   HeartHandshake,
+  // Icons for quick intervention templates (Section 4)
+  Plane,
+  PlaySquare,
+  AlertTriangle,
+  Users,
+  GitBranch,
+  // Icons for focused reflection templates (Section 5)
+  LayoutGrid,
+  Rewind,
+  Award,
+  MapPin,
+  Sparkles,
+  // Icons for emotional processing templates (Section 6)
+  Angry,
+  Globe,
+  Clock,
+  Shuffle,
+  PenTool,
+  // Icons for skill & strategy templates (Section 7)
+  Crosshair as CrosshairIcon,
+  Focus,
+  Eye,
+  FlaskConical,
+  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, TemplateField } from "@/src/db/trackingTypes"
@@ -77,7 +101,7 @@ const ULTRA_SHORT_TEMPLATES: UltraShortTemplate[] = [
     description: "Complete learning cycle in 3 questions",
     tagline: "What? So What? Now What?",
     icon: <RefreshCw className="size-5" />,
-    time: "~30s",
+    time: "~45s",
     color: {
       bg: "bg-cyan-500/10",
       icon: "bg-cyan-500 text-white",
@@ -116,7 +140,7 @@ const ULTRA_SHORT_TEMPLATES: UltraShortTemplate[] = [
     description: "The two most diagnostic questions",
     tagline: "80/20 of learning",
     icon: <HelpCircle className="size-5" />,
-    time: "~45s",
+    time: "~1-2m",
     color: {
       bg: "bg-orange-500/10",
       icon: "bg-orange-500 text-white",
@@ -135,7 +159,7 @@ const ULTRA_SHORT_TEMPLATES: UltraShortTemplate[] = [
     description: "Pure positive capture",
     tagline: "Celebrate wins",
     icon: <Trophy className="size-5" />,
-    time: "~10s",
+    time: "~20-30s",
     color: {
       bg: "bg-emerald-500/10",
       icon: "bg-emerald-500 text-white",
@@ -251,7 +275,7 @@ const RESEARCH_BACKED_TEMPLATES: ResearchTemplate[] = [
     description: "Balanced ratio of positives to improvements - structured but fast",
     tagline: "3 highlights, 2 lowlights, 1 forward",
     icon: <BarChart3 className="size-5" />,
-    time: "5-7m",
+    time: "~4-5m",
     origin: "Sports Psychology",
     citation: "Bridge Athletic: 3 Highlights, 2 Lowlights, 1 Forward - the skill of reflecting",
     color: {
@@ -276,7 +300,7 @@ const RESEARCH_BACKED_TEMPLATES: ResearchTemplate[] = [
     description: "Separates decision quality from outcomes - critical for skill development",
     tagline: "Good decisions can have bad outcomes",
     icon: <Lightbulb className="size-5" />,
-    time: "5-10m",
+    time: "~5-7m",
     origin: "Sales + Poker/Trading",
     citation: "Jared Tendler (Poker): 'Focus on decision quality, not outcome. Good decisions can have bad outcomes (variance).'",
     color: {
@@ -436,6 +460,488 @@ const DEEP_DIVE_TEMPLATES: ResearchTemplate[] = [
       { id: "worst_case", type: "textarea", label: "Worst Case Reality: What's the actual worst-case outcome? Is it survivable?", placeholder: "The worst that could happen is... and I can survive that because...", rows: 2, required: true },
       { id: "action_forward", type: "text", label: "Action Forward: One small, concrete action for next time", placeholder: "Next time I will...", required: true },
       { id: "self_compassion", type: "textarea", label: "Self-Compassion Close: Write one kind thing to yourself about this experience", placeholder: "I want to remind myself that...", rows: 2, required: true },
+    ],
+  },
+]
+
+// ============================================================================
+// SECTION 4: Quick Interventions (1-3 minutes)
+// Targeted tools for specific needs - pre-session, emotional check, behavior change
+// ============================================================================
+
+const QUICK_INTERVENTION_TEMPLATES: ResearchTemplate[] = [
+  {
+    id: "intervention-preflight",
+    slug: "pre-flight",
+    name: "The Pre-Flight",
+    description: "Set your intention before you go out - the only pre-session template",
+    tagline: "Set your intention before you go",
+    icon: <Plane className="size-5" />,
+    time: "~45s-1m",
+    origin: "Aviation CRM + Poker",
+    citation: "CRM research: 'Pre-flight briefing: Set session goals before going out.' Poker journals emphasize pre-session mindset checks.",
+    color: {
+      bg: "bg-sky-500/10",
+      icon: "bg-sky-500 text-white",
+      gradient: "from-sky-500/30 via-sky-500/10 to-blue-500/20",
+      border: "border-sky-500/50 hover:border-sky-500",
+    },
+    fields: [
+      { id: "goal", type: "text", label: "What's your goal for today?", placeholder: "Today I want to...", required: true },
+      { id: "energy", type: "select", label: "Energy level right now", options: ["1-3 Low", "4-6 Medium", "7-10 High"], required: true },
+      { id: "focus", type: "text", label: "One thing you'll focus on", placeholder: "I'll specifically work on...", required: true },
+    ],
+  },
+  {
+    id: "intervention-startstop",
+    slug: "start-stop-continue",
+    name: "Start-Stop-Continue",
+    description: "Classic agile format - three buckets for immediate change",
+    tagline: "Three buckets for change",
+    icon: <PlaySquare className="size-5" />,
+    time: "~2m",
+    origin: "Agile Retrospectives",
+    citation: "Atlassian: 'Start-Stop-Continue - What to start, stop, continue doing.'",
+    color: {
+      bg: "bg-lime-500/10",
+      icon: "bg-lime-500 text-white",
+      gradient: "from-lime-500/30 via-lime-500/10 to-green-500/20",
+      border: "border-lime-500/50 hover:border-lime-500",
+    },
+    fields: [
+      { id: "start", type: "text", label: "START: One new thing to try", placeholder: "I'll start...", required: true },
+      { id: "stop", type: "text", label: "STOP: One thing to drop", placeholder: "I'll stop...", required: true },
+      { id: "continue", type: "text", label: "CONTINUE: One thing that's working", placeholder: "I'll keep doing...", required: true },
+    ],
+  },
+  {
+    id: "intervention-tilt",
+    slug: "tilt-check",
+    name: "The Tilt Check",
+    description: "Quick emotional interference detector from poker psychology",
+    tagline: "Catch emotional interference",
+    icon: <AlertTriangle className="size-5" />,
+    time: "~1m",
+    origin: "Poker/Trading Psychology",
+    citation: "Jared Tendler's tilt indicators: 'Frustration beyond normal, Changing approach out of panic, Overconfidence after early success.'",
+    color: {
+      bg: "bg-red-500/10",
+      icon: "bg-red-500 text-white",
+      gradient: "from-red-500/30 via-red-500/10 to-orange-500/20",
+      border: "border-red-500/50 hover:border-red-500",
+    },
+    fields: [
+      { id: "tilt_signs", type: "select", label: "Did any of these happen?", options: ["Frustration", "Panic-changing", "Overconfidence", "Going through motions", "None"], required: true },
+      { id: "when_noticed", type: "text", label: "When did you notice?", placeholder: "I noticed when..." },
+      { id: "trigger", type: "text", label: "What triggered it?", placeholder: "It was triggered by..." },
+    ],
+  },
+  {
+    id: "intervention-friend",
+    slug: "friend-test",
+    name: "The Friend Test",
+    description: "Quick self-compassion intervention - treat yourself like a friend",
+    tagline: "What would you tell a friend?",
+    icon: <Users className="size-5" />,
+    time: "~2m",
+    origin: "Self-Compassion (Kristin Neff)",
+    citation: "Neff: 'Self-compassion involves treating yourself with the same kindness you would offer a good friend.'",
+    color: {
+      bg: "bg-pink-500/10",
+      icon: "bg-pink-500 text-white",
+      gradient: "from-pink-500/30 via-pink-500/10 to-rose-500/20",
+      border: "border-pink-500/50 hover:border-pink-500",
+    },
+    fields: [
+      { id: "what_happened", type: "text", label: "Briefly, what happened?", placeholder: "What happened was...", required: true },
+      { id: "self_treatment", type: "text", label: "How are you treating yourself about it?", placeholder: "I'm telling myself...", required: true },
+      { id: "friend_advice", type: "textarea", label: "What would you tell a close friend?", placeholder: "I would tell them...", rows: 2, required: true },
+      { id: "can_offer", type: "select", label: "Can you offer that same compassion?", options: ["Yes", "Working on it", "It's hard"], required: true },
+    ],
+  },
+  {
+    id: "intervention-ifthen",
+    slug: "if-then",
+    name: "The If-Then",
+    description: "Implementation intentions - turn insight into autopilot behavior",
+    tagline: "Turn insight into autopilot",
+    icon: <GitBranch className="size-5" />,
+    time: "~1m",
+    origin: "Implementation Intentions (Gollwitzer)",
+    citation: "Meta-analysis of 94 studies: d=0.65 effect size. 'Difficult goals completed 3x more often with implementation intentions.'",
+    color: {
+      bg: "bg-violet-500/10",
+      icon: "bg-violet-500 text-white",
+      gradient: "from-violet-500/30 via-violet-500/10 to-purple-500/20",
+      border: "border-violet-500/50 hover:border-violet-500",
+    },
+    fields: [
+      { id: "situation", type: "text", label: "Situation that challenged you", placeholder: "Today I faced...", required: true },
+      { id: "if_clause", type: "text", label: "IF this comes up again...", placeholder: "If I encounter...", required: true },
+      { id: "then_clause", type: "text", label: "THEN I will...", placeholder: "Then I will...", required: true },
+    ],
+  },
+]
+
+// ============================================================================
+// SECTION 5: Focused Reflections (2-5 minutes)
+// Deeper but targeted - specific angles on reflection
+// ============================================================================
+
+const FOCUSED_REFLECTION_TEMPLATES: ResearchTemplate[] = [
+  {
+    id: "focused-4ls",
+    slug: "four-ls",
+    name: "The 4 Ls",
+    description: "Full emotional inventory including what you wished had happened",
+    tagline: "Liked, Learned, Lacked, Longed For",
+    icon: <LayoutGrid className="size-5" />,
+    time: "~5m",
+    origin: "Agile Retrospectives",
+    citation: "From Agile: '4 Ls - Liked, Learned, Lacked, Longed for' - captures both positive and aspirational thinking.",
+    color: {
+      bg: "bg-indigo-500/10",
+      icon: "bg-indigo-500 text-white",
+      gradient: "from-indigo-500/30 via-indigo-500/10 to-blue-500/20",
+      border: "border-indigo-500/50 hover:border-indigo-500",
+    },
+    fields: [
+      { id: "liked", type: "textarea", label: "LIKED: What did you enjoy?", placeholder: "I liked...", rows: 2, required: true },
+      { id: "learned", type: "textarea", label: "LEARNED: What insight did you gain?", placeholder: "I learned...", rows: 2, required: true },
+      { id: "lacked", type: "textarea", label: "LACKED: What was missing?", placeholder: "I lacked...", rows: 2, required: true },
+      { id: "longed_for", type: "textarea", label: "LONGED FOR: What do you wish had happened?", placeholder: "I wished...", rows: 2, required: true },
+    ],
+  },
+  {
+    id: "focused-rewind",
+    slug: "rewind",
+    name: "The Rewind",
+    description: "Focus on the lead-up - what happened BEFORE the key moment",
+    tagline: "What happened BEFORE the moment?",
+    icon: <Rewind className="size-5" />,
+    time: "~3m",
+    origin: "BJJ 'Off the Move' Analysis",
+    citation: "BJJ Scout: 'Focus on off the move - what happens BEFORE the technique. You see what really works, the circumstances under which it works.'",
+    color: {
+      bg: "bg-cyan-600/10",
+      icon: "bg-cyan-600 text-white",
+      gradient: "from-cyan-600/30 via-cyan-600/10 to-teal-600/20",
+      border: "border-cyan-600/50 hover:border-cyan-600",
+    },
+    fields: [
+      { id: "key_moment", type: "text", label: "The key moment", placeholder: "The moment was...", required: true },
+      { id: "before", type: "textarea", label: "What happened 30 seconds before?", placeholder: "Before that...", rows: 3, required: true },
+      { id: "setup", type: "text", label: "What set you up for success/failure?", placeholder: "The setup was...", required: true },
+      { id: "change_setup", type: "text", label: "What would've changed the setup?", placeholder: "Next time I could...", required: true },
+    ],
+  },
+  {
+    id: "focused-mastery",
+    slug: "mastery-log",
+    name: "The Mastery Log",
+    description: "Document proof of capability - build self-efficacy through evidence",
+    tagline: "Document proof of capability",
+    icon: <Award className="size-5" />,
+    time: "~3m",
+    origin: "Self-Efficacy Theory (Bandura)",
+    citation: "Bandura: Mastery experiences are the #1 source of self-efficacy. 'Successfully navigating setbacks can lead to even stronger self-belief.'",
+    color: {
+      bg: "bg-amber-500/10",
+      icon: "bg-amber-500 text-white",
+      gradient: "from-amber-500/30 via-amber-500/10 to-yellow-500/20",
+      border: "border-amber-500/50 hover:border-amber-500",
+    },
+    fields: [
+      { id: "did_well", type: "text", label: "One thing you did well", placeholder: "I did well at...", required: true },
+      { id: "why_worked", type: "text", label: "What made it work?", placeholder: "It worked because...", required: true },
+      { id: "challenge", type: "text", label: "One challenge you navigated", placeholder: "I faced...", required: true },
+      { id: "how_handled", type: "text", label: "How did you handle it?", placeholder: "I handled it by...", required: true },
+      { id: "proves", type: "text", label: "What does this prove about you?", placeholder: "This shows that I...", required: true },
+    ],
+  },
+  {
+    id: "focused-context",
+    slug: "context-check",
+    name: "The Context Check",
+    description: "Audit external factors - separate controllables from uncontrollables",
+    tagline: "What external factors mattered?",
+    icon: <MapPin className="size-5" />,
+    time: "~2m",
+    origin: "Habit Science + Aviation CRM",
+    citation: "Habit science: 'Environmental cues +58% adherence.' Separating controllables from uncontrollables is key in poker/trading and aviation.",
+    color: {
+      bg: "bg-emerald-500/10",
+      icon: "bg-emerald-500 text-white",
+      gradient: "from-emerald-500/30 via-emerald-500/10 to-green-500/20",
+      border: "border-emerald-500/50 hover:border-emerald-500",
+    },
+    fields: [
+      { id: "location", type: "text", label: "Location today", placeholder: "I was at...", required: true },
+      { id: "time_of_day", type: "select", label: "Time of day", options: ["Morning", "Afternoon", "Evening", "Night"], required: true },
+      { id: "energy_in", type: "select", label: "Energy level going in", options: ["Low", "Medium", "High"], required: true },
+      { id: "helped", type: "text", label: "External factors that helped", placeholder: "Things that helped..." },
+      { id: "hurt", type: "text", label: "External factors that hurt", placeholder: "Things that hurt..." },
+    ],
+  },
+  {
+    id: "focused-reframe",
+    slug: "quick-reframe",
+    name: "The Quick Reframe",
+    description: "Spot cognitive distortions quickly - lighter version of CBT",
+    tagline: "Spot the thought trap",
+    icon: <Sparkles className="size-5" />,
+    time: "~2m",
+    origin: "Cognitive Behavioral Therapy",
+    citation: "CBT research on cognitive distortions. This quick version catches distortions without the full 20-30 minute diary process.",
+    color: {
+      bg: "bg-fuchsia-500/10",
+      icon: "bg-fuchsia-500 text-white",
+      gradient: "from-fuchsia-500/30 via-fuchsia-500/10 to-purple-500/20",
+      border: "border-fuchsia-500/50 hover:border-fuchsia-500",
+    },
+    fields: [
+      { id: "negative_thought", type: "text", label: "A negative thought you had", placeholder: "I thought...", required: true },
+      { id: "distortion", type: "select", label: "Which distortion might this be?", options: ["All-or-nothing", "Catastrophizing", "Mind-reading", "Overgeneralization", "Discounting positives"], required: true },
+      { id: "evidence_against", type: "text", label: "Evidence against this thought", placeholder: "But actually...", required: true },
+      { id: "balanced", type: "text", label: "More balanced take", placeholder: "A more balanced view is...", required: true },
+    ],
+  },
+]
+
+// ============================================================================
+// SECTION 6: Emotional Processing Templates (2-5 minutes)
+// Templates focused on emotional awareness, perspective, and expression
+// ============================================================================
+
+const EMOTIONAL_PROCESSING_TEMPLATES: ResearchTemplate[] = [
+  {
+    id: "emotional-mad-sad-glad",
+    slug: "mad-sad-glad",
+    name: "The Mad-Sad-Glad",
+    description: "Simple emotional categorization in three buckets",
+    tagline: "Sort your feelings fast",
+    icon: <Angry className="size-5" />,
+    time: "~2m",
+    origin: "Agile Retrospectives",
+    citation: "Popular agile format for quick emotional processing. Simpler than 4 Ls - purely emotional, no cognitive analysis.",
+    color: {
+      bg: "bg-red-400/10",
+      icon: "bg-red-400 text-white",
+      gradient: "from-red-400/30 via-yellow-400/10 to-green-400/20",
+      border: "border-red-400/50 hover:border-red-400",
+    },
+    fields: [
+      { id: "mad", type: "text", label: "What made you MAD? (frustrations)", placeholder: "I was frustrated by...", required: true },
+      { id: "sad", type: "text", label: "What made you SAD? (disappointments)", placeholder: "I was disappointed that...", required: true },
+      { id: "glad", type: "text", label: "What made you GLAD? (wins)", placeholder: "I was happy about...", required: true },
+    ],
+  },
+  {
+    id: "emotional-common-humanity",
+    slug: "common-humanity",
+    name: "The Common Humanity",
+    description: "Remember you're not alone - millions have been exactly here",
+    tagline: "You're not the only one",
+    icon: <Globe className="size-5" />,
+    time: "~2m",
+    origin: "Kristin Neff Self-Compassion",
+    citation: "Neff's research shows 'common humanity' reduces isolation feelings. Component #2 of self-compassion: 'Struggle is part of the shared human experience.'",
+    color: {
+      bg: "bg-blue-400/10",
+      icon: "bg-blue-400 text-white",
+      gradient: "from-blue-400/30 via-blue-400/10 to-cyan-400/20",
+      border: "border-blue-400/50 hover:border-blue-400",
+    },
+    fields: [
+      { id: "failure", type: "text", label: "What feels like personal failure?", placeholder: "I feel like I failed at...", required: true },
+      { id: "how_many", type: "select", label: "How many others have experienced this exact thing?", options: ["Thousands", "Millions", "Everyone at some point"], required: true },
+      { id: "mentor_says", type: "textarea", label: "What would a wise mentor who's been there say?", placeholder: "They would tell me...", rows: 2, required: true },
+    ],
+  },
+  {
+    id: "emotional-five-year",
+    slug: "five-year-view",
+    name: "The Five Year View",
+    description: "Zoom out for perspective - cognitive distancing technique",
+    tagline: "How will future-you see this?",
+    icon: <Clock className="size-5" />,
+    time: "~2m",
+    origin: "Emotion Regulation Research",
+    citation: "Research shows distancing ('How will I view this in 5 years?') is a powerful reappraisal tactic that reduces emotional intensity.",
+    color: {
+      bg: "bg-indigo-400/10",
+      icon: "bg-indigo-400 text-white",
+      gradient: "from-indigo-400/30 via-indigo-400/10 to-violet-400/20",
+      border: "border-indigo-400/50 hover:border-indigo-400",
+    },
+    fields: [
+      { id: "feels_big", type: "text", label: "What feels big right now?", placeholder: "Right now it feels like...", required: true },
+      { id: "five_years", type: "text", label: "How will you view this in 5 years?", placeholder: "In 5 years I'll probably...", required: true },
+      { id: "future_advice", type: "text", label: "What advice would future-you give present-you?", placeholder: "Future me would say...", required: true },
+    ],
+  },
+  {
+    id: "emotional-improv",
+    slug: "improv",
+    name: "The Improv",
+    description: "Reframe unexpected responses as opportunities, not obstacles",
+    tagline: "Yes, And the unexpected",
+    icon: <Shuffle className="size-5" />,
+    time: "~2m",
+    origin: "Second City Improv",
+    citation: "Second City: 'You cannot be creative when in judgment of self or others. You also can't be creative if you're in fear.'",
+    color: {
+      bg: "bg-yellow-500/10",
+      icon: "bg-yellow-500 text-white",
+      gradient: "from-yellow-500/30 via-yellow-500/10 to-orange-400/20",
+      border: "border-yellow-500/50 hover:border-yellow-500",
+    },
+    fields: [
+      { id: "unexpected", type: "text", label: "What unexpected response did you get?", placeholder: "She said/did something I didn't expect...", required: true },
+      { id: "reaction", type: "select", label: "Did you 'Yes, And' it or resist?", options: ["Yes, And (built on it)", "Resisted (fought it)", "Froze (went blank)"], required: true },
+      { id: "opportunity", type: "text", label: "How could it have been an opportunity?", placeholder: "I could have used it to...", required: true },
+    ],
+  },
+  {
+    id: "emotional-free-write",
+    slug: "free-write",
+    name: "The Free Write",
+    description: "Unstructured expressive writing - write continuously without judgment",
+    tagline: "Just write, don't think",
+    icon: <PenTool className="size-5" />,
+    time: "~5m",
+    origin: "Pennebaker Expressive Writing",
+    citation: "Pennebaker's research shows expressive writing has therapeutic benefits: reduced stress, improved immune function, better emotional processing.",
+    color: {
+      bg: "bg-teal-400/10",
+      icon: "bg-teal-400 text-white",
+      gradient: "from-teal-400/30 via-teal-400/10 to-emerald-400/20",
+      border: "border-teal-400/50 hover:border-teal-400",
+    },
+    fields: [
+      { id: "free_write", type: "textarea", label: "Set timer for 5 minutes. Write continuously about your deepest feelings. No editing, no judgment.", placeholder: "Start writing and don't stop...", rows: 10, required: true },
+      { id: "one_word", type: "text", label: "One word to summarize how you feel now", placeholder: "One word...", required: true },
+    ],
+  },
+]
+
+// ============================================================================
+// SECTION 7: Skill & Strategy Templates (1-3 minutes)
+// Templates focused on deliberate practice, skill isolation, and strategic thinking
+// ============================================================================
+
+const SKILL_STRATEGY_TEMPLATES: ResearchTemplate[] = [
+  {
+    id: "skill-focus",
+    slug: "skill-focus",
+    name: "The Skill Focus",
+    description: "Deliberate practice - target one specific skill with full concentration",
+    tagline: "Targeted practice, not just reps",
+    icon: <Focus className="size-5" />,
+    time: "~2m",
+    origin: "Ericsson Deliberate Practice",
+    citation: "Ericsson: 'When individuals engage in practice with full concentration on improving some specific aspect of performance.' Deliberate practice = 18% of variance in skill.",
+    color: {
+      bg: "bg-orange-500/10",
+      icon: "bg-orange-500 text-white",
+      gradient: "from-orange-500/30 via-orange-500/10 to-red-500/20",
+      border: "border-orange-500/50 hover:border-orange-500",
+    },
+    fields: [
+      { id: "skill_targeted", type: "text", label: "What specific skill did you target?", placeholder: "I was working on...", required: true },
+      { id: "concentration", type: "select", label: "Concentration level (1-10)", options: ["1-3 Distracted", "4-6 Moderate", "7-8 Focused", "9-10 Flow state"], required: true },
+      { id: "feedback", type: "text", label: "What feedback did you get?", placeholder: "I noticed that...", required: true },
+      { id: "refine", type: "text", label: "How will you refine it next time?", placeholder: "Next time I'll adjust by...", required: true },
+    ],
+  },
+  {
+    id: "skill-one-thing",
+    slug: "one-thing",
+    name: "The One Thing",
+    description: "Hyper-focused review - analyze just ONE decision that mattered",
+    tagline: "The ONE moment that mattered",
+    icon: <CrosshairIcon className="size-5" />,
+    time: "~1m",
+    origin: "Esports VOD Review",
+    citation: "Esports research: 'Keep sessions SHORT (10-15 min), focus on 1-2 things. Prioritize decision-making over mechanics.'",
+    color: {
+      bg: "bg-rose-500/10",
+      icon: "bg-rose-500 text-white",
+      gradient: "from-rose-500/30 via-rose-500/10 to-pink-500/20",
+      border: "border-rose-500/50 hover:border-rose-500",
+    },
+    fields: [
+      { id: "one_moment", type: "text", label: "The ONE moment that mattered most", placeholder: "The key moment was when...", required: true },
+      { id: "right_call", type: "select", label: "Was it the right call?", options: ["Yes", "No", "Unsure"], required: true },
+      { id: "change", type: "text", label: "What would you change about that ONE moment?", placeholder: "I would change...", required: true },
+    ],
+  },
+  {
+    id: "skill-perception-gap",
+    slug: "perception-gap",
+    name: "The Perception Gap",
+    description: "Compare your intention to how you actually landed",
+    tagline: "Intention vs. how you landed",
+    icon: <Eye className="size-5" />,
+    time: "~2m",
+    origin: "Executive Coaching 360",
+    citation: "360 feedback research: 'Greatest value is seeing gap between intentions and how you actually show up.'",
+    color: {
+      bg: "bg-purple-500/10",
+      icon: "bg-purple-500 text-white",
+      gradient: "from-purple-500/30 via-purple-500/10 to-indigo-500/20",
+      border: "border-purple-500/50 hover:border-purple-500",
+    },
+    fields: [
+      { id: "intention", type: "text", label: "What was your intention?", placeholder: "I intended to come across as...", required: true },
+      { id: "perception", type: "text", label: "How do you think she perceived you?", placeholder: "She probably thought I was...", required: true },
+      { id: "gap", type: "text", label: "Where's the gap?", placeholder: "The disconnect was...", required: true },
+      { id: "close_gap", type: "text", label: "What would close it?", placeholder: "To close the gap I could...", required: true },
+    ],
+  },
+  {
+    id: "skill-learning-goal",
+    slug: "learning-goal",
+    name: "The Learning Goal",
+    description: "Focus on process over outcome - what did you learn about HOW?",
+    tagline: "Process over outcome",
+    icon: <FlaskConical className="size-5" />,
+    time: "~2m",
+    origin: "Locke & Latham Goal-Setting",
+    citation: "Research: 'For NEW, COMPLEX tasks, learning goals beat performance goals.' Focus on learning, not just results.",
+    color: {
+      bg: "bg-green-500/10",
+      icon: "bg-green-500 text-white",
+      gradient: "from-green-500/30 via-green-500/10 to-emerald-500/20",
+      border: "border-green-500/50 hover:border-green-500",
+    },
+    fields: [
+      { id: "learned_how", type: "text", label: "What did you learn about HOW to do this? (not results)", placeholder: "I learned that the process of...", required: true },
+      { id: "strategy_worked", type: "text", label: "What strategy worked?", placeholder: "What worked was...", required: true },
+      { id: "strategy_didnt", type: "text", label: "What strategy didn't work?", placeholder: "What didn't work was...", required: true },
+      { id: "experiment", type: "text", label: "One experiment to try next time", placeholder: "Next time I'll experiment with...", required: true },
+    ],
+  },
+  {
+    id: "skill-daily-cadence",
+    slug: "yesterday-today-week",
+    name: "The Yesterday-Today-Week",
+    description: "Connect the dots across time - build session continuity",
+    tagline: "Connect the dots",
+    icon: <Calendar className="size-5" />,
+    time: "~1m",
+    origin: "Sales Call Review Cadences",
+    citation: "Sales research: 'Daily: Review previous day, identify 1 takeaway. Weekly: Focus on one theme.' Creates continuity.",
+    color: {
+      bg: "bg-cyan-500/10",
+      icon: "bg-cyan-500 text-white",
+      gradient: "from-cyan-500/30 via-cyan-500/10 to-blue-500/20",
+      border: "border-cyan-500/50 hover:border-cyan-500",
+    },
+    fields: [
+      { id: "yesterday", type: "text", label: "Yesterday's key takeaway", placeholder: "From last session I learned...", required: true },
+      { id: "today", type: "text", label: "Today's one focus area", placeholder: "Today I focused on...", required: true },
+      { id: "week", type: "text", label: "This week's theme", placeholder: "This week I'm working on...", required: true },
     ],
   },
 ]
@@ -914,12 +1420,256 @@ export default function TemplateTestingPage() {
             </div>
 
             {/* SECTION 3: Deep Dive Templates */}
-            <div className="mb-6">
+            <div className="mb-8">
               <h3 className="text-lg font-bold mb-1">Section 3: Deep Dive Reflections</h3>
               <p className="text-sm text-muted-foreground mb-4">15-30 minute templates for thorough processing when you have time</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
                 {DEEP_DIVE_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleUltraShortSelect(template)}
+                    className={`group rounded-2xl overflow-hidden border-2 ${template.color.border} transition-all duration-200 cursor-pointer hover:shadow-xl hover:scale-[1.02] bg-card active:scale-[0.98]`}
+                  >
+                    {/* Header with gradient */}
+                    <div className={`p-5 md:p-4 bg-gradient-to-br ${template.color.gradient}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`p-3 md:p-2.5 rounded-xl ${template.color.icon} shadow-lg`}>
+                          {template.icon}
+                        </div>
+                        <Badge variant="secondary" className="text-sm md:text-xs font-semibold">
+                          {template.time}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-lg md:text-base text-foreground">{template.name}</h3>
+                      <p className="text-sm md:text-xs text-muted-foreground italic mt-1">{template.tagline}</p>
+                    </div>
+
+                    {/* Origin badge */}
+                    <div className="px-4 md:px-3 pt-3 md:pt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                        {template.origin}
+                      </span>
+                    </div>
+
+                    {/* Fields preview */}
+                    <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
+                      {template.fields.slice(0, 3).map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                          <span className="w-6 h-6 md:w-5 md:h-5 rounded-full bg-muted flex items-center justify-center text-xs md:text-[10px] font-semibold shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{field.label}</span>
+                        </div>
+                      ))}
+                      {template.fields.length > 3 && (
+                        <div className="text-xs text-muted-foreground/60 pl-9">
+                          +{template.fields.length - 3} more fields
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="p-4 md:p-3 pt-0">
+                      <button className={`w-full py-3 md:py-2.5 rounded-xl text-base md:text-sm font-semibold ${template.color.icon} opacity-90 group-hover:opacity-100 transition-all shadow-md`}>
+                        Select This
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 4: Quick Interventions */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-1">Section 4: Quick Interventions</h3>
+              <p className="text-sm text-muted-foreground mb-4">1-3 minute targeted tools for specific needs - pre-session, emotional check, behavior change</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+                {QUICK_INTERVENTION_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleUltraShortSelect(template)}
+                    className={`group rounded-2xl overflow-hidden border-2 ${template.color.border} transition-all duration-200 cursor-pointer hover:shadow-xl hover:scale-[1.02] bg-card active:scale-[0.98]`}
+                  >
+                    {/* Header with gradient */}
+                    <div className={`p-5 md:p-4 bg-gradient-to-br ${template.color.gradient}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`p-3 md:p-2.5 rounded-xl ${template.color.icon} shadow-lg`}>
+                          {template.icon}
+                        </div>
+                        <Badge variant="secondary" className="text-sm md:text-xs font-semibold">
+                          {template.time}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-lg md:text-base text-foreground">{template.name}</h3>
+                      <p className="text-sm md:text-xs text-muted-foreground italic mt-1">{template.tagline}</p>
+                    </div>
+
+                    {/* Origin badge */}
+                    <div className="px-4 md:px-3 pt-3 md:pt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                        {template.origin}
+                      </span>
+                    </div>
+
+                    {/* Fields preview */}
+                    <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
+                      {template.fields.slice(0, 3).map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                          <span className="w-6 h-6 md:w-5 md:h-5 rounded-full bg-muted flex items-center justify-center text-xs md:text-[10px] font-semibold shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{field.label}</span>
+                        </div>
+                      ))}
+                      {template.fields.length > 3 && (
+                        <div className="text-xs text-muted-foreground/60 pl-9">
+                          +{template.fields.length - 3} more fields
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="p-4 md:p-3 pt-0">
+                      <button className={`w-full py-3 md:py-2.5 rounded-xl text-base md:text-sm font-semibold ${template.color.icon} opacity-90 group-hover:opacity-100 transition-all shadow-md`}>
+                        Select This
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 5: Focused Reflections */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-1">Section 5: Focused Reflections</h3>
+              <p className="text-sm text-muted-foreground mb-4">2-5 minute deeper but targeted templates - specific angles on reflection</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+                {FOCUSED_REFLECTION_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleUltraShortSelect(template)}
+                    className={`group rounded-2xl overflow-hidden border-2 ${template.color.border} transition-all duration-200 cursor-pointer hover:shadow-xl hover:scale-[1.02] bg-card active:scale-[0.98]`}
+                  >
+                    {/* Header with gradient */}
+                    <div className={`p-5 md:p-4 bg-gradient-to-br ${template.color.gradient}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`p-3 md:p-2.5 rounded-xl ${template.color.icon} shadow-lg`}>
+                          {template.icon}
+                        </div>
+                        <Badge variant="secondary" className="text-sm md:text-xs font-semibold">
+                          {template.time}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-lg md:text-base text-foreground">{template.name}</h3>
+                      <p className="text-sm md:text-xs text-muted-foreground italic mt-1">{template.tagline}</p>
+                    </div>
+
+                    {/* Origin badge */}
+                    <div className="px-4 md:px-3 pt-3 md:pt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                        {template.origin}
+                      </span>
+                    </div>
+
+                    {/* Fields preview */}
+                    <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
+                      {template.fields.slice(0, 3).map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                          <span className="w-6 h-6 md:w-5 md:h-5 rounded-full bg-muted flex items-center justify-center text-xs md:text-[10px] font-semibold shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{field.label}</span>
+                        </div>
+                      ))}
+                      {template.fields.length > 3 && (
+                        <div className="text-xs text-muted-foreground/60 pl-9">
+                          +{template.fields.length - 3} more fields
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="p-4 md:p-3 pt-0">
+                      <button className={`w-full py-3 md:py-2.5 rounded-xl text-base md:text-sm font-semibold ${template.color.icon} opacity-90 group-hover:opacity-100 transition-all shadow-md`}>
+                        Select This
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 6: Emotional Processing */}
+            <div className="mb-8">
+              <h3 className="text-lg font-bold mb-1">Section 6: Emotional Processing</h3>
+              <p className="text-sm text-muted-foreground mb-4">2-5 minute templates for emotional awareness, perspective, and expression</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+                {EMOTIONAL_PROCESSING_TEMPLATES.map((template) => (
+                  <div
+                    key={template.id}
+                    onClick={() => handleUltraShortSelect(template)}
+                    className={`group rounded-2xl overflow-hidden border-2 ${template.color.border} transition-all duration-200 cursor-pointer hover:shadow-xl hover:scale-[1.02] bg-card active:scale-[0.98]`}
+                  >
+                    {/* Header with gradient */}
+                    <div className={`p-5 md:p-4 bg-gradient-to-br ${template.color.gradient}`}>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className={`p-3 md:p-2.5 rounded-xl ${template.color.icon} shadow-lg`}>
+                          {template.icon}
+                        </div>
+                        <Badge variant="secondary" className="text-sm md:text-xs font-semibold">
+                          {template.time}
+                        </Badge>
+                      </div>
+                      <h3 className="font-bold text-lg md:text-base text-foreground">{template.name}</h3>
+                      <p className="text-sm md:text-xs text-muted-foreground italic mt-1">{template.tagline}</p>
+                    </div>
+
+                    {/* Origin badge */}
+                    <div className="px-4 md:px-3 pt-3 md:pt-2">
+                      <span className="inline-block px-2 py-0.5 rounded-full bg-muted text-xs text-muted-foreground">
+                        {template.origin}
+                      </span>
+                    </div>
+
+                    {/* Fields preview */}
+                    <div className="p-4 md:p-3 space-y-2 md:space-y-1.5">
+                      {template.fields.slice(0, 3).map((field, idx) => (
+                        <div key={field.id} className="flex items-center gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                          <span className="w-6 h-6 md:w-5 md:h-5 rounded-full bg-muted flex items-center justify-center text-xs md:text-[10px] font-semibold shrink-0">
+                            {idx + 1}
+                          </span>
+                          <span className="truncate">{field.label}</span>
+                        </div>
+                      ))}
+                      {template.fields.length > 3 && (
+                        <div className="text-xs text-muted-foreground/60 pl-9">
+                          +{template.fields.length - 3} more fields
+                        </div>
+                      )}
+                    </div>
+
+                    {/* CTA */}
+                    <div className="p-4 md:p-3 pt-0">
+                      <button className={`w-full py-3 md:py-2.5 rounded-xl text-base md:text-sm font-semibold ${template.color.icon} opacity-90 group-hover:opacity-100 transition-all shadow-md`}>
+                        Select This
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* SECTION 7: Skill & Strategy */}
+            <div className="mb-6">
+              <h3 className="text-lg font-bold mb-1">Section 7: Skill &amp; Strategy</h3>
+              <p className="text-sm text-muted-foreground mb-4">1-3 minute templates for deliberate practice, skill isolation, and strategic thinking</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+                {SKILL_STRATEGY_TEMPLATES.map((template) => (
                   <div
                     key={template.id}
                     onClick={() => handleUltraShortSelect(template)}
@@ -1030,7 +1780,7 @@ export default function TemplateTestingPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="mb-4">
                 <p className="text-xs text-muted-foreground mb-2 font-medium">Deep Dives (Section 3) - 15-30 minutes:</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
                   <div className="flex items-start gap-2">
@@ -1052,6 +1802,110 @@ export default function TemplateTestingPage() {
                   <div className="flex items-start gap-2">
                     <span className="font-semibold text-rose-600">Phoenix:</span>
                     <span>Recover from blowouts</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Quick Interventions (Section 4) - 1-3 minutes:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-sky-500">Pre-Flight:</span>
+                    <span>Before you go out</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-lime-500">Start-Stop-Continue:</span>
+                    <span>Quick change plan</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-red-500">Tilt Check:</span>
+                    <span>Emotional interference</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-pink-500">Friend Test:</span>
+                    <span>Self-compassion</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-violet-500">If-Then:</span>
+                    <span>Behavior autopilot</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Focused Reflections (Section 5) - 2-5 minutes:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-indigo-500">4 Ls:</span>
+                    <span>Full inventory + wishes</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-cyan-600">Rewind:</span>
+                    <span>What happened before</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-amber-500">Mastery Log:</span>
+                    <span>Build confidence</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-emerald-500">Context Check:</span>
+                    <span>External factors</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-fuchsia-500">Quick Reframe:</span>
+                    <span>Spot thought traps</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Emotional Processing (Section 6) - 2-5 minutes:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-red-400">Mad-Sad-Glad:</span>
+                    <span>Sort feelings fast</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-blue-400">Common Humanity:</span>
+                    <span>You&apos;re not alone</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-indigo-400">Five Year View:</span>
+                    <span>Zoom out</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-yellow-500">Improv:</span>
+                    <span>Yes, And surprises</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-teal-400">Free Write:</span>
+                    <span>Unstructured expression</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Skill &amp; Strategy (Section 7) - 1-3 minutes:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-2 text-sm md:text-xs text-muted-foreground">
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-orange-500">Skill Focus:</span>
+                    <span>Deliberate practice</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-rose-500">One Thing:</span>
+                    <span>Hyper-focused review</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-purple-500">Perception Gap:</span>
+                    <span>Intention vs. reality</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-green-500">Learning Goal:</span>
+                    <span>Process over outcome</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-semibold text-cyan-500">Yesterday-Today-Week:</span>
+                    <span>Build continuity</span>
                   </div>
                 </div>
               </div>

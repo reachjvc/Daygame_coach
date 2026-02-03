@@ -108,4 +108,77 @@ test.describe('Field Report Flow', () => {
     await expect(saveDraftButton).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(saveDraftButton).toBeEnabled({ timeout: ACTION_TIMEOUT })
   })
+
+  test('should display Today button in form', async ({ page }) => {
+    // Arrange: Navigate to form view
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const templateToClick = quickLogTemplate.or(standardTemplate)
+    await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Assert: Today button should be visible
+    const todayButton = page.getByTestId(SELECTORS.fieldReport.todayButton)
+    await expect(todayButton).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(todayButton).toHaveText('Today')
+  })
+
+  test('should show date display when Today button clicked', async ({ page }) => {
+    // Arrange: Navigate to form view
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const templateToClick = quickLogTemplate.or(standardTemplate)
+    await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Assert: Date display should NOT be visible initially
+    const dateDisplay = page.getByTestId(SELECTORS.fieldReport.dateDisplay)
+    await expect(dateDisplay).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+
+    // Act: Click Today button
+    const todayButton = page.getByTestId(SELECTORS.fieldReport.todayButton)
+    await todayButton.click({ timeout: ACTION_TIMEOUT })
+
+    // Assert: Date display should now be visible with today's date
+    await expect(dateDisplay).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // Check that it shows the current day number
+    const today = new Date()
+    await expect(dateDisplay).toContainText(today.getDate().toString())
+  })
+
+  test('should reset date when navigating back and selecting new template', async ({ page }) => {
+    // Arrange: Navigate to form view and set date
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const templateToClick = quickLogTemplate.or(standardTemplate)
+    await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Set a date
+    const todayButton = page.getByTestId(SELECTORS.fieldReport.todayButton)
+    await todayButton.click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.dateDisplay)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Act: Go back and select another template
+    await page.getByTestId(SELECTORS.fieldReport.back).click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Select a different template (or same one)
+    await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Assert: Date should be reset (not visible)
+    const dateDisplay = page.getByTestId(SELECTORS.fieldReport.dateDisplay)
+    await expect(dateDisplay).not.toBeVisible({ timeout: ACTION_TIMEOUT })
+  })
 })

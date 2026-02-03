@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/05.conversations
+scripts/training-data/07.conversations
 
 Conversation Boundary Detection for Daygame Transcripts (LLM / Ollama)
 
@@ -14,17 +14,17 @@ Adds per-segment fields:
 - segment_type: "approach" | "commentary" | "transition"
 
 Default I/O (recommended):
-- Input : data/04.segment-enrich/<source>/**/*.json
-- Output: data/05.conversations/<source>/**/*.conversations.json
+- Input : data/06.segment-enrich/<source>/**/*.json
+- Output: data/07.conversations/<source>/**/*.conversations.json
 
 Use:
 
   A) One source (video / playlist / channel):
-     ./scripts/training-data/05.conversations "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+     ./scripts/training-data/07.conversations "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 
   B) Batch from sources file:
-     ./scripts/training-data/05.conversations --sources
-     ./scripts/training-data/05.conversations --sources docs/sources.txt
+     ./scripts/training-data/07.conversations --sources
+     ./scripts/training-data/07.conversations --sources docs/sources.txt
 
 Environment:
   OLLAMA_API_URL=http://localhost:11434
@@ -362,7 +362,7 @@ class ConversationDetector:
                 if attempt < retries - 1:
                     time.sleep(1)
                     continue
-                print(f"[05.conversations] Ollama error: {e}")
+                print(f"[07.conversations] Ollama error: {e}")
         return None
 
     def _analyze_window_with_llm(
@@ -455,8 +455,8 @@ JSON response:"""
 
                 return results
         except (json.JSONDecodeError, KeyError, ValueError) as e:
-            print(f"[05.conversations] Failed to parse LLM response: {e}")
-            print(f"[05.conversations] Response preview: {response[:500]}...")
+            print(f"[07.conversations] Failed to parse LLM response: {e}")
+            print(f"[07.conversations] Response preview: {response[:500]}...")
 
         return self._analyze_window_heuristic(window, current_conversation_id, prev_type)
 
@@ -534,7 +534,7 @@ JSON response:"""
                 break
 
             if (idx % 50) == 0:
-                print(f"[05.conversations] Processed {idx}/{total} segments...")
+                print(f"[07.conversations] Processed {idx}/{total} segments...")
 
         return segments
 
@@ -544,19 +544,19 @@ def process_file(input_path: Path, output_path: Path, use_llm: bool = True) -> D
         data = json.load(f)
 
     segments = data.get("segments", [])
-    print(f"[05.conversations] Processing {input_path.name} ({len(segments)} segments)")
+    print(f"[07.conversations] Processing {input_path.name} ({len(segments)} segments)")
 
     # Step 1: Detect video type (v2.0 improvement)
     video_title = extract_video_title_from_filename(input_path.name)
-    print(f"[05.conversations] Video title: {video_title}")
+    print(f"[07.conversations] Video title: {video_title}")
 
     video_type = detect_video_type_with_llm(segments, video_title)
-    print(f"[05.conversations] Detected video type: {video_type}")
+    print(f"[07.conversations] Detected video type: {video_type}")
 
     # Step 2: Process based on video type
     if video_type in ["talking_head", "podcast"]:
         # Force all segments to commentary - guarantees 0 false positives
-        print(f"[05.conversations] Non-infield content - forcing all segments to commentary")
+        print(f"[07.conversations] Non-infield content - forcing all segments to commentary")
         processed_segments = force_commentary_for_non_infield(segments, video_type)
     else:
         # Use LLM to detect conversation boundaries for infield content
@@ -585,8 +585,8 @@ def process_file(input_path: Path, output_path: Path, use_llm: bool = True) -> D
     with output_path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-    print(f"[05.conversations] Found {len(conversation_ids)} distinct conversations")
-    print(f"[05.conversations] Segment types: {type_counts}")
+    print(f"[07.conversations] Found {len(conversation_ids)} distinct conversations")
+    print(f"[07.conversations] Segment types: {type_counts}")
 
     return data
 
@@ -601,11 +601,11 @@ def repo_root() -> Path:
 
 
 def segment_enrich_root() -> Path:
-    return repo_root() / "data" / "04.segment-enrich"
+    return repo_root() / "data" / "06.segment-enrich"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "05.conversations"
+    return repo_root() / "data" / "07.conversations"
 
 
 def infer_name_from_input(input_path: Path) -> Optional[str]:
@@ -622,7 +622,7 @@ def infer_name_from_input(input_path: Path) -> Optional[str]:
         return None
     stage = parts[i + 1]
     name = parts[i + 2]
-    if stage in {"03.audio-features", "04.segment-enrich", "05.conversations"}:
+    if stage in {"05.audio-features", "06.segment-enrich", "07.conversations"}:
         return name
     return None
 
@@ -719,10 +719,10 @@ def main() -> None:
             try:
                 response = requests.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=5)
                 if not response.ok:
-                    print("[05.conversations] Warning: Ollama not available, using heuristics only")
+                    print("[07.conversations] Warning: Ollama not available, using heuristics only")
                     return False
             except requests.exceptions.RequestException:
-                print(f"[05.conversations] Warning: Cannot connect to Ollama at {OLLAMA_BASE_URL}")
+                print(f"[07.conversations] Warning: Cannot connect to Ollama at {OLLAMA_BASE_URL}")
                 return False
         return use_llm
 
@@ -738,12 +738,12 @@ def main() -> None:
                 files = [f for f in files if needle in f.name or needle in f.as_posix()]
 
             if not files:
-                print(f"[05.conversations] No input JSON files found under: {input_path}")
+                print(f"[07.conversations] No input JSON files found under: {input_path}")
                 return
 
-            print(f"[05.conversations] Input : {input_path}")
-            print(f"[05.conversations] Output: {output_path}")
-            print(f"[05.conversations] Files : {len(files)}")
+            print(f"[07.conversations] Input : {input_path}")
+            print(f"[07.conversations] Output: {output_path}")
+            print(f"[07.conversations] Files : {len(files)}")
 
             written = 0
             skipped = 0
@@ -761,12 +761,12 @@ def main() -> None:
                     written += 1
                     continue
 
-                print(f"\n[05.conversations] {src.name} -> {dest.name}")
+                print(f"\n[07.conversations] {src.name} -> {dest.name}")
                 process_file(src, dest, use_llm=use_llm)
                 written += 1
 
             print("")
-            print("[05.conversations] Done.")
+            print("[07.conversations] Done.")
             print(f"  written : {written}")
             print(f"  skipped : {skipped}")
             return
@@ -778,14 +778,14 @@ def main() -> None:
             dest = compute_output_file_for_input_file(input_path, output_path, args.suffix)
 
         if dest.exists() and not args.overwrite:
-            print(f"[05.conversations] Output exists, skipping: {dest}")
+            print(f"[07.conversations] Output exists, skipping: {dest}")
             return
 
         if args.dry_run:
             print(f"[dry-run] Would write: {dest}")
             return
 
-        print(f"[05.conversations] {input_path} -> {dest}")
+        print(f"[07.conversations] {input_path} -> {dest}")
         process_file(input_path, dest, use_llm=use_llm)
 
     if args.sources:

@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-# scripts/training-data/03.audio-features
+# scripts/training-data/05.audio-features
 #
 # STEP 3 — AUDIO FEATURES (+ speaker embeddings)
 #
 # Reads:
 #   data/01.download/<source_name>/<video_name>/*.wav
-#   data/02.transcribe/<source_name>/<video_name>/<stem>.json   (Whisper-shape JSON)
+#   data/04.diarize/<source_name>/<video_name>/<stem>.json   (diarized JSON with speakers)
 #
 # Writes:
-#   data/03.audio-features/<source_name>/<video_name>/<stem>.audio_features.json
+#   data/05.audio-features/<source_name>/<video_name>/<stem>.audio_features.json
 #
 # Use:
 #   A) One source (video / playlist / channel):
-#      ./scripts/training-data/03.audio-features "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#      ./scripts/training-data/05.audio-features "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 #
 #   B) Batch from sources file:
-#      ./scripts/training-data/03.audio-features --sources
-#      ./scripts/training-data/03.audio-features --sources docs/sources.txt
+#      ./scripts/training-data/05.audio-features --sources
+#      ./scripts/training-data/05.audio-features --sources docs/sources.txt
 #
 #   C) Single-file mode:
 #      python3 scripts/training-data/03.audio-features \
@@ -749,8 +749,8 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
     safe_source = safe_name(source_name)
 
     downloads_root = root / "data" / "01.download" / safe_source
-    transcribe_root = root / "data" / "02.transcribe" / safe_source
-    out_root = root / "data" / "03.audio-features" / safe_source
+    transcribe_root = root / "data" / "04.diarize" / safe_source
+    out_root = root / "data" / "05.audio-features" / safe_source
 
     if not downloads_root.exists():
         raise SystemExit(f"[audio-features] Missing downloads folder: {downloads_root}")
@@ -907,7 +907,7 @@ if __name__ == "__main__":
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
             "Provide either --audio/--transcript/--out, or --sources [file], or:\n"
-            "./scripts/training-data/03.audio-features <source_name> <youtube_url>"
+            "./scripts/training-data/05.audio-features <source_name> <youtube_url>"
         )
 
     batch_for_source(str(args.source_name), str(args.youtube_url), overwrite=bool(args.overwrite), cfg=cfg)

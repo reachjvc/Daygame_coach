@@ -37,6 +37,12 @@ import {
   getFavoriteTemplateIds as repoGetFavoriteTemplateIds,
   addFavoriteTemplate as repoAddFavoriteTemplate,
   removeFavoriteTemplate as repoRemoveFavoriteTemplate,
+  // Custom Report Templates
+  createCustomReportTemplate as repoCreateCustomReportTemplate,
+  getUserCustomReportTemplates as repoGetUserCustomReportTemplates,
+  getCustomReportTemplate as repoGetCustomReportTemplate,
+  updateCustomReportTemplate as repoUpdateCustomReportTemplate,
+  deleteCustomReportTemplate as repoDeleteCustomReportTemplate,
   // Reviews
   createReview as repoCreateReview,
   updateReview as repoUpdateReview,
@@ -69,6 +75,8 @@ import type {
   FieldReportInsert,
   FieldReportUpdate,
   FieldReportTemplateRow,
+  FieldReportTemplateInsert,
+  FieldReportTemplateUpdate,
   ReviewRow,
   ReviewInsert,
   ReviewUpdate,
@@ -220,6 +228,153 @@ export async function addFavoriteTemplate(userId: string, templateId: string): P
 
 export async function removeFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
   return repoRemoveFavoriteTemplate(userId, templateId)
+}
+
+// ============================================
+// Custom Report Templates
+// ============================================
+
+/**
+ * Generate a URL-safe slug from a template name.
+ * Ensures uniqueness by appending timestamp if needed.
+ */
+export function generateSlug(name: string): string {
+  const baseSlug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 50)
+  // Add timestamp suffix for uniqueness
+  const timestamp = Date.now().toString(36)
+  return `${baseSlug}-${timestamp}`
+}
+
+/**
+ * Estimate completion time based on field types.
+ * More complex fields take longer to fill out.
+ */
+export function estimateMinutes(fields: FieldReportTemplateInsert["static_fields"]): number {
+  let minutes = 0
+  for (const field of fields) {
+    switch (field.type) {
+      case "textarea":
+        minutes += 3
+        break
+      case "text":
+      case "select":
+      case "multiselect":
+        minutes += 1
+        break
+      case "scale":
+      case "number":
+        minutes += 0.5
+        break
+      default:
+        minutes += 1
+    }
+  }
+  return Math.max(1, Math.round(minutes))
+}
+
+/**
+ * Save a new custom report template for a user.
+ * Generates slug and estimates completion time automatically.
+ */
+export async function saveCustomReportTemplate(
+  userId: string,
+  config: {
+    name: string
+    description?: string
+    fields: FieldReportTemplateInsert["static_fields"]
+  }
+): Promise<FieldReportTemplateRow> {
+  // Validate inputs
+  if (!config.name.trim()) {
+    throw new Error("Template name is required")
+  }
+  if (config.fields.length === 0) {
+    throw new Error("At least one field is required")
+  }
+
+  const template: FieldReportTemplateInsert = {
+    user_id: userId,
+    name: config.name.trim(),
+    slug: generateSlug(config.name),
+    description: config.description?.trim(),
+    estimated_minutes: estimateMinutes(config.fields),
+    is_system: false,
+    static_fields: config.fields,
+    dynamic_fields: [],
+    active_dynamic_fields: [],
+  }
+
+  return repoCreateCustomReportTemplate(template)
+}
+
+/**
+ * Get all custom report templates for a user.
+ */
+export async function getUserCustomReportTemplates(
+  userId: string
+): Promise<FieldReportTemplateRow[]> {
+  return repoGetUserCustomReportTemplates(userId)
+}
+
+/**
+ * Get a single custom report template by ID.
+ * Returns null if not found or not owned by user.
+ */
+export async function getCustomReportTemplate(
+  userId: string,
+  templateId: string
+): Promise<FieldReportTemplateRow | null> {
+  return repoGetCustomReportTemplate(templateId, userId)
+}
+
+/**
+ * Update an existing custom report template.
+ */
+export async function updateCustomReportTemplate(
+  userId: string,
+  templateId: string,
+  updates: {
+    name?: string
+    description?: string
+    fields?: FieldReportTemplateInsert["static_fields"]
+  }
+): Promise<FieldReportTemplateRow> {
+  const templateUpdates: FieldReportTemplateUpdate = {}
+
+  if (updates.name !== undefined) {
+    if (!updates.name.trim()) {
+      throw new Error("Template name cannot be empty")
+    }
+    templateUpdates.name = updates.name.trim()
+  }
+
+  if (updates.description !== undefined) {
+    templateUpdates.description = updates.description.trim()
+  }
+
+  if (updates.fields !== undefined) {
+    if (updates.fields.length === 0) {
+      throw new Error("At least one field is required")
+    }
+    templateUpdates.static_fields = updates.fields
+    templateUpdates.estimated_minutes = estimateMinutes(updates.fields)
+  }
+
+  return repoUpdateCustomReportTemplate(templateId, userId, templateUpdates)
+}
+
+/**
+ * Delete a custom report template.
+ */
+export async function deleteCustomReportTemplate(
+  userId: string,
+  templateId: string
+): Promise<void> {
+  return repoDeleteCustomReportTemplate(templateId, userId)
 }
 
 // ============================================

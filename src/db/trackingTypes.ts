@@ -202,6 +202,7 @@ export interface FieldReportRow {
   user_id: string
   session_id: string | null
   template_id: string | null
+  title: string | null
   fields: Record<string, unknown>
   approach_count: number | null
   location: string | null
@@ -216,6 +217,7 @@ export interface FieldReportInsert {
   user_id: string
   session_id?: string
   template_id?: string
+  title?: string
   fields: Record<string, unknown>
   approach_count?: number
   location?: string
@@ -226,6 +228,7 @@ export interface FieldReportInsert {
 
 export interface FieldReportUpdate {
   template_id?: string
+  title?: string
   fields?: Record<string, unknown>
   approach_count?: number
   location?: string

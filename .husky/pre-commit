@@ -12,7 +12,7 @@ fi
 
 # Check for changelog entries in modified docs
 echo "📝 Checking documentation changes..."
-MODIFIED_DOCS=$(git diff --cached --name-only --diff-filter=M | grep -E '^docs/.*\.md$' | grep -v '/archive/' | grep -v '/articles/')
+MODIFIED_DOCS=$(git diff --cached --name-only --diff-filter=M | grep -E '^docs/.*\.md$' | grep -v '/archive/' | grep -v '/articles/' || true)
 
 if [ -n "$MODIFIED_DOCS" ]; then
   TODAY=$(TZ='Europe/Copenhagen' date '+%d-%m-%Y')

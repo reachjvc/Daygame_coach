@@ -41,6 +41,8 @@ import type {
   ApproachUpdate,
   ApproachOutcome,
   FieldReportTemplateRow,
+  FieldReportTemplateInsert,
+  FieldReportTemplateUpdate,
   FieldReportRow,
   FieldReportInsert,
   FieldReportUpdate,
@@ -613,6 +615,143 @@ export async function getFieldReportTemplate(
   }
 
   return data as FieldReportTemplateRow
+}
+
+// ============================================
+// Custom Field Report Templates (User-created)
+// ============================================
+
+/**
+ * Create a new custom field report template for a user.
+ * Sets is_system to false to distinguish from system templates.
+ */
+export async function createCustomReportTemplate(
+  template: FieldReportTemplateInsert
+): Promise<FieldReportTemplateRow> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_report_templates")
+    .insert({
+      ...template,
+      is_system: false, // Always false for user-created templates
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to create custom report template: ${error.message}`)
+  }
+
+  return data as FieldReportTemplateRow
+}
+
+/**
+ * Get all custom report templates for a specific user.
+ * Only returns non-system templates owned by the user.
+ */
+export async function getUserCustomReportTemplates(
+  userId: string
+): Promise<FieldReportTemplateRow[]> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_report_templates")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_system", false)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to get custom report templates: ${error.message}`)
+  }
+
+  return data as FieldReportTemplateRow[]
+}
+
+/**
+ * Get a single custom report template by ID.
+ * Only returns if the template belongs to the user.
+ */
+export async function getCustomReportTemplate(
+  templateId: string,
+  userId: string
+): Promise<FieldReportTemplateRow | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_report_templates")
+    .select("*")
+    .eq("id", templateId)
+    .eq("user_id", userId)
+    .eq("is_system", false)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") return null // Not found
+    throw new Error(`Failed to get custom report template: ${error.message}`)
+  }
+
+  return data as FieldReportTemplateRow
+}
+
+/**
+ * Update a custom report template.
+ * Only allows updating templates owned by the user.
+ */
+export async function updateCustomReportTemplate(
+  templateId: string,
+  userId: string,
+  updates: FieldReportTemplateUpdate
+): Promise<FieldReportTemplateRow> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_report_templates")
+    .update({
+      ...updates,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", templateId)
+    .eq("user_id", userId)
+    .eq("is_system", false)
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      throw new Error("Template not found or access denied")
+    }
+    throw new Error(`Failed to update custom report template: ${error.message}`)
+  }
+
+  return data as FieldReportTemplateRow
+}
+
+/**
+ * Delete a custom report template.
+ * Only allows deleting templates owned by the user.
+ */
+export async function deleteCustomReportTemplate(
+  templateId: string,
+  userId: string
+): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error, count } = await supabase
+    .from("field_report_templates")
+    .delete({ count: "exact" })
+    .eq("id", templateId)
+    .eq("user_id", userId)
+    .eq("is_system", false)
+
+  if (error) {
+    throw new Error(`Failed to delete custom report template: ${error.message}`)
+  }
+
+  if (count === 0) {
+    throw new Error("Template not found or access denied")
+  }
 }
 
 // ============================================

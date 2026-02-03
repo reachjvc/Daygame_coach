@@ -1384,6 +1384,87 @@ describe("trackingRepo Integration Tests", () => {
         await client.end()
       }
     })
+
+    test("should persist title and reported_at correctly", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+      const testTitle = "My Evening Session"
+      const testReportedAt = "2026-01-15T19:30:00.000Z"
+
+      try {
+        // Act: Create report with title and specific reported_at
+        const reportResult = await client.query(
+          `INSERT INTO field_reports (user_id, title, fields, reported_at, is_draft)
+           VALUES ($1, $2, '{"summary": "Great session"}'::jsonb, $3, false)
+           RETURNING *`,
+          [userId, testTitle, testReportedAt]
+        )
+
+        // Assert: Title and reported_at should be persisted
+        const report = reportResult.rows[0]
+        expect(report.title).toBe(testTitle)
+        expect(new Date(report.reported_at).toISOString()).toBe(testReportedAt)
+
+        // Act: Query back by user_id
+        const queryResult = await client.query(
+          `SELECT title, reported_at FROM field_reports WHERE user_id = $1`,
+          [userId]
+        )
+
+        // Assert: Values are correctly stored and retrieved
+        expect(queryResult.rows[0].title).toBe(testTitle)
+        expect(new Date(queryResult.rows[0].reported_at).toISOString()).toBe(testReportedAt)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should allow null title (optional field)", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Act: Create report without title
+        const reportResult = await client.query(
+          `INSERT INTO field_reports (user_id, fields, is_draft)
+           VALUES ($1, '{"summary": "No title"}'::jsonb, false)
+           RETURNING *`,
+          [userId]
+        )
+
+        // Assert: Title should be null
+        expect(reportResult.rows[0].title).toBeNull()
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should use default reported_at when not provided", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+      const beforeInsert = new Date()
+
+      try {
+        // Act: Create report without reported_at
+        const reportResult = await client.query(
+          `INSERT INTO field_reports (user_id, fields, is_draft)
+           VALUES ($1, '{"summary": "Default date"}'::jsonb, false)
+           RETURNING *`,
+          [userId]
+        )
+        const afterInsert = new Date()
+
+        // Assert: reported_at should be between before and after insert
+        const reportedAt = new Date(reportResult.rows[0].reported_at)
+        expect(reportedAt.getTime()).toBeGreaterThanOrEqual(beforeInsert.getTime() - 1000)
+        expect(reportedAt.getTime()).toBeLessThanOrEqual(afterInsert.getTime() + 1000)
+      } finally {
+        await client.end()
+      }
+    })
   })
 
   describe("Field Report Queries", () => {
@@ -2416,6 +2497,396 @@ describe("trackingRepo Integration Tests", () => {
           [pointId]
         )
         expect(checkResult.rows).toHaveLength(0)
+      } finally {
+        await client.end()
+      }
+    })
+  })
+
+  // ============================================
+  // Custom Report Template Tests (added 03-02-2026)
+  // Tests for user-created field report templates
+  // ============================================
+
+  describe("Custom Report Template CRUD", () => {
+    test("should create a custom report template with is_system=false", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Act
+        const result = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'My Custom Report', 'my-custom-report', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING *`,
+          [userId]
+        )
+
+        // Assert
+        const template = result.rows[0]
+        expect(template.user_id).toBe(userId)
+        expect(template.name).toBe("My Custom Report")
+        expect(template.slug).toBe("my-custom-report")
+        expect(template.is_system).toBe(false)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should create custom template with JSONB static_fields", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+      const staticFields = [
+        { id: "mood", type: "select", label: "Mood", options: ["😤", "😐", "😊", "🔥"] },
+        { id: "approaches", type: "number", label: "Approaches" },
+      ]
+
+      try {
+        // Act
+        const result = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'Fields Test', 'fields-test', false, $2::jsonb, '[]'::jsonb)
+           RETURNING *`,
+          [userId, JSON.stringify(staticFields)]
+        )
+
+        // Assert
+        const template = result.rows[0]
+        expect(template.static_fields).toHaveLength(2)
+        expect(template.static_fields[0].id).toBe("mood")
+        expect(template.static_fields[1].type).toBe("number")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should return only user's custom templates (not system templates)", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create system template
+        await client.query(
+          `INSERT INTO field_report_templates
+           (name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ('System Template', 'system-template', true, '[]'::jsonb, '[]'::jsonb)`
+        )
+
+        // Create user custom template
+        await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'My Template', 'my-template', false, '[]'::jsonb, '[]'::jsonb)`,
+          [userId]
+        )
+
+        // Act: Query only user's custom templates
+        const result = await client.query(
+          `SELECT * FROM field_report_templates
+           WHERE user_id = $1 AND is_system = false`,
+          [userId]
+        )
+
+        // Assert
+        expect(result.rows).toHaveLength(1)
+        expect(result.rows[0].name).toBe("My Template")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should not return other users' templates", async () => {
+      // Arrange
+      const userId1 = await createTestUser()
+      const userId2 = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create template for user 1
+        await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'User 1 Template', 'user1-template', false, '[]'::jsonb, '[]'::jsonb)`,
+          [userId1]
+        )
+
+        // Create template for user 2
+        await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'User 2 Template', 'user2-template', false, '[]'::jsonb, '[]'::jsonb)`,
+          [userId2]
+        )
+
+        // Act: Query user 1's templates
+        const result = await client.query(
+          `SELECT * FROM field_report_templates
+           WHERE user_id = $1 AND is_system = false`,
+          [userId1]
+        )
+
+        // Assert: Should only see user 1's template
+        expect(result.rows).toHaveLength(1)
+        expect(result.rows[0].name).toBe("User 1 Template")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should update custom template owned by user", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create template
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'Original Name', 'original-slug', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`,
+          [userId]
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Update template
+        await client.query(
+          `UPDATE field_report_templates
+           SET name = 'Updated Name', description = 'New description'
+           WHERE id = $1 AND user_id = $2 AND is_system = false`,
+          [templateId, userId]
+        )
+
+        // Assert
+        const result = await client.query(
+          `SELECT * FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(result.rows[0].name).toBe("Updated Name")
+        expect(result.rows[0].description).toBe("New description")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should not update template owned by another user", async () => {
+      // Arrange
+      const userId1 = await createTestUser()
+      const userId2 = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create template for user 1
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'User 1 Template', 'user1-template', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`,
+          [userId1]
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Try to update as user 2
+        const updateResult = await client.query(
+          `UPDATE field_report_templates
+           SET name = 'Hacked Name'
+           WHERE id = $1 AND user_id = $2 AND is_system = false
+           RETURNING id`,
+          [templateId, userId2]
+        )
+
+        // Assert: No rows affected
+        expect(updateResult.rowCount).toBe(0)
+
+        // Verify original name unchanged
+        const checkResult = await client.query(
+          `SELECT name FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(checkResult.rows[0].name).toBe("User 1 Template")
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should delete custom template owned by user", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create template
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'To Delete', 'to-delete', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`,
+          [userId]
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Delete template
+        const deleteResult = await client.query(
+          `DELETE FROM field_report_templates
+           WHERE id = $1 AND user_id = $2 AND is_system = false
+           RETURNING id`,
+          [templateId, userId]
+        )
+
+        // Assert: One row deleted
+        expect(deleteResult.rowCount).toBe(1)
+
+        // Verify template is gone
+        const checkResult = await client.query(
+          `SELECT * FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(checkResult.rows).toHaveLength(0)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should not delete template owned by another user", async () => {
+      // Arrange
+      const userId1 = await createTestUser()
+      const userId2 = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create template for user 1
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'User 1 Template', 'user1-template', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`,
+          [userId1]
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Try to delete as user 2
+        const deleteResult = await client.query(
+          `DELETE FROM field_report_templates
+           WHERE id = $1 AND user_id = $2 AND is_system = false
+           RETURNING id`,
+          [templateId, userId2]
+        )
+
+        // Assert: No rows deleted
+        expect(deleteResult.rowCount).toBe(0)
+
+        // Verify template still exists
+        const checkResult = await client.query(
+          `SELECT * FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(checkResult.rows).toHaveLength(1)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should not delete system templates", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create system template (no user_id)
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ('System Template', 'system-template', true, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Try to delete with is_system = false filter
+        const deleteResult = await client.query(
+          `DELETE FROM field_report_templates
+           WHERE id = $1 AND is_system = false
+           RETURNING id`,
+          [templateId]
+        )
+
+        // Assert: No rows deleted (is_system = true)
+        expect(deleteResult.rowCount).toBe(0)
+
+        // Verify template still exists
+        const checkResult = await client.query(
+          `SELECT * FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(checkResult.rows).toHaveLength(1)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should cascade delete when user profile is deleted", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create custom template for user
+        const createResult = await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields)
+           VALUES ($1, 'User Template', 'user-template', false, '[]'::jsonb, '[]'::jsonb)
+           RETURNING id`,
+          [userId]
+        )
+        const templateId = createResult.rows[0].id
+
+        // Act: Delete user profile
+        await client.query(`DELETE FROM profiles WHERE id = $1`, [userId])
+
+        // Assert: Template should be deleted
+        const checkResult = await client.query(
+          `SELECT * FROM field_report_templates WHERE id = $1`,
+          [templateId]
+        )
+        expect(checkResult.rows).toHaveLength(0)
+      } finally {
+        await client.end()
+      }
+    })
+
+    test("should order user templates by created_at descending", async () => {
+      // Arrange
+      const userId = await createTestUser()
+      const client = await getClient()
+
+      try {
+        // Create templates with different timestamps
+        await client.query(
+          `INSERT INTO field_report_templates
+           (user_id, name, slug, is_system, static_fields, dynamic_fields, created_at)
+           VALUES
+           ($1, 'Oldest', 'oldest', false, '[]'::jsonb, '[]'::jsonb, NOW() - interval '3 days'),
+           ($1, 'Middle', 'middle', false, '[]'::jsonb, '[]'::jsonb, NOW() - interval '2 days'),
+           ($1, 'Newest', 'newest', false, '[]'::jsonb, '[]'::jsonb, NOW() - interval '1 day')`,
+          [userId]
+        )
+
+        // Act
+        const result = await client.query(
+          `SELECT name FROM field_report_templates
+           WHERE user_id = $1 AND is_system = false
+           ORDER BY created_at DESC`,
+          [userId]
+        )
+
+        // Assert: Newest first
+        expect(result.rows[0].name).toBe("Newest")
+        expect(result.rows[1].name).toBe("Middle")
+        expect(result.rows[2].name).toBe("Oldest")
       } finally {
         await client.end()
       }

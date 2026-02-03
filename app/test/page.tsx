@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -52,6 +52,12 @@ const testPages = [
     href: "/test/ultra-short-reports",
     description: "5 ultra-short field report templates (click Quick Log to see popup)",
     icon: Zap,
+  },
+  {
+    name: "Custom Report Builder",
+    href: "/test/custom-report-builder",
+    description: "Build your own field report with custom fields",
+    icon: PenTool,
   },
 ]
 

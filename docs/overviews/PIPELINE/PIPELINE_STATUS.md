@@ -1,10 +1,13 @@
 # Pipeline Status
 
-Updated: 02-02-2026 19:05 - Added turn-taking corrections to 04.segment-enrich; improved speaker label accuracy
+Updated: 03-02-2026 - Added Video Issues Tracker; KddKqbIhUwE fixed with --no-condition-on-prev
+Updated: 03-02-2026 - Clarified flagging as manual remediation (not auto-retry); added remediation playbook
+Updated: 03-02-2026 - Added repetition hallucination detection to 02/03; flags videos with 3+ consecutive repeated sentences to `.flagged.json`
+Updated: 03-02-2026 - 03.align: filter wordless segments, no fallback, flag failures to `.failed.json`
+Updated: 03-02-2026 - R2 test: 4/5 videos through pipeline (02→03→04); KddKqbIhUwE failed align; -CZtcqqEDdk confirmed hallucination
+Updated: 03-02-2026 - Added test_r2 (5 infield videos); organized test data by rounds (r1, r2)
+Updated: 03-02-2026 - Split 02.transcribe into 02/03/04; renumbered pipeline to 9 scripts
 Updated: 02-02-2026 17:30 - Measured actual timing: 0.92x realtime (diarization is bottleneck at 0.71x)
-Updated: 02-02-2026 17:15 - Phase B batch test: 230 videos transcribed; alignment timeout on 50+ min files
-Updated: 02-02-2026 - Cleaned archive docs, removed stale speaker clustering config from 03.audio-features
-Updated: 02-02-2026 15:30 - Updated to use dynamic counts; added transcription time estimate
 
 ---
 
@@ -29,17 +32,17 @@ find data/02.transcribe -name "*.full.json" | wc -l
 
 ## Transcription Time Estimate
 
-**Method**: large-v3 + whisperx.align + pyannote diarization (GPU)
+**Method**: 02.transcribe → 03.align → 04.diarize (3 separate scripts, GPU)
 **Total audio**: ~941 hours
 
 ### Measured Benchmark (843s video, CUDA GPU)
 
-| Step | Time | Realtime Factor |
-|------|------|-----------------|
-| Transcription (large-v3) | 162s | 0.19x |
-| Alignment (whisperx.align) | 10s | 0.01x |
-| **Diarization (pyannote)** | **600s** | **0.71x** ← bottleneck |
-| **Total** | **775s** | **0.92x** |
+| Script | Step | Time | Realtime Factor |
+|--------|------|------|-----------------|
+| 02.transcribe | large-v3 transcription | 162s | 0.19x |
+| 03.align | whisperx.align | 10s | 0.01x |
+| **04.diarize** | **pyannote diarization** | **600s** | **0.71x** ← bottleneck |
+| **Total** | — | **775s** | **0.92x** |
 
 ### Full Pipeline Estimate
 
@@ -56,11 +59,12 @@ find data/02.transcribe -name "*.full.json" | wc -l
 
 | Decision | Value | Rationale | Date |
 |----------|-------|-----------|------|
+| **Pipeline Split** | **02→03→04** | Separate concerns: transcribe, align, diarize | 03-02-2026 |
 | **Transcription Approach** | **large-v3 only** | Quality testing showed distil-v3 has critical errors; HYBRID not worth 2x cost | 02-02-2026 |
 | Diarization Engine | pyannote (via whisperx) | Reliable 2-speaker detection in street audio | 01-02-2026 |
 | Text Model | `large-v3` with `condition_on_previous_text=True` | Best accuracy, proper nouns, punctuation | 02-02-2026 |
-| Segmentation | `whisperx.align` | Splits large-v3 segments into sentence-level for diarization | 02-02-2026 |
-| Speaker ID Location | 02.transcribe (diarization) → 04.segment-enrich (mapping) | Pyannote at transcription, coach/target mapping at enrichment | 02-02-2026 |
+| Segmentation | `whisperx.align` (03.align) | Splits large-v3 segments into sentence-level for diarization | 02-02-2026 |
+| Speaker ID Location | 04.diarize (pyannote) → 06.segment-enrich (mapping) | Pyannote labels, then coach/target mapping at enrichment | 03-02-2026 |
 
 ### Quality Testing Results (02-02-2026)
 Tested distil-v3 vs large-v3 vs HYBRID on 5 videos. **large-v3 wins**:
@@ -84,9 +88,61 @@ Phase D: Cleanup          [NOT STARTED]
 
 **Known issues**:
 - whisperx.align timeouts on 50+ min files (need to skip or chunk)
-- 1 ZeroDivisionError failure during alignment (rare edge case)
+- whisperx.align ZeroDivisionError on some videos (flagged to `.failed.json` for manual review)
+- Whisper hallucination loops (same sentence repeated 3+ times) - auto-detected and flagged to `.flagged.json`
+  - **Manual remediation**: See "Flagging & Manual Remediation" section below
 
 **Note**: Total video count grows as new sources are added. Run `find data/01.download -mindepth 2 -maxdepth 2 -type d | wc -l` for current count.
+
+---
+
+## Flagging & Manual Remediation
+
+Videos that fail or have quality issues are **flagged for manual review** (not auto-retried).
+
+### View Flagged Videos
+
+```bash
+# Hallucination flags (repeated sentences)
+find data/ -name ".flagged.json" -exec echo "=== {} ===" \; -exec cat {} \;
+
+# Processing failures (ZeroDivisionError, etc.)
+find data/ -name ".failed.json" -exec echo "=== {} ===" \; -exec cat {} \;
+
+# Remediated videos (fixed with --no-condition-on-prev)
+find data/ -name ".remediated.json" -exec echo "=== {} ===" \; -exec cat {} \;
+```
+
+### Remediation Playbook
+
+| Issue | Flag Location | Remediation |
+|-------|---------------|-------------|
+| **Hallucination loops** (3+ repeated sentences) | `data/02.transcribe/<source>/.flagged.json` | Re-run 02.transcribe with `--no-condition-on-prev --overwrite`, then re-run 03.align |
+| **03.align ZeroDivisionError** | `data/03.align/<source>/.failed.json` | Re-run 02.transcribe with `--no-condition-on-prev --overwrite`, then re-run 03.align. Produces fewer, longer segments that align better. |
+| **03.align timeout** (50+ min files) | Process hangs | Skip or chunk audio manually |
+
+**After remediation**: Log the fix to `data/02.transcribe/<source>/.remediated.json` and clear from `.flagged.json`/`.failed.json`.
+
+### Video Issues Tracker
+
+| Video ID | Source | Issue | Stage | Status | Notes |
+|----------|--------|-------|-------|--------|-------|
+| KddKqbIhUwE | daily_evolution | ZeroDivisionError | 03.align | ✅ FIXED | 204→79 segments with `--no-condition-on-prev` |
+| -CZtcqqEDdk | social_stoic | Hallucination (260 reps of "I'm not looking") | 02.transcribe | ⚠️ PENDING | Needs `--no-condition-on-prev` |
+
+### Hallucination Remediation Example
+
+```bash
+# 1. Find flagged video
+cat data/02.transcribe/daily_evolution/.flagged.json
+
+# 2. Re-run with hallucination-resistant settings
+./scripts/training-data/02.transcribe --audio data/01.download/daily_evolution/<video>/*.wav \
+  --out data/02.transcribe/daily_evolution/<video>/<video>.full.json \
+  --no-condition-on-prev --overwrite
+
+# Trade-off: May have minor capitalization inconsistencies on proper nouns
+```
 
 ---
 
@@ -97,13 +153,13 @@ Phase D: Cleanup          [NOT STARTED]
 ### Architecture (LOCKED)
 
 ```
-Audio ──► large-v3 (condition_on_previous_text=True)
+Audio ──► 02.transcribe (large-v3, condition_on_previous_text=True)
+              │
+              ▼ [segments with word timestamps]
+         03.align (whisperx.align) ──► sentence-level segments
               │
               ▼
-         whisperx.align ──► sentence-level segments
-              │
-              ▼
-         pyannote ──► speaker diarization (SPEAKER_00/01)
+         04.diarize (pyannote) ──► speaker diarization (SPEAKER_00/01)
 ```
 
 **Key findings from Phase A:**
@@ -125,34 +181,74 @@ Audio ──► large-v3 (condition_on_previous_text=True)
 | Script | Status | Notes |
 |--------|--------|-------|
 | 01.download | DONE | ~966 videos downloaded (~941 hours audio) |
-| 02.transcribe | **VERIFIED** | large-v3 + whisperx.align + pyannote (LOCKED) |
-| 03.audio-features | READY | Pyannote_speaker passthrough working |
-| 04.segment-enrich | **IMPROVED** | Turn-taking corrections + coach/target pattern matching |
-| 05.conversations | PENDING | Ready for Phase B |
-| 06a.structure | PENDING | Will run after 05 |
-| 06b.content | PENDING | Will run after 06a |
-| 07.ingest | NOT STARTED | Will run after 06b |
+| 02.transcribe | **MODIFIED** | large-v3 only (no align/diarize) |
+| 03.align | **NEW** | whisperx.align for sentence-level segments |
+| 04.diarize | **NEW** | pyannote speaker diarization |
+| 05.audio-features | READY | Pyannote_speaker passthrough working |
+| 06.segment-enrich | **IMPROVED** | Turn-taking corrections + coach/target pattern matching |
+| 07.conversations | PENDING | Ready for Phase B |
+| 08a.structure | PENDING | Will run after 07 |
+| 08b.content | PENDING | Will run after 08a |
+| 09.ingest | NOT STARTED | Will run after 08b |
 
 **Check progress:**
 ```bash
 # Count per step
 echo "01.download: $(find data/01.download -mindepth 2 -maxdepth 2 -type d | wc -l) videos"
 echo "02.transcribe: $(find data/02.transcribe -name '*.full.json' ! -name '*.*.full.json' | wc -l) done"
-echo "03.audio-features: $(find data/03.audio-features -name '*.features.json' | wc -l) done"
-echo "04.segment-enrich: $(find data/04.segment-enrich -name '*.enriched.json' | wc -l) done"
+echo "03.align: $(find data/03.align -name '*.full.json' ! -name '*.*.full.json' | wc -l) done"
+echo "04.diarize: $(find data/04.diarize -name '*.full.json' ! -name '*.*.full.json' | wc -l) done"
+echo "05.audio-features: $(find data/05.audio-features -name '*.features.json' | wc -l) done"
+echo "06.segment-enrich: $(find data/06.segment-enrich -name '*.enriched.json' | wc -l) done"
 ```
 
 ---
 
-## Test Videos (5)
+## Test Round Naming Convention
 
-1. `ALWAYS BE CLOSING [KddKqbIhUwE]` - infield (critical test case)
-2. `Critical Daygame Hack [zOc19KfIcFk]` - talking_head
-3. `Fixing Mistakes [0B2hALxnzKk]` - talking_head
-4. `HOW TO FEEL GOOD [JOhR3sQstIs]` - talking_head
-5. `Better Conversations [B5AikkHrzuk]` - talking_head
+| Round | Purpose | Videos | Status |
+|-------|---------|--------|--------|
+| `pilot` | Original 20-video expansion (historical) | 20 mixed | ARCHIVED |
+| `r1` | Phase A: Initial 5-video pipeline verification | 5 (daily_evolution only) | COMPLETE |
+| `r2` | 5-video infield test with problematic cases | 5 infield | **CURRENT** |
 
-Test data: `data/02.transcribe-test/`
+**Data locations:**
+- `data/test/pilot/` - Historical manifest (archived)
+- `data/test/r1/` - Phase A test data + transcripts
+- `data/test/r2/` - Current test round (symlinks to main data)
+
+---
+
+## Test Round r2 (Current)
+
+**Purpose**: Test refactored 9-script pipeline (02→03→04 split) on infield videos only.
+
+**Status**: 4/5 videos completed through 04.diarize
+
+**Videos**:
+| # | Video ID | 02 | 03 | 04 | Segments | Speakers | Notes |
+|---|----------|----|----|----|---------:|----------|-------|
+| 1 | KddKqbIhUwE | ✓ | ✗ | — | — | — | ZeroDivisionError (flagged) |
+| 2 | e2dLEB-AwmA | ✓ | ✓ | ✓ | 359 | 6 | Multiple approaches in video |
+| 3 | Sz1f6OiO5Ko | ✓ | ✓ | ✓ | 519 | 4 | Coach 92% speaking time |
+| 4 | -CZtcqqEDdk | ✓ | ✓ | ✓ | 708 | 6 | **260 hallucinations** |
+| 5 | Lhg-ycvVSro | ✓ | ✓ | ✓ | 1132 | 4 | Coach 97% speaking time |
+
+**Total duration**: ~78 min (~1.3 hours)
+
+**R2 Findings (03-02-2026)**:
+- **KddKqbIhUwE**: 03.align fails with ZeroDivisionError - segment 176 has no `words` array, but filtering it doesn't fix the issue (whisperx.align still fails internally)
+- **-CZtcqqEDdk**: Whisper hallucination - 260 segments containing "I'm not looking" around 14:00-15:30
+- **Transcription quality**: Good - proper nouns capitalized (Social Stoic, Latina, etc.)
+- **Diarization**: Working - pyannote detects 3-6 speakers per infield video
+
+**03.align Approach (03-02-2026)**:
+- **Preprocessing**: Filter segments without `words` array before whisperx.align
+- **No fallback**: Errors propagate and video is flagged to `data/03.align/<source>/.failed.json`
+- **View flagged**: `find data/03.align -name ".failed.json" -exec cat {} \;`
+- **Known issue**: Some videos still fail due to whisperx.align internal issues (backtrack failures → ZeroDivisionError)
+
+**Data Location**: `data/04.diarize/` (main pipeline folders)
 
 ---
 
@@ -161,13 +257,34 @@ Test data: `data/02.transcribe-test/`
 1. ~~**Run on 5 test videos**~~ ✅ DONE
 2. ~~**Verify output quality**~~ ✅ DONE - proper nouns, diarization working
 3. ~~**Test HYBRID value**~~ ✅ DONE - large-v3 only wins, HYBRID not worth 2x cost
-4. **Phase B** - run 02.transcribe on batch of videos
-5. **Continue pipeline** - run 03 → 04 → 05 → 06a → 06b on transcribed videos
-6. **Phase C** - run full pipeline on all remaining videos (est. 8-12 days GPU time)
+4. ~~**Split pipeline**~~ ✅ DONE - 02.transcribe split into 02/03/04
+5. **Phase B** - run 02→03→04 pipeline on batch of videos
+6. **Continue pipeline** - run 05 → 06 → 07 → 08a → 08b on diarized videos
+7. **Phase C** - run full pipeline on all remaining videos (est. 8-12 days GPU time)
 
 ---
 
 ## Recent Changes
+
+### 03-02-2026 - Pipeline Refactored (7 → 9 Scripts)
+
+Split `02.transcribe` into three separate scripts for better modularity:
+
+| Old | New | Description |
+|-----|-----|-------------|
+| 02.transcribe (all-in-one) | 02.transcribe | large-v3 transcription only |
+| — | 03.align | whisperx.align for sentence segments |
+| — | 04.diarize | pyannote speaker diarization |
+
+Renumbered downstream scripts:
+- 03.audio-features → 05.audio-features
+- 04.segment-enrich → 06.segment-enrich
+- 05.conversations → 07.conversations
+- 06a.structure → 08a.structure
+- 06b.content → 08b.content
+- 07.ingest.ts → 09.ingest.ts
+
+Deleted: `02b.clean-transcribed` (obsolete consensus merge script)
 
 ### 02-02-2026 19:05 - Turn-Taking Corrections in 04.segment-enrich
 

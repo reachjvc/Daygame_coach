@@ -1,31 +1,19 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/02.transcribe
+scripts/training-data/03.align
 
-STEP 2 — RAW TRANSCRIPTION (large-v3 only)
+STEP 3 — SENTENCE-LEVEL ALIGNMENT (whisperx.align)
 
 Usage:
-  A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./02.transcribe --sources docs/sources.txt
-  C) Single file:    ./02.transcribe --audio path/to/audio.wav --out output.full.json
+  A) Single source:  ./03.align "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./03.align --sources docs/sources.txt
+  C) Single file:    ./03.align --input path/to/transcription.full.json --audio path/to/audio.wav --out output.full.json
 
-Transcription Model (LOCKED 02-02-2026):
-  large-v3 with condition_on_previous_text=True
-    - Best for accuracy: proper nouns, punctuation, capitalization
-    - Produces raw segments with word-level timestamps
+Takes raw transcription from 02.transcribe and aligns to sentence-level segments
+using whisperx.align. This improves segment boundaries for downstream diarization.
 
-Hallucination Remediation (Manual):
-  Videos with hallucination (3+ consecutive repeated sentences) are flagged
-  to `.flagged.json` for manual review. To remediate, re-run with:
-    ./02.transcribe --audio <path> --out <output> --no-condition-on-prev --overwrite
-  This disables the feedback loop that causes hallucination propagation.
-  Trade-off: May have minor capitalization inconsistencies on proper nouns.
-
-Note: This script ONLY does transcription. Alignment and diarization are
-      handled by subsequent scripts (03.align, 04.diarize).
-
-Input:  data/01.download/<source>/<video>/*.audio.asr.clean16k.wav
-Output: data/02.transcribe/<source>/<video>/<video>.full.json + .txt
+Input:  data/02.transcribe/<source>/<video>/<video>.full.json
+Output: data/03.align/<source>/<video>/<video>.full.json
 """
 
 from __future__ import annotations
@@ -35,16 +23,13 @@ import json
 import os
 import re
 import shlex
-import shutil
-import subprocess
 import sys
 import threading
 import time
 from contextlib import contextmanager
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import numpy as np
 
@@ -208,7 +193,7 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
     def _runner() -> None:
         while not stop.wait(interval_sec):
             elapsed = int(time.monotonic() - start)
-            log(f"[02.transcribe] … {label}: still running ({elapsed}s)")
+            log(f"[03.align] … {label}: still running ({elapsed}s)")
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
@@ -219,61 +204,9 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
         t.join(timeout=1.0)
 
 
-def cleanup_after_engine_run(engine: Optional["BaseEngine"]) -> None:
-    try:
-        del engine
-    except Exception:
-        pass
-    import gc
-    gc.collect()
-    if torch is not None and torch.cuda.is_available():
-        try:
-            torch.cuda.synchronize()
-        except Exception:
-            pass
-        for fn in ("empty_cache", "ipc_collect"):
-            try:
-                getattr(torch.cuda, fn)()
-            except Exception:
-                pass
-
-
-# --------------------------
-# Output formats
-# --------------------------
-
-def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
-    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
-    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
-
-
-def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
-    out_json_path.parent.mkdir(parents=True, exist_ok=True)
-    full_text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
-    out_json_path.write_text(
-        json.dumps({"text": full_text, "segments": segments}, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    base = out_json_path.with_suffix("")
-    write_txt(base.with_name(base.name + ".txt"), segments)
-
-
 # --------------------------
 # Audio loading
 # --------------------------
-
-def wav_duration_sec_fast(path: Path) -> Optional[float]:
-    try:
-        import wave
-        with wave.open(str(path), "rb") as wf:
-            frames = wf.getnframes()
-            rate = wf.getframerate()
-            if rate <= 0:
-                return None
-            return float(frames) / float(rate)
-    except Exception:
-        return None
-
 
 def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
     if torchaudio is not None and torch is not None:
@@ -303,6 +236,30 @@ def load_audio_mono(path: str) -> Tuple[np.ndarray, int]:
     raise SystemExit("No audio loader available. Install soundfile or librosa (or torchaudio).")
 
 
+def resample_to_16k(y: np.ndarray, sr: int) -> np.ndarray:
+    if sr == 16000:
+        return y.astype(np.float32)
+    if torchaudio is not None and torch is not None:
+        try:
+            yt = torch.from_numpy(y).to(torch.float32)
+            yt = torchaudio.functional.resample(yt, orig_freq=sr, new_freq=16000)
+            return yt.detach().cpu().numpy().astype(np.float32)
+        except Exception:
+            pass
+    if librosa is not None:
+        return librosa.resample(y.astype(np.float32), orig_sr=sr, target_sr=16000).astype(np.float32)
+    raise SystemExit("Need torchaudio or librosa to resample to 16k.")
+
+
+def load_audio_16k_for_whisperx(audio_path: str) -> np.ndarray:
+    try:
+        import whisperx  # type: ignore
+        return whisperx.load_audio(audio_path)
+    except Exception:
+        y, sr = load_audio_mono(audio_path)
+        return resample_to_16k(y, sr)
+
+
 # --------------------------
 # Segment normalization
 # --------------------------
@@ -328,6 +285,8 @@ def _normalize_word_list(words: Any, duration_sec: float) -> Optional[List[Dict[
             we = max(0.0, min(we, duration_sec))
             ww["start"] = _r3(ws)
             ww["end"] = _r3(we)
+        if "speaker" in w:
+            ww["speaker"] = str(w.get("speaker"))
         out.append(ww)
     return out or None
 
@@ -352,6 +311,8 @@ def _segments_from_any(segments_in: Any, duration_sec: float) -> List[Dict[str, 
         if e <= s:
             continue
         o: Dict[str, Any] = {"start": _r3(s), "end": _r3(e), "text": txt}
+        if "speaker" in seg:
+            o["speaker"] = str(seg.get("speaker"))
         if "words" in seg:
             wn = _normalize_word_list(seg.get("words"), duration_sec)
             if wn:
@@ -361,81 +322,106 @@ def _segments_from_any(segments_in: Any, duration_sec: float) -> List[Dict[str, 
     return out
 
 
+def _preprocess_segments_for_align(
+    segments: List[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], List[int]]:
+    """
+    Preprocess segments before whisperx.align to prevent ZeroDivisionError.
+    Filters out segments without words array.
+
+    Returns:
+        Tuple of (filtered_segments, removed_indices)
+    """
+    filtered = []
+    removed_indices = []
+
+    for i, seg in enumerate(segments):
+        words = seg.get("words", [])
+
+        # Skip segments without words (causes ZeroDivisionError in whisperx.align)
+        if not words:
+            removed_indices.append(i)
+            continue
+
+        filtered.append(seg)
+
+    return filtered, removed_indices
+
+
 # --------------------------
-# Transcription Engine
+# Alignment engine
 # --------------------------
 
-class BaseEngine:
-    name: str = "base"
-    model_name: str = ""
-    language: str = "en"
-    device: str = "cpu"
-    decode_options: Dict[str, Any] = {}
+class AlignEngine:
+    """Sentence-level alignment using whisperx.align."""
 
-    def transcribe(self, audio_path: str) -> Dict[str, Any]:
-        raise NotImplementedError
-
-
-class FasterWhisperEngine(BaseEngine):
-    """Transcription engine using faster-whisper with word timestamps."""
-    name = "faster"
-
-    def __init__(
-        self,
-        model_name: str,
-        language: str,
-        device: str,
-        compute_type: str,
-        beam_size: int,
-        temperature: float,
-        condition_on_previous_text: bool = True,
-        vad_filter: bool = False,
-    ):
-        self.model_name = str(model_name)
+    def __init__(self, language: str = "en", device: str = ""):
         self.language = (language or "en").strip()
         self.device = _auto_device(device)
-        self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
-        self.decode_options = {
-            "beam_size": int(beam_size),
-            "temperature": float(temperature),
-            "condition_on_previous_text": bool(condition_on_previous_text),
-            "vad_filter": bool(vad_filter),
-            "compute_type": self.compute_type,
-        }
-        try:
-            from faster_whisper import WhisperModel  # type: ignore
-        except Exception as e:
-            raise SystemExit(f"Missing faster-whisper. Install: pip install -U faster-whisper ({type(e).__name__}: {e})")
-        self._model = WhisperModel(self.model_name, device=self.device, compute_type=self.compute_type)
-        log(f"[02.transcribe] Loaded model: {self.model_name} on device={self.device}")
 
-    def transcribe(self, audio_path: str) -> Dict[str, Any]:
-        segments_out: List[Dict[str, Any]] = []
-        segments, _info = self._model.transcribe(
-            audio_path,
-            language=self.language,
-            task="transcribe",
-            beam_size=int(self.decode_options["beam_size"]),
-            temperature=float(self.decode_options["temperature"]),
-            condition_on_previous_text=bool(self.decode_options["condition_on_previous_text"]),
-            vad_filter=bool(self.decode_options["vad_filter"]),
-            word_timestamps=True,  # Always get word-level timestamps
+        try:
+            import whisperx  # type: ignore
+        except Exception as e:
+            raise SystemExit(f"Missing whisperx. Install: pip install -U whisperx ({type(e).__name__}: {e})")
+
+        self._whisperx = whisperx
+        self._align_model, self._align_meta = self._whisperx.load_align_model(
+            language_code=self.language,
+            device=self.device,
         )
-        parts: List[str] = []
-        for seg in segments:
-            txt = (seg.text or "").strip()
-            if not txt:
-                continue
-            seg_dict: Dict[str, Any] = {"start": float(seg.start), "end": float(seg.end), "text": txt}
-            # Capture word-level timestamps
-            if hasattr(seg, "words") and seg.words:
-                seg_dict["words"] = [
-                    {"word": w.word, "start": float(w.start), "end": float(w.end)}
-                    for w in seg.words if w.word
-                ]
-            segments_out.append(seg_dict)
-            parts.append(txt)
-        return {"text": " ".join(parts).strip(), "segments": segments_out}
+        log(f"[03.align] Loaded alignment model for language={self.language} on device={self.device}")
+
+    def align(self, segments: List[Dict[str, Any]], audio16k: np.ndarray) -> List[Dict[str, Any]]:
+        """Align segments to sentence-level boundaries.
+
+        Preprocessing: Removes segments without words (causes ZeroDivisionError).
+        Failures are flagged for manual review.
+        """
+        # Preprocess to avoid ZeroDivisionError from wordless segments
+        filtered_segments, removed = _preprocess_segments_for_align(segments)
+
+        if removed:
+            log(f"[03.align] Filtered {len(removed)} problematic segments (indices: {removed[:10]}{'...' if len(removed) > 10 else ''})")
+
+        if not filtered_segments:
+            log("[03.align] WARN: No valid segments after filtering")
+            return segments  # Return original if nothing left to align
+
+        try:
+            aligned = self._whisperx.align(
+                filtered_segments,
+                self._align_model,
+                self._align_meta,
+                audio16k,
+                self.device,
+                return_char_alignments=False,
+            )
+            return aligned.get("segments", []) or []
+        except TypeError:
+            # Older whisperx versions have different signature
+            aligned = self._whisperx.align(filtered_segments, self._align_model, self._align_meta, audio16k, self.device)
+            return aligned.get("segments", []) or []
+        # ZeroDivisionError intentionally NOT caught - let it propagate for flagging
+
+
+# --------------------------
+# Output writing
+# --------------------------
+
+def write_txt(path: Path, segments: List[Dict[str, Any]]) -> None:
+    text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    path.write_text(text + ("\n" if text else ""), encoding="utf-8")
+
+
+def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> None:
+    out_json_path.parent.mkdir(parents=True, exist_ok=True)
+    full_text = " ".join([str(s.get("text", "")).strip() for s in segments if str(s.get("text", "")).strip()]).strip()
+    out_json_path.write_text(
+        json.dumps({"text": full_text, "segments": segments}, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    base = out_json_path.with_suffix("")
+    write_txt(base.with_name(base.name + ".txt"), segments)
 
 
 # --------------------------
@@ -453,18 +439,7 @@ def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Opt
         return legacy[0]
 
     if clean:
-        clean_path = clean[0]
-        if raw:
-            raw_path = raw[0]
-            d_clean = wav_duration_sec_fast(clean_path)
-            d_raw = wav_duration_sec_fast(raw_path)
-            if d_clean is not None and d_raw is not None and d_clean < (0.95 * d_raw):
-                log("[02.transcribe] WARN: clean audio appears truncated vs raw -> using raw instead.")
-                log(f"[02.transcribe]   clean: {d_clean:.2f}s")
-                log(f"[02.transcribe]   raw  : {d_raw:.2f}s")
-                return raw_path
-        return clean_path
-
+        return clean[0]
     if raw:
         return raw[0]
     if legacy:
@@ -473,60 +448,67 @@ def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Opt
 
 
 # --------------------------
-# Core runner
+# Core processing
 # --------------------------
 
-def transcribe_full_file_with_engine(
-    audio_path: str,
-    out_json: str,
-    engine: BaseEngine,
-    progress_interval: float,
+def align_transcription(
+    transcription_json: Path,
+    audio_path: Path,
+    out_json: Path,
+    engine: AlignEngine,
+    progress_interval: float = 15.0,
 ) -> Optional[Dict[str, Any]]:
-    """
-    Transcribe audio file and write output.
+    """Align a transcription to sentence-level segments.
 
     Returns:
         None if successful, or a dict with hallucination info if repetition detected.
     """
     t0 = time.monotonic()
 
-    y, sr = load_audio_mono(audio_path)
-    duration_sec = float(len(y) / float(sr)) if sr > 0 else 0.0
+    # Load transcription
+    data = json.loads(transcription_json.read_text(encoding="utf-8"))
+    segments = data.get("segments", [])
 
-    out_json_path = Path(out_json)
-    log(
-        f"[02.transcribe] START {engine.name} ({getattr(engine, 'model_name', '')}) "
-        f"| device={getattr(engine, 'device', '')} | audio={Path(audio_path).name} | dur={duration_sec:.1f}s"
-    )
+    if not segments:
+        log(f"[03.align] WARN: No segments in {transcription_json.name}")
+        _write_all_outputs(out_json, [])
+        return None
 
-    with heartbeat(f"{engine.name} decode", interval_sec=float(progress_interval)):
-        result = engine.transcribe(audio_path)
+    log(f"[03.align] Input: {len(segments)} segments from {transcription_json.name}")
 
-    segments = _segments_from_any(result.get("segments", []) or [], duration_sec)
-
-    seg_n = len(segments)
-    last_end = float(segments[-1]["end"]) if segments else 0.0
-    if duration_sec > 60 and last_end < 0.90 * duration_sec:
-        log(f"[02.transcribe] WARN: transcript ends early (last_end={last_end:.1f}s vs dur={duration_sec:.1f}s)")
-
-    # Check for repetition hallucination (same sentence repeated 3+ times)
+    # Check for repetition hallucination in input (same sentence repeated 3+ times)
     hallucination = _detect_repetition_hallucination(segments, min_repeats=3)
     if hallucination:
-        log(f"[02.transcribe] FLAGGED: Repetition hallucination detected!")
-        log(f"[02.transcribe]   Text: \"{hallucination['repeated_text'][:50]}...\"")
-        log(f"[02.transcribe]   Count: {hallucination['count']} consecutive repetitions")
-        log(f"[02.transcribe]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
+        log(f"[03.align] FLAGGED: Repetition hallucination detected in input!")
+        log(f"[03.align]   Text: \"{hallucination['repeated_text'][:50]}...\"")
+        log(f"[03.align]   Count: {hallucination['count']} consecutive repetitions")
+        log(f"[03.align]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
 
-    _write_all_outputs(out_json_path, segments)
+    # Load audio
+    audio16k = load_audio_16k_for_whisperx(str(audio_path))
+    duration_sec = len(audio16k) / 16000.0
+    log(f"[03.align] Audio: {audio_path.name} ({duration_sec:.1f}s)")
+
+    # Align
+    with heartbeat("alignment", interval_sec=progress_interval):
+        aligned_segments = engine.align(segments, audio16k)
+
+    # Normalize
+    aligned_segments = _segments_from_any(aligned_segments, duration_sec)
+
+    log(f"[03.align] Output: {len(aligned_segments)} aligned segments")
+
+    # Write output
+    _write_all_outputs(out_json, aligned_segments)
 
     elapsed = time.monotonic() - t0
-    log(f"[02.transcribe] DONE: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s -> {out_json_path.name}")
+    log(f"[03.align] DONE: {out_json.name} ({elapsed:.1f}s)")
 
     return hallucination
 
 
 # --------------------------
-# Batch runner
+# Batch processing
 # --------------------------
 
 def batch_for_source(
@@ -534,54 +516,82 @@ def batch_for_source(
     youtube_url: str,
     overwrite: bool,
     prefer_audio: str,
-    engine: BaseEngine,
+    engine: AlignEngine,
     progress_interval: float,
 ) -> int:
     root = repo_root()
     safe_source = safe_name(source_name)
 
+    # Input from 02.transcribe
+    transcribe_root = root / "data" / "02.transcribe" / safe_source
+    # Audio from 01.download
     downloads_root = root / "data" / "01.download" / safe_source
-    out_root = root / "data" / "02.transcribe" / safe_source
+    # Output to 03.align
+    out_root = root / "data" / "03.align" / safe_source
+
+    if not transcribe_root.exists():
+        log(f"[03.align] No transcriptions found: {transcribe_root}")
+        return 0
 
     if not downloads_root.exists():
-        raise SystemExit(f"[02.transcribe] Missing downloads folder: {downloads_root}")
+        log(f"[03.align] No downloads found: {downloads_root}")
+        return 0
 
     video_id = extract_video_id(youtube_url)
-    video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
+    video_dirs = sorted([p for p in transcribe_root.iterdir() if p.is_dir()])
     if video_id:
         video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
 
     if not video_dirs:
-        log(f"[02.transcribe] No video folders found under: {downloads_root}")
+        log(f"[03.align] No video folders found under: {transcribe_root}")
         return 0
 
     processed = 0
     skipped = 0
     failed = 0
+    failed_videos: List[Dict[str, Any]] = []  # Track failures for flagging
     flagged_videos: List[Dict[str, Any]] = []  # Track hallucination flags
 
     for video_dir in video_dirs:
         try:
-            audio_path = _pick_best_audio_in_video_dir(video_dir, prefer=prefer_audio)
-            if audio_path is None:
-                log(f"[02.transcribe] WARN: No audio found in: {video_dir}")
+            # Find transcription JSON
+            transcription_files = sorted(video_dir.glob("*.full.json"))
+            # Filter out engine-specific files (*.full.whisperx.json, etc.)
+            transcription_files = [f for f in transcription_files if not any(
+                f.name.endswith(f".full.{eng}.json") for eng in ["whisperx", "faster", "whisper"]
+            )]
+
+            if not transcription_files:
+                log(f"[03.align] WARN: No transcription found in: {video_dir}")
                 continue
 
+            transcription_json = transcription_files[0]
+
+            # Find corresponding audio
+            download_video_dir = downloads_root / video_dir.name
+            if not download_video_dir.exists():
+                log(f"[03.align] WARN: No download folder for: {video_dir.name}")
+                continue
+
+            audio_path = _pick_best_audio_in_video_dir(download_video_dir, prefer=prefer_audio)
+            if audio_path is None:
+                log(f"[03.align] WARN: No audio found for: {video_dir.name}")
+                continue
+
+            # Output
             out_video_dir = out_root / video_dir.name
             out_video_dir.mkdir(parents=True, exist_ok=True)
-
             out_json = out_video_dir / f"{video_dir.name}.full.json"
 
             if out_json.exists() and not overwrite:
                 skipped += 1
                 continue
 
-            log(f"[02.transcribe] VIDEO: {video_dir.name}")
-            log(f"[02.transcribe] AUDIO: {audio_path.name}")
-
-            hallucination = transcribe_full_file_with_engine(
-                audio_path=str(audio_path),
-                out_json=str(out_json),
+            log(f"[03.align] VIDEO: {video_dir.name}")
+            hallucination = align_transcription(
+                transcription_json=transcription_json,
+                audio_path=audio_path,
+                out_json=out_json,
                 engine=engine,
                 progress_interval=progress_interval,
             )
@@ -601,25 +611,45 @@ def batch_for_source(
 
         except Exception as e:
             failed += 1
-            log(f"[02.transcribe] ERROR: Failed on folder: {video_dir.name}")
-            log(f"[02.transcribe]        {type(e).__name__}: {e}")
+            log(f"[03.align] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[03.align]        {type(e).__name__}: {e}")
+            failed_videos.append({
+                "video": video_dir.name,
+                "source": safe_source,
+                "error": f"{type(e).__name__}: {e}",
+                "timestamp": now_iso(),
+            })
             continue
 
-    # Write flagged videos to flag file for manual review
-    if flagged_videos:
-        flag_file = out_root / ".flagged.json"
+    # Write failures to flag file for manual review
+    if failed_videos:
+        flag_file = out_root / ".failed.json"
         existing: List[Dict[str, Any]] = []
         if flag_file.exists():
             try:
                 existing = json.loads(flag_file.read_text(encoding="utf-8"))
             except Exception:
                 pass
-        existing.extend(flagged_videos)
+        existing.extend(failed_videos)
         flag_file.parent.mkdir(parents=True, exist_ok=True)
         flag_file.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        log(f"[02.transcribe] FLAGGED: {len(flagged_videos)} videos written to {flag_file}")
+        log(f"[03.align] FAILED: {len(failed_videos)} videos written to {flag_file}")
 
-    log(f"[02.transcribe] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
+    # Write hallucination flags to flag file for manual review
+    if flagged_videos:
+        flagged_file = out_root / ".flagged.json"
+        existing_flagged: List[Dict[str, Any]] = []
+        if flagged_file.exists():
+            try:
+                existing_flagged = json.loads(flagged_file.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        existing_flagged.extend(flagged_videos)
+        flagged_file.parent.mkdir(parents=True, exist_ok=True)
+        flagged_file.write_text(json.dumps(existing_flagged, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        log(f"[03.align] FLAGGED: {len(flagged_videos)} videos with hallucination written to {flagged_file}")
+
+    log(f"[03.align] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
     return processed
 
 
@@ -629,75 +659,59 @@ def batch_for_source(
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
-        description="Raw transcription with faster-whisper (large-v3).",
+        description="Sentence-level alignment using whisperx.align.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/02.transcribe).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
     p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
-    p.add_argument("--audio", help="Single-file input path.")
+    p.add_argument("--input", help="Single-file input transcription JSON.")
+    p.add_argument("--audio", help="Single-file input audio path.")
     p.add_argument("--out", help="Single-file output .full.json.")
 
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
     p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
 
-    p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
-
-    # Model options
-    p.add_argument("--model", default=os.environ.get("FASTER_WHISPER_MODEL", "large-v3"),
-                   help="Whisper model (default: large-v3)")
-    p.add_argument("--device", default=os.environ.get("FASTER_WHISPER_DEVICE", ""))
-    p.add_argument("--compute-type", default=os.environ.get("FASTER_WHISPER_COMPUTE_TYPE", ""))
-    p.add_argument("--beam-size", type=int, default=int(os.environ.get("WHISPER_BEAM_SIZE", "3")))
-    p.add_argument("--temperature", type=float, default=float(os.environ.get("WHISPER_TEMPERATURE", "0.0")))
     p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
-    p.add_argument("--vad-filter", action="store_true", help="Enable Silero VAD filter (default OFF).")
-    p.add_argument("--no-condition-on-prev", action="store_true", help="Disable condition_on_previous_text.")
+    p.add_argument("--device", default=os.environ.get("WHISPERX_DEVICE", ""))
+
+    p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
 
     args = p.parse_args()
 
-    device = _auto_device(args.device)
-    compute_type = (args.compute_type or "").strip().lower() or ("int8_float16" if device == "cuda" else "int8")
-    condition_on_prev = not args.no_condition_on_prev
-
-    log(f"[02.transcribe] Model: {args.model} | device={device} | condition_on_previous_text={condition_on_prev}")
-
     # Initialize engine
-    engine = FasterWhisperEngine(
-        model_name=args.model,
-        language=args.language,
-        device=device,
-        compute_type=compute_type,
-        beam_size=args.beam_size,
-        temperature=args.temperature,
-        condition_on_previous_text=condition_on_prev,
-        vad_filter=args.vad_filter,
-    )
+    engine = AlignEngine(language=args.language, device=args.device)
 
     # Single-file mode
-    if args.audio:
+    if args.input:
+        if not args.audio:
+            raise SystemExit("--input requires --audio")
         if not args.out:
-            raise SystemExit("--audio requires --out")
+            raise SystemExit("--input requires --out")
+
+        input_path = Path(args.input)
+        audio_path = Path(args.audio)
         out_path = Path(args.out)
-        if out_path.suffix.lower() != ".json":
-            out_path = out_path.with_suffix(".json")
-        if not out_path.name.endswith(".full.json"):
-            out_path = out_path.with_name(out_path.stem + ".full.json")
+
+        if not input_path.exists():
+            raise SystemExit(f"Input not found: {input_path}")
+        if not audio_path.exists():
+            raise SystemExit(f"Audio not found: {audio_path}")
 
         if out_path.exists() and not args.overwrite:
-            log(f"[02.transcribe] SKIP: exists ({out_path.name})")
+            log(f"[03.align] SKIP: exists ({out_path.name})")
             raise SystemExit(0)
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        transcribe_full_file_with_engine(
-            audio_path=str(args.audio),
-            out_json=str(out_path),
+        align_transcription(
+            transcription_json=input_path,
+            audio_path=audio_path,
+            out_json=out_path,
             engine=engine,
             progress_interval=args.progress_interval,
         )
-        cleanup_after_engine_run(engine)
         raise SystemExit(0)
 
     # Batch sources file
@@ -717,15 +731,14 @@ if __name__ == "__main__":
                 engine=engine,
                 progress_interval=args.progress_interval,
             )
-        cleanup_after_engine_run(engine)
-        log(f"[02.transcribe] ✅ ALL SOURCES DONE: total_processed={total}")
+        log(f"[03.align] ✅ ALL SOURCES DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
-            "Provide either --audio/--out, or --sources [file], or:\n"
-            "./scripts/training-data/02.transcribe <source_name> <youtube_url>"
+            "Provide either --input/--audio/--out, or --sources [file], or:\n"
+            "./scripts/training-data/03.align <source_name> <youtube_url>"
         )
 
     batch_for_source(
@@ -736,4 +749,3 @@ if __name__ == "__main__":
         engine=engine,
         progress_interval=args.progress_interval,
     )
-    cleanup_after_engine_run(engine)

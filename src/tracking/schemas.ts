@@ -88,6 +88,8 @@ export const UpdateApproachSchema = z.object({
 export const CreateFieldReportSchema = z.object({
   template_id: z.string().uuid().optional(),
   session_id: z.string().uuid().optional(),
+  title: z.string().max(200).optional(),
+  report_date: z.string().datetime().optional(),
   fields: z.record(z.string(), z.unknown()),
   approach_count: z.number().int().min(0).max(1000).optional(),
   location: z.string().max(200).optional(),

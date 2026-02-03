@@ -66,6 +66,9 @@ export const SELECTORS = {
     back: 'field-report-back',
     submit: 'field-report-submit',
     saveDraft: 'field-report-save-draft',
+    todayButton: 'report-today-button',
+    dateDisplay: 'report-date-display',
+    datePicker: 'report-date-picker',
   },
 
   qa: {

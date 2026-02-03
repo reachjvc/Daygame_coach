@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import {
   Loader2,
   FileText,
@@ -19,6 +20,7 @@ import {
   Star,
   X,
   Heart,
+  Calendar,
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
@@ -29,6 +31,7 @@ import { FieldRenderer } from "./FieldRenderer"
 import { KeyStatsSection } from "./KeyStatsSection"
 import { PrinciplesSection } from "./PrinciplesSection"
 import { ResearchDomainsSection } from "./ResearchDomainsSection"
+import { CustomReportBuilder } from "./CustomReportBuilder"
 
 interface FieldReportPageProps {
   userId: string
@@ -57,6 +60,9 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const [recentlyUsedTemplateId, setRecentlyUsedTemplateId] = useState<string | null>(null)
   const [favoriteTemplateIds, setFavoriteTemplateIds] = useState<string[]>([])
   const [isTogglingFavorite, setIsTogglingFavorite] = useState<string | null>(null)
+  const [showCustomBuilder, setShowCustomBuilder] = useState(false)
+  const [reportTitle, setReportTitle] = useState("")
+  const [reportDate, setReportDate] = useState<Date | null>(null)
 
   useEffect(() => {
     loadTemplates()
@@ -126,17 +132,24 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   // Handle browser back button - close template form instead of leaving page
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
+      // If we have the custom builder open and user pressed back, close it
+      if (showCustomBuilder && !event.state?.customBuilder) {
+        setShowCustomBuilder(false)
+        return
+      }
       // If we have a selected template and user pressed back, close the form
       if (selectedTemplate && !event.state?.templateOpen) {
         setSelectedTemplate(null)
         setFormValues({})
+        setReportTitle("")
+        setReportDate(null)
         setSubmitError(null)
       }
     }
 
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
-  }, [selectedTemplate])
+  }, [selectedTemplate, showCustomBuilder])
 
   const loadSessionData = async (id: string) => {
     try {
@@ -306,6 +319,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const handleCloseTemplate = () => {
     setSelectedTemplate(null)
     setFormValues({})
+    setReportTitle("")
+    setReportDate(null)
     setSubmitError(null)
     // Go back in history to remove our pushed state
     window.history.back()
@@ -322,6 +337,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         body: JSON.stringify({
           template_id: selectedTemplate?.id,
           session_id: sessionId,
+          title: reportTitle || undefined,
+          report_date: reportDate?.toISOString() || undefined,
           fields: formValues,
           approach_count: sessionData?.approachCount,
           location: sessionData?.location,
@@ -365,6 +382,20 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="size-8 animate-spin text-primary" />
       </div>
+    )
+  }
+
+  // Custom report builder view
+  if (showCustomBuilder) {
+    return (
+      <CustomReportBuilder
+        sessionData={sessionData}
+        onBack={() => {
+          setShowCustomBuilder(false)
+          window.history.back()
+        }}
+        onSaved={() => router.push("/dashboard/tracking")}
+      />
     )
   }
 
@@ -726,7 +757,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           {/* Custom Field Report Option */}
           <div
             onClick={() => {
-              // TODO: Navigate to custom template builder
+              setShowCustomBuilder(true)
+              window.history.pushState({ customBuilder: true }, '')
             }}
             className="group rounded-2xl overflow-hidden border-2 border-dashed border-border hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-emerald-500/10 bg-card"
           >
@@ -873,6 +905,67 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }}>
         <Card className="p-6 rounded-2xl border-border/50">
+          {/* Report Title Section */}
+          <div className="space-y-3 mb-6 pb-6 border-b border-border/50">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-foreground">
+                Report Title
+                <span className="text-muted-foreground font-normal ml-1">(optional)</span>
+              </label>
+              <div className="flex items-center gap-2">
+                {/* Date display box - clickable to change date */}
+                {reportDate && (
+                  <label
+                    data-testid="report-date-display"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-primary/15 to-primary/5 border border-primary/20 shadow-sm cursor-pointer hover:border-primary/40 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-foreground">
+                      {reportDate.toLocaleDateString('en-US', { weekday: 'short' })}
+                      <span className="text-muted-foreground mx-1">-</span>
+                      {reportDate.getDate()}
+                      <span className="text-muted-foreground mx-1">-</span>
+                      {reportDate.toLocaleDateString('en-US', { month: 'short' })}
+                    </span>
+                    <input
+                      type="date"
+                      data-testid="report-date-picker"
+                      value={reportDate.toISOString().split('T')[0]}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          setReportDate(new Date(e.target.value + 'T12:00:00'))
+                        }
+                      }}
+                      className="sr-only"
+                    />
+                  </label>
+                )}
+                <button
+                  type="button"
+                  data-testid="report-today-button"
+                  onClick={() => setReportDate(new Date())}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors ${
+                    reportDate
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-primary/30 text-primary hover:bg-primary/10'
+                  }`}
+                >
+                  {reportDate ? (
+                    <Check className="size-3" />
+                  ) : (
+                    <Calendar className="size-3" />
+                  )}
+                  Today
+                </button>
+              </div>
+            </div>
+            <Input
+              value={reportTitle}
+              onChange={(e) => setReportTitle(e.target.value)}
+              placeholder="Give your report a title..."
+              className="text-lg font-medium"
+            />
+          </div>
+
           <div className="space-y-6">
             {fieldsToRender.map((field) => (
               <FieldRenderer

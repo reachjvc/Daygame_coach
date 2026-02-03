@@ -772,6 +772,50 @@ describe("CreateFieldReportSchema", () => {
       // Assert
       expect(result.success).toBe(true)
     })
+
+    test("should accept valid report_date ISO datetime", () => {
+      // Arrange
+      const input = { fields: {}, report_date: "2024-01-15T14:30:00.000Z" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
+    })
+
+    test("should accept report_date without milliseconds", () => {
+      // Arrange
+      const input = { fields: {}, report_date: "2024-01-15T14:30:00Z" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
+    })
+
+    test("should accept optional title", () => {
+      // Arrange
+      const input = { fields: {}, title: "My Session Report" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
+    })
+
+    test("should accept title at max length (200)", () => {
+      // Arrange
+      const input = { fields: {}, title: "a".repeat(200) }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
+    })
   })
 
   describe("invalid inputs", () => {
@@ -845,6 +889,39 @@ describe("CreateFieldReportSchema", () => {
     test("should reject tag exceeding 50 chars", () => {
       // Arrange
       const input = { fields: {}, tags: ["a".repeat(51)] }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(false)
+    })
+
+    test("should reject invalid report_date format (not ISO)", () => {
+      // Arrange
+      const input = { fields: {}, report_date: "January 15, 2024" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(false)
+    })
+
+    test("should reject report_date as date-only string", () => {
+      // Arrange
+      const input = { fields: {}, report_date: "2024-01-15" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(false)
+    })
+
+    test("should reject title exceeding 200 chars", () => {
+      // Arrange
+      const input = { fields: {}, title: "a".repeat(201) }
 
       // Act
       const result = CreateFieldReportSchema.safeParse(input)
