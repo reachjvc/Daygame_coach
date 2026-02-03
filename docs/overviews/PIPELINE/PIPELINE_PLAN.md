@@ -1,8 +1,10 @@
 # Pipeline Plan
 
 Status: Active
-Updated: 02-02-2026 22:00 - Cleaned: Removed legacy model references, kept only HYBRID (distil-v3 + large-v3)
-Updated: 02-02-2026 21:30 - LOCKED: HYBRID transcription (distil-v3 structure + large-v3 text)
+Updated: 02-02-2026 - Fixed output paths to show nested folder structure (video/video.full.json)
+Updated: 02-02-2026 14:00 - LOCKED: large-v3 only decision finalized (HYBRID rejected after quality testing)
+Updated: 02-02-2026 12:30 - CLARIFIED: Actual implementation is large-v3 only; testing if HYBRID adds value
+Updated: 02-02-2026 22:00 - Cleaned: Removed legacy model references
 Updated: 02-02-2026 20:30 - MAJOR: Consolidated speaker ID in 04. Pyannote diarization confirmed.
 
 ---
@@ -44,7 +46,7 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 
 ```
 01.download       → Raw audio + metadata
-02.transcribe     → HYBRID: distil-v3 (structure) + large-v3 (text) + pyannote
+02.transcribe     → large-v3 + whisperx.align + pyannote
 03.audio-features → Pitch, energy, tempo + pyannote_speaker passthrough
 04.segment-enrich → Speaker mapping (pyannote→coach/target) + tone
 05.conversations  → Video type + conversation boundaries
@@ -55,34 +57,35 @@ Transform 456 YouTube videos into structured training data for a daygame coachin
 
 **Note**: 06c.outcomes was removed (video selection bias makes outcome data unreliable).
 
-### HYBRID Transcription Approach (LOCKED 02-02-2026)
+### Transcription Approach (LOCKED)
 
-**Decision**: Use HYBRID approach combining two models for best results.
+**Decision**: large-v3 only + whisperx.align + pyannote diarization
 
 ```
-Audio ──► distil-v3 ──► SEGMENTS + TIMESTAMPS + pyannote speakers (structure)
+Audio ──► large-v3 (condition_on_previous_text=True)
               │
               ▼
-Audio ──► large-v3 ──► TEXT CONTENT (accuracy)
+         whisperx.align ──► sentence-level segments
               │
               ▼
-         FUSION ──► distil-v3 boundaries + large-v3 text
+         pyannote ──► speaker diarization
               │
               ▼
-         OUTPUT: .full.json with best of both
+         OUTPUT: .full.json
 ```
 
-| Component | Choice | Rationale |
-|-----------|--------|-----------|
-| Structure Model | `Systran/faster-distil-whisper-large-v3` | Best diarization, preserves speaker turn boundaries |
-| Text Model | `large-v3` | Best accuracy, proper nouns, punctuation |
-| Diarization | pyannote via whisperx | Reliable 2-speaker detection in street audio |
-| Speaker Mapping | 04.segment-enrich | Maps SPEAKER_00/01 → coach/target |
+| Component | Value |
+|-----------|-------|
+| Transcription Model | `large-v3` with `condition_on_previous_text=True` |
+| Segmentation | `whisperx.align` (splits into sentence-level for diarization) |
+| Diarization | pyannote via whisperx |
+| Speaker Mapping | 04.segment-enrich |
 
-**Why HYBRID:**
-- distil-v3 correctly separates speaker turns (granular segments)
-- large-v3 provides accurate text with proper nouns and punctuation
-- Fusion combines the best of both: distil-v3 structure + large-v3 text
+**Why HYBRID was rejected (quality testing 02-02-2026):**
+- distil-v3 had critical errors: wrong cities, wrong words, wrong brand names
+- HYBRID requires 2x GPU memory and 2x processing time
+- whisperx.align achieves good segmentation from large-v3 output
+- No benefit to justify the additional complexity
 
 ### Data Flow
 
@@ -101,21 +104,20 @@ Each script reads from the previous script's output folder.
 - **Output**: `data/01.download/{source}/{title} [{id}].asr.clean16k.wav`
 - **Also creates**: .info.json, .listen.mp3
 
-### 02.transcribe (HYBRID)
-- **Input**: `data/01.download/**/*.wav`
-- **Output**: `data/02.transcribe/{source}/{title}.full.json` + `.txt`
-- **Approach**: HYBRID (LOCKED)
-  1. Run distil-v3 with pyannote → get segment boundaries + speaker labels
-  2. Run large-v3 → get accurate text
-  3. Fuse: map large-v3 text to distil-v3 segment boundaries
-- **Structure Model**: `Systran/faster-distil-whisper-large-v3` (for segment boundaries)
-- **Text Model**: `large-v3` (for accurate text content)
+### 02.transcribe
+- **Input**: `data/01.download/{source}/{video}/*.wav`
+- **Output**: `data/02.transcribe/{source}/{video}/{video}.full.json` + `.txt`
+- **Approach**: large-v3 only (LOCKED)
+  1. Run large-v3 with `condition_on_previous_text=True` for accurate text
+  2. Align with whisperx.align for sentence-level segments
+  3. Run pyannote for speaker diarization
+- **Model**: `large-v3` (best accuracy: proper nouns, punctuation, capitalization)
 - **Diarization**: pyannote ON by default (outputs SPEAKER_00, SPEAKER_01)
 - **Requires**: HF_TOKEN environment variable for pyannote model access
 
 ### 03.audio-features
-- **Input**: `data/02.transcribe/**/*.full.json`
-- **Output**: `data/03.audio-features/{source}/{title}.audio_features.json`
+- **Input**: `data/02.transcribe/{source}/{video}/*.full.json`
+- **Output**: `data/03.audio-features/{source}/{video}/{video}.audio_features.json`
 - **Features**: pitch, energy, tempo, spectral
 - **Passthrough**: `pyannote_speaker` field from transcription (SPEAKER_00, SPEAKER_01)
 - **Note**: Speaker ID comes from pyannote diarization in 02.transcribe, passed through here
@@ -199,9 +201,9 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 - All files processed without errors
 
 **02.transcribe specific:**
-- HYBRID fusion must complete successfully
-- Both distil-v3 and large-v3 outputs must be generated
+- large-v3 transcription must complete successfully
 - pyannote_speaker field must be present on all segments
+- Proper nouns should be correctly capitalized (verify on spot-check)
 
 **03.audio-features specific:**
 - `pitch_range_hz[1]` must be 350.0 (NOT 1046.5 - old format)
@@ -228,10 +230,10 @@ These rules must pass BEFORE presenting gate report. If any fail, fix the issue 
 
 Claude MUST present these items - not samples, but ALL instances:
 
-**02.transcribe (HYBRID):**
-1. **Verify HYBRID fusion worked**: distil-v3 segment count vs output segment count (should match)
-2. **Sample 3 segments per video**: show text from both models, verify fusion selected large-v3 text
-3. **Proper noun check**: verify "Cincinnati", "ThriveDayGame", etc. are correct (from large-v3)
+**02.transcribe:**
+1. **Verify transcription completed**: segment count per video, total duration covered
+2. **Sample 3 segments per video**: check text quality and capitalization
+3. **Proper noun check**: verify city names, brand names, celebrity names are correct
 4. **Pyannote speaker distribution**: SPEAKER_00/SPEAKER_01 counts per video
 
 **03.audio-features:**
@@ -302,11 +304,11 @@ Run full pipeline on all remaining videos.
 - [x] Label guidelines created
 - [x] Prompt templates ready
 - [x] whisperx + pyannote diarization configured (HF_TOKEN required)
-- [x] Transcription model testing complete (HYBRID approach locked)
+- [x] Transcription model testing complete (large-v3 only approach locked)
 
-### Phase A: 5 Test Videos [IN PROGRESS]
-- [ ] 02.transcribe HYBRID implemented
-- [ ] **GATE: User approves 02 HYBRID output**
+### Phase A: 5 Test Videos [COMPLETE]
+- [x] 02.transcribe verified on 5 videos (large-v3 + whisperx.align + pyannote)
+- [x] **GATE: User approves 02 output** (proper nouns, diarization verified)
 - [ ] 03.audio-features run on 5 videos
 - [ ] **GATE: User approves 03 output**
 - [ ] 04.segment-enrich run on 5 videos
@@ -409,7 +411,7 @@ Run full pipeline on all remaining videos.
 ## Rules
 
 1. **HARD GATES require explicit user approval** - Never proceed without "APPROVED"
-2. **HYBRID transcription is LOCKED** - Do not change without user approval
+2. **Transcription approach is LOCKED** - large-v3 only; do not change without user approval
 3. **No fallbacks** - Scripts fail hard on errors; fix issues, don't work around them
 4. **Pre-gate validation MUST pass** - Run all validation rules before presenting gate report
 5. **Full minority review** - Show ALL minority labels (target/voiceover/other), never sample

@@ -33,6 +33,10 @@ import {
   getDraftFieldReports as repoGetDraftFieldReports,
   getFieldReportTemplates as repoGetFieldReportTemplates,
   getFieldReportTemplate as repoGetFieldReportTemplate,
+  getMostRecentlyUsedTemplateId as repoGetMostRecentlyUsedTemplateId,
+  getFavoriteTemplateIds as repoGetFavoriteTemplateIds,
+  addFavoriteTemplate as repoAddFavoriteTemplate,
+  removeFavoriteTemplate as repoRemoveFavoriteTemplate,
   // Reviews
   createReview as repoCreateReview,
   updateReview as repoUpdateReview,
@@ -200,6 +204,22 @@ export async function getFieldReportTemplate(
   templateId: string
 ): Promise<FieldReportTemplateRow | null> {
   return repoGetFieldReportTemplate(templateId)
+}
+
+export async function getMostRecentlyUsedTemplateId(userId: string): Promise<string | null> {
+  return repoGetMostRecentlyUsedTemplateId(userId)
+}
+
+export async function getFavoriteTemplateIds(userId: string): Promise<string[]> {
+  return repoGetFavoriteTemplateIds(userId)
+}
+
+export async function addFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
+  return repoAddFavoriteTemplate(userId, templateId)
+}
+
+export async function removeFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
+  return repoRemoveFavoriteTemplate(userId, templateId)
 }
 
 // ============================================

@@ -2,22 +2,21 @@
 """
 scripts/training-data/02.transcribe
 
-STEP 2 — FULL-FILE TRANSCRIBE (HYBRID APPROACH)
+STEP 2 — FULL-FILE TRANSCRIBE (large-v3 only)
 
 Usage:
   A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
   B) Batch sources:  ./02.transcribe --sources docs/sources.txt
 
-Transcription Models (HYBRID - LOCKED):
-  Structure: Systran/faster-distil-whisper-large-v3 (distil-v3)
-    - Best for diarization: granular segments preserve speaker turn boundaries
-    - Used for: segment boundaries, timestamps, pyannote speaker labels
-
-  Text: large-v3
+Transcription Model (LOCKED 02-02-2026):
+  large-v3 with condition_on_previous_text=True
     - Best for accuracy: proper nouns, punctuation, capitalization
-    - Used for: final text content
+    - whisperx.align splits into sentence-level segments for diarization
+    - pyannote provides speaker diarization (SPEAKER_00, SPEAKER_01)
 
-  HYBRID fusion: distil-v3 structure + large-v3 text = best of both
+Note: HYBRID approach (distil-v3 + large-v3) was tested and rejected.
+      distil-v3 had critical transcription errors (wrong cities, wrong words).
+      See PIPELINE_STATUS.md for quality testing details.
 
 Engines:
   whisperx : faster-whisper -> whisperx.align (word timestamps) + diarization
@@ -608,11 +607,9 @@ def _merge_turns(turns: List[Dict[str, Any]], gap_sec: float = 0.35, min_dur_sec
 
 class WhisperXAlignEngine(BaseEngine):
     """
-    whisperx engine in this script (HYBRID approach):
-      - transcribe with distil-v3 (faster-whisper) for segment structure
-      - transcribe with large-v3 for accurate text
-      - align with whisperx.align to get word timestamps
-      - fuse: distil-v3 boundaries + large-v3 text
+    whisperx engine in this script (large-v3 only):
+      - transcribe with large-v3 for accurate text (condition_on_previous_text=True)
+      - align with whisperx.align for sentence-level segments
       - optional diarization (pyannote) if enabled
     """
     name = "whisperx"
@@ -632,8 +629,8 @@ class WhisperXAlignEngine(BaseEngine):
         vad_filter: bool = False,
         text_model: str = "large-v3",
     ):
-        self.model_name = str(faster_model)  # Structure model (distil-v3)
-        self.text_model_name = str(text_model)  # Text accuracy model (large-v3)
+        self.model_name = str(faster_model)  # Whisper model (large-v3)
+        self.text_model_name = str(text_model)  # Text model (large-v3)
         self.language = _norm_lang(language)
         self.device = _auto_device(device)
         self.compute_type = (compute_type or "").strip().lower() or ("int8_float16" if self.device == "cuda" else "int8")
@@ -703,9 +700,9 @@ class WhisperXAlignEngine(BaseEngine):
             task="transcribe",
             beam_size=int(self.decode_options["beam_size"]),
             temperature=float(self.decode_options["temperature"]),
-            condition_on_previous_text=False,
+            condition_on_previous_text=True,  # Required for proper capitalization
             vad_filter=bool(self.decode_options["vad_filter"]),
-            word_timestamps=True,  # Get word-level timestamps for fusion
+            word_timestamps=True,
         )
         for s in segs:
             txt = (s.text or "").strip()
@@ -735,13 +732,13 @@ class WhisperXAlignEngine(BaseEngine):
         text_segments: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """
-        HYBRID fusion: Use distil-v3 segment boundaries + large-v3 text.
+        Segment fusion helper (legacy method, kept for compatibility).
 
         For each structure segment, find overlapping text segments and use
         the segment-level text (which preserves proper capitalization).
         """
         if not text_segments:
-            log("[02.transcribe] WARN: No text segments from large-v3, using distil-v3 text")
+            log("[02.transcribe] WARN: No text segments, using original segments")
             return structure_segments
 
         fused: List[Dict[str, Any]] = []
@@ -783,7 +780,7 @@ class WhisperXAlignEngine(BaseEngine):
                 if "words" in txt_seg:
                     fused_seg["words"] = txt_seg["words"]
             else:
-                # Fallback to distil-v3 text
+                # Fallback to original segment text
                 fused_seg["text"] = seg.get("text", "")
                 if "words" in seg:
                     fused_seg["words"] = seg["words"]
@@ -900,26 +897,34 @@ class WhisperXAlignEngine(BaseEngine):
                         w["speaker"] = best_spk
 
     def transcribe(self, audio_path: str) -> Dict[str, Any]:
-        # Use text model (large-v3) directly for best text accuracy
-        # Then apply diarization for speaker labels
+        # Use text model (large-v3) with condition_on_previous_text=True for proper capitalization
+        # Then align with whisperx to split into sentence-level segments for better diarization
 
         log(f"[02.transcribe] Transcribing with {self.text_model_name} (text accuracy model)")
         text_segments = self._get_text_model_segments(audio_path)
         log(f"[02.transcribe] Got {len(text_segments)} segments from {self.text_model_name}")
 
-        # Load 16k audio for diarization
+        # Load 16k audio
         audio16k = load_audio_16k_for_whisperx(audio_path)
 
-        # Use segments directly without additional alignment
-        # (large-v3 with word_timestamps=True already provides word-level timestamps)
-        segs = text_segments
+        # Align to split into sentence-level segments (better for diarization)
+        log("[02.transcribe] Aligning for sentence-level segments")
+        aligned = self._align(text_segments, audio16k)
+        segs = aligned.get("segments", []) or []
+        if not isinstance(segs, list):
+            segs = []
+        log(f"[02.transcribe] After alignment: {len(segs)} segments")
 
-        # Optional diarization (assign speakers to segments)
+        # Optional diarization (assign speakers to aligned segments)
         if self.diarize:
             log("[02.transcribe] Running diarization")
             turns = self._run_diarization(audio16k, audio_path)
             if turns:
-                self._attach_speaker_by_overlap(segs, turns)
+                try:
+                    assigned = self._whisperx.assign_word_speakers(turns, aligned)
+                    segs = assigned.get("segments", []) or segs
+                except Exception:
+                    self._attach_speaker_by_overlap(segs, turns)
 
         full_text = " ".join([str(s.get("text", "")).strip() for s in segs if str(s.get("text", "")).strip()]).strip()
         log(f"[02.transcribe] Complete: {len(segs)} segments, {len(full_text)} chars")
@@ -1248,11 +1253,11 @@ if __name__ == "__main__":
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
     p.add_argument("--no-trim-repeat-tail", action="store_true", help="Disable repeated-tail trimming guardrail.")
 
-    # Engine selection (whisperx is required for HYBRID approach with diarization)
+    # Engine selection (whisperx is required for alignment + diarization)
     p.add_argument(
         "--engines",
         default="whisperx",
-        help="Engine to use: whisperx (default, required for HYBRID approach with diarization).",
+        help="Engine to use: whisperx (default, required for alignment + diarization).",
     )
     p.add_argument(
         "--primary-engine",
@@ -1280,10 +1285,10 @@ if __name__ == "__main__":
     p.add_argument("--whisper-no-condition-on-prev", action="store_true", help="Force conditioning OFF (default).")
 
     # faster-whisper
-    p.add_argument("--faster-model", default=os.environ.get("FASTER_WHISPER_MODEL", "Systran/faster-distil-whisper-large-v3"),
-                   help="Structure model for segment boundaries (default: distil-v3)")
+    p.add_argument("--faster-model", default=os.environ.get("FASTER_WHISPER_MODEL", "large-v3"),
+                   help="Whisper model for transcription (default: large-v3)")
     p.add_argument("--text-model", default=os.environ.get("WHISPER_TEXT_MODEL", "large-v3"),
-                   help="Text accuracy model for HYBRID fusion (default: large-v3)")
+                   help="Text model for transcription (default: large-v3, same as faster-model)")
     p.add_argument("--faster-device", default=os.environ.get("FASTER_WHISPER_DEVICE", ""))
     p.add_argument("--faster-compute-type", default=os.environ.get("FASTER_WHISPER_COMPUTE_TYPE", ""))
     p.add_argument("--faster-vad-filter", action="store_true", help="Enable faster-whisper Silero VAD filter (default OFF).")

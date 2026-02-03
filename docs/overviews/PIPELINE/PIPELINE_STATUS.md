@@ -1,8 +1,54 @@
 # Pipeline Status
 
-Updated: 03-02-2026 07:55 - IMPLEMENTED: HYBRID fusion in 02.transcribe (runs both distil-v3 + large-v3)
-Updated: 02-02-2026 22:00 - Cleaned: Removed legacy model references, kept only HYBRID (distil-v3 + large-v3)
-Updated: 02-02-2026 21:30 - LOCKED: HYBRID transcription approach (distil-v3 structure + large-v3 text)
+Updated: 02-02-2026 19:05 - Added turn-taking corrections to 04.segment-enrich; improved speaker label accuracy
+Updated: 02-02-2026 17:30 - Measured actual timing: 0.92x realtime (diarization is bottleneck at 0.71x)
+Updated: 02-02-2026 17:15 - Phase B batch test: 230 videos transcribed; alignment timeout on 50+ min files
+Updated: 02-02-2026 - Cleaned archive docs, removed stale speaker clustering config from 03.audio-features
+Updated: 02-02-2026 15:30 - Updated to use dynamic counts; added transcription time estimate
+
+---
+
+## Quick Stats (Dynamic)
+
+Run these commands to get current counts:
+
+```bash
+# Downloaded videos
+find data/01.download -mindepth 2 -maxdepth 2 -type d | wc -l
+
+# Total audio duration (minutes)
+find data/01.download -name "*.info.json" -exec cat {} \; | grep -o '"duration": [0-9.]*' | cut -d' ' -f2 | awk '{sum+=$1} END {print int(sum/60) " minutes (" int(sum/3600) " hours)"}'
+
+# Transcribed videos
+find data/02.transcribe -name "*.full.json" | wc -l
+```
+
+**As of 02-02-2026**: ~966 videos, ~941 hours of audio
+
+---
+
+## Transcription Time Estimate
+
+**Method**: large-v3 + whisperx.align + pyannote diarization (GPU)
+**Total audio**: ~941 hours
+
+### Measured Benchmark (843s video, CUDA GPU)
+
+| Step | Time | Realtime Factor |
+|------|------|-----------------|
+| Transcription (large-v3) | 162s | 0.19x |
+| Alignment (whisperx.align) | 10s | 0.01x |
+| **Diarization (pyannote)** | **600s** | **0.71x** ← bottleneck |
+| **Total** | **775s** | **0.92x** |
+
+### Full Pipeline Estimate
+
+| Scenario | Processing Time |
+|----------|-----------------|
+| With diarization (0.92x) | ~866 hours (~36 days) |
+| Without diarization (0.2x) | ~188 hours (~8 days) |
+
+**Note**: Diarization is required for speaker identification but is the slowest step.
 
 ---
 
@@ -10,72 +56,91 @@ Updated: 02-02-2026 21:30 - LOCKED: HYBRID transcription approach (distil-v3 str
 
 | Decision | Value | Rationale | Date |
 |----------|-------|-----------|------|
-| **Transcription Approach** | **HYBRID** (distil-v3 + large-v3) | Best of both: distil-v3 for diarization structure, large-v3 for text accuracy | 02-02-2026 |
-| Diarization Engine | whisperx + pyannote | Reliable 2-speaker detection in street audio | 01-02-2026 |
-| Structure Model | `Systran/faster-distil-whisper-large-v3` | Best turn segmentation, preserves speaker turn boundaries | 02-02-2026 |
-| Text Model | `large-v3` | Best transcription accuracy, proper nouns, punctuation | 02-02-2026 |
+| **Transcription Approach** | **large-v3 only** | Quality testing showed distil-v3 has critical errors; HYBRID not worth 2x cost | 02-02-2026 |
+| Diarization Engine | pyannote (via whisperx) | Reliable 2-speaker detection in street audio | 01-02-2026 |
+| Text Model | `large-v3` with `condition_on_previous_text=True` | Best accuracy, proper nouns, punctuation | 02-02-2026 |
+| Segmentation | `whisperx.align` | Splits large-v3 segments into sentence-level for diarization | 02-02-2026 |
 | Speaker ID Location | 02.transcribe (diarization) → 04.segment-enrich (mapping) | Pyannote at transcription, coach/target mapping at enrichment | 02-02-2026 |
+
+### Quality Testing Results (02-02-2026)
+Tested distil-v3 vs large-v3 vs HYBRID on 5 videos. **large-v3 wins**:
+- distil-v3 had critical errors: "Pennsylvania" instead of "Cincinnati", "food camp" instead of "boot camp"
+- distil-v3 wrong on brand names: "Thrivedaygame" instead of "ThriveDayGame"
+- HYBRID not worth 2x GPU memory and processing time
+- whisperx.align already provides sentence-level segmentation
 
 ---
 
 ## Current State
 
 ```
-Phase A: 5 Test Videos    [HYBRID IMPLEMENTED - READY TO TEST]
-Phase B: 15 More Videos   [NOT STARTED]
-Phase C: 436 Remaining    [NOT STARTED]
+Phase A: 5 Test Videos    [COMPLETE - VERIFIED]
+Phase B: Batch Processing [IN PROGRESS - 230 transcribed]
+Phase C: Full Pipeline    [NOT STARTED]
 Phase D: Cleanup          [NOT STARTED]
 ```
+
+**As of 02-02-2026 17:15**: 230/966 videos transcribed (~24%)
+
+**Known issues**:
+- whisperx.align timeouts on 50+ min files (need to skip or chunk)
+- 1 ZeroDivisionError failure during alignment (rare edge case)
+
+**Note**: Total video count grows as new sources are added. Run `find data/01.download -mindepth 2 -maxdepth 2 -type d | wc -l` for current count.
 
 ---
 
 ## Current Gate
 
-**FOCUS**: Test HYBRID transcription on 5 test videos
+**FOCUS**: Proceed to Phase B with locked large-v3 approach
 
-### HYBRID Architecture (IMPLEMENTED)
+### Architecture (LOCKED)
 
 ```
-Audio ──► distil-v3 ──► SEGMENTS + TIMESTAMPS
+Audio ──► large-v3 (condition_on_previous_text=True)
               │
               ▼
-Audio ──► large-v3 ──► WORD-LEVEL TEXT (with timestamps)
+         whisperx.align ──► sentence-level segments
               │
               ▼
-         FUSION ──► distil-v3 boundaries + large-v3 words
-              │
-              ▼
-         whisperx.align ──► refined word timestamps
-              │
-              ▼
-         pyannote ──► speaker diarization
+         pyannote ──► speaker diarization (SPEAKER_00/01)
 ```
 
-**Implementation complete:**
-- ✅ Both models loaded in WhisperXAlignEngine
-- ✅ Fusion logic: maps large-v3 words to distil-v3 segment boundaries
-- ✅ CLI: `--faster-model` (structure) + `--text-model` (accuracy)
-- ✅ Defaults: distil-v3 for structure, large-v3 for text
+**Key findings from Phase A:**
+- ✅ `condition_on_previous_text=True` required for proper capitalization
+- ✅ `whisperx.align` splits long segments for diarization
+- ✅ Proper nouns capitalized: Sydney Sweeney, Austin, Texas, etc.
+- ✅ Speaker distribution: ~80% coach, ~20% target (reasonable for infield)
+- ✅ large-v3 produces correct city names, brand names, and vocabulary
 
 ### Next Steps:
-1. **Test on 5 videos** - run `./02.transcribe --overwrite` on test set
-2. **Verify output quality** - check proper nouns, segment boundaries
-3. **Proceed to Phase B** - run on 15 more videos
+1. **Phase B** - run on 15 more videos (20 total)
+2. **Phase C** - run on remaining 436 videos
+3. **Continue pipeline** - 05.conversations onwards
 
 ---
 
 ## Script Status
 
-| Script | Status | Files | Notes |
-|--------|--------|-------|-------|
-| 01.download | DONE | 2753 | Audio files ready |
-| 02.transcribe | **READY** | 5/456 | HYBRID fusion implemented (distil-v3 structure + large-v3 text) |
-| 03.audio-features | READY | 5/456 | Pyannote_speaker passthrough working |
-| 04.segment-enrich | READY | 5/456 | Pyannote-based speaker ID working |
-| 05.conversations | PENDING | 0 | Will run after 02 hybrid verification |
-| 06a.structure | PENDING | 0 | Will run after 05 |
-| 06b.content | PENDING | 0 | Will run after 06a |
-| 07.ingest | NOT STARTED | 0 | Will run after 06b |
+| Script | Status | Notes |
+|--------|--------|-------|
+| 01.download | DONE | ~966 videos downloaded (~941 hours audio) |
+| 02.transcribe | **VERIFIED** | large-v3 + whisperx.align + pyannote (LOCKED) |
+| 03.audio-features | READY | Pyannote_speaker passthrough working |
+| 04.segment-enrich | **IMPROVED** | Turn-taking corrections + coach/target pattern matching |
+| 05.conversations | PENDING | Ready for Phase B |
+| 06a.structure | PENDING | Will run after 05 |
+| 06b.content | PENDING | Will run after 06a |
+| 07.ingest | NOT STARTED | Will run after 06b |
+
+**Check progress:**
+```bash
+# Count per step
+echo "01.download: $(find data/01.download -mindepth 2 -maxdepth 2 -type d | wc -l) videos"
+echo "02.transcribe: $(find data/02.transcribe -name '*.full.json' ! -name '*.*.full.json' | wc -l) done"
+echo "03.audio-features: $(find data/03.audio-features -name '*.features.json' | wc -l) done"
+echo "04.segment-enrich: $(find data/04.segment-enrich -name '*.enriched.json' | wc -l) done"
+```
 
 ---
 
@@ -93,36 +158,59 @@ Test data: `data/02.transcribe-test/`
 
 ## Next Actions
 
-1. ~~**Implement hybrid fusion** in 02.transcribe script~~ ✅ DONE
-2. **Run hybrid on 5 test videos** - `./02.transcribe --overwrite` on test set
-3. **Verify output quality** - check proper nouns, segment boundaries
-4. **Proceed to Phase B** - run on 15 more videos (20 total)
-5. **Proceed with 05.conversations** after Phase B verification
+1. ~~**Run on 5 test videos**~~ ✅ DONE
+2. ~~**Verify output quality**~~ ✅ DONE - proper nouns, diarization working
+3. ~~**Test HYBRID value**~~ ✅ DONE - large-v3 only wins, HYBRID not worth 2x cost
+4. **Phase B** - run 02.transcribe on batch of videos
+5. **Continue pipeline** - run 03 → 04 → 05 → 06a → 06b on transcribed videos
+6. **Phase C** - run full pipeline on all remaining videos (est. 8-12 days GPU time)
 
 ---
 
 ## Recent Changes
 
-### 03-02-2026 07:55 - HYBRID Fusion Implemented
+### 02-02-2026 19:05 - Turn-Taking Corrections in 04.segment-enrich
 
-Implemented HYBRID transcription in 02.transcribe:
-- WhisperXAlignEngine now loads BOTH models (distil-v3 + large-v3)
-- Added `--text-model` CLI parameter (defaults to large-v3)
-- Fusion logic: distil-v3 segment boundaries + large-v3 word-level text
-- Process: structure → text → fusion → alignment → diarization
+Added post-processing to fix pyannote speaker label flips:
 
-### 02-02-2026 22:00 - Documentation Cleanup
+**New Features:**
+- `apply_turn_taking_corrections()` - corrects speaker labels using conversational context
+- Coach question patterns - overrides target labels for questions like "How's your day going?"
+- Improved "I'm [Name]" detection - distinguishes coach intro from target responses
+- 3+ speaker handling - labels secondary speakers as "embedded_clip" in talking_head videos
 
-Removed legacy model comparison data. Pipeline now uses only:
-- **distil-v3** (`Systran/faster-distil-whisper-large-v3`) for structure/diarization
-- **large-v3** for text accuracy
+**Test Results (KddKqbIhUwE infield video):**
+- Turn-taking corrections applied: 9 segments
+- Key fixes: "How's your day going?" → coach, "It's good." → target, "Alyssa." → target
+- Final distribution: 118 coach, 52 target (from 170 segments)
 
-### 02-02-2026 21:30 - HYBRID Approach Locked
+### 02-02-2026 17:15 - Phase B Batch Test
 
-Decision: HYBRID approach combining two models:
-- distil-v3 for segment boundaries + pyannote diarization
-- large-v3 for text content
-- Fusion: distil-v3 structure + large-v3 text
+Ran 02.transcribe on 14 randomly selected videos with audio ready:
+- **6 newly transcribed**: 5ngoDVsOJz0, RjX3I4CRK8Y, Ug3XudWT_8A, BNPJSzy8x9A, kbecyT-9bJE, TcUKm5LAWYU
+- **4 skipped**: Already had transcriptions from earlier runs
+- **1 failed**: Wd8HhkKxa0g - ZeroDivisionError in whisperx.align
+- **1 timeout**: UftblvPgTDs (51-min podcast) - whisperx.align stuck >17 min
+- **2 not reached**: Process killed due to timeout
+
+**Finding**: Very long files (50+ min) can cause whisperx.align to hang.
+
+### 02-02-2026 14:00 - LOCKED: large-v3 Only (HYBRID Rejected)
+
+Quality testing completed on 5 videos comparing distil-v3 vs large-v3 vs HYBRID:
+- **distil-v3 errors**: "Pennsylvania" (should be Cincinnati), "food camp" (should be boot camp)
+- **distil-v3 brand errors**: "Thrivedaygame" (should be ThriveDayGame)
+- **large-v3**: Correct on all proper nouns, cities, brand names
+- **HYBRID verdict**: NOT worth implementing - 2x GPU memory, 2x time, no benefit
+- **Decision**: Use large-v3 + condition_on_previous_text=True + whisperx.align + pyannote
+
+### 03-02-2026 10:25 - Phase A Complete
+
+Tested 02.transcribe on 5 test videos with verified quality:
+- Fixed capitalization issue: `condition_on_previous_text=True` required
+- whisperx.align splits long segments for better diarization
+- All proper nouns correctly capitalized (Sydney Sweeney, Austin, Texas, etc.)
+- Speaker diarization working (~80% coach, ~20% target for infield videos)
 
 ### 02-02-2026 20:30 - Pyannote Diarization
 
@@ -135,7 +223,7 @@ Decision: HYBRID approach combining two models:
 
 ## Blocking Issues
 
-None. Ready to implement hybrid approach.
+None. Transcription approach is LOCKED (large-v3 only). Ready to proceed with Phase B.
 
 ---
 
@@ -153,5 +241,5 @@ None. Ready to implement hybrid approach.
 3. Add entry to "Recent Changes"
 
 ### Rules
-- HYBRID approach is LOCKED - do not change without user approval
+- Transcription approach is LOCKED - large-v3 only (do not change without user approval)
 - Update this file BEFORE summarizing to user

@@ -338,44 +338,79 @@ def identify_speakers_global(
     # Use text pattern analysis to verify/refine
     speaker_label_map: Dict[str, Tuple[str, float]] = {}
 
-    for i, spk in enumerate(sorted_speakers):
-        texts = speaker_texts.get(spk, [])
-        pattern_label, pattern_conf = classify_cluster_by_patterns(texts)
+    # Handle 3+ speaker edge cases (e.g., talking_head with embedded infield clips)
+    if len(sorted_speakers) > 2:
+        print(f"    WARNING: {len(sorted_speakers)} speakers detected")
 
-        if i == 0:  # Majority speaker
-            if pattern_label == "target":
-                # Text patterns strongly suggest target, but this is majority speaker
-                # This is unusual - might be a compilation video. Use text analysis.
-                label = pattern_label
-                confidence = pattern_conf * 0.8  # Lower confidence due to conflict
-                print(f"      {spk}: majority but text suggests target (unusual)")
-            else:
-                # Majority speaker is coach (expected)
-                label = "coach"
-                confidence = max(0.85, pattern_conf)
-        elif i == 1:  # Second speaker (minority)
-            if pattern_label == "coach":
-                # Text patterns suggest coach, but this is minority speaker
-                # Could be voiceover or secondary commentary
-                label = "voiceover"
-                confidence = 0.6
-                print(f"      {spk}: minority but text suggests coach -> voiceover")
-            else:
-                # Minority speaker is target (expected for infield)
-                label = "target"
-                confidence = max(0.75, pattern_conf)
-        else:  # Third+ speakers
-            # Rare - label as "other"
-            label = "other"
-            confidence = 0.5
+        if video_type == "talking_head":
+            # For talking_head videos, majority speaker is coach
+            # Other speakers are from embedded clips
+            for i, spk in enumerate(sorted_speakers):
+                texts = speaker_texts.get(spk, [])
+                if i == 0:  # Majority speaker
+                    speaker_label_map[spk] = ("coach", 0.90)
+                else:
+                    # Secondary speakers in talking_head are embedded clips
+                    speaker_label_map[spk] = ("embedded_clip", 0.70)
+                print(f"      {spk}: {len(texts)} segments, {speaker_durations[spk]:.1f}s -> {speaker_label_map[spk][0]} ({speaker_label_map[spk][1]:.2f})")
+        else:
+            # For infield with 3+ speakers, treat normally but flag
+            # First = coach, second = target, rest = other
+            for i, spk in enumerate(sorted_speakers):
+                texts = speaker_texts.get(spk, [])
+                if i == 0:
+                    speaker_label_map[spk] = ("coach", 0.80)
+                elif i == 1:
+                    speaker_label_map[spk] = ("target", 0.70)
+                else:
+                    speaker_label_map[spk] = ("other", 0.50)
+                print(f"      {spk}: {len(texts)} segments, {speaker_durations[spk]:.1f}s -> {speaker_label_map[spk][0]} ({speaker_label_map[spk][1]:.2f})")
+    else:
+        # Normal 1-2 speaker case
+        for i, spk in enumerate(sorted_speakers):
+            texts = speaker_texts.get(spk, [])
+            pattern_label, pattern_conf = classify_cluster_by_patterns(texts)
 
-        speaker_label_map[spk] = (label, confidence)
-        print(f"      {spk}: {len(texts)} segments, {speaker_durations[spk]:.1f}s -> {label} ({confidence:.2f})")
+            if i == 0:  # Majority speaker
+                if pattern_label == "target":
+                    # Text patterns strongly suggest target, but this is majority speaker
+                    # This is unusual - might be a compilation video. Use text analysis.
+                    label = pattern_label
+                    confidence = pattern_conf * 0.8  # Lower confidence due to conflict
+                    print(f"      {spk}: majority but text suggests target (unusual)")
+                else:
+                    # Majority speaker is coach (expected)
+                    label = "coach"
+                    confidence = max(0.85, pattern_conf)
+            elif i == 1:  # Second speaker (minority)
+                if pattern_label == "coach":
+                    # Text patterns suggest coach, but this is minority speaker
+                    # Could be voiceover or secondary commentary
+                    label = "voiceover"
+                    confidence = 0.6
+                    print(f"      {spk}: minority but text suggests coach -> voiceover")
+                else:
+                    # Minority speaker is target (expected for infield)
+                    label = "target"
+                    confidence = max(0.75, pattern_conf)
+            else:  # Third+ speakers (shouldn't reach here in else block)
+                label = "other"
+                confidence = 0.5
+
+            speaker_label_map[spk] = (label, confidence)
+            print(f"      {spk}: {len(texts)} segments, {speaker_durations[spk]:.1f}s -> {label} ({confidence:.2f})")
 
     # Handle UNKNOWN speaker
     if "UNKNOWN" in speaker_label_map:
         # UNKNOWN segments - use text patterns or default to coach
         speaker_label_map["UNKNOWN"] = ("coach", 0.4)
+
+    # Coach question patterns - these are ALWAYS coach, regardless of pyannote assignment
+    coach_question_patterns = [
+        "how's your", "how are you", "what's your name", "what part of",
+        "where are you", "where do you", "you live here", "do you live",
+        "can i get your", "let me get your", "want to grab", "want to go"
+    ]
 
     # Build speaker_info for each segment
     speaker_info: List[Dict] = []
@@ -391,16 +426,49 @@ def identify_speakers_global(
         # even if pyannote assigned them to majority speaker
         target_phrases = [
             "thank you", "thanks", "okay", "oh okay", "yeah", "yes",
-            "nice to meet you", "nice meeting you", "i'm ", "my name is",
-            "it's good", "i do", "i don't", "i'm from", "i live"
+            "nice to meet you", "nice meeting you", "my name is",
+            "it's good", "it's great", "i do", "i don't", "i'm from", "i live",
+            "i'm good", "i'm fine", "i'm okay"
+        ]
+
+        # Coach phrases that should NOT be flipped to target
+        coach_phrases = [
+            "i'm ", "i just", "i had to", "excuse me", "sorry to bother",
+            "you look", "you're so", "what's your name", "what part",
+            "how's your", "can i get", "let me get"
         ]
 
         if duration < 2.0 and label == "coach":
-            for phrase in target_phrases:
-                if phrase in text and len(text) < 50:
-                    # This looks like a target response
-                    label = "target"
-                    confidence = 0.70
+            # First check if this looks like coach speech
+            is_coach_pattern = False
+            for phrase in coach_phrases:
+                if phrase in text:
+                    # Check for "i'm [name]" pattern - this is coach intro, not target
+                    if phrase == "i'm ":
+                        # If it's just "I'm [Name]." (short intro), this is coach
+                        words = text.split()
+                        if len(words) <= 3 and not any(resp in text for resp in ["i'm good", "i'm fine", "i'm okay", "i'm from"]):
+                            is_coach_pattern = True
+                            break
+                    else:
+                        is_coach_pattern = True
+                        break
+
+            if not is_coach_pattern:
+                for phrase in target_phrases:
+                    if phrase in text and len(text) < 50:
+                        # This looks like a target response
+                        label = "target"
+                        confidence = 0.70
+                        break
+
+        # Override: Coach questions labeled as target should be flipped to coach
+        # This handles pyannote misassignments on conversational segments
+        if label == "target":
+            for pattern in coach_question_patterns:
+                if pattern in text:
+                    label = "coach"
+                    confidence = 0.75
                     break
 
         speaker_info.append({
@@ -533,9 +601,103 @@ def aggregate_features(segments: List[Dict], win_start: float, win_end: float) -
     }
 
 
-# NOTE: Turn-taking corrections removed - now integrated into identify_speakers_global()
-# via the infer_speaker_from_context() function which handles short responses,
-# name exchanges, and compliment responses as part of the main speaker ID flow.
+# === Turn-Taking Corrections ===
+#
+# Post-process speaker labels to fix turn-taking flip errors from pyannote.
+# Pyannote gets the overall distribution right (~80% coach, ~20% target) but
+# individual segment assignments often flip incorrectly during rapid exchanges.
+#
+# This function runs AFTER identify_speakers_global() to correct obvious errors.
+
+
+def apply_turn_taking_corrections(
+    segments: List[Dict],
+    speaker_info: List[Dict],
+    video_type: str
+) -> List[Dict]:
+    """
+    Post-process speaker labels to fix turn-taking flip errors.
+
+    Pyannote often incorrectly assigns short responses to the wrong speaker.
+    This function uses conversational context to correct those errors.
+
+    Only applies to infield videos - talking_head is single speaker.
+
+    Returns: Modified speaker_info list
+    """
+    if video_type == "talking_head":
+        return speaker_info
+
+    corrections_made = 0
+
+    for i, (seg, info) in enumerate(zip(segments, speaker_info)):
+        if i == 0:
+            continue
+
+        prev_seg = segments[i-1]
+        prev_info = speaker_info[i-1]
+
+        text = seg.get("text", "").strip().lower()
+        prev_text = prev_seg.get("text", "").strip().lower()
+        duration = float(seg.get("end", 0)) - float(seg.get("start", 0))
+
+        original_label = info["label"]
+
+        # Rule 1: Short response after question = opposite speaker
+        # "How's your day?" (coach) -> "It's good." (should be target)
+        if prev_text.endswith("?") and duration < 2.0 and len(text) < 40:
+            expected = "target" if prev_info["label"] == "coach" else "coach"
+            if info["label"] != expected:
+                info["label"] = expected
+                info["method"] = "turn_taking_correction"
+                info["confidence"] = 0.75
+                corrections_made += 1
+                continue  # Don't apply multiple rules
+
+        # Rule 2: Compliment response = target
+        # "You're so beautiful." (coach) -> "Oh, thank you." (should be target)
+        compliments = ["beautiful", "gorgeous", "cute", "pretty", "stunning", "attractive"]
+        responses = ["oh", "thank", "thanks", "aww", "really"]
+        if any(c in prev_text for c in compliments):
+            if any(text.startswith(r) for r in responses) and duration < 2.0:
+                if info["label"] != "target":
+                    info["label"] = "target"
+                    info["method"] = "turn_taking_correction"
+                    info["confidence"] = 0.80
+                    corrections_made += 1
+                    continue
+
+        # Rule 3: Name after coach intro = target
+        # "I'm Erin." (coach) -> "Alyssa." (should be target)
+        if "i'm " in prev_text and len(text.split()) <= 2 and duration < 1.5:
+            if prev_info["label"] == "coach" and not text.startswith(("i'm", "i am", "nice")):
+                if info["label"] != "target":
+                    info["label"] = "target"
+                    info["method"] = "turn_taking_correction"
+                    info["confidence"] = 0.85
+                    corrections_made += 1
+                    continue
+
+        # Rule 4: Agreement/acknowledgment responses after coach statement
+        # Patterns that are almost always target responses
+        agreement_patterns = [
+            "yeah", "yes", "okay", "ok", "oh okay", "oh ok", "cool", "nice",
+            "sure", "right", "really", "uh huh", "mm hmm", "gotcha"
+        ]
+        if duration < 1.5 and prev_info["label"] == "coach":
+            for pattern in agreement_patterns:
+                if text == pattern or text.startswith(pattern + " ") or text.startswith(pattern + "."):
+                    if info["label"] != "target":
+                        info["label"] = "target"
+                        info["method"] = "turn_taking_correction"
+                        info["confidence"] = 0.70
+                        corrections_made += 1
+                        break
+
+    if corrections_made > 0:
+        print(f"    Turn-taking corrections: {corrections_made}")
+
+    return speaker_info
 
 
 # === Main Processing ===
@@ -574,6 +736,12 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
         segments, detected_video_type, video_title
     )
 
+    # 3. Apply turn-taking corrections for infield videos
+    # Fixes pyannote speaker flips using conversational context
+    speaker_info_list = apply_turn_taking_corrections(
+        segments, speaker_info_list, detected_video_type
+    )
+
     # Count labels for summary
     label_counts = {}
     for info in speaker_info_list:
@@ -581,7 +749,7 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
         label_counts[lbl] = label_counts.get(lbl, 0) + 1
     print(f"    Speaker labels: {label_counts}")
 
-    # 3. Build enriched segments
+    # 4. Build enriched segments
     enriched_segments = []
     for i, seg in enumerate(segments):
         info = speaker_info_list[i]
@@ -598,11 +766,11 @@ def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
             "speaker_id": info["cluster_id"]
         })
 
-    # 4. Build tone windows
+    # 5. Build tone windows
     tone_windows = build_tone_windows(segments)
     print(f"    Tone windows: {len(tone_windows)}")
 
-    # 5. Build output
+    # 6. Build output
     output = {
         "video_id": input_path.parent.name,
         "source_file": str(input_path),

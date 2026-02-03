@@ -2,13 +2,17 @@
 
 **ARCHIVED** - Superseded by `docs/overviews/PIPELINE/PIPELINE_PLAN.md`
 
+> **NOTE (02-02-2026)**: Speaker identification approach changed.
+> Current: pyannote diarization from 02.transcribe.
+> The resemblyzer embedding description below is outdated.
+
 Status: Approved - Option B Restructuring
+Updated: 02-02-2026 - Added speaker identification note
+Updated: 02-02-2026 14:00 - Cleaned: Updated to large-v3 only (HYBRID rejected after testing)
 Updated: 02-02-2026 22:30 - Cleaned: Updated to HYBRID transcription (distil-v3 + large-v3)
 Updated: 30-01-2026 16:00 - Added quality targets and expanded taxonomies
 Updated: 30-01-2026 14:35 - Cleaned up, removed legacy analysis
 Updated: 30-01-2026 13:00 - Comprehensive analysis + restructuring proposal
-Updated: 30-01-2026 12:15 - Clarified 06-09 script descriptions after code review
-Updated: 30-01-2026 11:00 - Removed 04.content (redundant), consolidated to 9 steps
 
 ## CRITICAL RULES
 1) ALWAYS test quality. INFORM me of ANY divergence.
@@ -76,17 +80,18 @@ Transform YouTube videos into structured training data:
 - Creates 16kHz mono WAV + .info.json metadata
 
 ### 02.transcribe
-- **HYBRID approach** (LOCKED 02-02-2026):
-  - `Systran/faster-distil-whisper-large-v3` (distil-v3) for segment boundaries + diarization
-  - `large-v3` for text accuracy
-  - Fusion: distil-v3 structure + large-v3 text
-- Word-level timestamps, pyannote diarization
+- **large-v3 only** (LOCKED 02-02-2026):
+  - `large-v3` with `condition_on_previous_text=True` for accurate text
+  - `whisperx.align` for sentence-level segmentation
+  - pyannote for speaker diarization
+- Word-level timestamps
 - Anti-loop protection
+- Note: HYBRID approach (distil-v3 + large-v3) was tested and rejected due to distil-v3 transcription errors
 
 ### 03.audio-features
 - Per-segment: pitch, energy, tempo, spectral features
-- Speaker embeddings via resemblyzer (256-dim)
-- Assigns `speaker_id` (spk_0, spk_1) via embedding similarity
+- Passes through `pyannote_speaker` from 02.transcribe (SPEAKER_00, SPEAKER_01)
+- Also computes speaker embeddings via resemblyzer (256-dim) for potential future use
 
 ### 04.segment-enrich (NEW)
 - LLM labels speaker clusters as coach/target/voiceover

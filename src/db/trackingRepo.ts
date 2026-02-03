@@ -706,6 +706,83 @@ export async function getDraftFieldReports(userId: string): Promise<FieldReportR
   return data as FieldReportRow[]
 }
 
+export async function getMostRecentlyUsedTemplateId(userId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_reports")
+    .select("template_id")
+    .eq("user_id", userId)
+    .eq("is_draft", false)
+    .not("template_id", "is", null)
+    .order("reported_at", { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    // No reports found is not an error
+    if (error.code === "PGRST116") {
+      return null
+    }
+    throw new Error(`Failed to get recently used template: ${error.message}`)
+  }
+
+  return data?.template_id || null
+}
+
+export async function getFavoriteTemplateIds(userId: string): Promise<string[]> {
+  const stats = await getOrCreateUserTrackingStats(userId)
+  return stats.favorite_template_ids || []
+}
+
+export async function addFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+  const stats = await getOrCreateUserTrackingStats(userId)
+  const currentFavorites = stats.favorite_template_ids || []
+
+  // Check if already at max (3)
+  if (currentFavorites.length >= 3) {
+    throw new Error("Maximum of 3 favorite templates allowed")
+  }
+
+  // Check if already favorited
+  if (currentFavorites.includes(templateId)) {
+    return currentFavorites
+  }
+
+  const newFavorites = [...currentFavorites, templateId]
+
+  const { error } = await supabase
+    .from("user_tracking_stats")
+    .update({ favorite_template_ids: newFavorites, updated_at: new Date().toISOString() })
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to add favorite template: ${error.message}`)
+  }
+
+  return newFavorites
+}
+
+export async function removeFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
+  const supabase = await createServerSupabaseClient()
+  const stats = await getOrCreateUserTrackingStats(userId)
+  const currentFavorites = stats.favorite_template_ids || []
+
+  const newFavorites = currentFavorites.filter(id => id !== templateId)
+
+  const { error } = await supabase
+    .from("user_tracking_stats")
+    .update({ favorite_template_ids: newFavorites, updated_at: new Date().toISOString() })
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to remove favorite template: ${error.message}`)
+  }
+
+  return newFavorites
+}
+
 // ============================================
 // Review Templates
 // ============================================

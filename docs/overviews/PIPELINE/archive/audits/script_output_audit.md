@@ -1,9 +1,13 @@
 # Pipeline Script Output Audit
 
-**Status:** Active
-**Updated:** 31-01-2026 17:20
+**Status:** Archived
+**Updated:** 02-02-2026
+
+> **NOTE (02-02-2026)**: This audit is outdated. Speaker identification now uses pyannote diarization.
+> The "ORPHAN" labels for speaker_embedding are no longer accurate - embeddings are computed and available.
 
 ## Changelog
+- 02-02-2026 - Added note: speaker identification now uses pyannote, audit outdated
 - 31-01-2026 17:20 - RESOLVED: Video download disabled by default, sidecars removed from 02.transcribe
 - 31-01-2026 16:30 - Initial audit of scripts 01-05 for Phase 0.v2 testing
 
@@ -25,7 +29,7 @@ This audit documents what each pipeline script outputs and whether downstream sc
 | Issue | Severity | Decision | Status |
 |-------|----------|----------|--------|
 | **05.tonality parallel path** | MEDIUM | Plan already merges 04+05 (see plan_pipeline.md Phase 6) | DEFERRED to Phase 6 |
-| **speaker_embedding unused** | MEDIUM | Will switch 04 to use speaker_embedding (user confirmed) | TODO |
+| ~~speaker_embedding unused~~ | ~~MEDIUM~~ | **RESOLVED**: pyannote used for speaker ID, embeddings available | DONE |
 | **Orphan features in 03** | LOW | Keep for future use (documented) | ACCEPTED |
 
 ### Original Findings (for reference)
@@ -35,7 +39,7 @@ This audit documents what each pipeline script outputs and whether downstream sc
 | **VIDEO download unused** | HIGH | ~~01.download downloads full video - never used by pipeline~~ ✅ FIXED |
 | **05.tonality parallel path** | MEDIUM | 04 and 05 both do tone classification, 05 reads from 03 not 04 |
 | **Orphan features in 03** | LOW | `pitch.range_hz`, `pitch.direction`, `quality.*` not used by 04 |
-| **speaker_embedding unused** | MEDIUM | 256-dim embedding computed but 04 uses deprecated pitch clustering |
+| ~~speaker_embedding unused~~ | ~~MEDIUM~~ | ~~256-dim embedding computed but 04 uses pitch~~ ✅ RESOLVED: pyannote used |
 
 ---
 
@@ -162,11 +166,11 @@ SKIP_VIDEO=0 ./scripts/training-data/01.download "source" "url"
 
 | Field | Used By 04 | Purpose | Status |
 |-------|------------|---------|--------|
-| `speaker_id` | Yes (04 re-labels) | Initial speaker assignment | **USED** |
-| `speaker_embedding.dim` | No | Embedding metadata | **ORPHAN** |
-| `speaker_embedding.vector[]` | No | 256-dim voice fingerprint | **ORPHAN - HIGH VALUE** |
+| `pyannote_speaker` | Yes | Speaker ID from 02.transcribe (SPEAKER_00, SPEAKER_01) | **USED** |
+| `speaker_embedding.dim` | Yes | Embedding metadata | **AVAILABLE** |
+| `speaker_embedding.vector[]` | Yes | 256-dim voice fingerprint | **AVAILABLE** |
 
-**Critical Finding:** `speaker_embedding` is a robust 256-dim voice fingerprint that should be used for speaker clustering, but 04.segment-enrich uses the deprecated pitch-based clustering instead.
+**Note:** Speaker identification now uses `pyannote_speaker` from 02.transcribe. Speaker embeddings are also computed and available for potential future use.
 
 ### Output Fields - Other
 

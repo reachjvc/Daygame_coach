@@ -318,6 +318,8 @@ CREATE TABLE user_tracking_stats (
   current_weekly_streak INTEGER NOT NULL DEFAULT 0,
   monthly_review_unlocked BOOLEAN NOT NULL DEFAULT false,
   quarterly_review_unlocked BOOLEAN NOT NULL DEFAULT false,
+  -- Favorite templates (max 3)
+  favorite_template_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[],
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

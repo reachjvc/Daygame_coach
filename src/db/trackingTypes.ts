@@ -344,6 +344,8 @@ export interface UserTrackingStatsRow {
   current_weekly_streak: number
   monthly_review_unlocked: boolean
   quarterly_review_unlocked: boolean
+  // Favorite templates (max 3)
+  favorite_template_ids: string[]
   updated_at: string
 }
 
@@ -367,6 +369,7 @@ export interface UserTrackingStatsUpdate {
   current_weekly_streak?: number
   monthly_review_unlocked?: boolean
   quarterly_review_unlocked?: boolean
+  favorite_template_ids?: string[]
 }
 
 // ============================================

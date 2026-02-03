@@ -1,6 +1,10 @@
 # Pipeline Restructuring Plan
 
+> **NOTE (02-02-2026)**: Speaker identification approach simplified.
+> Now uses pyannote diarization from 02.transcribe (not resemblyzer clustering).
+
 Status: Testing
+Updated: 02-02-2026 - Added speaker identification note
 Updated: 31-01-2026 18:20 - Pipeline tested on 5 videos. Phases 1-3 working. Ready for full run.
 Updated: 31-01-2026 06:15 - Model testing deferred (not skipped) - should test alternatives for quality.
 Updated: 31-01-2026 06:00 - Synced docs with reality. Phase 1 script implemented + tested.

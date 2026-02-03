@@ -147,20 +147,20 @@ export const TEMPLATE_COLORS: Record<string, { bg: string; icon: string; gradien
     icon: "bg-purple-500 text-white",
     gradient: "from-purple-500/30 via-purple-500/10 to-pink-500/20",
   },
-  blowout: {
+  phoenix: {
     bg: "bg-red-500/10 text-red-500 border-red-500/20",
     icon: "bg-red-500 text-white",
     gradient: "from-red-500/30 via-red-500/10 to-orange-500/20",
-  },
-  customizable: {
-    bg: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-    icon: "bg-cyan-500 text-white",
-    gradient: "from-cyan-500/30 via-cyan-500/10 to-sky-500/20",
   },
   custom: {
     bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     icon: "bg-emerald-500 text-white",
     gradient: "from-emerald-500/30 via-emerald-500/10 to-teal-500/20",
+  },
+  favorite: {
+    bg: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+    icon: "bg-rose-500 text-white",
+    gradient: "from-rose-500/30 via-rose-500/10 to-pink-500/20",
   },
 }
 
@@ -168,8 +168,7 @@ export const TEMPLATE_TAGLINES: Record<string, string> = {
   "quick-log": "30 seconds. Just the essentials.",
   standard: "The sweet spot. Learn without overthinking.",
   "deep-dive": "When you got close. Extract every lesson.",
-  blowout: "Rise from the ashes. Every master failed here first.",
-  customizable: "Build your own. Pick the questions that matter to you.",
+  phoenix: "Rise from the ashes. Every master failed here first.",
 }
 
 // ============================================

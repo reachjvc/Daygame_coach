@@ -15,6 +15,10 @@ import {
   Check,
   Settings2,
   ArrowRight,
+  Lock,
+  Star,
+  X,
+  Heart,
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
@@ -31,6 +35,14 @@ interface FieldReportPageProps {
   sessionId?: string
 }
 
+// Template ordering: defines the logical order for templates
+const TEMPLATE_ORDER: Record<string, number> = {
+  "quick-log": 1,
+  standard: 2,
+  phoenix: 3,
+  "deep-dive": 4,
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
 export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const router = useRouter()
@@ -42,13 +54,74 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const [formValues, setFormValues] = useState<Record<string, unknown>>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [recentlyUsedTemplateId, setRecentlyUsedTemplateId] = useState<string | null>(null)
+  const [favoriteTemplateIds, setFavoriteTemplateIds] = useState<string[]>([])
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState<string | null>(null)
 
   useEffect(() => {
     loadTemplates()
+    loadRecentlyUsedTemplate()
+    loadFavoriteTemplates()
     if (sessionId) {
       loadSessionData(sessionId)
     }
   }, [sessionId])
+
+  const loadRecentlyUsedTemplate = async () => {
+    try {
+      const response = await fetch("/api/tracking/field-reports/recent")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.templateId) {
+          setRecentlyUsedTemplateId(data.templateId)
+        }
+      }
+    } catch (error) {
+      // Silently fail - recently used is optional
+      console.error("Failed to load recently used template:", error)
+    }
+  }
+
+  const loadFavoriteTemplates = async () => {
+    try {
+      const response = await fetch("/api/tracking/templates/field-report/favorites")
+      if (response.ok) {
+        const data = await response.json()
+        setFavoriteTemplateIds(data.favoriteIds || [])
+      }
+    } catch (error) {
+      console.error("Failed to load favorite templates:", error)
+    }
+  }
+
+  const toggleFavorite = async (templateId: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card click
+    setIsTogglingFavorite(templateId)
+
+    try {
+      const isFavorite = favoriteTemplateIds.includes(templateId)
+      const response = await fetch("/api/tracking/templates/field-report/favorites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          templateId,
+          action: isFavorite ? "remove" : "add",
+        }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setFavoriteTemplateIds(data.favoriteIds || [])
+      } else {
+        const error = await response.json()
+        console.error("Failed to toggle favorite:", error.error)
+      }
+    } catch (error) {
+      console.error("Failed to toggle favorite:", error)
+    } finally {
+      setIsTogglingFavorite(null)
+    }
+  }
 
   // Handle browser back button - close template form instead of leaving page
   useEffect(() => {
@@ -128,6 +201,40 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
       setIsLoading(false)
     }
   }
+
+  // Sort templates: recently used 2nd, then by logical order
+  // Split templates into favorites and non-favorites
+  const { favoriteTemplates, nonFavoriteTemplates } = useMemo(() => {
+    const favorites: FieldReportTemplateRow[] = []
+    const nonFavorites: FieldReportTemplateRow[] = []
+
+    // Filter out deprecated "customizable" template
+    const activeTemplates = templates.filter(t => t.slug !== "customizable")
+
+    // First, add favorites in the order they were favorited
+    for (const favId of favoriteTemplateIds) {
+      const template = activeTemplates.find(t => t.id === favId)
+      if (template) {
+        favorites.push(template)
+      }
+    }
+
+    // Then sort non-favorites: recently used first, then by logical order
+    const remaining = activeTemplates.filter(t => !favoriteTemplateIds.includes(t.id))
+    remaining.sort((a, b) => {
+      // Recently used goes to the top (if not a favorite)
+      if (recentlyUsedTemplateId) {
+        if (a.id === recentlyUsedTemplateId) return -1
+        if (b.id === recentlyUsedTemplateId) return 1
+      }
+      // Then sort by logical order
+      const orderA = TEMPLATE_ORDER[a.slug] ?? 100
+      const orderB = TEMPLATE_ORDER[b.slug] ?? 100
+      return orderA - orderB
+    })
+
+    return { favoriteTemplates: favorites, nonFavoriteTemplates: remaining }
+  }, [templates, favoriteTemplateIds, recentlyUsedTemplateId])
 
   // Get all fields to render (static + active dynamic)
   const fieldsToRender = useMemo((): TemplateField[] => {
@@ -369,7 +476,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
         {/* Visual Cards Grid - Layout 4 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {templates.map((template) => {
+          {/* Favorite Templates */}
+          {favoriteTemplates.map((template) => {
             const colors = TEMPLATE_COLORS[template.slug] || {
               bg: "bg-primary/10 text-primary border-primary/20",
               icon: "bg-primary text-primary-foreground",
@@ -382,6 +490,157 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
                 template.active_dynamic_fields?.includes(f.id)
               )
             ]
+
+            return (
+              <div
+                key={template.id}
+                onClick={() => handleSelectTemplate(template)}
+                className="group rounded-2xl overflow-hidden border-2 border-rose-500/50 hover:border-rose-500 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-rose-500/10 bg-card"
+                data-testid={`template-card-favorite-${template.slug}`}
+              >
+                {/* Visual header with pattern */}
+                <div className={`h-32 relative overflow-hidden bg-gradient-to-br ${colors.gradient}`}>
+                  {/* Abstract pattern overlay */}
+                  <div className="absolute inset-0 opacity-30">
+                    <svg width="100%" height="100%" className="text-foreground">
+                      <defs>
+                        <pattern id={`pattern-fav-${template.id}`} x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                          <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill={`url(#pattern-fav-${template.id})`} />
+                    </svg>
+                  </div>
+
+                  {/* Floating icon */}
+                  <div className={`absolute top-6 left-6 p-4 rounded-2xl ${colors.icon} shadow-xl group-hover:scale-110 transition-transform duration-300`}>
+                    {TEMPLATE_ICONS[template.slug] || <FileText className="size-6" />}
+                  </div>
+
+                  {/* Favorite badge and time */}
+                  <div className="absolute top-6 right-6 flex items-center gap-2">
+                    <div className="px-3 py-1.5 rounded-full bg-rose-500/90 text-white text-sm font-medium flex items-center gap-1.5">
+                      <Star className="size-3.5 fill-current" />
+                      Favorite
+                    </div>
+                    <div className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-sm font-medium">
+                      {template.estimated_minutes} min
+                    </div>
+                  </div>
+
+                  {/* Bottom gradient */}
+                  <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
+                </div>
+
+                {/* Content */}
+                <div className="p-5">
+                  <h3 className="text-xl font-bold text-foreground mb-1">{template.name}</h3>
+                  <p className="text-muted-foreground text-sm italic mb-3">{tagline}</p>
+                  <p className="text-foreground/70 text-sm leading-relaxed mb-4">{template.description}</p>
+
+                  {/* Quick stats */}
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground mb-4">
+                    <span>{allFields.length} fields</span>
+                    <span>•</span>
+                    <span>{allFields.filter(f => f.required).length} required</span>
+                  </div>
+
+                  {/* CTA row with remove favorite button */}
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-3 rounded-xl text-primary-foreground font-semibold bg-primary opacity-90 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      Start Report
+                      <ArrowRight className="size-4" />
+                    </button>
+                    <button
+                      onClick={(e) => toggleFavorite(template.id, e)}
+                      disabled={isTogglingFavorite === template.id}
+                      className="px-4 py-3 rounded-xl border border-rose-500/50 text-rose-500 hover:bg-rose-500/10 transition-colors flex items-center justify-center"
+                      title="Remove from favorites"
+                    >
+                      {isTogglingFavorite === template.id ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <X className="size-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Add to Favorites Card - Only show if < 3 favorites */}
+          {favoriteTemplateIds.length < 3 && (
+            <div
+              className="group rounded-2xl overflow-hidden border-2 border-dashed border-rose-500/30 transition-all duration-300 bg-card"
+              data-testid="template-card-add-favorite"
+            >
+              {/* Visual header with pattern */}
+              <div className="h-32 relative overflow-hidden bg-gradient-to-br from-rose-500/20 via-rose-500/10 to-pink-500/15">
+                {/* Abstract pattern overlay */}
+                <div className="absolute inset-0 opacity-20">
+                  <svg width="100%" height="100%" className="text-foreground">
+                    <defs>
+                      <pattern id="pattern-add-favorite" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+                        <circle cx="20" cy="20" r="1.5" fill="currentColor" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#pattern-add-favorite)" />
+                  </svg>
+                </div>
+
+                {/* Floating icon */}
+                <div className="absolute top-6 left-6 p-4 rounded-2xl bg-rose-500/50 text-white shadow-xl">
+                  <Heart className="size-6" />
+                </div>
+
+                {/* Slots badge */}
+                <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-muted-foreground text-sm font-medium flex items-center gap-1.5">
+                  <Star className="size-3.5" />
+                  {3 - favoriteTemplateIds.length} slot{3 - favoriteTemplateIds.length !== 1 ? 's' : ''} left
+                </div>
+
+                {/* Bottom gradient */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-card to-transparent" />
+              </div>
+
+              {/* Content */}
+              <div className="p-5">
+                <h3 className="text-xl font-bold text-muted-foreground mb-1">Add a Favorite</h3>
+                <p className="text-muted-foreground/70 text-sm italic mb-3">Quick access to your go-to templates.</p>
+                <p className="text-muted-foreground/60 text-sm leading-relaxed mb-4">
+                  Tap the <Heart className="size-3 inline" /> on any template below to save it here. You can have up to 3 favorites.
+                </p>
+
+                {/* Hint */}
+                <div className="flex items-center gap-2 text-xs text-muted-foreground/50 mb-4">
+                  <Heart className="size-3" />
+                  <span>Favorites appear at the top for quick access</span>
+                </div>
+
+                {/* Visual indicator */}
+                <div className="w-full py-3 rounded-xl font-semibold border border-muted-foreground/20 text-muted-foreground/50 flex items-center justify-center gap-2">
+                  Tap <Heart className="size-4" /> below to add
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Non-Favorite Templates */}
+          {nonFavoriteTemplates.map((template) => {
+            const colors = TEMPLATE_COLORS[template.slug] || {
+              bg: "bg-primary/10 text-primary border-primary/20",
+              icon: "bg-primary text-primary-foreground",
+              gradient: "from-primary/30 via-primary/10 to-accent/20",
+            }
+            const tagline = TEMPLATE_TAGLINES[template.slug] || template.description
+            const allFields = [
+              ...template.static_fields,
+              ...(template.dynamic_fields || []).filter(f =>
+                template.active_dynamic_fields?.includes(f.id)
+              )
+            ]
+            const canAddFavorite = favoriteTemplateIds.length < 3
 
             return (
               <div
@@ -409,9 +668,16 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
                     {TEMPLATE_ICONS[template.slug] || <FileText className="size-6" />}
                   </div>
 
-                  {/* Time badge */}
-                  <div className="absolute top-6 right-6 px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-sm font-medium">
-                    {template.estimated_minutes} min
+                  {/* Time badge and Recently Used badge */}
+                  <div className="absolute top-6 right-6 flex items-center gap-2">
+                    {recentlyUsedTemplateId === template.id && (
+                      <div className="px-3 py-1.5 rounded-full bg-green-500/90 text-white text-sm font-medium">
+                        Recently Used
+                      </div>
+                    )}
+                    <div className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm text-foreground text-sm font-medium">
+                      {template.estimated_minutes} min
+                    </div>
                   </div>
 
                   {/* Bottom gradient */}
@@ -431,11 +697,27 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
                     <span>{allFields.filter(f => f.required).length} required</span>
                   </div>
 
-                  {/* CTA */}
-                  <button className="w-full py-3 rounded-xl text-primary-foreground font-semibold bg-primary opacity-90 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    Start Report
-                    <ArrowRight className="size-4" />
-                  </button>
+                  {/* CTA row with add favorite button */}
+                  <div className="flex gap-2">
+                    <button className="flex-1 py-3 rounded-xl text-primary-foreground font-semibold bg-primary opacity-90 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      Start Report
+                      <ArrowRight className="size-4" />
+                    </button>
+                    {canAddFavorite && (
+                      <button
+                        onClick={(e) => toggleFavorite(template.id, e)}
+                        disabled={isTogglingFavorite === template.id}
+                        className="px-4 py-3 rounded-xl border border-muted-foreground/30 text-muted-foreground hover:border-rose-500/50 hover:text-rose-500 hover:bg-rose-500/10 transition-colors flex items-center justify-center"
+                        title="Add to favorites"
+                      >
+                        {isTogglingFavorite === template.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Heart className="size-4" />
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             )

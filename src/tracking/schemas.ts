@@ -95,6 +95,11 @@ export const CreateFieldReportSchema = z.object({
   is_draft: z.boolean().default(false),
 })
 
+export const FavoriteActionSchema = z.object({
+  templateId: z.string().uuid(),
+  action: z.enum(["add", "remove"]),
+})
+
 // ============================================
 // Review Schemas
 // ============================================
@@ -120,4 +125,5 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>
 export type CreateApproachInput = z.infer<typeof CreateApproachSchema>
 export type UpdateApproachInput = z.infer<typeof UpdateApproachSchema>
 export type CreateFieldReportInput = z.infer<typeof CreateFieldReportSchema>
+export type FavoriteActionInput = z.infer<typeof FavoriteActionSchema>
 export type CreateReviewInput = z.infer<typeof CreateReviewSchema>

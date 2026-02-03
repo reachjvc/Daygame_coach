@@ -7,7 +7,7 @@
  * 1. Quick Log - 30 seconds, just the essentials
  * 2. Standard - 3 minutes, the sweet spot
  * 3. Deep Dive - 10 minutes, full forensic analysis
- * 4. Customizable - Build your own with research questions
+ * 4. Phoenix - 5 minutes, blowout recovery
  */
 
 import { createAdminSupabaseClient } from "../src/db/supabase"
@@ -272,14 +272,14 @@ const TEMPLATES: TemplateData[] = [
   },
 
   // ============================================================================
-  // 4. Customizable - Build your own
+  // 4. The Phoenix - Blowout Recovery (5 minutes)
   // ============================================================================
   {
-    slug: "customizable",
-    name: "Customizable",
-    description: "Full question library for power users who want maximum depth.",
-    icon: "settings-2",
-    estimated_minutes: 10,
+    slug: "phoenix",
+    name: "The Phoenix",
+    description: "Turn harsh rejections into growth fuel",
+    icon: "flame",
+    estimated_minutes: 5,
     static_fields: [
       {
         id: "mood",
@@ -297,144 +297,52 @@ const TEMPLATES: TemplateData[] = [
         min: 0,
       },
       {
-        id: "intention",
-        type: "text",
-        label: "What was your intention/goal?",
-        placeholder: "What were you trying to do?",
-      },
-      {
-        id: "best_moment",
+        id: "what_happened",
         type: "textarea",
-        label: "Best moment",
-        placeholder: "What stood out positively?",
-        rows: 2,
-      },
-    ],
-    dynamic_fields: [
-      // Core analysis fields
-      {
-        id: "conversation",
-        type: "textarea",
-        label: "Conversation",
-        placeholder: "Me: ...\nHer: ...",
-        rows: 8,
-      },
-      {
-        id: "technique",
-        type: "multiselect",
-        label: "Technique practiced",
-        options: [
-          "Push-pull",
-          "Cold read",
-          "Statement of intent",
-          "Compliance test",
-          "Time bridge",
-          "Tease",
-          "Qualification",
-          "Role play",
-        ],
-      },
-      {
-        id: "thirty_seconds_before",
-        type: "textarea",
-        label: "What happened 30 seconds before?",
-        placeholder: "The lead-up...",
+        label: "What happened? (factual, without judgment)",
+        placeholder: "Describe what actually occurred...",
         rows: 3,
+        required: true,
       },
       {
-        id: "hinge_moment",
+        id: "how_it_made_you_feel",
         type: "textarea",
-        label: "The hinge moment",
-        placeholder: "Where it could have gone differently...",
+        label: "How it made you feel",
+        placeholder: "Emotional processing - be honest...",
         rows: 3,
+        required: true,
       },
       {
-        id: "why_ended",
+        id: "why_it_happened",
         type: "textarea",
-        label: "Why did it end?",
-        placeholder: "Compare to intention...",
+        label: "Why it might have happened",
+        placeholder: "Analysis without self-blame...",
         rows: 3,
-      },
-      {
-        id: "do_differently",
-        type: "textarea",
-        label: "What would you do differently?",
-        placeholder: "If you could replay...",
-        rows: 2,
-      },
-      {
-        id: "sticking_point",
-        type: "select",
-        label: "Sticking point appeared?",
-        options: ["Yes", "No"],
-      },
-      {
-        id: "not_admitting",
-        type: "textarea",
-        label: "What are you not admitting?",
-        placeholder: "Be honest...",
-        rows: 3,
-      },
-      {
-        id: "key_takeaway",
-        type: "text",
-        label: "Key takeaway",
-        placeholder: "One thing to remember",
-      },
-      // Research-based questions (10 questions from research)
-      {
-        id: "pre_energy",
-        type: "scale",
-        label: "Pre-session energy (1-5)",
-        min: 1,
-        max: 5,
-      },
-      {
-        id: "what_took_courage",
-        type: "textarea",
-        label: "What took courage today?",
-        placeholder: "Celebrates effort regardless of outcome (Sports Psychology)",
-        rows: 2,
       },
       {
         id: "tell_friend",
         type: "textarea",
         label: "What would you tell a friend who had this experience?",
-        placeholder: "Self-compassion reframe (Kristin Neff)",
+        placeholder: "Be compassionate with yourself...",
         rows: 2,
       },
       {
-        id: "automatic_thought",
-        type: "textarea",
-        label: "What automatic thought went through your mind?",
-        placeholder: "When she responded... (CBT Thought Diaries)",
-        rows: 2,
+        id: "do_it_again",
+        type: "select",
+        label: "Would you do it again?",
+        options: ["Yes, definitely", "Yes, with adjustments", "Need to think about it", "Probably not"],
       },
       {
-        id: "pattern_repeating",
-        type: "textarea",
-        label: "What pattern do you notice repeating?",
-        placeholder: "From previous sessions... (Learning Science)",
-        rows: 2,
-      },
-      {
-        id: "confidence_assessment",
-        type: "scale",
-        label: "Confidence in this self-assessment (1-5)",
-        min: 1,
-        max: 5,
-      },
-      {
-        id: "what_proves",
-        type: "textarea",
-        label: "What does this experience prove about you?",
-        placeholder: "Identity reinforcement (Self-Efficacy)",
-        rows: 2,
+        id: "key_takeaway",
+        type: "text",
+        label: "Key takeaway (optional)",
+        placeholder: "One thing to remember",
       },
     ],
-    // Default active fields for customizable template
-    active_dynamic_fields: ["conversation", "why_ended", "do_differently", "key_takeaway"],
+    dynamic_fields: [],
+    active_dynamic_fields: [],
   },
+
 ]
 
 // ============================================================================

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, FileText, Medal, Sparkles, User, Video, Palette } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -30,22 +30,28 @@ const testPages = [
     icon: Sparkles,
   },
   {
-    name: "Field Reports",
-    href: "/test/field-reports",
-    description: "Field reports component testing",
-    icon: FileText,
-  },
-  {
-    name: "Field Report Showcase",
-    href: "/test/field-report-showcase",
-    description: "Template selection + form UI testing with different layouts",
-    icon: Palette,
-  },
-  {
     name: "Articles",
     href: "/test/articles",
     description: "Articles system testing",
     icon: BookOpen,
+  },
+  {
+    name: "Key Stats",
+    href: "/test/key-stats",
+    description: "Key stats section variations (Original, Enhanced, Creative)",
+    icon: BarChart3,
+  },
+  {
+    name: "Expand Effects",
+    href: "/test/key-stats-effects",
+    description: "5 creative expand animation effects comparison",
+    icon: Wand2,
+  },
+  {
+    name: "Ultra-Short Reports",
+    href: "/test/ultra-short-reports",
+    description: "5 ultra-short field report templates (click Quick Log to see popup)",
+    icon: Zap,
   },
 ]
 
