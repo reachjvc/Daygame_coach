@@ -1,11 +1,10 @@
 # Pipeline Status
 
+Updated: 03-02-2026 - R2 analysis: 1 PASS, 4 FAIL - hallucinations at 02.transcribe root cause
 Updated: 03-02-2026 - Added Video Issues Tracker; KddKqbIhUwE fixed with --no-condition-on-prev
 Updated: 03-02-2026 - Clarified flagging as manual remediation (not auto-retry); added remediation playbook
 Updated: 03-02-2026 - Added repetition hallucination detection to 02/03; flags videos with 3+ consecutive repeated sentences to `.flagged.json`
 Updated: 03-02-2026 - 03.align: filter wordless segments, no fallback, flag failures to `.failed.json`
-Updated: 03-02-2026 - R2 test: 4/5 videos through pipeline (02→03→04); KddKqbIhUwE failed align; -CZtcqqEDdk confirmed hallucination
-Updated: 03-02-2026 - Added test_r2 (5 infield videos); organized test data by rounds (r1, r2)
 Updated: 03-02-2026 - Split 02.transcribe into 02/03/04; renumbered pipeline to 9 scripts
 Updated: 02-02-2026 17:30 - Measured actual timing: 0.92x realtime (diarization is bottleneck at 0.71x)
 
@@ -123,12 +122,15 @@ find data/ -name ".remediated.json" -exec echo "=== {} ===" \; -exec cat {} \;
 
 **After remediation**: Log the fix to `data/02.transcribe/<source>/.remediated.json` and clear from `.flagged.json`/`.failed.json`.
 
-### Video Issues Tracker
+### Video Issues Tracker (R2 Test Videos)
 
 | Video ID | Source | Issue | Stage | Status | Notes |
 |----------|--------|-------|-------|--------|-------|
-| KddKqbIhUwE | daily_evolution | ZeroDivisionError | 03.align | ✅ FIXED | 204→79 segments with `--no-condition-on-prev` |
-| -CZtcqqEDdk | social_stoic | Hallucination (260 reps of "I'm not looking") | 02.transcribe | ⚠️ PENDING | Needs `--no-condition-on-prev` |
+| KddKqbIhUwE | daily_evolution | — | — | ✅ PASS | Clean through all stages |
+| e2dLEB-AwmA | coach_kyle | 29× "Yeah" hallucination | 02.transcribe | ⚠️ PENDING | Needs `--no-condition-on-prev` |
+| Sz1f6OiO5Ko | social_stoic | 358× "Thank you" hallucination | 02.transcribe | ⚠️ PENDING | Needs `--no-condition-on-prev` |
+| -CZtcqqEDdk | social_stoic | 260× "I'm not looking" | 04.diarize | ⚠️ STALE | 02/03 clean, 04 needs `--overwrite` |
+| Lhg-ycvVSro | NICK_KRAUSER | 266× "I'm not a chode" | 02.transcribe | ⚠️ PENDING | Needs `--no-condition-on-prev` |
 
 ### Hallucination Remediation Example
 
@@ -223,32 +225,28 @@ echo "06.segment-enrich: $(find data/06.segment-enrich -name '*.enriched.json' |
 
 **Purpose**: Test refactored 9-script pipeline (02→03→04 split) on infield videos only.
 
-**Status**: 4/5 videos completed through 04.diarize
+**Status**: 1 PASS, 4 FAIL (hallucinations at 02.transcribe)
 
 **Videos**:
-| # | Video ID | 02 | 03 | 04 | Segments | Speakers | Notes |
-|---|----------|----|----|----|---------:|----------|-------|
-| 1 | KddKqbIhUwE | ✓ | ✗ | — | — | — | ZeroDivisionError (flagged) |
-| 2 | e2dLEB-AwmA | ✓ | ✓ | ✓ | 359 | 6 | Multiple approaches in video |
-| 3 | Sz1f6OiO5Ko | ✓ | ✓ | ✓ | 519 | 4 | Coach 92% speaking time |
-| 4 | -CZtcqqEDdk | ✓ | ✓ | ✓ | 708 | 6 | **260 hallucinations** |
-| 5 | Lhg-ycvVSro | ✓ | ✓ | ✓ | 1132 | 4 | Coach 97% speaking time |
+| # | Video ID | Source | 02 | 03 | 04 | Issue |
+|---|----------|--------|----|----|----|----|
+| 1 | KddKqbIhUwE | daily_evolution | ✓ | ✓ | ✓ | **PASS** - 79→89 segments, clean |
+| 2 | e2dLEB-AwmA | coach_kyle | ✗ | ✗ | ✗ | **FAIL @ 02** - 29× "Yeah" hallucination |
+| 3 | Sz1f6OiO5Ko | social_stoic | ✗ | ✗ | ✗ | **FAIL @ 02** - 358× "Thank you" hallucination |
+| 4 | -CZtcqqEDdk | social_stoic | ✓ | ✓ | ✗ | **FAIL @ 04** - 02/03 fixed, 04 stale (260× "I'm not looking") |
+| 5 | Lhg-ycvVSro | NICK_KRAUSER | ✗ | ✗ | ✗ | **FAIL @ 02** - 266× "I'm not a chode" hallucination |
 
-**Total duration**: ~78 min (~1.3 hours)
+**Root Cause**: Whisper `condition_on_previous_text=True` causes hallucination loops on noisy infield audio
 
-**R2 Findings (03-02-2026)**:
-- **KddKqbIhUwE**: 03.align fails with ZeroDivisionError - segment 176 has no `words` array, but filtering it doesn't fix the issue (whisperx.align still fails internally)
-- **-CZtcqqEDdk**: Whisper hallucination - 260 segments containing "I'm not looking" around 14:00-15:30
-- **Transcription quality**: Good - proper nouns capitalized (Social Stoic, Latina, etc.)
-- **Diarization**: Working - pyannote detects 3-6 speakers per infield video
+**Remediation Required**:
+| Video ID | Action |
+|----------|--------|
+| e2dLEB-AwmA | `./02.transcribe --no-condition-on-prev --overwrite` then re-run 03, 04 |
+| Sz1f6OiO5Ko | `./02.transcribe --no-condition-on-prev --overwrite` then re-run 03, 04 |
+| -CZtcqqEDdk | `./04.diarize --overwrite` only (02/03 already clean) |
+| Lhg-ycvVSro | `./02.transcribe --no-condition-on-prev --overwrite` then re-run 03, 04 |
 
-**03.align Approach (03-02-2026)**:
-- **Preprocessing**: Filter segments without `words` array before whisperx.align
-- **No fallback**: Errors propagate and video is flagged to `data/03.align/<source>/.failed.json`
-- **View flagged**: `find data/03.align -name ".failed.json" -exec cat {} \;`
-- **Known issue**: Some videos still fail due to whisperx.align internal issues (backtrack failures → ZeroDivisionError)
-
-**Data Location**: `data/04.diarize/` (main pipeline folders)
+**Data Location**: `data/{02,03,04}.{transcribe,align,diarize}/` (main pipeline folders)
 
 ---
 

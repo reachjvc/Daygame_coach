@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Changelog
+- 03-02-2026 - Added code-review subagent rule for major code changes
 - 01-02-2026 12:30 - Added tech stack, development commands, test organization, articles slice
 - 31-01-2026 19:50 - Restructured for better Claude compliance: pre-response checklist, stronger framing
 - 31-01-2026 19:35 - Added doc-before-summary rule with strict order
 - 30-01-2026 20:07 - Added rule to read testing_behavior.md before writing tests
-- 30-01-2026 19:57 - Added mandatory test-driven workflow
 
 ---
 
@@ -52,6 +52,7 @@ npx vitest run -t "should calculate"
 | 2 | Did I complete a task from a doc? | Update that doc NOW (before this message) |
 | 3 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
 | 4 | Did I modify any doc? | Add changelog entry with today's date |
+| 5 | Did I make major code changes? | Run `code-review` subagent (see below) |
 
 if in doubt, ask user if documents should be updated or not .
 
@@ -107,6 +108,32 @@ Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the use
 ### 5. Quality Over Speed
 
 20 extra hours for better architecture is worth it.
+
+### 6. Code Review Subagent (After Major Changes)
+
+**When to run:** After completing prompts involving major code changes (new features, refactors, significant bug fixes).
+
+**How to invoke:** Use the Task tool with `subagent_type: "code-review"`
+
+**What it does:**
+1. Reads `docs/testing_behavior.md` for testing principles
+2. Identifies changed files via `git diff`
+3. Checks test coverage for changed code
+4. Runs `npm test` to verify tests pass
+5. Suggests missing tests (does NOT write them)
+
+**What counts as "major code changes":**
+- New service functions or components
+- Modified business logic in `*Service.ts`
+- New API routes or endpoints
+- Database schema or repo changes
+- Any change touching 3+ files
+
+**NOT needed for:**
+- Doc-only changes
+- Config tweaks
+- Single-line fixes
+- Test-only changes
 
 ---
 

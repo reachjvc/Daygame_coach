@@ -71,6 +71,9 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     if (sessionId) {
       loadSessionData(sessionId)
     }
+    // Replace initial history state so we have a known "home" state to return to
+    // This prevents browser back from navigating away entirely when closing modals
+    window.history.replaceState({ fieldReportHome: true }, '')
   }, [sessionId])
 
   const loadRecentlyUsedTemplate = async () => {
@@ -135,6 +138,10 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
       // If we have the custom builder open and user pressed back, close it
       if (showCustomBuilder && !event.state?.customBuilder) {
         setShowCustomBuilder(false)
+        // Restore the home state if we went too far back
+        if (!event.state?.fieldReportHome) {
+          window.history.replaceState({ fieldReportHome: true }, '')
+        }
         return
       }
       // If we have a selected template and user pressed back, close the form
@@ -144,6 +151,10 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         setReportTitle("")
         setReportDate(null)
         setSubmitError(null)
+        // Restore the home state if we went too far back
+        if (!event.state?.fieldReportHome) {
+          window.history.replaceState({ fieldReportHome: true }, '')
+        }
       }
     }
 
