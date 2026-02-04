@@ -1,0 +1,208 @@
+import {
+  ListChecks,
+  TrendingUp,
+  Repeat,
+  CircleHelp,
+  Trophy,
+  ShieldCheck,
+  Scale,
+} from "lucide-react"
+import type { KeyStat } from "../types"
+
+/**
+ * HYBRID VERSION: Best of all worlds
+ * - Original structure and academic credibility
+ * - Enhanced supporting stats (same-mechanism research)
+ * - Creative's punchiest hooks and clearer explanations
+ */
+export const KEY_STATS_HYBRID: KeyStat[] = [
+  {
+    id: "implementation-intentions",
+    value: "3x",
+    label: "Success Rate",
+    detail: "with implementation intentions",
+    hoverPreview: "Your future self has no willpower. Pre-decide now.",
+    fullDescription: "Your brain in the moment is unreliable—flooded with stress and social pressure. But your calm brain RIGHT NOW can pre-program the panicked one. \"If she looks bored, I'll tease her about her shoes.\" That simple sentence triples your success rate. The decision is already made before the pressure hits.",
+    icon: <ListChecks className="size-5" />,
+    nerdBox: {
+      primaryStudy: "Gollwitzer's meta-analysis (94 studies, 8,000+ participants) with effect size d=0.65",
+      keyQuote: "Difficult goal intentions were completed about 3 times more often when participants had furnished them with implementation intentions.",
+      whyItWorks: [
+        "Pre-decisions bypass the willpower bottleneck entirely",
+        "Your brain treats 'if-then' as already decided—no deliberation needed",
+        "Works even when stressed, tired, or emotionally flooded",
+        "Reduces need for conscious effort in the moment",
+      ],
+      alsoSupportedBy: [
+        "Habit stacking increases success by 64% (2025 JAP study)—same mechanism, linking to existing routines",
+        "Environmental cues increase adherence by 58% (2018 review)—the situational trigger",
+        "Sports psychology: Pre-race visualization and contingency planning",
+        "Military training: If-then rules for high-pressure decisions",
+        "Trading psychology: Pre-planned exit strategies reduce emotional decisions",
+      ],
+      topPerformers: "Elite athletes, military special forces, and professional traders all use if-then planning. They don't have more willpower—they've automated more decisions.",
+    },
+  },
+  {
+    id: "habit-tracking",
+    value: "40%",
+    label: "Higher Adherence",
+    detail: "with habit tracking",
+    hoverPreview: "What gets measured gets done. What gets ignored gets forgotten.",
+    fullDescription: "Here's a weird truth: you don't need to analyze your data. Just COLLECTING it makes you 40% more consistent. The act of observation changes the behavior. Write down 'approached: yes/no' and watch yourself approach more. No willpower required—just visibility.",
+    icon: <TrendingUp className="size-5" />,
+    nerdBox: {
+      primaryStudy: "APA research + 2025 Journal of Applied Psychology meta-analysis",
+      keyQuote: "Participants who merely recorded eating—without any diet changes—lost weight. Observation IS intervention.",
+      whyItWorks: [
+        "Tracking creates a micro-accountability moment each day",
+        "Streaks hijack loss aversion—breaking the chain feels worse than the effort",
+        "Your future self doesn't want to write 'skipped again'",
+        "Data reveals patterns invisible to memory alone",
+      ],
+      alsoSupportedBy: [
+        "Identity-based framing adds +32% adherence (JPSP study)—'I am someone who...'",
+        "Self-monitoring in weight loss: 2x more effective than non-tracking",
+        "Seinfeld's 'Don't Break the Chain': Writers who tracked wrote 4x more",
+        "Fitness tracking: Users who log workouts exercise 40% more days per month",
+        "Habit formation takes 59-66 days median, up to 254 days",
+      ],
+      topPerformers: "The most consistent performers in any field—from elite athletes to successful writers—track their key behaviors religiously. James Clear, Jerry Seinfeld, and nearly every elite athlete: They all track the mundane.",
+    },
+  },
+  {
+    id: "spaced-retrieval",
+    value: "200-300%",
+    label: "Better Retention",
+    detail: "with spaced retrieval",
+    hoverPreview: "You NEED to forget before you remember. That's the secret.",
+    fullDescription: "Counter-intuitive truth: Re-reading notes right after = 30% retention. Waiting until you've almost forgotten, then struggling to recall = 90% retention. The struggle IS the learning. Your old field reports are goldmines—but only if you let them fade first, then revisit.",
+    icon: <Repeat className="size-5" />,
+    nerdBox: {
+      primaryStudy: "The Spacing Effect—one of the most replicated findings in cognitive psychology, validated across 100+ years of research",
+      keyQuote: "Students using spaced repetition retain 80-90% after six months vs. 20-30% with cramming.",
+      whyItWorks: [
+        "Easy retrieval = weak memory trace. Hard retrieval = strong trace.",
+        "Forgetting creates 'retrieval cues' that make future recall easier",
+        "The frustration of almost-remembering is where neurons connect",
+        "Spacing forces effortful recall, which is more effective than passive re-reading",
+      ],
+      alsoSupportedBy: [
+        "Testing Effect: Being tested on material improves retention 50% more than re-studying",
+        "Medical students using spaced repetition outperform peers consistently",
+        "Language learning apps (Duolingo, Anki) built entirely on this principle",
+        "BJJ practitioners who review old rolls improve faster than those who don't",
+        "Interleaving: Mixing topics during review beats blocked practice by 43%",
+      ],
+      topPerformers: "Medical students, language learners, and competitive memory athletes all rely on spaced retrieval. Memory champions don't have better memories—they have better forgetting schedules.",
+    },
+  },
+  {
+    id: "analyzing-endings",
+    value: "80%",
+    label: "Of Insights",
+    detail: "come from analyzing endings",
+    hoverPreview: "Stop analyzing the crash. Analyze the decision chain.",
+    fullDescription: "You didn't lose her when she left. You lost her 3 minutes before. The ending is just the autopsy—the cause of death happened earlier. \"Why did the interaction end?\" and \"What happened in the 3 minutes before?\" These questions produce 80% of the actionable insights.",
+    icon: <CircleHelp className="size-5" />,
+    nerdBox: {
+      primaryStudy: "80/20 Field Report Method (community-derived) + BJJ Scout analysis methodology",
+      keyQuote: "The presenting problem is never the real problem. The real problem is 3-5 decisions upstream.",
+      whyItWorks: [
+        "The final moment is too late—the dominoes were already falling",
+        "Working backwards reveals the first domino (the actual mistake)",
+        "Focusing on fewer moments allows deeper analysis",
+        "Pareto principle: 20% of moments contain 80% of lessons",
+      ],
+      alsoSupportedBy: [
+        "BJJ Scout method: Study what happens BEFORE the submission, not just the finish",
+        "Aviation incident analysis: Focus on the decision chain, not the crash",
+        "Poker hand review: The mistake was made before the river card",
+        "Chess analysis: The losing move is rarely the final blunder, but 3-5 moves earlier",
+        "Software debugging: The bug is never on the line that crashed",
+      ],
+      topPerformers: "NTSB investigators, homicide detectives, elite BJJ competitors, and poker professionals all share the same instinct: ignore the ending, study the lead-up.",
+    },
+  },
+  {
+    id: "goal-setting",
+    value: "90%",
+    label: "Success Rate",
+    detail: "with specific, challenging goals",
+    hoverPreview: "'Be more confident' is a wish. 'Hold eye contact for 3 seconds' is a goal.",
+    fullDescription: "35 years of research across 40,000+ participants: specific, challenging goals lead to higher performance 90% of the time. \"Practice one cold read per approach\" beats \"be better at conversation\" every time. The specificity IS the skill—it eliminates the 'good enough' escape hatch.",
+    icon: <Trophy className="size-5" />,
+    nerdBox: {
+      primaryStudy: "Locke & Latham goal-setting research (35 years, 40,000+ participants, multiple countries)",
+      keyQuote: "'Do your best' is the worst possible goal. It gives your brain an excuse to do less.",
+      whyItWorks: [
+        "Specificity eliminates the 'good enough' escape hatch",
+        "Challenge activates effort—easy goals don't engage your brain",
+        "Clear targets enable honest self-assessment (did I or didn't I?)",
+        "For new skills: learning goals ('practice X') beat performance goals ('achieve Y')",
+      ],
+      alsoSupportedBy: [
+        "Difficult goals produce 250% higher performance than easy goals (Locke & Latham)",
+        "Writing goals down increases achievement by 42% vs. unwritten goals",
+        "Public commitment increases goal achievement by 65% (accountability effect)",
+        "Process goals ('do 3 approaches') beat outcome goals ('get a number') for beginners",
+        "MBA students with learning goals had higher GPAs AND satisfaction",
+      ],
+      topPerformers: "No Olympian says 'I want to be faster.' They say 'I will shave 0.3 seconds off my 100m by improving my block start.' The precision is the power.",
+    },
+  },
+  {
+    id: "psychological-safety",
+    value: "2x",
+    label: "More Effective",
+    detail: "with honest self-assessment",
+    hoverPreview: "Your inner critic thinks it's helping. It's not.",
+    fullDescription: "Self-judgment feels productive. 'I need to be harder on myself.' Wrong. Google's Project Aristotle found teams that reported MORE mistakes outperformed teams that hid them—they were 2x more effective. For solo reflection: you need safety with YOURSELF to honestly assess. Your inner critic isn't motivating you—it's slowing you down.",
+    icon: <ShieldCheck className="size-5" />,
+    nerdBox: {
+      primaryStudy: "Google Project Aristotle + Edmondson's research on psychological safety",
+      keyQuote: "Higher-performing hospital teams reported MORE errors, not fewer. Safety enabled honest reporting, which enabled learning.",
+      whyItWorks: [
+        "You can't learn from what you can't admit to yourself",
+        "Shame triggers defense mechanisms—you protect ego instead of analyzing",
+        "Self-compassion = 30% more persistence after failure (Neff research)",
+        "Normalizing mistakes creates space for genuine insight",
+      ],
+      alsoSupportedBy: [
+        "Athletes who practice self-compassion recover from losses 2x faster",
+        "Growth mindset: Framing mistakes as 'not yet' vs 'failure' increases effort by 40%",
+        "Improv comedy (Second City): 'You cannot be creative when you're in judgment of self'",
+        "Blameless postmortems in software: Focus on WHAT happened, not WHO caused it",
+        "Journaling with self-compassion prompts: 3x more honest than judgmental prompts",
+      ],
+      topPerformers: "Elite teams in tech, aviation, and healthcare all cultivate blameless cultures. The best performers aren't easier on themselves about STANDARDS—they're easier on themselves about MISTAKES. High bar, low shame.",
+    },
+  },
+  {
+    id: "feedback-paradox",
+    value: "A Third",
+    label: "Of Reflections",
+    detail: "hurt instead of help",
+    hoverPreview: "Not all reflection helps. Some makes you worse.",
+    fullDescription: "This is the stat that changes everything: a landmark meta-analysis of 607 studies found that 1/3 of feedback actually DECREASES performance. Not neutral—actively harmful. Rumination disguised as reflection. Ego focus disguised as analysis. If you're not careful, your field reports can work against you.",
+    icon: <Scale className="size-5" />,
+    nerdBox: {
+      primaryStudy: "Kluger & DeNisi meta-analysis (607 studies) on feedback interventions",
+      keyQuote: "'How could I be so stupid?' is not reflection. It's self-harm with extra steps.",
+      whyItWorks: [
+        "Feedback pointing at ego (not task) = performance drops",
+        "Anxious people get MORE anxious from feedback (vicious cycle)",
+        "'You are...' feedback harms; 'This approach...' feedback helps",
+        "Complex, unfamiliar tasks + high cognitive load = feedback backfires",
+      ],
+      alsoSupportedBy: [
+        "Time-limited reflection (10 min max) prevents harmful rumination",
+        "Positive-to-negative ratio: 5:1 ratio optimal for learning (Losada ratio)",
+        "Outcome feedback ('you failed') hurts; process feedback ('try X') helps",
+        "Beginners need encouragement; experts need correction (skill-stage calibration)",
+        "Self-compassion research: Self-criticism doesn't motivate, it paralyzes",
+      ],
+      topPerformers: "Great coaches don't give more feedback—they give better-timed feedback. Wrong feedback at wrong time = regression. The best coaches calibrate intensity to the athlete's current state—pushing hard when confident, supporting gently when struggling.",
+    },
+  },
+]

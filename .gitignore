@@ -40,7 +40,7 @@ next-env.d.ts
 .vercel
 
 # Training data (large local assets)
-data
+/data
 training-data
 training-data/**
 !training-data/
