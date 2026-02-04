@@ -374,4 +374,10 @@ test.describe('Session Tracking Flow', () => {
     }
     // If banner isn't visible, we're in start-session state which is also acceptable
   })
+
+  // Note: The UI now handles checking for active sessions before starting a new one.
+  // When an active session exists and user tries to start a new one, a dialog is shown
+  // offering "Resume Session" or "Start Fresh" options. The "Start Fresh" option
+  // abandons the old session and marks it with end_reason='abandoned'.
+  // Testing this flow requires more complex E2E setup with multiple browser contexts.
 })

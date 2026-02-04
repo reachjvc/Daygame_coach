@@ -16,7 +16,10 @@ STAGED_COUNT=$(git diff --cached --name-only 2>/dev/null | grep -v "\.md$" | gre
 TOTAL=$((MODIFIED_COUNT + STAGED_COUNT))
 
 # Check if any code files were touched (not just docs/config)
-CODE_FILES=$(git diff --name-only HEAD 2>/dev/null | grep -E "\.(ts|tsx|js|jsx)$" | wc -l)
+# Includes: TypeScript, JavaScript, Python, and shell scripts
+CODE_FILES=$(git diff --name-only HEAD 2>/dev/null | grep -E "\.(ts|tsx|js|jsx|py)$" | wc -l)
+SHELL_SCRIPTS=$(git diff --name-only HEAD 2>/dev/null | xargs -I{} sh -c 'head -1 "{}" 2>/dev/null | grep -q "^#!" && echo {}' | wc -l)
+CODE_FILES=$((CODE_FILES + SHELL_SCRIPTS))
 
 # If 3+ files modified AND at least one is code, suggest code review
 if [ "$TOTAL" -ge 3 ] && [ "$CODE_FILES" -ge 1 ]; then

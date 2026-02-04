@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "segment_enriched.schema.json",
-  "title": "Segment Enriched (04)",
-  "description": "Output schema for 04.segment-enrich - speaker labels and tone windows",
+  "title": "Segment Enriched (06)",
+  "description": "Output schema for 06.segment-enrich - speaker labels and tone windows",
   "type": "object",
-  "required": ["video_id", "source_file", "processed_at", "segments", "tone_windows", "speaker_cluster_labels", "metadata"],
+  "required": ["video_id", "source_file", "processed_at", "segments", "tone_windows", "speaker_cluster_labels", "detected_video_type", "metadata"],
   "properties": {
     "video_id": {
       "type": "string",
@@ -12,7 +12,7 @@
     },
     "source_file": {
       "type": "string",
-      "description": "Path to input file from 03.audio-features"
+      "description": "Path to input file from 05.audio-features"
     },
     "processed_at": {
       "type": "string",
@@ -61,8 +61,8 @@
             }
           },
           "speaker_id": {
-            "type": "integer",
-            "description": "Original speaker cluster ID from audio features"
+            "type": "string",
+            "description": "Original pyannote speaker ID (e.g., SPEAKER_00)"
           }
         }
       }
@@ -118,6 +118,11 @@
         "type": "string",
         "enum": ["coach", "target", "voiceover", "other"]
       }
+    },
+    "detected_video_type": {
+      "type": "string",
+      "enum": ["infield", "talking_head"],
+      "description": "Auto-detected video type from title keywords"
     },
     "metadata": {
       "type": "object",

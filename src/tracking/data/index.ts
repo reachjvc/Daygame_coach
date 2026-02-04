@@ -21,10 +21,12 @@ export {
   getSystemTemplateSlugs,
   isSystemTemplate,
   getSystemTemplateInfo,
+  systemTemplateToRow,
+  getSystemTemplatesAsRows,
   type SystemTemplateSlug,
   type UITemplateSlug,
   type TemplateSlug,
-  type SystemTemplateInfo,
+  type SystemTemplateData,
   type UITemplateInfo,
   type TemplateColorConfig,
 } from "./templates"

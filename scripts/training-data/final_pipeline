@@ -32,13 +32,12 @@ cd "$REPO_ROOT"
 PER_SOURCE_STEPS=(
   "$REPO_ROOT/scripts/training-data/01.download"
   "$REPO_ROOT/scripts/training-data/02.transcribe"
-  "$REPO_ROOT/scripts/training-data/03.audio-features"
-  "$REPO_ROOT/scripts/training-data/04.content"
-  "$REPO_ROOT/scripts/training-data/05.tonality"
-  "$REPO_ROOT/scripts/training-data/06.speakers"
-  "$REPO_ROOT/scripts/training-data/07.LLM-conversations"
-  "$REPO_ROOT/scripts/training-data/08.interactions"
-  "$REPO_ROOT/scripts/training-data/09.enrich"
+  "$REPO_ROOT/scripts/training-data/03.align"
+  "$REPO_ROOT/scripts/training-data/04.diarize"
+  "$REPO_ROOT/scripts/training-data/05.audio-features"
+  "$REPO_ROOT/scripts/training-data/06.conversations"
+  "$REPO_ROOT/scripts/training-data/07.content"
+  "$REPO_ROOT/scripts/training-data/08.structure"
 )
 TOTAL_PER_SOURCE_STEPS=${#PER_SOURCE_STEPS[@]}
 GLOBAL_STEP_DESCRIPTIONS=("Ingest to vector store")

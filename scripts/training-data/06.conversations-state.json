@@ -1,0 +1,75 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-02-04T16:30:00Z",
+  "mode": "test",
+  "input_dir": "data/test/05.audio-features",
+  "output_dir": "data/test/06.conversations",
+
+  "videos": {
+    "H3_8iPikhDw": {
+      "status": "complete",
+      "title": "A Basic Daygame Approach Anyone Can Do",
+      "input_file": "A Basic Daygame Approach Anyone Can Do [H3_8iPikhDw].audio_features.json",
+      "output_file": "A Basic Daygame Approach Anyone Can Do [H3_8iPikhDw].conversations.json",
+      "segment_count": 139,
+      "video_type": "compilation",
+      "conversations_detected": 1,
+      "processed_at": "2026-02-04T14:45:00Z",
+      "error": null
+    },
+    "G2sWa8X0EjA": {
+      "status": "complete",
+      "title": "How To Approach Groups Of Girls (The Complete Guide)",
+      "input_file": "How To Approach Groups Of Girls (The Complete Guide) [G2sWa8X0EjA].audio_features.json",
+      "output_file": "How To Approach Groups Of Girls (The Complete Guide) [G2sWa8X0EjA].conversations.json",
+      "segment_count": 162,
+      "video_type": "compilation",
+      "conversations_detected": 1,
+      "processed_at": "2026-02-04T16:30:00Z",
+      "error": null
+    },
+    "4x9bvKaVWBc": {
+      "status": "complete",
+      "title": "How to approach a woman when she's with her friends",
+      "input_file": "How to approach a woman when she's with her friends [4x9bvKaVWBc].audio_features.json",
+      "output_file": "How to approach a woman when she's with her friends [4x9bvKaVWBc].conversations.json",
+      "segment_count": 187,
+      "video_type": "compilation",
+      "conversations_detected": 1,
+      "processed_at": "2026-02-04T16:30:00Z",
+      "error": null
+    },
+    "WSFSpbFCPZo": {
+      "status": "complete",
+      "title": "How to get Rejected like a BOSS - James Marshall Infield",
+      "input_file": "How to get Rejected like a BOSS - James Marshall Infield [WSFSpbFCPZo].audio_features.json",
+      "output_file": "How to get Rejected like a BOSS - James Marshall Infield [WSFSpbFCPZo].conversations.json",
+      "segment_count": 328,
+      "video_type": "infield",
+      "conversations_detected": 5,
+      "processed_at": "2026-02-04T16:30:00Z",
+      "error": null
+    },
+    "dz8w8XUBDXU": {
+      "status": "complete",
+      "title": "Purpose | Masculinity | Fitness | Pickup",
+      "input_file": "Purpose ｜ Masculinity ｜ Fitness ｜ Pickup [dz8w8XUBDXU].audio_features.json",
+      "output_file": "Purpose ｜ Masculinity ｜ Fitness ｜ Pickup [dz8w8XUBDXU].conversations.json",
+      "segment_count": 118,
+      "video_type": "talking_head",
+      "conversations_detected": 0,
+      "processed_at": "2026-02-04T16:30:00Z",
+      "error": null
+    }
+  },
+
+  "summary": {
+    "total": 5,
+    "complete": 5,
+    "in_progress": 0,
+    "pending": 0,
+    "failed": 0
+  },
+
+  "handoff_note": "5/5 videos processed. Stage 06 complete for test set. Ready for user verification."
+}

@@ -59,6 +59,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/clear-code-review-marker.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/clear-test-marker.sh"
           }
         ]
       }
@@ -91,6 +95,10 @@
           {
             "type": "command",
             "command": ".claude/hooks/check-code-review.sh"
+          },
+          {
+            "type": "command",
+            "command": ".claude/hooks/check-test-results.sh"
           }
         ]
       }

@@ -1,0 +1,423 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/06.segment-enrich
+
+Tone classification for audio segments based on acoustic features.
+
+Input:  data/05.audio-features/<source>/<video>/*.audio_features.json
+Output: data/06.segment-enrich/<source>/<video>/*.segment_enriched.json
+
+Use:
+  ./06.segment-enrich --input PATH           # Process single file
+  ./06.segment-enrich --sources              # Process all sources
+  ./06.segment-enrich --force                # Reprocess all
+  ./06.segment-enrich --dry-run              # Show what would be processed
+
+================================================================================
+TONE CLASSIFICATION
+================================================================================
+
+We classify each segment into exactly ONE of 5 tones based on audio features.
+Research: docs/overviews/PIPELINE/research/tones/TONES_RESEARCH_SUMMARY.md
+
+THE 5 TONES:
+┌────────────┬─────┬─────────────────────────────────────────────────────────┐
+│ Tone       │  %  │ What it sounds like                                     │
+├────────────┼─────┼─────────────────────────────────────────────────────────┤
+│ playful    │ 13% │ Animated, dynamic delivery - pitch varies, high energy  │
+│ confident  │ 14% │ Measured, steady delivery - controlled pace and energy  │
+│ nervous    │ 14% │ Fast, monotone delivery - rushed speech, flat pitch     │
+│ energetic  │ 12% │ High vocal effort/arousal - bright, loud                │
+│ neutral    │ 47% │ Modal baseline - none of the above                      │
+└────────────┴─────┴─────────────────────────────────────────────────────────┘
+
+DROPPED TONES (and why):
+- warm      → No acoustic cluster exists (timbre-based, we don't measure timbre)
+- grounded  → Same as confident
+- direct    → Semantic, not acoustic
+- flirty    → Same as playful
+
+FEATURES USED FOR TONE DETECTION:
+- pitch_std (Hz)      : Pitch variability - high = animated, low = monotone
+- energy_dyn (dB)     : Loudness dynamics - high = expressive, low = flat
+- syllable_rate (/s)  : Speaking speed - high = rushed, low = measured
+- brightness (Hz)     : Spectral centroid - high = bright/effortful
+
+NOTE: Speaker labeling (coach/target) and video type detection are handled
+in a later pipeline stage, not here. This stage focuses purely on acoustic
+tone classification.
+
+================================================================================
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+# === Configuration ===
+REPO_ROOT = Path(__file__).parent.parent.parent
+DATA_ROOT = REPO_ROOT / "data"
+
+# Default directories (overridden by --test flag)
+INPUT_DIR = DATA_ROOT / "05.audio-features"
+OUTPUT_DIR = DATA_ROOT / "06.segment-enrich"
+
+# Test directories
+TEST_INPUT_DIR = DATA_ROOT / "test" / "05.audio-features"
+TEST_OUTPUT_DIR = DATA_ROOT / "test" / "06.segment-enrich"
+
+# Version tracking
+PIPELINE_VERSION = "2026-02-04"
+SCHEMA_VERSION = "2.0.0"  # Breaking change: removed speaker labeling
+
+# =============================================================================
+# TONE THRESHOLDS - How we detect each of the 5 tones
+# =============================================================================
+# Detection logic:
+#   playful   = pitch varies a lot (std > 22) AND loud dynamics (dyn > 13)
+#   confident = pitch steady (std < 18) AND moderate dynamics AND measured pace
+#   nervous   = fast speech (rate > 6.8) AND monotone (std < 16)
+#   energetic = bright voice (> 1700Hz) OR very loud dynamics (> 15dB)
+#   neutral   = none of the above (this is the default, ~47% of segments)
+#
+TONE_THRESHOLDS = {
+    "playful":   {"pitch_std_min": 22, "energy_dyn_min": 13},
+    "confident": {"pitch_std_max": 18, "energy_dyn_min": 8, "energy_dyn_max": 13, "syl_rate_min": 5, "syl_rate_max": 6.5},
+    "nervous":   {"syl_rate_min": 6.8, "pitch_std_max": 16},
+    "energetic": {"brightness_min": 1700, "energy_dyn_min": 15},  # OR condition
+}
+
+# Quality thresholds for filtering unreliable segments
+# Based on Stage 05 R1 analysis (04-02-2026):
+# - pitch.mean_hz == 0 means pyin couldn't detect pitch (9.7% of segments)
+# - pitch.std_hz < 5 means unreliable variation (10.4% of segments)
+PITCH_STD_MIN_FOR_TONE = 5.0
+
+
+def file_checksum(path: Path) -> str:
+    """SHA256 checksum (first 16 chars)."""
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+
+# === Tone Classification ===
+
+def classify_tone_window(features: Dict) -> Tuple[str, float]:
+    """
+    Classify tone using audio feature thresholds.
+    Returns (tone, confidence)
+    """
+    pitch = features.get("pitch", {})
+    energy = features.get("energy", {})
+    tempo = features.get("tempo", {})
+    spectral = features.get("spectral", {})
+
+    pitch_std = pitch.get("std_hz", 0)
+    energy_dyn = energy.get("dynamics_db", 0)
+    syl_rate = tempo.get("syllable_rate", 0)
+    brightness = spectral.get("brightness_hz", 0)
+
+    scores = {}
+
+    # Playful: pitch_std > 22 AND energy_dyn > 13
+    if pitch_std > 22 and energy_dyn > 13:
+        score = min((pitch_std - 22) / 10, 1) * 0.5 + min((energy_dyn - 13) / 5, 1) * 0.5
+        scores["playful"] = score
+
+    # Confident: pitch_std < 18 AND energy_dyn 8-13 AND syl_rate 5-6.5
+    if pitch_std < 18 and 8 <= energy_dyn <= 13 and 5 <= syl_rate <= 6.5:
+        score = (1 - pitch_std / 18) * 0.4 + 0.3 + 0.3
+        scores["confident"] = min(score, 1.0)
+
+    # Nervous: syl_rate > 6.8 AND pitch_std < 16
+    if syl_rate > 6.8 and pitch_std < 16:
+        score = min((syl_rate - 6.8) / 2, 1) * 0.5 + (1 - pitch_std / 16) * 0.5
+        scores["nervous"] = score
+
+    # Energetic: brightness > 1700 OR energy_dyn > 15
+    if brightness > 1700 or energy_dyn > 15:
+        b_score = min((brightness - 1700) / 500, 1) if brightness > 1700 else 0
+        e_score = min((energy_dyn - 15) / 5, 1) if energy_dyn > 15 else 0
+        scores["energetic"] = max(b_score, e_score)
+
+    # Default to neutral if no strong signals
+    if not scores or max(scores.values()) < 0.3:
+        return "neutral", 0.7
+
+    # Return highest scoring tone
+    best_tone = max(scores.keys(), key=lambda k: scores[k])
+    return best_tone, min(scores[best_tone], 1.0)
+
+
+def segment_has_reliable_features(seg: Dict) -> bool:
+    """
+    Check if segment has reliable audio features for tone classification.
+
+    Filters out segments where:
+    - pitch.mean_hz == 0 (pyin couldn't detect pitch)
+    - pitch.std_hz < 5 (unreliable variation)
+    """
+    features = seg.get("features", {})
+    pitch = features.get("pitch", {})
+
+    pitch_mean = pitch.get("mean_hz", 0)
+    if pitch_mean == 0:
+        return False
+
+    pitch_std = pitch.get("std_hz", 0)
+    if pitch_std < PITCH_STD_MIN_FOR_TONE:
+        return False
+
+    return True
+
+
+def aggregate_features(segments: List[Dict], win_start: float, win_end: float) -> Dict:
+    """
+    Aggregate features across segments in a window.
+    Filters out unreliable segments before aggregation.
+    """
+    pitch_stds = []
+    energy_dyns = []
+    syl_rates = []
+    brightnesses = []
+
+    for seg in segments:
+        if not segment_has_reliable_features(seg):
+            continue
+
+        f = seg.get("features", {})
+        if f.get("pitch", {}).get("std_hz", 0) > 0:
+            pitch_stds.append(f["pitch"]["std_hz"])
+        if f.get("energy", {}).get("dynamics_db", 0) > 0:
+            energy_dyns.append(f["energy"]["dynamics_db"])
+        if f.get("tempo", {}).get("syllable_rate", 0) > 0:
+            syl_rates.append(f["tempo"]["syllable_rate"])
+        if f.get("spectral", {}).get("brightness_hz", 0) > 0:
+            brightnesses.append(f["spectral"]["brightness_hz"])
+
+    return {
+        "pitch": {"std_hz": sum(pitch_stds) / len(pitch_stds) if pitch_stds else 0},
+        "energy": {"dynamics_db": sum(energy_dyns) / len(energy_dyns) if energy_dyns else 0},
+        "tempo": {"syllable_rate": sum(syl_rates) / len(syl_rates) if syl_rates else 0},
+        "spectral": {"brightness_hz": sum(brightnesses) / len(brightnesses) if brightnesses else 0},
+    }
+
+
+def build_tone_windows(segments: List[Dict], window_sec: float = 30, hop_sec: float = 10) -> List[Dict]:
+    """
+    Build tone windows with aggregated features.
+    """
+    if not segments:
+        return []
+
+    total_duration = segments[-1]["end"]
+    windows = []
+    window_id = 0
+
+    start = 0
+    while start < total_duration:
+        end = min(start + window_sec, total_duration)
+
+        # Get segments in this window
+        window_segs = [s for s in segments if s["start"] < end and s["end"] > start]
+
+        if window_segs:
+            agg_features = aggregate_features(window_segs, start, end)
+            tone, confidence = classify_tone_window(agg_features)
+
+            windows.append({
+                "id": window_id,
+                "start": round(start, 2),
+                "end": round(end, 2),
+                "tone": {
+                    "primary": tone,
+                    "confidence": round(confidence, 2),
+                    "method": "audio_threshold"
+                }
+            })
+            window_id += 1
+
+        start += hop_sec
+
+    return windows
+
+
+def classify_segment_tone(seg: Dict) -> Dict:
+    """
+    Classify tone for a single segment based on its features.
+    Returns tone info dict.
+    """
+    if not segment_has_reliable_features(seg):
+        return {
+            "primary": "neutral",
+            "confidence": 0.5,
+            "method": "unreliable_features"
+        }
+
+    features = seg.get("features", {})
+    tone, confidence = classify_tone_window(features)
+
+    return {
+        "primary": tone,
+        "confidence": round(confidence, 2),
+        "method": "audio_threshold"
+    }
+
+
+# === Main Processing ===
+
+def process_file(input_path: Path, force: bool = False) -> Optional[Path]:
+    """Process a single audio features file."""
+    # Determine output path
+    rel_path = input_path.relative_to(INPUT_DIR)
+    output_path = OUTPUT_DIR / rel_path.parent / rel_path.name.replace(".audio_features.json", ".segment_enriched.json")
+
+    # Skip if already processed (unless force)
+    if output_path.exists() and not force:
+        print(f"  Skipping (exists): {output_path.name}")
+        return output_path
+
+    # Load input
+    data = json.loads(input_path.read_text())
+    segments = data.get("segments", [])
+
+    if not segments:
+        print(f"  Skipping (no segments): {input_path.name}")
+        return None
+
+    # Extract video ID from path or filename
+    if " [" in input_path.parent.name and "]" in input_path.parent.name:
+        video_id = input_path.parent.name
+    else:
+        video_id = input_path.stem.replace(".audio_features", "")
+
+    print(f"  Processing: {video_id[:50]}...")
+    print(f"    Segments: {len(segments)}")
+
+    # Build enriched segments (pass through basic info + add per-segment tone)
+    enriched_segments = []
+    tone_counts = {}
+
+    for i, seg in enumerate(segments):
+        tone_info = classify_segment_tone(seg)
+        tone_counts[tone_info["primary"]] = tone_counts.get(tone_info["primary"], 0) + 1
+
+        enriched_segments.append({
+            "id": i,
+            "start": seg["start"],
+            "end": seg["end"],
+            "text": seg.get("text", ""),
+            "tone": tone_info,
+            # Pass through pyannote speaker ID for later stages
+            "pyannote_speaker": seg.get("pyannote_speaker")
+        })
+
+    # Build tone windows (30s windows with 10s hop)
+    tone_windows = build_tone_windows(segments)
+    print(f"    Tone windows: {len(tone_windows)}")
+
+    # Summarize tone distribution
+    print(f"    Segment tones: {tone_counts}")
+
+    # Build output
+    output = {
+        "video_id": video_id,
+        "source_file": str(input_path),
+        "processed_at": datetime.now(timezone.utc).isoformat(),
+        "segments": enriched_segments,
+        "tone_windows": tone_windows,
+        "metadata": {
+            "pipeline_version": PIPELINE_VERSION,
+            "schema_version": SCHEMA_VERSION,
+            "input_checksum": file_checksum(input_path)
+        }
+    }
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(output, indent=2))
+
+    print(f"    Output: {output_path}")
+    return output_path
+
+
+def find_input_files(source: Optional[str] = None) -> List[Path]:
+    """Find all audio feature files to process."""
+    if source:
+        source_dir = INPUT_DIR / source
+    else:
+        source_dir = INPUT_DIR
+
+    files = []
+    for json_file in source_dir.rglob("*.audio_features.json"):
+        files.append(json_file)
+
+    return sorted(files)
+
+
+def main():
+    global INPUT_DIR, OUTPUT_DIR
+
+    parser = argparse.ArgumentParser(description="Tone classification for audio segments")
+    parser.add_argument("--input", type=Path, help="Process single file")
+    parser.add_argument("--source", type=str, help="Process specific source folder")
+    parser.add_argument("--sources", action="store_true", help="Process all sources")
+    parser.add_argument("--test", action="store_true", help="Use test directories (data/test/...)")
+    parser.add_argument("--force", action="store_true", help="Reprocess all files")
+    parser.add_argument("--dry-run", action="store_true", help="Show what would be processed")
+    parser.add_argument("--limit", type=int, help="Limit number of files to process")
+
+    args = parser.parse_args()
+
+    # Switch to test directories if --test flag is set
+    if args.test:
+        INPUT_DIR = TEST_INPUT_DIR
+        OUTPUT_DIR = TEST_OUTPUT_DIR
+        print(f"Using test directories:")
+        print(f"  Input:  {INPUT_DIR}")
+        print(f"  Output: {OUTPUT_DIR}")
+
+    # Determine files to process
+    if args.input:
+        files = [args.input]
+    elif args.source:
+        files = find_input_files(args.source)
+    elif args.sources:
+        files = find_input_files()
+    else:
+        parser.print_help()
+        return
+
+    if args.limit:
+        files = files[:args.limit]
+
+    print(f"Found {len(files)} files to process")
+
+    if args.dry_run:
+        for f in files:
+            print(f"  Would process: {f}")
+        return
+
+    # Process files
+    success = 0
+    failed = 0
+
+    for f in files:
+        try:
+            result = process_file(f, force=args.force)
+            if result:
+                success += 1
+        except Exception as e:
+            print(f"  ERROR: {f.name}: {e}", file=sys.stderr)
+            failed += 1
+
+    print(f"\nComplete: {success} success, {failed} failed")
+
+
+if __name__ == "__main__":
+    main()

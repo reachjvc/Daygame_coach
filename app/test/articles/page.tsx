@@ -551,7 +551,7 @@ export default function ArticleEditorPage() {
   const [subMenu, setSubMenu] = useState<"ai" | "excellent" | "negative" | "good" | "almost" | "angle" | "alternatives" | null>(null)
   const [subMenuComment, setSubMenuComment] = useState("")
   // Track recently added flags for visual feedback
-  const [recentlyAdded, setRecentlyAdded] = useState<string | null>(null)
+  const [recentlyAdded, setRecentlyAdded] = useState<FeedbackType | null>(null)
   // Learning suggestions modal state
   const [suggestionsModal, setSuggestionsModal] = useState(false)
   const [learningSuggestions, setLearningSuggestions] = useState<LearningSuggestion[]>([])

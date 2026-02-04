@@ -1,0 +1,13 @@
+{
+  "$schema": "./.test-known-failures.schema.json",
+  "_comment": "Track known test failures. Claude MUST NOT dismiss failures not listed here.",
+  "_updated": "2026-02-04",
+  "_instructions": [
+    "Each entry must have: test (full test name), reason (why it's failing), ticket (issue URL or 'pending')",
+    "To add a known failure: 1) Investigate the failure 2) Create GitHub issue 3) Add entry here",
+    "To remove: Only when the test is fixed and passing"
+  ],
+  "unit": [],
+  "e2e": [],
+  "integration": []
+}

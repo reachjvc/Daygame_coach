@@ -1,0 +1,607 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/07.video-type
+
+Video Type Classification using Claude Code CLI
+
+Single-purpose: Classify videos into one of four types:
+- infield: Coach doing live approaches
+- talking_head: Coach explaining to camera
+- podcast: Multiple speakers discussing
+- compilation: Mixed content types
+
+Reads:
+  - Corrected audio feature files (from Stage 06):
+      data/06.corrected/<source>/<video>/*.corrected.json
+
+Writes:
+  - Video type files (full data + classification):
+      data/07.video-type/<source>/<video>/*.video_type.json
+
+Use:
+
+  A) Test videos:
+     ./scripts/training-data/07.video-type --test
+
+  B) Single file:
+     ./scripts/training-data/07.video-type --input data/test/06.corrected/video.corrected.json
+
+  C) Batch from sources file:
+     ./scripts/training-data/07.video-type --sources
+
+Requirements:
+  - Claude Code CLI installed and authenticated (claude command available)
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import shlex
+import subprocess
+import time
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+
+# ---------------------------
+# Configuration
+# ---------------------------
+
+SCHEMA_VERSION = "1.0.0"
+PIPELINE_VERSION = "07.video-type-v1"
+PROMPT_VERSION = "1.0.0"
+
+# Claude CLI binary path - try common locations
+CLAUDE_BINARY_PATHS = [
+    "claude",  # If in PATH
+    Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    "/usr/local/bin/claude",
+]
+
+
+# ---------------------------
+# Prompt
+# ---------------------------
+
+VIDEO_TYPE_PROMPT = """You are classifying daygame coaching videos. Determine the PRIMARY content type.
+
+VIDEO TYPES:
+
+1. "infield" - Coach DOING live approaches on the street
+   - Live interaction with women (not hypothetical)
+   - Real-time responses from targets
+   - Street/shopping/park environment implied
+   - Nervous energy, real rejection/acceptance
+   - Incomplete thoughts, interruptions, ambient noise
+
+2. "talking_head" - Coach EXPLAINING concepts to camera
+   - Educational/instructional tone
+   - No second party responding
+   - Abstract examples, theory discussion
+   - "Guys", "everyone", "you should"
+   - Clean, complete sentences
+
+3. "podcast" - Multiple speakers DISCUSSING topics
+   - Back-and-forth dialogue about theory
+   - Named co-hosts or guests
+   - Interview-style questions
+   - Both speakers have long turns
+
+4. "compilation" - Mixed content types
+   - Shifts between infield and commentary
+   - Multiple approaches with breakdowns between
+   - "As you saw..." followed by explanation
+
+VIDEO TITLE: "{title}"
+
+SAMPLE SEGMENTS:
+{samples}
+
+OUTPUT: Return ONLY a JSON object with this exact structure:
+{{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}
+"""
+
+
+# ---------------------------
+# State Management
+# ---------------------------
+
+@dataclass
+class ProcessingState:
+    version: int
+    completed_files: List[str]
+    in_progress: Optional[str]
+    failures: List[Dict[str, str]]
+
+
+def load_state(state_path: Path) -> ProcessingState:
+    """Load processing state from file."""
+    if state_path.exists():
+        try:
+            data = json.loads(state_path.read_text())
+            return ProcessingState(
+                version=data.get("version", 1),
+                completed_files=data.get("completed_files", []),
+                in_progress=data.get("in_progress"),
+                failures=data.get("failures", []),
+            )
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return ProcessingState(version=1, completed_files=[], in_progress=None, failures=[])
+
+
+def save_state(state_path: Path, state: ProcessingState) -> None:
+    """Save processing state to file."""
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps(asdict(state), indent=2))
+
+
+# ---------------------------
+# Claude CLI Interface
+# ---------------------------
+
+def find_claude_binary() -> Optional[str]:
+    """Find the Claude CLI binary."""
+    for path in CLAUDE_BINARY_PATHS:
+        path = Path(path)
+        if path.exists() and path.is_file():
+            return str(path)
+        # Also check if it's in PATH
+        if str(path) == "claude":
+            try:
+                result = subprocess.run(["which", "claude"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    return "claude"
+            except Exception:
+                pass
+    return None
+
+
+def call_claude(prompt: str, retries: int = 3, timeout: int = 120) -> Optional[str]:
+    """Call Claude Code CLI with retry logic."""
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        raise RuntimeError("Claude CLI binary not found - cannot proceed")
+
+    for attempt in range(retries):
+        try:
+            result = subprocess.run(
+                [claude_bin, "-p", prompt, "--output-format", "text"],
+                capture_output=True,
+                text=True,
+                timeout=timeout
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                if attempt < retries - 1:
+                    wait = 2 ** attempt
+                    print(f"[07.video-type] Claude CLI error, retrying in {wait}s...")
+                    print(f"[07.video-type]   stderr: {result.stderr[:200]}")
+                    time.sleep(wait)
+                    continue
+                raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
+        except subprocess.TimeoutExpired:
+            if attempt < retries - 1:
+                print(f"[07.video-type] Timeout, retrying...")
+                time.sleep(2 ** attempt)
+                continue
+            raise RuntimeError(f"Claude CLI timeout after {timeout}s")
+        except FileNotFoundError:
+            raise RuntimeError("'claude' command not found. Install Claude Code CLI.")
+    return None
+
+
+def parse_json_response(response: str) -> Optional[Dict]:
+    """Parse JSON object from LLM response."""
+    if not response:
+        return None
+
+    try:
+        # Try to find JSON in code block
+        code_block_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
+        if code_block_match:
+            return json.loads(code_block_match.group(1))
+
+        # Try to find raw JSON object
+        start = response.find("{")
+        if start != -1:
+            bracket_count = 0
+            for i, char in enumerate(response[start:], start):
+                if char == "{":
+                    bracket_count += 1
+                elif char == "}":
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        json_str = response[start:i + 1]
+                        return json.loads(json_str)
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"[07.video-type] JSON parse error: {e}")
+        print(f"[07.video-type] Response preview: {response[:500]}...")
+
+    return None
+
+
+# ---------------------------
+# Video Type Classification
+# ---------------------------
+
+def classify_video_type(title: str, segments: List[Dict]) -> Dict[str, Any]:
+    """Classify video type using Claude CLI."""
+
+    # Sample segments: first 5, middle 5, last 5
+    sample_indices = []
+    for i in range(min(5, len(segments))):
+        sample_indices.append(i)
+
+    if len(segments) > 10:
+        mid = len(segments) // 2
+        for i in range(mid - 2, mid + 3):
+            if 0 <= i < len(segments):
+                sample_indices.append(i)
+
+    if len(segments) > 15:
+        for i in range(len(segments) - 5, len(segments)):
+            sample_indices.append(i)
+
+    unique_indices = sorted(set(sample_indices))[:15]
+
+    samples = "\n".join([
+        f"[{i}] {segments[i].get('text', '')[:100]}"
+        for i in unique_indices
+    ])
+
+    prompt = VIDEO_TYPE_PROMPT.format(title=title, samples=samples)
+
+    print("[07.video-type] Classifying video type...")
+    response = call_claude(prompt, timeout=120)
+
+    result = parse_json_response(response)
+    if result and "type" in result:
+        vtype = result["type"]
+        conf = result.get("confidence", 0)
+        print(f"[07.video-type]   Type: {vtype} ({conf * 100:.0f}%)")
+        return result
+
+    # No fallback - fail explicitly
+    raise RuntimeError(f"Video type classification failed. Response: {response[:200]}")
+
+
+# ---------------------------
+# Main Processing
+# ---------------------------
+
+def extract_video_title(filename: str) -> str:
+    """Extract video title from filename."""
+    name = Path(filename).stem
+    name = re.sub(r"\.(audio_features|video_type)$", "", name)
+    match = re.match(r"^(.+?)\s*\[", name)
+    return match.group(1).strip() if match else name
+
+
+def extract_video_id(filename: str) -> str:
+    """Extract video ID from filename."""
+    match = re.search(r"\[([^\]]+)\]", filename)
+    return match.group(1) if match else Path(filename).stem
+
+
+def compute_checksum(data: Any) -> str:
+    """Compute checksum of data."""
+    return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
+
+
+def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+    """Process a single corrected.json file and add video type classification."""
+
+    print(f"\n[07.video-type] Processing: {input_path.name}")
+
+    # Load input (preserves all data from Stage 06)
+    with input_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    segments = data.get("segments", [])
+    video_title = extract_video_title(str(input_path))
+    video_id = extract_video_id(str(input_path))
+
+    print(f"[07.video-type]   Video: \"{video_title}\" [{video_id}]")
+    print(f"[07.video-type]   Segments: {len(segments)}")
+
+    if not segments:
+        raise RuntimeError(f"No segments found in {input_path}")
+
+    if dry_run:
+        print("[07.video-type]   [DRY RUN] Would process this file")
+        return {"video_type": None, "dry_run": True}
+
+    start_time = time.time()
+
+    # Classify video type
+    video_type = classify_video_type(video_title, segments)
+
+    elapsed = time.time() - start_time
+
+    # Build output - preserve ALL input data, add video_type
+    output = data.copy()
+    output["video_id"] = video_id
+    output["video_title"] = video_title
+    output["video_type"] = {
+        "type": video_type.get("type"),
+        "confidence": video_type.get("confidence"),
+        "reasoning": video_type.get("reasoning"),
+    }
+    output["video_type_metadata"] = {
+        "source_file": str(input_path),
+        "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "pipeline_version": PIPELINE_VERSION,
+        "prompt_version": PROMPT_VERSION,
+        "schema_version": SCHEMA_VERSION,
+        "input_checksum": compute_checksum(data),
+        "segment_count": len(segments),
+        "processing_time_sec": elapsed,
+    }
+
+    # Write output
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8") as f:
+        json.dump(output, f, indent=2, ensure_ascii=False)
+
+    print(f"[07.video-type] Result: {video_type.get('type')} ({video_type.get('confidence', 0) * 100:.0f}%)")
+    print(f"[07.video-type]   Time: {elapsed:.1f}s")
+    print(f"[07.video-type]   Output: {output_path}")
+
+    return {
+        "video_type": video_type.get("type"),
+        "confidence": video_type.get("confidence"),
+    }
+
+
+# ---------------------------
+# Path helpers
+# ---------------------------
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def input_root() -> Path:
+    return repo_root() / "data" / "06.corrected"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "07.video-type"
+
+
+def test_input_root() -> Path:
+    return repo_root() / "data" / "test" / "06.corrected"
+
+
+def test_output_root() -> Path:
+    return repo_root() / "data" / "test" / "07.video-type"
+
+
+def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+    """Compute output path from input path."""
+    stem = input_path.stem
+    if stem.endswith(".corrected"):
+        stem = stem[:-len(".corrected")]
+    return output_dir / f"{stem}.video_type.json"
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    """Parse sources.txt file."""
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            sources.append((name.strip(), url.strip()))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def find_input_files(in_dir: Path) -> List[Path]:
+    """Find all corrected JSON files in directory."""
+    return sorted(in_dir.rglob("*.corrected.json"))
+
+
+# ---------------------------
+# CLI
+# ---------------------------
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Classify daygame video types using Claude CLI"
+    )
+    parser.add_argument(
+        "--input",
+        help="Input .corrected.json file or directory"
+    )
+    parser.add_argument(
+        "--output",
+        help="Output directory (defaults to data/07.video-type/)"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Process test videos (data/test/06.corrected/)"
+    )
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from sources.txt file"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview what would be processed"
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing output files"
+    )
+
+    args = parser.parse_args()
+
+    # Test Claude CLI availability
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        print("[07.video-type] Error: Claude CLI binary not found")
+        print("[07.video-type] Searched paths:")
+        for p in CLAUDE_BINARY_PATHS:
+            print(f"  - {p}")
+        print("[07.video-type] Install Claude Code CLI: https://claude.ai/code")
+        raise SystemExit(1)
+
+    try:
+        result = subprocess.run(
+            [claude_bin, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode != 0:
+            print("[07.video-type] Warning: Claude CLI not responding properly")
+        else:
+            print(f"[07.video-type] Using Claude CLI: {claude_bin}")
+    except subprocess.TimeoutExpired:
+        print("[07.video-type] Warning: Claude CLI slow to respond")
+
+    # Determine input/output paths
+    if args.test:
+        in_dir = test_input_root()
+        out_dir = test_output_root()
+    elif args.input:
+        input_path = Path(args.input)
+        if not input_path.exists():
+            input_path = repo_root() / args.input
+        if not input_path.exists():
+            raise SystemExit(f"Input not found: {args.input}")
+
+        if input_path.is_file():
+            # Single file mode
+            out_dir = Path(args.output) if args.output else output_root()
+            output_path = compute_output_path(input_path, out_dir)
+
+            if output_path.exists() and not args.overwrite:
+                print(f"[07.video-type] Output exists, skipping: {output_path}")
+                return
+
+            result = process_file(input_path, output_path, dry_run=args.dry_run)
+            print(f"\n[07.video-type] Done. Type: {result.get('video_type')}")
+            return
+
+        in_dir = input_path
+        out_dir = Path(args.output) if args.output else output_root()
+    elif args.sources:
+        sources_path = repo_root() / args.sources
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+
+        total_files = 0
+        results_summary: Dict[str, int] = {}
+
+        for src_name, _ in parse_sources_file(sources_path):
+            src_in_dir = input_root() / src_name
+            if not src_in_dir.exists():
+                print(f"[07.video-type] Skipping {src_name}: no 06.corrected output")
+                continue
+
+            src_out_dir = output_root() / src_name
+            files = find_input_files(src_in_dir)
+
+            for input_file in files:
+                output_file = compute_output_path(input_file, src_out_dir)
+                if output_file.exists() and not args.overwrite:
+                    continue
+                try:
+                    result = process_file(input_file, output_file, dry_run=args.dry_run)
+                    vtype = result.get("video_type", "unknown")
+                    results_summary[vtype] = results_summary.get(vtype, 0) + 1
+                    total_files += 1
+                except Exception as e:
+                    print(f"[07.video-type] Error: {e}")
+
+        print(f"\n[07.video-type] Done. Processed {total_files} files")
+        print(f"[07.video-type] Summary: {results_summary}")
+        return
+    else:
+        raise SystemExit("Provide --input, --test, or --sources")
+
+    # Directory mode
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"[07.video-type] No .corrected.json files found in: {in_dir}")
+        return
+
+    print(f"[07.video-type] Input : {in_dir}")
+    print(f"[07.video-type] Output: {out_dir}")
+    print(f"[07.video-type] Files : {len(files)}")
+
+    # Load state for checkpointing
+    state_path = out_dir / ".video_type_state.json"
+    state = load_state(state_path)
+
+    results_summary: Dict[str, int] = {}
+    processed = 0
+    skipped = 0
+    failed = 0
+
+    for input_file in files:
+        file_key = str(input_file.relative_to(in_dir))
+
+        # Skip if already completed
+        if file_key in state.completed_files and not args.overwrite:
+            skipped += 1
+            continue
+
+        output_file = compute_output_path(input_file, out_dir)
+
+        if output_file.exists() and not args.overwrite:
+            skipped += 1
+            state.completed_files.append(file_key)
+            save_state(state_path, state)
+            continue
+
+        # Mark as in progress
+        state.in_progress = file_key
+        save_state(state_path, state)
+
+        try:
+            result = process_file(input_file, output_file, dry_run=args.dry_run)
+            vtype = result.get("video_type", "unknown")
+            results_summary[vtype] = results_summary.get(vtype, 0) + 1
+            processed += 1
+
+            # Mark as completed
+            if not args.dry_run:
+                state.completed_files.append(file_key)
+                state.in_progress = None
+                save_state(state_path, state)
+        except Exception as e:
+            print(f"[07.video-type] Error processing {input_file}: {e}")
+            state.failures.append({"file": file_key, "error": str(e)})
+            state.in_progress = None
+            save_state(state_path, state)
+            failed += 1
+
+    print(f"\n[07.video-type] Done.")
+    print(f"  Processed: {processed}")
+    print(f"  Skipped  : {skipped}")
+    print(f"  Failed   : {failed}")
+    print(f"  Summary  : {results_summary}")
+
+
+if __name__ == "__main__":
+    main()

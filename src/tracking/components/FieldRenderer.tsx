@@ -284,9 +284,8 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
       "space-y-2",
       variant === "card" && "p-4 rounded-xl bg-muted/30 border border-border/50"
     )}>
-      <Label htmlFor={field.id} className="flex items-center gap-1 text-sm font-medium">
+      <Label htmlFor={field.id} className="text-sm font-medium">
         {field.label}
-        {field.required && <span className="text-destructive ml-0.5">*</span>}
       </Label>
       {renderField()}
     </div>

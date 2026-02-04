@@ -3,6 +3,9 @@
 **Status:** Completed
 **Updated:** 04-02-2026
 
+## Changelog
+- 04-02-2026: System templates now served directly from code (no DB seeding needed)
+
 ## Problem Statement
 
 We just implemented a "single source of truth" pattern for milestones (see `src/tracking/data/milestones.ts`). This prevents code drift by deriving types from data.
@@ -26,20 +29,27 @@ Created `src/tracking/data/templates.ts` following the milestone pattern:
 - Derived types: `SystemTemplateSlug`, `UITemplateSlug`, `TemplateSlug`
 
 ### Files Changed
-- **NEW**: `src/tracking/data/templates.ts` - single source of truth
-- **UPDATED**: `src/tracking/data/index.ts` - exports template types
+- **NEW**: `src/tracking/data/templates.ts` - single source of truth (includes full field definitions)
+- **UPDATED**: `src/tracking/data/index.ts` - exports template types and helpers
 - **UPDATED**: `src/tracking/config.ts` - removed duplicate TEMPLATE_COLORS/TAGLINES
 - **UPDATED**: `src/tracking/components/templateIcons.tsx` - typed against TemplateSlug
 - **UPDATED**: `src/tracking/components/FieldReportPage.tsx` - imports from templates.ts
 - **UPDATED**: `src/tracking/components/CustomReportBuilder.tsx` - imports from templates.ts
-- **UPDATED**: `scripts/seed_field_report_templates.ts` - validates against SYSTEM_TEMPLATES
+- **UPDATED**: `src/db/trackingRepo.ts` - serves system templates from code, user templates from DB
+- **DEPRECATED**: `scripts/seed_field_report_templates.ts` - moved to scripts/deprecated/
 - **UPDATED**: `tests/e2e/field-report.spec.ts` - uses SLUGS constant
 - **UPDATED**: `tests/unit/architecture.test.ts` - allowlist for templates.ts
+
+### Architecture Change (04-02-2026)
+System templates are now served directly from code instead of being seeded to the database:
+- `getFieldReportTemplates()` returns code-defined system templates + DB user templates
+- No manual seeding required - template changes deploy with the code
+- User-created templates still stored in DB
 
 ### Type Safety Benefits
 - Typos in template slugs caught at compile time
 - Missing icon for new template caught at compile time
-- Seed script validates slugs match SYSTEM_TEMPLATES
+- No sync issues between code and database
 
 ## Acceptance Criteria
 

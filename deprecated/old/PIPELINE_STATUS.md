@@ -1,7 +1,7 @@
 # Pipeline Status
 
-**Updated**: 03-02-2026 19:30 - Stage 03 R1 APPROVED (word alignment only, not sentence segmentation)
-**Status**: Phase 2 COMPLETE - Ready for Stage 04
+**Updated**: 04-02-2026 - Added Stage 07 speaker-correction, renumbered 07→11
+**Status**: Phase 5 - Stage 06 Complete, Ready for Stage 07
 
 ---
 
@@ -12,14 +12,16 @@
 | 01.download | `01.download` | RETAINED (~966 videos) | - | - |
 | 02.transcribe | `02.transcribe` | R1 APPROVED | [x] | [ ] |
 | 03.align | `03.align` | R1 APPROVED | [x] | [ ] |
-| 04.diarize | `04.diarize` | FRESH START | [ ] | [ ] |
-| 05.audio-features | `05.audio-features` | FRESH START | [ ] | [ ] |
-| 06.segment-enrich | `06.segment-enrich` | FRESH START | [ ] | [ ] |
-| 07.conversations | `07.conversations` | FRESH START | [ ] | [ ] |
-| 08a.structure | `08a.structure` | FRESH START | [ ] | [ ] |
-| 08b.content | `08b.content` | FRESH START | [ ] | [ ] |
-| 08c.chunk | `08c.chunk` | TO BE CREATED | [ ] | [ ] |
-| 09.ingest | `09.ingest.ts` | FRESH START | [ ] | [ ] |
+| 04.diarize | `04.diarize` | R1 COMPLETE | [x] | [ ] |
+| 05.audio-features | `05.audio-features` | R1 APPROVED | [x] | [ ] |
+| 06.conversations | `06.conversations.ts` | R1 IN PROGRESS | [ ] | [ ] |
+| 07.speaker-correction | `07.speaker-correction` | FRESH START | [ ] | [ ] |
+| 08.content | `08.content` | FRESH START | [ ] | [ ] |
+| 09.structure | `09.structure` | FRESH START | [ ] | [ ] |
+| 10.chunk | `10.chunk` | TO BE CREATED | [ ] | [ ] |
+| 11.ingest | `11.ingest.ts` | FRESH START | [ ] | [ ] |
+
+**Note:** Stage 07 (speaker correction) added as dedicated stage. Old 07-10 shifted to 08-11.
 
 ---
 
@@ -41,7 +43,18 @@
 
 ---
 
-## Current Phase: 1 - Stage 02 Transcription (IN PROGRESS)
+## Current Phase: 5 - Stage 06 Conversations (Claude Code Direct)
+
+### Phase 5 Tasks
+- [x] Create handoff document: `docs/pipeline/stages/STAGE_06_PROCESSING.md`
+- [x] Create state file: `scripts/training-data/06.conversations-state.json`
+- [x] Update stage documentation with Claude Code Direct approach
+- [ ] **R1: Process 5 test videos using Claude Code Direct**
+  - Uses Claude Code (subscription) instead of API calls
+  - Opus 4.5 model (higher quality than Haiku)
+  - State file tracks progress for handoff
+- [ ] User verifies R1 outputs
+- [ ] R2: Process 15 additional videos
 
 ### Phase 0 Tasks (COMPLETE)
 - [x] Create `/docs/pipeline/` folder structure
@@ -147,12 +160,61 @@ Task tool with:
 
 ---
 
-## Pipeline Structure (ASCII) - 10 Stages
+## Cross-Stage Integration Rules
+
+Later stages must READ data from earlier stages rather than re-compute it. Override only when evidence clearly contradicts earlier stage output.
+
+### Stage 06 (Conversations) → Speaker Labeling & Video Type
+
+**Inputs:**
+- `pyannote_speaker` from Stage 05 audio-features
+- Text content for pattern analysis
+
+**Outputs:**
+- `detected_video_type`: infield, talking_head, podcast, compilation
+- `speaker_labels`: mapping of SPEAKER_XX to coach/target/other
+- Per-segment speaker assignment
+- Conversation boundaries for infield videos
+
+### Stage 07 (Speaker Correction) → Fix Diarization Errors
+
+**Behavior:**
+- Detects Q&A patterns where same speaker asks AND answers
+- Swaps speaker labels on detected errors
+- Tracks corrections in metadata
+
+### Stage 08 (Content) → LLM Enrichment
+
+**Behavior:**
+- Text-based sentiment and intent analysis
+- Technique and topic classification (31 techniques, 22 topics)
+- Quality metrics
+- Single Claude CLI call per video (efficient)
+
+### Stage 09 (Structure) → Interaction Extraction
+
+**Behavior:**
+- Extracts interaction objects from enriched conversations
+- Phase detection (open → pre_hook → post_hook → close)
+- Hook point identification
+
+### Integration Summary
+
+| Stage | Reads From | Adds |
+|-------|------------|------|
+| 06 | 05.audio-features | speaker_labels, video_type, conversation_boundaries |
+| 07 | 06.conversations | speaker corrections (Q&A error fixes) |
+| 08 | 07.speaker-correction | techniques, topics, quality metrics |
+| 09 | 08.content | interaction structure (phases), hook points |
+
+---
+
+## Pipeline Structure (ASCII) - 11 Stages
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                         DAYGAME COACH TRAINING DATA PIPELINE                    │
-│                              (10 Stages, Sequential)                            │
+│                              (11 Stages, Sequential)                            │
 │                                                                                 │
 │   Starting Fresh: Only 01.download retained, all else re-verified              │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -170,57 +232,63 @@ Task tool with:
          ▼
 ┌──────────────────┐
 │  02.transcribe   │  Python (faster-whisper large-v3)
-│  FRESH START     │  Output: data/02.transcribe/<source>/<video>/
+│  R1 APPROVED     │  Output: data/02.transcribe/<source>/<video>/
 │                  │  Files: *.full.json (text + word timestamps), *.txt
-│                  │  Known issue: hallucinations with condition_on_previous_text
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
 │  03.align        │  Python (whisperx)
-│  FRESH START     │  Output: data/03.align/<source>/<video>/
-│                  │  Files: *.full.json (sentence-level segments), *.txt
-│                  │  Known issue: ZeroDivisionError on some videos
+│  R1 APPROVED     │  Output: data/03.align/<source>/<video>/
+│                  │  Files: *.full.json (word-level alignment), *.txt
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
 │  04.diarize      │  Python (pyannote)
-│  FRESH START     │  Output: data/04.diarize/<source>/<video>/
+│  R1 COMPLETE     │  Output: data/04.diarize/<source>/<video>/
 │                  │  Files: *.full.json (SPEAKER_00, SPEAKER_01 labels)
 │  SLOW: 0.71x RT  │  ~600s processing per 843s video (pipeline bottleneck)
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
-│  05.audio-feat.  │  Python (librosa, resemblyzer)
-│  FRESH START     │  Output: data/05.audio-features/<source>/<video>/
-│                  │  Files: *.features.json
-│                  │  Features: pitch, energy, tempo, spectral, speaker embeddings
+│  05.audio-feat.  │  Python (librosa)
+│  R1 APPROVED     │  Output: data/05.audio-features/<source>/<video>/
+│                  │  Files: *.audio_features.json
+│                  │  Features: pitch, energy, tempo, spectral
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
-│  06.segment-enr. │  Python (Ollama LLM optional)
-│  FRESH START     │  Output: data/06.segment-enrich/<source>/<video>/
-│                  │  Files: *.enriched.json
-│                  │  Speaker roles: coach, target, voiceover, other
-│                  │  Tones: playful, confident, nervous, energetic, neutral
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  07.conversations│  Python (Ollama LLM)
-│  FRESH START     │  Output: data/07.conversations/<source>/<video>/
+│  06.conversations│  TypeScript (Claude CLI)
+│  IN PROGRESS     │  Output: data/06.conversations/<source>/<video>/
 │                  │  Files: *.conversations.json
 │                  │  Video types: infield, talking_head, podcast, compilation
-│                  │  Detects conversation boundaries in infield videos
+│                  │  Speaker labels, conversation boundaries
 └────────┬─────────┘
          │
          ▼
 ┌──────────────────┐
-│  08a.structure   │  Python
-│  FRESH START     │  Output: data/08a.structure/<source>/<video>/
+│  07.speaker-corr │  Python (heuristic)
+│  FRESH START     │  Output: data/07.speaker-correction/<source>/<video>/
+│                  │  Files: *.corrected.json
+│                  │  Fixes Q&A pattern diarization errors
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  08.content      │  Python (Claude CLI)
+│  FRESH START     │  Output: data/08.content/<source>/<video>/
+│                  │  Files: *.enriched.json
+│                  │  31 techniques, 22 topics, quality metrics
+│                  │  Single CLI call per video (efficient)
+└────────┬─────────┘
+         │
+         ▼
+┌──────────────────┐
+│  09.structure    │  Python
+│  FRESH START     │  Output: data/09.structure/<source>/<video>/
 │                  │  Files: *.interactions.jsonl
 │                  │  Phases: open → pre_hook → post_hook → close
 │                  │  Extracts interaction objects with turn-level structure
@@ -228,17 +296,8 @@ Task tool with:
          │
          ▼
 ┌──────────────────┐
-│  08b.content     │  Python (Ollama LLM)
-│  FRESH START     │  Output: data/08b.content/<source>/<video>/
-│                  │  Files: *.enriched.json
-│                  │  31 techniques, 22 topics, quality metrics
-│                  │  Interaction-level enrichment
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  08c.chunk       │  Python (NEW STAGE)
-│  TO BE CREATED   │  Output: data/08c.chunk/<source>/<video>/
+│  10.chunk        │  Python
+│  TO BE CREATED   │  Output: data/10.chunk/<source>/<video>/
 │                  │  Files: *.chunks.json
 │                  │  RAG-optimized chunks with metadata
 │                  │  Optimal chunk sizes for embedding + retrieval
@@ -246,7 +305,7 @@ Task tool with:
          │
          ▼
 ┌──────────────────┐
-│  09.ingest       │  TypeScript/Node.js
+│  11.ingest       │  TypeScript/Node.js
 │  FRESH START     │  Output: Supabase embeddings table
 │                  │  Modes: transcripts | interactions | chunks
 │                  │  Vector store for RAG/QA system
@@ -314,17 +373,16 @@ STAGE VERIFIED → Move to next stage
 | Phase | Focus | Status |
 |-------|-------|--------|
 | 0 | Foundation & Cleanup | COMPLETE |
-| 1 | Stage 02 - Transcription | READY |
-| 2 | Stage 03 - Alignment | PENDING |
-| 3 | Stage 04 - Diarization | PENDING |
-| 4 | Stage 05 - Audio Features | PENDING |
-| 5 | Stage 06 - Segment Enrichment | PENDING |
-| 6 | Stage 07 - Conversations | PENDING |
-| 7 | Stage 08a - Structure | PENDING |
-| 8 | Stage 08b - Content | PENDING |
-| 9 | Stage 08c - Chunking (NEW) | PENDING |
-| 10 | Stage 09 - Ingest | PENDING |
-| 11 | Full Pipeline Run | PENDING |
+| 1 | Stage 02 - Transcription | COMPLETE (R1 APPROVED) |
+| 2 | Stage 03 - Alignment | COMPLETE (R1 APPROVED) |
+| 3 | Stage 04 - Diarization | COMPLETE (R1 COMPLETE) |
+| 4 | Stage 05 - Audio Features | COMPLETE (R1 APPROVED) |
+| 5 | Stage 06 - Conversations | PENDING |
+| 6 | Stage 07 - Content | PENDING |
+| 7 | Stage 08 - Structure | PENDING |
+| 8 | Stage 09 - Chunking | PENDING |
+| 9 | Stage 10 - Ingest | PENDING |
+| 10 | Full Pipeline Run | PENDING |
 
 ---
 
@@ -336,15 +394,14 @@ STAGE VERIFIED → Move to next stage
 data/test/
 ├── 01.download/      # R1 audio files (171MB)
 ├── 02.transcribe/    # R1 transcripts (1.2MB)
-├── 03.align/         # (pending)
+├── 03.align/
 ├── 04.diarize/
 ├── 05.audio-features/
-├── 06.segment-enrich/
-├── 07.conversations/
-├── 08a.structure/
-├── 08b.content/
-├── 08c.chunk/
-└── 09.ingest/
+├── 06.conversations/
+├── 07.content/
+├── 08.structure/
+├── 09.chunk/
+└── 10.ingest/
 ```
 
 ### R1 Videos (5)
@@ -386,17 +443,27 @@ data/<stage>/<source>/.remediated.json # Successfully fixed videos
 - [Stage 03: Align](stages/STAGE_03_align.md)
 - [Stage 04: Diarize](stages/STAGE_04_diarize.md)
 - [Stage 05: Audio Features](stages/STAGE_05_audio_features.md)
-- [Stage 06: Segment Enrich](stages/STAGE_06_segment_enrich.md)
-- [Stage 07: Conversations](stages/STAGE_07_conversations.md)
-- [Stage 08a: Structure](stages/STAGE_08a_structure.md)
-- [Stage 08b: Content](stages/STAGE_08b_content.md)
-- [Stage 08c: Chunk](stages/STAGE_08c_chunk.md) (NEW)
-- [Stage 09: Ingest](stages/STAGE_09_ingest.md)
+- [Stage 06: Conversations](stages/STAGE_06_conversations.md)
+- [Stage 07: Speaker Correction](stages/STAGE_07_speaker_correction.md)
+- [Stage 08: Content](stages/STAGE_08_content.md)
+- [Stage 09: Structure](stages/STAGE_09_structure.md)
+- [Stage 10: Chunk](stages/STAGE_10_chunk.md)
+- [Stage 11: Ingest](stages/STAGE_11_ingest.md)
+
+**Future Features (not in pipeline):**
+- [Voice-to-Voice: Tone Classification](../../scripts/voice_to_voice/TONE_CLASSIFICATION.md)
 
 ---
 
 ## Changelog
 
+- 04-02-2026 - **RESTRUCTURE**: Added Stage 07 (speaker-correction) as dedicated stage. Old 07→08, 08→09, 09→10, 10→11. Total stages: 11.
+- 04-02-2026 14:30 - **Stage 06**: Switched to Claude Code Direct processing. Uses subscription (Opus 4.5) instead of API credits. Created handoff doc + state file for session continuity.
+- 04-02-2026 - **SWAPPED** stages 07 and 08. Content (was 08) is now 07, Structure (was 07) is now 08. New order: 06.conversations → 07.content → 08.structure. Content enrichment happens first, then structure extraction uses enriched data.
+- 04-02-2026 13:00 - **REMOVED** Stage 06 (tone classification) from pipeline. Moved to `scripts/voice_to_voice/` as future feature. Stages renumbered: 07→06, 08a→07, 08b→08, 08c→09, 09→10. Tone classification is for voice-to-voice coaching, not text-based training data.
+- 04-02-2026 11:00 - **R1 APPROVED** for Stage 05 audio-features. Usable segments: 58-98% (short infield segments expected to fail pitch detection)
+- 04-02-2026 - Added JSON schema for Stage 05 audio_features output
+- 04-02-2026 - Stage 05 speaker embeddings disabled by default (saves storage)
 - 03-02-2026 19:30 - **R1 APPROVED** for Stage 03 align. Added Rule #11 (quality-review subagent). Documented FINDING-002 (stage does word alignment, not sentence alignment as claimed)
 - 03-02-2026 17:15 - **R1 APPROVED** for Stage 02 transcribe (user verified austen_summers gap is correct)
 - 03-02-2026 17:05 - Created data/test/ folder with R1 videos isolated (5 videos, each stage has subfolder)

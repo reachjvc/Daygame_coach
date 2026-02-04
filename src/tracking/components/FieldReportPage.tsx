@@ -25,7 +25,7 @@ import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { SessionSummaryData } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, SESSION_IMPORT_FIELD_IDS } from "../config"
-import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER } from "../data/templates"
+import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER, type TemplateSlug } from "../data/templates"
 import { TEMPLATE_ICONS } from "./templateIcons"
 import { FieldRenderer } from "./FieldRenderer"
 import { SessionImportSection } from "./SessionImportSection"
@@ -299,13 +299,15 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     const activeDynamic = dynamicFields.filter(f => activeIds.includes(f.id))
     let allFields = [...staticFields, ...activeDynamic]
 
-    // Filter out approach-related number fields when session data exists
-    // (approach count is already displayed in Session Context section)
+    // Filter out fields that are already displayed in Session Context section
     if (sessionData) {
       allFields = allFields.filter(field => {
         const fieldIdLower = field.id.toLowerCase()
+        // Filter approach count fields (shown in session context)
         const isApproachField = fieldIdLower.includes("approach") && field.type === "number"
-        return !isApproachField
+        // Filter location fields when session has location (shown in session context)
+        const isLocationField = fieldIdLower.includes("location") && sessionData.location
+        return !isApproachField && !isLocationField
       })
     }
 
@@ -388,25 +390,37 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     }
 
     try {
+      // Determine template type - system templates have synthetic IDs starting with "system-"
+      const isSystemTemplate = selectedTemplate?.id.startsWith("system-")
+
       const response = await fetch("/api/tracking/field-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          template_id: selectedTemplate?.id,
+          // Send system_template_slug for system templates, template_id (UUID) for custom
+          ...(isSystemTemplate
+            ? { system_template_slug: selectedTemplate?.slug }
+            : { template_id: selectedTemplate?.id }),
           session_id: sessionId,
           title: reportTitle || undefined,
           report_date: reportDate?.toISOString() || undefined,
           fields: fieldsWithMood,
-          approach_count: sessionData?.approachCount,
-          location: sessionData?.location,
-          tags: sessionData?.tags,
+          approach_count: sessionData?.approachCount ?? undefined,
+          location: sessionData?.location ?? undefined,
+          tags: sessionData?.tags ?? undefined,
           is_draft: isDraft,
         }),
       })
 
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || "Failed to save report")
+        // Include validation details if available for debugging
+        const details = error.details?.fieldErrors
+          ? Object.entries(error.details.fieldErrors)
+              .map(([field, msgs]) => `${field}: ${(msgs as string[]).join(", ")}`)
+              .join("; ")
+          : ""
+        throw new Error(details || error.error || "Failed to save report")
       }
 
       // Navigate back to tracking dashboard
@@ -566,12 +580,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Favorite Templates */}
           {favoriteTemplates.map((template) => {
-            const colors = TEMPLATE_COLORS[template.slug] || {
+            const colors = TEMPLATE_COLORS[template.slug as TemplateSlug] || {
               bg: "bg-primary/10 text-primary border-primary/20",
               icon: "bg-primary text-primary-foreground",
               gradient: "from-primary/30 via-primary/10 to-accent/20",
             }
-            const tagline = TEMPLATE_TAGLINES[template.slug] || template.description
+            const tagline = (TEMPLATE_TAGLINES as Record<string, string>)[template.slug] || template.description
             const allFields = [
               ...template.static_fields,
               ...(template.dynamic_fields || []).filter(f =>
@@ -602,7 +616,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
                   {/* Floating icon */}
                   <div className={`absolute top-6 left-6 p-4 rounded-2xl ${colors.icon} shadow-xl group-hover:scale-110 transition-transform duration-300`}>
-                    {TEMPLATE_ICONS[template.slug] || <FileText className="size-6" />}
+                    {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[template.slug] || <FileText className="size-6" />}
                   </div>
 
                   {/* Favorite badge and time */}
@@ -716,12 +730,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
           {/* Non-Favorite Templates */}
           {nonFavoriteTemplates.map((template) => {
-            const colors = TEMPLATE_COLORS[template.slug] || {
+            const colors = TEMPLATE_COLORS[template.slug as TemplateSlug] || {
               bg: "bg-primary/10 text-primary border-primary/20",
               icon: "bg-primary text-primary-foreground",
               gradient: "from-primary/30 via-primary/10 to-accent/20",
             }
-            const tagline = TEMPLATE_TAGLINES[template.slug] || template.description
+            const tagline = (TEMPLATE_TAGLINES as Record<string, string>)[template.slug] || template.description
             const allFields = [
               ...template.static_fields,
               ...(template.dynamic_fields || []).filter(f =>
@@ -753,7 +767,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
                   {/* Floating icon */}
                   <div className={`absolute top-6 left-6 p-4 rounded-2xl ${colors.icon} shadow-xl group-hover:scale-110 transition-transform duration-300`}>
-                    {TEMPLATE_ICONS[template.slug] || <FileText className="size-6" />}
+                    {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[template.slug] || <FileText className="size-6" />}
                   </div>
 
                   {/* Time badge and Recently Used badge */}
@@ -896,7 +910,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   // Report form view
   const isValid = validateForm()
-  const colors = TEMPLATE_COLORS[selectedTemplate.slug] || {
+  const colors = TEMPLATE_COLORS[selectedTemplate.slug as TemplateSlug] || {
     bg: "bg-primary/10 text-primary border-primary/20",
     icon: "bg-primary text-primary-foreground",
     gradient: "from-primary/30 via-primary/10 to-accent/20",
@@ -919,12 +933,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
-              {TEMPLATE_ICONS[selectedTemplate.slug] || <FileText className="size-6" />}
+              {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[selectedTemplate.slug] || <FileText className="size-6" />}
             </div>
             <div>
               <h1 className="text-2xl font-bold">{selectedTemplate.name}</h1>
               <p className="text-muted-foreground text-sm mt-0.5">
-                {TEMPLATE_TAGLINES[selectedTemplate.slug] || selectedTemplate.description}
+                {(TEMPLATE_TAGLINES as Record<string, string>)[selectedTemplate.slug] || selectedTemplate.description}
               </p>
             </div>
           </div>

@@ -1,10 +1,10 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "conversations.schema.json",
-  "title": "Conversations (05)",
-  "description": "Output schema for 05.conversations - video type and conversation boundaries",
+  "title": "Conversations (06)",
+  "description": "Output schema for 06.conversations - video type, speaker labels, and conversation boundaries (Claude LLM)",
   "type": "object",
-  "required": ["video_id", "source_file", "processed_at", "video_type", "segments", "metadata"],
+  "required": ["video_id", "source_file", "processed_at", "video_type", "speaker_labels", "segments", "conversations", "metadata"],
   "properties": {
     "video_id": {
       "type": "string",
@@ -12,7 +12,7 @@
     },
     "source_file": {
       "type": "string",
-      "description": "Path to input file from 04.segment-enrich"
+      "description": "Path to input file from 05.audio-features"
     },
     "processed_at": {
       "type": "string",
@@ -21,7 +21,7 @@
     },
     "video_type": {
       "type": "object",
-      "required": ["type", "confidence"],
+      "required": ["type", "confidence", "method"],
       "properties": {
         "type": {
           "type": "string",
@@ -31,6 +31,34 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
+        },
+        "method": {
+          "type": "string",
+          "const": "claude_llm",
+          "description": "Classification method - always claude_llm"
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "LLM explanation for classification"
+        }
+      }
+    },
+    "speaker_labels": {
+      "type": "object",
+      "description": "Mapping of pyannote SPEAKER_XX to semantic roles",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["role", "confidence"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": ["coach", "target", "voiceover", "other"]
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
         }
       }
     },
@@ -38,48 +66,77 @@
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "conversation_id", "segment_type"],
+        "required": ["id", "start", "end", "text", "speaker_id", "speaker_role", "segment_type", "conversation_id"],
         "properties": {
           "id": {
             "type": "integer",
-            "description": "Segment index (matches 04 segment id)"
+            "description": "Segment index (matches input segment id)"
+          },
+          "start": {
+            "type": "number",
+            "description": "Start time in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "End time in seconds"
+          },
+          "text": {
+            "type": "string",
+            "description": "Transcript text"
+          },
+          "speaker_id": {
+            "type": "string",
+            "description": "Original pyannote speaker ID (e.g., SPEAKER_00)"
+          },
+          "speaker_role": {
+            "type": "string",
+            "enum": ["coach", "target", "voiceover", "other"],
+            "description": "Semantic role derived from speaker_labels"
+          },
+          "segment_type": {
+            "type": "string",
+            "enum": ["approach", "commentary", "transition"],
+            "description": "Type of content in this segment"
           },
           "conversation_id": {
             "type": "integer",
+            "minimum": 0,
             "description": "Conversation group ID (0 = non-approach/commentary)"
           },
-          "segment_type": {
-            "type": "object",
-            "required": ["type", "confidence"],
-            "properties": {
-              "type": {
-                "type": "string",
-                "enum": ["approach", "commentary", "transition", "intro", "outro"]
-              },
-              "confidence": {
-                "type": "number",
-                "minimum": 0,
-                "maximum": 1
-              }
-            }
+          "is_conversation_start": {
+            "type": "boolean",
+            "description": "True if this segment starts a new conversation"
           }
         }
       }
     },
     "conversations": {
       "type": "array",
-      "description": "Summary of conversation boundaries",
+      "description": "Summary of detected conversations",
       "items": {
         "type": "object",
         "required": ["conversation_id", "segment_ids", "start_time", "end_time"],
         "properties": {
-          "conversation_id": { "type": "integer" },
+          "conversation_id": {
+            "type": "integer",
+            "minimum": 1
+          },
           "segment_ids": {
             "type": "array",
             "items": { "type": "integer" }
           },
-          "start_time": { "type": "number" },
-          "end_time": { "type": "number" }
+          "start_time": {
+            "type": "number",
+            "description": "Conversation start time in seconds"
+          },
+          "end_time": {
+            "type": "number",
+            "description": "Conversation end time in seconds"
+          },
+          "opener_type": {
+            "type": "string",
+            "description": "Type of opener used (e.g., direct, compliment, situational)"
+          }
         }
       }
     },
@@ -91,7 +148,19 @@
         "prompt_version": { "type": "string" },
         "model_version": { "type": "string" },
         "schema_version": { "type": "string" },
-        "input_checksum": { "type": "string" }
+        "input_checksum": { "type": "string" },
+        "llm_calls": {
+          "type": "integer",
+          "description": "Number of LLM API calls made"
+        },
+        "total_input_tokens": {
+          "type": "integer",
+          "description": "Total input tokens used"
+        },
+        "total_output_tokens": {
+          "type": "integer",
+          "description": "Total output tokens used"
+        }
       }
     }
   }

@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Known Test Failures",
+  "description": "Tracks expected test failures to distinguish new regressions from known issues",
+  "type": "object",
+  "required": ["unit", "e2e", "integration"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "_comment": { "type": "string" },
+    "_updated": { "type": "string", "format": "date" },
+    "_instructions": { "type": "array", "items": { "type": "string" } },
+    "unit": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/knownFailure" }
+    },
+    "e2e": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/knownFailure" }
+    },
+    "integration": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/knownFailure" }
+    }
+  },
+  "definitions": {
+    "knownFailure": {
+      "type": "object",
+      "required": ["test", "reason", "ticket"],
+      "properties": {
+        "test": {
+          "type": "string",
+          "description": "Full test name as shown in test output (e.g., 'Articles Page › should display articles page')"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Brief explanation of why this test is failing"
+        },
+        "ticket": {
+          "type": "string",
+          "description": "GitHub issue URL or 'pending' if issue not yet created"
+        },
+        "added": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when this known failure was added"
+        }
+      }
+    }
+  }
+}

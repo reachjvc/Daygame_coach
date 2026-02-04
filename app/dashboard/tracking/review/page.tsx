@@ -1,14 +1,9 @@
-import { createServerSupabaseClient } from "@/src/db/server"
-import { redirect } from "next/navigation"
-import { WeeklyReviewPage } from "@/src/tracking"
+"use client"
 
-export default async function ReviewPage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+import { WeeklyReviewPage } from "@/src/tracking/components/WeeklyReviewPage"
+import { useTrackingAuth } from "../TrackingAuthContext"
 
-  if (error || !user) {
-    redirect("/auth/login")
-  }
-
-  return <WeeklyReviewPage userId={user.id} />
+export default function ReviewPage() {
+  const { userId } = useTrackingAuth()
+  return <WeeklyReviewPage userId={userId} />
 }

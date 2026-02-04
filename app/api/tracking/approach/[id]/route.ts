@@ -39,7 +39,7 @@ export async function PATCH(
       )
     }
 
-    const { outcome, set_type, tags, mood, note } = parsed.data
+    const { outcome, set_type, tags, mood, note, voice_note_url } = parsed.data
 
     const updated = await updateApproach(id, {
       outcome: outcome ?? undefined,
@@ -47,6 +47,7 @@ export async function PATCH(
       tags: tags ?? undefined,
       mood: mood ?? undefined,
       note: note ?? undefined,
+      voice_note_url: voice_note_url ?? undefined,
     })
 
     return NextResponse.json(updated)

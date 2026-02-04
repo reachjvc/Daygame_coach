@@ -1,21 +1,29 @@
 /**
- * Template data - Single source of truth for template slugs.
+ * Template data - Single source of truth for system templates.
+ *
+ * System templates are served directly from code (no database seeding needed).
+ * User-created custom templates are still stored in the database.
  *
  * Following the milestone pattern (see milestones.ts):
- * - ALL data in one place with `as const satisfies`
- * - Types derived from data via `keyof typeof`
- * - No hardcoded strings scattered across codebase
+ * - ALL data in one place
+ * - Types derived from data
+ * - No sync issues between code and database
  */
+
+import type { TemplateField, FieldReportTemplateRow } from "@/src/db/trackingTypes"
 
 // ============================================
 // Types
 // ============================================
 
-export interface SystemTemplateInfo {
+export interface SystemTemplateData {
   name: string
   description: string
   icon: string
   estimatedMinutes: number
+  staticFields: TemplateField[]
+  dynamicFields: TemplateField[]
+  activeDynamicFields: string[]
 }
 
 export interface UITemplateInfo {
@@ -30,7 +38,7 @@ export interface TemplateColorConfig {
 }
 
 // ============================================
-// System Templates (seeded to DB)
+// System Templates (served from code, no DB)
 // ============================================
 
 export const SYSTEM_TEMPLATES = {
@@ -38,33 +46,351 @@ export const SYSTEM_TEMPLATES = {
     name: "Quick Log",
     description: "Minimum viable logging. Capture that it happened.",
     icon: "zap",
-    estimatedMinutes: 1,
+    estimatedMinutes: 2,
+    staticFields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        min: 0,
+      },
+      {
+        id: "intention",
+        type: "text",
+        label: "What was your intention/goal?",
+        placeholder: "What were you trying to do?",
+      },
+      {
+        id: "best_moment",
+        type: "textarea",
+        label: "Best moment",
+        placeholder: "What stood out positively?",
+        rows: 2,
+      },
+      {
+        id: "quick_note",
+        type: "text",
+        label: "Quick note",
+        placeholder: "Anything worth noting?",
+      },
+    ],
+    dynamicFields: [
+      {
+        id: "conversation",
+        type: "textarea",
+        label: "Add conversation",
+        placeholder: "Me: ...\nHer: ...",
+        rows: 6,
+      },
+    ],
+    activeDynamicFields: [],
   },
+
   standard: {
     name: "Standard",
     description: "Quick learning loop. Extract the key lesson.",
     icon: "file-text",
-    estimatedMinutes: 3,
+    estimatedMinutes: 4,
+    staticFields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        min: 0,
+      },
+      {
+        id: "intention",
+        type: "text",
+        label: "What was your intention/goal?",
+        placeholder: "What were you trying to do?",
+      },
+      {
+        id: "best_moment",
+        type: "textarea",
+        label: "Best moment",
+        placeholder: "What stood out positively?",
+        rows: 2,
+      },
+      {
+        id: "why_ended",
+        type: "textarea",
+        label: "Your best interaction - why did it end?",
+        placeholder: "Compare to your intention...",
+        rows: 3,
+      },
+      {
+        id: "do_differently",
+        type: "textarea",
+        label: "What would you do differently?",
+        placeholder: "If you could replay it...",
+        rows: 2,
+      },
+      {
+        id: "key_takeaway",
+        type: "text",
+        label: "Key takeaway",
+        placeholder: "One thing to remember",
+      },
+    ],
+    dynamicFields: [
+      {
+        id: "conversation",
+        type: "textarea",
+        label: "Add conversation for AI analysis",
+        placeholder: "Me: ...\nHer: ...",
+        rows: 8,
+      },
+    ],
+    activeDynamicFields: [],
   },
+
   "deep-dive": {
     name: "Deep Dive",
-    description: "Full forensic analysis. Every detail matters.",
+    description: "Full forensic analysis for notable sessions.",
     icon: "microscope",
-    estimatedMinutes: 10,
+    estimatedMinutes: 15,
+    staticFields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        min: 0,
+      },
+      {
+        id: "intention",
+        type: "text",
+        label: "What was your intention/goal?",
+        placeholder: "What were you trying to do?",
+      },
+      {
+        id: "best_moment",
+        type: "textarea",
+        label: "Best moment",
+        placeholder: "What stood out positively?",
+        rows: 2,
+      },
+      {
+        id: "conversation",
+        type: "textarea",
+        label: "Conversation",
+        placeholder: "Me: ...\nHer: ...",
+        rows: 8,
+      },
+      {
+        id: "technique",
+        type: "multiselect",
+        label: "Technique practiced",
+        options: [
+          "Push-pull",
+          "Cold read",
+          "Statement of intent",
+          "Compliance test",
+          "Time bridge",
+          "Tease",
+          "Qualification",
+          "Role play",
+          "Assumption stacking",
+          "Future projection",
+        ],
+      },
+      {
+        id: "thirty_seconds_before",
+        type: "textarea",
+        label: "What happened in the 30 seconds before the key moment?",
+        placeholder: "The lead-up often reveals more than the moment itself...",
+        rows: 3,
+      },
+      {
+        id: "hinge_moment",
+        type: "textarea",
+        label: "The hinge moment (where it could have gone differently)",
+        placeholder: "Describe the decision point...",
+        rows: 3,
+      },
+      {
+        id: "why_ended",
+        type: "textarea",
+        label: "Why did it end?",
+        placeholder: "Compare to your intention...",
+        rows: 3,
+      },
+      {
+        id: "do_differently",
+        type: "textarea",
+        label: "What would you do differently?",
+        placeholder: "If you could replay it...",
+        rows: 2,
+      },
+      {
+        id: "sticking_point",
+        type: "select",
+        label: "Did your sticking point show up?",
+        options: ["Yes", "No"],
+      },
+      {
+        id: "sticking_point_detail",
+        type: "textarea",
+        label: "If yes, describe",
+        placeholder: "What happened?",
+        rows: 2,
+      },
+      {
+        id: "not_admitting",
+        type: "textarea",
+        label: "What are you not admitting to yourself?",
+        placeholder: "Be honest - this is private...",
+        rows: 3,
+      },
+      {
+        id: "key_takeaway",
+        type: "text",
+        label: "Key takeaway",
+        placeholder: "One thing to remember",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
   },
+
   phoenix: {
     name: "The Phoenix",
-    description: "Rise from the ashes. Every master failed here first.",
+    description: "Turn harsh rejections into growth fuel",
     icon: "flame",
     estimatedMinutes: 5,
+    staticFields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        min: 0,
+      },
+      {
+        id: "what_happened",
+        type: "textarea",
+        label: "What happened? (factual, without judgment)",
+        placeholder: "Describe what actually occurred...",
+        rows: 3,
+      },
+      {
+        id: "how_it_made_you_feel",
+        type: "textarea",
+        label: "How it made you feel",
+        placeholder: "Emotional processing - be honest...",
+        rows: 3,
+      },
+      {
+        id: "why_it_happened",
+        type: "textarea",
+        label: "Why it might have happened",
+        placeholder: "Analysis without self-blame...",
+        rows: 3,
+      },
+      {
+        id: "tell_friend",
+        type: "textarea",
+        label: "What would you tell a friend who had this experience?",
+        placeholder: "Be compassionate with yourself...",
+        rows: 2,
+      },
+      {
+        id: "do_it_again",
+        type: "select",
+        label: "Would you do it again?",
+        options: ["Yes, definitely", "Yes, with adjustments", "Need to think about it", "Probably not"],
+      },
+      {
+        id: "key_takeaway",
+        type: "text",
+        label: "Key takeaway",
+        placeholder: "One thing to remember",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
   },
+
   "cbt-thought-diary": {
     name: "CBT Thought Diary",
-    description: "Challenge automatic thoughts. Break the loop.",
+    description: "Identify and reframe negative thought patterns",
     icon: "brain",
     estimatedMinutes: 20,
+    staticFields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        min: 0,
+      },
+      {
+        id: "situation",
+        type: "textarea",
+        label: "1. Situation: What happened? (objective facts only)",
+        placeholder: "The factual situation was...",
+        rows: 2,
+      },
+      {
+        id: "automatic_thoughts",
+        type: "textarea",
+        label: "2. Automatic Thoughts: What went through your mind?",
+        placeholder: "I thought to myself...",
+        rows: 2,
+      },
+      {
+        id: "emotions",
+        type: "text",
+        label: "3. Emotions: What did you feel? Rate intensity (0-100)",
+        placeholder: "e.g., Anxious (70), Embarrassed (50)",
+      },
+      {
+        id: "distortions",
+        type: "select",
+        label: "4. Cognitive Distortions: Which apply?",
+        options: [
+          "All-or-nothing",
+          "Catastrophizing",
+          "Mind-reading",
+          "Overgeneralization",
+          "Discounting positives",
+          "Multiple/Other",
+        ],
+      },
+      {
+        id: "evidence_for",
+        type: "textarea",
+        label: "5. Evidence FOR the thought: What supports it being true?",
+        placeholder: "Evidence that supports this thought...",
+        rows: 2,
+      },
+      {
+        id: "evidence_against",
+        type: "textarea",
+        label: "6. Evidence AGAINST: What contradicts it? What would you tell a friend?",
+        placeholder: "Evidence against this thought / what I'd tell a friend...",
+        rows: 2,
+      },
+      {
+        id: "balanced_thought",
+        type: "textarea",
+        label: "7. Balanced Thought: More realistic perspective",
+        placeholder: "A more balanced way to see this is...",
+        rows: 2,
+      },
+      {
+        id: "outcome",
+        type: "text",
+        label: "8. Outcome: How do you feel now? (0-100)",
+        placeholder: "e.g., Anxious (30), Hopeful (60)",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
   },
-} as const satisfies Record<string, SystemTemplateInfo>
+} as const satisfies Record<string, SystemTemplateData>
 
 // ============================================
 // UI-Only Slugs (not in DB)
@@ -90,8 +416,8 @@ export const UI_TEMPLATE_SLUGS = {
 // ============================================
 
 /**
- * SystemTemplateSlug - Only templates seeded to database.
- * Derived from SYSTEM_TEMPLATES keys - add/remove templates from SYSTEM_TEMPLATES only.
+ * SystemTemplateSlug - Only system templates (served from code).
+ * Derived from SYSTEM_TEMPLATES keys.
  */
 export type SystemTemplateSlug = keyof typeof SYSTEM_TEMPLATES
 
@@ -130,11 +456,42 @@ export function isSystemTemplate(slug: string): slug is SystemTemplateSlug {
  */
 export function getSystemTemplateInfo(
   slug: string
-): SystemTemplateInfo | undefined {
+): SystemTemplateData | undefined {
   if (isSystemTemplate(slug)) {
     return SYSTEM_TEMPLATES[slug]
   }
   return undefined
+}
+
+/**
+ * Convert a system template to FieldReportTemplateRow format.
+ * This allows system templates to be used interchangeably with DB templates.
+ */
+export function systemTemplateToRow(slug: SystemTemplateSlug): FieldReportTemplateRow {
+  const template = SYSTEM_TEMPLATES[slug]
+  return {
+    id: `system-${slug}`, // Synthetic ID for system templates
+    user_id: null,
+    name: template.name,
+    slug: slug,
+    description: template.description,
+    icon: template.icon,
+    estimated_minutes: template.estimatedMinutes,
+    is_system: true,
+    base_template_id: null,
+    static_fields: template.staticFields as TemplateField[],
+    dynamic_fields: template.dynamicFields as TemplateField[],
+    active_dynamic_fields: template.activeDynamicFields as string[],
+    created_at: "2024-01-01T00:00:00Z", // Static date for system templates
+    updated_at: "2024-01-01T00:00:00Z",
+  }
+}
+
+/**
+ * Get all system templates as FieldReportTemplateRow format.
+ */
+export function getSystemTemplatesAsRows(): FieldReportTemplateRow[] {
+  return getSystemTemplateSlugs().map(systemTemplateToRow)
 }
 
 // ============================================
@@ -150,7 +507,7 @@ export const TEMPLATE_ORDER: Record<string, number> = {
   standard: 2,
   phoenix: 3,
   "deep-dive": 4,
-  // cbt-thought-diary intentionally not ordered (appears after others)
+  "cbt-thought-diary": 5,
 }
 
 // ============================================

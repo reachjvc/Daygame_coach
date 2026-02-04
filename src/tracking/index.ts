@@ -11,6 +11,7 @@ export {
   getActiveSession,
   updateSession,
   endSession,
+  abandonSession,
   deleteSession,
   getSessionWithApproaches,
   getUserSessions,
@@ -88,7 +89,7 @@ export { QuickAddModal } from "./components/QuickAddModal"
 // ─────────────────────────────────────────────────────────────────────────────
 
 export { useSession } from "./hooks/useSession"
-export { useTrackingStats } from "./hooks/useTrackingStats"
+export { useTrackingStats, invalidateTrackingStatsCache } from "./hooks/useTrackingStats"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types (slice-specific)

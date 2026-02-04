@@ -831,9 +831,35 @@ describe("CreateFieldReportSchema", () => {
       expect(result.success).toBe(false)
     })
 
-    test("should reject invalid UUID for template_id", () => {
-      // Arrange
-      const input = { fields: {}, template_id: "not-uuid" }
+    test("should accept system template slugs via system_template_slug field", () => {
+      // Arrange - system templates now use system_template_slug (not template_id)
+      const input = { fields: {}, system_template_slug: "standard" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
+    })
+
+    test("should reject non-UUID template_id (system template IDs should use system_template_slug)", () => {
+      // Arrange - template_id must be UUID now, system templates use system_template_slug
+      const input = { fields: {}, template_id: "system-standard" }
+
+      // Act
+      const result = CreateFieldReportSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(false)
+    })
+
+    test("should reject providing both template_id and system_template_slug", () => {
+      // Arrange - can't have both
+      const input = {
+        fields: {},
+        template_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        system_template_slug: "quick-log",
+      }
 
       // Act
       const result = CreateFieldReportSchema.safeParse(input)

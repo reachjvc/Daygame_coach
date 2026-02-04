@@ -1,4 +1,10 @@
 import { createServerSupabaseClient, createAdminSupabaseClient } from "./supabase"
+import {
+  getSystemTemplatesAsRows,
+  systemTemplateToRow,
+  isSystemTemplate,
+  type SystemTemplateSlug,
+} from "@/src/tracking/data/templates"
 
 // Helper to get ISO week string (e.g., "2026-W04")
 export function getISOWeekString(date: Date): string {
@@ -180,6 +186,7 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
     duration_minutes: durationMinutes,
     total_approaches: totalApproaches,
     goal_met: goalMet,
+    end_reason: 'completed',
   })
 
   // Update session-related stats and milestones
@@ -192,6 +199,31 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
   })
 
   return updatedSession
+}
+
+/**
+ * Abandon a session - used when user starts a new session while this one is still active.
+ * Unlike endSession, this does NOT update stats or milestones since the session was not
+ * properly completed.
+ */
+export async function abandonSession(sessionId: string): Promise<SessionRow> {
+  const session = await getSessionWithApproaches(sessionId)
+  if (!session) {
+    throw new Error("Session not found")
+  }
+
+  const endedAt = new Date()
+  const startedAt = new Date(session.started_at)
+  const durationMinutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000)
+
+  // Mark as abandoned - don't call updateSessionStats since this wasn't a proper completion
+  return updateSession(sessionId, {
+    ended_at: endedAt.toISOString(),
+    is_active: false,
+    duration_minutes: durationMinutes,
+    total_approaches: session.approaches.length,
+    end_reason: 'abandoned',
+  })
 }
 
 export async function reactivateSession(sessionId: string): Promise<SessionWithApproaches> {
@@ -261,55 +293,35 @@ async function updateSessionStats(
   // Check and update weekly streak based on new criteria
   await checkAndUpdateWeeklyStreak(userId, currentWeek)
 
-  // Check session milestones
-  if (newSessionCount === 1) await checkAndAwardMilestone(userId, "first_session")
-  if (newSessionCount === 3) await checkAndAwardMilestone(userId, "3_sessions")
-  if (newSessionCount === 5) await checkAndAwardMilestone(userId, "5_sessions")
-  if (newSessionCount === 10) await checkAndAwardMilestone(userId, "10_sessions")
-  if (newSessionCount === 25) await checkAndAwardMilestone(userId, "25_sessions")
-  if (newSessionCount === 50) await checkAndAwardMilestone(userId, "50_sessions")
-  if (newSessionCount === 100) await checkAndAwardMilestone(userId, "100_sessions")
+  // Collect all potential milestones and check in batch (2 queries instead of 2*N)
+  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
 
-  // First 5+ approach session
-  if (sessionInfo.approachCount >= 5) {
-    await checkAndAwardMilestone(userId, "first_5_approach_session")
-  }
+  // Session count milestones
+  if (newSessionCount === 1) potentialMilestones.push({ type: "first_session" })
+  if (newSessionCount === 3) potentialMilestones.push({ type: "3_sessions" })
+  if (newSessionCount === 5) potentialMilestones.push({ type: "5_sessions" })
+  if (newSessionCount === 10) potentialMilestones.push({ type: "10_sessions" })
+  if (newSessionCount === 25) potentialMilestones.push({ type: "25_sessions" })
+  if (newSessionCount === 50) potentialMilestones.push({ type: "50_sessions" })
+  if (newSessionCount === 100) potentialMilestones.push({ type: "100_sessions" })
 
-  // First 10+ approach session
-  if (sessionInfo.approachCount >= 10) {
-    await checkAndAwardMilestone(userId, "first_10_approach_session")
-  }
+  // Session quality milestones
+  if (sessionInfo.approachCount >= 5) potentialMilestones.push({ type: "first_5_approach_session" })
+  if (sessionInfo.approachCount >= 10) potentialMilestones.push({ type: "first_10_approach_session" })
+  if (sessionInfo.goalMet) potentialMilestones.push({ type: "first_goal_hit" })
+  if (sessionInfo.durationMinutes >= 120) potentialMilestones.push({ type: "marathon" })
 
-  // First goal hit
-  if (sessionInfo.goalMet) {
-    await checkAndAwardMilestone(userId, "first_goal_hit")
-  }
-
-  // Marathon (2+ hour session)
-  if (sessionInfo.durationMinutes >= 120) {
-    await checkAndAwardMilestone(userId, "marathon")
-  }
-
-  // Night owl (session started after 9pm)
-  if (sessionInfo.startHour >= 21) {
-    await checkAndAwardMilestone(userId, "night_owl")
-  }
-
-  // Early bird (session started before 10am)
-  if (sessionInfo.startHour < 10) {
-    await checkAndAwardMilestone(userId, "early_bird")
-  }
-
-  // Weekend warrior (session on Sat/Sun)
+  // Time-based milestones
+  if (sessionInfo.startHour >= 21) potentialMilestones.push({ type: "night_owl" })
+  if (sessionInfo.startHour < 10) potentialMilestones.push({ type: "early_bird" })
   const dayOfWeek = new Date().getDay()
-  if (dayOfWeek === 0 || dayOfWeek === 6) {
-    await checkAndAwardMilestone(userId, "weekend_warrior")
-  }
+  if (dayOfWeek === 0 || dayOfWeek === 6) potentialMilestones.push({ type: "weekend_warrior" })
 
-  // Globetrotter (5 different locations)
-  if (uniqueLocations.length >= 5) {
-    await checkAndAwardMilestone(userId, "globetrotter")
-  }
+  // Variety milestones
+  if (uniqueLocations.length >= 5) potentialMilestones.push({ type: "globetrotter" })
+
+  // Award all in batch
+  await checkAndAwardMilestones(userId, potentialMilestones)
 }
 
 // Check if current week is "active" and update weekly streak accordingly
@@ -351,13 +363,15 @@ async function checkAndUpdateWeeklyStreak(
     last_active_week: currentWeek,
   })
 
-  // Check weekly streak milestones
-  if (newWeekStreak === 2) await checkAndAwardMilestone(userId, "2_week_streak")
-  if (newWeekStreak === 4) await checkAndAwardMilestone(userId, "4_week_streak")
-  if (newWeekStreak === 8) await checkAndAwardMilestone(userId, "8_week_streak")
-  if (newWeekStreak === 12) await checkAndAwardMilestone(userId, "12_week_streak")
-  if (newWeekStreak === 26) await checkAndAwardMilestone(userId, "26_week_streak")
-  if (newWeekStreak === 52) await checkAndAwardMilestone(userId, "52_week_streak")
+  // Check weekly streak milestones in batch
+  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
+  if (newWeekStreak === 2) potentialMilestones.push({ type: "2_week_streak" })
+  if (newWeekStreak === 4) potentialMilestones.push({ type: "4_week_streak" })
+  if (newWeekStreak === 8) potentialMilestones.push({ type: "8_week_streak" })
+  if (newWeekStreak === 12) potentialMilestones.push({ type: "12_week_streak" })
+  if (newWeekStreak === 26) potentialMilestones.push({ type: "26_week_streak" })
+  if (newWeekStreak === 52) potentialMilestones.push({ type: "52_week_streak" })
+  await checkAndAwardMilestones(userId, potentialMilestones)
 }
 
 export async function getSessionWithApproaches(
@@ -465,6 +479,7 @@ export async function getSessionSummaries(
       goal,
       goal_met,
       primary_location,
+      end_reason,
       approaches (
         outcome
       )
@@ -504,6 +519,7 @@ export async function getSessionSummaries(
       goal: session.goal,
       goal_met: session.goal_met,
       primary_location: session.primary_location,
+      end_reason: session.end_reason as SessionSummary['end_reason'],
       outcomes,
     }
   })
@@ -605,28 +621,51 @@ export async function getUserApproaches(
 // Field Report Templates
 // ============================================
 
+/**
+ * Get all field report templates (system + user-created).
+ * System templates are served from code, user templates from DB.
+ */
 export async function getFieldReportTemplates(
   userId: string
 ): Promise<FieldReportTemplateRow[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  // Get system templates from code
+  const systemTemplates = getSystemTemplatesAsRows()
+
+  // Get user-created templates from DB (non-system only)
+  const { data: userTemplates, error } = await supabase
     .from("field_report_templates")
     .select("*")
-    .or(`is_system.eq.true,user_id.eq.${userId}`)
-    .order("is_system", { ascending: false })
+    .eq("user_id", userId)
+    .eq("is_system", false)
     .order("name", { ascending: true })
 
   if (error) {
-    throw new Error(`Failed to get templates: ${error.message}`)
+    throw new Error(`Failed to get user templates: ${error.message}`)
   }
 
-  return data as FieldReportTemplateRow[]
+  // Combine: system templates first, then user templates
+  return [...systemTemplates, ...(userTemplates as FieldReportTemplateRow[])]
 }
 
+/**
+ * Get a single field report template by ID.
+ * Handles both system templates (id starts with "system-") and DB templates.
+ */
 export async function getFieldReportTemplate(
   templateId: string
 ): Promise<FieldReportTemplateRow | null> {
+  // Handle system templates (synthetic IDs like "system-quick-log")
+  if (templateId.startsWith("system-")) {
+    const slug = templateId.replace("system-", "")
+    if (isSystemTemplate(slug)) {
+      return systemTemplateToRow(slug as SystemTemplateSlug)
+    }
+    return null
+  }
+
+  // Handle DB templates
   const supabase = await createServerSupabaseClient()
 
   const { data, error } = await supabase
@@ -803,10 +842,13 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
     const newCount = (stats.total_field_reports || 0) + 1
     await updateUserTrackingStats(report.user_id, { total_field_reports: newCount })
 
-    if (newCount === 1) await checkAndAwardMilestone(report.user_id, "first_field_report")
-    if (newCount === 10) await checkAndAwardMilestone(report.user_id, "10_field_reports")
-    if (newCount === 25) await checkAndAwardMilestone(report.user_id, "25_field_reports")
-    if (newCount === 50) await checkAndAwardMilestone(report.user_id, "50_field_reports")
+    // Batch milestone checking
+    const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
+    if (newCount === 1) potentialMilestones.push({ type: "first_field_report" })
+    if (newCount === 10) potentialMilestones.push({ type: "10_field_reports" })
+    if (newCount === 25) potentialMilestones.push({ type: "25_field_reports" })
+    if (newCount === 50) potentialMilestones.push({ type: "50_field_reports" })
+    await checkAndAwardMilestones(report.user_id, potentialMilestones)
   }
 
   return data as FieldReportRow
@@ -1102,7 +1144,8 @@ export async function getOrCreateUserTrackingStats(
   let stats = await getUserTrackingStats(userId)
 
   if (!stats) {
-    const supabase = await createServerSupabaseClient()
+    // Use admin client - user_tracking_stats is system-only (no user INSERT policy)
+    const supabase = createAdminSupabaseClient()
 
     const { data, error } = await supabase
       .from("user_tracking_stats")
@@ -1124,7 +1167,8 @@ export async function updateUserTrackingStats(
   userId: string,
   updates: UserTrackingStatsUpdate
 ): Promise<UserTrackingStatsRow> {
-  const supabase = await createServerSupabaseClient()
+  // Use admin client - user_tracking_stats is system-only (no user UPDATE policy)
+  const supabase = createAdminSupabaseClient()
 
   // Ensure stats record exists
   await getOrCreateUserTrackingStats(userId)
@@ -1202,42 +1246,48 @@ async function incrementApproachStats(
   // and update weekly streak if needed
   await checkAndUpdateWeeklyStreak(userId, currentWeek)
 
-  // Check approach milestones
+  // Collect all potential milestones and check in batch (2 queries instead of 2*N)
+  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
   const newTotal = stats.total_approaches + 1
-  if (newTotal === 1) await checkAndAwardMilestone(userId, "first_approach")
-  if (newTotal === 5) await checkAndAwardMilestone(userId, "5_approaches")
-  if (newTotal === 10) await checkAndAwardMilestone(userId, "10_approaches")
-  if (newTotal === 25) await checkAndAwardMilestone(userId, "25_approaches")
-  if (newTotal === 50) await checkAndAwardMilestone(userId, "50_approaches")
-  if (newTotal === 100) await checkAndAwardMilestone(userId, "100_approaches")
-  if (newTotal === 250) await checkAndAwardMilestone(userId, "250_approaches")
-  if (newTotal === 500) await checkAndAwardMilestone(userId, "500_approaches")
-  if (newTotal === 1000) await checkAndAwardMilestone(userId, "1000_approaches")
+
+  // Approach count milestones
+  if (newTotal === 1) potentialMilestones.push({ type: "first_approach" })
+  if (newTotal === 5) potentialMilestones.push({ type: "5_approaches" })
+  if (newTotal === 10) potentialMilestones.push({ type: "10_approaches" })
+  if (newTotal === 25) potentialMilestones.push({ type: "25_approaches" })
+  if (newTotal === 50) potentialMilestones.push({ type: "50_approaches" })
+  if (newTotal === 100) potentialMilestones.push({ type: "100_approaches" })
+  if (newTotal === 250) potentialMilestones.push({ type: "250_approaches" })
+  if (newTotal === 500) potentialMilestones.push({ type: "500_approaches" })
+  if (newTotal === 1000) potentialMilestones.push({ type: "1000_approaches" })
 
   // Number milestones
   if (outcome === "number") {
-    if (newNumbers === 1) await checkAndAwardMilestone(userId, "first_number")
-    if (newNumbers === 2) await checkAndAwardMilestone(userId, "2_numbers")
-    if (newNumbers === 5) await checkAndAwardMilestone(userId, "5_numbers")
-    if (newNumbers === 10) await checkAndAwardMilestone(userId, "10_numbers")
-    if (newNumbers === 25) await checkAndAwardMilestone(userId, "25_numbers")
-    if (newNumbers === 50) await checkAndAwardMilestone(userId, "50_numbers")
-    if (newNumbers === 100) await checkAndAwardMilestone(userId, "100_numbers")
+    if (newNumbers === 1) potentialMilestones.push({ type: "first_number" })
+    if (newNumbers === 2) potentialMilestones.push({ type: "2_numbers" })
+    if (newNumbers === 5) potentialMilestones.push({ type: "5_numbers" })
+    if (newNumbers === 10) potentialMilestones.push({ type: "10_numbers" })
+    if (newNumbers === 25) potentialMilestones.push({ type: "25_numbers" })
+    if (newNumbers === 50) potentialMilestones.push({ type: "50_numbers" })
+    if (newNumbers === 100) potentialMilestones.push({ type: "100_numbers" })
   }
 
   // Instadate milestones
   if (outcome === "instadate") {
-    if (newInstadates === 1) await checkAndAwardMilestone(userId, "first_instadate")
-    if (newInstadates === 2) await checkAndAwardMilestone(userId, "2_instadates")
-    if (newInstadates === 5) await checkAndAwardMilestone(userId, "5_instadates")
-    if (newInstadates === 10) await checkAndAwardMilestone(userId, "10_instadates")
-    if (newInstadates === 25) await checkAndAwardMilestone(userId, "25_instadates")
+    if (newInstadates === 1) potentialMilestones.push({ type: "first_instadate" })
+    if (newInstadates === 2) potentialMilestones.push({ type: "2_instadates" })
+    if (newInstadates === 5) potentialMilestones.push({ type: "5_instadates" })
+    if (newInstadates === 10) potentialMilestones.push({ type: "10_instadates" })
+    if (newInstadates === 25) potentialMilestones.push({ type: "25_instadates" })
   }
 
-  // Legacy daily streak milestones (still award them)
-  if (newStreak === 7) await checkAndAwardMilestone(userId, "7_day_streak")
-  if (newStreak === 30) await checkAndAwardMilestone(userId, "30_day_streak")
-  if (newStreak === 100) await checkAndAwardMilestone(userId, "100_day_streak")
+  // Legacy daily streak milestones
+  if (newStreak === 7) potentialMilestones.push({ type: "7_day_streak" })
+  if (newStreak === 30) potentialMilestones.push({ type: "30_day_streak" })
+  if (newStreak === 100) potentialMilestones.push({ type: "100_day_streak" })
+
+  // Award all in batch
+  await checkAndAwardMilestones(userId, potentialMilestones)
 }
 
 async function incrementWeeklyReviewCount(userId: string): Promise<void> {
@@ -1289,7 +1339,8 @@ export async function checkAndAwardMilestone(
   milestoneType: MilestoneType,
   value?: number
 ): Promise<MilestoneRow | null> {
-  const supabase = await createServerSupabaseClient()
+  // Use admin client - milestones is system-only (no user INSERT policy)
+  const supabase = createAdminSupabaseClient()
 
   // Check if already achieved
   const { data: existing } = await supabase
@@ -1321,6 +1372,58 @@ export async function checkAndAwardMilestone(
   }
 
   return data as MilestoneRow
+}
+
+/**
+ * Batch check and award multiple milestones in 2 queries instead of 2*N queries.
+ * 1. Single SELECT to get all existing milestones for user
+ * 2. Single bulk INSERT for any new milestones
+ */
+export async function checkAndAwardMilestones(
+  userId: string,
+  milestones: Array<{ type: MilestoneType; value?: number }>
+): Promise<MilestoneRow[]> {
+  if (milestones.length === 0) return []
+
+  const supabase = createAdminSupabaseClient()
+
+  // Single query to get all existing milestone types for this user
+  const { data: existing, error: selectError } = await supabase
+    .from("milestones")
+    .select("milestone_type")
+    .eq("user_id", userId)
+    .in("milestone_type", milestones.map(m => m.type))
+
+  if (selectError) {
+    throw new Error(`Failed to check milestones: ${selectError.message}`)
+  }
+
+  const existingTypes = new Set((existing || []).map(m => m.milestone_type))
+
+  // Filter out already-achieved milestones
+  const toAward = milestones.filter(m => !existingTypes.has(m.type))
+
+  if (toAward.length === 0) return []
+
+  // Single bulk insert for new milestones
+  const inserts: MilestoneInsert[] = toAward.map(m => ({
+    user_id: userId,
+    milestone_type: m.type,
+    value: m.value,
+  }))
+
+  const { data, error: insertError } = await supabase
+    .from("milestones")
+    .insert(inserts)
+    .select()
+
+  if (insertError) {
+    // Unique constraint violations are fine (race condition)
+    if (insertError.code === "23505") return []
+    throw new Error(`Failed to award milestones: ${insertError.message}`)
+  }
+
+  return (data || []) as MilestoneRow[]
 }
 
 export async function getUserMilestones(userId: string): Promise<MilestoneRow[]> {

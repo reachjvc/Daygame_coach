@@ -7,8 +7,8 @@
  * Reads:
  *   - Transcript .txt files:
  *       data/04.diarize/**\/*.txt
- *   - Enriched ground-truth JSON files (from step 08b.content):
- *       data/08b.content/**\/*.enriched.json
+ *   - Enriched ground-truth JSON files (from step 08.structure):
+ *       data/08.structure/**\/*.enriched.json
  *
  * Writes:
  *   - Supabase embeddings (via `storeEmbeddings`)
@@ -33,7 +33,7 @@
  *   - Uses `src/qa/config` + Supabase env vars (see `src/db/server`)
  *
  * Note:
- *   - Interactions mode ingests from `data/08b.content` (step 08b output).
+ *   - Interactions mode ingests from `data/08.structure` (step 08 output).
  */
 
 import fs from "fs"
@@ -401,7 +401,7 @@ async function main() {
   const { QA_CONFIG } = await import("../../src/qa/config")
 
   const transcriptsDir = path.join(process.cwd(), "data", "04.diarize")
-  const enrichedDir = path.join(process.cwd(), "data", "08b.content")
+  const enrichedDir = path.join(process.cwd(), "data", "08.structure")
 
   const chunkSize = QA_CONFIG.rag.chunkSize
   const chunkOverlap = QA_CONFIG.rag.chunkOverlap
@@ -468,7 +468,7 @@ async function main() {
 
     const enrichedFiles = await listJsonlFiles(enrichedDir, ".enriched.json")
     if (enrichedFiles.length === 0) {
-      console.log("No .enriched.json files found under data/08b.content")
+      console.log("No .enriched.json files found under data/08.structure")
       return
     }
 

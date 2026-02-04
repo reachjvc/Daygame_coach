@@ -71,6 +71,7 @@ export const CreateApproachSchema = z.object({
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   timestamp: z.string().datetime().optional(),
+  voice_note_url: z.string().url().optional(),
 })
 
 export const UpdateApproachSchema = z.object({
@@ -79,6 +80,7 @@ export const UpdateApproachSchema = z.object({
   tags: z.array(z.string().max(50)).max(10).optional(),
   mood: z.number().int().min(1).max(5).optional(),
   note: z.string().max(2000).optional(),
+  voice_note_url: z.string().url().optional(),
 })
 
 // ============================================
@@ -86,7 +88,8 @@ export const UpdateApproachSchema = z.object({
 // ============================================
 
 export const CreateFieldReportSchema = z.object({
-  template_id: z.string().uuid().optional(),
+  template_id: z.string().uuid().optional(),        // UUID for custom templates only
+  system_template_slug: z.string().max(50).optional(), // Slug for system templates (e.g., "quick-log")
   session_id: z.string().uuid().optional(),
   title: z.string().max(200).optional(),
   report_date: z.string().datetime().optional(),
@@ -95,7 +98,10 @@ export const CreateFieldReportSchema = z.object({
   location: z.string().max(200).optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   is_draft: z.boolean().default(false),
-})
+}).refine(
+  (data) => !(data.template_id && data.system_template_slug),
+  { message: "Cannot specify both template_id and system_template_slug" }
+)
 
 export const FavoriteActionSchema = z.object({
   templateId: z.string().uuid(),

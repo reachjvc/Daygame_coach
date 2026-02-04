@@ -83,6 +83,13 @@ export const SESSION_CONFIG = {
 
   /** Goal presets for quick selection */
   GOAL_PRESETS: [5, 10, 15, 20, 30] as const,
+
+  /**
+   * Sessions older than this are considered "stale" and will be auto-closed
+   * when starting a new session. This prevents zombie sessions from
+   * accumulating if a user forgets to end their session.
+   */
+  STALE_SESSION_THRESHOLD_HOURS: 12,
 } as const
 
 // ============================================
@@ -216,7 +223,6 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
     type: "number",
     label: "How many approaches?",
     placeholder: "0",
-    required: true,
     min: 0,
     max: 100,
     category: "quick_capture",
@@ -228,7 +234,6 @@ export const FIELD_LIBRARY: FieldDefinition[] = [
     type: "text",
     label: "What happened?",
     placeholder: "Brief description",
-    required: true,
     category: "quick_capture",
     description: "Factual description without judgment",
     usedIn: ["The Driscoll", "Phoenix", "The Friend Test"],

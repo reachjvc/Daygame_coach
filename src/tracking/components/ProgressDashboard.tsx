@@ -24,6 +24,8 @@ import {
   PlusCircle,
   X,
   Filter,
+  FileText,
+  MapPin,
 } from "lucide-react"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
@@ -38,14 +40,19 @@ import {
   type MilestoneInfo,
   type MilestoneTier,
 } from "../data/milestones"
+import { getSystemTemplateInfo, TEMPLATE_COLORS, type TemplateSlug } from "../data/templates"
+import { TEMPLATE_ICONS } from "./templateIcons"
 
 export function ProgressDashboard() {
-  const { state, deleteSession, refresh } = useTrackingStats()
+  const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
   const [sessionsExpanded, setSessionsExpanded] = useState(false)
   const [achievementsListExpanded, setAchievementsListExpanded] = useState(false)
   const [achievementsExpanded, setAchievementsExpanded] = useState(false)
   const [quickAddOpen, setQuickAddOpen] = useState(false)
+  const [reportsExpanded, setReportsExpanded] = useState(false)
+  const [expandedReportId, setExpandedReportId] = useState<string | null>(null)
 
   // Achievement modal state
   const categories = getMilestoneCategories()
@@ -66,10 +73,85 @@ export function ProgressDashboard() {
     setDeletingId(null)
   }
 
+  const handleDeleteReport = async (reportId: string) => {
+    if (!confirm("Are you sure you want to delete this field report? This cannot be undone.")) {
+      return
+    }
+    setDeletingReportId(reportId)
+    await deleteFieldReport(reportId)
+    setDeletingReportId(null)
+  }
+
+  const toggleReportExpand = (reportId: string) => {
+    setExpandedReportId(expandedReportId === reportId ? null : reportId)
+  }
+
   if (state.isLoading) {
+    // Skeleton loading that matches the dashboard layout
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header skeleton */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-8 w-48 bg-muted rounded animate-pulse" />
+            <div className="h-4 w-72 bg-muted rounded animate-pulse mt-2" />
+          </div>
+          <div className="h-12 w-36 bg-muted rounded animate-pulse" />
+        </div>
+
+        {/* Stats grid skeleton */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted animate-pulse size-9" />
+                <div>
+                  <div className="h-7 w-12 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-20 bg-muted rounded animate-pulse mt-1" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Content grid skeleton */}
+        <div className="grid md:grid-cols-2 gap-6">
+          {/* Quick Actions skeleton */}
+          <Card className="p-6">
+            <div className="h-6 w-32 bg-muted rounded animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-12 bg-muted rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </Card>
+
+          {/* Achievements skeleton */}
+          <Card className="p-6">
+            <div className="h-6 w-44 bg-muted rounded animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  <div className="size-12 rounded-full bg-muted animate-pulse" />
+                  <div className="flex-1">
+                    <div className="h-4 w-24 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-36 bg-muted rounded animate-pulse mt-1" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Sessions skeleton */}
+          <Card className="p-6 md:col-span-2">
+            <div className="h-6 w-36 bg-muted rounded animate-pulse mb-4" />
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-20 bg-muted/30 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
     )
   }
@@ -474,19 +556,36 @@ export function ProgressDashboard() {
                 {(sessionsExpanded ? state.recentSessions : state.recentSessions.slice(0, 3)).map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
+                    className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                      session.goal_met
+                        ? "bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 ring-2 ring-yellow-500/30"
+                        : "bg-muted/30"
+                    }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-3xl font-bold text-primary">
-                        {session.total_approaches}
+                      {/* Approach count with goal progress */}
+                      <div className="min-w-[4rem] text-center">
+                        <div className={`text-3xl font-bold ${session.goal_met ? "text-yellow-500" : "text-primary"}`}>
+                          {session.total_approaches}
+                        </div>
+                        {session.goal !== null && (
+                          <div className="text-xs text-muted-foreground">
+                            / {session.goal} goal
+                          </div>
+                        )}
                       </div>
                       <div>
-                        <div className="font-medium">
+                        <div className="font-medium flex items-center gap-2">
                           {new Date(session.started_at).toLocaleDateString(undefined, {
                             weekday: "short",
                             month: "short",
                             day: "numeric",
                           })}
+                          {session.goal_met && (
+                            <span className="text-yellow-500" title="Goal achieved!">
+                              🏆
+                            </span>
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {session.duration_minutes
@@ -508,8 +607,13 @@ export function ProgressDashboard() {
                         </Badge>
                       )}
                       {session.goal_met && (
-                        <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500">
+                        <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-500 font-medium">
                           Goal Hit ✓
+                        </Badge>
+                      )}
+                      {session.end_reason === 'abandoned' && (
+                        <Badge variant="secondary" className="bg-orange-500/10 text-orange-500">
+                          Abandoned
                         </Badge>
                       )}
                       <Button
@@ -548,6 +652,196 @@ export function ProgressDashboard() {
                   {sessionsExpanded ? "Show less" : `${state.recentSessions.length - 3} more`}
                 </span>
                 {sessionsExpanded ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Field Reports */}
+        <div className="md:col-span-2 relative">
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-lg">Recent Field Reports</h2>
+              <Link
+                href="/dashboard/tracking/history"
+                className="text-sm text-primary hover:underline"
+              >
+                View All
+              </Link>
+            </div>
+            {state.recentFieldReports.length > 0 ? (
+              <div className="space-y-3">
+                {(reportsExpanded ? state.recentFieldReports : state.recentFieldReports.slice(0, 3)).map((report) => {
+                  const templateInfo = report.system_template_slug
+                    ? getSystemTemplateInfo(report.system_template_slug)
+                    : null
+                  const templateSlug = (report.system_template_slug || "custom") as TemplateSlug
+                  const colors = TEMPLATE_COLORS[templateSlug] || TEMPLATE_COLORS.custom
+                  const isExpanded = expandedReportId === report.id
+
+                  return (
+                    <div
+                      key={report.id}
+                      className="rounded-lg bg-muted/30 overflow-hidden"
+                    >
+                      {/* Clickable header */}
+                      <div
+                        className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => toggleReportExpand(report.id)}
+                      >
+                        <div className="flex items-center gap-4">
+                          {/* Always show approach count - celebrate the effort! */}
+                          <div className="min-w-[3.5rem] text-center">
+                            <div className={`text-3xl font-bold ${
+                              (report.approach_count ?? 0) > 0 ? "text-primary" : "text-muted-foreground/50"
+                            }`}>
+                              {report.approach_count ?? 0}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              approaches
+                            </div>
+                          </div>
+                          {/* Template icon */}
+                          <div className={`p-2 rounded-lg ${colors.icon} shrink-0`}>
+                            {TEMPLATE_ICONS[templateSlug] || <FileText className="size-5" />}
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              {report.title || templateInfo?.name || "Field Report"}
+                            </div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2">
+                              <span>
+                                {new Date(report.reported_at).toLocaleDateString(undefined, {
+                                  weekday: "short",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                              {report.location && (
+                                <>
+                                  <span>•</span>
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="size-3" />
+                                    {report.location}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {report.is_draft && (
+                            <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">
+                              Draft
+                            </Badge>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              toggleReportExpand(report.id)
+                            }}
+                          >
+                            {isExpanded ? "Close" : "View/Edit"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-muted-foreground hover:text-destructive"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDeleteReport(report.id)
+                            }}
+                            disabled={deletingReportId === report.id}
+                          >
+                            {deletingReportId === report.id ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="size-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Expanded content */}
+                      {isExpanded && (
+                        <div className="border-t border-border/50 p-4 bg-muted/10">
+                          <div className="space-y-3">
+                            {Object.entries(report.fields).map(([key, value]) => {
+                              // Skip empty values
+                              if (value === null || value === undefined || value === "") return null
+                              if (Array.isArray(value) && value.length === 0) return null
+
+                              // Format the key to be human-readable
+                              const label = key
+                                .replace(/_/g, " ")
+                                .replace(/([A-Z])/g, " $1")
+                                .replace(/^./, (str) => str.toUpperCase())
+                                .trim()
+
+                              // Format the value based on type
+                              let displayValue: React.ReactNode
+                              if (Array.isArray(value)) {
+                                displayValue = (
+                                  <div className="flex flex-wrap gap-1">
+                                    {value.map((item, i) => (
+                                      <Badge key={i} variant="outline" className="text-xs">
+                                        {String(item)}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )
+                              } else if (typeof value === "boolean") {
+                                displayValue = value ? "Yes" : "No"
+                              } else {
+                                displayValue = (
+                                  <p className="whitespace-pre-wrap text-sm text-foreground/90">{String(value)}</p>
+                                )
+                              }
+
+                              return (
+                                <div key={key} className="border-b border-border/30 pb-3 last:border-0 last:pb-0">
+                                  <dt className="text-xs font-medium text-muted-foreground mb-1">{label}</dt>
+                                  <dd>{displayValue}</dd>
+                                </div>
+                              )
+                            })}
+                            {Object.keys(report.fields).length === 0 && (
+                              <p className="text-sm text-muted-foreground italic">No fields recorded</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="size-12 mx-auto mb-3 opacity-30" />
+                <p>No field reports yet</p>
+                <p className="text-sm">Write your first report to reflect on your sessions</p>
+              </div>
+            )}
+          </Card>
+          {/* Floating expand button */}
+          {state.recentFieldReports.length > 3 && (
+            <div className="flex justify-center -mt-5 relative z-10">
+              <button
+                onClick={() => setReportsExpanded(!reportsExpanded)}
+                className="group flex items-center gap-2 pl-4 pr-3 py-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 hover:shadow-xl"
+                data-testid="reports-expand-button"
+              >
+                <span className="text-sm font-medium">
+                  {reportsExpanded ? "Show less" : `${state.recentFieldReports.length - 3} more`}
+                </span>
+                {reportsExpanded ? (
                   <ChevronUp className="size-4" />
                 ) : (
                   <ChevronDown className="size-4" />

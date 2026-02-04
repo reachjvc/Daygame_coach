@@ -3,9 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Changelog
+- 04-02-2026 - Added Test Failure Reporting rule + enforcement hook (NEVER dismiss failures without tracking)
+- 04-02-2026 - Added Pipeline Stage Verification rule (NEVER mark stages as PASS without user approval)
+- 04-02-2026 - Extended code review hook to include Python files and shell scripts (was TS/JS only)
 - 04-02-2026 - Added gamification tables to system-only list (milestones, user_tracking_stats, scenarios)
 - 04-02-2026 - Added Security Rules section (threat modeling, system-only tables, RLS checklist)
-- 04-02-2026 - Added Stop hook to auto-trigger code review (`.claude/hooks/check-code-review.sh`)
 - 03-02-2026 - Added idempotent seed scripts rule
 - 03-02-2026 - Fixed code-review subagent to use general-purpose (code-review type doesn't exist)
 
@@ -49,11 +51,13 @@ npx vitest run -t "should calculate"
 | # | Check | If Yes |
 |---|-------|--------|
 | 1 | Did I write/modify code? | Run `npm test` first |
-| 2 | Did I complete a task from a doc? | Update that doc NOW (before this message) |
-| 3 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
-| 4 | Did I modify any doc? | Add changelog entry with today's date |
-| 5 | Did I make major code changes? | Run `code-review` subagent (see below) |
-| 6 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
+| 2 | Did tests fail? | Report ALL failures, check `.test-known-failures.json` (Rule 10) |
+| 3 | Did I complete a task from a doc? | Update that doc NOW (before this message) |
+| 4 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
+| 5 | Did I modify any doc? | Add changelog entry with today's date |
+| 6 | Did I make major code changes? | Run `code-review` subagent (see below) |
+| 7 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
+| 8 | Did I run a pipeline stage? | Set status to PENDING, NEVER auto-PASS (Rule 9) |
 
 if in doubt, ask user if documents should be updated or not .
 
@@ -195,7 +199,7 @@ CREATE POLICY "purchases_select_own" ...  -- SELECT only
 
 **This is now enforced automatically.** A Stop hook (`.claude/hooks/check-code-review.sh`) blocks your response when:
 - 3+ non-doc files are modified
-- At least one is a code file (`.ts`, `.tsx`, `.js`, `.jsx`)
+- At least one is a code file (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, or shell scripts with shebang)
 
 **When triggered:** The hook injects a blocking message telling you to run the code-review subagent. You MUST run it before responding.
 
@@ -216,6 +220,81 @@ prompt: "Code review for recent changes. 1) Read docs/testing_behavior.md. 2) Ru
 - Blocks once per user message (uses marker file to avoid infinite loop)
 - Marker cleared on next user prompt (UserPromptSubmit hook)
 - Hook files: `.claude/hooks/check-code-review.sh`, `.claude/hooks/clear-code-review-marker.sh`
+
+### 9. Pipeline Stage Verification (NEVER Auto-Pass)
+
+**CRITICAL: Claude must NEVER mark a pipeline stage as PASS without explicit user approval.**
+
+When running pipeline stages (`scripts/training-data/*`):
+
+1. **Run the stage** - Execute the script, report results
+2. **Update doc with PENDING** - Set status to "PENDING VERIFICATION" or "RUN COMPLETE"
+3. **Report to user** - Show summary of what was processed
+4. **WAIT for user verification** - Only the user can change status to PASS
+
+```
+WRONG:
+1. Run pipeline stage
+2. Update doc: "Status: PASS"  ← NEVER DO THIS
+3. Tell user "Stage passed!"
+
+CORRECT:
+1. Run pipeline stage
+2. Update doc: "Status: PENDING VERIFICATION"
+3. Tell user "Stage complete. Please verify outputs at <path> before I mark as PASS."
+4. User says "looks good, mark as pass"
+5. THEN update doc: "Status: PASS"
+```
+
+**Why:** Pipeline outputs require human judgment (audio quality, transcript accuracy, feature validity). Automated execution ≠ quality verification.
+
+**Applies to ALL stages in `docs/pipeline/stages/STAGE_*.md`**
+
+### 10. Test Failure Reporting (AUTOMATED via Stop Hook)
+
+**CRITICAL: Claude must NEVER dismiss test failures as "pre-existing" without verification.**
+
+A Stop hook (`.claude/hooks/check-test-results.sh`) blocks responses when:
+- Code files were modified AND
+- `npm test` fails
+
+**Prohibited behaviors:**
+- Claiming failures are "pre-existing" without checking `.test-known-failures.json`
+- Reporting misleading stats (e.g., "11/13 passing" when 78 tests fail)
+- Summarizing failures instead of reporting them fully
+- Proceeding with work when tests are broken
+
+**Required behavior when tests fail:**
+
+1. **Report ALL failures** - List every failing test, not a summary
+2. **Check known failures file** - Compare against `.test-known-failures.json`
+3. **For NEW failures (not in tracking file):**
+   - STOP work immediately
+   - Report the failures to user
+   - Either FIX them or ask user how to proceed
+4. **For KNOWN failures (in tracking file):**
+   - May continue work
+   - Still report them as "known issues" (don't hide them)
+5. **To add a known failure:**
+   - Must have a reason (not "it was failing before")
+   - Must have a GitHub issue ticket
+   - Add to `.test-known-failures.json` with full test name
+
+**Known failures file structure:**
+```json
+{
+  "e2e": [
+    {
+      "test": "Articles Page › should display articles page",
+      "reason": "Flaky selector due to hydration timing",
+      "ticket": "https://github.com/owner/repo/issues/123",
+      "added": "2026-02-04"
+    }
+  ]
+}
+```
+
+**Hook files:** `.claude/hooks/check-test-results.sh`, `.claude/hooks/clear-test-marker.sh`
 
 ---
 

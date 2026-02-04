@@ -67,7 +67,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, TemplateField } from "@/src/db/trackingTypes"
-import { TEMPLATE_COLORS, TEMPLATE_TAGLINES } from "@/src/tracking/config"
+import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, type TemplateSlug } from "@/src/tracking/data"
 
 // ============================================================================
 // ULTRA-SHORT TEMPLATES (the 5 proposed templates)
@@ -1197,12 +1197,12 @@ export default function TemplateTestingPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Non-Favorite Templates */}
         {nonFavoriteTemplates.map((template) => {
-          const colors = TEMPLATE_COLORS[template.slug] || {
+          const colors = TEMPLATE_COLORS[template.slug as TemplateSlug] || {
             bg: "bg-primary/10 text-primary border-primary/20",
             icon: "bg-primary text-primary-foreground",
             gradient: "from-primary/30 via-primary/10 to-accent/20",
           }
-          const tagline = TEMPLATE_TAGLINES[template.slug] || template.description
+          const tagline = (TEMPLATE_TAGLINES as Record<string, string>)[template.slug] || template.description
           const allFields = [
             ...template.static_fields,
             ...(template.dynamic_fields || []).filter(f =>

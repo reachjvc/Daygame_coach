@@ -1,20 +1,25 @@
-# Stage 08c: Chunk (NEW)
+# Stage 10: Chunk
 **Status:** TO BE CREATED
-**Updated:** 03-02-2026
+**Updated:** 04-02-2026
 
-**Script**: `scripts/training-data/08c.chunk` (TO BE CREATED)
+**Script**: `scripts/training-data/10.chunk` (TO BE CREATED)
+
+---
+
+## Changelog
+- 04-02-2026: Renumbered from 09 to 10 (speaker correction now stage 07)
 
 ---
 
 ## Overview
 
-Creates RAG-optimized chunks from enriched interactions for vector database ingestion.
+Creates RAG-optimized chunks from structured interactions for vector database ingestion.
 
 ## Input
-- `data/08b.content/<source>/<video>/*.enriched.json`
+- `data/09.structure/<source>/<video>/*.interactions.jsonl`
 
 ## Output
-- `data/08c.chunk/<source>/<video>/`
+- `data/10.chunk/<source>/<video>/`
   - `*.chunks.json` - RAG-optimized chunks
 
 ## Design Considerations
@@ -60,10 +65,10 @@ Creates RAG-optimized chunks from enriched interactions for vector database inge
 ## Usage (TBD)
 ```bash
 # Single video
-./scripts/training-data/08c.chunk "source_name" "https://..."
+./scripts/training-data/10.chunk "source_name" "https://..."
 
 # All sources
-./scripts/training-data/08c.chunk --sources
+./scripts/training-data/10.chunk --sources
 ```
 
 ## Implementation Notes

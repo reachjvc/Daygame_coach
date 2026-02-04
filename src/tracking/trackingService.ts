@@ -15,6 +15,7 @@ import {
   getActiveSession as repoGetActiveSession,
   updateSession as repoUpdateSession,
   endSession as repoEndSession,
+  abandonSession as repoAbandonSession,
   reactivateSession as repoReactivateSession,
   deleteSession as repoDeleteSession,
   getSessionWithApproaches as repoGetSessionWithApproaches,
@@ -95,6 +96,11 @@ import type {
 // Sessions
 // ============================================
 
+/**
+ * Create a new session.
+ * Note: The UI should check for existing active sessions first using getActiveSession()
+ * and show a dialog to let the user choose to resume or start fresh.
+ */
 export async function createSession(session: SessionInsert): Promise<SessionRow> {
   return repoCreateSession(session)
 }
@@ -116,6 +122,14 @@ export async function updateSession(
 
 export async function endSession(sessionId: string): Promise<SessionRow> {
   return repoEndSession(sessionId)
+}
+
+/**
+ * Abandon a session - used when user starts a new session while this one is still active.
+ * Unlike endSession, this marks the session as 'abandoned' and does NOT update stats/milestones.
+ */
+export async function abandonSession(sessionId: string): Promise<SessionRow> {
+  return repoAbandonSession(sessionId)
 }
 
 export async function reactivateSession(sessionId: string): Promise<SessionWithApproaches> {

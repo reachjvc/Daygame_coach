@@ -34,6 +34,7 @@ export interface ApproachFormData {
   note?: string
   latitude?: number
   longitude?: number
+  voice_note_url?: string
 }
 
 // ============================================
@@ -197,4 +198,27 @@ export interface CustomReportConfig {
   description?: string
   fields: FieldDefinition[]
   estimatedMinutes?: number
+}
+
+// ============================================
+// Voice Recorder Types
+// ============================================
+
+export interface VoiceRecorderResult {
+  audioBlob: Blob
+  transcription: string
+}
+
+export interface UseVoiceRecorderReturn {
+  isRecording: boolean
+  isTranscribing: boolean
+  duration: number
+  error: string | null
+  transcription: string
+  startRecording: () => Promise<void>
+  stopRecording: () => Promise<VoiceRecorderResult | null>
+  cancelRecording: () => void
+  clearError: () => void
+  isSupported: boolean
+  isTranscriptionSupported: boolean
 }

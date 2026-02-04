@@ -230,6 +230,7 @@ CREATE TABLE field_reports (
   user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
   template_id UUID REFERENCES field_report_templates(id),
+  system_template_slug TEXT,  -- For system templates (e.g., "quick-log")
   title TEXT,
   fields JSONB NOT NULL DEFAULT '{}'::JSONB,
   approach_count INTEGER,
@@ -238,11 +239,17 @@ CREATE TABLE field_reports (
   is_draft BOOLEAN NOT NULL DEFAULT false,
   reported_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  -- Constraint: can't have both template_id AND system_template_slug
+  CONSTRAINT field_reports_template_check CHECK (
+    NOT (template_id IS NOT NULL AND system_template_slug IS NOT NULL)
+  )
 );
 
 CREATE INDEX idx_field_reports_user_id ON field_reports(user_id);
 CREATE INDEX idx_field_reports_session_id ON field_reports(session_id);
+CREATE INDEX idx_field_reports_system_template ON field_reports(system_template_slug)
+  WHERE system_template_slug IS NOT NULL;
 
 -- ============================================
 -- Review templates table

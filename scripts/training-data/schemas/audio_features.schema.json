@@ -1,0 +1,222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audio_features.schema.json",
+  "title": "Audio Features (05)",
+  "description": "Output schema for 05.audio-features - acoustic features per segment for tone detection",
+  "type": "object",
+  "required": ["source_audio", "audio_sha256", "source_timestamps", "processing", "total_duration_sec", "segments"],
+  "properties": {
+    "source_audio": {
+      "type": "string",
+      "description": "Absolute path to source audio file"
+    },
+    "audio_sha256": {
+      "type": "string",
+      "description": "SHA256 hash of audio file for verification"
+    },
+    "source_timestamps": {
+      "type": "string",
+      "description": "Absolute path to source transcript JSON"
+    },
+    "processing": {
+      "type": "object",
+      "required": ["sample_rate", "feature_extractor", "pitch_range_hz", "pitch_method"],
+      "properties": {
+        "sample_rate": {
+          "type": "integer",
+          "description": "Sample rate for feature extraction (Hz)"
+        },
+        "feature_extractor": {
+          "type": "string",
+          "description": "Library used for extraction (librosa)"
+        },
+        "pitch_range_hz": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[fmin, fmax] Hz for pitch detection"
+        },
+        "pitch_method": {
+          "type": "string",
+          "enum": ["pyin", "yin"],
+          "description": "Pitch extraction algorithm"
+        },
+        "pyin_voiced_prob_threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Minimum voiced probability for pyin"
+        },
+        "pitch_trim_percentile": {
+          "type": "number",
+          "description": "Percentile for pitch outlier trimming"
+        },
+        "embedder": {
+          "type": "string",
+          "description": "Speaker embedding model (resemblyzer)"
+        },
+        "embedder_sample_rate": {
+          "type": "integer",
+          "description": "Sample rate for embedder (Hz)"
+        },
+        "min_embed_raw_sec": {
+          "type": "number",
+          "description": "Minimum segment duration for embedding"
+        },
+        "min_embed_window_sec": {
+          "type": "number",
+          "description": "Minimum window for embedding"
+        },
+        "embed_pad_sec": {
+          "type": "number",
+          "description": "Padding around segment for embedding"
+        },
+        "store_embedding_vectors": {
+          "type": "boolean",
+          "description": "Whether embedding vectors are stored (default: false)"
+        }
+      }
+    },
+    "total_duration_sec": {
+      "type": "number",
+      "description": "Total audio duration in seconds"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["start", "end", "duration_sec", "text", "features"],
+        "properties": {
+          "start": {
+            "type": "number",
+            "description": "Segment start time in seconds"
+          },
+          "end": {
+            "type": "number",
+            "description": "Segment end time in seconds"
+          },
+          "duration_sec": {
+            "type": "number",
+            "description": "Segment duration in seconds"
+          },
+          "text": {
+            "type": "string",
+            "description": "Transcript text for this segment"
+          },
+          "pyannote_speaker": {
+            "type": ["string", "null"],
+            "description": "Speaker ID from pyannote diarization (SPEAKER_00, SPEAKER_01, etc.)"
+          },
+          "features": {
+            "type": "object",
+            "required": ["pitch", "energy", "tempo", "spectral", "quality"],
+            "properties": {
+              "pitch": {
+                "type": "object",
+                "required": ["mean_hz", "std_hz", "range_hz", "direction"],
+                "properties": {
+                  "mean_hz": {
+                    "type": "number",
+                    "description": "Mean pitch in Hz (for future voice-to-voice coaching)"
+                  },
+                  "std_hz": {
+                    "type": "number",
+                    "description": "Pitch std dev - used for tone detection (playful >22, confident <18, nervous <16)"
+                  },
+                  "range_hz": {
+                    "type": "number",
+                    "description": "Pitch range (max-min) - expressiveness metric"
+                  },
+                  "direction": {
+                    "type": "number",
+                    "description": "Pitch slope - positive=rising (question), negative=falling (statement)"
+                  }
+                }
+              },
+              "energy": {
+                "type": "object",
+                "required": ["dynamics_db"],
+                "properties": {
+                  "dynamics_db": {
+                    "type": "number",
+                    "description": "Energy dynamics (max-mean dB) - used for tone detection (playful >13, confident 8-13, energetic >15)"
+                  }
+                }
+              },
+              "tempo": {
+                "type": "object",
+                "required": ["syllable_rate"],
+                "properties": {
+                  "syllable_rate": {
+                    "type": "number",
+                    "description": "Syllables per second - used for tone detection (confident 5-6.5, nervous >6.8)"
+                  }
+                }
+              },
+              "spectral": {
+                "type": "object",
+                "required": ["brightness_hz"],
+                "properties": {
+                  "brightness_hz": {
+                    "type": "number",
+                    "description": "Spectral centroid Hz - used for tone detection (energetic >1700)"
+                  }
+                }
+              },
+              "quality": {
+                "type": "object",
+                "required": ["low_energy", "speech_activity_ratio"],
+                "properties": {
+                  "low_energy": {
+                    "type": "boolean",
+                    "description": "True if segment too quiet - Stage 06 skips these for tone classification"
+                  },
+                  "speech_activity_ratio": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Fraction of frames with speech - Stage 06 skips if <0.3"
+                  }
+                }
+              },
+              "speaker_embedding": {
+                "type": ["object", "null"],
+                "description": "Speaker embedding (disabled by default)",
+                "properties": {
+                  "dim": {
+                    "type": "integer",
+                    "description": "Embedding dimension (256 for resemblyzer)"
+                  },
+                  "vector": {
+                    "type": ["array", "null"],
+                    "items": { "type": "number" },
+                    "description": "Embedding vector (null if store_embedding_vectors=false)"
+                  }
+                }
+              }
+            }
+          },
+          "audio_clip": {
+            "type": "object",
+            "required": ["file", "start", "end"],
+            "properties": {
+              "file": {
+                "type": "string",
+                "description": "Path to audio file"
+              },
+              "start": {
+                "type": "number",
+                "description": "Clip start time"
+              },
+              "end": {
+                "type": "number",
+                "description": "Clip end time"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

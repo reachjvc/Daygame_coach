@@ -1,21 +1,13 @@
-import { createServerSupabaseClient } from "@/src/db/server"
-import { redirect } from "next/navigation"
-import { FieldReportPage } from "@/src/tracking"
+"use client"
 
-interface PageProps {
-  searchParams: Promise<{ session?: string }>
-}
+import { useSearchParams } from "next/navigation"
+import { FieldReportPage } from "@/src/tracking/components/FieldReportPage"
+import { useTrackingAuth } from "../TrackingAuthContext"
 
-export default async function ReportPage({ searchParams }: PageProps) {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+export default function ReportPage() {
+  const { userId } = useTrackingAuth()
+  const searchParams = useSearchParams()
+  const sessionId = searchParams.get("session") || undefined
 
-  if (error || !user) {
-    redirect("/auth/login")
-  }
-
-  const params = await searchParams
-  const sessionId = params.session
-
-  return <FieldReportPage userId={user.id} sessionId={sessionId} />
+  return <FieldReportPage userId={userId} sessionId={sessionId} />
 }

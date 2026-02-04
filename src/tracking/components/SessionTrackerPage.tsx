@@ -30,7 +30,8 @@ import {
   Loader2,
 } from "lucide-react"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS, DEFAULT_SESSION_SUGGESTIONS } from "../config"
-import type { ApproachFormData } from "../types"
+import type { ApproachFormData, VoiceRecorderResult, SessionRow } from "../types"
+import { VoiceRecorderButton, TranscriptionPreview } from "./VoiceRecorderButton"
 import Link from "next/link"
 
 // Combobox input component with dropdown suggestions
@@ -138,6 +139,16 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const [locationInput, setLocationInput] = useState("")
   const [preMood, setPreMood] = useState<number | null>(null)
   const [quickLogData, setQuickLogData] = useState<ApproachFormData>({})
+  // Active session dialog state (shown when trying to start with an existing session)
+  const [showActiveSessionDialog, setShowActiveSessionDialog] = useState(false)
+  const [existingActiveSession, setExistingActiveSession] = useState<SessionRow | null>(null)
+  const [isCheckingActiveSession, setIsCheckingActiveSession] = useState(false)
+  const [isAbandoning, setIsAbandoning] = useState(false)
+  // Voice recording state
+  const [voiceData, setVoiceData] = useState<{
+    audioBlob: Blob | null
+    transcription: string
+  }>({ audioBlob: null, transcription: "" })
   // Pre-session intention prompts
   const [sessionFocus, setSessionFocus] = useState("")
   const [techniqueFocus, setTechniqueFocus] = useState("")
@@ -182,6 +193,21 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     fetchSuggestions()
   }, [])
 
+  // Warn user when navigating away from an active session with unsaved progress
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (state.isActive && state.approaches.length > 0) {
+        // Standard way to trigger the browser's confirmation dialog
+        event.preventDefault()
+        // For older browsers, return a string (modern browsers show generic message)
+        return "Closing this will delete any unsaved progress. Are you sure?"
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [state.isActive, state.approaches.length])
+
   const GOAL_PRESETS = [
     { value: 1, emoji: "👋", label: "1" },
     { value: 3, emoji: "🎯", label: "3" },
@@ -189,22 +215,24 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     { value: 10, emoji: "🔥", label: "10" },
   ] as const
 
-  // Auto-open dialog when coming from reports page with autostart=true
+  // Auto-handle when coming from reports page with autostart=true
   useEffect(() => {
-    if (searchParams.get("autostart") === "true" && !state.isActive && !state.isLoading) {
-      setShowStartDialog(true)
-      // Clean up the URL
+    if (searchParams.get("autostart") === "true" && !state.isLoading) {
+      // Clean up the URL first
       router.replace("/dashboard/tracking/session", { scroll: false })
+      // If there's an existing active session, show the active session dialog
+      if (state.isActive && state.session) {
+        setExistingActiveSession(state.session)
+        setShowActiveSessionDialog(true)
+      } else {
+        // No active session - show start dialog
+        setShowStartDialog(true)
+      }
     }
-  }, [searchParams, state.isActive, state.isLoading, router])
+  }, [searchParams, state.isActive, state.isLoading, state.session, router])
 
-  if (state.isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="size-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+  // Don't block render on initial load - show "Start Session" UI optimistically
+  // If an active session exists, it will transition once loaded
 
   const handleStartSession = async () => {
     const goal = goalInput ? parseInt(goalInput, 10) : undefined
@@ -238,23 +266,141 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     router.push("/dashboard/tracking")
   }
 
+  // End session AND navigate to write field report
+  const handleEndSessionAndWriteReport = async () => {
+    if (!state.session) return
+    const sessionId = state.session.id
+    setShowEndDialog(false)
+    // End session FIRST to ensure it's properly closed before navigating
+    await endSession()
+    router.push(`/dashboard/tracking/report?session=${sessionId}`)
+  }
+
+  // Handle clicking "Start Session" - check for existing active session first
+  const handleStartButtonClick = async () => {
+    // If we already have an active session loaded, show the dialog
+    if (state.isActive && state.session) {
+      setExistingActiveSession(state.session)
+      setShowActiveSessionDialog(true)
+      return
+    }
+
+    // Otherwise check API for any active session (in case we're on a fresh page load)
+    setIsCheckingActiveSession(true)
+    try {
+      const response = await fetch("/api/tracking/session/active")
+      if (response.ok) {
+        const data = await response.json()
+        if (data.session) {
+          setExistingActiveSession(data.session as SessionRow)
+          setShowActiveSessionDialog(true)
+          return
+        }
+      }
+      // No active session found - show start dialog
+      setShowStartDialog(true)
+    } catch (error) {
+      console.error("Failed to check for active session:", error)
+      // On error, just show start dialog
+      setShowStartDialog(true)
+    } finally {
+      setIsCheckingActiveSession(false)
+    }
+  }
+
+  // Resume the existing session - just close dialog (session is already loaded)
+  const handleResumeExisting = () => {
+    setShowActiveSessionDialog(false)
+    setExistingActiveSession(null)
+    // The active session is already loaded, so nothing else to do
+  }
+
+  // Start fresh - abandon old session and open start dialog
+  const handleStartFresh = async () => {
+    if (!existingActiveSession) return
+
+    setIsAbandoning(true)
+    try {
+      const response = await fetch(`/api/tracking/session/${existingActiveSession.id}/abandon`, {
+        method: "POST",
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to abandon session")
+      }
+      setShowActiveSessionDialog(false)
+      setExistingActiveSession(null)
+      // Now show the start dialog
+      setShowStartDialog(true)
+    } catch (error) {
+      console.error("Failed to abandon session:", error)
+      // Keep dialog open on error
+    } finally {
+      setIsAbandoning(false)
+    }
+  }
+
+  // Format time ago for display
+  const formatTimeAgo = (dateString: string): string => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+
+    if (diffHours >= 24) {
+      const days = Math.floor(diffHours / 24)
+      return `${days} day${days !== 1 ? "s" : ""} ago`
+    }
+    if (diffHours > 0) {
+      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`
+    }
+    return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`
+  }
+
   const handleTap = async () => {
     await addApproach()
     setShowQuickLog(true)
     setQuickLogData({})
+    setVoiceData({ audioBlob: null, transcription: "" })
   }
 
   const handleQuickLogSubmit = async () => {
-    if (Object.keys(quickLogData).length > 0) {
+    if (Object.keys(quickLogData).length > 0 || voiceData.transcription) {
+      // Include transcription as note if user chose "Use as note"
       await updateLastApproach(quickLogData)
     }
     setShowQuickLog(false)
     setQuickLogData({})
+    setVoiceData({ audioBlob: null, transcription: "" })
   }
 
   const handleQuickLogSkip = () => {
     setShowQuickLog(false)
     setQuickLogData({})
+    setVoiceData({ audioBlob: null, transcription: "" })
+  }
+
+  const handleVoiceComplete = (result: VoiceRecorderResult) => {
+    setVoiceData({
+      audioBlob: result.audioBlob,
+      transcription: result.transcription,
+    })
+  }
+
+  const handleUseAsNote = () => {
+    if (voiceData.transcription) {
+      setQuickLogData(prev => ({
+        ...prev,
+        note: voiceData.transcription,
+      }))
+      // Clear voice data after using as note
+      setVoiceData({ audioBlob: null, transcription: "" })
+    }
+  }
+
+  const handleDiscardVoice = () => {
+    setVoiceData({ audioBlob: null, transcription: "" })
   }
 
   const handleReactivateSession = async () => {
@@ -337,10 +483,15 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
         <Button
           size="lg"
           className="h-20 px-12 text-xl gap-3"
-          onClick={() => setShowStartDialog(true)}
+          onClick={handleStartButtonClick}
+          disabled={isCheckingActiveSession || state.isLoading}
           data-testid="start-session-button"
         >
-          <Play className="size-6" />
+          {(isCheckingActiveSession || state.isLoading) ? (
+            <Loader2 className="size-6 animate-spin" />
+          ) : (
+            <Play className="size-6" />
+          )}
           Start Session
         </Button>
 
@@ -525,6 +676,56 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                   <Play className="size-4 mr-2" />
                 )}
                 {state.isLoading ? "Starting..." : "Start"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Active Session Found Dialog */}
+        <Dialog open={showActiveSessionDialog} onOpenChange={(open) => {
+          setShowActiveSessionDialog(open)
+          if (!open) {
+            setExistingActiveSession(null)
+          }
+        }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Active Session Found</DialogTitle>
+              <DialogDescription>
+                {existingActiveSession && (
+                  <>
+                    You have an active session from {formatTimeAgo(existingActiveSession.started_at)} with{" "}
+                    {existingActiveSession.total_approaches} approach{existingActiveSession.total_approaches !== 1 ? "es" : ""}.
+                    {existingActiveSession.primary_location && (
+                      <span className="block mt-1">
+                        <MapPin className="inline size-3 mr-1" />
+                        {existingActiveSession.primary_location}
+                      </span>
+                    )}
+                  </>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                variant="outline"
+                onClick={handleResumeExisting}
+                disabled={isAbandoning}
+              >
+                Resume Session
+              </Button>
+              <Button
+                onClick={handleStartFresh}
+                disabled={isAbandoning}
+              >
+                {isAbandoning ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    Closing...
+                  </>
+                ) : (
+                  "Start Fresh"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -727,9 +928,15 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             <div className="max-w-lg mx-auto space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-semibold">Quick Log</h3>
-                <Button variant="ghost" size="sm" onClick={handleQuickLogSkip} data-testid="quick-log-dismiss">
-                  Skip
-                </Button>
+                <div className="flex items-center gap-2">
+                  <VoiceRecorderButton
+                    onComplete={handleVoiceComplete}
+                    onError={(error) => console.error("Voice error:", error)}
+                  />
+                  <Button variant="ghost" size="sm" onClick={handleQuickLogSkip} data-testid="quick-log-dismiss">
+                    Skip
+                  </Button>
+                </div>
               </div>
 
               {/* Outcome Selection */}
@@ -814,6 +1021,14 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                 </div>
               </div>
 
+              {/* Voice Note Transcription Preview */}
+              <TranscriptionPreview
+                transcription={voiceData.transcription}
+                audioBlob={voiceData.audioBlob}
+                onUseAsNote={handleUseAsNote}
+                onDiscard={handleDiscardVoice}
+              />
+
               <Button className="w-full" onClick={handleQuickLogSubmit} data-testid="quick-log-save">
                 Save
               </Button>
@@ -841,12 +1056,14 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             <Button variant="outline" onClick={() => setShowEndDialog(false)}>
               Keep Going
             </Button>
-            <Link href={`/dashboard/tracking/report?session=${state.session?.id}`}>
-              <Button variant="secondary" className="w-full sm:w-auto">
-                <FileText className="size-4 mr-2" />
-                Write Field Report
-              </Button>
-            </Link>
+            <Button
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={handleEndSessionAndWriteReport}
+            >
+              <FileText className="size-4 mr-2" />
+              Write Field Report
+            </Button>
             <Button variant="destructive" onClick={handleEndSession}>
               End Session
             </Button>

@@ -17,6 +17,10 @@ export async function POST(request: NextRequest) {
     const parsed = CreateFieldReportSchema.safeParse(body)
 
     if (!parsed.success) {
+      console.error("Field report validation failed:", {
+        body: JSON.stringify(body, null, 2),
+        errors: parsed.error.flatten(),
+      })
       return NextResponse.json(
         { error: "Invalid request body", details: parsed.error.flatten() },
         { status: 400 }
@@ -25,6 +29,7 @@ export async function POST(request: NextRequest) {
 
     const {
       template_id,
+      system_template_slug,
       session_id,
       title,
       report_date,
@@ -38,6 +43,7 @@ export async function POST(request: NextRequest) {
     const reportData: FieldReportInsert = {
       user_id: user.id,
       template_id,
+      system_template_slug,
       session_id,
       title,
       fields,

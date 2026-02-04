@@ -1,14 +1,5 @@
-import { createServerSupabaseClient } from "@/src/db/server"
-import { redirect } from "next/navigation"
-import { ProgressDashboard } from "@/src/tracking"
+import { ProgressDashboard } from "@/src/tracking/components/ProgressDashboard"
 
-export default async function TrackingPage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-
-  if (error || !user) {
-    redirect("/auth/login")
-  }
-
+export default function TrackingPage() {
   return <ProgressDashboard />
 }

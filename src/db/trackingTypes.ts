@@ -7,6 +7,8 @@
 // Sessions
 // ============================================
 
+export type SessionEndReason = 'completed' | 'abandoned'
+
 export interface SessionRow {
   id: string
   user_id: string
@@ -27,6 +29,7 @@ export interface SessionRow {
   if_then_plan: string | null
   custom_intention: string | null
   pre_session_mood: number | null
+  end_reason: SessionEndReason | null
   created_at: string
   updated_at: string
 }
@@ -47,7 +50,7 @@ export interface SessionInsert {
 }
 
 export interface SessionUpdate {
-  ended_at?: string
+  ended_at?: string | null
   goal?: number
   goal_met?: boolean
   total_approaches?: number
@@ -63,6 +66,8 @@ export interface SessionUpdate {
   if_then_plan?: string
   custom_intention?: string
   pre_session_mood?: number
+  // End reason
+  end_reason?: SessionEndReason
 }
 
 export interface LocationPoint {
@@ -131,6 +136,7 @@ export interface ApproachUpdate {
   tags?: string[]
   mood?: number
   note?: string
+  voice_note_url?: string
 }
 
 // ============================================
@@ -202,6 +208,7 @@ export interface FieldReportRow {
   user_id: string
   session_id: string | null
   template_id: string | null
+  system_template_slug: string | null  // For system templates (e.g., "quick-log")
   title: string | null
   fields: Record<string, unknown>
   approach_count: number | null
@@ -216,7 +223,8 @@ export interface FieldReportRow {
 export interface FieldReportInsert {
   user_id: string
   session_id?: string
-  template_id?: string
+  template_id?: string              // UUID for custom templates
+  system_template_slug?: string     // Slug for system templates (e.g., "quick-log")
   title?: string
   fields: Record<string, unknown>
   approach_count?: number
@@ -227,7 +235,8 @@ export interface FieldReportInsert {
 }
 
 export interface FieldReportUpdate {
-  template_id?: string
+  template_id?: string              // UUID for custom templates
+  system_template_slug?: string     // Slug for system templates (e.g., "quick-log")
   title?: string
   fields?: Record<string, unknown>
   approach_count?: number
@@ -569,6 +578,7 @@ export interface SessionSummary {
   goal: number | null
   goal_met: boolean
   primary_location: string | null
+  end_reason: SessionEndReason | null
   outcomes: {
     blowout: number
     short: number

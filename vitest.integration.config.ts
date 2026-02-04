@@ -18,9 +18,8 @@ export default defineConfig({
     pool: "forks",
     fileParallelism: false, // Run test files one at a time
 
-    // Global setup/teardown for container lifecycle
+    // Global setup (returns teardown function) for container lifecycle
     globalSetup: "./tests/integration/globalSetup.ts",
-    globalTeardown: "./tests/integration/globalTeardown.ts",
   },
   resolve: {
     alias: {

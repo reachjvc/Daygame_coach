@@ -1,8 +1,13 @@
-# Stage 08a: Structure
+# Stage 09: Structure
 **Status:** FRESH START
-**Updated:** 03-02-2026
+**Updated:** 04-02-2026
 
-**Script**: `scripts/training-data/08a.structure`
+**Script**: `scripts/training-data/09.structure`
+
+---
+
+## Changelog
+- 04-02-2026: Renumbered from 08 to 09 (speaker correction now stage 07)
 
 ---
 
@@ -11,10 +16,10 @@
 Extracts interaction objects with turn-level structure and phase detection.
 
 ## Input
-- `data/07.conversations/<source>/<video>/*.conversations.json`
+- `data/08.content/<source>/<video>/*.enriched.json`
 
 ## Output
-- `data/08a.structure/<source>/<video>/`
+- `data/09.structure/<source>/<video>/`
   - `*.interactions.jsonl` - One interaction per line
 
 ## Extraction
@@ -39,10 +44,10 @@ open → pre_hook → post_hook → close
 ## Usage
 ```bash
 # Single video
-./scripts/training-data/08a.structure "source_name" "https://..."
+./scripts/training-data/09.structure "source_name" "https://..."
 
 # All sources
-./scripts/training-data/08a.structure --sources
+./scripts/training-data/09.structure --sources
 ```
 
 ## Output Format (JSONL)

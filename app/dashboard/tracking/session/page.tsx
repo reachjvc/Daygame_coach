@@ -1,14 +1,9 @@
-import { createServerSupabaseClient } from "@/src/db/server"
-import { redirect } from "next/navigation"
-import { SessionTrackerPage } from "@/src/tracking"
+"use client"
 
-export default async function SessionPage() {
-  const supabase = await createServerSupabaseClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
+import { SessionTrackerPage } from "@/src/tracking/components/SessionTrackerPage"
+import { useTrackingAuth } from "../TrackingAuthContext"
 
-  if (error || !user) {
-    redirect("/auth/login")
-  }
-
-  return <SessionTrackerPage userId={user.id} />
+export default function SessionPage() {
+  const { userId } = useTrackingAuth()
+  return <SessionTrackerPage userId={userId} />
 }

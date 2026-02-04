@@ -19,6 +19,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DATA_DIR="$ROOT_DIR/data/01.download"
 LOG_FILE="$DATA_DIR/redownload-missing.log"
+COOKIES_FILE="$ROOT_DIR/docs/data_docs/www.youtube.com_cookies.txt"
 
 # Pacing to avoid bot detection
 SLEEP_MIN_SEC="${SLEEP_MIN_SEC:-30}"
@@ -44,6 +45,10 @@ check_deps() {
             missing=1
         fi
     done
+    if [[ ! -f "$COOKIES_FILE" ]]; then
+        echo -e "${RED}ERROR: Cookies file not found: $COOKIES_FILE${NC}"
+        missing=1
+    fi
     if [[ $missing -eq 1 ]]; then
         exit 1
     fi
@@ -118,6 +123,7 @@ with open('$info_json') as f:
     local output_template="$dir/%(title)s [%(id)s].audio"
 
     yt-dlp \
+        --cookies "$COOKIES_FILE" \
         --extract-audio \
         --audio-format best \
         --audio-quality 0 \
