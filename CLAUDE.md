@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Changelog
+- 04-02-2026 - Added gamification tables to system-only list (milestones, user_tracking_stats, scenarios)
 - 04-02-2026 - Added Security Rules section (threat modeling, system-only tables, RLS checklist)
 - 04-02-2026 - Added Stop hook to auto-trigger code review (`.claude/hooks/check-code-review.sh`)
 - 03-02-2026 - Added idempotent seed scripts rule
 - 03-02-2026 - Fixed code-review subagent to use general-purpose (code-review type doesn't exist)
-- 03-02-2026 - Added code-review subagent rule for major code changes
 
 ---
 
@@ -136,18 +136,29 @@ Before writing any security-sensitive code, answer these questions:
 3. HEDGE CHECK: Am I adding "just in case" code?
    - If I wrote "if users need to..." → STOP. Ask the user instead.
    - Never add dangerous capabilities speculatively.
+
+4. GAMIFICATION CHECK: Does this table store earned/computed data?
+   - Achievements, milestones, badges → System-only
+   - Aggregate stats (totals, streaks) → System-only
+   - XP, levels, scores → System-only
+   - If users could write directly, could they cheat?
 ```
 
 #### System-Only Tables (NEVER User-Writable)
 
-These tables should ONLY be modified by service role (webhooks, admin scripts):
+These tables should ONLY be modified by service role (webhooks, admin scripts, triggers):
 
 | Table | Why System-Only | Allowed User Operations |
 |-------|-----------------|------------------------|
 | `purchases` | Financial records from Stripe | SELECT only |
 | `embeddings` | RAG training data | SELECT only |
 | `values` | Reference data | SELECT only |
+| `milestones` | Earned achievements - abuse = fake badges | SELECT only |
+| `user_tracking_stats` | Computed aggregates - abuse = inflated stats | SELECT only |
+| `scenarios` | Contains xp_earned - abuse = XP farming | SELECT only |
 | System templates (`is_system=true`) | Curated content | SELECT only |
+
+**Key Principle:** If a table contains data that is *earned* or *computed* from user actions (not directly entered by users), it's system-only.
 
 **If you're tempted to add INSERT/UPDATE/DELETE policies for these tables → STOP and ask the user.**
 

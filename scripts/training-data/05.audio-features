@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # scripts/training-data/05.audio-features
 #
-# STEP 3 — AUDIO FEATURES (+ speaker embeddings)
+# STEP 5 — AUDIO FEATURES (+ speaker embeddings)
 #
 # Reads:
 #   data/01.download/<source_name>/<video_name>/*.wav
@@ -19,7 +19,7 @@
 #      ./scripts/training-data/05.audio-features --sources docs/sources.txt
 #
 #   C) Single-file mode:
-#      python3 scripts/training-data/03.audio-features \
+#      python3 scripts/training-data/05.audio-features \
 #        --audio path/to/audio.wav \
 #        --transcript path/to/transcript.json \
 #        --out path/to/audio_features.json
@@ -28,7 +28,7 @@
 # FEATURES WE EXTRACT AND WHY
 # ================================================================================
 #
-# FOR TONE CLASSIFICATION (used in 04.segment-enrich):
+# FOR TONE CLASSIFICATION (used in 06.segment-enrich):
 # ┌─────────────────────┬────────────────────────────────────────────────────┐
 # │ Feature             │ Used to detect                                     │
 # ├─────────────────────┼────────────────────────────────────────────────────┤
@@ -39,8 +39,8 @@
 # └─────────────────────┴────────────────────────────────────────────────────┘
 #
 # FOR SPEAKER IDENTIFICATION:
-# Primary: pyannote_speaker field passed through from 02.transcribe (SPEAKER_00, SPEAKER_01)
-# Backup:  speaker_embedding (256-dim resemblyzer) available for 04.segment-enrich if needed
+# Primary: pyannote_speaker field passed through from 04.diarize (SPEAKER_00, SPEAKER_01)
+# Backup:  speaker_embedding (256-dim resemblyzer) available for 06.segment-enrich if needed
 #
 # FOR FUTURE VOICE-TO-VOICE COACHING:
 # ┌─────────────────────┬────────────────────────────────────────────────────┐
@@ -59,7 +59,7 @@
 # │ quality.speech_act  │ Filter segments with low speech activity           │
 # └─────────────────────┴────────────────────────────────────────────────────┘
 #
-# NOTE: Speaker identification now uses pyannote diarization from 02.transcribe.
+# NOTE: Speaker identification now uses pyannote diarization from 04.diarize.
 # pitch.mean_hz is kept for future voice-to-voice coaching features.
 #
 # ================================================================================
@@ -121,22 +121,14 @@ class Config:
     pyin_voiced_prob_threshold: float = 0.35  # raise if you still see unrealistic highs
     pitch_trim_percentile: float = 2.0        # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
 
-    # Octave correction: DISABLED
-    # The heuristic (170-280Hz + low variance = octave-doubled male) incorrectly targets
-    # female voices, causing systematic misclassification. A female at 200Hz with consistent
-    # delivery gets "corrected" to 100Hz, halving her pitch_std and breaking tone detection.
-    # Better to accept occasional male octave doubling than destroy female pitch data.
-    pitch_octave_correction: bool = False
-    pitch_octave_threshold_hz: float = 250.0  # unused when pitch_octave_correction=False
-
     # Quality thresholds
     low_energy_db: float = -35.0
     activity_db_threshold: float = -40.0
     clip_abs_threshold: float = 0.999
 
     # Speaker embeddings (resemblyzer)
-    # NOTE: Speaker identification now uses pyannote diarization from 02.transcribe.
-    # Embeddings are still computed here for potential future use by 04.segment-enrich.
+    # NOTE: Speaker identification now uses pyannote diarization from 04.diarize.
+    # Embeddings are still computed here for potential future use by 06.segment-enrich.
     embedder: str = "resemblyzer"
     embedder_sample_rate: int = 16000
     min_embed_raw_sec: float = 0.8
@@ -218,60 +210,6 @@ def percentile_trim(values: np.ndarray, pct: float) -> np.ndarray:
     lo = np.percentile(values, pct)
     hi = np.percentile(values, 100.0 - pct)
     return values[(values >= lo) & (values <= hi)]
-
-
-def apply_octave_correction(f0: np.ndarray, threshold_hz: float = 250.0) -> np.ndarray:
-    """
-    Correct octave doubling errors in pitch values.
-
-    Pitch detection algorithms (pyin, yin) often detect the 1st harmonic (2x F0)
-    instead of the fundamental. This is especially common for male voices where:
-    - True F0 is ~85-150Hz
-    - Detected F0 is ~170-300Hz (octave-doubled)
-
-    Strategy:
-    1. If median pitch is in the "suspicious" range (170-280Hz) for speech,
-       AND there's low variance (suggesting single speaker),
-       apply octave correction to values > 170Hz
-    2. This is aggressive but correct for the common case of male coaches
-    """
-    if f0.size == 0:
-        return f0
-
-    f0_out = f0.copy()
-    voiced = np.isfinite(f0_out) & (f0_out > 0)
-
-    if np.sum(voiced) < 5:
-        return f0_out
-
-    f0_voiced = f0_out[voiced]
-    median_hz = float(np.median(f0_voiced))
-    std_hz = float(np.std(f0_voiced))
-
-    # Suspicious range: 170-280Hz with low variance suggests octave-doubled male voice
-    # True male voice: 85-180Hz, std typically 10-30Hz
-    # Octave-doubled male: 170-300Hz, similar std
-    # True female voice: 165-255Hz, but higher variance with male in conversation
-
-    suspicious_median = 170 < median_hz < 280
-    low_variance = std_hz < 50  # Single speaker typically has low variance
-
-    if suspicious_median and low_variance:
-        # This looks like an octave-doubled male voice
-        # Halve all values above 170Hz (male upper range)
-        octave_correction_threshold = 170.0
-
-        correction_mask = voiced & (f0_out > octave_correction_threshold)
-        if np.sum(correction_mask) > 0:
-            # Apply halving
-            f0_out[correction_mask] = f0_out[correction_mask] / 2.0
-
-    elif median_hz > 280:
-        # Very high median - definitely octave errors
-        # Halve everything
-        f0_out[voiced] = f0_out[voiced] / 2.0
-
-    return f0_out
 
 
 # -------------------------
@@ -358,9 +296,6 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
     - std_hz: For tone detection (playful, confident, nervous)
     - range_hz: For future expressiveness coaching
     - direction: For future question vs statement detection
-
-    KNOWN ISSUE: Street audio causes octave doubling (90Hz detected as 180Hz).
-    We apply octave correction but it's not perfect. Use speaker_embedding instead.
     """
     if librosa is None or y.size == 0:
         return {
@@ -382,13 +317,6 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
             voiced_flag = np.asarray(voiced_flag, dtype=bool)
             voiced_prob = np.asarray(voiced_prob, dtype=np.float32)
 
-            # Apply octave correction to fix any remaining octave doubling errors
-            if cfg.pitch_octave_correction:
-                f0 = apply_octave_correction(f0, cfg.pitch_octave_threshold_hz)
-
-            # This is the ratio you actually want: fraction of frames pyin considers voiced.
-            voiced_ratio = float(np.mean(voiced_flag)) if voiced_flag.size else 0.0
-
             # For stats, use a stricter voiced mask (reduces false highs)
             voiced = voiced_flag & np.isfinite(f0) & (voiced_prob >= cfg.pyin_voiced_prob_threshold)
 
@@ -402,14 +330,9 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
             )
             f0 = np.asarray(f0, dtype=np.float32)
 
-            # Apply octave correction to fix any remaining octave doubling errors
-            if cfg.pitch_octave_correction:
-                f0 = apply_octave_correction(f0, cfg.pitch_octave_threshold_hz)
-
             # With yin(), treat low-energy / garbage frames as unvoiced is hard.
             # We approximate: if f0 is finite and >0, mark voiced.
             voiced = np.isfinite(f0) & (f0 > 0)
-            voiced_ratio = float(np.mean(voiced)) if f0.size > 0 else 0.0
 
         if np.sum(voiced) < 2:
             return {
@@ -551,16 +474,8 @@ def compute_quality_flags(
 
 
 # -------------------------
-# Speaker embeddings + clustering
+# Speaker embeddings
 # -------------------------
-
-def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
-    a = a.astype(np.float32)
-    b = b.astype(np.float32)
-    na = float(np.linalg.norm(a) + 1e-9)
-    nb = float(np.linalg.norm(b) + 1e-9)
-    return float(np.dot(a, b) / (na * nb))
-
 
 def get_speaker_encoder(cfg: Config):
     if VoiceEncoder is None:
@@ -634,7 +549,7 @@ def build_audio_features(
     segments_in = transcript.get("segments", []) or []
 
     encoder = get_speaker_encoder(cfg)
-    # NOTE: No longer tracking speakers here - 04.segment-enrich does global clustering
+    # NOTE: No longer tracking speakers here - 06.segment-enrich does global clustering
 
     segments_out: List[Dict[str, Any]] = []
 
@@ -679,7 +594,7 @@ def build_audio_features(
             cfg=cfg,
         )
 
-        # Speaker embedding (clustering done in 04.segment-enrich)
+        # Speaker embedding (clustering done in 06.segment-enrich)
         emb = try_embed_segment(encoder, y_orig, sr_orig, start, end, cfg)
 
         speaker_embedding_obj = None
@@ -702,7 +617,7 @@ def build_audio_features(
                 "duration_sec": r3(dur),
                 "text": text,
                 # Pyannote speaker ID from transcript (SPEAKER_00, SPEAKER_01, etc.)
-                # Will be mapped to coach/target/voiceover in 04.segment-enrich
+                # Will be mapped to coach/target/voiceover in 06.segment-enrich
                 "pyannote_speaker": pyannote_speaker,
                 "features": {
                     "pitch": pitch,

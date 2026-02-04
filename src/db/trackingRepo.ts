@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "./supabase"
+import { createServerSupabaseClient, createAdminSupabaseClient } from "./supabase"
 
 // Helper to get ISO week string (e.g., "2026-W04")
 export function getISOWeekString(date: Date): string {

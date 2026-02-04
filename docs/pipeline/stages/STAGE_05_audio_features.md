@@ -5,6 +5,7 @@
 **Script**: `scripts/training-data/05.audio-features`
 
 ## Changelog
+- 04-02-2026: Removed dead code (octave correction, unused voiced_ratio, cosine_sim)
 - 04-02-2026: Fixed pitch range (350Hz → 500Hz) to capture excited female voices
 - 04-02-2026: Disabled octave correction (was incorrectly halving female pitch data)
 
@@ -49,11 +50,12 @@ Extracts acoustic features for tone detection and speaker identification.
 | `pitch_fmin_hz` | 65 Hz | Male voice lower bound |
 | `pitch_fmax_hz` | 500 Hz | Female excited speech upper bound |
 | `pitch_method` | pyin | More robust than yin, provides voiced probability |
-| `pitch_octave_correction` | False | Disabled - heuristic incorrectly targets female voices |
 
-### Why Octave Correction is Disabled
+### Known Issue: Quality Flags Unused
 
-The octave correction heuristic assumed that pitch in 170-280Hz with low variance indicates an octave-doubled male voice. However, this range IS the normal female voice range. A female speaker at 200Hz with consistent delivery would have her pitch halved to 100Hz, breaking tone detection (pitch_std also halves).
+Stage 05 extracts `quality.low_energy` and `quality.speech_activity_ratio` flags to indicate unreliable segments. However, **Stage 06 does not currently use these flags** - it processes all segments regardless of quality. This could cause tone misclassification on noisy/quiet segments.
+
+**TODO for Stage 06**: Filter segments where `quality.low_energy=true` or `quality.speech_activity_ratio < 0.3` before tone classification.
 
 ## Quality Targets
 

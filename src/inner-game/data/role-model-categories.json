@@ -1,0 +1,38 @@
+[
+  {
+    "id": "charisma",
+    "label": "Charisma & Romance",
+    "description": "Masters of attraction, charm, and the art of connection",
+    "color": "#EC407A"
+  },
+  {
+    "id": "warriors",
+    "label": "Warriors & Leaders",
+    "description": "Men who led with courage and transformed the world",
+    "color": "#E53935"
+  },
+  {
+    "id": "philosophers",
+    "label": "Philosophers & Visionaries",
+    "description": "Thinkers who redefined what's possible",
+    "color": "#43A047"
+  },
+  {
+    "id": "icons",
+    "label": "Icons of Cool",
+    "description": "The embodiment of effortless presence and style",
+    "color": "#5C6BC0"
+  },
+  {
+    "id": "titans",
+    "label": "Titans of Business",
+    "description": "Builders who turned vision into empire",
+    "color": "#FB8C00"
+  },
+  {
+    "id": "mindset",
+    "label": "Masters of Mindset",
+    "description": "Teachers who show that mindset determines destiny",
+    "color": "#8E24AA"
+  }
+]
