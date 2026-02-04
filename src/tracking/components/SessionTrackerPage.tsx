@@ -232,10 +232,10 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   }
 
   const handleEndSession = async () => {
-    // Navigate first to avoid flash of "Start Session" screen
-    router.push("/dashboard/tracking")
     setShowEndDialog(false)
+    // Complete endSession FIRST to ensure sessionStorage is set before navigation
     await endSession()
+    router.push("/dashboard/tracking")
   }
 
   const handleTap = async () => {
@@ -257,8 +257,74 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     setQuickLogData({})
   }
 
-  // Not in session - show start screen
+  const handleReactivateSession = async () => {
+    await reactivateSession()
+    // Error handling is done via state.error which is displayed in the UI
+  }
+
+  // Not in session - check if we have a recently ended session
   if (!state.isActive) {
+    // Show "Session Ended" UI if we have a recently ended session
+    if (endedSession) {
+      return (
+        <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
+          <Card
+            className="p-8 max-w-md w-full text-center"
+            data-testid="session-ended-banner"
+          >
+            <div className="mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <Square className="size-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Session Ended</h2>
+              <p className="text-muted-foreground">
+                You logged {endedSession.approachCount} approach{endedSession.approachCount !== 1 ? "es" : ""} in {endedSession.duration}
+              </p>
+            </div>
+
+            {state.error && (
+              <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm mb-4">
+                {state.error}
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <Button
+                className="w-full"
+                onClick={handleReactivateSession}
+                disabled={state.isLoading}
+                data-testid="edit-session-button"
+              >
+                {state.isLoading ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" />
+                ) : (
+                  <Play className="size-4 mr-2" />
+                )}
+                Continue Session
+              </Button>
+
+              <div className="flex gap-2">
+                <Link href={`/dashboard/tracking/report?session=${endedSession.id}`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    <FileText className="size-4 mr-2" />
+                    Write Report
+                  </Button>
+                </Link>
+                <Button
+                  variant="ghost"
+                  onClick={clearEndedSession}
+                  className="flex-1"
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )
+    }
+
+    // No ended session - show normal start screen
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
         <div className="text-center mb-12">
@@ -308,7 +374,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               )}
 
               <div className="space-y-3">
-                <Label>Goal (optional)</Label>
+                <Label>Goal</Label>
                 <div className="flex flex-wrap gap-2">
                   {GOAL_PRESETS.map((preset) => (
                     <button
@@ -349,7 +415,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
               {/* Pre-session mood */}
               <div className="space-y-3">
-                <Label>How are you feeling? (optional)</Label>
+                <Label>How are you feeling?</Label>
                 <div className="flex gap-2">
                   {MOOD_OPTIONS.map((option) => (
                     <button
@@ -370,7 +436,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="location">Location (optional)</Label>
+                <Label htmlFor="location">Location</Label>
                 <div className="flex items-center gap-2">
                   <MapPin className="size-4 text-muted-foreground shrink-0" />
                   <ComboboxInput

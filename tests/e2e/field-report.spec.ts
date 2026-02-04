@@ -5,6 +5,18 @@ import { login } from './helpers/auth.helper'
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
+/**
+ * Template slug constants - single source of truth reference.
+ * These map to slugs defined in src/tracking/data/templates.ts
+ */
+const SLUGS = {
+  quickLog: 'quick-log',
+  standard: 'standard',
+  deepDive: 'deep-dive',
+  phoenix: 'phoenix',
+  cbt: 'cbt-thought-diary',
+} as const
+
 test.describe('Field Report Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Arrange: Login and navigate to field report page
@@ -25,8 +37,8 @@ test.describe('Field Report Flow', () => {
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Check for common template slugs - at least one should be visible
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
 
     // Check that at least one template is visible
     const quickLogVisible = await quickLogTemplate.isVisible().catch(() => false)
@@ -39,9 +51,9 @@ test.describe('Field Report Flow', () => {
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Find first available template card and click it
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
-    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('deep-dive'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
+    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.deepDive))
 
     // Click whichever template is available
     const templateToClick = quickLogTemplate.or(standardTemplate).or(deepDiveTemplate)
@@ -58,8 +70,8 @@ test.describe('Field Report Flow', () => {
     // Arrange: Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -77,8 +89,8 @@ test.describe('Field Report Flow', () => {
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Use standard template which likely has required fields
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
-    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('deep-dive'))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
+    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.deepDive))
     const templateToClick = standardTemplate.or(deepDiveTemplate)
 
     if (await templateToClick.first().isVisible().catch(() => false)) {
@@ -96,8 +108,8 @@ test.describe('Field Report Flow', () => {
     // Arrange: Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -113,8 +125,8 @@ test.describe('Field Report Flow', () => {
     // Arrange: Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -131,8 +143,8 @@ test.describe('Field Report Flow', () => {
     // Arrange: Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -151,8 +163,8 @@ test.describe('Field Report Flow', () => {
     // Arrange: Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -187,7 +199,7 @@ test.describe('Field Input Types', () => {
 
     // Navigate to form view using quick-log template (has text, number, select fields)
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
     await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
     await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -271,8 +283,8 @@ test.describe('Form Validation', () => {
     // Use standard template which has required fields
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
-    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('deep-dive'))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
+    const deepDiveTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.deepDive))
     const templateToClick = standardTemplate.or(deepDiveTemplate)
 
     if (await templateToClick.first().isVisible().catch(() => false)) {
@@ -289,7 +301,7 @@ test.describe('Form Validation', () => {
     // Use quick-log template which has fewer required fields
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
     await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
     await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -315,7 +327,7 @@ test.describe('Form Validation', () => {
   test('should keep save draft enabled regardless of validation', async ({ page }) => {
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
     await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
     await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -337,7 +349,7 @@ test.describe('Form Submission', () => {
     // Navigate to quick-log form
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
     await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
     await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -360,7 +372,7 @@ test.describe('Form Submission', () => {
     // Navigate to quick-log form
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
     await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
     await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
@@ -399,8 +411,8 @@ test.describe('Post-Session Mood Picker', () => {
 
     // Navigate to form view
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })
@@ -476,8 +488,8 @@ test.describe('Post-Session Mood Picker', () => {
     await page.getByTestId(SELECTORS.fieldReport.back).click({ timeout: ACTION_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
-    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('quick-log'))
-    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard('standard'))
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    const standardTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.standard))
     const templateToClick = quickLogTemplate.or(standardTemplate)
     await expect(templateToClick.first()).toBeVisible({ timeout: AUTH_TIMEOUT })
     await templateToClick.first().click({ timeout: ACTION_TIMEOUT })

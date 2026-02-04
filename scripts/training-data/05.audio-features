@@ -109,11 +109,11 @@ class Config:
     sample_rate: int = 22050
     feature_extractor: str = "librosa"
 
-    # Pitch range for speech (prevents octave doubling errors)
-    # Male F0: 85-180Hz, Female F0: 165-255Hz
-    # Setting fmax=350Hz prevents detecting harmonics (which are 2x fundamental)
+    # Pitch range for speech
+    # Male F0: 85-180Hz, Female F0: 165-255Hz (up to 400-500Hz when excited)
+    # fmax=500Hz allows full female range including excited/animated speech
     pitch_fmin_hz: float = 65.0
-    pitch_fmax_hz: float = 350.0  # Changed from 1046.5 to prevent octave doubling
+    pitch_fmax_hz: float = 500.0
 
     # Pitch extraction method / robustness
     # NOTE: pyin gives voiced/unvoiced flags + probabilities -> fixes voiced_ratio == 1.0 issue
@@ -121,10 +121,13 @@ class Config:
     pyin_voiced_prob_threshold: float = 0.35  # raise if you still see unrealistic highs
     pitch_trim_percentile: float = 2.0        # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
 
-    # Octave correction: if pitch > this threshold and there's a clear octave jump, halve it
-    # This catches any remaining octave doubling that slips through fmax constraint
-    pitch_octave_correction: bool = True
-    pitch_octave_threshold_hz: float = 250.0  # pitches above this get checked for octave errors
+    # Octave correction: DISABLED
+    # The heuristic (170-280Hz + low variance = octave-doubled male) incorrectly targets
+    # female voices, causing systematic misclassification. A female at 200Hz with consistent
+    # delivery gets "corrected" to 100Hz, halving her pitch_std and breaking tone detection.
+    # Better to accept occasional male octave doubling than destroy female pitch data.
+    pitch_octave_correction: bool = False
+    pitch_octave_threshold_hz: float = 250.0  # unused when pitch_octave_correction=False
 
     # Quality thresholds
     low_energy_db: float = -35.0

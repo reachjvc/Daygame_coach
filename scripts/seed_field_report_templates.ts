@@ -3,15 +3,20 @@
  *
  * Run with: npx tsx scripts/seed_field_report_templates.ts
  *
- * This script creates/updates the 4 system templates:
+ * This script creates/updates the 5 system templates:
  * 1. Quick Log - 30 seconds, just the essentials
  * 2. Standard - 3 minutes, the sweet spot
  * 3. Deep Dive - 10 minutes, full forensic analysis
  * 4. Phoenix - 5 minutes, blowout recovery
+ * 5. CBT Thought Diary - 20 minutes, challenge automatic thoughts
  */
 
 import { createAdminSupabaseClient } from "../src/db/supabase"
 import type { TemplateField } from "../src/db/trackingTypes"
+import {
+  getSystemTemplateSlugs,
+  type SystemTemplateSlug,
+} from "../src/tracking/data/templates"
 
 // ============================================================================
 // Template Definitions (matching FIELD_REPORT_TEMPLATES_DISCUSSION.md)
@@ -319,6 +324,96 @@ const TEMPLATES: TemplateData[] = [
     active_dynamic_fields: [],
   },
 
+  // ============================================================================
+  // 5. CBT Thought Diary - 20 minutes
+  // ============================================================================
+  {
+    slug: "cbt-thought-diary",
+    name: "CBT Thought Diary",
+    description: "Identify and reframe negative thought patterns",
+    icon: "brain",
+    estimated_minutes: 20,
+    static_fields: [
+      {
+        id: "approaches",
+        type: "number",
+        label: "Approaches",
+        placeholder: "How many?",
+        required: true,
+        min: 0,
+      },
+      {
+        id: "situation",
+        type: "textarea",
+        label: "1. Situation: What happened? (objective facts only)",
+        placeholder: "The factual situation was...",
+        rows: 2,
+        required: true,
+      },
+      {
+        id: "automatic_thoughts",
+        type: "textarea",
+        label: "2. Automatic Thoughts: What went through your mind?",
+        placeholder: "I thought to myself...",
+        rows: 2,
+        required: true,
+      },
+      {
+        id: "emotions",
+        type: "text",
+        label: "3. Emotions: What did you feel? Rate intensity (0-100)",
+        placeholder: "e.g., Anxious (70), Embarrassed (50)",
+        required: true,
+      },
+      {
+        id: "distortions",
+        type: "select",
+        label: "4. Cognitive Distortions: Which apply?",
+        options: [
+          "All-or-nothing",
+          "Catastrophizing",
+          "Mind-reading",
+          "Overgeneralization",
+          "Discounting positives",
+          "Multiple/Other",
+        ],
+        required: true,
+      },
+      {
+        id: "evidence_for",
+        type: "textarea",
+        label: "5. Evidence FOR the thought: What supports it being true?",
+        placeholder: "Evidence that supports this thought...",
+        rows: 2,
+        required: true,
+      },
+      {
+        id: "evidence_against",
+        type: "textarea",
+        label: "6. Evidence AGAINST: What contradicts it? What would you tell a friend?",
+        placeholder: "Evidence against this thought / what I'd tell a friend...",
+        rows: 2,
+        required: true,
+      },
+      {
+        id: "balanced_thought",
+        type: "textarea",
+        label: "7. Balanced Thought: More realistic perspective",
+        placeholder: "A more balanced way to see this is...",
+        rows: 2,
+        required: true,
+      },
+      {
+        id: "outcome",
+        type: "text",
+        label: "8. Outcome: How do you feel now? (0-100)",
+        placeholder: "e.g., Anxious (30), Hopeful (60)",
+        required: true,
+      },
+    ],
+    dynamic_fields: [],
+    active_dynamic_fields: [],
+  },
 ]
 
 // ============================================================================
@@ -329,6 +424,27 @@ async function main() {
   const supabase = createAdminSupabaseClient()
 
   console.log("Seeding field report templates...")
+
+  // Validate: All seed template slugs must exist in SYSTEM_TEMPLATES (single source of truth)
+  const validSlugsFromSource = new Set(getSystemTemplateSlugs())
+  for (const template of TEMPLATES) {
+    if (!validSlugsFromSource.has(template.slug as SystemTemplateSlug)) {
+      throw new Error(
+        `Template slug "${template.slug}" not found in SYSTEM_TEMPLATES. ` +
+          `Add it to src/tracking/data/templates.ts first.`
+      )
+    }
+  }
+
+  // Validate: All SYSTEM_TEMPLATES slugs should be in seed script
+  const seedSlugs = new Set(TEMPLATES.map((t) => t.slug))
+  for (const slug of validSlugsFromSource) {
+    if (!seedSlugs.has(slug)) {
+      console.warn(
+        `  ⚠️  Warning: SYSTEM_TEMPLATES contains "${slug}" but it's not in this seed script.`
+      )
+    }
+  }
 
   // Step 1: Delete orphaned system templates (idempotency)
   const validSlugs = TEMPLATES.map((t) => t.slug)

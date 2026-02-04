@@ -48,6 +48,7 @@ const ALLOWED_TYPE_EXPORTS = new Set([
   'src/scenarios/scenariosService.ts',
   'src/tracking/config.ts',
   'src/tracking/data/milestones.ts',
+  'src/tracking/data/templates.ts',
   'src/tracking/schemas.ts',
   'src/profile/data/experience-levels.ts',
   'src/profile/data/map-audit.ts',

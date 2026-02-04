@@ -29,7 +29,8 @@ import {
 } from "lucide-react"
 
 import type { FieldDefinition, FieldCategory, SessionSummaryData } from "@/src/tracking/types"
-import { FIELD_LIBRARY, CATEGORY_INFO, TEMPLATE_COLORS, SESSION_IMPORT_FIELD_IDS } from "@/src/tracking/config"
+import { FIELD_LIBRARY, CATEGORY_INFO, SESSION_IMPORT_FIELD_IDS } from "@/src/tracking/config"
+import { TEMPLATE_COLORS } from "@/src/tracking/data/templates"
 import { CATEGORY_ICONS } from "@/src/tracking/components/templateIcons"
 import { SessionImportSection } from "./SessionImportSection"
 import { DatePicker } from "./DatePicker"

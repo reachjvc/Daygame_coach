@@ -3,11 +3,11 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Changelog
+- 04-02-2026 - Added Security Rules section (threat modeling, system-only tables, RLS checklist)
+- 04-02-2026 - Added Stop hook to auto-trigger code review (`.claude/hooks/check-code-review.sh`)
 - 03-02-2026 - Added idempotent seed scripts rule
 - 03-02-2026 - Fixed code-review subagent to use general-purpose (code-review type doesn't exist)
 - 03-02-2026 - Added code-review subagent rule for major code changes
-- 01-02-2026 12:30 - Added tech stack, development commands, test organization, articles slice
-- 31-01-2026 19:50 - Restructured for better Claude compliance: pre-response checklist, stronger framing
 
 ---
 
@@ -53,6 +53,7 @@ npx vitest run -t "should calculate"
 | 3 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
 | 4 | Did I modify any doc? | Add changelog entry with today's date |
 | 5 | Did I make major code changes? | Run `code-review` subagent (see below) |
+| 6 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
 
 if in doubt, ask user if documents should be updated or not .
 
@@ -113,9 +114,79 @@ Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the use
 
 Seed scripts must be **idempotent**: delete orphans first, then upsert. Running twice = same result.
 
-### 7. Code Review Subagent (After Major Changes)
+### 7. Security Rules (CRITICAL for Auth/RLS/Payments)
 
-**When to run:** After completing prompts involving major code changes (new features, refactors, significant bug fixes).
+**When touching:** authentication, RLS policies, payments, permissions, or any table in the "system-only" list below.
+
+#### Threat Modeling Required
+
+Before writing any security-sensitive code, answer these questions:
+
+```
+1. TRUST MODEL: Who should be able to perform this action?
+   - Only the system/service role?
+   - Only the owning user?
+   - Any authenticated user?
+
+2. ABUSE CASE: What's the worst a malicious user could do with this capability?
+   - Can they grant themselves privileges?
+   - Can they access other users' data?
+   - Can they create fake records?
+
+3. HEDGE CHECK: Am I adding "just in case" code?
+   - If I wrote "if users need to..." → STOP. Ask the user instead.
+   - Never add dangerous capabilities speculatively.
+```
+
+#### System-Only Tables (NEVER User-Writable)
+
+These tables should ONLY be modified by service role (webhooks, admin scripts):
+
+| Table | Why System-Only | Allowed User Operations |
+|-------|-----------------|------------------------|
+| `purchases` | Financial records from Stripe | SELECT only |
+| `embeddings` | RAG training data | SELECT only |
+| `values` | Reference data | SELECT only |
+| System templates (`is_system=true`) | Curated content | SELECT only |
+
+**If you're tempted to add INSERT/UPDATE/DELETE policies for these tables → STOP and ask the user.**
+
+#### RLS Policy Checklist
+
+When writing RLS policies, verify:
+
+- [ ] Each table classified: user-writable vs system-only
+- [ ] No INSERT policy on system-only tables
+- [ ] UPDATE policies have both USING and WITH CHECK (prevents user_id mutation)
+- [ ] Shared tables use `auth.uid() IS NOT NULL` not `auth.role() = 'authenticated'`
+- [ ] Reserved SQL words (like `values`) are quoted
+- [ ] Test plan includes: anon blocked, wrong user_id blocked, mutation blocked
+
+#### Anti-Pattern: Speculative Permissions
+
+```
+BAD (what caused the purchases bug):
+-- Purchases are typically created by Stripe webhooks
+-- If users need to create purchases directly:  ← SPECULATIVE HEDGE
+CREATE POLICY "purchases_insert_own" ...
+
+GOOD:
+-- Purchases created ONLY by Stripe webhooks via service role
+-- NO user INSERT policy - this is intentional
+CREATE POLICY "purchases_select_own" ...  -- SELECT only
+```
+
+**Rule:** If you're uncertain whether users need a capability, ASK. Don't add dangerous policies "just in case."
+
+---
+
+### 8. Code Review Subagent (AUTOMATED via Stop Hook)
+
+**This is now enforced automatically.** A Stop hook (`.claude/hooks/check-code-review.sh`) blocks your response when:
+- 3+ non-doc files are modified
+- At least one is a code file (`.ts`, `.tsx`, `.js`, `.jsx`)
+
+**When triggered:** The hook injects a blocking message telling you to run the code-review subagent. You MUST run it before responding.
 
 **How to invoke:** Use the Task tool with:
 ```
@@ -130,18 +201,10 @@ prompt: "Code review for recent changes. 1) Read docs/testing_behavior.md. 2) Ru
 - Missing integration points (API payloads, state persistence)
 - Code quality issues (magic numbers, missing validation)
 
-**What counts as "major code changes":**
-- New service functions or components
-- Modified business logic in `*Service.ts`
-- New API routes or endpoints
-- Database schema or repo changes
-- Any change touching 3+ files
-
-**NOT needed for:**
-- Doc-only changes
-- Config tweaks
-- Single-line fixes
-- Test-only changes
+**Hook behavior:**
+- Blocks once per user message (uses marker file to avoid infinite loop)
+- Marker cleared on next user prompt (UserPromptSubmit hook)
+- Hook files: `.claude/hooks/check-code-review.sh`, `.claude/hooks/clear-code-review-marker.sh`
 
 ---
 

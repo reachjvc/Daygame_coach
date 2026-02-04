@@ -138,48 +138,10 @@ export const REVIEW_CONFIG = {
 } as const
 
 // ============================================
-// Field Report Template Display (pure data, no JSX)
+// Field Report Template Display
 // ============================================
-
-export const TEMPLATE_COLORS: Record<string, { bg: string; icon: string; gradient: string }> = {
-  "quick-log": {
-    bg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    icon: "bg-amber-500 text-white",
-    gradient: "from-amber-500/30 via-amber-500/10 to-orange-500/20",
-  },
-  standard: {
-    bg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    icon: "bg-blue-500 text-white",
-    gradient: "from-blue-500/30 via-blue-500/10 to-indigo-500/20",
-  },
-  "deep-dive": {
-    bg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    icon: "bg-purple-500 text-white",
-    gradient: "from-purple-500/30 via-purple-500/10 to-pink-500/20",
-  },
-  phoenix: {
-    bg: "bg-red-500/10 text-red-500 border-red-500/20",
-    icon: "bg-red-500 text-white",
-    gradient: "from-red-500/30 via-red-500/10 to-orange-500/20",
-  },
-  custom: {
-    bg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    icon: "bg-emerald-500 text-white",
-    gradient: "from-emerald-500/30 via-emerald-500/10 to-teal-500/20",
-  },
-  favorite: {
-    bg: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-    icon: "bg-rose-500 text-white",
-    gradient: "from-rose-500/30 via-rose-500/10 to-pink-500/20",
-  },
-}
-
-export const TEMPLATE_TAGLINES: Record<string, string> = {
-  "quick-log": "30 seconds. Just the essentials.",
-  standard: "The sweet spot. Learn without overthinking.",
-  "deep-dive": "When you got close. Extract every lesson.",
-  phoenix: "Rise from the ashes. Every master failed here first.",
-}
+// MOVED to src/tracking/data/templates.ts (single source of truth)
+// Import TEMPLATE_COLORS, TEMPLATE_TAGLINES from "@/src/tracking/data"
 
 // ============================================
 // Emoji Mood Options for Field Reports

@@ -62,8 +62,8 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const [, forceUpdate] = useState(0)
 
-  // Load ended session from sessionStorage on mount
-  useEffect(() => {
+  // Load ended session from sessionStorage (used on mount and pageshow)
+  const loadEndedSessionFromStorage = useCallback(() => {
     try {
       const stored = sessionStorage.getItem(ENDED_SESSION_STORAGE_KEY)
       if (stored) {
@@ -75,12 +75,21 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
           setEndedSession(parsed)
         } else {
           sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+          setEndedSession(null)
         }
+      } else {
+        setEndedSession(null)
       }
     } catch {
       sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+      setEndedSession(null)
     }
   }, [])
+
+  // Load ended session from sessionStorage on mount
+  useEffect(() => {
+    loadEndedSessionFromStorage()
+  }, [loadEndedSessionFromStorage])
 
   // Force re-render every second for live timers
   useEffect(() => {
@@ -106,14 +115,15 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   useEffect(() => {
     const handlePageShow = (event: PageTransitionEvent) => {
       if (event.persisted) {
-        // Page was restored from bfcache - revalidate session status
+        // Page was restored from bfcache - revalidate session status and ended session
         loadActiveSession()
+        loadEndedSessionFromStorage()
       }
     }
 
     window.addEventListener("pageshow", handlePageShow)
     return () => window.removeEventListener("pageshow", handlePageShow)
-  }, [userId])
+  }, [userId, loadEndedSessionFromStorage])
 
   const loadActiveSession = async () => {
     try {
@@ -161,6 +171,10 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
       }
 
       const session = await response.json()
+
+      // Clear any ended session info when starting a new session
+      sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+      setEndedSession(null)
 
       setState({
         session,

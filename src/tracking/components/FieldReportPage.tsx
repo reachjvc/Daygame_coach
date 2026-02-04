@@ -24,7 +24,8 @@ import {
 import Link from "next/link"
 import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { SessionSummaryData } from "../types"
-import { OUTCOME_OPTIONS, MOOD_OPTIONS, TEMPLATE_COLORS, TEMPLATE_TAGLINES, SESSION_IMPORT_FIELD_IDS } from "../config"
+import { OUTCOME_OPTIONS, MOOD_OPTIONS, SESSION_IMPORT_FIELD_IDS } from "../config"
+import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER } from "../data/templates"
 import { TEMPLATE_ICONS } from "./templateIcons"
 import { FieldRenderer } from "./FieldRenderer"
 import { SessionImportSection } from "./SessionImportSection"
@@ -37,14 +38,6 @@ import { DatePicker } from "./DatePicker"
 interface FieldReportPageProps {
   userId: string
   sessionId?: string
-}
-
-// Template ordering: defines the logical order for templates
-const TEMPLATE_ORDER: Record<string, number> = {
-  "quick-log": 1,
-  standard: 2,
-  phoenix: 3,
-  "deep-dive": 4,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
