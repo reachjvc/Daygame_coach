@@ -219,7 +219,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
 
           {/* Outcomes breakdown */}
           <div className="space-y-2">
-            <Label>Outcomes (optional)</Label>
+            <Label>Outcomes</Label>
             <p className="text-xs text-muted-foreground mb-2">
               {totalOutcomes} of {approachCount} assigned • {approachCount - totalOutcomes} unspecified
             </p>
@@ -265,7 +265,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
 
           {/* Location (optional) */}
           <div className="space-y-2">
-            <Label htmlFor="location">Location (optional)</Label>
+            <Label htmlFor="location">Location</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Input
@@ -280,7 +280,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
 
           {/* Tags (optional) */}
           <div className="space-y-2">
-            <Label>Tags (optional)</Label>
+            <Label>Tags</Label>
             <div className="flex flex-wrap gap-2">
               {Object.entries(APPROACH_TAGS).map(([, tags]) => (
                 tags.map((tag) => (

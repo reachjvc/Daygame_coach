@@ -428,7 +428,6 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">
                 Report Title
-                <span className="text-muted-foreground font-normal ml-1">(optional)</span>
               </label>
               <DatePicker
                 date={reportDate}
