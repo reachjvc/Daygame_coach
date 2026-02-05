@@ -21,7 +21,7 @@
     },
     "video_type": {
       "type": "object",
-      "required": ["type", "confidence", "method"],
+      "required": ["type", "confidence"],
       "properties": {
         "type": {
           "type": "string",
@@ -52,7 +52,7 @@
         "properties": {
           "role": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other"]
+            "enum": ["coach", "target", "voiceover", "other", "unknown"]
           },
           "confidence": {
             "type": "number",
@@ -90,7 +90,7 @@
           },
           "speaker_role": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other"],
+            "enum": ["coach", "target", "voiceover", "other", "unknown"],
             "description": "Semantic role derived from speaker_labels"
           },
           "segment_type": {
@@ -142,7 +142,7 @@
     },
     "metadata": {
       "type": "object",
-      "required": ["pipeline_version", "prompt_version", "model_version", "schema_version"],
+      "required": ["pipeline_version", "prompt_version", "schema_version"],
       "properties": {
         "pipeline_version": { "type": "string" },
         "prompt_version": { "type": "string" },

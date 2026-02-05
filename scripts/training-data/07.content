@@ -1,0 +1,1250 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/07.content
+
+Content Enrichment using Claude Code CLI
+
+Reads:
+  - Conversation files (from Stage 06):
+      data/06.video-type/<source>/<video>/*.conversations.json
+
+Writes:
+  - Enriched conversation files:
+      data/07.content/<source>/<video>/*.enriched.json
+
+The enrichment adds:
+  For infield/compilation videos:
+    - Per-approach: technique detection, topic extraction, turn phases, hook/investment
+    - Per-commentary-block: teaching points, techniques/topics discussed
+    - unlisted_concepts: taxonomy gap detection on all enrichments
+
+  For talking_head/podcast videos:
+    - Per-section: topic identification, techniques discussed, description
+    - unlisted_concepts: taxonomy gap detection on all enrichments
+
+Architecture:
+  - Single Claude CLI call per VIDEO (not per interaction)
+  - Two prompt variants: infield (approaches + commentary) vs talking_head (topic sections)
+  - Taxonomy sent once, outputs JSON
+
+Use:
+
+  A) Test videos:
+     ./scripts/training-data/07.content --test
+
+  B) Single file:
+     ./scripts/training-data/07.content --input data/test/06.video-type/video.conversations.json
+
+  C) Batch from sources file:
+     ./scripts/training-data/07.content --sources
+
+Requirements:
+  - Claude Code CLI installed and authenticated (claude command available)
+"""
+
+from __future__ import annotations
+
+import argparse
+import difflib
+import hashlib
+import json
+import re
+import shlex
+import subprocess
+import sys
+import time
+from dataclasses import dataclass, asdict, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+import jsonschema
+
+
+# ---------------------------
+# Technique and Topic Taxonomies (synced with STAGE_07_content.md)
+# ---------------------------
+
+# 31 techniques across 5 categories
+TECHNIQUE_TAXONOMY = {
+    # Openers (5)
+    "direct_opener": "Explicitly stating attraction/interest upfront ('I think you're attractive')",
+    "indirect_opener": "Starting conversation without revealing intent (asking for directions, opinion)",
+    "situational_opener": "Opening based on something happening in the environment",
+    "observation_opener": "Commenting on something specific about her (outfit, book, behavior)",
+    "gambit": "Pre-planned opener or routine to spark conversation",
+
+    # Attraction (9)
+    "push_pull": "Giving a compliment then taking it away, or vice versa ('You seem cool... for a tourist')",
+    "tease": "Playful mocking or joking at her expense in a fun way",
+    "cold_read": "Making an assumption about her personality/life ('You look like a yoga teacher')",
+    "role_play": "Creating imaginary scenarios together ('We'd make terrible dance partners')",
+    "disqualification": "Playfully suggesting you two wouldn't work out",
+    "DHV": "Demonstration of higher value through stories or behavior",
+    "frame_control": "Maintaining your perspective/reality in the interaction",
+    "takeaway": "Withdrawing attention or threatening to leave",
+    "false_time_constraint": "Saying you need to leave soon to reduce pressure",
+
+    # Connection (8)
+    "qualification": "Asking what makes her special beyond looks ('What's your passion?')",
+    "statement_of_intent": "Clearly expressing romantic/sexual interest",
+    "grounding": "Sharing personal details to build trust and rapport",
+    "storytelling": "Using engaging stories to convey personality",
+    "vulnerability": "Sharing something genuine/personal to create connection",
+    "callback_humor": "Referencing something mentioned earlier in conversation",
+    "screening": "Asking questions to evaluate her as a potential partner",
+    "appreciation": "Expressing genuine appreciation for something about her",
+
+    # Compliance (1)
+    "compliance": "Getting her to agree to small requests, building investment",
+
+    # Closing (8)
+    "number_close": "Asking for her phone number",
+    "instagram_close": "Asking for her Instagram handle",
+    "soft_close": "Suggesting future meeting without immediate commitment",
+    "assumptive_close": "Acting as if she's already agreed ('So when are you free?')",
+    "instant_date": "Suggesting to continue hanging out right now",
+    "bounce": "Moving to a different location together",
+    "time_bridge": "Setting up specific future plans",
+    "logistics_check": "Asking about her schedule/availability",
+}
+
+# 22 topics across 5 categories
+TOPIC_TAXONOMY = {
+    # Personal (8)
+    "name": "Her name or introductions",
+    "origin": "Where she's from, nationality, hometown",
+    "career": "Job, profession, what she does for work",
+    "education": "Studies, university, school",
+    "hobby": "Interests, activities, passions",
+    "travel": "Trips, places visited, travel plans",
+    "living_situation": "Where she lives, roommates, neighborhood",
+    "ambitions": "Goals, dreams, future plans",
+
+    # Appearance (1)
+    "appearance": "General looks, attractiveness comments, style",
+
+    # Personality (4)
+    "personality": "Character traits, demeanor",
+    "age": "How old she is, age-related topics",
+    "behavior": "How she acts, mannerisms",
+    "values": "What she cares about, beliefs",
+
+    # Logistics (5)
+    "plans": "What she's doing today, schedule",
+    "contact": "Exchanging numbers, social media",
+    "logistics": "Meeting up, availability, dating",
+    "relationship": "Boyfriend, dating status",
+    "duration": "How long she's in town, staying",
+
+    # Context (4)
+    "food_drinks": "Coffee, restaurants, bars",
+    "location": "The current place, area, city",
+    "humor": "Jokes, banter, playful exchanges",
+    "flirting": "Romantic/sexual tension, attraction",
+}
+
+LOG_PREFIX = "[07.content]"
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "content.schema.json"
+
+PROMPT_VERSION = "1.0.0"
+PIPELINE_VERSION = "07.content-v1"
+
+# Failure budget
+MAX_CONSECUTIVE_FAILURES = 3
+MAX_FAILURE_RATE = 0.20
+
+# Phase progression order (must go forward only)
+PHASE_ORDER = ["open", "pre_hook", "post_hook", "close"]
+
+
+# ---------------------------
+# Validation
+# ---------------------------
+
+@dataclass
+class ValidationResult:
+    severity: str  # "error", "warning", "info"
+    check: str
+    message: str
+
+    def to_dict(self) -> Dict[str, str]:
+        return {"severity": self.severity, "check": self.check, "message": self.message}
+
+
+def load_schema() -> Optional[Dict]:
+    """Load JSON schema for Stage 07 output validation."""
+    if SCHEMA_PATH.exists():
+        return json.loads(SCHEMA_PATH.read_text())
+    print(f"{LOG_PREFIX} WARNING: Schema not found at {SCHEMA_PATH}")
+    return None
+
+
+_CACHED_SCHEMA: Optional[Dict] = None
+
+
+def get_schema() -> Optional[Dict]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = load_schema()
+    return _CACHED_SCHEMA
+
+
+def fuzzy_evidence_match(evidence: str, transcript_text: str, threshold: float = 0.7) -> bool:
+    """Check if evidence string roughly appears in transcript.
+
+    Uses SequenceMatcher to find the best matching substring.
+    Returns True if a reasonable match is found.
+    """
+    if not evidence or not transcript_text:
+        return True  # can't check, don't flag
+
+    evidence_lower = evidence.lower().strip()
+    transcript_lower = transcript_text.lower()
+
+    # Exact substring match
+    if evidence_lower in transcript_lower:
+        return True
+
+    # Try matching against sliding windows of similar length
+    ev_len = len(evidence_lower)
+    best_ratio = 0.0
+
+    # Check chunks of similar size throughout the transcript
+    step = max(1, ev_len // 4)
+    for i in range(0, max(1, len(transcript_lower) - ev_len + 1), step):
+        chunk = transcript_lower[i:i + ev_len + ev_len // 2]
+        ratio = difflib.SequenceMatcher(None, evidence_lower, chunk).ratio()
+        if ratio > best_ratio:
+            best_ratio = ratio
+        if best_ratio >= threshold:
+            return True
+
+    return best_ratio >= threshold
+
+
+def validate_enrichment_output(
+    output: Dict,
+    stage06_data: Optional[Dict] = None,
+) -> List[ValidationResult]:
+    """Comprehensive validation of Stage 07 output.
+
+    Args:
+        output: The Stage 07 enriched output
+        stage06_data: Optional Stage 06 output for cross-reference checks
+    """
+    results: List[ValidationResult] = []
+
+    enrichments = output.get("enrichments", [])
+
+    # Build full transcript text for evidence checking
+    segments = output.get("segments", [])
+    full_transcript = " ".join(s.get("text", "") for s in segments)
+
+    # --- 1. Technique taxonomy enforcement ---
+    valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
+    for i, enrichment in enumerate(enrichments):
+        for tech in enrichment.get("techniques_used", []):
+            technique_name = tech.get("technique", "")
+            if technique_name and technique_name not in valid_techniques:
+                results.append(ValidationResult(
+                    "error", "invalid_technique",
+                    f"Enrichment {i}: technique '{technique_name}' not in taxonomy. "
+                    f"Should be in unlisted_concepts instead."
+                ))
+        for tech in enrichment.get("techniques_discussed", []):
+            technique_name = tech.get("technique", "")
+            if technique_name and technique_name not in valid_techniques:
+                results.append(ValidationResult(
+                    "error", "invalid_technique_discussed",
+                    f"Enrichment {i}: discussed technique '{technique_name}' not in taxonomy."
+                ))
+
+    # --- 2. Topic taxonomy enforcement ---
+    valid_topics = set(TOPIC_TAXONOMY.keys())
+    for i, enrichment in enumerate(enrichments):
+        for topic in enrichment.get("topics_discussed", []):
+            topic_name = topic if isinstance(topic, str) else ""
+            if topic_name and topic_name not in valid_topics:
+                results.append(ValidationResult(
+                    "error", "invalid_topic",
+                    f"Enrichment {i}: topic '{topic_name}' not in taxonomy."
+                ))
+
+    # --- 3. Evidence string verification ---
+    if full_transcript:
+        evidence_mismatches = 0
+        evidence_total = 0
+        empty_evidence = 0
+        for i, enrichment in enumerate(enrichments):
+            for tech in enrichment.get("techniques_used", []):
+                example = tech.get("example", "")
+                if example:
+                    evidence_total += 1
+                    if not fuzzy_evidence_match(example, full_transcript):
+                        evidence_mismatches += 1
+                        results.append(ValidationResult(
+                            "warning", "evidence_mismatch",
+                            f"Enrichment {i}: technique '{tech.get('technique', '?')}' "
+                            f"evidence not found in transcript: \"{example[:80]}...\""
+                        ))
+                else:
+                    empty_evidence += 1
+
+        if empty_evidence > 0:
+            results.append(ValidationResult(
+                "warning", "empty_evidence",
+                f"{empty_evidence} technique(s) have no example/evidence string"
+            ))
+
+        if evidence_total > 0:
+            mismatch_rate = evidence_mismatches / evidence_total
+            if mismatch_rate > 0.3:
+                results.append(ValidationResult(
+                    "error", "high_evidence_mismatch_rate",
+                    f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
+                    f"don't match transcript (threshold: 30%)"
+                ))
+            elif mismatch_rate > 0.1:
+                results.append(ValidationResult(
+                    "warning", "elevated_evidence_mismatch_rate",
+                    f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
+                    f"don't match transcript"
+                ))
+
+    # --- 4. Turn phase progression ---
+    for i, enrichment in enumerate(enrichments):
+        if enrichment.get("type") != "approach":
+            continue
+        turn_phases = enrichment.get("turn_phases", [])
+        if not turn_phases:
+            continue
+
+        last_phase_idx = -1
+        for tp in turn_phases:
+            phase = tp.get("phase", "")
+            if phase in PHASE_ORDER:
+                phase_idx = PHASE_ORDER.index(phase)
+                if phase_idx < last_phase_idx:
+                    results.append(ValidationResult(
+                        "error", "phase_regression",
+                        f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
+                        f"phase goes backward: '{PHASE_ORDER[last_phase_idx]}' → '{phase}'"
+                    ))
+                    break
+                last_phase_idx = phase_idx
+
+    # --- 5. Cross-reference with Stage 06 ---
+    if stage06_data:
+        s06_conversations = stage06_data.get("conversations", [])
+        s06_conv_ids = {c["conversation_id"] for c in s06_conversations}
+
+        for i, enrichment in enumerate(enrichments):
+            conv_id = enrichment.get("conversation_id")
+            if conv_id is not None and conv_id > 0 and conv_id not in s06_conv_ids:
+                results.append(ValidationResult(
+                    "error", "phantom_conversation",
+                    f"Enrichment {i}: conversation_id {conv_id} does not exist in Stage 06 output"
+                ))
+
+        # Enrichment count vs Stage 06 conversation count
+        approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
+        if len(approach_enrichments) != len(s06_conv_ids):
+            results.append(ValidationResult(
+                "warning", "enrichment_count_mismatch",
+                f"Stage 07 has {len(approach_enrichments)} approach enrichments but "
+                f"Stage 06 has {len(s06_conv_ids)} conversations"
+            ))
+
+    # --- 6. Hook point / investment consistency ---
+    for i, enrichment in enumerate(enrichments):
+        if enrichment.get("type") != "approach":
+            continue
+
+        phases_present = {tp.get("phase") for tp in enrichment.get("turn_phases", [])}
+
+        if enrichment.get("hook_point") and "post_hook" not in phases_present:
+            results.append(ValidationResult(
+                "error", "hook_without_post_hook",
+                f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
+                f"hook_point is set but post_hook phase not found in turn_phases"
+            ))
+
+        if enrichment.get("investment_level") and "post_hook" not in phases_present:
+            results.append(ValidationResult(
+                "error", "investment_without_post_hook",
+                f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
+                f"investment_level is set but post_hook phase not found in turn_phases"
+            ))
+
+    # --- Summary ---
+    if not any(r.severity == "error" for r in results):
+        results.append(ValidationResult("info", "validation_passed", "All checks passed"))
+
+    return results
+
+
+def write_validation_results(
+    results: List[ValidationResult], output_path: Path, video_id: str
+) -> None:
+    """Write validation results to a .validation.json file alongside the output."""
+    validation_output = {
+        "video_id": video_id,
+        "validated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "pipeline_version": PIPELINE_VERSION,
+        "prompt_version": PROMPT_VERSION,
+        "summary": {
+            "errors": sum(1 for r in results if r.severity == "error"),
+            "warnings": sum(1 for r in results if r.severity == "warning"),
+            "info": sum(1 for r in results if r.severity == "info"),
+            "passed": all(r.severity != "error" for r in results),
+        },
+        "results": [r.to_dict() for r in results],
+    }
+
+    validation_path = output_path.with_suffix(".validation.json")
+    validation_path.parent.mkdir(parents=True, exist_ok=True)
+    with validation_path.open("w", encoding="utf-8") as f:
+        json.dump(validation_output, f, indent=2, ensure_ascii=False)
+
+    errors = validation_output["summary"]["errors"]
+    warnings = validation_output["summary"]["warnings"]
+    if errors > 0:
+        print(f"{LOG_PREFIX} VALIDATION FAILED: {errors} error(s), {warnings} warning(s)")
+        for r in results:
+            if r.severity == "error":
+                print(f"{LOG_PREFIX}   ERROR: [{r.check}] {r.message}")
+    elif warnings > 0:
+        print(f"{LOG_PREFIX} VALIDATION PASSED with {warnings} warning(s)")
+        for r in results:
+            if r.severity == "warning":
+                print(f"{LOG_PREFIX}   WARN: [{r.check}] {r.message}")
+    else:
+        print(f"{LOG_PREFIX} VALIDATION PASSED (clean)")
+
+
+@dataclass
+class ConversationEnrichment:
+    conversation_id: int
+    type: str  # "approach" or "commentary"
+    description: str
+    techniques_used: List[Dict[str, Any]]
+    topics_discussed: List[str]
+    turn_phases: List[Dict[str, Any]]
+    hook_point: Optional[Dict[str, str]]  # {"signal": "..."} or None
+    investment_level: Optional[str]  # "low"/"medium"/"high" or None if no post_hook
+
+
+@dataclass
+class ProcessingState:
+    version: int
+    completed_files: List[str]
+    in_progress: Optional[str]
+    failures: List[Dict[str, str]]
+
+
+def load_state(state_path: Path) -> ProcessingState:
+    """Load processing state from file."""
+    if state_path.exists():
+        try:
+            data = json.loads(state_path.read_text())
+            return ProcessingState(
+                version=data.get("version", 1),
+                completed_files=data.get("completed_files", []),
+                in_progress=data.get("in_progress"),
+                failures=data.get("failures", []),
+            )
+        except (json.JSONDecodeError, KeyError):
+            pass
+    return ProcessingState(version=1, completed_files=[], in_progress=None, failures=[])
+
+
+def save_state(state_path: Path, state: ProcessingState) -> None:
+    """Save processing state to file."""
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps(asdict(state), indent=2))
+
+
+def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[str]:
+    """Call Claude Code CLI with retry logic."""
+    for attempt in range(retries):
+        try:
+            result = subprocess.run(
+                ["claude", "-p", prompt, "--output-format", "text"],
+                capture_output=True,
+                text=True,
+                timeout=timeout
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+            else:
+                if attempt < retries - 1:
+                    wait = 2 ** attempt
+                    print(f"[07.content] Claude CLI error, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                print(f"[07.content] Claude CLI error: {result.stderr[:200]}")
+        except subprocess.TimeoutExpired:
+            if attempt < retries - 1:
+                print(f"[07.content] Timeout, retrying...")
+                time.sleep(2 ** attempt)
+                continue
+            print(f"[07.content] Claude CLI timeout after {timeout}s")
+        except FileNotFoundError:
+            print("[07.content] Error: 'claude' command not found. Install Claude Code CLI.")
+            return None
+    return None
+
+
+def group_segments_by_conversation(segments: List[Dict]) -> Dict[int, List[Dict]]:
+    """Group segments by conversation_id."""
+    conversations: Dict[int, List[Dict]] = {}
+    for seg in segments:
+        conv_id = seg.get("conversation_id", 0)
+        if conv_id not in conversations:
+            conversations[conv_id] = []
+        conversations[conv_id].append(seg)
+    return conversations
+
+
+def get_video_type_str(data: Dict) -> str:
+    """Extract video type string from stage 06 output."""
+    vt = data.get("video_type", {})
+    if isinstance(vt, dict):
+        return vt.get("type", "compilation")
+    if isinstance(vt, str):
+        return vt
+    return "compilation"
+
+
+def group_commentary_blocks(segments: List[Dict]) -> List[Dict]:
+    """Group consecutive commentary segments (conversation_id=0) into blocks."""
+    blocks: List[Dict] = []
+    current_segs: List[Dict] = []
+
+    for seg in segments:
+        if seg.get("conversation_id", 0) == 0:
+            current_segs.append(seg)
+        else:
+            if current_segs:
+                blocks.append({
+                    "segments": current_segs,
+                    "start": current_segs[0].get("start", 0),
+                    "end": current_segs[-1].get("end", 0),
+                })
+                current_segs = []
+
+    if current_segs:
+        blocks.append({
+            "segments": current_segs,
+            "start": current_segs[0].get("start", 0),
+            "end": current_segs[-1].get("end", 0),
+        })
+
+    return blocks
+
+
+def build_infield_prompt(
+    conversations: Dict[int, List[Dict]],
+    commentary_blocks: List[Dict],
+    video_id: str,
+) -> str:
+    """Build prompt for infield/compilation videos: approaches + interleaved commentary."""
+
+    technique_list = "\n".join([f"  - {k}: {v}" for k, v in TECHNIQUE_TAXONOMY.items()])
+    topic_list = ", ".join(TOPIC_TAXONOMY.keys())
+
+    # Build chronological content blocks
+    content_items: List[Dict[str, Any]] = []
+
+    # Add commentary blocks
+    for i, block in enumerate(commentary_blocks):
+        segs = block["segments"]
+        turns = []
+        for j, seg in enumerate(segs):
+            speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
+            text = seg.get("text", "").strip()
+            if text:
+                turns.append(f"  [{j}] {speaker.upper()}: {text}")
+
+        if turns:
+            content_items.append({
+                "sort_key": block["start"],
+                "text": f"""COMMENTARY BLOCK #{i + 1}
+Start: {block['start']:.1f}s
+End: {block['end']:.1f}s
+
+{chr(10).join(turns)}"""
+            })
+
+    # Add approach conversations
+    for conv_id in sorted(conversations.keys()):
+        if conv_id == 0:
+            continue
+
+        segments = conversations[conv_id]
+        turns = []
+        for i, seg in enumerate(segments):
+            speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
+            text = seg.get("text", "").strip()
+            turns.append(f"  [{i}] {speaker.upper()}: {text}")
+
+        content_items.append({
+            "sort_key": segments[0].get("start", 0),
+            "text": f"""APPROACH CONVERSATION #{conv_id}
+Segments: {len(segments)}
+Start: {segments[0].get('start', 0):.1f}s
+End: {segments[-1].get('end', 0):.1f}s
+
+{chr(10).join(turns)}"""
+        })
+
+    # Sort by start time for chronological order
+    content_items.sort(key=lambda x: x["sort_key"])
+    all_content = "\n---\n".join(item["text"] for item in content_items)
+
+    approach_count = len([c for c in conversations if c > 0])
+
+    prompt = f"""You are an expert daygame analyst. Analyze ALL content in this infield coaching video.
+
+VIDEO: {video_id}
+VIDEO TYPE: infield
+APPROACH CONVERSATIONS: {approach_count}
+COMMENTARY BLOCKS: {len(commentary_blocks)}
+
+TECHNIQUE REFERENCE (31 techniques):
+{technique_list}
+
+TOPIC REFERENCE: {topic_list}
+
+CONTENT TO ANALYZE (chronological order):
+{all_content}
+
+=== ANALYSIS INSTRUCTIONS ===
+
+FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
+
+1. TYPE: "approach"
+2. CONVERSATION_ID: The conversation number
+3. DESCRIPTION: Concise 10-20 word summary
+4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote
+5. TOPICS: List topics discussed (only include actually discussed topics)
+6. TURN PHASES: Label each turn with its interaction phase.
+   Phases (in order of progression):
+   - "open": The approach. Coach introducing himself and the interaction.
+     Can be multiple turns if he's stacking assumptions or extending his opening bit.
+     Her responses (if any) are pure acknowledgment.
+   - "pre_hook": Coach building attraction. Still doing most of the talking,
+     running game — teasing, cold reading, push-pull, being entertaining.
+     She's still mostly passive.
+   - "post_hook": She's flipped. Actively participating — asking questions back,
+     sharing information voluntarily, initiating topics, longer responses.
+   - "close": Logistics and closing — number, Instagram, instant date, time bridge.
+   Rules:
+   - Phases always progress forward: open -> pre_hook -> post_hook -> close
+   - A turn's phase must NEVER go backwards
+   - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
+   - Use the segment index [0], [1], etc. to identify each turn
+7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
+   Provide a brief "signal". If no hook point, set to null.
+8. INVESTMENT LEVEL: "low"/"medium"/"high" if post_hook reached, else null.
+   - "low": Barely crossed — asked one polite question back, still mostly reactive
+   - "medium": Engaged, asking questions, responsive, but he's still somewhat leading
+   - "high": Fully in — initiating topics, sharing unprompted, her turns match or exceed his
+9. UNLISTED CONCEPTS: Techniques or topics you observe that don't fit the taxonomy.
+   Format: {{"techniques": ["name: description"], "topics": ["name: description"]}}
+   Empty arrays if all concepts fit.
+
+FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
+
+1. TYPE: "commentary"
+2. BLOCK INDEX: Sequential starting at 1
+3. DESCRIPTION: 10-20 word summary of what the coach is teaching/explaining
+4. TECHNIQUES DISCUSSED: Techniques the coach explains, references, or demonstrates via example
+5. TOPICS DISCUSSED: Topics covered in the commentary
+6. UNLISTED CONCEPTS: Same format as above
+
+OUTPUT FORMAT: Return a JSON array containing one object for each approach conversation
+AND each commentary block, in chronological order. Output ONLY valid JSON.
+
+EXAMPLE:
+[
+  {{
+    "type": "commentary",
+    "block_index": 1,
+    "description": "Coach introduces the session and explains his approach style",
+    "techniques_discussed": [{{"technique": "direct_opener", "example": "I always open direct"}}],
+    "topics_discussed": ["personality"],
+    "unlisted_concepts": {{"techniques": [], "topics": []}}
+  }},
+  {{
+    "conversation_id": 1,
+    "type": "approach",
+    "description": "Direct opener on tourist, builds attraction with cold reads, number close",
+    "techniques_used": [
+      {{"technique": "direct_opener", "segment": 0, "example": "Hey, I saw you and had to say hi"}},
+      {{"technique": "cold_read", "segment": 3, "example": "You look like you do yoga"}}
+    ],
+    "topics_discussed": ["origin", "career", "travel"],
+    "turn_phases": [
+      {{"segment": 0, "phase": "open"}},
+      {{"segment": 1, "phase": "open"}},
+      {{"segment": 2, "phase": "pre_hook"}},
+      {{"segment": 3, "phase": "pre_hook"}},
+      {{"segment": 4, "phase": "post_hook"}},
+      {{"segment": 5, "phase": "close"}}
+    ],
+    "hook_point": {{"signal": "she asked where he's from unprompted"}},
+    "investment_level": "medium",
+    "unlisted_concepts": {{"techniques": [], "topics": []}}
+  }},
+  {{
+    "type": "commentary",
+    "block_index": 2,
+    "description": "Coach breaks down the previous approach, highlights the cold read",
+    "techniques_discussed": [{{"technique": "cold_read", "example": "When I said you look like a yoga teacher..."}}],
+    "topics_discussed": ["behavior"],
+    "unlisted_concepts": {{"techniques": [], "topics": []}}
+  }}
+]
+
+YOUR JSON RESPONSE:"""
+
+    return prompt
+
+
+def build_talking_head_prompt(segments: List[Dict], video_id: str) -> str:
+    """Build prompt for talking_head/podcast videos: identify topic sections."""
+
+    technique_list = "\n".join([f"  - {k}: {v}" for k, v in TECHNIQUE_TAXONOMY.items()])
+    topic_list = ", ".join(TOPIC_TAXONOMY.keys())
+
+    # Format full transcript
+    turns = []
+    for i, seg in enumerate(segments):
+        speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
+        text = seg.get("text", "").strip()
+        if text:
+            turns.append(f"  [{i}] {speaker.upper()}: {text}")
+
+    transcript = chr(10).join(turns)
+
+    prompt = f"""You are an expert daygame analyst. Analyze this coaching explanation video and identify distinct topic sections.
+
+VIDEO: {video_id}
+VIDEO TYPE: talking_head
+TOTAL SEGMENTS: {len(segments)}
+
+TECHNIQUE REFERENCE (31 techniques):
+{technique_list}
+
+TOPIC REFERENCE: {topic_list}
+
+FULL TRANSCRIPT:
+{transcript}
+
+TASK: This is a talking-head coaching video (no live approaches).
+Identify distinct TOPIC SECTIONS. A new section starts when the coach transitions
+to a new subject or teaching point.
+
+FOR EACH SECTION, analyze:
+
+1. SECTION INDEX: Sequential starting at 1
+2. TYPE: "talking_head_section"
+3. DESCRIPTION: Concise 10-20 word summary of what the coach is teaching
+4. START SEGMENT: Index of first segment in this section
+5. END SEGMENT: Index of last segment in this section
+6. TECHNIQUES DISCUSSED: Techniques from the taxonomy that the coach explains,
+   demonstrates via example, or references. Include technique ID and brief example quote.
+7. TOPICS DISCUSSED: Topics from the taxonomy that are covered
+8. UNLISTED CONCEPTS: Report any technique or topic that doesn't fit the taxonomy.
+   Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
+   Return empty arrays if all concepts fit.
+
+OUTPUT FORMAT: Return a JSON array with one object per section.
+Output ONLY valid JSON, no explanation text.
+
+EXAMPLE:
+[
+  {{
+    "section_index": 1,
+    "type": "talking_head_section",
+    "description": "Introduction to direct game and why it works on the street",
+    "start_segment": 0,
+    "end_segment": 12,
+    "techniques_discussed": [
+      {{"technique": "direct_opener", "example": "You walk up and say I think you're cute"}}
+    ],
+    "topics_discussed": ["personality", "behavior"],
+    "unlisted_concepts": {{"techniques": [], "topics": []}}
+  }},
+  {{
+    "section_index": 2,
+    "type": "talking_head_section",
+    "description": "How to transition from opener to building attraction",
+    "start_segment": 13,
+    "end_segment": 28,
+    "techniques_discussed": [
+      {{"technique": "cold_read", "example": "After the opener, throw out an assumption about her"}}
+    ],
+    "topics_discussed": ["hobby", "personality"],
+    "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}}
+  }}
+]
+
+YOUR JSON RESPONSE:"""
+
+    return prompt
+
+
+def parse_enrichment_response(response: str) -> List[Dict]:
+    """Parse JSON array from LLM response."""
+    if not response:
+        return []
+
+    try:
+        # Try to find JSON array in code block
+        code_block_match = re.search(r"```(?:json)?\s*(\[[\s\S]*?\])\s*```", response)
+        if code_block_match:
+            return json.loads(code_block_match.group(1))
+
+        # Try to find raw JSON array
+        start = response.find("[")
+        if start != -1:
+            bracket_count = 0
+            for i, char in enumerate(response[start:], start):
+                if char == "[":
+                    bracket_count += 1
+                elif char == "]":
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        json_str = response[start:i + 1]
+                        return json.loads(json_str)
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"[07.content] JSON parse error: {e}")
+        print(f"[07.content] Response preview: {response[:500]}...")
+
+    return []
+
+
+def process_video_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+    """Process a single video's conversations.json file."""
+
+    print(f"[07.content] Processing: {input_path.name}")
+
+    # Load input
+    with input_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    segments = data.get("segments", [])
+    video_id = data.get("video_id", input_path.stem)
+    video_type = get_video_type_str(data)
+
+    if not segments:
+        print(f"[07.content] No segments found")
+        return {"conversations": 0, "enriched": 0}
+
+    # Group by conversation
+    conversations = group_segments_by_conversation(segments)
+    approach_convs = {k: v for k, v in conversations.items() if k > 0}
+    commentary_blocks = group_commentary_blocks(segments)
+
+    print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
+          f"{len(commentary_blocks)} commentary blocks, type={video_type}")
+
+    if dry_run:
+        print(f"[07.content]   [DRY RUN] Would call Claude CLI ({video_type} prompt)")
+        return {"conversations": len(approach_convs), "enriched": 0}
+
+    # Build prompt based on video type
+    if video_type in ("infield", "compilation"):
+        prompt = build_infield_prompt(conversations, commentary_blocks, video_id)
+    else:
+        prompt = build_talking_head_prompt(segments, video_id)
+
+    print(f"[07.content]   Calling Claude CLI ({video_type} prompt)...")
+
+    start_time = time.time()
+    response = call_claude(prompt, timeout=600)
+    elapsed = time.time() - start_time
+
+    enrichments: List[Dict] = []
+    if response:
+        enrichments = parse_enrichment_response(response)
+        print(f"[07.content]   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
+    else:
+        print(f"[07.content]   Claude call failed, using empty enrichments")
+
+    # Collect unlisted concepts across all enrichments
+    all_unlisted_techniques: List[str] = []
+    all_unlisted_topics: List[str] = []
+    for e in enrichments:
+        unlisted = e.get("unlisted_concepts", {})
+        if isinstance(unlisted, dict):
+            all_unlisted_techniques.extend(unlisted.get("techniques", []))
+            all_unlisted_topics.extend(unlisted.get("topics", []))
+
+    # Categorize enrichments by type
+    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
+    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
+    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
+
+    # Collect all techniques (from both techniques_used and techniques_discussed)
+    all_techniques = set()
+    for e in enrichments:
+        for t in e.get("techniques_used", []):
+            if t.get("technique"):
+                all_techniques.add(t["technique"])
+        for t in e.get("techniques_discussed", []):
+            if t.get("technique"):
+                all_techniques.add(t["technique"])
+
+    # Collect all topics
+    all_topics = set()
+    for e in enrichments:
+        for topic in e.get("topics_discussed", []):
+            if isinstance(topic, str):
+                all_topics.add(topic)
+
+    # Build output
+    output: Dict[str, Any] = {
+        "metadata": {
+            "source_file": str(input_path),
+            "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "video_type": video_type,
+            "prompt_variant": "infield" if video_type in ("infield", "compilation") else "talking_head",
+            "conversations_enriched": len(approach_enrichments),
+            "commentary_blocks_enriched": len(commentary_enrichments),
+            "sections_enriched": len(section_enrichments),
+            "processing_time_sec": elapsed,
+            "model": "claude-cli",
+        },
+        "video_id": video_id,
+        "video_type": data.get("video_type"),
+        "speaker_labels": data.get("speaker_labels"),
+        "speaker_corrections": data.get("speaker_corrections", []),
+        "segments": segments,
+        "enrichments": enrichments,
+        "summary": {
+            "total_conversations": len(approach_convs),
+            "enriched_conversations": len(approach_enrichments),
+            "commentary_blocks_enriched": len(commentary_enrichments),
+            "sections_enriched": len(section_enrichments),
+            "techniques_found": sorted(all_techniques),
+            "topics_found": sorted(all_topics),
+            "phases_found": sorted(set(
+                p.get("phase", "")
+                for e in enrichments
+                for p in e.get("turn_phases", [])
+                if p.get("phase")
+            )),
+            "unlisted_concepts": {
+                "techniques": sorted(set(all_unlisted_techniques)),
+                "topics": sorted(set(all_unlisted_topics)),
+            },
+        },
+    }
+
+    # Add approach-specific summary fields when there are approaches
+    if approach_enrichments:
+        output["summary"]["hook_rate"] = (
+            sum(1 for e in approach_enrichments if e.get("hook_point"))
+            / max(len(approach_enrichments), 1)
+        )
+        output["summary"]["investment_levels"] = {
+            level: sum(1 for e in approach_enrichments if e.get("investment_level") == level)
+            for level in ["low", "medium", "high"]
+        }
+
+    # Load Stage 06 data for cross-reference validation
+    stage06_data = data  # The input IS the Stage 06 output
+
+    # Validate output
+    validation_results = validate_enrichment_output(output, stage06_data)
+    write_validation_results(validation_results, output_path, video_id)
+
+    has_errors = any(r.severity == "error" for r in validation_results)
+
+    if has_errors:
+        print(f"{LOG_PREFIX}   SKIPPING output write due to validation errors")
+    else:
+        # Write output
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(output, f, ensure_ascii=False)
+        print(f"{LOG_PREFIX}   Wrote: {output_path}")
+
+    print(f"{LOG_PREFIX}   Validation: {'FAILED' if has_errors else 'PASSED'}")
+
+    return {
+        "conversations": len(approach_convs),
+        "enriched": len(enrichments),
+        "validation_passed": not has_errors,
+        "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
+        "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
+    }
+
+
+# ---------------------------
+# Path helpers
+# ---------------------------
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def input_root() -> Path:
+    return repo_root() / "data" / "06.video-type"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "07.content"
+
+
+def test_input_root() -> Path:
+    return repo_root() / "data" / "test" / "06.video-type"
+
+
+def test_output_root() -> Path:
+    return repo_root() / "data" / "test" / "07.content"
+
+
+def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+    """Compute output path from input path."""
+    stem = input_path.stem
+    if stem.endswith(".conversations"):
+        stem = stem[:-len(".conversations")]
+    return output_dir / f"{stem}.enriched.json"
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    """Parse sources.txt file."""
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            sources.append((name.strip(), url.strip()))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def find_input_files(in_dir: Path) -> List[Path]:
+    """Find all conversations JSON files in directory."""
+    return sorted(in_dir.rglob("*.conversations.json"))
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Enrich conversations with technique/topic analysis using Claude CLI"
+    )
+    parser.add_argument(
+        "--input",
+        help="Input .conversations.json file or directory"
+    )
+    parser.add_argument(
+        "--output",
+        help="Output directory (defaults to data/07.content/)"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Process test videos (data/test/06.video-type/)"
+    )
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/sources.txt",
+        help="Process all sources from sources.txt file"
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview what would be processed"
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing output files"
+    )
+
+    args = parser.parse_args()
+
+    # Test Claude CLI availability
+    try:
+        result = subprocess.run(
+            ["claude", "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode != 0:
+            print("[07.content] Warning: Claude CLI not responding properly")
+    except FileNotFoundError:
+        print("[07.content] Error: 'claude' command not found")
+        print("[07.content] Install Claude Code CLI: https://claude.ai/code")
+        return
+    except subprocess.TimeoutExpired:
+        print("[07.content] Warning: Claude CLI slow to respond")
+
+    # Determine input/output paths
+    if args.test:
+        in_dir = test_input_root()
+        out_dir = test_output_root()
+    elif args.input:
+        input_path = Path(args.input)
+        if not input_path.exists():
+            input_path = repo_root() / args.input
+        if not input_path.exists():
+            raise SystemExit(f"Input not found: {args.input}")
+
+        if input_path.is_file():
+            # Single file mode
+            out_dir = Path(args.output) if args.output else output_root()
+            output_path = compute_output_path(input_path, out_dir)
+
+            if output_path.exists() and not args.overwrite:
+                print(f"[07.content] Output exists, skipping: {output_path}")
+                return
+
+            result = process_video_file(input_path, output_path, dry_run=args.dry_run)
+            print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
+            return
+
+        in_dir = input_path
+        out_dir = Path(args.output) if args.output else output_root()
+    elif args.sources:
+        sources_path = repo_root() / args.sources
+        if not sources_path.exists():
+            raise SystemExit(f"Sources file not found: {sources_path}")
+
+        total_convs = 0
+        total_enriched = 0
+
+        for src_name, _ in parse_sources_file(sources_path):
+            src_in_dir = input_root() / src_name
+            if not src_in_dir.exists():
+                print(f"[07.content] Skipping {src_name}: no 06.video-type output")
+                continue
+
+            src_out_dir = output_root() / src_name
+            files = find_input_files(src_in_dir)
+
+            for input_file in files:
+                output_file = compute_output_path(input_file, src_out_dir)
+                if output_file.exists() and not args.overwrite:
+                    continue
+                result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+                total_convs += result["conversations"]
+                total_enriched += result["enriched"]
+
+        print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
+        return
+    else:
+        raise SystemExit("Provide --input, --test, or --sources")
+
+    # Directory mode
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"[07.content] No .conversations.json files found in: {in_dir}")
+        return
+
+    print(f"[07.content] Input : {in_dir}")
+    print(f"[07.content] Output: {out_dir}")
+    print(f"[07.content] Files : {len(files)}")
+
+    # Load state for checkpointing
+    state_path = out_dir / ".enrichment_state.json"
+    state = load_state(state_path)
+
+    total_convs = 0
+    total_enriched = 0
+    processed = 0
+    skipped = 0
+    failed = 0
+    consecutive_failures = 0
+    validation_failed = 0
+
+    for input_file in files:
+        file_key = str(input_file.relative_to(in_dir))
+
+        # Skip if already completed
+        if file_key in state.completed_files and not args.overwrite:
+            skipped += 1
+            continue
+
+        output_file = compute_output_path(input_file, out_dir)
+
+        if output_file.exists() and not args.overwrite:
+            skipped += 1
+            state.completed_files.append(file_key)
+            save_state(state_path, state)
+            continue
+
+        # Mark as in progress
+        state.in_progress = file_key
+        save_state(state_path, state)
+
+        try:
+            result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+            total_convs += result["conversations"]
+            total_enriched += result["enriched"]
+            processed += 1
+
+            # Track validation failures for failure budget
+            if not result.get("validation_passed", True):
+                validation_failed += 1
+                consecutive_failures += 1
+            else:
+                consecutive_failures = 0
+
+            # Mark as completed
+            if not args.dry_run:
+                state.completed_files.append(file_key)
+                state.in_progress = None
+                save_state(state_path, state)
+
+            # Failure budget: halt on consecutive failures
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive validation failures")
+                print(f"{LOG_PREFIX} Review .validation.json files for details.")
+                break
+
+        except Exception as e:
+            print(f"{LOG_PREFIX} Error processing {input_file}: {e}")
+            state.failures.append({"file": file_key, "error": str(e)})
+            state.in_progress = None
+            save_state(state_path, state)
+            failed += 1
+            consecutive_failures += 1
+
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive failures")
+                break
+
+    # Print summary first
+    print(f"\n{LOG_PREFIX} Done.")
+    print(f"  Processed:           {processed}")
+    print(f"  Skipped:             {skipped}")
+    print(f"  Failed (exception):  {failed}")
+    print(f"  Failed (validation): {validation_failed}")
+    print(f"  Enriched:            {total_enriched}/{total_convs} conversations")
+
+    # Failure budget: check overall failure rate (after summary so user sees stats)
+    total_attempted = processed + failed
+    if total_attempted > 0:
+        failure_rate = (failed + validation_failed) / total_attempted
+        if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
+            print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
+            print(f"{LOG_PREFIX} {failed} exceptions + {validation_failed} validation failures out of {total_attempted} attempted.")
+            print(f"{LOG_PREFIX} Review .validation.json files for details.")
+            sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

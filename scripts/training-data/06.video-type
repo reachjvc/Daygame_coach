@@ -1,33 +1,33 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/07.video-type
+scripts/training-data/06.video-type
 
-Video Type Classification using Claude Code CLI
+Video Type Classification + Speaker Labeling + Conversation Boundaries
 
-Single-purpose: Classify videos into one of four types:
-- infield: Coach doing live approaches
-- talking_head: Coach explaining to camera
-- podcast: Multiple speakers discussing
-- compilation: Mixed content types
+Reads ALL segments and performs analysis in 1 LLM call:
+  Classify video type, label speakers, and detect conversation boundaries in a single pass.
 
 Reads:
-  - Corrected audio feature files (from Stage 06):
-      data/06.corrected/<source>/<video>/*.corrected.json
+  - Audio feature files (from Stage 05):
+      data/05.audio-features/<source>/<video>/*.audio_features.json
 
 Writes:
-  - Video type files (full data + classification):
-      data/07.video-type/<source>/<video>/*.video_type.json
+  - Combined analysis files:
+      data/06.video-type/<source>/<video>/*.conversations.json
 
 Use:
 
-  A) Test videos:
-     ./scripts/training-data/07.video-type --test
+  A) From pipeline:
+     ./scripts/training-data/06.video-type "source_name" "youtube_url"
 
-  B) Single file:
-     ./scripts/training-data/07.video-type --input data/test/06.corrected/video.corrected.json
+  B) Test videos:
+     ./scripts/training-data/06.video-type --test
 
-  C) Batch from sources file:
-     ./scripts/training-data/07.video-type --sources
+  C) Single file:
+     ./scripts/training-data/06.video-type --input data/test/05.audio-features/video.audio_features.json
+
+  D) Batch from sources file:
+     ./scripts/training-data/06.video-type --sources
 
 Requirements:
   - Claude Code CLI installed and authenticated (claude command available)
@@ -41,34 +41,239 @@ import json
 import re
 import shlex
 import subprocess
+import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+
+import jsonschema
 
 
 # ---------------------------
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "1.0.0"
-PIPELINE_VERSION = "07.video-type-v1"
-PROMPT_VERSION = "1.0.0"
+SCHEMA_VERSION = "3.0.0"
+PIPELINE_VERSION = "06.video-type-v3"
+PROMPT_VERSION = "3.0.0"
 
-# Claude CLI binary path - try common locations
+DEBUG_MODE = False
+
 CLAUDE_BINARY_PATHS = [
-    "claude",  # If in PATH
+    "claude",
     Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
     Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
     "/usr/local/bin/claude",
 ]
 
+LOG_PREFIX = "[06.video-type]"
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
+
+# Failure budget: halt batch if too many failures
+MAX_CONSECUTIVE_FAILURES = 3
+MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail validation
+
 
 # ---------------------------
-# Prompt
+# Validation
 # ---------------------------
 
-VIDEO_TYPE_PROMPT = """You are classifying daygame coaching videos. Determine the PRIMARY content type.
+@dataclass
+class ValidationResult:
+    severity: str  # "error", "warning", "info"
+    check: str
+    message: str
+
+    def to_dict(self) -> Dict[str, str]:
+        return {"severity": self.severity, "check": self.check, "message": self.message}
+
+
+def load_schema() -> Optional[Dict]:
+    """Load JSON schema for output validation."""
+    if SCHEMA_PATH.exists():
+        return json.loads(SCHEMA_PATH.read_text())
+    print(f"{LOG_PREFIX} WARNING: Schema not found at {SCHEMA_PATH}")
+    return None
+
+
+_CACHED_SCHEMA: Optional[Dict] = None
+
+
+def get_schema() -> Optional[Dict]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = load_schema()
+    return _CACHED_SCHEMA
+
+
+def validate_output(output: Dict, input_segments: List[Dict]) -> List[ValidationResult]:
+    """Comprehensive validation of Stage 06 output.
+
+    Returns a list of ValidationResult with severity levels:
+    - error: halt, do not write output
+    - warning: flag for review but still write
+    - info: logged only
+    """
+    results: List[ValidationResult] = []
+
+    # --- 1. JSON Schema validation ---
+    schema = get_schema()
+    if schema:
+        try:
+            jsonschema.validate(instance=output, schema=schema)
+            results.append(ValidationResult("info", "schema_valid", "Output matches JSON schema"))
+        except jsonschema.ValidationError as e:
+            path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+            results.append(ValidationResult(
+                "error", "schema_invalid",
+                f"Schema validation failed at {path}: {e.message[:200]}"
+            ))
+
+    # --- 2. Segment count match ---
+    output_segments = output.get("segments", [])
+    if len(output_segments) != len(input_segments):
+        results.append(ValidationResult(
+            "warning", "segment_count_mismatch",
+            f"Output has {len(output_segments)} segments, input had {len(input_segments)}"
+        ))
+
+    # --- 3. Conversation contiguity ---
+    conv_segment_ids: Dict[int, List[int]] = {}
+    for seg in output_segments:
+        conv_id = seg.get("conversation_id", 0)
+        if conv_id > 0:
+            if conv_id not in conv_segment_ids:
+                conv_segment_ids[conv_id] = []
+            conv_segment_ids[conv_id].append(seg.get("id", -1))
+
+    for conv_id, seg_ids in conv_segment_ids.items():
+        sorted_ids = sorted(seg_ids)
+        if sorted_ids != list(range(sorted_ids[0], sorted_ids[0] + len(sorted_ids))):
+            results.append(ValidationResult(
+                "warning", "conversation_not_contiguous",
+                f"Conversation {conv_id} has non-contiguous segment IDs: {sorted_ids}"
+            ))
+
+    # --- 4. Video type ↔ segment type consistency ---
+    video_type = output.get("video_type", {}).get("type", "")
+    if video_type in ("talking_head", "podcast"):
+        non_commentary = [
+            s for s in output_segments
+            if s.get("segment_type") != "commentary" or s.get("conversation_id", 0) > 0
+        ]
+        if non_commentary:
+            results.append(ValidationResult(
+                "error", "video_type_segment_mismatch",
+                f"{video_type} video has {len(non_commentary)} non-commentary segments "
+                f"(should all be commentary with conversation_id=0)"
+            ))
+
+    # --- 5. Speaker role sanity ---
+    speaker_labels = output.get("speaker_labels", {})
+    roles = [v.get("role", "unknown") for v in speaker_labels.values()]
+
+    if "coach" not in roles:
+        results.append(ValidationResult(
+            "warning", "no_coach_speaker",
+            f"No speaker labeled as coach. Roles found: {roles}"
+        ))
+
+    if video_type in ("infield", "compilation") and "target" not in roles:
+        results.append(ValidationResult(
+            "warning", "no_target_in_infield",
+            f"No target speaker in {video_type} video. Roles found: {roles}"
+        ))
+
+    # Unknown speaker ratio
+    unknown_count = sum(1 for r in roles if r == "unknown")
+    if roles and unknown_count / len(roles) > 0.5:
+        results.append(ValidationResult(
+            "warning", "high_unknown_speaker_ratio",
+            f"{unknown_count}/{len(roles)} speakers are unknown"
+        ))
+
+    # --- 6. Conversations-per-minute ratio ---
+    conversations = output.get("conversations", [])
+    if output_segments:
+        first_start = min(s.get("start", 0) for s in output_segments)
+        last_end = max(s.get("end", 0) for s in output_segments)
+        duration_min = (last_end - first_start) / 60.0
+        if duration_min > 0.5:  # only check if video is > 30 seconds
+            conv_per_min = len(conversations) / duration_min
+            if video_type in ("infield", "compilation"):
+                if conversations and conv_per_min > 3.0:
+                    results.append(ValidationResult(
+                        "warning", "high_conversation_rate",
+                        f"{len(conversations)} conversations in {duration_min:.1f}min "
+                        f"({conv_per_min:.1f}/min) — possible over-segmentation"
+                    ))
+                elif len(conversations) == 0:
+                    results.append(ValidationResult(
+                        "warning", "zero_conversations_in_infield",
+                        f"0 conversations in {video_type} video ({duration_min:.1f}min)"
+                    ))
+
+    # --- 7. Conversation ID sequentiality ---
+    conv_ids = sorted(conv_segment_ids.keys())
+    if conv_ids and conv_ids != list(range(1, len(conv_ids) + 1)):
+        results.append(ValidationResult(
+            "warning", "conversation_ids_not_sequential",
+            f"Conversation IDs are not sequential 1..N: {conv_ids}"
+        ))
+
+    return results
+
+
+def write_validation_results(
+    results: List[ValidationResult], output_path: Path, video_id: str
+) -> None:
+    """Write validation results to a .validation.json file alongside the output."""
+    validation_output = {
+        "video_id": video_id,
+        "validated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "pipeline_version": PIPELINE_VERSION,
+        "prompt_version": PROMPT_VERSION,
+        "summary": {
+            "errors": sum(1 for r in results if r.severity == "error"),
+            "warnings": sum(1 for r in results if r.severity == "warning"),
+            "info": sum(1 for r in results if r.severity == "info"),
+            "passed": all(r.severity != "error" for r in results),
+        },
+        "results": [r.to_dict() for r in results],
+    }
+
+    validation_path = output_path.with_suffix(".validation.json")
+    validation_path.parent.mkdir(parents=True, exist_ok=True)
+    with validation_path.open("w", encoding="utf-8") as f:
+        json.dump(validation_output, f, indent=2, ensure_ascii=False)
+
+    # Log summary
+    errors = validation_output["summary"]["errors"]
+    warnings = validation_output["summary"]["warnings"]
+    if errors > 0:
+        print(f"{LOG_PREFIX} VALIDATION FAILED: {errors} error(s), {warnings} warning(s)")
+        for r in results:
+            if r.severity == "error":
+                print(f"{LOG_PREFIX}   ERROR: [{r.check}] {r.message}")
+    elif warnings > 0:
+        print(f"{LOG_PREFIX} VALIDATION PASSED with {warnings} warning(s)")
+        for r in results:
+            if r.severity == "warning":
+                print(f"{LOG_PREFIX}   WARN: [{r.check}] {r.message}")
+    else:
+        print(f"{LOG_PREFIX} VALIDATION PASSED (clean)")
+
+
+# ---------------------------
+# Prompts
+# ---------------------------
+
+ANALYZE_VIDEO_PROMPT = """You are analyzing a daygame coaching video. Your THREE tasks in a single pass:
+1. Classify the video type
+2. Assign a role to each speaker
+3. Detect conversation boundaries
 
 VIDEO TYPES:
 
@@ -97,13 +302,81 @@ VIDEO TYPES:
    - Multiple approaches with breakdowns between
    - "As you saw..." followed by explanation
 
+SPEAKER ROLES:
+
+1. "coach" - The person teaching/demonstrating
+   - Opens conversations (excuse me, quick question...)
+   - Asks personal questions (name, origin, occupation)
+   - Gives compliments
+   - Longer, confident statements
+   - Commentary to camera between approaches
+   - May reference teaching ("guys", "as you can see")
+
+2. "target" - Women being approached
+   - Responds to questions (short answers initially)
+   - Asked about herself (not asking)
+   - Gives name when asked
+   - May laugh, show surprise, hesitation
+   - Typically shorter turns than coach
+
+3. "voiceover" - Post-production narration
+   - Instructional tone disconnected from live action
+   - No back-and-forth dialogue
+   - Perfect sentences (not fragmented)
+   - "Notice how he..." or "Watch what happens..."
+
+4. "other" - Background voices, friends, staff
+   - Brief interjections
+   - Not involved in approach
+
+5. "unknown" - Cannot determine with confidence
+   - Mark as unknown if unsure
+   - Flag for manual review
+
+SEGMENT TYPES (for conversation boundaries):
+
+1. "approach" - Part of live interaction with a woman
+   - Includes: opener, small talk, flirting, number close
+   - Gets non-zero conversation_id
+
+2. "commentary" - Coach talking to camera (not to woman)
+   - Pre-approach setup, post-approach breakdown
+   - conversation_id: 0
+
+3. "transition" - Brief moment between content
+   - Walking, repositioning, audio gaps
+   - conversation_id: 0
+
+CONVERSATION BOUNDARY RULES:
+- NEW conversation starts when: direct address to new person, change from commentary to dialogue, location shift, previous approach ended
+- SAME conversation continues when: same thread, questions followed by answers, no camera break
+- APPROACH ends when: number exchange, goodbye, rejection, coach pivots to camera
+- Use time gaps between segments to help detect boundaries. Gaps >30s between segments strongly suggest a new conversation.
+- When uncertain: default to commentary (safer)
+- conversation_id must be sequential (1, 2, 3...)
+- Segments with same conversation_id must be contiguous
+
+CRITICAL RULES:
+1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the coach, NEVER the target
+2. The person giving SHORT RESPONSES to questions is typically the target
+3. If unsure about a speaker, mark as "unknown" with low confidence - DO NOT GUESS
+4. Consider speech patterns across ALL segments, not just one or two
+5. If one speaker ID shows BOTH coach AND target patterns (opens AND gives short responses), this indicates pyannote merged two speakers. Label as "unknown" with confidence 0.3 and reasoning "mixed_diarization_error"
+6. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
+7. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
+
 VIDEO TITLE: "{title}"
 
-SAMPLE SEGMENTS:
-{samples}
+SPEAKERS FOUND: {speakers}
 
-OUTPUT: Return ONLY a JSON object with this exact structure:
-{{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}
+SPEAKER STATS:
+{speaker_stats}
+
+FULL TRANSCRIPT ({segment_count} segments):
+{transcript}
+
+OUTPUT: First, briefly reason about the video type and speaker assignments (2-3 sentences). Then output the JSON object in a ```json code block with this exact structure:
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false}}, ...]}}
 """
 
 
@@ -120,7 +393,6 @@ class ProcessingState:
 
 
 def load_state(state_path: Path) -> ProcessingState:
-    """Load processing state from file."""
     if state_path.exists():
         try:
             data = json.loads(state_path.read_text())
@@ -136,7 +408,6 @@ def load_state(state_path: Path) -> ProcessingState:
 
 
 def save_state(state_path: Path, state: ProcessingState) -> None:
-    """Save processing state to file."""
     state_path.parent.mkdir(parents=True, exist_ok=True)
     state_path.write_text(json.dumps(asdict(state), indent=2))
 
@@ -146,12 +417,10 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
 # ---------------------------
 
 def find_claude_binary() -> Optional[str]:
-    """Find the Claude CLI binary."""
     for path in CLAUDE_BINARY_PATHS:
         path = Path(path)
         if path.exists() and path.is_file():
             return str(path)
-        # Also check if it's in PATH
         if str(path) == "claude":
             try:
                 result = subprocess.run(["which", "claude"], capture_output=True, text=True)
@@ -162,8 +431,7 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, retries: int = 3, timeout: int = 120) -> Optional[str]:
-    """Call Claude Code CLI with retry logic."""
+def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[str]:
     claude_bin = find_claude_binary()
     if not claude_bin:
         raise RuntimeError("Claude CLI binary not found - cannot proceed")
@@ -174,21 +442,21 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 120) -> Optional[s
                 [claude_bin, "-p", prompt, "--output-format", "text"],
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
             )
             if result.returncode == 0:
                 return result.stdout.strip()
             else:
                 if attempt < retries - 1:
                     wait = 2 ** attempt
-                    print(f"[07.video-type] Claude CLI error, retrying in {wait}s...")
-                    print(f"[07.video-type]   stderr: {result.stderr[:200]}")
+                    print(f"{LOG_PREFIX} Claude CLI error, retrying in {wait}s...")
+                    print(f"{LOG_PREFIX}   stderr: {result.stderr[:200]}")
                     time.sleep(wait)
                     continue
                 raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
         except subprocess.TimeoutExpired:
             if attempt < retries - 1:
-                print(f"[07.video-type] Timeout, retrying...")
+                print(f"{LOG_PREFIX} Timeout, retrying...")
                 time.sleep(2 ** attempt)
                 continue
             raise RuntimeError(f"Claude CLI timeout after {timeout}s")
@@ -198,17 +466,23 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 120) -> Optional[s
 
 
 def parse_json_response(response: str) -> Optional[Dict]:
-    """Parse JSON object from LLM response."""
     if not response:
+        if DEBUG_MODE:
+            print(f"{LOG_PREFIX} DEBUG: Response is empty/None")
         return None
 
+    if DEBUG_MODE:
+        print(f"{LOG_PREFIX} DEBUG: Response length: {len(response)} chars")
+        print(f"{LOG_PREFIX} DEBUG: Response preview:\n{response[:1000]}")
+        print(f"{LOG_PREFIX} DEBUG: Response end:\n...{response[-500:]}")
+
     try:
-        # Try to find JSON in code block
         code_block_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
         if code_block_match:
+            if DEBUG_MODE:
+                print(f"{LOG_PREFIX} DEBUG: Found JSON in code block")
             return json.loads(code_block_match.group(1))
 
-        # Try to find raw JSON object
         start = response.find("{")
         if start != -1:
             bracket_count = 0
@@ -219,57 +493,126 @@ def parse_json_response(response: str) -> Optional[Dict]:
                     bracket_count -= 1
                     if bracket_count == 0:
                         json_str = response[start:i + 1]
+                        if DEBUG_MODE:
+                            print(f"{LOG_PREFIX} DEBUG: Extracted JSON ({len(json_str)} chars)")
                         return json.loads(json_str)
+            if DEBUG_MODE:
+                print(f"{LOG_PREFIX} DEBUG: Unbalanced brackets, final count: {bracket_count}")
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[07.video-type] JSON parse error: {e}")
-        print(f"[07.video-type] Response preview: {response[:500]}...")
+        print(f"{LOG_PREFIX} JSON parse error: {e}")
+        print(f"{LOG_PREFIX} Response preview: {response[:500]}...")
+
+    # Save failed response for debugging
+    debug_path = Path(__file__).parent / "debug_failed_response.txt"
+    debug_path.write_text(response)
+    print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
 
     return None
 
 
 # ---------------------------
-# Video Type Classification
+# Single-Pass Analysis: Video Type + Speakers + Boundaries
 # ---------------------------
 
-def classify_video_type(title: str, segments: List[Dict]) -> Dict[str, Any]:
-    """Classify video type using Claude CLI."""
+def analyze_video(
+    title: str, segments: List[Dict]
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+    """Classify video type, label speakers, and detect conversation boundaries in a single LLM call.
 
-    # Sample segments: first 5, middle 5, last 5
-    sample_indices = []
-    for i in range(min(5, len(segments))):
-        sample_indices.append(i)
+    Returns (video_type_dict, speaker_labels_dict, segment_classifications, extra_flags).
+    """
+    speakers = sorted(set(seg.get("pyannote_speaker", "UNKNOWN") for seg in segments))
 
-    if len(segments) > 10:
-        mid = len(segments) // 2
-        for i in range(mid - 2, mid + 3):
-            if 0 <= i < len(segments):
-                sample_indices.append(i)
+    # Compute per-speaker stats
+    speaker_seg_counts: Dict[str, int] = {}
+    speaker_word_counts: Dict[str, int] = {}
+    speaker_duration: Dict[str, float] = {}
+    for seg in segments:
+        spk = seg.get("pyannote_speaker", "UNKNOWN")
+        text = seg.get("text", "").strip()
+        dur = seg.get("end", 0) - seg.get("start", 0)
+        speaker_seg_counts[spk] = speaker_seg_counts.get(spk, 0) + 1
+        speaker_word_counts[spk] = speaker_word_counts.get(spk, 0) + len(text.split())
+        speaker_duration[spk] = speaker_duration.get(spk, 0) + dur
 
-    if len(segments) > 15:
-        for i in range(len(segments) - 5, len(segments)):
-            sample_indices.append(i)
+    stats_lines = []
+    for spk in sorted(speakers, key=lambda s: speaker_seg_counts.get(s, 0), reverse=True):
+        segs = speaker_seg_counts.get(spk, 0)
+        words = speaker_word_counts.get(spk, 0)
+        dur = speaker_duration.get(spk, 0)
+        stats_lines.append(f"{spk}: {segs} segments, ~{words} words, {dur:.1f}s speaking time")
+    speaker_stats_text = "\n".join(stats_lines)
 
-    unique_indices = sorted(set(sample_indices))[:15]
+    # Build chronological transcript with speaker IDs
+    transcript_lines = []
+    for i, seg in enumerate(segments):
+        speaker = seg.get("pyannote_speaker", "UNKNOWN")
+        text = seg.get("text", "").strip()
+        start = seg.get("start", 0)
+        end = seg.get("end", 0)
+        if text:
+            transcript_lines.append(f"[{i}] {speaker} ({start:.1f}-{end:.1f}s): \"{text}\"")
 
-    samples = "\n".join([
-        f"[{i}] {segments[i].get('text', '')[:100]}"
-        for i in unique_indices
-    ])
+    transcript_text = "\n".join(transcript_lines)
 
-    prompt = VIDEO_TYPE_PROMPT.format(title=title, samples=samples)
+    prompt = ANALYZE_VIDEO_PROMPT.format(
+        title=title,
+        speakers=", ".join(speakers),
+        speaker_stats=speaker_stats_text,
+        segment_count=len(segments),
+        transcript=transcript_text,
+    )
 
-    print("[07.video-type] Classifying video type...")
-    response = call_claude(prompt, timeout=120)
+    print(f"{LOG_PREFIX} Analyzing: type + {len(speakers)} speakers + boundaries ({len(segments)} segments)...")
 
-    result = parse_json_response(response)
-    if result and "type" in result:
-        vtype = result["type"]
-        conf = result.get("confidence", 0)
-        print(f"[07.video-type]   Type: {vtype} ({conf * 100:.0f}%)")
-        return result
+    max_retries = 3
+    for attempt in range(max_retries):
+        response = call_claude(prompt, timeout=300)
+        result = parse_json_response(response)
 
-    # No fallback - fail explicitly
-    raise RuntimeError(f"Video type classification failed. Response: {response[:200]}")
+        if result and "video_type" in result and "speaker_labels" in result and "segments" in result:
+            vtype = result["video_type"]
+            labels = result["speaker_labels"]
+            classifications = result["segments"]
+
+            # Ensure all speakers have labels
+            for speaker in speakers:
+                if speaker not in labels:
+                    labels[speaker] = {"role": "unknown", "confidence": 0.3, "reasoning": "Not labeled by LLM"}
+
+            # Fix segment count mismatches
+            extra_flags = []
+            if len(classifications) != len(segments):
+                print(f"{LOG_PREFIX}   WARNING: Got {len(classifications)} segment classifications for {len(segments)} segments")
+                extra_flags.append(f"segment_count_mismatch_{len(classifications)}_vs_{len(segments)}")
+                if len(classifications) < len(segments):
+                    padded = len(segments) - len(classifications)
+                    extra_flags.append(f"padded_{padded}_segments_as_commentary")
+                while len(classifications) < len(segments):
+                    classifications.append({
+                        "id": len(classifications),
+                        "segment_type": "commentary",
+                        "conversation_id": 0,
+                        "is_conversation_start": False,
+                    })
+                classifications = classifications[:len(segments)]
+
+            # Log results
+            conf = vtype.get("confidence", 0)
+            print(f"{LOG_PREFIX}   Video type: {vtype.get('type')} ({conf * 100:.0f}%)")
+            for speaker, label in labels.items():
+                lconf = label.get("confidence", 0) * 100
+                print(f"{LOG_PREFIX}   {speaker}: {label.get('role')} ({lconf:.0f}%) - {label.get('reasoning', '')[:50]}")
+            conv_ids = set(c.get("conversation_id", 0) for c in classifications if c.get("conversation_id", 0) > 0)
+            print(f"{LOG_PREFIX}   Conversations: {len(conv_ids)}")
+
+            return vtype, labels, classifications, extra_flags
+
+        if attempt < max_retries - 1:
+            print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
+            time.sleep(2)
+
+    raise RuntimeError(f"Video analysis failed after {max_retries} retries")
 
 
 # ---------------------------
@@ -277,30 +620,26 @@ def classify_video_type(title: str, segments: List[Dict]) -> Dict[str, Any]:
 # ---------------------------
 
 def extract_video_title(filename: str) -> str:
-    """Extract video title from filename."""
     name = Path(filename).stem
-    name = re.sub(r"\.(audio_features|video_type)$", "", name)
+    name = re.sub(r"\.(audio_features|video_type|conversations)$", "", name)
     match = re.match(r"^(.+?)\s*\[", name)
     return match.group(1).strip() if match else name
 
 
 def extract_video_id(filename: str) -> str:
-    """Extract video ID from filename."""
     match = re.search(r"\[([^\]]+)\]", filename)
     return match.group(1) if match else Path(filename).stem
 
 
 def compute_checksum(data: Any) -> str:
-    """Compute checksum of data."""
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
-    """Process a single corrected.json file and add video type classification."""
+    """Process a single audio_features.json file through single-pass LLM analysis."""
 
-    print(f"\n[07.video-type] Processing: {input_path.name}")
+    print(f"\n{LOG_PREFIX} Processing: {input_path.name}")
 
-    # Load input (preserves all data from Stage 06)
     with input_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
@@ -308,55 +647,133 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
     video_title = extract_video_title(str(input_path))
     video_id = extract_video_id(str(input_path))
 
-    print(f"[07.video-type]   Video: \"{video_title}\" [{video_id}]")
-    print(f"[07.video-type]   Segments: {len(segments)}")
+    print(f"{LOG_PREFIX}   Video: \"{video_title}\" [{video_id}]")
+    print(f"{LOG_PREFIX}   Segments: {len(segments)}")
 
     if not segments:
         raise RuntimeError(f"No segments found in {input_path}")
 
     if dry_run:
-        print("[07.video-type]   [DRY RUN] Would process this file")
-        return {"video_type": None, "dry_run": True}
+        print(f"{LOG_PREFIX}   [DRY RUN] Would process this file")
+        return {"video_type": None, "conversations": 0, "flags": []}
 
     start_time = time.time()
 
-    # Classify video type
-    video_type = classify_video_type(video_title, segments)
+    # Single-pass analysis: video type + speakers + boundaries
+    video_type_info, speaker_labels, classifications, extra_flags = analyze_video(video_title, segments)
+
+    video_type = video_type_info.get("type", "compilation")
+
+    # Legacy flags from segment count mismatch
+    review_flags = list(extra_flags)
+
+    # Build output segments
+    output_segments = []
+    for i, seg in enumerate(segments):
+        classification = classifications[i] if i < len(classifications) else {
+            "segment_type": "commentary",
+            "conversation_id": 0,
+            "is_conversation_start": False,
+        }
+
+        speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+        speaker_role = speaker_labels.get(speaker_id, {}).get("role", "unknown")
+
+        output_segments.append({
+            "id": i,
+            "start": seg.get("start", 0),
+            "end": seg.get("end", 0),
+            "text": seg.get("text", ""),
+            "speaker_id": speaker_id,
+            "speaker_role": speaker_role,
+            "segment_type": classification.get("segment_type", "commentary"),
+            "conversation_id": classification.get("conversation_id", 0),
+            "is_conversation_start": classification.get("is_conversation_start", False),
+        })
+
+    # Build conversation summaries
+    conversations = []
+    conv_segments: Dict[int, List[Dict]] = {}
+    for seg in output_segments:
+        conv_id = seg["conversation_id"]
+        if conv_id > 0:
+            if conv_id not in conv_segments:
+                conv_segments[conv_id] = []
+            conv_segments[conv_id].append(seg)
+
+    for conv_id, segs in sorted(conv_segments.items()):
+        conversations.append({
+            "conversation_id": conv_id,
+            "segment_ids": [s["id"] for s in segs],
+            "start_time": segs[0]["start"],
+            "end_time": segs[-1]["end"],
+        })
 
     elapsed = time.time() - start_time
 
-    # Build output - preserve ALL input data, add video_type
-    output = data.copy()
-    output["video_id"] = video_id
-    output["video_title"] = video_title
-    output["video_type"] = {
-        "type": video_type.get("type"),
-        "confidence": video_type.get("confidence"),
-        "reasoning": video_type.get("reasoning"),
-    }
-    output["video_type_metadata"] = {
+    # Build output
+    output = {
+        "video_id": video_id,
         "source_file": str(input_path),
         "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "pipeline_version": PIPELINE_VERSION,
-        "prompt_version": PROMPT_VERSION,
-        "schema_version": SCHEMA_VERSION,
-        "input_checksum": compute_checksum(data),
-        "segment_count": len(segments),
-        "processing_time_sec": elapsed,
+        "video_type": {
+            "type": video_type,
+            "confidence": video_type_info.get("confidence"),
+            "reasoning": video_type_info.get("reasoning"),
+        },
+        "speaker_labels": speaker_labels,
+        "segments": output_segments,
+        "conversations": conversations,
+        "review_flags": review_flags if review_flags else None,
+        "metadata": {
+            "pipeline_version": PIPELINE_VERSION,
+            "prompt_version": PROMPT_VERSION,
+            "schema_version": SCHEMA_VERSION,
+            "input_checksum": compute_checksum(data),
+            "llm_calls": 1,
+            "processing_time_sec": elapsed,
+        },
     }
 
-    # Write output
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with output_path.open("w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2, ensure_ascii=False)
+    # Validate output before writing
+    validation_results = validate_output(output, segments)
 
-    print(f"[07.video-type] Result: {video_type.get('type')} ({video_type.get('confidence', 0) * 100:.0f}%)")
-    print(f"[07.video-type]   Time: {elapsed:.1f}s")
-    print(f"[07.video-type]   Output: {output_path}")
+    # Write validation results (always, even if validation fails)
+    write_validation_results(validation_results, output_path, video_id)
+
+    has_errors = any(r.severity == "error" for r in validation_results)
+
+    if has_errors:
+        # Don't write invalid output to the main output file
+        print(f"{LOG_PREFIX} SKIPPING output write due to validation errors")
+    else:
+        # Write output
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(output, f, indent=2, ensure_ascii=False)
+
+    # Summary
+    type_counts: Dict[str, int] = {}
+    for seg in output_segments:
+        st = seg["segment_type"]
+        type_counts[st] = type_counts.get(st, 0) + 1
+
+    print(f"{LOG_PREFIX} Results:")
+    print(f"  Video type: {video_type}")
+    print(f"  Conversations: {len(conversations)}")
+    print(f"  Segment types: {type_counts}")
+    print(f"  LLM calls: 1")
+    print(f"  Time: {elapsed:.1f}s")
+    print(f"  Output: {output_path}")
+    print(f"  Validation: {'FAILED' if has_errors else 'PASSED'}")
 
     return {
-        "video_type": video_type.get("type"),
-        "confidence": video_type.get("confidence"),
+        "video_type": video_type,
+        "conversations": len(conversations),
+        "flags": review_flags,
+        "validation_passed": not has_errors,
+        "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
+        "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
     }
 
 
@@ -369,31 +786,29 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06.corrected"
+    return repo_root() / "data" / "05.audio-features"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "07.video-type"
+    return repo_root() / "data" / "06.video-type"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06.corrected"
+    return repo_root() / "data" / "test" / "05.audio-features"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "07.video-type"
+    return repo_root() / "data" / "test" / "06.video-type"
 
 
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
-    """Compute output path from input path."""
     stem = input_path.stem
-    if stem.endswith(".corrected"):
-        stem = stem[:-len(".corrected")]
-    return output_dir / f"{stem}.video_type.json"
+    if stem.endswith(".audio_features"):
+        stem = stem[:-len(".audio_features")]
+    return output_dir / f"{stem}.conversations.json"
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
-    """Parse sources.txt file."""
     sources: List[Tuple[str, str]] = []
     for raw in path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
@@ -410,8 +825,7 @@ def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
 
 
 def find_input_files(in_dir: Path) -> List[Path]:
-    """Find all corrected JSON files in directory."""
-    return sorted(in_dir.rglob("*.corrected.json"))
+    return sorted(in_dir.rglob("*.audio_features.json"))
 
 
 # ---------------------------
@@ -420,20 +834,28 @@ def find_input_files(in_dir: Path) -> List[Path]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Classify daygame video types using Claude CLI"
+        description="Video type classification + speaker labeling + conversation boundaries"
+    )
+    parser.add_argument(
+        "name", nargs="?",
+        help="Source name (folder under data/05.audio-features/)"
+    )
+    parser.add_argument(
+        "youtube_url", nargs="?",
+        help="YouTube URL (unused, accepted for pipeline compatibility)"
     )
     parser.add_argument(
         "--input",
-        help="Input .corrected.json file or directory"
+        help="Input .audio_features.json file or directory"
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/07.video-type/)"
+        help="Output directory (defaults to data/06.video-type/)"
     )
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/06.corrected/)"
+        help="Process test videos (data/test/05.audio-features/)"
     )
     parser.add_argument(
         "--sources",
@@ -451,117 +873,140 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing output files"
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging for LLM responses"
+    )
 
     args = parser.parse_args()
+
+    global DEBUG_MODE
+    DEBUG_MODE = args.debug
 
     # Test Claude CLI availability
     claude_bin = find_claude_binary()
     if not claude_bin:
-        print("[07.video-type] Error: Claude CLI binary not found")
-        print("[07.video-type] Searched paths:")
+        print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+        print(f"{LOG_PREFIX} Searched paths:")
         for p in CLAUDE_BINARY_PATHS:
             print(f"  - {p}")
-        print("[07.video-type] Install Claude Code CLI: https://claude.ai/code")
+        print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
         raise SystemExit(1)
 
     try:
         result = subprocess.run(
             [claude_bin, "--version"],
-            capture_output=True,
-            text=True,
-            timeout=10
+            capture_output=True, text=True, timeout=10,
         )
         if result.returncode != 0:
-            print("[07.video-type] Warning: Claude CLI not responding properly")
+            print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
         else:
-            print(f"[07.video-type] Using Claude CLI: {claude_bin}")
+            print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
     except subprocess.TimeoutExpired:
-        print("[07.video-type] Warning: Claude CLI slow to respond")
+        print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    # Determine input/output paths
+    # Route to appropriate mode
     if args.test:
-        in_dir = test_input_root()
-        out_dir = test_output_root()
+        _run_directory(test_input_root(), test_output_root(), args)
     elif args.input:
-        input_path = Path(args.input)
-        if not input_path.exists():
-            input_path = repo_root() / args.input
-        if not input_path.exists():
-            raise SystemExit(f"Input not found: {args.input}")
+        _run_input(args)
+    elif args.sources:
+        _run_sources(args)
+    elif args.name:
+        _run_named_source(args)
+    else:
+        raise SystemExit("Provide a source name, --input, --test, or --sources")
 
-        if input_path.is_file():
-            # Single file mode
-            out_dir = Path(args.output) if args.output else output_root()
-            output_path = compute_output_path(input_path, out_dir)
 
-            if output_path.exists() and not args.overwrite:
-                print(f"[07.video-type] Output exists, skipping: {output_path}")
-                return
+def _run_input(args) -> None:
+    input_path = Path(args.input)
+    if not input_path.exists():
+        input_path = repo_root() / args.input
+    if not input_path.exists():
+        raise SystemExit(f"Input not found: {args.input}")
 
-            result = process_file(input_path, output_path, dry_run=args.dry_run)
-            print(f"\n[07.video-type] Done. Type: {result.get('video_type')}")
+    if input_path.is_file():
+        out_dir = Path(args.output) if args.output else output_root()
+        output_path = compute_output_path(input_path, out_dir)
+
+        if output_path.exists() and not args.overwrite:
+            print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        in_dir = input_path
-        out_dir = Path(args.output) if args.output else output_root()
-    elif args.sources:
-        sources_path = repo_root() / args.sources
-        if not sources_path.exists():
-            raise SystemExit(f"Sources file not found: {sources_path}")
-
-        total_files = 0
-        results_summary: Dict[str, int] = {}
-
-        for src_name, _ in parse_sources_file(sources_path):
-            src_in_dir = input_root() / src_name
-            if not src_in_dir.exists():
-                print(f"[07.video-type] Skipping {src_name}: no 06.corrected output")
-                continue
-
-            src_out_dir = output_root() / src_name
-            files = find_input_files(src_in_dir)
-
-            for input_file in files:
-                output_file = compute_output_path(input_file, src_out_dir)
-                if output_file.exists() and not args.overwrite:
-                    continue
-                try:
-                    result = process_file(input_file, output_file, dry_run=args.dry_run)
-                    vtype = result.get("video_type", "unknown")
-                    results_summary[vtype] = results_summary.get(vtype, 0) + 1
-                    total_files += 1
-                except Exception as e:
-                    print(f"[07.video-type] Error: {e}")
-
-        print(f"\n[07.video-type] Done. Processed {total_files} files")
-        print(f"[07.video-type] Summary: {results_summary}")
+        result = process_file(input_path, output_path, dry_run=args.dry_run)
+        print(f"\n{LOG_PREFIX} Done. Type: {result.get('video_type')}, Conversations: {result.get('conversations')}")
         return
-    else:
-        raise SystemExit("Provide --input, --test, or --sources")
 
-    # Directory mode
+    out_dir = Path(args.output) if args.output else output_root()
+    _run_directory(input_path, out_dir, args)
+
+
+def _run_sources(args) -> None:
+    sources_path = repo_root() / args.sources
+    if not sources_path.exists():
+        raise SystemExit(f"Sources file not found: {sources_path}")
+
+    total_files = 0
+    total_convs = 0
+
+    for src_name, _ in parse_sources_file(sources_path):
+        src_in_dir = input_root() / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
+            continue
+
+        src_out_dir = output_root() / src_name
+        files = find_input_files(src_in_dir)
+
+        for input_file in files:
+            output_file = compute_output_path(input_file, src_out_dir)
+            if output_file.exists() and not args.overwrite:
+                continue
+            try:
+                result = process_file(input_file, output_file, dry_run=args.dry_run)
+                total_convs += result.get("conversations", 0)
+                total_files += 1
+            except Exception as e:
+                print(f"{LOG_PREFIX} Error: {e}")
+
+    print(f"\n{LOG_PREFIX} Done. Processed {total_files} files, {total_convs} conversations")
+
+
+def _run_named_source(args) -> None:
+    """Run for a named source (from pipeline: ./06.video-type source_name url)."""
+    name = args.name
+    in_dir = input_root() / name
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+
+    out_dir = Path(args.output) if args.output else output_root() / name
+    _run_directory(in_dir, out_dir, args)
+
+
+def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
     files = find_input_files(in_dir)
     if not files:
-        print(f"[07.video-type] No .corrected.json files found in: {in_dir}")
+        print(f"{LOG_PREFIX} No .audio_features.json files found in: {in_dir}")
         return
 
-    print(f"[07.video-type] Input : {in_dir}")
-    print(f"[07.video-type] Output: {out_dir}")
-    print(f"[07.video-type] Files : {len(files)}")
+    print(f"{LOG_PREFIX} Input : {in_dir}")
+    print(f"{LOG_PREFIX} Output: {out_dir}")
+    print(f"{LOG_PREFIX} Files : {len(files)}")
 
-    # Load state for checkpointing
     state_path = out_dir / ".video_type_state.json"
     state = load_state(state_path)
 
-    results_summary: Dict[str, int] = {}
+    total_convs = 0
     processed = 0
     skipped = 0
     failed = 0
+    consecutive_failures = 0
+    validation_failed = 0
 
     for input_file in files:
         file_key = str(input_file.relative_to(in_dir))
 
-        # Skip if already completed
         if file_key in state.completed_files and not args.overwrite:
             skipped += 1
             continue
@@ -574,33 +1019,62 @@ def main() -> None:
             save_state(state_path, state)
             continue
 
-        # Mark as in progress
         state.in_progress = file_key
         save_state(state_path, state)
 
         try:
             result = process_file(input_file, output_file, dry_run=args.dry_run)
-            vtype = result.get("video_type", "unknown")
-            results_summary[vtype] = results_summary.get(vtype, 0) + 1
+            total_convs += result.get("conversations", 0)
             processed += 1
 
-            # Mark as completed
+            # Track validation failures for failure budget
+            if not result.get("validation_passed", True):
+                validation_failed += 1
+                consecutive_failures += 1
+            else:
+                consecutive_failures = 0
+
             if not args.dry_run:
                 state.completed_files.append(file_key)
                 state.in_progress = None
                 save_state(state_path, state)
+
+            # Failure budget: halt on consecutive failures
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive validation failures")
+                print(f"{LOG_PREFIX} This indicates a systematic issue with the pipeline or prompts.")
+                print(f"{LOG_PREFIX} Review the .validation.json files for details.")
+                break
+
         except Exception as e:
-            print(f"[07.video-type] Error processing {input_file}: {e}")
+            print(f"{LOG_PREFIX} Error processing {input_file}: {e}")
             state.failures.append({"file": file_key, "error": str(e)})
             state.in_progress = None
             save_state(state_path, state)
             failed += 1
+            consecutive_failures += 1
 
-    print(f"\n[07.video-type] Done.")
-    print(f"  Processed: {processed}")
-    print(f"  Skipped  : {skipped}")
-    print(f"  Failed   : {failed}")
-    print(f"  Summary  : {results_summary}")
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive failures")
+                break
+
+    # Print summary first
+    print(f"\n{LOG_PREFIX} Done.")
+    print(f"  Processed:           {processed}")
+    print(f"  Skipped:             {skipped}")
+    print(f"  Failed (exception):  {failed}")
+    print(f"  Failed (validation): {validation_failed}")
+    print(f"  Conversations:       {total_convs}")
+
+    # Failure budget: check overall failure rate (after summary so user sees stats)
+    total_attempted = processed + failed
+    if total_attempted > 0:
+        failure_rate = (failed + validation_failed) / total_attempted
+        if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
+            print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
+            print(f"{LOG_PREFIX} {failed} exceptions + {validation_failed} validation failures out of {total_attempted} attempted.")
+            print(f"{LOG_PREFIX} Review .validation.json files for details.")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

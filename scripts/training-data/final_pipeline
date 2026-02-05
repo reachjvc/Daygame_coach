@@ -2,10 +2,10 @@
 #
 # scripts/training-data/final_pipeline
 #
-# STEP 10 — FULL TRAINING-DATA PIPELINE
+# FINAL TRAINING-DATA PIPELINE
 #
-# Runs steps 01‒09 per source, then ingests the enriched results into Supabase
-# (step 10 / `./scripts/training-data/10.ingest.ts`).
+# Runs steps 01‒07 per source, then ingests the enriched results into Supabase
+# (step 08 / `./scripts/training-data/08.ingest.ts`).
 #
 # Use:
 #   A) One source (video / playlist / channel):
@@ -16,12 +16,11 @@
 #      ./scripts/training-data/final_pipeline --sources docs/sources.txt
 #
 # Optional flags:
-#   --skip-ingest        stop before step 10
-#   --ingest-full        pass `--full` to `./scripts/training-data/10.ingest.ts`
-#   --ingest-mode <mode> pass `--mode=<mode>` to the ingest script
+#   --skip-ingest        stop before step 08 (ingest)
+#   --ingest-full        pass `--full` to `./scripts/training-data/08.ingest.ts`
 #   --ingest-dry-run     run ingest in dry-run mode
 #   --ingest-verify      verify ingest without writing to the DB
-#   --ingest-arg <arg>   forward any other flag to `./scripts/training-data/10.ingest.ts`
+#   --ingest-arg <arg>   forward any other flag to `./scripts/training-data/08.ingest.ts`
 
 set -euo pipefail
 
@@ -35,9 +34,8 @@ PER_SOURCE_STEPS=(
   "$REPO_ROOT/scripts/training-data/03.align"
   "$REPO_ROOT/scripts/training-data/04.diarize"
   "$REPO_ROOT/scripts/training-data/05.audio-features"
-  "$REPO_ROOT/scripts/training-data/06.conversations"
+  "$REPO_ROOT/scripts/training-data/06.video-type"
   "$REPO_ROOT/scripts/training-data/07.content"
-  "$REPO_ROOT/scripts/training-data/08.structure"
 )
 TOTAL_PER_SOURCE_STEPS=${#PER_SOURCE_STEPS[@]}
 GLOBAL_STEP_DESCRIPTIONS=("Ingest to vector store")
@@ -59,11 +57,10 @@ Usage:
 Options:
   --sources <file>        Use the provided sources file (default: docs/sources.txt)
   --skip-ingest           Stop before the vector-store ingestion step
-  --ingest-full           Pass --full to `./scripts/training-data/10.ingest.ts` (force reingest)
-  --ingest-mode <mode>    Forward --mode=<mode> to `./scripts/training-data/10.ingest.ts`
-  --ingest-dry-run        Forward --dry-run to `./scripts/training-data/10.ingest.ts`
-  --ingest-verify         Forward --verify to `./scripts/training-data/10.ingest.ts`
-  --ingest-arg <arg>      Forward any extra flag to `./scripts/training-data/10.ingest.ts`
+  --ingest-full           Pass --full to `./scripts/training-data/08.ingest.ts` (force reingest)
+  --ingest-dry-run        Forward --dry-run to `./scripts/training-data/08.ingest.ts`
+  --ingest-verify         Forward --verify to `./scripts/training-data/08.ingest.ts`
+  --ingest-arg <arg>      Forward any extra flag to `./scripts/training-data/08.ingest.ts`
 EOF
 }
 
@@ -152,14 +149,48 @@ run_ingest() {
   echo "🧠 Ingesting to vector store"
   echo "==========================================================="
 
-  local ingest_cmd=("node" "$REPO_ROOT/node_modules/tsx/dist/cli.mjs" "$REPO_ROOT/scripts/training-data/10.ingest.ts")
+  local ingest_cmd=("node" "$REPO_ROOT/node_modules/tsx/dist/cli.mjs" "$REPO_ROOT/scripts/training-data/08.ingest.ts")
   if [[ "${#INGEST_ARGS[@]}" -gt 0 ]]; then
     ingest_cmd+=("${INGEST_ARGS[@]}")
   fi
   "${ingest_cmd[@]}"
 }
 
+run_cross_stage_validation() {
+  echo ""
+  echo "==========================================================="
+  echo "🔍 Cross-stage validation (Stage 06 ↔ Stage 07)"
+  echo "==========================================================="
+
+  local validator="$REPO_ROOT/scripts/training-data/validate_cross_stage.py"
+  if [[ ! -f "$validator" ]]; then
+    echo "WARNING: Cross-stage validator not found at $validator"
+    return 0
+  fi
+
+  python3 "$validator" --all
+  local exit_code=$?
+
+  if [[ $exit_code -ne 0 ]]; then
+    echo ""
+    echo "⚠️  Cross-stage validation found errors."
+    echo "    Review the output above before proceeding to ingest."
+    echo ""
+    read -r -p "Continue to ingest despite validation errors? [y/N] " response
+    if [[ ! "$response" =~ ^[Yy]$ ]]; then
+      echo "Pipeline halted by cross-stage validation errors."
+      return 1
+    fi
+    echo "Continuing despite cross-stage validation errors (user confirmed)."
+  fi
+
+  return 0
+}
+
 run_global_steps() {
+  # Run cross-stage validation before ingest
+  run_cross_stage_validation || return 1
+
   for idx in "${!GLOBAL_STEP_DESCRIPTIONS[@]}"; do
     local stepNumber=$((TOTAL_PER_SOURCE_STEPS + idx + 1))
     local description="${GLOBAL_STEP_DESCRIPTIONS[$idx]}"
@@ -200,17 +231,6 @@ while [[ $# -gt 0 ]]; do
       INGEST_ARGS+=("--full")
       shift
       ;;
-    --ingest-mode)
-      if [[ $# -lt 2 ]]; then
-        cli_error "--ingest-mode requires a value"
-      fi
-      INGEST_ARGS+=("--mode" "$2")
-      shift 2
-      ;;
-    --ingest-mode=*)
-      INGEST_ARGS+=("--mode" "${1#--ingest-mode=}")
-      shift
-      ;;
     --ingest-dry-run)
       INGEST_ARGS+=("--dry-run")
       shift
@@ -239,6 +259,9 @@ done
 if [[ "$MODE" == "sources" && -z "$SOURCES_FILE" ]]; then
   SOURCES_FILE="$DEFAULT_SOURCES"
 fi
+
+# Sync video exclusions into yt-dlp archives
+"$REPO_ROOT/scripts/training-data/sync-exclusions"
 
 if [[ "$MODE" == "single" ]]; then
   if [[ $# -lt 2 ]]; then

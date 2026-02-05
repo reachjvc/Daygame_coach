@@ -1,0 +1,23 @@
+{
+  "description": "Tracks prompt version changes across pipeline stages. Human reference only — not currently read by any script.",
+  "entries": [
+    {
+      "stage": "06.video-type",
+      "from_version": null,
+      "to_version": "3.0.0",
+      "date": "2026-02-05",
+      "change_type": "major",
+      "description": "Initial single-pass prompt: video type + speaker roles + conversation boundaries",
+      "reason": "Merged three separate LLM passes into one"
+    },
+    {
+      "stage": "07.content",
+      "from_version": null,
+      "to_version": "1.0.0",
+      "date": "2026-02-05",
+      "change_type": "major",
+      "description": "Initial content enrichment prompt: techniques, topics, turn phases, hook points, investment levels",
+      "reason": "First production prompt with 31 techniques and 22 topics taxonomy"
+    }
+  ]
+}
