@@ -148,6 +148,16 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       mediaRecorder.start(1000) // Collect data every second
 
       // Start Web Speech API for transcription (if available)
+      // Chrome requires HTTPS (or localhost) for Web Speech API
+      if (
+        typeof location !== "undefined" &&
+        location.protocol !== "https:" &&
+        location.hostname !== "localhost" &&
+        location.hostname !== "127.0.0.1"
+      ) {
+        console.warn("Speech recognition may not work over non-HTTPS connections")
+      }
+
       if (isSpeechRecognitionSupported()) {
         const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition
         if (!SpeechRecognitionClass) return // Type guard
@@ -181,6 +191,14 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
           // Don't show error for "no-speech" - user just didn't speak
           if (event.error !== "no-speech" && event.error !== "aborted") {
             console.warn("Speech recognition error:", event.error)
+            // Surface meaningful errors to the user
+            if (event.error === "not-allowed") {
+              setError("Speech recognition permission denied. Check browser settings.")
+            } else if (event.error === "network") {
+              setError("Speech recognition requires an internet connection.")
+            } else {
+              setError(`Transcription unavailable: ${event.error}`)
+            }
           }
         }
 

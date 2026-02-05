@@ -61,6 +61,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   const [endedSession, setEndedSession] = useState<EndedSessionInfo | null>(null)
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const approachesRef = useRef<ApproachRow[]>([])
   const [, forceUpdate] = useState(0)
 
   // Load ended session from sessionStorage (used on mount and pageshow)
@@ -105,6 +106,11 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
       }
     }
   }, [state.isActive])
+
+  // Keep approaches ref in sync with state (for use in async callbacks)
+  useEffect(() => {
+    approachesRef.current = state.approaches
+  }, [state.approaches])
 
   // Load active session on mount
   useEffect(() => {
@@ -312,8 +318,44 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
   }, [state.session, onApproachAdded])
 
   const updateLastApproach = useCallback(async (data: ApproachFormData) => {
-    const lastApproach = state.approaches[state.approaches.length - 1]
+    let approaches = approachesRef.current
+    let lastApproach = approaches[approaches.length - 1]
     if (!lastApproach) return
+
+    // If the approach still has a temp ID, wait for the POST to resolve
+    if (lastApproach.id.startsWith("temp-")) {
+      const tempId = lastApproach.id
+      const maxWaitMs = 5000
+      const intervalMs = 250
+      let waited = 0
+
+      while (waited < maxWaitMs) {
+        await new Promise(r => setTimeout(r, intervalMs))
+        waited += intervalMs
+        approaches = approachesRef.current
+        const current = approaches[approaches.length - 1]
+        if (current && !current.id.startsWith("temp-")) {
+          lastApproach = current
+          break
+        }
+        // Approach was removed (creation failed)
+        if (!approaches.some(a => a.id === tempId)) {
+          setState(prev => ({
+            ...prev,
+            error: "Failed to save approach. Please try again.",
+          }))
+          return
+        }
+      }
+
+      if (lastApproach.id.startsWith("temp-")) {
+        setState(prev => ({
+          ...prev,
+          error: "Approach is still saving. Please wait and try again.",
+        }))
+        return
+      }
+    }
 
     try {
       const response = await fetch(`/api/tracking/approach/${lastApproach.id}`, {
@@ -340,7 +382,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
         error: error instanceof Error ? error.message : "Failed to update approach",
       }))
     }
-  }, [state.approaches])
+  }, [])
 
   const setGoal = useCallback(async (goal: number) => {
     if (!state.session) return

@@ -1,4 +1,6 @@
 # Pipeline Stage Verification Prompts
+**Status:** Active
+**Updated:** 05-02-2026
 
 ## How to use
 

@@ -18,11 +18,12 @@
 #   C) Manifest batch (process specific videos):
 #      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt
 #      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt --stages 02-05
-#      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt --stages 06-07
+#      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt --stages 06-08
 #
 # Optional flags:
 #   --skip-ingest        stop before step 08 (ingest)
-#   --stages <range>     only run specific stages (e.g., "02-05", "06-07", "02")
+#   --parallel <N>       max concurrent videos per stage (default: auto)
+#   --stages <range>     only run specific stages (e.g., "02-05", "06-08", "02")
 #   --ingest-full        pass `--full` to `./scripts/training-data/08.ingest.ts`
 #   --ingest-dry-run     run ingest in dry-run mode
 #   --ingest-verify      verify ingest without writing to the DB
@@ -42,9 +43,10 @@ PER_SOURCE_STEPS=(
   "$REPO_ROOT/scripts/training-data/05.audio-features"
   "$REPO_ROOT/scripts/training-data/06.video-type"
   "$REPO_ROOT/scripts/training-data/06b.verify"
+  "$REPO_ROOT/scripts/training-data/06c.patch"
   "$REPO_ROOT/scripts/training-data/07.content"
 )
-# Step numbers: 01=0, 02=1, 03=2, 04=3, 05=4, 06=5, 06b=6, 07=7
+# Step numbers: 01=0, 02=1, 03=2, 04=3, 05=4, 06=5, 06b=6, 06c=7, 07=8
 TOTAL_PER_SOURCE_STEPS=${#PER_SOURCE_STEPS[@]}
 GLOBAL_STEP_DESCRIPTIONS=("Ingest to vector store")
 TOTAL_GLOBAL_STEPS=${#GLOBAL_STEP_DESCRIPTIONS[@]}
@@ -58,6 +60,17 @@ STAGE_RANGE=""
 SKIP_INGEST=false
 declare -a INGEST_ARGS=()
 
+# Default parallelism per stage (manifest mode only).
+# Stages 01-05 stay sequential (fast enough, GPU models would OOM).
+# LLM stages (06, 06b, 06c, 07) are I/O-bound — safe to parallelize.
+# 01=0, 02=1, 03=2, 04=3, 05=4, 06=5, 06b=6, 06c=7, 07=8
+STAGE_PARALLEL=(1 1 1 1 1 10 10 10 10)
+PARALLEL_OVERRIDE=""
+
+# Global state for parallel job cleanup (signal handler needs access)
+PARALLEL_TMPDIR=""
+declare -a PARALLEL_PIDS=()
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -69,6 +82,7 @@ Options:
   --sources <file>        Use the provided sources file (default: docs/sources.txt)
   --manifest <file>       Process only videos listed in manifest file
   --stages <range>        Only run specific stages (e.g., "02-05", "06-07", "02")
+  --parallel <N>          Max concurrent videos per stage (default: auto per stage)
   --skip-ingest           Stop before the vector-store ingestion step
   --ingest-full           Pass --full to `./scripts/training-data/08.ingest.ts` (force reingest)
   --ingest-dry-run        Forward --dry-run to `./scripts/training-data/08.ingest.ts`
@@ -103,8 +117,8 @@ parse_stage_range() {
   # Remove leading zeros for arithmetic
   STAGE_MIN=$((10#$STAGE_MIN))
   STAGE_MAX=$((10#$STAGE_MAX))
-  if [[ $STAGE_MIN -lt 1 || $STAGE_MAX -gt 8 || $STAGE_MIN -gt $STAGE_MAX ]]; then
-    cli_error "Invalid --stages range: $range (must be 01-08)"
+  if [[ $STAGE_MIN -lt 1 || $STAGE_MAX -gt 9 || $STAGE_MIN -gt $STAGE_MAX ]]; then
+    cli_error "Invalid --stages range: $range (must be 01-09)"
   fi
 }
 
@@ -116,6 +130,167 @@ step_in_range() {
     return 0  # no filter, run all
   fi
   [[ $step_num -ge $STAGE_MIN && $step_num -le $STAGE_MAX ]]
+}
+
+cleanup_parallel() {
+  if [[ ${#PARALLEL_PIDS[@]} -gt 0 ]]; then
+    echo "  Killing ${#PARALLEL_PIDS[@]} background jobs..."
+    for pid in "${PARALLEL_PIDS[@]}"; do
+      kill "$pid" 2>/dev/null || true
+    done
+    wait 2>/dev/null || true
+    PARALLEL_PIDS=()
+  fi
+  if [[ -n "$PARALLEL_TMPDIR" && -d "$PARALLEL_TMPDIR" ]]; then
+    rm -rf "$PARALLEL_TMPDIR"
+    PARALLEL_TMPDIR=""
+  fi
+}
+
+trap cleanup_parallel INT TERM
+
+get_parallel_jobs() {
+  local idx="$1"
+  if [[ -n "$PARALLEL_OVERRIDE" ]]; then
+    echo "$PARALLEL_OVERRIDE"
+  else
+    echo "${STAGE_PARALLEL[$idx]}"
+  fi
+}
+
+# Run a stage on all manifest videos with up to max_jobs concurrent workers.
+# Falls back to sequential (full manifest) when max_jobs <= 1.
+run_stage_parallel() {
+  local script="$1"
+  local manifest="$2"
+  local max_jobs="$3"
+  local name
+  name="$(basename "$script")"
+
+  # Sequential fallback: call stage once with full manifest
+  if [[ "$max_jobs" -le 1 ]]; then
+    "$script" --manifest "$manifest"
+    return $?
+  fi
+
+  PARALLEL_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/pipeline_parallel.XXXXXX")
+
+  # Parse manifest into per-video sub-manifests
+  local -a sub_manifests=()
+  local total=0
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    local sub="${PARALLEL_TMPDIR}/video_${total}.txt"
+    printf '%s\n' "$line" > "$sub"
+    sub_manifests+=("$sub")
+    ((total++))
+  done < "$manifest"
+
+  if [[ "$total" -eq 0 ]]; then
+    echo "  No videos in manifest, skipping"
+    rm -rf "$PARALLEL_TMPDIR"; PARALLEL_TMPDIR=""
+    return 0
+  fi
+
+  # Cap workers to video count
+  if [[ "$max_jobs" -gt "$total" ]]; then
+    max_jobs="$total"
+  fi
+
+  echo "  Parallel: ${max_jobs} workers, ${total} videos"
+
+  # GPU stage warning
+  case "$name" in
+    02.*|03.*|04.*)
+      if [[ "$max_jobs" -gt 1 ]]; then
+        echo "  WARNING: $name loads GPU models. parallel=$max_jobs may cause OOM."
+      fi
+      ;;
+  esac
+
+  # Job tracking
+  local -A pid_to_idx=()
+  local running=0
+  local completed=0
+  local failures=0
+  local next=0
+  PARALLEL_PIDS=()
+
+  # Launch initial batch
+  while [[ $next -lt $total && $running -lt $max_jobs ]]; do
+    local logfile="${PARALLEL_TMPDIR}/log_${next}.txt"
+    "$script" --manifest "${sub_manifests[$next]}" >"$logfile" 2>&1 &
+    local pid=$!
+    pid_to_idx[$pid]=$next
+    PARALLEL_PIDS+=("$pid")
+    ((running++))
+    ((next++))
+  done
+
+  # Process completions and launch new jobs
+  while [[ $running -gt 0 ]]; do
+    local finished_pid=""
+    local exit_code=0
+    wait -n -p finished_pid "${!pid_to_idx[@]}" || exit_code=$?
+
+    ((running--))
+    ((completed++))
+
+    local vidx="${pid_to_idx[$finished_pid]:-?}"
+    local video_label="unknown"
+    if [[ "$vidx" != "?" ]]; then
+      video_label=$(head -1 "${sub_manifests[$vidx]}")
+    fi
+
+    if [[ $exit_code -ne 0 ]]; then
+      ((failures++))
+      echo "  FAIL [${completed}/${total}]: ${video_label} (exit=${exit_code})"
+      if [[ "$vidx" != "?" && -f "${PARALLEL_TMPDIR}/log_${vidx}.txt" ]]; then
+        tail -5 "${PARALLEL_TMPDIR}/log_${vidx}.txt" | sed 's/^/    /'
+      fi
+    else
+      echo "  OK   [${completed}/${total}]: ${video_label}"
+    fi
+
+    unset "pid_to_idx[$finished_pid]"
+
+    # Launch next job if available
+    if [[ $next -lt $total ]]; then
+      local logfile="${PARALLEL_TMPDIR}/log_${next}.txt"
+      "$script" --manifest "${sub_manifests[$next]}" >"$logfile" 2>&1 &
+      local pid=$!
+      pid_to_idx[$pid]=$next
+      PARALLEL_PIDS+=("$pid")
+      ((running++))
+      ((next++))
+    fi
+
+    # Early halt: check failure budget (need >=5 attempts for meaningful rate)
+    if [[ $completed -ge 5 && $failures -gt 0 ]]; then
+      local rate=$((failures * 100 / completed))
+      if [[ $rate -gt 20 ]]; then
+        echo "  HALT: ${failures}/${completed} failures (${rate}% > 20% threshold)"
+        cleanup_parallel
+        return 1
+      fi
+    fi
+  done
+
+  echo "  Stage complete: ${completed} processed, ${failures} failed"
+
+  # Final failure budget check
+  if [[ $total -ge 5 && $failures -gt 0 ]]; then
+    local rate=$((failures * 100 / total))
+    if [[ $rate -gt 20 ]]; then
+      echo "  HALT: ${failures}/${total} failures (${rate}% > 20% threshold)"
+      cleanup_parallel
+      return 1
+    fi
+  fi
+
+  rm -rf "$PARALLEL_TMPDIR"; PARALLEL_TMPDIR=""
+  PARALLEL_PIDS=()
+  return 0
 }
 
 run_pipeline_for_source() {
@@ -166,9 +341,6 @@ run_manifest_pipeline() {
   fi
   echo "==========================================================="
 
-  # For manifest mode, we pass --manifest to each stage script directly
-  # instead of iterating sources ourselves. Each stage script handles
-  # the manifest internally (grouping by source, filtering videos).
   for idx in "${!PER_SOURCE_STEPS[@]}"; do
     if ! step_in_range "$idx"; then
       continue
@@ -186,9 +358,16 @@ run_manifest_pipeline() {
       continue
     fi
 
+    local jobs
+    jobs=$(get_parallel_jobs "$idx")
+
     echo ""
-    echo "Step ${stepNumber}/${TOTAL_STEPS} — $name"
-    "$script" --manifest "$manifest"
+    echo "Step ${stepNumber}/${TOTAL_STEPS} — $name (parallel=${jobs})"
+
+    if ! run_stage_parallel "$script" "$manifest" "$jobs"; then
+      echo "FATAL: Stage $name failed, halting pipeline"
+      exit 1
+    fi
   done
 
   echo ""
@@ -340,6 +519,17 @@ while [[ $# -gt 0 ]]; do
     --stages=*)
       STAGE_RANGE="${1#--stages=}"
       parse_stage_range "$STAGE_RANGE"
+      shift
+      ;;
+    --parallel)
+      if [[ $# -lt 2 ]]; then
+        cli_error "--parallel requires a number"
+      fi
+      PARALLEL_OVERRIDE="$2"
+      shift 2
+      ;;
+    --parallel=*)
+      PARALLEL_OVERRIDE="${1#--parallel=}"
       shift
       ;;
     --skip-ingest)

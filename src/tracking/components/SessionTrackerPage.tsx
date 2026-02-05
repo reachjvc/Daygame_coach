@@ -369,8 +369,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   }
 
   const handleQuickLogSubmit = async () => {
-    if (Object.keys(quickLogData).length > 0 || voiceData.transcription) {
-      // Include transcription as note if user chose "Use as note"
+    if (Object.keys(quickLogData).length > 0) {
       await updateLastApproach(quickLogData)
     }
     setShowQuickLog(false)
@@ -389,21 +388,22 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
       audioBlob: result.audioBlob,
       transcription: result.transcription,
     })
-  }
-
-  const handleUseAsNote = () => {
-    if (voiceData.transcription) {
+    // Auto-save transcription as note
+    if (result.transcription.trim()) {
       setQuickLogData(prev => ({
         ...prev,
-        note: voiceData.transcription,
+        note: result.transcription.trim(),
       }))
-      // Clear voice data after using as note
-      setVoiceData({ audioBlob: null, transcription: "" })
     }
   }
 
   const handleDiscardVoice = () => {
     setVoiceData({ audioBlob: null, transcription: "" })
+    // Also remove auto-saved note
+    setQuickLogData(prev => {
+      const { note: _note, ...rest } = prev
+      return rest
+    })
   }
 
   const handleReactivateSession = async () => {
@@ -1028,7 +1028,6 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               <TranscriptionPreview
                 transcription={voiceData.transcription}
                 audioBlob={voiceData.audioBlob}
-                onUseAsNote={handleUseAsNote}
                 onDiscard={handleDiscardVoice}
               />
 

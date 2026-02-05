@@ -2,15 +2,16 @@
 """
 scripts/training-data/validate_cross_stage.py
 
-Cross-stage consistency validation between Stage 06 and Stage 07 outputs.
+Cross-stage consistency validation between Stage 06 (or 06c patched) and Stage 07 outputs.
 
 Runs after both stages complete for a video (or batch of videos).
-Checks that Stage 07 output is consistent with Stage 06 output.
+Checks that Stage 07 output is consistent with Stage 06/06c output.
+Prefers 06c.patched data when available, falls back to 06.video-type.
 
 Use:
   A) Validate a single video pair:
      python validate_cross_stage.py \
-       --s06 data/06.video-type/source/video.conversations.json \
+       --s06 data/06c.patched/source/video.conversations.json \
        --s07 data/07.content/source/video.enriched.json
 
   B) Validate all videos in a source:
@@ -189,7 +190,9 @@ def repo_root() -> Path:
 
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
     """Find matching Stage 06/07 output file pairs."""
-    s06_root = repo_root() / "data" / "06.video-type"
+    s06_root = repo_root() / "data" / "06c.patched"
+    if not s06_root.exists():
+        s06_root = repo_root() / "data" / "06.video-type"
     s07_root = repo_root() / "data" / "07.content"
 
     pairs: List[Tuple[Path, Path, str]] = []
@@ -216,8 +219,8 @@ def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06 and 07")
-    parser.add_argument("--s06", help="Stage 06 output file (conversations.json)")
+    parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06/06c and 07")
+    parser.add_argument("--s06", help="Stage 06 or 06c output file (conversations.json)")
     parser.add_argument("--s07", help="Stage 07 output file (enriched.json)")
     parser.add_argument("--source", help="Validate all videos in a source directory")
     parser.add_argument("--all", action="store_true", help="Validate all sources")

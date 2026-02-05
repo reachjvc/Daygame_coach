@@ -65,14 +65,42 @@
              |  data/06.video-type/.../*.conversations.json
              v
 +--------------------------+
+|  06b. VERIFY             |    1 LLM call / video
+|                          |    Claude CLI
+|  5-pass critical review  |
+|  of Stage 06 output:     |    APPROVE / FLAG / REJECT
+|   - Role coherence       |    verdict per video
+|   - Conversation bounds  |
+|   - Commentary verify    |    Halts pipeline
+|   - Collapsed speakers   |    on REJECT
+|   - Structural coherence |
++--------------------------+
+             |
+             |  data/06b.verify/.../*.verification.json
+             v
++--------------------------+
+|  06c. PATCH              |    No LLM — pure JSON
+|                          |    transform
+|  Auto-applies from 06b:  |
+|   - Misattributions      |    APPROVE: copy unchanged
+|   - Collapse issues      |    FLAG: apply fixes
+|                          |    REJECT: halt (blocked
+|  Flags but won't fix:    |      by 06b already)
+|   - Boundary issues      |
+|   - Other flags          |    Adds patch_metadata
++--------------------------+
+             |
+             |  data/06c.patched/.../*.conversations.json
+             v
++--------------------------+
 |    07. CONTENT           |    1 LLM call / video
 |                          |    2 prompt variants:
 |  INFIELD/COMPILATION:    |
 |   Per approach:          |    31 techniques taxonomy
 |    - Techniques used     |    22 topics taxonomy
 |    - Topics discussed    |
-|    - Turn-by-turn phases |    opener -> hook ->
-|    - Hook/investment     |    vibe -> close
+|    - Turn-by-turn phases |    open -> pre_hook ->
+|    - Hook/investment     |    post_hook -> close
 |   Per commentary block:  |
 |    - Teaching points     |    Interleaved with
 |    - Techniques discussed|    approaches by time

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { Mic, Square, Loader2, X } from "lucide-react"
+import { Mic, Square, Loader2, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder"
 import type { VoiceRecorderResult } from "../types"
@@ -141,6 +141,7 @@ export function VoiceRecorderButton({
 
         {/* Cancel button */}
         <Button
+          type="button"
           variant="ghost"
           size="icon-sm"
           onClick={handleCancel}
@@ -157,6 +158,7 @@ export function VoiceRecorderButton({
   // Idle state
   return (
     <Button
+      type="button"
       variant="ghost"
       size="icon-sm"
       onClick={handleClick}
@@ -177,13 +179,14 @@ export function VoiceRecorderButton({
 interface TranscriptionPreviewProps {
   transcription: string
   audioBlob: Blob | null
-  onUseAsNote: () => void
+  onUseAsNote?: () => void
   onDiscard: () => void
   className?: string
 }
 
 /**
- * Preview card showing transcription result with "Use as note" action.
+ * Preview card showing transcription result.
+ * When onUseAsNote is omitted, shows "Saved as note" indicator (auto-save mode).
  */
 export function TranscriptionPreview({
   transcription,
@@ -201,6 +204,7 @@ export function TranscriptionPreview({
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">Voice Note</span>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={onDiscard}
@@ -213,14 +217,22 @@ export function TranscriptionPreview({
       {transcription ? (
         <>
           <p className="text-sm text-foreground">{transcription}</p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onUseAsNote}
-            className="w-full"
-          >
-            Use as note
-          </Button>
+          {onUseAsNote ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onUseAsNote}
+              className="w-full"
+            >
+              Use as note
+            </Button>
+          ) : (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Check className="size-3 text-green-500" />
+              <span>Saved as note</span>
+            </div>
+          )}
         </>
       ) : (
         <p className="text-sm text-muted-foreground italic">

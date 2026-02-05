@@ -362,6 +362,16 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         else if (field.type === "tags" && sessionData.tags.length > 0) {
           prefilled[field.id] = sessionData.tags
         }
+        // Conversation fields - pre-fill with approach notes (voice transcriptions)
+        else if (
+          fieldIdLower === "conversation" &&
+          (field.type === "textarea" || field.type === "text") &&
+          sessionData.approachNotes.length > 0
+        ) {
+          prefilled[field.id] = sessionData.approachNotes
+            .map(({ approachNumber, note }) => `#${approachNumber}: ${note}`)
+            .join("\n\n")
+        }
       }
     }
 

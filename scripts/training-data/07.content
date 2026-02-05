@@ -5,8 +5,8 @@ scripts/training-data/07.content
 Content Enrichment using Claude Code CLI
 
 Reads:
-  - Conversation files (from Stage 06):
-      data/06.video-type/<source>/<video>/*.conversations.json
+  - Conversation files (from Stage 06c patched output):
+      data/06c.patched/<source>/<video>/*.conversations.json
 
 Writes:
   - Enriched conversation files:
@@ -33,7 +33,7 @@ Use:
      ./scripts/training-data/07.content --test
 
   B) Single file:
-     ./scripts/training-data/07.content --input data/test/06.video-type/video.conversations.json
+     ./scripts/training-data/07.content --input data/test/06c.patched/video.conversations.json
 
   C) Batch from sources file:
      ./scripts/training-data/07.content --sources
@@ -1011,7 +1011,7 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06.video-type"
+    return repo_root() / "data" / "06c.patched"
 
 
 def output_root() -> Path:
@@ -1019,7 +1019,7 @@ def output_root() -> Path:
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06.video-type"
+    return repo_root() / "data" / "test" / "06c.patched"
 
 
 def test_output_root() -> Path:
@@ -1056,9 +1056,48 @@ def find_input_files(in_dir: Path) -> List[Path]:
     return sorted(in_dir.rglob("*.conversations.json"))
 
 
+def _run_named_source(args) -> None:
+    """Run for a named source (from pipeline: ./07.content source_name url)."""
+    name = args.name
+    in_dir = input_root() / name
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+
+    out_dir = Path(args.output) if args.output else output_root() / name
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"[07.content] No .conversations.json files found in: {in_dir}")
+        return
+
+    print(f"[07.content] Input : {in_dir}")
+    print(f"[07.content] Output: {out_dir}")
+    print(f"[07.content] Files : {len(files)}")
+
+    total_convs = 0
+    total_enriched = 0
+
+    for input_file in files:
+        output_file = compute_output_path(input_file, out_dir)
+        if output_file.exists() and not args.overwrite:
+            continue
+        result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+        total_convs += result["conversations"]
+        total_enriched += result["enriched"]
+
+    print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Enrich conversations with technique/topic analysis using Claude CLI"
+    )
+    parser.add_argument(
+        "name", nargs="?",
+        help="Source name (folder under data/06c.patched/)"
+    )
+    parser.add_argument(
+        "youtube_url", nargs="?",
+        help="YouTube URL (unused, accepted for pipeline compatibility)"
     )
     parser.add_argument(
         "--input",
@@ -1071,7 +1110,7 @@ def main() -> None:
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/06.video-type/)"
+        help="Process test videos (data/test/06c.patched/)"
     )
     parser.add_argument(
         "--sources",
@@ -1153,7 +1192,7 @@ def main() -> None:
         for src_name, vid_ids in sorted(sources_map.items()):
             src_in_dir = input_root() / src_name
             if not src_in_dir.exists():
-                print(f"[07.content] Skipping {src_name}: no 06.video-type output")
+                print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
 
             src_out_dir = output_root() / src_name
@@ -1184,7 +1223,7 @@ def main() -> None:
         for src_name, _ in parse_sources_file(sources_path):
             src_in_dir = input_root() / src_name
             if not src_in_dir.exists():
-                print(f"[07.content] Skipping {src_name}: no 06.video-type output")
+                print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
 
             src_out_dir = output_root() / src_name
@@ -1200,8 +1239,11 @@ def main() -> None:
 
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
+    elif args.name:
+        _run_named_source(args)
+        return
     else:
-        raise SystemExit("Provide --input, --test, --manifest, or --sources")
+        raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
 
     # Directory mode
     files = find_input_files(in_dir)

@@ -54,6 +54,8 @@ STAGES = [
     ("04.diarize", "diarize", "*.full.json"),
     ("05.audio-features", "audio-features", "*.audio_features.json"),
     ("06.video-type", "video-type", "*.conversations.json"),
+    ("06b.verify", "verify", "*.verification.json"),
+    ("06c.patched", "patched", "*.conversations.json"),
     ("07.content", "content", "*.enriched.json"),
 ]
 
