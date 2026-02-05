@@ -9,6 +9,7 @@ import {
   updateSandboxSettings as repoUpdateSandboxSettings,
   resetSandboxSettings as repoResetSandboxSettings,
   updateDifficulty as repoUpdateDifficulty,
+  updateVoiceLanguage as repoUpdateVoiceLanguage,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
   updateSubscriptionCancelledAt,
@@ -23,6 +24,7 @@ import {
   type DifficultyLevel,
 } from "./types"
 import { SETTINGS_CONFIG } from "./config"
+import { VALID_VOICE_LANGUAGE_CODES } from "@/src/tracking/config"
 
 export type SettingsErrorCode = "INVALID_INPUT" | "NOT_FOUND" | "UNAUTHORIZED" | "STRIPE_ERROR"
 
@@ -85,6 +87,24 @@ export async function handleUpdateDifficulty(
   }
 
   await repoUpdateDifficulty(userId, difficulty)
+}
+
+// ============================================
+// Voice Language
+// ============================================
+
+/**
+ * Update voice language for a user.
+ */
+export async function handleUpdateVoiceLanguage(
+  userId: string,
+  language: string
+): Promise<void> {
+  if (!VALID_VOICE_LANGUAGE_CODES.has(language)) {
+    throw createSettingsError("Invalid voice language", "INVALID_INPUT")
+  }
+
+  await repoUpdateVoiceLanguage(userId, language)
 }
 
 // ============================================
@@ -260,6 +280,7 @@ export async function getSettingsPageData(
     experience_level: profile?.experience_level ?? null,
     primary_goal: profile?.primary_goal ?? null,
     sandbox_settings: sandboxSettings,
+    voice_language: profile?.voice_language ?? null,
   }
 
   const stats: UserStats = {

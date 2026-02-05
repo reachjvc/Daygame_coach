@@ -206,11 +206,16 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
   }, []); // Empty dependency - only run once on mount
 
   return (
-    <Card className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
-      <div className="relative w-full max-w-2xl mx-auto h-[90vh] flex flex-col bg-card border-2 border-border rounded-lg shadow-2xl">
+    <Card className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm pt-safe pb-safe">
+      <div
+        className="relative w-full max-w-2xl mx-auto h-[calc(var(--app-vh)*90)] flex flex-col bg-card border-2 border-border rounded-lg shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chat-window-title"
+      >
         <CardHeader className="flex flex-row items-center justify-between border-b border-border">
           <div>
-            <CardTitle className="text-2xl text-foreground">{scenarioTitles[scenarioType]}</CardTitle>
+            <CardTitle id="chat-window-title" className="text-2xl text-foreground">{scenarioTitles[scenarioType]}</CardTitle>
             {currentArchetype && (
               <p className="text-sm text-muted-foreground mt-1">
                 Practicing with: <span className="text-primary font-semibold">{currentArchetype}</span>

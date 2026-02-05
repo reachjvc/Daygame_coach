@@ -44,12 +44,12 @@ Read that file for the full pipeline diagram (stages 01-08 + post-pipeline, I/O 
 - [x] User sign-off on Stage 02 (05-02-2026)
 
 ### R2: Stage 06 — Video Type + Conversations
-- [ ] Run Stage 06 on 14 R2 videos
+- [ ] Run Stage 06 on 12 R2 videos
 - [ ] Verify: read each output against full transcript. Confirm video classification correct, speaker labels correct, conversation boundaries map to real approaches, diarization fixes didn't break correct assignments
 - [ ] User sign-off
 
 ### R2: Stage 06b — Verify
-- [ ] Run 06b.verify on 14 R2 videos
+- [ ] Run 06b.verify on 12 R2 videos
 - [ ] Review verdicts: all APPROVE or justified FLAG
 - [ ] User sign-off
 
@@ -60,14 +60,14 @@ Read that file for the full pipeline diagram (stages 01-08 + post-pipeline, I/O 
 - [ ] User sign-off
 
 ### R2: Stage 07 — Content Enrichment
-- [ ] Run Stage 07 on 14 R2 videos
+- [ ] Run Stage 07 on 12 R2 videos
 - [ ] Verify infield: for every approach, confirm techniques exist in transcript, check commentary blocks capture teaching points, confirm turn phases progress correctly
 - [ ] Verify unlisted_concepts: review flagged concepts for taxonomy additions
 - [ ] User sign-off
 
 ### R2: Stage 08 — Ingest
 - [x] Rewrite `08.ingest.ts` — clean version, no legacy code paths
-- [ ] Run Stage 08 on 14 R2 videos
+- [ ] Run Stage 08 on 12 R2 videos
 - [ ] Verify: confirm row counts include both INTERACTION and COMMENTARY chunks, spot-check metadata (video_type, isRealExample), test vector search returns relevant results, confirm deduplication works
 - [ ] User sign-off
 
@@ -126,7 +126,7 @@ Read that file for the full pipeline diagram (stages 01-08 + post-pipeline, I/O 
 ## Key Decisions (already made)
 
 - **Model:** Opus via Claude Max. Fall back to Sonnet if rate-limited.
-- **Testing phases:** R2 = 14 videos, Production = batches of 100.
+- **Testing phases:** R2 = 12 videos (r2batch), Production = batches of 100.
 - **Video type + conversations merged:** Stage 06 reads all segments in a single pass — classifies video type, assigns speaker roles, and detects conversation boundaries. Downstream stages filter on video_type.
 - **Structure folded into Content (Stage 07):** Phase-per-turn labeling is done by the same LLM call that detects techniques/topics/quality. No separate structure stage — the LLM labels phases more accurately than regex heuristics, at zero extra cost.
 - **Commentary enrichment in Stage 07:** Infield videos get commentary blocks interleaved with approaches. Talking_head videos get LLM-identified topic sections. Both get unlisted_concepts for taxonomy gap detection.

@@ -14,7 +14,7 @@ export async function DashboardPage() {
   // Preview mode for non-logged-in users
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <AppHeader currentPage="dashboard" isLoggedIn={false} isPreviewMode={true} />
         <DashboardContent profileData={null} isPreviewMode={true} />
       </div>
@@ -26,7 +26,7 @@ export async function DashboardPage() {
   // Users must be premium (has_purchased) to access features
   if (!profile?.has_purchased) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <AppHeader currentPage="dashboard" isLoggedIn={true} hasPurchased={false} isPreviewMode={true} />
         <DashboardContent profileData={null} isPreviewMode={true} />
       </div>
@@ -58,7 +58,7 @@ export async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="dashboard" isLoggedIn={true} hasPurchased={true} />
       <DashboardContent profileData={profileData} isPreviewMode={false} />
     </div>

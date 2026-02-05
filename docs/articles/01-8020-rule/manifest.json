@@ -1,6 +1,6 @@
 {
   "id": "01-8020-rule",
-  "title": "The 80/20 Rule for Learning from Social Interactions",
+  "title": "The 80/20 Rule for Field Reports",
   "status": "draft",
   "requiredContext": {
     "research": [
@@ -13,47 +13,65 @@
     "articleIndex": "docs/articles/INDEX.md"
   },
   "keyResearchPoints": [
-    "Skilled Seducer's '3 minutes before you lost her' concept",
-    "BJJ Scout method: analyze lead-up, not just the moment",
-    "Sports psychology: shorter debriefs work better",
-    "Memory research: emotionally significant moments encoded differently",
-    "Pareto principle applied to learning"
+    "Ericsson (1993): naive practice stops producing improvement after autonomous phase",
+    "Bjork (1994): 'desirable difficulties' — productive struggle improves long-term retention",
+    "Danaher: 'The lock is just the full stop at the end of a sentence. It's the sentence that counts.'",
+    "McGaugh / Zheng et al. (2022): emotional moments encoded via amygdala-hippocampal pathway",
+    "Cook & Crewther (2012): positive post-game feedback raises pre-game testosterone 28-51% for next game",
+    "Sweller: Cognitive Load Theory — working memory holds ~4-7 items, overload impairs encoding",
+    "Skilled Seducer: 'the 3 minutes before you lost her' concept",
+    "Ellis & Davidi (2005): reviewing successes AND failures beats failures alone"
   ],
-  "notes": "The intro section was marked as AI-sounding in feedback1. The BJJ section works well - preserve the specificity.",
+  "notes": "Contract revised 2026-02-05. Previous contract was too broad ('Social Interactions'), structure was repetitive (7 sections → 4), and contained unverifiable claims (3-2-1 framework, Brian Cain as researcher). Convergence argument now the centerpiece. Danaher quote replaces generic 'off the move'. Bjork properly attributed (was conflated with Ericsson). Cook & Crewther finding added.",
 
   "phase": 4,
   "phaseLocks": {
-    "contractLockedAt": "2026-02-01T10:00:00Z",
-    "structureLockedAt": "2026-02-01T10:00:00Z"
+    "contractLockedAt": "2026-02-05T12:00:00Z",
+    "structureLockedAt": "2026-02-05T12:00:00Z"
   },
   "contract": {
-    "title": "The 80/20 Rule for Learning from Social Interactions",
-    "thesis": "Most of a field report teaches you nothing - learning is concentrated in the 20% of moments where something actually shifted.",
-    "targetReader": "Practitioners who write field reports and want to extract more learning from fewer notes.",
+    "title": "The 80/20 Rule for Field Reports",
+    "titleAlternatives": [
+      "Why Most of Your Field Report Teaches You Nothing",
+      "What BJJ Coaches, Neuroscientists, and Sports Psychologists All Agree On"
+    ],
+    "thesis": "Learning from experience concentrates in a small number of specific moments. BJJ fight analysis, deliberate practice research, memory neuroscience, and sports psychology debriefing all converge independently: depth on the moments that mattered beats breadth across everything that happened.",
+    "targetReader": "Practitioners who debrief their sessions (or want to start) and are either spending too much effort documenting for too little insight, or not documenting at all because it feels overwhelming.",
     "mustInclude": [
-      "The 80/20 rule applied to learning (Pareto principle)",
-      "BJJ 'off the move' analysis as concrete analogy",
-      "Emotional tipping points concept",
-      "Sports psychology research on focused debriefs"
+      "Ericsson's deliberate practice (correctly framed: improvement at edge of ability, naive practice automates)",
+      "Bjork's desirable difficulties (the actual source for 'productive struggle')",
+      "Danaher's 'full stop at the end of a sentence' quote (replaces generic 'off the move')",
+      "Emotional memory encoding — McGaugh, Zheng et al. 2022 (amygdala-hippocampal pathway)",
+      "Cook & Crewther (2012) testosterone finding (specific, surprising, verified)",
+      "Skilled Seducer's '3 minutes before you lost her'",
+      "Cognitive Load Theory for why exhaustive analysis fails",
+      "The convergence argument made explicit — multiple domains arriving at same conclusion"
     ],
     "mustNotInclude": [
+      "The '3-2-1' framework (unverified as established framework)",
+      "Brian Cain presented as researcher (he's a practitioner)",
+      "'Seriously.' or similar AI punchy devices",
+      "First-person anecdotes",
+      "Unverified claims presented as peer-reviewed research",
+      "Generic self-improvement fluff",
       "Specific lines or routines",
-      "Manipulation tactics",
-      "Generic self-improvement fluff"
+      "Manipulation tactics"
     ],
-    "tone": "Analytical and credible. Third-person perspective with concrete examples."
+    "tone": "Research-backed, third-person. Authority from naming specific researchers with concrete findings. Alive and specific, not punchy and hollow."
   },
   "outline": {
     "sections": [
-      { "id": "intro", "purpose": "Hook the reader with the counterintuitive claim that most notes are useless" },
-      { "id": "bjj-analogy", "purpose": "Make the abstract concrete with BJJ 'off the move' analysis" },
-      { "id": "emotional-tipping", "purpose": "Show HOW to identify the 20% - emotional markers" },
-      { "id": "research", "purpose": "Add credibility with sports psychology evidence" },
-      { "id": "practical", "purpose": "Give reader actionable steps to implement" },
-      { "id": "objections", "purpose": "Address 'but what if I miss something important?'" },
-      { "id": "conclusion", "purpose": "Reinforce thesis and create urgency to apply it" }
+      { "id": "claim", "purpose": "Cold open. 80% of a field report is filler. Pareto applies to learning from experience. ~150 words." },
+      { "id": "convergence", "purpose": "Core argument. Three independent domains (BJJ analysis, deliberate practice, field report practice) arrive at same conclusion. Danaher quote, Ericsson/Bjork, Skilled Seducer. ~400 words." },
+      { "id": "neuroscience", "purpose": "Why your brain already knows which moments matter. Emotional encoding (McGaugh/Zheng), Cook & Crewther testosterone finding, Cognitive Load Theory. ~300 words." },
+      { "id": "practical", "purpose": "The practical shift. Which moment are you still thinking about? The 3 questions. Beginner caveat. ~200 words." }
     ],
-    "lockedAt": "2026-02-01T10:00:00Z"
+    "lockedAt": "2026-02-05T12:00:00Z"
   },
-  "structureUnlocks": []
+  "structureUnlocks": [
+    {
+      "date": "2026-02-05",
+      "reason": "Contract revised: title narrowed, structure cut from 7 to 4 sections, convergence argument made centerpiece, research claims verified and corrected"
+    }
+  ]
 }

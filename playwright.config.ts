@@ -81,6 +81,28 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
+    // === Cross-browser smoke (unauthenticated only) ===
+    {
+      name: 'smoke-firefox',
+      testMatch: /smoke\.spec\.ts/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'smoke-webkit',
+      testMatch: /smoke\.spec\.ts/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'smoke-iphone',
+      testMatch: /smoke\.spec\.ts/,
+      use: { ...devices['iPhone 14'] },
+    },
+    {
+      name: 'smoke-android',
+      testMatch: /smoke\.spec\.ts/,
+      use: { ...devices['Pixel 7'] },
+    },
+
     // === Session-creating tests (chained to run ONE file at a time) ===
     // These files create/end sessions via UI for the same user. Since only one session
     // can be active at a time, they MUST NOT run in parallel. Each project contains

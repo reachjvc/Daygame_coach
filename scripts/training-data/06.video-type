@@ -968,7 +968,33 @@ def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
 
 
 def find_input_files(in_dir: Path) -> List[Path]:
-    return sorted(in_dir.rglob("*.audio_features.json"))
+    """Find audio_features.json files, preferring clean16k over raw16k per video.
+
+    Matches convention from stages 03-05: clean16k is canonical for downstream stages.
+    Falls back to raw16k only when clean16k is missing for a given video.
+    """
+    all_files = sorted(in_dir.rglob("*.audio_features.json"))
+
+    # Group by video directory
+    dir_files: Dict[Path, List[Path]] = {}
+    for f in all_files:
+        dir_files.setdefault(f.parent, []).append(f)
+
+    selected: List[Path] = []
+    for video_dir in sorted(dir_files.keys()):
+        files = dir_files[video_dir]
+        clean = [f for f in files if ".clean16k." in f.name]
+        raw = [f for f in files if ".raw16k." in f.name]
+        other = [f for f in files if ".clean16k." not in f.name and ".raw16k." not in f.name]
+
+        if clean:
+            selected.extend(clean)
+        elif raw:
+            selected.extend(raw)
+        else:
+            selected.extend(other)
+
+    return sorted(selected)
 
 
 # ---------------------------

@@ -68,6 +68,45 @@ export const SET_TYPE_OPTIONS: { value: SetType; label: string; emoji: string; d
 ]
 
 // ============================================
+// Voice Language Options
+// ============================================
+
+export interface VoiceLanguageOption {
+  code: string
+  label: string
+  /** Whisper language code (ISO 639-1 or name) */
+  whisperLang: string
+}
+
+export const DEFAULT_VOICE_LANGUAGE = "en-US"
+
+export const VOICE_LANGUAGES: VoiceLanguageOption[] = [
+  { code: "en-US", label: "English (US)", whisperLang: "english" },
+  { code: "en-GB", label: "English (UK)", whisperLang: "english" },
+  { code: "da-DK", label: "Danish", whisperLang: "danish" },
+  { code: "de-DE", label: "German", whisperLang: "german" },
+  { code: "es-ES", label: "Spanish", whisperLang: "spanish" },
+  { code: "fr-FR", label: "French", whisperLang: "french" },
+  { code: "nl-NL", label: "Dutch", whisperLang: "dutch" },
+  { code: "pt-BR", label: "Portuguese (BR)", whisperLang: "portuguese" },
+  { code: "sv-SE", label: "Swedish", whisperLang: "swedish" },
+  { code: "pl-PL", label: "Polish", whisperLang: "polish" },
+  { code: "it-IT", label: "Italian", whisperLang: "italian" },
+]
+
+export const VALID_VOICE_LANGUAGE_CODES = new Set(VOICE_LANGUAGES.map(l => l.code))
+
+/** Get display label for a voice language code */
+export function getVoiceLanguageLabel(code: string): string {
+  return VOICE_LANGUAGES.find(l => l.code === code)?.label ?? code
+}
+
+/** Get Whisper language name for a voice language code */
+export function getWhisperLanguage(code: string): string {
+  return VOICE_LANGUAGES.find(l => l.code === code)?.whisperLang ?? "english"
+}
+
+// ============================================
 // Session Settings
 // ============================================
 

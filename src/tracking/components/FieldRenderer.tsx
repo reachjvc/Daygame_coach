@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, ChangeEvent } from "react"
+import { useState, useEffect, ChangeEvent } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Plus, X, Check } from "lucide-react"
 import type { TemplateField } from "@/src/db/trackingTypes"
-import type { VoiceRecorderResult } from "../types"
+import type { VoiceRecorderResult, AudioUploadResult } from "../types"
 import { VoiceRecorderButton } from "./VoiceRecorderButton"
+import { AudioUploadButton } from "./AudioUploadButton"
 
 interface FieldRendererProps {
   field: TemplateField
@@ -32,6 +33,14 @@ const VOICE_LABEL_TYPES = new Set(["text", "textarea"])
 
 export function FieldRenderer({ field, value, onChange, variant = "default" }: FieldRendererProps) {
   const [tagInput, setTagInput] = useState("")
+  const [audioBlobUrl, setAudioBlobUrl] = useState<string | null>(null)
+
+  // Revoke blob URL on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (audioBlobUrl) URL.revokeObjectURL(audioBlobUrl)
+    }
+  }, [audioBlobUrl])
 
   // Voice transcription handler for text/textarea fields (appends to existing value)
   const handleVoiceComplete = (result: VoiceRecorderResult) => {
@@ -40,6 +49,18 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
     const separator = current ? " " : ""
     onChange(current + separator + result.transcription)
   }
+
+  // Audio file upload handler for conversation fields
+  const handleAudioUpload = (result: AudioUploadResult) => {
+    setAudioBlobUrl(result.audioBlobUrl)
+    if (result.transcription) {
+      const current = (value as string) || ""
+      const separator = current ? "\n\n" : ""
+      onChange(current + separator + result.transcription)
+    }
+  }
+
+  const isConversationField = field.id === "conversation" && field.type === "textarea"
 
   const inputClassName = cn(
     "transition-all duration-200 bg-background border-border/50",
@@ -390,13 +411,39 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
           {field.label}
         </Label>
         {showLabelVoice && (
-          <VoiceRecorderButton
-            onComplete={handleVoiceComplete}
-            data-testid={`voice-btn-${field.id}`}
-          />
+          <div className="flex items-center gap-1">
+            <VoiceRecorderButton
+              onComplete={handleVoiceComplete}
+              data-testid={`voice-btn-${field.id}`}
+            />
+            {isConversationField && (
+              <AudioUploadButton
+                onComplete={handleAudioUpload}
+                data-testid={`audio-upload-${field.id}`}
+              />
+            )}
+          </div>
         )}
       </div>
       {renderField()}
+      {isConversationField && audioBlobUrl && (
+        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
+          <audio src={audioBlobUrl} controls className="h-8 flex-1" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => {
+              URL.revokeObjectURL(audioBlobUrl)
+              setAudioBlobUrl(null)
+            }}
+            className="text-muted-foreground hover:text-destructive shrink-0"
+            title="Remove audio"
+          >
+            <X className="size-3" />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

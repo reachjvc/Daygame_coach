@@ -9,7 +9,7 @@ export default async function DashboardArticlesPage() {
   // Articles are publicly accessible - no auth required
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <AppHeader currentPage="articles" isLoggedIn={false} />
         <ArticlesPage />
       </div>
@@ -25,7 +25,7 @@ export default async function DashboardArticlesPage() {
   const hasPurchased = profile?.has_purchased ?? false
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="articles" isLoggedIn={true} hasPurchased={hasPurchased} />
       <ArticlesPage />
     </div>

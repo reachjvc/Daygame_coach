@@ -25,8 +25,8 @@ export async function ScenariosPage() {
   // Preview mode for non-logged-in users
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur">
+      <div className="min-h-dvh bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <Target className="size-6 text-primary" />
@@ -67,8 +67,8 @@ export async function ScenariosPage() {
   // Preview mode for users without subscription
   if (!profile?.has_purchased) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur">
+      <div className="min-h-dvh bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <Target className="size-6 text-primary" />
@@ -103,8 +103,8 @@ export async function ScenariosPage() {
   // Onboarding check - only for subscribed users
   if (!profile?.onboarding_completed) {
     return (
-      <div className="min-h-screen bg-background">
-        <header className="border-b border-border bg-card/50 backdrop-blur">
+      <div className="min-h-dvh bg-background">
+        <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <Target className="size-6 text-primary" />
@@ -135,8 +135,8 @@ export async function ScenariosPage() {
   const recommendedDifficulty = getRecommendedDifficulty(profile?.level)
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card/50 backdrop-blur">
+    <div className="min-h-dvh bg-background">
+      <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
         <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
           <div className="flex items-center gap-2 font-bold text-xl text-foreground">
             <Target className="size-6 text-primary" />

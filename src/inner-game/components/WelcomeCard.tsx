@@ -67,9 +67,15 @@ export function WelcomeCard({
   return (
     <div className={isPreviewMode
       ? "flex items-center justify-center p-4"
-      : "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      : "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 pt-safe pb-safe"
     }>
-      <div className="bg-card rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-border/50" data-testid="inner-game-welcome">
+      <div
+        className="bg-card rounded-2xl shadow-2xl max-w-lg w-full max-h-[calc(var(--app-vh)*90)] overflow-y-auto scroll-touch border border-border/50"
+        data-testid="inner-game-welcome"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inner-game-welcome-title"
+      >
         {/* Header with gradient accent */}
         <div className="relative p-6 pb-4">
           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-purple-500 to-pink-500 rounded-t-2xl" />
@@ -100,7 +106,7 @@ export function WelcomeCard({
                 <Compass className="w-8 h-8 text-primary" />
               )}
             </div>
-            <h2 className="text-2xl font-bold text-foreground">
+            <h2 id="inner-game-welcome-title" className="text-2xl font-bold text-foreground">
               {isPreviewMode
                 ? "Inner Game Preview"
                 : isReturningUser

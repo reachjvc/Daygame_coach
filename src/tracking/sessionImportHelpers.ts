@@ -8,10 +8,10 @@ import type { SessionSummaryData } from "./types"
 
 /**
  * Get emoji for a mood value.
- * Returns neutral emoji for null/invalid values.
+ * Returns "-" for null (no mood selected), neutral emoji for invalid values.
  */
 export function getMoodEmoji(value: number | null): string {
-  if (value === null) return "😶"
+  if (value === null) return "-"
   return MOOD_OPTIONS.find((m) => m.value === value)?.emoji || "😶"
 }
 

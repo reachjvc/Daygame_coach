@@ -351,8 +351,13 @@ export function ProgressDashboard() {
 
         {/* All Achievements Modal */}
         {achievementsExpanded && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 pt-safe pb-safe">
+            <Card
+              className="w-full max-w-4xl max-h-[calc(var(--app-vh)*90)] overflow-hidden flex flex-col"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="achievements-title"
+            >
               {/* Header with orange-themed close button */}
               <div className="flex items-center justify-between p-5 border-b bg-card">
                 <div className="flex items-center gap-3">
@@ -360,7 +365,7 @@ export function ProgressDashboard() {
                     <Trophy className="size-6 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">All Achievements</h2>
+                    <h2 id="achievements-title" className="text-xl font-bold">All Achievements</h2>
                     <p className="text-sm text-muted-foreground">
                       {state.milestones.length} of {Object.keys(ALL_MILESTONES).length} unlocked
                     </p>
@@ -376,7 +381,7 @@ export function ProgressDashboard() {
               </div>
 
               {/* Scrollable content with hidden scrollbar */}
-              <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex-1 overflow-y-auto scroll-touch [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {/* Recent Achievements Showcase - with names visible */}
                 {state.milestones.length > 0 && (
                   <div className="p-5 border-b bg-gradient-to-b from-primary/5 to-transparent">
@@ -926,4 +931,3 @@ export function ProgressDashboard() {
     </div>
   )
 }
-

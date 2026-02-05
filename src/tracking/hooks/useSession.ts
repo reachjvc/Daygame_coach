@@ -382,6 +382,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
         error: error instanceof Error ? error.message : "Failed to update approach",
       }))
     }
+  // Empty deps: reads from approachesRef (always current) instead of state closure
   }, [])
 
   const setGoal = useCallback(async (goal: number) => {

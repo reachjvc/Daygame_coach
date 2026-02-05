@@ -17,7 +17,7 @@ interface HomePageProps {
 
 export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageProps) {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="home" isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
 
       {/* Hero Section */}

@@ -130,8 +130,14 @@ export function ScenariosHub({
     <div className="space-y-8" data-testid="scenarios-hub">
       {/* Signup Prompt Modal */}
       {showSignupPrompt && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative" data-testid="scenarios-signup-prompt">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-safe pb-safe">
+          <div
+            className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative"
+            data-testid="scenarios-signup-prompt"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scenarios-signup-title"
+          >
             <button
               onClick={() => setShowSignupPrompt(false)}
               className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
@@ -143,7 +149,7 @@ export function ScenariosHub({
               <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Lock className="size-8 text-primary" />
               </div>
-              <h3 className="text-xl font-bold text-foreground mb-2">
+              <h3 id="scenarios-signup-title" className="text-xl font-bold text-foreground mb-2">
                 Unlock "{selectedScenarioName}"
               </h3>
               <p className="text-muted-foreground mb-6">

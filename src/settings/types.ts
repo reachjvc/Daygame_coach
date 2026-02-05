@@ -43,6 +43,7 @@ export interface ProfileInfo {
   experience_level: string | null
   primary_goal: string | null
   sandbox_settings: SandboxSettings
+  voice_language: string | null
 }
 
 export interface SubscriptionInfo {

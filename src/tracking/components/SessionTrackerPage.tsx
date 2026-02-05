@@ -739,9 +739,9 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
   // Active session view
   return (
-    <div className="min-h-screen pb-32">
+    <div className="min-h-dvh pb-32">
       {/* Header with session info */}
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b p-4">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b p-4 pt-safe">
         <div className="max-w-lg mx-auto flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -926,11 +926,16 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
       {/* Quick Log Bottom Sheet */}
       {showQuickLog && (
-        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm" data-testid="quick-log-modal">
-          <div className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-xl p-4 animate-in slide-in-from-bottom">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm pt-safe pb-safe" data-testid="quick-log-modal">
+          <div
+            className="fixed inset-x-0 bottom-0 z-50 bg-background border-t rounded-t-xl p-4 animate-in slide-in-from-bottom"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-log-title"
+          >
             <div className="max-w-lg mx-auto space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-semibold">Quick Log</h3>
+                <h3 id="quick-log-title" className="font-semibold">Quick Log</h3>
                 <div className="flex items-center gap-2">
                   <VoiceRecorderButton
                     onComplete={handleVoiceComplete}

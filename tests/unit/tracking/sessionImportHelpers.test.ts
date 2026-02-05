@@ -60,12 +60,12 @@ describe("getMoodEmoji", () => {
   })
 
   describe("null and invalid values", () => {
-    test("should return neutral emoji for null", () => {
+    test("should return dash for null (no mood selected)", () => {
       // Act
       const result = getMoodEmoji(null)
 
       // Assert
-      expect(result).toBe("😶")
+      expect(result).toBe("-")
     })
 
     test("should return neutral emoji for mood 0 (out of range)", () => {

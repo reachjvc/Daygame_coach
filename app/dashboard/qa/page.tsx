@@ -26,7 +26,7 @@ export default async function DashboardQAPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="qa" isLoggedIn={true} hasPurchased={true} />
       <QAPage />
     </div>

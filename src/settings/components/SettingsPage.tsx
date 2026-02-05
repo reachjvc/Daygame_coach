@@ -11,6 +11,7 @@ import {
   Trophy,
   TrendingUp,
   Target,
+  Mic,
   RotateCcw,
   ExternalLink,
   AlertCircle,
@@ -36,11 +37,13 @@ import type { SandboxSettings } from "@/src/scenarios/config"
 import { PRODUCTS } from "@/src/home"
 import type { SettingsPageProps } from "../types"
 import { DIFFICULTY_OPTIONS, LEVEL_TITLES } from "../types"
+import { VOICE_LANGUAGES, DEFAULT_VOICE_LANGUAGE, getVoiceLanguageLabel } from "@/src/tracking/config"
 
 interface SettingsPageClientProps extends SettingsPageProps {
   onUpdateSandboxSettings: (settings: Partial<SandboxSettings>) => Promise<void>
   onResetSandboxSettings: () => Promise<void>
   onUpdateDifficulty: (difficulty: string) => Promise<void>
+  onUpdateVoiceLanguage: (language: string) => Promise<void>
   onCancelSubscription: () => Promise<{ success: boolean }>
   onReactivateSubscription: () => Promise<{ success: boolean }>
   onOpenBillingPortal: () => Promise<{ url: string } | null>
@@ -54,6 +57,7 @@ export function SettingsPage({
   onUpdateSandboxSettings,
   onResetSandboxSettings,
   onUpdateDifficulty,
+  onUpdateVoiceLanguage,
   onCancelSubscription,
   onReactivateSubscription,
   onOpenBillingPortal,
@@ -67,6 +71,9 @@ export function SettingsPage({
   const [showResetDialog, setShowResetDialog] = useState(false)
   const [currentDifficulty, setCurrentDifficulty] = useState(
     profile.difficulty || "beginner"
+  )
+  const [currentVoiceLanguage, setCurrentVoiceLanguage] = useState(
+    profile.voice_language || DEFAULT_VOICE_LANGUAGE
   )
 
   const handleSandboxToggle = (
@@ -127,6 +134,13 @@ export function SettingsPage({
     })
   }
 
+  const handleVoiceLanguageChange = (language: string) => {
+    setCurrentVoiceLanguage(language)
+    startTransition(async () => {
+      await onUpdateVoiceLanguage(language)
+    })
+  }
+
   const product = subscription
     ? PRODUCTS.find((p) => p.id === subscription.productId)
     : null
@@ -136,7 +150,7 @@ export function SettingsPage({
   const xpProgress = Math.min((stats.xp / xpForNextLevel) * 100, 100)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="settings" isLoggedIn={true} hasPurchased={true} />
 
       <main className="mx-auto max-w-6xl px-8 py-8">
@@ -563,6 +577,37 @@ export function SettingsPage({
                       <p className="mt-1 text-sm text-muted-foreground">
                         {option.description}
                       </p>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Voice Language */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mic className="h-5 w-5" />
+                  Voice Language
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Language used for voice transcription in field reports and session tracking
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {VOICE_LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => handleVoiceLanguageChange(lang.code)}
+                      disabled={isPending}
+                      className={`rounded-lg border p-4 text-left transition-all ${
+                        currentVoiceLanguage === lang.code
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/50"
+                      } ${isPending ? "opacity-50" : ""}`}
+                    >
+                      <p className="font-medium">{lang.label}</p>
                     </button>
                   ))}
                 </div>

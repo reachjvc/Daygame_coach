@@ -5,6 +5,7 @@ import {
   updateSandboxSettings,
   resetSandboxSettings,
   updateDifficulty,
+  updateVoiceLanguage,
   cancelSubscription,
   reactivateSubscription,
   openBillingPortal,
@@ -39,6 +40,7 @@ export default async function SettingsPageWrapper() {
       onUpdateSandboxSettings={updateSandboxSettings}
       onResetSandboxSettings={resetSandboxSettings}
       onUpdateDifficulty={updateDifficulty}
+      onUpdateVoiceLanguage={updateVoiceLanguage}
       onCancelSubscription={cancelSubscription}
       onReactivateSubscription={reactivateSubscription}
       onOpenBillingPortal={openBillingPortal}

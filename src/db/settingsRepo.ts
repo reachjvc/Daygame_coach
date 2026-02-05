@@ -103,6 +103,44 @@ export async function updateDifficulty(userId: string, difficulty: string): Prom
 }
 
 /**
+ * Get voice language for a user.
+ */
+export async function getVoiceLanguage(userId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("voice_language")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null
+    }
+    throw new Error(`Failed to get voice language: ${error.message}`)
+  }
+
+  return data?.voice_language ?? null
+}
+
+/**
+ * Update voice language for a user.
+ */
+export async function updateVoiceLanguage(userId: string, language: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ voice_language: language })
+    .eq("id", userId)
+
+  if (error) {
+    throw new Error(`Failed to update voice language: ${error.message}`)
+  }
+}
+
+/**
  * Get the user's active subscription purchase.
  */
 export async function getActiveSubscriptionPurchase(

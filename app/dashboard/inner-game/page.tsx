@@ -12,7 +12,7 @@ export default async function DashboardInnerGamePage() {
   // Preview mode for non-logged-in users
   if (!user) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <AppHeader currentPage="inner-game" isLoggedIn={false} isPreviewMode={true} />
         <main className="mx-auto max-w-2xl px-4 py-12">
           <InnerGamePage isPreviewMode={true} />
@@ -30,7 +30,7 @@ export default async function DashboardInnerGamePage() {
   // Preview mode for users without subscription
   if (!profile?.has_purchased) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-dvh bg-background">
         <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={false} isPreviewMode={true} />
         <main className="mx-auto max-w-2xl px-4 py-12">
           <InnerGamePage isPreviewMode={true} />
@@ -41,7 +41,7 @@ export default async function DashboardInnerGamePage() {
 
   // Full access
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={true} />
       <InnerGamePage isPreviewMode={false} />
     </div>

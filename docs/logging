@@ -1,0 +1,16 @@
+2026-02-05
+- Reviewed UI/layout, responsive patterns, and browser-specific APIs for cross-browser/mobile risks.
+- Identified key issues: header/nav mobile overflow, vh-based layouts, voice recording API support gaps, SVG map styling/injection risks, modern CSS feature fallbacks, hidden scrollbars, and history/beforeunload behavior.
+- Prepared a remediation plan covering UI changes, fallbacks, and expanded browser/device testing.
+
+2026-02-05
+- Reviewed the remediation plan for cross-browser/mobile support and identified missing items (safe-area insets, reduced-motion, modal focus/scroll lock, input keyboard optimization, scroll momentum, visual regression/testing). Proposed plan refinements.
+- Added global utilities for dvh-based sizing and safe-area padding, plus reduced-motion overrides (app/globals.css).
+- Added ViewportHeightUpdater to set --app-vh via visualViewport/innerHeight (components/ViewportHeightUpdater.tsx) and wired it into app layout.
+- Replaced min-h-screen with min-h-dvh on non-test pages and updated QA/chat window heights to use --app-vh.
+- Added mobile navigation via a Radix dialog with shared nav data, plus responsive header padding (components/AppHeader.tsx, components/MobileNav.tsx).
+- Added scroll momentum utility and applied it to key scroll containers; updated modal max-heights to use --app-vh.
+- Added safe-area padding for fixed overlays/sticky header and basic dialog ARIA on custom modals (chat, scenarios signup, inner-game welcome, achievements, quick log).
+- Added text-wrap fallbacks and backdrop-filter fallback class; applied fallback to AppHeader and Scenarios headers.
+- Removed :has() usage from button size variants for broader browser compatibility.
+- Added cross-browser/mobile smoke projects in Playwright (Firefox, WebKit, iPhone, Pixel).

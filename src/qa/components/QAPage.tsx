@@ -148,7 +148,7 @@ export function QAPage() {
         </p>
       </header>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] h-[calc(100vh-280px)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px] h-[calc(var(--app-vh)*100-280px)]">
           {/* Left column: Chat */}
           <Card className="flex h-full flex-col">
             <CardHeader className="pb-3">
@@ -192,7 +192,7 @@ export function QAPage() {
                 </div>
               )}
 
-              <div className="flex flex-1 flex-col gap-4 px-6 overflow-y-auto" aria-live="polite">
+              <div className="flex flex-1 flex-col gap-4 px-6 overflow-y-auto scroll-touch" aria-live="polite">
                 {messages.length === 1 ? (
                   <div className="flex flex-1 flex-col items-center justify-center text-center space-y-4">
                     <div className="space-y-2">

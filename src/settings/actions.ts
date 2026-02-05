@@ -8,6 +8,7 @@ import {
   handleUpdateSandboxSettings,
   handleResetSandboxSettings,
   handleUpdateDifficulty,
+  handleUpdateVoiceLanguage,
   handleCancelSubscription,
   handleReactivateSubscription,
   createBillingPortalSession,
@@ -58,6 +59,16 @@ export async function resetSandboxSettings(): Promise<void> {
 export async function updateDifficulty(difficulty: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateDifficulty(userId, difficulty)
+  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+}
+
+/**
+ * Update voice language
+ */
+export async function updateVoiceLanguage(language: string): Promise<void> {
+  const userId = await requireAuth()
+  await handleUpdateVoiceLanguage(userId, language)
   revalidatePath(SETTINGS_CONFIG.paths.settings)
   revalidatePath(SETTINGS_CONFIG.paths.dashboard)
 }

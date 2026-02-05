@@ -33,7 +33,7 @@ export function CheckoutButton({ productId, children, className = "", ...props }
       </div>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[calc(var(--app-vh)*90)] overflow-y-auto scroll-touch">
           <DialogHeader>
             <DialogTitle>Complete Your Purchase</DialogTitle>
             <DialogDescription>Stripe migration in progress (temporary flow).</DialogDescription>

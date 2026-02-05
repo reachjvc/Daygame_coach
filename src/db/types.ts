@@ -67,6 +67,7 @@ export interface ProfileRow {
   sandbox_settings?: SandboxSettings | null
   scenarios_completed?: number | null
   subscription_cancelled_at?: string | null
+  voice_language?: string | null
   // Legacy preference fields (from old project)
   age_range_start?: number | null
   age_range_end?: number | null
@@ -97,6 +98,7 @@ export interface ProfileUpdate {
   sandbox_settings?: SandboxSettings | null
   scenarios_completed?: number | null
   subscription_cancelled_at?: string | null
+  voice_language?: string | null
 }
 
 // ============================================

@@ -208,6 +208,24 @@ export interface CustomReportConfig {
 }
 
 // ============================================
+// Conversation Audio Upload Types
+// ============================================
+
+/** Value for a conversation field that has an audio attachment */
+export interface ConversationFieldValue {
+  text: string
+  audioUrl: string | null
+  audioFileName: string | null
+  transcribedAt: string | null
+}
+
+/** Result from uploading and transcribing an audio file */
+export interface AudioUploadResult {
+  transcription: string
+  audioBlobUrl: string
+}
+
+// ============================================
 // Voice Recorder Types
 // ============================================
 

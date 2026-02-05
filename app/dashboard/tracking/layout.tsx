@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient } from "@/src/db/server"
 import { TrackingAuthProvider } from "./TrackingAuthContext"
+import { VoiceLanguageProvider } from "@/src/tracking/components/VoiceLanguageContext"
+import { DEFAULT_VOICE_LANGUAGE } from "@/src/tracking/config"
+import { getVoiceLanguage } from "@/src/db/settingsRepo"
 
 export default async function TrackingLayout({
   children,
@@ -18,9 +21,13 @@ export default async function TrackingLayout({
     redirect("/auth/login")
   }
 
+  const voiceLanguage = await getVoiceLanguage(session.user.id) ?? DEFAULT_VOICE_LANGUAGE
+
   return (
-    <TrackingAuthProvider userId={session.user.id}>
-      {children}
-    </TrackingAuthProvider>
+    <VoiceLanguageProvider language={voiceLanguage}>
+      <TrackingAuthProvider userId={session.user.id}>
+        {children}
+      </TrackingAuthProvider>
+    </VoiceLanguageProvider>
   )
 }

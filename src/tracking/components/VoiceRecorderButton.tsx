@@ -1,11 +1,15 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Mic, Square, Loader2, X, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder"
+import { useVoiceLanguage } from "./VoiceLanguageContext"
+import { getVoiceLanguageLabel } from "../config"
 import type { VoiceRecorderResult } from "../types"
 import { cn } from "@/lib/utils"
+
+const VOICE_HINT_STORAGE_KEY = "voice-language-hint-shown"
 
 interface VoiceRecorderButtonProps {
   onComplete: (result: VoiceRecorderResult) => void
@@ -33,6 +37,8 @@ export function VoiceRecorderButton({
   disabled = false,
   className,
 }: VoiceRecorderButtonProps) {
+  const lang = useVoiceLanguage()
+  const langLabel = getVoiceLanguageLabel(lang)
   const {
     isRecording,
     isTranscribing,
@@ -45,9 +51,27 @@ export function VoiceRecorderButton({
     clearError,
     isSupported,
     isTranscriptionSupported,
-  } = useVoiceRecorder()
+  } = useVoiceRecorder(lang)
 
   const [showError, setShowError] = useState(false)
+  const [showLanguageHint, setShowLanguageHint] = useState(false)
+
+  // Show first-use language hint when recording starts
+  useEffect(() => {
+    if (isRecording && typeof window !== "undefined") {
+      const hintShown = localStorage.getItem(VOICE_HINT_STORAGE_KEY)
+      if (!hintShown) {
+        setShowLanguageHint(true)
+        localStorage.setItem(VOICE_HINT_STORAGE_KEY, "true")
+        // Auto-dismiss after 6 seconds
+        const timer = setTimeout(() => setShowLanguageHint(false), 6000)
+        return () => clearTimeout(timer)
+      }
+    }
+    if (!isRecording) {
+      setShowLanguageHint(false)
+    }
+  }, [isRecording])
 
   const handleClick = useCallback(async () => {
     if (!isSupported) {
@@ -151,6 +175,14 @@ export function VoiceRecorderButton({
         >
           <X className="size-4" />
         </Button>
+
+        {/* First-use language hint */}
+        {showLanguageHint && (
+          <span className="text-xs text-muted-foreground animate-in fade-in duration-300">
+            Transcribing in {langLabel}. Change in{" "}
+            <a href="/dashboard/settings" className="underline hover:text-primary">Settings</a>.
+          </span>
+        )}
       </div>
     )
   }
@@ -166,8 +198,8 @@ export function VoiceRecorderButton({
       className={cn("text-muted-foreground hover:text-primary", className)}
       title={
         isTranscriptionSupported
-          ? "Record voice note"
-          : "Record voice note (auto-transcription not available in this browser)"
+          ? `Record voice note (${langLabel})`
+          : `Record voice note (${langLabel}, auto-transcription not available in this browser)`
       }
       data-testid="voice-record-button"
     >

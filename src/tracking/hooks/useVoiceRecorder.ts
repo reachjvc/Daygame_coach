@@ -73,7 +73,7 @@ function isSpeechRecognitionSupported(): boolean {
  *
  * Free, no API key required. Works in browsers but not iOS installed PWA.
  */
-export function useVoiceRecorder(): UseVoiceRecorderReturn {
+export function useVoiceRecorder(lang: string = "en-US"): UseVoiceRecorderReturn {
   const [isRecording, setIsRecording] = useState(false)
   const [isTranscribing, setIsTranscribing] = useState(false)
   const [duration, setDuration] = useState(0)
@@ -167,7 +167,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
         recognition.continuous = true
         recognition.interimResults = true
-        recognition.lang = "en-US"
+        recognition.lang = lang
 
         recognition.onresult = (event) => {
           let finalTranscript = ""
@@ -240,7 +240,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         setError("Failed to start recording. Please try again.")
       }
     }
-  }, [isSupported])
+  }, [isSupported, lang])
 
   const stopRecording = useCallback(async (): Promise<VoiceRecorderResult | null> => {
     if (!mediaRecorderRef.current || !isRecording) {

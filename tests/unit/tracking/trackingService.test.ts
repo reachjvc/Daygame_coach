@@ -6,7 +6,7 @@
  */
 
 import { describe, test, expect } from "vitest"
-import { generateSlug, estimateMinutes } from "@/src/tracking/trackingService"
+import { generateSlug, estimateMinutes, getConversationText, getConversationAudioUrl } from "@/src/tracking/trackingService"
 import type { TemplateField } from "@/src/db/trackingTypes"
 
 // Helper to create minimal TemplateField for testing
@@ -218,5 +218,70 @@ describe("estimateMinutes", () => {
 
     // Assert - 0.5 + 0.5 + 0.5 = 1.5, Math.round = 2
     expect(minutes).toBe(2)
+  })
+})
+
+describe("getConversationText", () => {
+  test("returns plain string as-is", () => {
+    expect(getConversationText("Hello world")).toBe("Hello world")
+  })
+
+  test("extracts text from ConversationFieldValue object", () => {
+    const value = { text: "Me: Hi\nHer: Hey", audioUrl: "blob:...", audioFileName: "rec.m4a", transcribedAt: "2026-01-01" }
+    expect(getConversationText(value)).toBe("Me: Hi\nHer: Hey")
+  })
+
+  test("returns empty string for null", () => {
+    expect(getConversationText(null)).toBe("")
+  })
+
+  test("returns empty string for undefined", () => {
+    expect(getConversationText(undefined)).toBe("")
+  })
+
+  test("returns empty string for number", () => {
+    expect(getConversationText(42)).toBe("")
+  })
+
+  test("returns empty string for object without text property", () => {
+    expect(getConversationText({ foo: "bar" })).toBe("")
+  })
+
+  test("returns empty string from ConversationFieldValue with empty text", () => {
+    const value = { text: "", audioUrl: null, audioFileName: null, transcribedAt: null }
+    expect(getConversationText(value)).toBe("")
+  })
+})
+
+describe("getConversationAudioUrl", () => {
+  test("extracts audioUrl from ConversationFieldValue", () => {
+    const value = { text: "transcript", audioUrl: "https://example.com/audio.m4a", audioFileName: "audio.m4a", transcribedAt: "2026-01-01" }
+    expect(getConversationAudioUrl(value)).toBe("https://example.com/audio.m4a")
+  })
+
+  test("returns null when audioUrl is null", () => {
+    const value = { text: "transcript", audioUrl: null, audioFileName: null, transcribedAt: null }
+    expect(getConversationAudioUrl(value)).toBeNull()
+  })
+
+  test("returns null when audioUrl is empty string", () => {
+    const value = { text: "transcript", audioUrl: "", audioFileName: null, transcribedAt: null }
+    expect(getConversationAudioUrl(value)).toBeNull()
+  })
+
+  test("returns null for plain string input", () => {
+    expect(getConversationAudioUrl("just text")).toBeNull()
+  })
+
+  test("returns null for null input", () => {
+    expect(getConversationAudioUrl(null)).toBeNull()
+  })
+
+  test("returns null for undefined input", () => {
+    expect(getConversationAudioUrl(undefined)).toBeNull()
+  })
+
+  test("returns null for object without audioUrl", () => {
+    expect(getConversationAudioUrl({ text: "hello" })).toBeNull()
   })
 })
