@@ -55,9 +55,9 @@ import sys
 import time
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
-import jsonschema
+from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
 
 
 # ---------------------------
@@ -145,9 +145,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-SCHEMA_PATH = Path(__file__).parent / "schemas" / "content.schema.json"
-
-PROMPT_VERSION = "1.0.0"
+PROMPT_VERSION = "1.1.0"
 PIPELINE_VERSION = "07.content-v1"
 
 # Failure budget
@@ -170,24 +168,6 @@ class ValidationResult:
 
     def to_dict(self) -> Dict[str, str]:
         return {"severity": self.severity, "check": self.check, "message": self.message}
-
-
-def load_schema() -> Optional[Dict]:
-    """Load JSON schema for Stage 07 output validation."""
-    if SCHEMA_PATH.exists():
-        return json.loads(SCHEMA_PATH.read_text())
-    print(f"{LOG_PREFIX} WARNING: Schema not found at {SCHEMA_PATH}")
-    return None
-
-
-_CACHED_SCHEMA: Optional[Dict] = None
-
-
-def get_schema() -> Optional[Dict]:
-    global _CACHED_SCHEMA
-    if _CACHED_SCHEMA is None:
-        _CACHED_SCHEMA = load_schema()
-    return _CACHED_SCHEMA
 
 
 def fuzzy_evidence_match(evidence: str, transcript_text: str, threshold: float = 0.7) -> bool:
@@ -375,6 +355,17 @@ def validate_enrichment_output(
                 "error", "investment_without_post_hook",
                 f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
                 f"investment_level is set but post_hook phase not found in turn_phases"
+            ))
+
+    # --- 7. Transcript artifact reporting ---
+    artifacts = output.get("transcript_artifacts", [])
+    if artifacts:
+        for artifact in artifacts:
+            results.append(ValidationResult(
+                "warning", "transcript_artifact",
+                f"Seg {artifact.get('segment_index', '?')}: "
+                f"{artifact.get('artifact_type', '?')} — "
+                f"{artifact.get('description', 'no description')}"
             ))
 
     # --- Summary ---
@@ -664,8 +655,18 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 5. TOPICS DISCUSSED: Topics covered in the commentary
 6. UNLISTED CONCEPTS: Same format as above
 
+TRANSCRIPT QUALITY: If you notice segments with suspected Whisper transcription artifacts,
+include additional entries in the array with type "transcript_artifact". Flag:
+- Repeated filler words that don't fit conversational context (e.g., "yeah yeah yeah yeah yeah" filling a gap)
+- Nonsensical repeated phrases
+- Text that appears to be hallucinated rather than real speech
+Do NOT flag natural speech patterns (e.g., someone genuinely saying "yes, yes" twice).
+Format: {{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+Return no transcript_artifact entries if no artifacts detected.
+
 OUTPUT FORMAT: Return a JSON array containing one object for each approach conversation
-AND each commentary block, in chronological order. Output ONLY valid JSON.
+AND each commentary block, in chronological order. Include any transcript_artifact entries
+at the end of the array. Output ONLY valid JSON.
 
 EXAMPLE:
 [
@@ -761,7 +762,17 @@ FOR EACH SECTION, analyze:
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
 
+TRANSCRIPT QUALITY: If you notice segments with suspected Whisper transcription artifacts,
+include additional entries in the array with type "transcript_artifact". Flag:
+- Repeated filler words that don't fit conversational context (e.g., "yeah yeah yeah yeah yeah" filling a gap)
+- Nonsensical repeated phrases
+- Text that appears to be hallucinated rather than real speech
+Do NOT flag natural speech patterns (e.g., someone genuinely saying "yes, yes" twice).
+Format: {{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+Return no transcript_artifact entries if no artifacts detected.
+
 OUTPUT FORMAT: Return a JSON array with one object per section.
+Include any transcript_artifact entries at the end of the array.
 Output ONLY valid JSON, no explanation text.
 
 EXAMPLE:
@@ -869,9 +880,14 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     elapsed = time.time() - start_time
 
     enrichments: List[Dict] = []
+    transcript_artifacts: List[Dict] = []
     if response:
-        enrichments = parse_enrichment_response(response)
-        print(f"[07.content]   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
+        all_entries = parse_enrichment_response(response)
+        # Separate transcript_artifact entries from enrichment entries
+        transcript_artifacts = [e for e in all_entries if e.get("type") == "transcript_artifact"]
+        enrichments = [e for e in all_entries if e.get("type") != "transcript_artifact"]
+        artifact_msg = f", {len(transcript_artifacts)} artifacts" if transcript_artifacts else ""
+        print(f"[07.content]   Got {len(enrichments)} enrichments{artifact_msg} in {elapsed:.1f}s")
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
@@ -925,6 +941,7 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         "speaker_corrections": data.get("speaker_corrections", []),
         "segments": segments,
         "enrichments": enrichments,
+        "transcript_artifacts": transcript_artifacts,
         "summary": {
             "total_conversations": len(approach_convs),
             "enriched_conversations": len(approach_enrichments),
@@ -1063,6 +1080,10 @@ def main() -> None:
         help="Process all sources from sources.txt file"
     )
     parser.add_argument(
+        "--manifest",
+        help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt)."
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview what would be processed"
@@ -1118,6 +1139,40 @@ def main() -> None:
 
         in_dir = input_path
         out_dir = Path(args.output) if args.output else output_root()
+    elif args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            raise SystemExit(f"Manifest file not found: {manifest_path}")
+
+        sources_map = load_manifest_sources(manifest_path)
+        total_convs = 0
+        total_enriched = 0
+
+        for src_name, vid_ids in sorted(sources_map.items()):
+            src_in_dir = input_root() / src_name
+            if not src_in_dir.exists():
+                print(f"[07.content] Skipping {src_name}: no 06.video-type output")
+                continue
+
+            src_out_dir = output_root() / src_name
+            files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+            if not files:
+                print(f"[07.content] Skipping {src_name}: no manifest videos found in input")
+                continue
+
+            print(f"[07.content] Manifest: {src_name} ({len(files)} videos)")
+            for input_file in files:
+                output_file = compute_output_path(input_file, src_out_dir)
+                if output_file.exists() and not args.overwrite:
+                    continue
+                result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+                total_convs += result["conversations"]
+                total_enriched += result["enriched"]
+
+        print(f"\n[07.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
+        return
     elif args.sources:
         sources_path = repo_root() / args.sources
         if not sources_path.exists():
@@ -1146,7 +1201,7 @@ def main() -> None:
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     else:
-        raise SystemExit("Provide --input, --test, or --sources")
+        raise SystemExit("Provide --input, --test, --manifest, or --sources")
 
     # Directory mode
     files = find_input_files(in_dir)

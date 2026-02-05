@@ -52,7 +52,7 @@
         "properties": {
           "role": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other", "unknown"]
+            "enum": ["coach", "target", "voiceover", "other", "unknown", "collapsed"]
           },
           "confidence": {
             "type": "number",
@@ -106,6 +106,11 @@
           "is_conversation_start": {
             "type": "boolean",
             "description": "True if this segment starts a new conversation"
+          },
+          "speaker_role_override": {
+            "type": "string",
+            "enum": ["coach", "target", "voiceover", "other", "unknown"],
+            "description": "Per-segment role override for collapsed speakers. Takes precedence over speaker_role derived from speaker_labels."
           }
         }
       }
@@ -137,6 +142,39 @@
             "type": "string",
             "description": "Type of opener used (e.g., direct, compliment, situational)"
           }
+        }
+      }
+    },
+    "speaker_collapse": {
+      "type": ["object", "null"],
+      "description": "Speaker collapse detection and reassignment metadata. Null when no collapse detected.",
+      "properties": {
+        "detected": {
+          "type": "boolean",
+          "description": "Whether speaker collapse was detected"
+        },
+        "collapsed_speakers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Speaker IDs that were collapsed (e.g., SPEAKER_00)"
+        },
+        "total_segments_affected": {
+          "type": "integer",
+          "description": "Total segments belonging to collapsed speakers"
+        },
+        "reassigned_count": {
+          "type": "integer",
+          "description": "Segments given a definite role (coach/target/other)"
+        },
+        "unknown_count": {
+          "type": "integer",
+          "description": "Segments that remain unknown despite reassignment attempt"
+        },
+        "reassignment_rate": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Fraction of affected segments successfully reassigned"
         }
       }
     },

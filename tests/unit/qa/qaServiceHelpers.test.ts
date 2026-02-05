@@ -99,18 +99,6 @@ describe('createNoContextResponse', () => {
       expect(result.meta.provider).toBe('claude')
     })
 
-    test('should use openai provider correctly', () => {
-      // Arrange
-      const provider = 'openai'
-      const startTime = Date.now()
-
-      // Act
-      const result = createNoContextResponse(provider, startTime)
-
-      // Assert
-      expect(result.meta.provider).toBe('openai')
-    })
-
     test('should use ollama provider correctly', () => {
       // Arrange
       const provider = 'ollama'
@@ -503,18 +491,6 @@ describe('getDefaultModel', () => {
     expect(result.length).toBeGreaterThan(0)
   })
 
-  test('should return openai model for openai provider', () => {
-    // Arrange
-    const provider = 'openai' as const
-
-    // Act
-    const result = getDefaultModel(provider)
-
-    // Assert
-    expect(typeof result).toBe('string')
-    expect(result.length).toBeGreaterThan(0)
-  })
-
   test('should return claude model for claude provider', () => {
     // Arrange
     const provider = 'claude' as const
@@ -530,12 +506,10 @@ describe('getDefaultModel', () => {
   test('should return different models for different providers', () => {
     // Arrange & Act
     const ollamaModel = getDefaultModel('ollama')
-    const openaiModel = getDefaultModel('openai')
     const claudeModel = getDefaultModel('claude')
 
     // Assert - models should be different (or at least defined)
     expect(ollamaModel).toBeDefined()
-    expect(openaiModel).toBeDefined()
     expect(claudeModel).toBeDefined()
   })
 })

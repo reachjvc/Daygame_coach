@@ -18,7 +18,7 @@ export const qaRequestSchema = z.object({
     .optional(),
   generation: z
     .object({
-      provider: z.enum(["ollama", "openai", "claude"]).optional(),
+      provider: z.enum(["ollama", "claude"]).optional(),
       model: z.string().optional(),
       maxOutputTokens: z
         .number()

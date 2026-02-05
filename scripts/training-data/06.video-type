@@ -45,18 +45,20 @@ import sys
 import time
 from dataclasses import dataclass, asdict, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import jsonschema
+
+from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
 
 
 # ---------------------------
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "3.0.0"
-PIPELINE_VERSION = "06.video-type-v3"
-PROMPT_VERSION = "3.0.0"
+SCHEMA_VERSION = "3.1.0"
+PIPELINE_VERSION = "06.video-type-v3.1"
+PROMPT_VERSION = "3.1.0"
 
 DEBUG_MODE = False
 
@@ -173,25 +175,64 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
     # --- 5. Speaker role sanity ---
     speaker_labels = output.get("speaker_labels", {})
     roles = [v.get("role", "unknown") for v in speaker_labels.values()]
+    collapse_meta = output.get("speaker_collapse")
 
-    if "coach" not in roles:
-        results.append(ValidationResult(
-            "warning", "no_coach_speaker",
-            f"No speaker labeled as coach. Roles found: {roles}"
-        ))
+    if collapse_meta and collapse_meta.get("detected"):
+        # When collapse is detected, check resolved segment roles for coach/target presence
+        segment_roles = set(s.get("speaker_role", "unknown") for s in output_segments)
 
-    if video_type in ("infield", "compilation") and "target" not in roles:
-        results.append(ValidationResult(
-            "warning", "no_target_in_infield",
-            f"No target speaker in {video_type} video. Roles found: {roles}"
-        ))
+        if "coach" not in roles and "coach" not in segment_roles:
+            results.append(ValidationResult(
+                "warning", "no_coach_speaker",
+                f"No speaker labeled as coach (even after collapse resolution). "
+                f"Global roles: {roles}, Segment roles: {sorted(segment_roles)}"
+            ))
 
-    # Unknown speaker ratio
-    unknown_count = sum(1 for r in roles if r == "unknown")
-    if roles and unknown_count / len(roles) > 0.5:
+        if video_type in ("infield", "compilation") and "target" not in roles and "target" not in segment_roles:
+            results.append(ValidationResult(
+                "warning", "no_target_in_infield",
+                f"No target speaker in {video_type} video (even after collapse resolution). "
+                f"Global roles: {roles}, Segment roles: {sorted(segment_roles)}"
+            ))
+
+        # Report collapse reassignment quality
+        rate = collapse_meta.get("reassignment_rate", 0)
+        unknown_ct = collapse_meta.get("unknown_count", 0)
+        total = collapse_meta.get("total_segments_affected", 0)
+
+        if rate < 0.5:
+            results.append(ValidationResult(
+                "warning", "low_reassignment_rate",
+                f"Speaker collapse: only {rate:.0%} of {total} affected segments were reassigned. "
+                f"{unknown_ct} remain unknown."
+            ))
+        else:
+            results.append(ValidationResult(
+                "info", "speaker_collapse_resolved",
+                f"Speaker collapse: {collapse_meta.get('reassigned_count', 0)}/{total} segments "
+                f"reassigned ({rate:.0%}), {unknown_ct} remain unknown."
+            ))
+    else:
+        # Standard checks (no collapse)
+        if "coach" not in roles:
+            results.append(ValidationResult(
+                "warning", "no_coach_speaker",
+                f"No speaker labeled as coach. Roles found: {roles}"
+            ))
+
+        if video_type in ("infield", "compilation") and "target" not in roles:
+            results.append(ValidationResult(
+                "warning", "no_target_in_infield",
+                f"No target speaker in {video_type} video. Roles found: {roles}"
+            ))
+
+    # Unknown speaker ratio (exclude collapsed from this check)
+    non_collapsed_roles = [r for r in roles if r != "collapsed"]
+    unknown_count = sum(1 for r in non_collapsed_roles if r == "unknown")
+    if non_collapsed_roles and unknown_count / len(non_collapsed_roles) > 0.5:
         results.append(ValidationResult(
             "warning", "high_unknown_speaker_ratio",
-            f"{unknown_count}/{len(roles)} speakers are unknown"
+            f"{unknown_count}/{len(non_collapsed_roles)} non-collapsed speakers are unknown"
         ))
 
     # --- 6. Conversations-per-minute ratio ---
@@ -333,6 +374,10 @@ SPEAKER ROLES:
    - Mark as unknown if unsure
    - Flag for manual review
 
+6. "collapsed" - Pyannote merged multiple real speakers into this ID
+   - Shows BOTH coach AND target speech patterns
+   - Per-segment roles provided via speaker_role_override in the segments array
+
 SEGMENT TYPES (for conversation boundaries):
 
 1. "approach" - Part of live interaction with a woman
@@ -361,7 +406,14 @@ CRITICAL RULES:
 2. The person giving SHORT RESPONSES to questions is typically the target
 3. If unsure about a speaker, mark as "unknown" with low confidence - DO NOT GUESS
 4. Consider speech patterns across ALL segments, not just one or two
-5. If one speaker ID shows BOTH coach AND target patterns (opens AND gives short responses), this indicates pyannote merged two speakers. Label as "unknown" with confidence 0.3 and reasoning "mixed_diarization_error"
+5. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH coach AND target patterns (opens conversations AND gives short responses to questions), this indicates pyannote merged multiple speakers into one ID.
+   When you detect this:
+   a) In speaker_labels: Set that speaker's role to "collapsed" with confidence 0.3 and reasoning starting with "mixed_diarization_error: " followed by a brief description
+   b) In segments: For EACH segment from the collapsed speaker, add a "speaker_role_override" field:
+      - "coach" if the segment delivers an opener, compliment, cold read, or camera commentary
+      - "target" if the segment is a short response to a question, gives personal info when asked, or reacts to the coach
+      - "unknown" if you genuinely cannot determine from context
+   c) Only add speaker_role_override to segments from collapsed speakers. Omit it for all other segments.
 6. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
 7. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
 
@@ -376,7 +428,7 @@ FULL TRANSCRIPT ({segment_count} segments):
 {transcript}
 
 OUTPUT: First, briefly reason about the video type and speaker assignments (2-3 sentences). Then output the JSON object in a ```json code block with this exact structure:
-{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false}}, ...]}}
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|target|unknown (ONLY for collapsed speakers, omit otherwise)"}}, ...]}}
 """
 
 
@@ -616,6 +668,71 @@ def analyze_video(
 
 
 # ---------------------------
+# Speaker Collapse Resolution
+# ---------------------------
+
+def resolve_speaker_roles(
+    segments: List[Dict],
+    speaker_labels: Dict[str, Dict],
+    classifications: List[Dict],
+) -> Tuple[List[str], Optional[Dict[str, Any]]]:
+    """Resolve per-segment speaker roles, handling collapsed speakers.
+
+    For non-collapsed speakers, uses the global speaker_labels mapping.
+    For collapsed speakers, uses per-segment speaker_role_override from LLM output.
+
+    Returns:
+        - List of speaker_role strings (one per segment, in order)
+        - speaker_collapse metadata dict (or None if no collapse detected)
+    """
+    collapsed_ids = {
+        spk_id for spk_id, label in speaker_labels.items()
+        if label.get("role") == "collapsed"
+    }
+
+    if not collapsed_ids:
+        roles = []
+        for seg in segments:
+            speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+            roles.append(speaker_labels.get(speaker_id, {}).get("role", "unknown"))
+        return roles, None
+
+    roles = []
+    total_affected = 0
+    reassigned = 0
+    unknown = 0
+
+    for i, seg in enumerate(segments):
+        speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
+
+        if speaker_id in collapsed_ids:
+            total_affected += 1
+            classification = classifications[i] if i < len(classifications) else {}
+            override = classification.get("speaker_role_override", "unknown")
+
+            if override in ("coach", "target", "voiceover", "other"):
+                reassigned += 1
+            else:
+                override = "unknown"
+                unknown += 1
+
+            roles.append(override)
+        else:
+            roles.append(speaker_labels.get(speaker_id, {}).get("role", "unknown"))
+
+    collapse_meta = {
+        "detected": True,
+        "collapsed_speakers": sorted(collapsed_ids),
+        "total_segments_affected": total_affected,
+        "reassigned_count": reassigned,
+        "unknown_count": unknown,
+        "reassignment_rate": round(reassigned / max(total_affected, 1), 3),
+    }
+
+    return roles, collapse_meta
+
+
+# ---------------------------
 # Main Processing
 # ---------------------------
 
@@ -667,6 +784,24 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
     # Legacy flags from segment count mismatch
     review_flags = list(extra_flags)
 
+    # Resolve speaker roles (handles collapsed speakers with per-segment overrides)
+    resolved_roles, collapse_meta = resolve_speaker_roles(segments, speaker_labels, classifications)
+
+    if collapse_meta:
+        for spk_id in collapse_meta["collapsed_speakers"]:
+            review_flags.append(
+                f"speaker_collapse: {spk_id} "
+                f"({collapse_meta['total_segments_affected']} segs, "
+                f"{collapse_meta['reassignment_rate']:.0%} reassigned, "
+                f"{collapse_meta['unknown_count']} unknown)"
+            )
+            print(f"{LOG_PREFIX}   SPEAKER COLLAPSE: {spk_id} — "
+                  f"{collapse_meta['total_segments_affected']} segments affected")
+            print(f"{LOG_PREFIX}   Reassigned: "
+                  f"{collapse_meta['reassigned_count']}/{collapse_meta['total_segments_affected']} "
+                  f"({collapse_meta['reassignment_rate']:.0%}), "
+                  f"Unknown: {collapse_meta['unknown_count']}")
+
     # Build output segments
     output_segments = []
     for i, seg in enumerate(segments):
@@ -677,9 +812,9 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
         }
 
         speaker_id = seg.get("pyannote_speaker", "UNKNOWN")
-        speaker_role = speaker_labels.get(speaker_id, {}).get("role", "unknown")
+        speaker_role = resolved_roles[i]
 
-        output_segments.append({
+        out_seg = {
             "id": i,
             "start": seg.get("start", 0),
             "end": seg.get("end", 0),
@@ -689,7 +824,14 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
             "segment_type": classification.get("segment_type", "commentary"),
             "conversation_id": classification.get("conversation_id", 0),
             "is_conversation_start": classification.get("is_conversation_start", False),
-        })
+        }
+
+        # Include override field for collapsed speakers (audit trail)
+        override = classification.get("speaker_role_override")
+        if override:
+            out_seg["speaker_role_override"] = override
+
+        output_segments.append(out_seg)
 
     # Build conversation summaries
     conversations = []
@@ -725,6 +867,7 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
         "segments": output_segments,
         "conversations": conversations,
         "review_flags": review_flags if review_flags else None,
+        "speaker_collapse": collapse_meta,
         "metadata": {
             "pipeline_version": PIPELINE_VERSION,
             "prompt_version": PROMPT_VERSION,
@@ -864,6 +1007,10 @@ def main() -> None:
         help="Process all sources from sources.txt file"
     )
     parser.add_argument(
+        "--manifest",
+        help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt)."
+    )
+    parser.add_argument(
         "--dry-run",
         action="store_true",
         help="Preview what would be processed"
@@ -909,6 +1056,8 @@ def main() -> None:
     # Route to appropriate mode
     if args.test:
         _run_directory(test_input_root(), test_output_root(), args)
+    elif args.manifest:
+        _run_manifest(args)
     elif args.input:
         _run_input(args)
     elif args.sources:
@@ -916,7 +1065,7 @@ def main() -> None:
     elif args.name:
         _run_named_source(args)
     else:
-        raise SystemExit("Provide a source name, --input, --test, or --sources")
+        raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
 
 
 def _run_input(args) -> None:
@@ -973,21 +1122,37 @@ def _run_sources(args) -> None:
     print(f"\n{LOG_PREFIX} Done. Processed {total_files} files, {total_convs} conversations")
 
 
-def _run_named_source(args) -> None:
-    """Run for a named source (from pipeline: ./06.video-type source_name url)."""
-    name = args.name
-    in_dir = input_root() / name
-    if not in_dir.exists():
-        raise SystemExit(f"Input directory not found: {in_dir}")
+def _run_manifest(args) -> None:
+    """Run for videos listed in a manifest file."""
+    manifest_path = Path(args.manifest)
+    if not manifest_path.is_absolute():
+        manifest_path = repo_root() / manifest_path
+    if not manifest_path.exists():
+        raise SystemExit(f"Manifest file not found: {manifest_path}")
 
-    out_dir = Path(args.output) if args.output else output_root() / name
-    _run_directory(in_dir, out_dir, args)
+    sources_map = load_manifest_sources(manifest_path)
+    total_files = 0
+    total_convs = 0
+
+    for src_name, vid_ids in sorted(sources_map.items()):
+        src_in_dir = input_root() / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
+            continue
+
+        src_out_dir = output_root() / src_name
+        files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+        if not files:
+            print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
+            continue
+
+        print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
+        _run_directory_with_files(files, src_in_dir, src_out_dir, args)
 
 
-def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
-    files = find_input_files(in_dir)
+def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, args) -> None:
+    """Process a specific list of files (used by manifest mode and _run_directory)."""
     if not files:
-        print(f"{LOG_PREFIX} No .audio_features.json files found in: {in_dir}")
         return
 
     print(f"{LOG_PREFIX} Input : {in_dir}")
@@ -1027,7 +1192,6 @@ def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
             total_convs += result.get("conversations", 0)
             processed += 1
 
-            # Track validation failures for failure budget
             if not result.get("validation_passed", True):
                 validation_failed += 1
                 consecutive_failures += 1
@@ -1039,11 +1203,8 @@ def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
                 state.in_progress = None
                 save_state(state_path, state)
 
-            # Failure budget: halt on consecutive failures
             if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
                 print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive validation failures")
-                print(f"{LOG_PREFIX} This indicates a systematic issue with the pipeline or prompts.")
-                print(f"{LOG_PREFIX} Review the .validation.json files for details.")
                 break
 
         except Exception as e:
@@ -1058,7 +1219,6 @@ def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
                 print(f"\n{LOG_PREFIX} HALTING: {consecutive_failures} consecutive failures")
                 break
 
-    # Print summary first
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed:           {processed}")
     print(f"  Skipped:             {skipped}")
@@ -1066,15 +1226,31 @@ def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
     print(f"  Failed (validation): {validation_failed}")
     print(f"  Conversations:       {total_convs}")
 
-    # Failure budget: check overall failure rate (after summary so user sees stats)
     total_attempted = processed + failed
     if total_attempted > 0:
         failure_rate = (failed + validation_failed) / total_attempted
         if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
             print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
-            print(f"{LOG_PREFIX} {failed} exceptions + {validation_failed} validation failures out of {total_attempted} attempted.")
-            print(f"{LOG_PREFIX} Review .validation.json files for details.")
             sys.exit(1)
+
+
+def _run_named_source(args) -> None:
+    """Run for a named source (from pipeline: ./06.video-type source_name url)."""
+    name = args.name
+    in_dir = input_root() / name
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+
+    out_dir = Path(args.output) if args.output else output_root() / name
+    _run_directory(in_dir, out_dir, args)
+
+
+def _run_directory(in_dir: Path, out_dir: Path, args) -> None:
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"{LOG_PREFIX} No .audio_features.json files found in: {in_dir}")
+        return
+    _run_directory_with_files(files, in_dir, out_dir, args)
 
 
 if __name__ == "__main__":

@@ -65,9 +65,11 @@ import re
 import shlex
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
+
+from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
 
 try:
     import librosa  # type: ignore
@@ -131,6 +133,25 @@ class Config:
 # -------------------------
 # Small utils
 # -------------------------
+
+def _load_flagged_videos(flag_file: Path) -> set:
+    """Load CRITICAL-severity video names from a .flagged.json file.
+
+    Only CRITICAL videos are skipped. WARNING-severity entries (including
+    entries that predate the severity field) are allowed through.
+    """
+    if not flag_file.exists():
+        return set()
+    try:
+        entries = json.loads(flag_file.read_text(encoding="utf-8"))
+        return {
+            str(e.get("video", ""))
+            for e in entries
+            if e.get("video") and e.get("severity", "WARNING") == "CRITICAL"
+        }
+    except Exception:
+        return set()
+
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
@@ -601,7 +622,7 @@ def build_audio_features(
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: Config) -> int:
+def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: Config, manifest_ids: Optional[Set[str]] = None) -> int:
     root = repo_root()
     safe_source = safe_name(source_name)
 
@@ -612,10 +633,18 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
     if not downloads_root.exists():
         raise SystemExit(f"[audio-features] Missing downloads folder: {downloads_root}")
 
+    # Load flagged videos from 02.transcribe — skip these entirely
+    transcribe_flag_root = root / "data" / "02.transcribe" / safe_source
+    flagged = _load_flagged_videos(transcribe_flag_root / ".flagged.json")
+    if flagged:
+        print(f"[audio-features] CRITICAL-flagged videos (will skip): {len(flagged)}")
+
     video_id = extract_video_id(youtube_url)
     wav_files = sorted(downloads_root.rglob("*.wav"))
     if video_id:
         wav_files = [p for p in wav_files if f"[{video_id}]" in p.as_posix() or f"[{video_id}]" in p.name]
+    if manifest_ids:
+        wav_files = manifest_filter_files(wav_files, manifest_ids)
 
     if not wav_files:
         print(f"[audio-features] No WAV files found under: {downloads_root}")
@@ -628,6 +657,11 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
         rel = wav_path.relative_to(downloads_root)
         rel_dir = rel.parent
         stem = wav_path.stem
+
+        # Skip flagged videos (hallucination, quality issues in 02.transcribe)
+        if str(rel_dir) in flagged:
+            skipped += 1
+            continue
 
         # The WAV file is named: <video_name>.audio.asr.clean16k.wav
         # But transcripts are named: <video_name>.full.json
@@ -699,6 +733,7 @@ if __name__ == "__main__":
         const="docs/sources.txt",
         help="Process all sources from a sources.txt file (default: docs/sources.txt).",
     )
+    p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
 
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs in batch mode.")
 
@@ -747,6 +782,19 @@ if __name__ == "__main__":
         )
         raise SystemExit(0)
 
+    # Manifest batch mode
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            raise SystemExit(f"Manifest file not found: {manifest_path}")
+        sources_map = load_manifest_sources(manifest_path)
+        for source_name, vid_ids in sorted(sources_map.items()):
+            print(f"[audio-features] Manifest: {source_name} ({len(vid_ids)} videos)")
+            batch_for_source(source_name, "", overwrite=bool(args.overwrite), cfg=cfg, manifest_ids=vid_ids)
+        raise SystemExit(0)
+
     # Batch from sources file
     if args.sources is not None:
         sources_path = Path(args.sources)
@@ -762,7 +810,7 @@ if __name__ == "__main__":
     # One source mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
-            "Provide either --audio/--transcript/--out, or --sources [file], or:\n"
+            "Provide either --audio/--transcript/--out, --manifest, or --sources [file], or:\n"
             "./scripts/training-data/05.audio-features <source_name> <youtube_url>"
         )
 

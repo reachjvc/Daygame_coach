@@ -26,6 +26,7 @@ import {
   Filter,
   FileText,
   MapPin,
+  Pencil,
 } from "lucide-react"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
@@ -588,9 +589,11 @@ export function ProgressDashboard() {
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          {session.duration_minutes
-                            ? `${session.duration_minutes} min`
-                            : "In progress"}
+                          {session.is_active
+                            ? "In progress"
+                            : session.duration_minutes
+                              ? `${session.duration_minutes} min`
+                              : "< 1 min"}
                           {session.primary_location && ` • ${session.primary_location}`}
                         </div>
                       </div>
@@ -615,6 +618,29 @@ export function ProgressDashboard() {
                         <Badge variant="secondary" className="bg-orange-500/10 text-orange-500">
                           Abandoned
                         </Badge>
+                      )}
+                      {session.is_active ? (
+                        <Link href="/dashboard/tracking/session">
+                          <Button variant="outline" size="sm" className="gap-1 text-xs">
+                            <Play className="size-3" />
+                            Continue
+                          </Button>
+                        </Link>
+                      ) : (
+                        <>
+                          <Link href={`/dashboard/tracking/session/${session.id}`}>
+                            <Button variant="outline" size="sm" className="gap-1 text-xs">
+                              <Pencil className="size-3" />
+                              Edit
+                            </Button>
+                          </Link>
+                          <Link href={`/dashboard/tracking/report?session=${session.id}`}>
+                            <Button variant="outline" size="sm" className="gap-1 text-xs">
+                              <FileText className="size-3" />
+                              Report
+                            </Button>
+                          </Link>
+                        </>
                       )}
                       <Button
                         variant="ghost"

@@ -86,6 +86,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const transcriptRef = useRef<string>("")
+  const fullTranscriptRef = useRef<string>("")
 
   const isSupported = typeof window !== "undefined" &&
     typeof MediaRecorder !== "undefined" &&
@@ -121,6 +122,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
       setError(null)
       setTranscription("")
       transcriptRef.current = ""
+      fullTranscriptRef.current = ""
       audioChunksRef.current = []
 
       // Request microphone permission
@@ -171,6 +173,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
           }
 
           transcriptRef.current = finalTranscript
+          fullTranscriptRef.current = finalTranscript + interimTranscript
           setTranscription(finalTranscript + interimTranscript)
         }
 
@@ -254,8 +257,9 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
         const mimeType = getSupportedMimeType()
         const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
 
-        // Get final transcription
-        const finalTranscription = transcriptRef.current.trim()
+        // Get final transcription (fall back to full transcript including interim
+        // results, since Chrome may not have finalized them before stop fires)
+        const finalTranscription = (transcriptRef.current || fullTranscriptRef.current).trim()
         setTranscription(finalTranscription)
 
         setIsRecording(false)
@@ -302,6 +306,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
     audioChunksRef.current = []
     transcriptRef.current = ""
+    fullTranscriptRef.current = ""
     setTranscription("")
     setIsRecording(false)
     setIsTranscribing(false)

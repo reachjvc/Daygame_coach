@@ -11,6 +11,15 @@
       "reason": "Merged three separate LLM passes into one"
     },
     {
+      "stage": "06.video-type",
+      "from_version": "3.0.0",
+      "to_version": "3.1.0",
+      "date": "2026-02-05",
+      "change_type": "minor",
+      "description": "Speaker collapse detection and per-segment role reassignment. When pyannote merges multiple speakers into one ID, the LLM now assigns speaker_role_override per segment instead of marking the entire speaker as unknown.",
+      "reason": "James Marshall video (IS2SoUgqDLE) showed 76.8% speaker collapse — girls merged into coach. Old Rule #5 only flagged as unknown; new rule attempts per-segment correction."
+    },
+    {
       "stage": "07.content",
       "from_version": null,
       "to_version": "1.0.0",

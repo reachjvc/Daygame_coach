@@ -128,7 +128,7 @@ export function createNoContextResponse(provider: string, startTime: number): QA
     },
     meta: {
       provider,
-      model: getDefaultModel(provider as "ollama" | "openai" | "claude"),
+      model: getDefaultModel(provider as "ollama" | "claude"),
       latencyMs: Date.now() - startTime,
       tokensUsed: 0,
     },
@@ -206,12 +206,10 @@ export function createMetaCognition(
 /**
  * Get the default model for a provider.
  */
-export function getDefaultModel(provider: "ollama" | "openai" | "claude"): string {
+export function getDefaultModel(provider: "ollama" | "claude"): string {
   switch (provider) {
     case "ollama":
       return QA_CONFIG.ollama.chatModel
-    case "openai":
-      return QA_CONFIG.openai.model
     case "claude":
       return QA_CONFIG.claude.model
   }

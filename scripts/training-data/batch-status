@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/batch-status
+
+Report processing progress for a batch manifest across all pipeline stages.
+
+Usage:
+  ./batch-status docs/pipeline/batches/P001.txt
+  ./batch-status --all
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def extract_video_id(name: str) -> Optional[str]:
+    match = re.search(r"\[([a-zA-Z0-9_-]+)\]", name)
+    return match.group(1) if match else None
+
+
+def load_manifest(manifest_path: Path) -> List[Tuple[str, str, str]]:
+    """Load manifest. Returns list of (source_name, folder_name, video_id)."""
+    entries = []
+    with open(manifest_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split("|", 1)
+            if len(parts) != 2:
+                continue
+            source = parts[0].strip()
+            folder = parts[1].strip()
+            vid_id = extract_video_id(folder)
+            if vid_id:
+                entries.append((source, folder, vid_id))
+    return entries
+
+
+STAGES = [
+    ("01.download", "download", "*.wav"),
+    ("02.transcribe", "transcribe", "*.full.json"),
+    ("03.align", "align", "*.full.json"),
+    ("04.diarize", "diarize", "*.full.json"),
+    ("05.audio-features", "audio-features", "*.audio_features.json"),
+    ("06.video-type", "video-type", "*.conversations.json"),
+    ("07.content", "content", "*.enriched.json"),
+]
+
+
+def check_stage_completion(data_root: Path, stage_dir: str, source: str, video_id: str) -> bool:
+    """Check if a video has output in a given stage."""
+    stage_path = data_root / stage_dir / source
+    if not stage_path.exists():
+        return False
+    # Search for any file/dir containing the video ID
+    for item in stage_path.iterdir():
+        if f"[{video_id}]" in item.name:
+            return True
+    return False
+
+
+def get_video_type(data_root: Path, source: str, video_id: str) -> Optional[str]:
+    """Read video type from stage 06 output."""
+    stage_path = data_root / "06.video-type" / source
+    if not stage_path.exists():
+        return None
+    for item in stage_path.iterdir():
+        if f"[{video_id}]" in item.name and item.name.endswith(".conversations.json"):
+            try:
+                data = json.loads(item.read_text())
+                return data.get("video_type", {}).get("type")
+            except (json.JSONDecodeError, KeyError):
+                return None
+    return None
+
+
+def progress_bar(done: int, total: int, width: int = 20) -> str:
+    if total == 0:
+        return " " * width
+    filled = int(width * done / total)
+    bar = "\u2588" * filled + "\u2591" * (width - filled)
+    pct = done * 100 // total
+    return f"{bar} {pct:>3}%"
+
+
+def report_batch(manifest_path: Path, data_root: Path) -> None:
+    entries = load_manifest(manifest_path)
+    batch_name = manifest_path.stem
+
+    if not entries:
+        print(f"Batch {batch_name}: empty manifest")
+        return
+
+    print(f"\nBatch {batch_name} ({len(entries)} videos):")
+
+    # Check each stage
+    for stage_dir, stage_label, _ in STAGES:
+        completed = 0
+        for source, folder, vid_id in entries:
+            if check_stage_completion(data_root, stage_dir, source, vid_id):
+                completed += 1
+        bar = progress_bar(completed, len(entries))
+        print(f"  Stage {stage_dir.split('.')[0]} ({stage_label:15s}): {completed:>4}/{len(entries):<4} {bar}")
+
+    # Video type breakdown (from stage 06)
+    type_counts: Dict[str, int] = {}
+    pending = 0
+    for source, folder, vid_id in entries:
+        vtype = get_video_type(data_root, source, vid_id)
+        if vtype:
+            type_counts[vtype] = type_counts.get(vtype, 0) + 1
+        else:
+            pending += 1
+
+    if type_counts or pending:
+        print(f"\n  Video type breakdown (stage 06):")
+        for vtype in ["infield", "talking_head", "podcast", "compilation"]:
+            count = type_counts.get(vtype, 0)
+            if count:
+                print(f"    {vtype}: {count}")
+        if pending:
+            print(f"    pending: {pending}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Report batch processing progress.")
+    parser.add_argument("manifest", nargs="?", help="Path to manifest file")
+    parser.add_argument("--all", action="store_true", help="Show status for all batches")
+
+    args = parser.parse_args()
+    root = repo_root()
+    data_root = root / "data"
+    batches_dir = root / "docs" / "pipeline" / "batches"
+
+    if args.all:
+        if not batches_dir.exists():
+            print("No batches directory found.")
+            sys.exit(0)
+        manifests = sorted(batches_dir.glob("*.txt"))
+        if not manifests:
+            print("No batch manifests found.")
+            sys.exit(0)
+        for manifest in manifests:
+            report_batch(manifest, data_root)
+        return
+
+    if not args.manifest:
+        parser.error("Provide a manifest path or use --all")
+
+    manifest_path = Path(args.manifest)
+    if not manifest_path.is_absolute():
+        manifest_path = root / manifest_path
+    if not manifest_path.exists():
+        print(f"Manifest not found: {manifest_path}")
+        sys.exit(1)
+
+    report_batch(manifest_path, data_root)
+
+
+if __name__ == "__main__":
+    main()

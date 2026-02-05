@@ -8,6 +8,7 @@ Usage:
   A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
   B) Batch sources:  ./02.transcribe --sources docs/sources.txt
   C) Single file:    ./02.transcribe --audio path/to/audio.wav --out output.full.json
+  D) Manifest batch: ./02.transcribe --manifest docs/pipeline/batches/P001.txt
 
 Transcription Model (UPDATED 03-02-2026):
   large-v3 with condition_on_previous_text=False (default)
@@ -41,9 +42,11 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 import numpy as np
+
+from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_dirs
 
 # --------------------------
 # Torch import
@@ -182,6 +185,203 @@ def _detect_repetition_hallucination(
         }
 
     return None
+
+
+def _detect_intra_segment_repetition(
+    segments: List[Dict[str, Any]],
+    min_word_repeats: int = 6,
+    suspicious_word_duration: float = 5.0,
+) -> List[Dict[str, Any]]:
+    """
+    Detect repeated words within individual segments (intra-segment hallucination).
+
+    Checks each segment's word-level timestamps for:
+    1. Consecutive runs of the same word (case-insensitive, punctuation-stripped) >= min_word_repeats (default 6)
+    2. Any single word with duration > suspicious_word_duration seconds (gap-fill indicator)
+
+    Returns a list of findings, each with:
+        - segment_index: which segment
+        - repeated_word: the word (lowercased, stripped)
+        - count: consecutive occurrences
+        - time_range: [start, end] of the repeated run
+        - longest_word_duration: max duration of a single word instance
+    """
+    import re
+
+    def _normalize_word(w: str) -> str:
+        """Lowercase and strip non-alphanumeric chars for comparison."""
+        return re.sub(r"[^a-z0-9]", "", w.lower())
+
+    findings: List[Dict[str, Any]] = []
+
+    for seg_idx, seg in enumerate(segments):
+        words = seg.get("words")
+        if not words or not isinstance(words, list):
+            continue
+
+        # Track consecutive runs of the same normalized word
+        prev_norm = ""
+        run_count = 0
+        run_start_time: Optional[float] = None
+        run_end_time: Optional[float] = None
+        run_longest_dur = 0.0
+        run_raw_word = ""
+
+        def _emit_if_flagged() -> None:
+            nonlocal run_count, run_start_time, run_end_time, run_longest_dur, run_raw_word
+            if run_count >= min_word_repeats:
+                finding: Dict[str, Any] = {
+                    "segment_index": seg_idx,
+                    "repeated_word": run_raw_word,
+                    "count": run_count,
+                    "time_range": [
+                        run_start_time if run_start_time is not None else seg.get("start", 0.0),
+                        run_end_time if run_end_time is not None else seg.get("end", 0.0),
+                    ],
+                    "longest_word_duration": round(run_longest_dur, 3),
+                }
+                findings.append(finding)
+
+        for w in words:
+            word_text = str(w.get("word", "")).strip()
+            if not word_text:
+                continue
+
+            norm = _normalize_word(word_text)
+            if not norm:
+                continue
+
+            # Compute word duration (only if both start and end exist)
+            w_start = w.get("start")
+            w_end = w.get("end")
+            w_dur = 0.0
+            if isinstance(w_start, (int, float)) and isinstance(w_end, (int, float)) and w_end > w_start:
+                w_dur = float(w_end) - float(w_start)
+
+            if norm == prev_norm:
+                run_count += 1
+                if isinstance(w_end, (int, float)):
+                    run_end_time = float(w_end)
+                run_longest_dur = max(run_longest_dur, w_dur)
+            else:
+                _emit_if_flagged()
+                prev_norm = norm
+                run_count = 1
+                run_raw_word = norm
+                run_start_time = float(w_start) if isinstance(w_start, (int, float)) else None
+                run_end_time = float(w_end) if isinstance(w_end, (int, float)) else None
+                run_longest_dur = w_dur
+
+            # Also flag individual words with suspicious duration
+            if w_dur > suspicious_word_duration:
+                # Check if this word isn't already going to be captured by a run
+                # We'll handle this at the end to avoid duplicates
+                pass
+
+        # Final run check
+        _emit_if_flagged()
+
+        # Check for suspicious individual word durations (even without consecutive repeats)
+        for w in words:
+            w_start = w.get("start")
+            w_end = w.get("end")
+            if isinstance(w_start, (int, float)) and isinstance(w_end, (int, float)) and w_end > w_start:
+                w_dur = float(w_end) - float(w_start)
+                if w_dur > suspicious_word_duration:
+                    # Only flag if this word isn't already covered by a repetition finding
+                    word_norm = _normalize_word(str(w.get("word", "")))
+                    already_covered = any(
+                        f["segment_index"] == seg_idx
+                        and f["repeated_word"] == word_norm
+                        for f in findings
+                    )
+                    if not already_covered:
+                        findings.append({
+                            "segment_index": seg_idx,
+                            "repeated_word": word_norm,
+                            "count": 1,
+                            "time_range": [float(w_start), float(w_end)],
+                            "longest_word_duration": round(w_dur, 3),
+                        })
+
+    return findings
+
+
+def _classify_transcript_quality(
+    segments: List[Dict[str, Any]],
+    duration_sec: float,
+    hallucination: Optional[Dict[str, Any]],
+    intra_seg_issues: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """
+    Classify transcript quality and severity. Returns a dict with:
+        - severity: "OK" | "WARNING" | "CRITICAL"
+        - reasons: list of human-readable reason strings
+        - total_words: int
+        - wpm: float (words per minute)
+        - hallucination_ratio: float (0.0-1.0, fraction of segments that are hallucinated)
+    """
+    total_words = sum(
+        len(str(s.get("text", "")).split())
+        for s in segments
+        if str(s.get("text", "")).strip()
+    )
+    duration_min = duration_sec / 60.0 if duration_sec > 0 else 0.0
+    wpm = total_words / duration_min if duration_min > 0 else 0.0
+    seg_count = len(segments)
+
+    hallucination_ratio = 0.0
+    if hallucination and seg_count > 0:
+        hallucinated_segs = hallucination["last_index"] - hallucination["first_index"] + 1
+        hallucination_ratio = hallucinated_segs / seg_count
+
+    severity = "OK"
+    reasons: List[str] = []
+
+    # CRITICAL: transcript is essentially empty
+    if duration_sec > 30 and total_words < 50:
+        severity = "CRITICAL"
+        reasons.append(f"near-empty transcript ({total_words} words for {duration_sec:.0f}s audio)")
+
+    # CRITICAL: extremely low WPM (less than 30 WPM for audio > 1 min)
+    if duration_sec > 60 and wpm < 30:
+        severity = "CRITICAL"
+        reasons.append(f"extremely low word density ({wpm:.0f} WPM, expected 100-200)")
+
+    # CRITICAL: hallucination covers >50% of segments
+    if hallucination and hallucination_ratio > 0.5:
+        severity = "CRITICAL"
+        reasons.append(
+            f"hallucination covers {hallucination_ratio:.0%} of segments "
+            f"(\"{hallucination['repeated_text']}\" x{hallucination['count']})"
+        )
+
+    # WARNING: minor hallucination (detected but covers <=50% of segments)
+    if hallucination and hallucination_ratio <= 0.5 and severity == "OK":
+        severity = "WARNING"
+        reasons.append(
+            f"minor hallucination artifact "
+            f"(\"{hallucination['repeated_text']}\" x{hallucination['count']}, "
+            f"{hallucination_ratio:.0%} of segments)"
+        )
+
+    # WARNING: intra-segment word repetition detected
+    if intra_seg_issues and severity == "OK":
+        severity = "WARNING"
+        affected = len(intra_seg_issues)
+        worst = max(intra_seg_issues, key=lambda x: x["count"])
+        reasons.append(
+            f"intra-segment word repetition in {affected} segment(s): "
+            f"\"{worst['repeated_word']}\" x{worst['count']}"
+        )
+
+    return {
+        "severity": severity,
+        "reasons": reasons,
+        "total_words": total_words,
+        "wpm": round(wpm, 1),
+        "hallucination_ratio": round(hallucination_ratio, 3),
+    }
 
 
 def _auto_device(preferred: str = "") -> str:
@@ -498,12 +698,36 @@ def transcribe_full_file_with_engine(
         log(f"[02.transcribe]   Count: {hallucination['count']} consecutive repetitions")
         log(f"[02.transcribe]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
 
-    _write_all_outputs(out_json_path, segments)
+    # Check for intra-segment word repetition (e.g., "yeah yeah yeah yeah yeah" within one segment)
+    intra_seg_issues = _detect_intra_segment_repetition(segments)
+    if intra_seg_issues:
+        log(f"[02.transcribe] FLAGGED: Intra-segment word repetition detected!")
+        for issue in intra_seg_issues:
+            log(f"[02.transcribe]   Seg {issue['segment_index']}: "
+                f"\"{issue['repeated_word']}\" x{issue['count']} "
+                f"({issue['time_range'][0]:.1f}s-{issue['time_range'][1]:.1f}s)")
+
+    # Classify transcript quality and severity
+    quality = _classify_transcript_quality(segments, duration_sec, hallucination, intra_seg_issues)
+
+    if quality["severity"] == "CRITICAL":
+        for reason in quality["reasons"]:
+            log(f"[02.transcribe] CRITICAL: {reason}")
+        log(f"[02.transcribe] SKIPPED: output NOT written (transcript is unusable)")
+        log(f"[02.transcribe]   words={quality['total_words']} wpm={quality['wpm']} halluc_ratio={quality['hallucination_ratio']}")
+    elif quality["severity"] == "WARNING":
+        for reason in quality["reasons"]:
+            log(f"[02.transcribe] WARNING: {reason}")
+        _write_all_outputs(out_json_path, segments)
+    else:
+        _write_all_outputs(out_json_path, segments)
 
     elapsed = time.monotonic() - t0
-    log(f"[02.transcribe] DONE: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s -> {out_json_path.name}")
+    wrote = "SKIPPED" if quality["severity"] == "CRITICAL" else "WROTE"
+    log(f"[02.transcribe] DONE: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s {wrote} -> {out_json_path.name}")
 
-    return hallucination
+    # Return quality info (includes hallucination data if present)
+    return {"hallucination": hallucination, "quality": quality, "intra_segment_repetition": intra_seg_issues}
 
 
 # --------------------------
@@ -517,6 +741,7 @@ def batch_for_source(
     prefer_audio: str,
     engine: BaseEngine,
     progress_interval: float,
+    manifest_ids: Optional[Set[str]] = None,
 ) -> int:
     root = repo_root()
     safe_source = safe_name(source_name)
@@ -531,6 +756,8 @@ def batch_for_source(
     video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
     if video_id:
         video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
+    if manifest_ids:
+        video_dirs = manifest_filter_dirs(video_dirs, manifest_ids)
 
     if not video_dirs:
         log(f"[02.transcribe] No video folders found under: {downloads_root}")
@@ -560,7 +787,7 @@ def batch_for_source(
             log(f"[02.transcribe] VIDEO: {video_dir.name}")
             log(f"[02.transcribe] AUDIO: {audio_path.name}")
 
-            hallucination = transcribe_full_file_with_engine(
+            result = transcribe_full_file_with_engine(
                 audio_path=str(audio_path),
                 out_json=str(out_json),
                 engine=engine,
@@ -568,17 +795,31 @@ def batch_for_source(
             )
             processed += 1
 
-            # Track hallucination flags
-            if hallucination:
-                flagged_videos.append({
+            hallucination = result.get("hallucination") if result else None
+            intra_seg = result.get("intra_segment_repetition") if result else None
+            quality = result.get("quality", {}) if result else {}
+            severity = quality.get("severity", "OK")
+
+            # Track flagged videos (both WARNING and CRITICAL)
+            if hallucination or intra_seg or severity in ("WARNING", "CRITICAL"):
+                flag_entry: Dict[str, Any] = {
                     "video": video_dir.name,
                     "source": safe_source,
-                    "reason": "repetition_hallucination",
-                    "repeated_text": hallucination["repeated_text"],
-                    "repeat_count": hallucination["count"],
-                    "segment_range": [hallucination["first_index"], hallucination["last_index"]],
+                    "severity": severity,
+                    "reasons": quality.get("reasons", []),
+                    "total_words": quality.get("total_words", 0),
+                    "wpm": quality.get("wpm", 0),
                     "timestamp": now_iso(),
-                })
+                }
+                if hallucination:
+                    flag_entry["reason"] = "repetition_hallucination"
+                    flag_entry["repeated_text"] = hallucination["repeated_text"]
+                    flag_entry["repeat_count"] = hallucination["count"]
+                    flag_entry["segment_range"] = [hallucination["first_index"], hallucination["last_index"]]
+                if intra_seg:
+                    flag_entry["reason"] = flag_entry.get("reason", "intra_segment_repetition")
+                    flag_entry["intra_segment_issues"] = intra_seg
+                flagged_videos.append(flag_entry)
 
         except Exception as e:
             failed += 1
@@ -618,6 +859,7 @@ if __name__ == "__main__":
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
     p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
     p.add_argument("--audio", help="Single-file input path.")
     p.add_argument("--out", help="Single-file output .full.json.")
 
@@ -681,6 +923,30 @@ if __name__ == "__main__":
         cleanup_after_engine_run(engine)
         raise SystemExit(0)
 
+    # Manifest batch mode
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            raise SystemExit(f"Manifest file not found: {manifest_path}")
+        sources_map = load_manifest_sources(manifest_path)
+        total = 0
+        for source_name, vid_ids in sorted(sources_map.items()):
+            log(f"[02.transcribe] Manifest: {source_name} ({len(vid_ids)} videos)")
+            total += batch_for_source(
+                source_name=source_name,
+                youtube_url="",
+                overwrite=bool(args.overwrite),
+                prefer_audio=str(args.prefer_audio),
+                engine=engine,
+                progress_interval=args.progress_interval,
+                manifest_ids=vid_ids,
+            )
+        cleanup_after_engine_run(engine)
+        log(f"[02.transcribe] ✅ MANIFEST DONE: total_processed={total}")
+        raise SystemExit(0)
+
     # Batch sources file
     if args.sources is not None:
         sources_path = Path(args.sources)
@@ -705,7 +971,7 @@ if __name__ == "__main__":
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
-            "Provide either --audio/--out, or --sources [file], or:\n"
+            "Provide either --audio/--out, --manifest, or --sources [file], or:\n"
             "./scripts/training-data/02.transcribe <source_name> <youtube_url>"
         )
 

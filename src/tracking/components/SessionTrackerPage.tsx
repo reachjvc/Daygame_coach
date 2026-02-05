@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useSession } from "../hooks/useSession"
+import { invalidateTrackingStatsCache } from "../hooks/useTrackingStats"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -263,6 +264,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     setShowEndDialog(false)
     // Complete endSession FIRST to ensure sessionStorage is set before navigation
     await endSession()
+    invalidateTrackingStatsCache()
     router.push("/dashboard/tracking")
   }
 
@@ -273,6 +275,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     setShowEndDialog(false)
     // End session FIRST to ensure it's properly closed before navigating
     await endSession()
+    invalidateTrackingStatsCache()
     router.push(`/dashboard/tracking/report?session=${sessionId}`)
   }
 
@@ -358,8 +361,8 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
     return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`
   }
 
-  const handleTap = async () => {
-    await addApproach()
+  const handleTap = () => {
+    addApproach()
     setShowQuickLog(true)
     setQuickLogData({})
     setVoiceData({ audioBlob: null, transcription: "" })

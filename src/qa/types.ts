@@ -19,7 +19,7 @@ export interface RetrievalOptions {
 }
 
 export interface GenerationOptions {
-  provider?: "ollama" | "openai" | "claude"
+  provider?: "ollama" | "claude"
   model?: string
   maxOutputTokens?: number
   temperature?: number
@@ -106,7 +106,6 @@ export interface ProviderResponse {
 
 export interface QAConfig {
   ollama: OllamaConfig
-  openai: OpenAIConfig
   claude: ClaudeConfig
   rag: RAGConfig
   defaults: DefaultsConfig
@@ -118,12 +117,6 @@ export interface OllamaConfig {
   embeddingModel: string
   temperature: number
   topP: number
-}
-
-export interface OpenAIConfig {
-  model: string
-  embeddingModel: string
-  temperature: number
 }
 
 export interface ClaudeConfig {
@@ -139,7 +132,7 @@ export interface RAGConfig {
 }
 
 export interface DefaultsConfig {
-  provider: "ollama" | "openai" | "claude"
+  provider: "ollama" | "claude"
   topK: number
   minScore: number
   maxChunkChars: number

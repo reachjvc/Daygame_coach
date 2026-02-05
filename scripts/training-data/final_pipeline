@@ -15,8 +15,14 @@
 #      ./scripts/training-data/final_pipeline --sources
 #      ./scripts/training-data/final_pipeline --sources docs/sources.txt
 #
+#   C) Manifest batch (process specific videos):
+#      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt
+#      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt --stages 02-05
+#      ./scripts/training-data/final_pipeline --manifest docs/pipeline/batches/P001.txt --stages 06-07
+#
 # Optional flags:
 #   --skip-ingest        stop before step 08 (ingest)
+#   --stages <range>     only run specific stages (e.g., "02-05", "06-07", "02")
 #   --ingest-full        pass `--full` to `./scripts/training-data/08.ingest.ts`
 #   --ingest-dry-run     run ingest in dry-run mode
 #   --ingest-verify      verify ingest without writing to the DB
@@ -35,8 +41,10 @@ PER_SOURCE_STEPS=(
   "$REPO_ROOT/scripts/training-data/04.diarize"
   "$REPO_ROOT/scripts/training-data/05.audio-features"
   "$REPO_ROOT/scripts/training-data/06.video-type"
+  "$REPO_ROOT/scripts/training-data/06b.verify"
   "$REPO_ROOT/scripts/training-data/07.content"
 )
+# Step numbers: 01=0, 02=1, 03=2, 04=3, 05=4, 06=5, 06b=6, 07=7
 TOTAL_PER_SOURCE_STEPS=${#PER_SOURCE_STEPS[@]}
 GLOBAL_STEP_DESCRIPTIONS=("Ingest to vector store")
 TOTAL_GLOBAL_STEPS=${#GLOBAL_STEP_DESCRIPTIONS[@]}
@@ -45,6 +53,8 @@ TOTAL_STEPS=$((TOTAL_PER_SOURCE_STEPS + TOTAL_GLOBAL_STEPS))
 DEFAULT_SOURCES="docs/sources.txt"
 MODE="single"
 SOURCES_FILE=""
+MANIFEST_FILE=""
+STAGE_RANGE=""
 SKIP_INGEST=false
 declare -a INGEST_ARGS=()
 
@@ -53,9 +63,12 @@ usage() {
 Usage:
   ./scripts/training-data/final_pipeline "<source_name>" "<youtube_url>"
   ./scripts/training-data/final_pipeline --sources [path/to/sources.txt]
+  ./scripts/training-data/final_pipeline --manifest path/to/manifest.txt [--stages 02-05]
 
 Options:
   --sources <file>        Use the provided sources file (default: docs/sources.txt)
+  --manifest <file>       Process only videos listed in manifest file
+  --stages <range>        Only run specific stages (e.g., "02-05", "06-07", "02")
   --skip-ingest           Stop before the vector-store ingestion step
   --ingest-full           Pass --full to `./scripts/training-data/08.ingest.ts` (force reingest)
   --ingest-dry-run        Forward --dry-run to `./scripts/training-data/08.ingest.ts`
@@ -77,6 +90,34 @@ trim() {
   printf '%s' "$value"
 }
 
+# Parse --stages range (e.g., "02-05", "06", "02-07") into min/max step numbers
+parse_stage_range() {
+  local range="$1"
+  if [[ "$range" == *-* ]]; then
+    STAGE_MIN="${range%%-*}"
+    STAGE_MAX="${range##*-}"
+  else
+    STAGE_MIN="$range"
+    STAGE_MAX="$range"
+  fi
+  # Remove leading zeros for arithmetic
+  STAGE_MIN=$((10#$STAGE_MIN))
+  STAGE_MAX=$((10#$STAGE_MAX))
+  if [[ $STAGE_MIN -lt 1 || $STAGE_MAX -gt 8 || $STAGE_MIN -gt $STAGE_MAX ]]; then
+    cli_error "Invalid --stages range: $range (must be 01-08)"
+  fi
+}
+
+# Check if a step index (0-based) is within the stage range
+step_in_range() {
+  local idx="$1"
+  local step_num=$((idx + 1))
+  if [[ -z "$STAGE_RANGE" ]]; then
+    return 0  # no filter, run all
+  fi
+  [[ $step_num -ge $STAGE_MIN && $step_num -le $STAGE_MAX ]]
+}
+
 run_pipeline_for_source() {
   local source="$1"
   local url="$2"
@@ -85,9 +126,16 @@ run_pipeline_for_source() {
   echo "==========================================================="
   echo "➡️  Running training-data pipeline for: $source"
   echo "    URL: $url"
+  if [[ -n "$STAGE_RANGE" ]]; then
+    echo "    Stages: $STAGE_RANGE"
+  fi
   echo "==========================================================="
 
   for idx in "${!PER_SOURCE_STEPS[@]}"; do
+    if ! step_in_range "$idx"; then
+      continue
+    fi
+
     local stepNumber=$((idx + 1))
     local script="${PER_SOURCE_STEPS[$idx]}"
     local name
@@ -100,6 +148,51 @@ run_pipeline_for_source() {
 
   echo ""
   echo "✅ Completed pipeline for $source"
+}
+
+run_manifest_pipeline() {
+  local manifest="$1"
+  if [[ ! -f "$manifest" ]]; then
+    echo "ERROR: Manifest file not found: $manifest" >&2
+    exit 1
+  fi
+
+  echo ""
+  echo "==========================================================="
+  echo "📋 Running manifest-based pipeline"
+  echo "    Manifest: $manifest"
+  if [[ -n "$STAGE_RANGE" ]]; then
+    echo "    Stages: $STAGE_RANGE"
+  fi
+  echo "==========================================================="
+
+  # For manifest mode, we pass --manifest to each stage script directly
+  # instead of iterating sources ourselves. Each stage script handles
+  # the manifest internally (grouping by source, filtering videos).
+  for idx in "${!PER_SOURCE_STEPS[@]}"; do
+    if ! step_in_range "$idx"; then
+      continue
+    fi
+
+    local stepNumber=$((idx + 1))
+    local script="${PER_SOURCE_STEPS[$idx]}"
+    local name
+    name="$(basename "$script")"
+
+    # Skip 01.download in manifest mode (videos already downloaded)
+    if [[ "$stepNumber" -eq 1 ]]; then
+      echo ""
+      echo "Step 1/${TOTAL_STEPS} — $name (SKIPPED: manifest mode, downloads already exist)"
+      continue
+    fi
+
+    echo ""
+    echo "Step ${stepNumber}/${TOTAL_STEPS} — $name"
+    "$script" --manifest "$manifest"
+  done
+
+  echo ""
+  echo "✅ Completed manifest pipeline"
 }
 
 process_sources_file() {
@@ -223,6 +316,32 @@ while [[ $# -gt 0 ]]; do
       SOURCES_FILE="${1#--sources=}"
       shift
       ;;
+    --manifest)
+      MODE="manifest"
+      if [[ $# -lt 2 ]]; then
+        cli_error "--manifest requires a file path"
+      fi
+      MANIFEST_FILE="$2"
+      shift 2
+      ;;
+    --manifest=*)
+      MODE="manifest"
+      MANIFEST_FILE="${1#--manifest=}"
+      shift
+      ;;
+    --stages)
+      if [[ $# -lt 2 ]]; then
+        cli_error "--stages requires a range (e.g., 02-05)"
+      fi
+      STAGE_RANGE="$2"
+      parse_stage_range "$STAGE_RANGE"
+      shift 2
+      ;;
+    --stages=*)
+      STAGE_RANGE="${1#--stages=}"
+      parse_stage_range "$STAGE_RANGE"
+      shift
+      ;;
     --skip-ingest)
       SKIP_INGEST=true
       shift
@@ -263,9 +382,14 @@ fi
 # Sync video exclusions into yt-dlp archives
 "$REPO_ROOT/scripts/training-data/sync-exclusions"
 
-if [[ "$MODE" == "single" ]]; then
+if [[ "$MODE" == "manifest" ]]; then
+  if [[ -z "$MANIFEST_FILE" ]]; then
+    cli_error "--manifest requires a file path"
+  fi
+  run_manifest_pipeline "$MANIFEST_FILE"
+elif [[ "$MODE" == "single" ]]; then
   if [[ $# -lt 2 ]]; then
-    cli_error "Provide a <source_name> and <youtube_url>, or use --sources"
+    cli_error "Provide a <source_name> and <youtube_url>, or use --sources or --manifest"
   fi
   SOURCE_NAME="$1"
   YOUTUBE_URL="$2"

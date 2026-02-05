@@ -152,6 +152,7 @@ export interface TemplateField {
   placeholder?: string
   required?: boolean
   options?: string[]  // For select/multiselect
+  allowCustom?: boolean // For multiselect - allow free-text entries
   min?: number        // For scale/number
   max?: number        // For scale/number
   rows?: number       // For textarea
@@ -445,8 +446,6 @@ export type MilestoneType =
   | 'monthly_unlocked'
   | 'quarterly_unlocked'
   // Fun/Variety
-  | 'night_owl'
-  | 'early_bird'
   | 'globetrotter'
   | 'consistent'
   | 'marathon'
@@ -500,7 +499,6 @@ export type MilestoneType =
   | '10_seated'             // 10 seated sets
   | 'first_foreign'         // First foreign language
   | 'polyglot'              // 5 different foreign language
-  | 'first_celebrity'       // First celebrity/model vibes
   | 'seated_master'         // 25 seated sets
   | 'tourist_guide'         // 10 tourists
   | 'world_traveler'        // 25 tourists
@@ -573,6 +571,7 @@ export interface SessionSummary {
   id: string
   started_at: string
   ended_at: string | null
+  is_active: boolean
   total_approaches: number
   duration_minutes: number | null
   goal: number | null

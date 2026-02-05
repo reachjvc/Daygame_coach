@@ -1,12 +1,7 @@
-import { openai } from "@ai-sdk/openai"
 import { anthropic } from "@ai-sdk/anthropic"
 
 export function getStructuredOutputModel() {
   const provider = (process.env.AI_PROVIDER || "claude").toLowerCase()
-
-  if (provider === "openai") {
-    return openai(process.env.OPENAI_MODEL || "gpt-4o-mini")
-  }
 
   if (provider === "claude" || provider === "anthropic") {
     return anthropic(process.env.AI_MODEL || "claude-3-5-haiku-20241022")

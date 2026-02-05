@@ -13,12 +13,6 @@ export const QA_CONFIG: QAConfig = {
     topP: 0.95,
   },
 
-  openai: {
-    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
-    embeddingModel: "text-embedding-3-small",
-    temperature: 0.7,
-  },
-
   claude: {
     model: process.env.AI_MODEL || "claude-3-5-haiku-20241022",
     temperature: 0.7,
@@ -32,7 +26,7 @@ export const QA_CONFIG: QAConfig = {
   },
 
   defaults: {
-    provider: (process.env.AI_PROVIDER as "ollama" | "openai" | "claude") || "claude",
+    provider: (process.env.AI_PROVIDER as "ollama" | "claude") || "claude",
     // Retrieve more examples when available so answers can show multiple infield excerpts.
     topK: 8,
     minScore: 0.5,

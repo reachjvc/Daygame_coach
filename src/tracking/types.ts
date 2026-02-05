@@ -77,6 +77,11 @@ export interface ApproachMoodEntry {
   timestamp: string
 }
 
+export interface ApproachNoteEntry {
+  approachNumber: number
+  note: string
+}
+
 export interface SessionSummaryData {
   // Basic stats
   approachCount: number
@@ -95,6 +100,8 @@ export interface SessionSummaryData {
   customIntention: string | null
   // Per-approach mood timeline
   approachMoods: ApproachMoodEntry[]
+  // Per-approach notes (voice transcriptions)
+  approachNotes: ApproachNoteEntry[]
 }
 
 // ============================================

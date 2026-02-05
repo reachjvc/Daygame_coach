@@ -168,6 +168,9 @@ def validate_cross_stage(
             s06_role = s06_label.get("role", "")
             s07_role = s07_label.get("role", "")
             if s06_role and s07_role and s06_role != s07_role:
+                # Don't warn if stage 06 marked as collapsed — stage 07 may refine
+                if s06_role == "collapsed":
+                    continue
                 results.append(ValidationResult(
                     "warning", "speaker_label_changed",
                     f"Speaker {speaker_id} role changed: Stage 06='{s06_role}', Stage 07='{s07_role}'",

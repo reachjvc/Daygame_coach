@@ -43,6 +43,7 @@ interface UseSessionReturn {
   setGoal: (goal: number) => Promise<void>
   revalidateSession: () => Promise<void>
   reactivateSession: () => Promise<boolean>
+  reactivateSessionById: (sessionId: string) => Promise<boolean>
   clearEndedSession: () => void
 }
 
@@ -415,6 +416,45 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
     }
   }, [endedSession])
 
+  // Re-activate a session by ID (for editing from dashboard)
+  const reactivateSessionById = useCallback(async (sessionId: string): Promise<boolean> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }))
+
+    try {
+      const response = await fetch(`/api/tracking/session/${sessionId}/reactivate`, {
+        method: "POST",
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || "Failed to reactivate session")
+      }
+
+      const { session, approaches } = await response.json()
+
+      // Clear ended session info
+      sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
+      setEndedSession(null)
+
+      setState({
+        session,
+        approaches: approaches || [],
+        isActive: true,
+        isLoading: false,
+        error: null,
+      })
+
+      return true
+    } catch (error) {
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: error instanceof Error ? error.message : "Failed to reactivate session",
+      }))
+      return false
+    }
+  }, [])
+
   // Clear ended session info (dismiss the banner)
   const clearEndedSession = useCallback(() => {
     sessionStorage.removeItem(ENDED_SESSION_STORAGE_KEY)
@@ -435,6 +475,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
     setGoal,
     revalidateSession,
     reactivateSession,
+    reactivateSessionById,
     clearEndedSession,
   }
 }

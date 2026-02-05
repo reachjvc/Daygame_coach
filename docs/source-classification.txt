@@ -1,0 +1,33 @@
+# Source Classification for Batch Ordering
+#
+# Used by batch-create to prioritize infield sources first.
+#
+# Format: source_name | likely_type | confidence | priority_phase
+# likely_type: infield, talking_head, mixed, unknown
+# confidence: high, medium, low
+# priority_phase: 1 = process first, 4 = process last
+
+coach_kyle_infield | infield | high | 1
+natural_lifestyles_meetingGirlsIRL | infield | high | 1
+austen_summers_meets_girls | infield | high | 1
+NICK_KRAUSER_VIRTUARESI | infield | high | 1
+NICK_KRAUSER_OUTLAWDAYGAME | infield | high | 1
+coach_kyle_how_to_approach_a_girl | infield | medium | 1
+austen_summers_client_results | infield | medium | 2
+social_stoic | mixed | medium | 2
+daily_evolution | mixed | unknown | 2
+NICK_KRAUSER_JOYOFDAYGAME | mixed | medium | 3
+natural_lifestyles_students | mixed | medium | 3
+natural_lifestyles_mastermind | mixed | medium | 3
+natural_lifestyles_askthecoaches | mixed | medium | 3
+natural_lifestyles_lifestyleacademy | mixed | medium | 3
+natural_lifestyles_lifestyledesign | talking_head | medium | 3
+TODD_V | mixed | medium | 3
+TODD_V_WINNERGAME | mixed | medium | 3
+TODD_V_THESYSTEM | mixed | medium | 3
+TODD_V_VERBAL_GAME | talking_head | medium | 4
+TODD_V_OPENING | talking_head | medium | 4
+TODD_V_CONVERSATION_TOPICS | talking_head | medium | 4
+TODD_V_TEXTINGMISTAKES | talking_head | high | 4
+natural_lifestyles_femalepsychology | talking_head | high | 4
+natural_lifestyles_innergrowth | talking_head | high | 4

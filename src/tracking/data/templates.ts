@@ -21,8 +21,15 @@ export interface SystemTemplateData {
   description: string
   icon: string
   estimatedMinutes: number
+  /** Fields always shown in the form. To add a new field to a template, add it HERE. */
   staticFields: TemplateField[]
+  /**
+   * Fields available for user activation. These are NOT rendered unless their ID
+   * is also listed in activeDynamicFields. If you want a field to actually show
+   * up in the form, put it in staticFields instead.
+   */
   dynamicFields: TemplateField[]
+  /** IDs from dynamicFields that are active by default. Empty = none shown. */
   activeDynamicFields: string[]
 }
 
@@ -74,16 +81,15 @@ export const SYSTEM_TEMPLATES = {
         label: "Quick note",
         placeholder: "Anything worth noting?",
       },
-    ],
-    dynamicFields: [
       {
         id: "conversation",
         type: "textarea",
-        label: "Add conversation",
+        label: "Conversation (optional)",
         placeholder: "Me: ...\nHer: ...",
         rows: 6,
       },
     ],
+    dynamicFields: [],
     activeDynamicFields: [],
   },
 
@@ -133,16 +139,15 @@ export const SYSTEM_TEMPLATES = {
         label: "Key takeaway",
         placeholder: "One thing to remember",
       },
-    ],
-    dynamicFields: [
       {
         id: "conversation",
         type: "textarea",
-        label: "Add conversation for AI analysis",
+        label: "Conversation (optional)",
         placeholder: "Me: ...\nHer: ...",
         rows: 8,
       },
     ],
+    dynamicFields: [],
     activeDynamicFields: [],
   },
 
@@ -180,9 +185,16 @@ export const SYSTEM_TEMPLATES = {
         rows: 8,
       },
       {
+        id: "key_takeaway",
+        type: "text",
+        label: "Key takeaway",
+        placeholder: "One thing to remember",
+      },
+      {
         id: "technique",
         type: "multiselect",
         label: "Technique practiced",
+        allowCustom: true,
         options: [
           "Push-pull",
           "Cold read",
@@ -240,73 +252,9 @@ export const SYSTEM_TEMPLATES = {
       {
         id: "not_admitting",
         type: "textarea",
-        label: "What are you not admitting to yourself?",
-        placeholder: "Be honest - this is private...",
+        label: "What might you be avoiding or downplaying?",
+        placeholder: "Sometimes the real lesson is hiding in plain sight...",
         rows: 3,
-      },
-      {
-        id: "key_takeaway",
-        type: "text",
-        label: "Key takeaway",
-        placeholder: "One thing to remember",
-      },
-    ],
-    dynamicFields: [],
-    activeDynamicFields: [],
-  },
-
-  phoenix: {
-    name: "The Phoenix",
-    description: "Turn harsh rejections into growth fuel",
-    icon: "flame",
-    estimatedMinutes: 5,
-    staticFields: [
-      {
-        id: "approaches",
-        type: "number",
-        label: "Approaches",
-        placeholder: "How many?",
-        min: 0,
-      },
-      {
-        id: "what_happened",
-        type: "textarea",
-        label: "What happened? (factual, without judgment)",
-        placeholder: "Describe what actually occurred...",
-        rows: 3,
-      },
-      {
-        id: "how_it_made_you_feel",
-        type: "textarea",
-        label: "How it made you feel",
-        placeholder: "Emotional processing - be honest...",
-        rows: 3,
-      },
-      {
-        id: "why_it_happened",
-        type: "textarea",
-        label: "Why it might have happened",
-        placeholder: "Analysis without self-blame...",
-        rows: 3,
-      },
-      {
-        id: "tell_friend",
-        type: "textarea",
-        label: "What would you tell a friend who had this experience?",
-        placeholder: "Be compassionate with yourself...",
-        rows: 2,
-      },
-      {
-        id: "do_it_again",
-        type: "select",
-        label: "Would you do it again?",
-        options: ["Yes, definitely", "Yes, with adjustments", "Need to think about it", "Probably not"],
-      },
-      {
-        id: "key_takeaway",
-        type: "text",
-        label: "Key takeaway",
-        placeholder: "One thing to remember",
       },
     ],
     dynamicFields: [],
@@ -352,12 +300,23 @@ export const SYSTEM_TEMPLATES = {
         label: "4. Cognitive Distortions: Which apply?",
         options: [
           "All-or-nothing",
-          "Catastrophizing",
-          "Mind-reading",
           "Overgeneralization",
-          "Discounting positives",
-          "Multiple/Other",
+          "Mental filter",
+          "Disqualifying the positive",
+          "Mind-reading",
+          "Fortune-telling",
+          "Catastrophizing",
+          "Emotional reasoning",
+          "Should statements",
+          "Labeling",
+          "Personalization",
         ],
+      },
+      {
+        id: "distortions_custom",
+        type: "text",
+        label: "Other distortion (optional)",
+        placeholder: "e.g., Social comparison, Control fallacy...",
       },
       {
         id: "evidence_for",
@@ -385,6 +344,13 @@ export const SYSTEM_TEMPLATES = {
         type: "text",
         label: "8. Outcome: How do you feel now? (0-100)",
         placeholder: "e.g., Anxious (30), Hopeful (60)",
+      },
+      {
+        id: "conversation",
+        type: "textarea",
+        label: "Conversation (optional)",
+        placeholder: "Me: ...\nHer: ...",
+        rows: 8,
       },
     ],
     dynamicFields: [],
@@ -505,9 +471,8 @@ export function getSystemTemplatesAsRows(): FieldReportTemplateRow[] {
 export const TEMPLATE_ORDER: Record<string, number> = {
   "quick-log": 1,
   standard: 2,
-  phoenix: 3,
-  "deep-dive": 4,
-  "cbt-thought-diary": 5,
+  "deep-dive": 3,
+  "cbt-thought-diary": 4,
 }
 
 // ============================================
@@ -529,11 +494,6 @@ export const TEMPLATE_COLORS: Record<TemplateSlug, TemplateColorConfig> = {
     bg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
     icon: "bg-purple-500 text-white",
     gradient: "from-purple-500/30 via-purple-500/10 to-pink-500/20",
-  },
-  phoenix: {
-    bg: "bg-red-500/10 text-red-500 border-red-500/20",
-    icon: "bg-red-500 text-white",
-    gradient: "from-red-500/30 via-red-500/10 to-orange-500/20",
   },
   "cbt-thought-diary": {
     bg: "bg-indigo-600/10 text-indigo-600 border-indigo-600/20",
@@ -565,6 +525,5 @@ export const TEMPLATE_TAGLINES: Record<SystemTemplateSlug, string> = {
   "quick-log": "30 seconds. Just the essentials.",
   standard: "The sweet spot. Learn without overthinking.",
   "deep-dive": "When you got close. Extract every lesson.",
-  phoenix: "Rise from the ashes. Every master failed here first.",
   "cbt-thought-diary": "Challenge automatic thoughts. Break the loop.",
 }

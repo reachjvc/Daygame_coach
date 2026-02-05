@@ -17,7 +17,7 @@ test.describe('Q&A Chat Flow', () => {
 
     // Assert: Q&A page should be visible with samples
     await expect(page.getByTestId(SELECTORS.qa.page)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByText('Ask the Coach')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await expect(page.getByRole('heading', { name: 'Ask the Coach' })).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.qa.samples)).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
 
@@ -85,8 +85,8 @@ test.describe('Q&A Chat Flow', () => {
     // Act: Click submit
     await page.getByTestId(SELECTORS.qa.submit).click({ timeout: ACTION_TIMEOUT })
 
-    // Assert: Should show "Thinking..." text (loading state)
-    await expect(page.getByText('Thinking...')).toBeVisible({ timeout: ACTION_TIMEOUT })
+    // Assert: Submit button should show "Thinking..." text (loading state)
+    await expect(page.getByTestId(SELECTORS.qa.submit)).toHaveText('Thinking...', { timeout: ACTION_TIMEOUT })
   })
 
   test('should display sources panel after getting response', async ({ page }) => {

@@ -312,8 +312,6 @@ async function updateSessionStats(
   if (sessionInfo.durationMinutes >= 120) potentialMilestones.push({ type: "marathon" })
 
   // Time-based milestones
-  if (sessionInfo.startHour >= 21) potentialMilestones.push({ type: "night_owl" })
-  if (sessionInfo.startHour < 10) potentialMilestones.push({ type: "early_bird" })
   const dayOfWeek = new Date().getDay()
   if (dayOfWeek === 0 || dayOfWeek === 6) potentialMilestones.push({ type: "weekend_warrior" })
 
@@ -475,6 +473,7 @@ export async function getSessionSummaries(
       id,
       started_at,
       ended_at,
+      is_active,
       duration_minutes,
       goal,
       goal_met,
@@ -514,6 +513,7 @@ export async function getSessionSummaries(
       id: session.id,
       started_at: session.started_at,
       ended_at: session.ended_at,
+      is_active: session.is_active,
       total_approaches: approaches.length,
       duration_minutes: session.duration_minutes,
       goal: session.goal,

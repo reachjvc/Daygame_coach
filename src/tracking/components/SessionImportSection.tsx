@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, Target, Brain, Lightbulb, MessageSquare, Users } from "lucide-react"
+import { ChevronDown, Target, Brain, Lightbulb, MessageSquare, Users, Mic } from "lucide-react"
 import { MOOD_OPTIONS } from "../config"
 import {
   getMoodEmoji,
@@ -177,6 +177,27 @@ export function SessionImportSection({
                       ))}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* Approach Notes */}
+              {sessionData.approachNotes.length > 0 && (
+                <div data-testid="approach-notes" className="pt-3 border-t border-border/30 space-y-2">
+                  <p className="text-xs text-muted-foreground mb-2">Approach notes</p>
+                  {sessionData.approachNotes.map(({ approachNumber, note }) => (
+                    <div
+                      key={approachNumber}
+                      className="rounded-lg bg-muted/40 border border-border/30 p-3"
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Mic className="size-3 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground">
+                          Approach #{approachNumber}
+                        </span>
+                      </div>
+                      <p className="text-sm">{note}</p>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

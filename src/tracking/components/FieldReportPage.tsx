@@ -76,14 +76,14 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   // Scroll to template section when coming from ended session
   useEffect(() => {
-    if (sessionId && !isLoading && templateSectionRef.current) {
+    if (sessionId && !isLoading && !sessionLoading && templateSectionRef.current) {
       // Small delay to ensure DOM is fully rendered
       const timeoutId = setTimeout(() => {
         templateSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
       }, 100)
       return () => clearTimeout(timeoutId)
     }
-  }, [sessionId, isLoading])
+  }, [sessionId, isLoading, sessionLoading])
 
   const loadRecentlyUsedTemplate = async () => {
     try {
@@ -199,6 +199,16 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           timestamp: approach.timestamp,
         }))
 
+        // Build approach notes (only approaches with non-empty notes)
+        const approachNotes = session.approaches
+          .map((approach, index) => ({
+            approachNumber: index + 1,
+            note: approach.note,
+          }))
+          .filter((entry): entry is { approachNumber: number; note: string } =>
+            entry.note !== null && entry.note.trim() !== ""
+          )
+
         for (const approach of session.approaches) {
           if (approach.outcome) {
             outcomes[approach.outcome]++
@@ -230,6 +240,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           customIntention: session.custom_intention,
           // Per-approach mood timeline
           approachMoods,
+          // Per-approach notes
+          approachNotes,
         })
       }
     } catch (error) {

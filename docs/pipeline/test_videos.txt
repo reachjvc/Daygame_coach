@@ -12,15 +12,16 @@ social_stoic|G2sWa8X0EjA|10min|How To Approach Groups Of Girls (The Complete Gui
 austen_summers_meets_girls|H3_8iPikhDw|7min|A Basic Daygame Approach Anyone Can Do
 natural_lifestyles_meetingGirlsIRL|WSFSpbFCPZo|15min|How to get Rejected like a BOSS - James Marshall Infield
 
-# R2 - Round 2 (15 additional videos)
-# 12 infield + 3 talking head, 10 sources (4 from R1 + 6 new)
-# Duration range: 4min-31min, all WAV_READY
+# R2 - Round 2 (12 additional videos)
+# 9 infield + 3 talking head, 9 sources (4 from R1 + 5 new)
+# Duration range: 8min-31min, all WAV_READY
+# Note: PwvM7HhnUEA excluded (age-restricted, silent audio). JKWRj2hwbT4 and
+#       OteE5cgUSOk were never processed past stage 02 — replaced by A1Mwr1pDusQ
+#       and kEAQ8dB4_R4 which have working audio.
 
-# -- Infield (12) --
+# -- Infield (9) --
 coach_kyle_infield|mv2X8Yhg9M0|9min|Approach ANY GIRL in Public LIKE a PRO! (INFIELD)
-coach_kyle_infield|JKWRj2hwbT4|4min|How to Fix Rejection in 5 minutes (INFIELD)
 social_stoic|DPieYj7nji0|13min|How To Turn Small Talk into Deep Connection (Daygame Coaching Infield)
-social_stoic|OteE5cgUSOk|17min|How To Create Sexual Spark in 60 Seconds (Infield Examples)
 austen_summers_meets_girls|nFjdyAHcTgA|8min|7 Minute Pull
 austen_summers_meets_girls|iOSpNACA9VI|31min|Picking Up Girls in Barcelona | Immersion Documentary
 natural_lifestyles_meetingGirlsIRL|IS2SoUgqDLE|24min|James Marshall picks up 3 shy girls (how to relax, connect & seduce them)
@@ -28,9 +29,8 @@ natural_lifestyles_meetingGirlsIRL|KtmnHDVbmss|9min|Picking Up 3 Girls In 10 min
 NICK_KRAUSER_VIRTUARESI|LCMW0fFEKQk|26min|Virtua Resi #1 - Gutter Game
 NICK_KRAUSER_VIRTUARESI|8xw8sEUI0Pg|9min|Virtua Resi #2 - Pushing Game Tech
 coach_kyle_how_to_approach_a_girl|LftMFDMrfAQ|14min|4 Ways To Approach a Girl You Don't Know [With Examples]
-TODD_V|PwvM7HhnUEA|5min|03.3 Todd V - How To Talk To A Girl (Infield Breakdown)
 
 # -- Talking Head (3) --
-TODD_V_WINNERGAME|kEAQ8dB4_R4|14min|Why Cold Approach Is A Cheat Code
-TODD_V_THESYSTEM|A1Mwr1pDusQ|20min|The P Word -- How to Show Intent the Right Way
 natural_lifestyles_femalepsychology|IZX3a0tLuAg|11min|How To Feel Worthy Around Hot Women (by Understanding What They REALLY Want)
+TODD_V_THESYSTEM|A1Mwr1pDusQ|20min|The P Word -- How to Show Intent the Right Way
+TODD_V_WINNERGAME|kEAQ8dB4_R4|14min|Why Cold Approach Is A Cheat Code

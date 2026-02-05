@@ -86,7 +86,6 @@ export const ALL_MILESTONES = {
   monthly_unlocked: { label: "Monthly Unlocked", emoji: "🔓", tier: "silver", category: "Reports", description: "Complete 4 weekly reviews" },
   quarterly_unlocked: { label: "Quarterly Unlocked", emoji: "🗝️", tier: "gold", category: "Reports", description: "Complete 3 monthly reviews" },
   // Fun/Variety
-  early_bird: { label: "Early Bird", emoji: "🐦", tier: "bronze", category: "Special", description: "Start a session before 10am" },
   globetrotter: { label: "Globetrotter", emoji: "🌍", tier: "gold", category: "Special", description: "Approach in 5 different locations" },
   consistent: { label: "Consistent", emoji: "📈", tier: "silver", category: "Special", description: "Approach every day for a week" },
   marathon: { label: "Marathon Man", emoji: "🏃", tier: "gold", category: "Special", description: "Complete a 2+ hour session" },
@@ -143,7 +142,6 @@ export const ALL_MILESTONES = {
   seated_master: { label: "Seated Master", emoji: "🛋️", tier: "gold", category: "Unique Sets", description: "Approach 25 seated sets" },
   first_foreign: { label: "Lost in Translation", emoji: "🗣️", tier: "silver", category: "Unique Sets", description: "Approach someone speaking a different language" },
   polyglot: { label: "Polyglot", emoji: "🌐", tier: "gold", category: "Unique Sets", description: "Approach girls speaking 5 different languages" },
-  first_celebrity: { label: "Star Struck", emoji: "⭐", tier: "gold", category: "Unique Sets", description: "Approach someone with model/celebrity vibes" },
   // Big milestones
   "2000_approaches": { label: "Approach God", emoji: "⚡", tier: "diamond", category: "Approaches", description: "Complete 2,000 approaches" },
   "5000_approaches": { label: "Living Legend", emoji: "🌟", tier: "diamond", category: "Approaches", description: "Complete 5,000 approaches" },

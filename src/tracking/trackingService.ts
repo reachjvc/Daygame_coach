@@ -91,6 +91,7 @@ import type {
   StickingPointUpdate,
   DailyStats,
 } from "@/src/db/trackingTypes"
+import { ALL_MILESTONES } from "@/src/tracking/data/milestones"
 
 // ============================================
 // Sessions
@@ -462,7 +463,8 @@ export async function getApproachesPerHour(
 // ============================================
 
 export async function getUserMilestones(userId: string): Promise<MilestoneRow[]> {
-  return repoGetUserMilestones(userId)
+  const milestones = await repoGetUserMilestones(userId)
+  return milestones.filter(m => m.milestone_type in ALL_MILESTONES)
 }
 
 // ============================================

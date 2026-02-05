@@ -29,7 +29,8 @@ export function hasSessionContext(sessionData: SessionSummaryData | null): boole
     !!sessionData.techniqueFocus ||
     !!sessionData.ifThenPlan ||
     !!sessionData.customIntention ||
-    sessionData.approachMoods.length > 0
+    sessionData.approachMoods.length > 0 ||
+    (sessionData.approachNotes?.length ?? 0) > 0
   )
 }
 

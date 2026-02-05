@@ -119,6 +119,17 @@ test.describe('Error Handling: API Failures', () => {
     await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
+    // Handle "Active Session Found" dialog if it appears (parallel test created a session)
+    const activeSessionDialog = page.getByRole('dialog', { name: 'Active Session Found' })
+    const dialogVisible = await activeSessionDialog.isVisible().catch(() => false)
+    if (dialogVisible) {
+      await page.getByRole('button', { name: 'Start Fresh' }).click({ timeout: 5000 })
+      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+      await ensureNoActiveSessionViaAPI(page)
+      await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
+      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+    }
+
     // Wait for page to fully load (either start button or end button visible)
     const startButton = page.getByTestId(SELECTORS.session.startButton)
     const endButton = page.getByTestId(SELECTORS.session.endButton)
@@ -170,8 +181,20 @@ test.describe('Error Handling: API Failures', () => {
 
   test('approach add shows error when API returns 500', async ({ page }) => {
     // Arrange: Navigate to session page
+    await ensureNoActiveSessionViaAPI(page)
     await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    // Handle "Active Session Found" dialog if it appears
+    const activeSessionDialog = page.getByRole('dialog', { name: 'Active Session Found' })
+    const dialogVisible = await activeSessionDialog.isVisible().catch(() => false)
+    if (dialogVisible) {
+      await page.getByRole('button', { name: 'Start Fresh' }).click({ timeout: 5000 })
+      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+      await ensureNoActiveSessionViaAPI(page)
+      await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
+      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+    }
 
     // Wait for page to fully load (either start button or end button visible)
     const startButton = page.getByTestId(SELECTORS.session.startButton)

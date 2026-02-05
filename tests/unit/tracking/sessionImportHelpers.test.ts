@@ -114,6 +114,7 @@ describe("hasSessionContext", () => {
     ifThenPlan: null,
     customIntention: null,
     approachMoods: [],
+    approachNotes: [],
   }
 
   test("should return false for null sessionData", () => {
@@ -281,6 +282,7 @@ describe("getDefaultExpanded", () => {
     ifThenPlan: null,
     customIntention: null,
     approachMoods: [],
+    approachNotes: [],
   }
 
   test("should return false for null sessionData", () => {

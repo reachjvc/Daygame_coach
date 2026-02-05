@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Plus, X, Check } from "lucide-react"
 import type { TemplateField } from "@/src/db/trackingTypes"
+import type { VoiceRecorderResult } from "../types"
+import { VoiceRecorderButton } from "./VoiceRecorderButton"
 
 interface FieldRendererProps {
   field: TemplateField
@@ -25,8 +27,19 @@ function isEmojiOptions(options?: string[]): boolean {
   return options.every(opt => emojiRegex.test(opt))
 }
 
+// Field types where voice input makes sense on the label row
+const VOICE_LABEL_TYPES = new Set(["text", "textarea"])
+
 export function FieldRenderer({ field, value, onChange, variant = "default" }: FieldRendererProps) {
   const [tagInput, setTagInput] = useState("")
+
+  // Voice transcription handler for text/textarea fields (appends to existing value)
+  const handleVoiceComplete = (result: VoiceRecorderResult) => {
+    if (!result.transcription) return
+    const current = (value as string) || ""
+    const separator = current ? " " : ""
+    onChange(current + separator + result.transcription)
+  }
 
   const inputClassName = cn(
     "transition-all duration-200 bg-background border-border/50",
@@ -124,31 +137,96 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
 
       case "multiselect": {
         const selectedValues = (value as string[]) || []
+        const predefinedOptions = field.options || []
+        const customValues = selectedValues.filter(v => !predefinedOptions.includes(v))
         return (
-          <div className="flex flex-wrap gap-2" data-testid={`field-multiselect-${field.id}`}>
-            {field.options?.map((option) => {
-              const isSelected = selectedValues.includes(option)
-              return (
-                <Button
-                  key={option}
-                  type="button"
-                  data-testid={`field-option-${field.id}-${option.toLowerCase().replace(/\s+/g, '-')}`}
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => {
-                    if (isSelected) {
-                      onChange(selectedValues.filter((v) => v !== option))
-                    } else {
-                      onChange([...selectedValues, option])
-                    }
-                  }}
-                  className="transition-all duration-200"
-                >
-                  {isSelected && <Check className="size-3 mr-1" />}
-                  {option}
-                </Button>
-              )
-            })}
+          <div className="space-y-3" data-testid={`field-multiselect-${field.id}`}>
+            <div className="flex flex-wrap gap-2">
+              {predefinedOptions.map((option) => {
+                const isSelected = selectedValues.includes(option)
+                return (
+                  <Button
+                    key={option}
+                    type="button"
+                    data-testid={`field-option-${field.id}-${option.toLowerCase().replace(/\s+/g, '-')}`}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      if (isSelected) {
+                        onChange(selectedValues.filter((v) => v !== option))
+                      } else {
+                        onChange([...selectedValues, option])
+                      }
+                    }}
+                    className="transition-all duration-200"
+                  >
+                    {isSelected && <Check className="size-3 mr-1" />}
+                    {option}
+                  </Button>
+                )
+              })}
+            </div>
+            {field.allowCustom && (
+              <>
+                {customValues.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {customValues.map((custom) => (
+                      <Badge key={custom} variant="secondary" className="flex items-center gap-1">
+                        {custom}
+                        <button
+                          type="button"
+                          onClick={() => onChange(selectedValues.filter((v) => v !== custom))}
+                          className="ml-1 hover:text-destructive"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    data-testid={`field-custom-input-${field.id}`}
+                    placeholder="Add your own..."
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && tagInput.trim()) {
+                        e.preventDefault()
+                        if (!selectedValues.includes(tagInput.trim())) {
+                          onChange([...selectedValues, tagInput.trim()])
+                        }
+                        setTagInput("")
+                      }
+                    }}
+                    className={inputClassName}
+                  />
+                  <VoiceRecorderButton
+                    onComplete={(result) => {
+                      if (result.transcription) {
+                        const current = tagInput
+                        const separator = current ? " " : ""
+                        setTagInput(current + separator + result.transcription)
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    data-testid={`field-custom-add-${field.id}`}
+                    onClick={() => {
+                      if (tagInput.trim() && !selectedValues.includes(tagInput.trim())) {
+                        onChange([...selectedValues, tagInput.trim()])
+                        setTagInput("")
+                      }
+                    }}
+                  >
+                    <Plus className="size-4" />
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         )
       }
@@ -196,17 +274,29 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         return (
           <div className="space-y-2" data-testid={`field-list-${field.id}`}>
             {Array.from({ length: count }, (_, i) => (
-              <Input
-                key={i}
-                data-testid={`field-list-${field.id}-${i}`}
-                placeholder={`${field.placeholder || "Item"} ${i + 1}`}
-                value={listItems[i] || ""}
-                onChange={(e) => {
-                  const newList = [...listItems]
-                  newList[i] = e.target.value
-                  onChange(newList)
-                }}
-              />
+              <div key={i} className="flex gap-2 items-center">
+                <Input
+                  data-testid={`field-list-${field.id}-${i}`}
+                  placeholder={`${field.placeholder || "Item"} ${i + 1}`}
+                  value={listItems[i] || ""}
+                  onChange={(e) => {
+                    const newList = [...listItems]
+                    newList[i] = e.target.value
+                    onChange(newList)
+                  }}
+                  className="flex-1"
+                />
+                <VoiceRecorderButton
+                  onComplete={(result) => {
+                    if (!result.transcription) return
+                    const newList = [...listItems]
+                    const current = newList[i] || ""
+                    const separator = current ? " " : ""
+                    newList[i] = current + separator + result.transcription
+                    onChange(newList)
+                  }}
+                />
+              </div>
             ))}
           </div>
         )
@@ -247,6 +337,15 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
                   }
                 }}
               />
+              <VoiceRecorderButton
+                onComplete={(result) => {
+                  if (result.transcription) {
+                    const current = tagInput
+                    const separator = current ? " " : ""
+                    setTagInput(current + separator + result.transcription)
+                  }
+                }}
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -279,14 +378,24 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
     }
   }
 
+  const showLabelVoice = VOICE_LABEL_TYPES.has(field.type)
+
   return (
     <div className={cn(
       "space-y-2",
       variant === "card" && "p-4 rounded-xl bg-muted/30 border border-border/50"
     )}>
-      <Label htmlFor={field.id} className="text-sm font-medium">
-        {field.label}
-      </Label>
+      <div className="flex items-center justify-between">
+        <Label htmlFor={field.id} className="text-sm font-medium">
+          {field.label}
+        </Label>
+        {showLabelVoice && (
+          <VoiceRecorderButton
+            onComplete={handleVoiceComplete}
+            data-testid={`voice-btn-${field.id}`}
+          />
+        )}
+      </div>
       {renderField()}
     </div>
   )

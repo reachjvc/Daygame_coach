@@ -7,16 +7,13 @@ test.describe('Protected Routes - Unauthenticated Access', () => {
   // Override storageState to ensure no auth tokens (cookies + localStorage)
   test.use({ storageState: { cookies: [], origins: [] } })
 
-  // Note: /dashboard allows unauthenticated access (shows preview mode)
-  // Only sub-routes require authentication
-
-  test('should show preview mode on /dashboard for unauthenticated user', async ({ page }) => {
+  test('should redirect unauthenticated user from /dashboard to login', async ({ page }) => {
     // Act: Access dashboard without logging in
     await page.goto('/dashboard', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // Assert: Should stay on dashboard (preview mode) - not redirect
-    expect(page.url()).toContain('/dashboard')
+    // Assert: Should be redirected to login page (proxy.ts protects all /dashboard routes)
+    await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
+    expect(page.url()).toContain('/auth/login')
   })
 
   test('should redirect unauthenticated user from /dashboard/tracking to login', async ({ page }) => {
@@ -46,8 +43,8 @@ test.describe('Protected Routes - Unauthenticated Access', () => {
     expect(page.url()).toContain('/auth/login')
   })
 
-  // Note: /dashboard/inner-game and /dashboard/scenarios also have preview mode
-  // so they don't redirect - only tracking, settings, and qa require auth
+  // Note: All /dashboard routes are protected by proxy.ts middleware
+  // and redirect unauthenticated users to /auth/login
 })
 
 test.describe('Protected Routes - After Logout', () => {
@@ -70,6 +67,10 @@ test.describe('Protected Routes - After Logout', () => {
     // Act: Logout
     await logoutButton.click()
     await page.waitForURL(/^\/$|localhost:\d+\/?$/, { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    // Clear any lingering Supabase auth cookies so the middleware sees no session
+    await page.context().clearCookies()
 
     // Try to navigate to a protected route (tracking requires auth)
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })

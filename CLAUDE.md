@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+If you enter planmode and give user a summary, keep it conscise. Sacrifice grammar for conscisiveness.
+
 
 ## ⛔ PRE-RESPONSE CHECKLIST (Complete Before Every Summary)
 

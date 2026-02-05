@@ -592,7 +592,7 @@ download_one() {
   : > "$log_audio"
   dl_with_backoff "$log_audio" \
     "$DOWNLOADER" \
-      --format "bestaudio/best" \
+      --format "bestaudio[abr>50]/bestaudio/best" \
       --output "${base}.audio.%(ext)s" \
       --write-info-json \
       --download-archive "$archive_audio" \

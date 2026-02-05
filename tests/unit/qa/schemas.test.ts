@@ -311,7 +311,7 @@ describe("qaRequestSchema", () => {
 
     test("should accept all valid provider values", () => {
       // Arrange
-      const providers = ["ollama", "openai", "claude"] as const
+      const providers = ["ollama", "claude"] as const
 
       for (const provider of providers) {
         // Act

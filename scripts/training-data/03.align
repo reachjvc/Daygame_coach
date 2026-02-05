@@ -29,9 +29,11 @@ import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 import numpy as np
+
+from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_dirs
 
 # --------------------------
 # Torch import
@@ -170,6 +172,25 @@ def _detect_repetition_hallucination(
         }
 
     return None
+
+
+def _load_flagged_videos(flag_file: Path) -> set:
+    """Load CRITICAL-severity video names from a .flagged.json file.
+
+    Only CRITICAL videos are skipped. WARNING-severity entries (including
+    entries that predate the severity field) are allowed through.
+    """
+    if not flag_file.exists():
+        return set()
+    try:
+        entries = json.loads(flag_file.read_text(encoding="utf-8"))
+        return {
+            str(e.get("video", ""))
+            for e in entries
+            if e.get("video") and e.get("severity", "WARNING") == "CRITICAL"
+        }
+    except Exception:
+        return set()
 
 
 def _auto_device(preferred: str = "") -> str:
@@ -518,6 +539,7 @@ def batch_for_source(
     prefer_audio: str,
     engine: AlignEngine,
     progress_interval: float,
+    manifest_ids: Optional[Set[str]] = None,
 ) -> int:
     root = repo_root()
     safe_source = safe_name(source_name)
@@ -537,10 +559,17 @@ def batch_for_source(
         log(f"[03.align] No downloads found: {downloads_root}")
         return 0
 
+    # Load flagged videos from 02.transcribe — skip these entirely
+    flagged = _load_flagged_videos(transcribe_root / ".flagged.json")
+    if flagged:
+        log(f"[03.align] CRITICAL-flagged videos (will skip): {len(flagged)}")
+
     video_id = extract_video_id(youtube_url)
     video_dirs = sorted([p for p in transcribe_root.iterdir() if p.is_dir()])
     if video_id:
         video_dirs = [d for d in video_dirs if f"[{video_id}]" in d.name]
+    if manifest_ids:
+        video_dirs = manifest_filter_dirs(video_dirs, manifest_ids)
 
     if not video_dirs:
         log(f"[03.align] No video folders found under: {transcribe_root}")
@@ -554,6 +583,12 @@ def batch_for_source(
 
     for video_dir in video_dirs:
         try:
+            # Skip flagged videos (hallucination, quality issues in 02.transcribe)
+            if video_dir.name in flagged:
+                log(f"[03.align] SKIP (flagged): {video_dir.name}")
+                skipped += 1
+                continue
+
             # Find transcription JSON
             transcription_files = sorted(video_dir.glob("*.full.json"))
             # Filter out engine-specific files (*.full.whisperx.json, etc.)
@@ -667,6 +702,7 @@ if __name__ == "__main__":
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
     p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
     p.add_argument("--input", help="Single-file input transcription JSON.")
     p.add_argument("--audio", help="Single-file input audio path.")
     p.add_argument("--out", help="Single-file output .full.json.")
@@ -714,6 +750,29 @@ if __name__ == "__main__":
         )
         raise SystemExit(0)
 
+    # Manifest batch mode
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            raise SystemExit(f"Manifest file not found: {manifest_path}")
+        sources_map = load_manifest_sources(manifest_path)
+        total = 0
+        for source_name, vid_ids in sorted(sources_map.items()):
+            log(f"[03.align] Manifest: {source_name} ({len(vid_ids)} videos)")
+            total += batch_for_source(
+                source_name=source_name,
+                youtube_url="",
+                overwrite=bool(args.overwrite),
+                prefer_audio=str(args.prefer_audio),
+                engine=engine,
+                progress_interval=args.progress_interval,
+                manifest_ids=vid_ids,
+            )
+        log(f"[03.align] ✅ MANIFEST DONE: total_processed={total}")
+        raise SystemExit(0)
+
     # Batch sources file
     if args.sources is not None:
         sources_path = Path(args.sources)
@@ -737,7 +796,7 @@ if __name__ == "__main__":
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
-            "Provide either --input/--audio/--out, or --sources [file], or:\n"
+            "Provide either --input/--audio/--out, --manifest, or --sources [file], or:\n"
             "./scripts/training-data/03.align <source_name> <youtube_url>"
         )
 

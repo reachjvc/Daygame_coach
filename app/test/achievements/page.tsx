@@ -54,7 +54,6 @@ const ALL_MILESTONES: Record<string, MilestoneInfo> = {
   "10_sessions": { label: "Dedicated", emoji: "💪", tier: "silver", category: "Sessions", description: "Complete 10 sessions" },
   // Special
   weekend_warrior: { label: "Weekend Warrior", emoji: "⚔️", tier: "bronze", category: "Special", description: "Complete a session on the weekend" },
-  night_owl: { label: "Night Owl", emoji: "🦉", tier: "bronze", category: "Special", description: "Start a session after 9pm" },
   marathon: { label: "Marathon Man", emoji: "🏃", tier: "gold", category: "Special", description: "Complete a 2+ hour session" },
   hot_streak: { label: "Hot Streak", emoji: "🔥", tier: "platinum", category: "Special", description: "Get 3 numbers in a single session" },
   // Reports

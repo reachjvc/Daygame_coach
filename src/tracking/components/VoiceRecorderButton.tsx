@@ -84,6 +84,7 @@ export function VoiceRecorderButton({
   if (!isSupported) {
     return (
       <Button
+        type="button"
         variant="ghost"
         size="icon-sm"
         disabled
@@ -99,6 +100,7 @@ export function VoiceRecorderButton({
   if (isTranscribing) {
     return (
       <Button
+        type="button"
         variant="ghost"
         size="icon-sm"
         disabled
@@ -121,6 +123,7 @@ export function VoiceRecorderButton({
 
         {/* Stop button */}
         <Button
+          type="button"
           variant="ghost"
           size="icon-sm"
           onClick={handleClick}

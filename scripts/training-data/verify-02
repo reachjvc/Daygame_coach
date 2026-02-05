@@ -1,0 +1,773 @@
+#!/usr/bin/env python3
+"""
+Stage 02 Verification Script
+
+Runs ALL deterministic quality checks on Whisper transcription output
+and writes a structured JSON report. No LLM involved.
+
+Usage:
+    ./verify-02 <batch_dir>
+    ./verify-02 data/test/r2/02.transcribe
+    ./verify-02 data/02.transcribe/r2batch
+
+Output:
+    <batch_dir>/.verify-report.json
+"""
+
+import json
+import os
+import re
+import subprocess
+import sys
+import unicodedata
+from datetime import datetime, timezone
+from pathlib import Path
+
+# ── Thresholds ───────────────────────────────────────────────────────────────
+
+WPM_LOW = 80
+WPM_HIGH = 300
+COVERAGE_LOW_PCT = 80
+MIN_DURATION_SEC = 30
+GAP_THRESHOLD_SEC = 30
+WORD_BOUNDARY_TOLERANCE_SEC = 0.5
+CROSS_SEG_REPEAT_MIN = 3
+INTRA_SEG_REPEAT_MIN = 6
+SUSPICIOUS_WORD_DURATION_SEC = 3.0
+HIGH_WPM_SEGMENT_THRESHOLD = 400
+HIGH_WPM_SEGMENT_MIN_DURATION = 2.0
+NON_ASCII_DENSITY_THRESHOLD = 0.30
+HALLUCINATION_CONTEXT_RADIUS = 3
+
+
+# ── Helpers ──────────────────────────────────────────────────────────────────
+
+def extract_video_id(dirname: str) -> str:
+    """Extract YouTube video ID from directory name like 'Title [VIDEO_ID]'."""
+    match = re.search(r'\[([A-Za-z0-9_-]{11})\]', dirname)
+    return match.group(1) if match else dirname
+
+
+def get_audio_duration(batch_dir: str, video_dirname: str) -> float | None:
+    """Get audio duration via ffprobe from the parallel 01.download directory."""
+    download_dir = batch_dir.replace("02.transcribe", "01.download")
+    video_dl_dir = os.path.join(download_dir, video_dirname)
+    wav_path = find_wav(video_dl_dir)
+    if not wav_path:
+        return None
+    try:
+        result = subprocess.run(
+            ["ffprobe", "-v", "quiet", "-show_entries", "format=duration",
+             "-of", "csv=p=0", wav_path],
+            capture_output=True, text=True, timeout=10
+        )
+        return float(result.stdout.strip()) if result.stdout.strip() else None
+    except (subprocess.TimeoutExpired, ValueError, FileNotFoundError):
+        return None
+
+
+def strip_punct(word: str) -> str:
+    """Strip punctuation from a word for comparison."""
+    return re.sub(r'[^\w]', '', word).lower()
+
+
+# ── Phase 1: Inventory ──────────────────────────────────────────────────────
+
+def find_full_json(dir_path: str) -> str | None:
+    """Find .full.json in a directory, handling bracket characters in filenames."""
+    for f in os.listdir(dir_path):
+        if f.endswith(".full.json"):
+            return os.path.join(dir_path, f)
+    return None
+
+
+def find_wav(dir_path: str, suffix: str = ".audio.asr.raw16k.wav") -> str | None:
+    """Find a WAV file in a directory, handling bracket characters in filenames."""
+    if not os.path.isdir(dir_path):
+        return None
+    for f in os.listdir(dir_path):
+        if f.endswith(suffix):
+            return os.path.join(dir_path, f)
+    return None
+
+
+def check_inventory(batch_dir: str) -> list[dict]:
+    """List all video subdirectories and confirm .full.json exists."""
+    results = []
+    for entry in sorted(os.listdir(batch_dir)):
+        full_path = os.path.join(batch_dir, entry)
+        if not os.path.isdir(full_path) or entry.startswith('.'):
+            continue
+        json_path = find_full_json(full_path)
+        results.append({
+            "dir": entry,
+            "video_id": extract_video_id(entry),
+            "full_json": json_path,
+            "present": json_path is not None
+        })
+    return results
+
+
+# ── Phase 2: Structural Validation ──────────────────────────────────────────
+
+def check_structural(data: dict) -> dict:
+    """Verify JSON structure of a .full.json file."""
+    issues = []
+
+    # Top-level keys
+    if "text" not in data:
+        issues.append({"severity": "BLOCK", "msg": "Missing top-level 'text' key"})
+    elif not isinstance(data["text"], str):
+        issues.append({"severity": "BLOCK", "msg": "'text' is not a string"})
+
+    if "segments" not in data:
+        issues.append({"severity": "BLOCK", "msg": "Missing top-level 'segments' key"})
+        return {"valid": False, "issues": issues}
+
+    segments = data["segments"]
+    if not isinstance(segments, list):
+        issues.append({"severity": "BLOCK", "msg": "'segments' is not an array"})
+        return {"valid": False, "issues": issues}
+
+    if len(segments) == 0:
+        issues.append({"severity": "BLOCK", "msg": "'segments' array is empty"})
+        return {"valid": False, "issues": issues}
+
+    # Per-segment checks
+    for i, seg in enumerate(segments):
+        for key in ("start", "end", "text", "words"):
+            if key not in seg:
+                issues.append({"severity": "BLOCK", "msg": f"Segment {i}: missing '{key}'"})
+        if "words" in seg:
+            if not isinstance(seg["words"], list):
+                issues.append({"severity": "BLOCK", "msg": f"Segment {i}: 'words' is not array"})
+            elif len(seg["words"]) == 0:
+                issues.append({"severity": "FLAG", "msg": f"Segment {i}: empty 'words' array"})
+            else:
+                for j, w in enumerate(seg["words"]):
+                    if "word" not in w:
+                        issues.append({
+                            "severity": "BLOCK",
+                            "msg": f"Segment {i}, word {j}: missing 'word'"
+                        })
+
+    # Aggregate missing word timestamps across all segments (INFO, not FLAG).
+    # faster-whisper commonly omits start/end for low-confidence words.
+    total_words = sum(len(s.get("words", [])) for s in segments)
+    words_missing_ts = sum(
+        1 for s in segments for w in s.get("words", [])
+        if "start" not in w or "end" not in w
+    )
+    if words_missing_ts > 0:
+        pct = (words_missing_ts / total_words * 100) if total_words > 0 else 0
+        severity = "FLAG" if pct > 20 else "INFO"
+        issues.append({
+            "severity": severity,
+            "msg": f"{words_missing_ts}/{total_words} words ({pct:.1f}%) "
+                   f"missing timestamps"
+        })
+
+    has_block = any(i["severity"] == "BLOCK" for i in issues)
+    return {"valid": not has_block, "issues": issues}
+
+
+# ── Phase 3: Statistical Checks ─────────────────────────────────────────────
+
+def check_stats(data: dict, audio_duration: float | None) -> dict:
+    """Compute statistics and flag outliers."""
+    segments = data.get("segments", [])
+    flags = []
+    blocks = []
+
+    # Basic counts
+    seg_count = len(segments)
+    word_count = sum(len(s.get("words", [])) for s in segments)
+
+    # Duration
+    first_start = segments[0]["start"] if segments else 0
+    last_end = segments[-1]["end"] if segments else 0
+    duration_sec = last_end - first_start
+
+    # WPM
+    wpm = (word_count / (duration_sec / 60)) if duration_sec > 0 else 0
+    if wpm < WPM_LOW:
+        flags.append(f"WPM={wpm:.1f} below {WPM_LOW} (possible silent/corrupt audio)")
+    if wpm > WPM_HIGH:
+        flags.append(f"WPM={wpm:.1f} above {WPM_HIGH} (possible hallucinated rapid text)")
+
+    # Duration check
+    if duration_sec < MIN_DURATION_SEC:
+        flags.append(f"Duration={duration_sec:.1f}s below {MIN_DURATION_SEC}s")
+
+    # Coverage
+    coverage_pct = None
+    if audio_duration and audio_duration > 0:
+        coverage_pct = (last_end / audio_duration) * 100
+        if coverage_pct < COVERAGE_LOW_PCT:
+            flags.append(f"Coverage={coverage_pct:.1f}% below {COVERAGE_LOW_PCT}%")
+
+    # Timestamp monotonicity
+    non_monotonic = []
+    for i in range(1, len(segments)):
+        if segments[i]["start"] < segments[i - 1]["start"]:
+            non_monotonic.append(i)
+    if non_monotonic:
+        blocks.append(f"Non-monotonic timestamps at segments: {non_monotonic[:5]}")
+
+    # Word boundary check (skip words without timestamps)
+    word_boundary_violations = []
+    for i, seg in enumerate(segments):
+        seg_start = seg["start"]
+        seg_end = seg["end"]
+        for j, w in enumerate(seg.get("words", [])):
+            if "start" not in w or "end" not in w:
+                continue
+            w_start = w["start"]
+            w_end = w["end"]
+            if w_start < seg_start - WORD_BOUNDARY_TOLERANCE_SEC:
+                word_boundary_violations.append(
+                    f"Seg {i}, word {j} ('{w.get('word','')}') start={w_start:.2f} "
+                    f"before segment start={seg_start:.2f}"
+                )
+            if w_end > seg_end + WORD_BOUNDARY_TOLERANCE_SEC:
+                word_boundary_violations.append(
+                    f"Seg {i}, word {j} ('{w.get('word','')}') end={w_end:.2f} "
+                    f"after segment end={seg_end:.2f}"
+                )
+    if word_boundary_violations:
+        flags.append(
+            f"{len(word_boundary_violations)} word boundary violation(s): "
+            f"{word_boundary_violations[0]}"
+            + (f" ... and {len(word_boundary_violations)-1} more"
+               if len(word_boundary_violations) > 1 else "")
+        )
+
+    # Gap detection
+    gaps = []
+    for i in range(1, len(segments)):
+        gap = segments[i]["start"] - segments[i - 1]["end"]
+        if gap > GAP_THRESHOLD_SEC:
+            gaps.append({
+                "between_segments": [i - 1, i],
+                "gap_sec": round(gap, 2),
+                "from": round(segments[i - 1]["end"], 2),
+                "to": round(segments[i]["start"], 2)
+            })
+    if gaps:
+        flags.append(f"{len(gaps)} gap(s) > {GAP_THRESHOLD_SEC}s detected")
+
+    return {
+        "segments": seg_count,
+        "words": word_count,
+        "duration_sec": round(duration_sec, 2),
+        "audio_duration_sec": round(audio_duration, 2) if audio_duration else None,
+        "wpm": round(wpm, 1),
+        "coverage_pct": round(coverage_pct, 1) if coverage_pct is not None else None,
+        "gaps": gaps,
+        "word_boundary_violations_count": len(word_boundary_violations),
+        "flags": flags,
+        "blocks": blocks
+    }
+
+
+# ── Phase 4: Hallucination Detection ────────────────────────────────────────
+
+def check_hallucination(data: dict) -> dict:
+    """Detect hallucination patterns in transcript."""
+    segments = data.get("segments", [])
+
+    # 4a: Cross-segment repetition
+    cross_segment = []
+    i = 0
+    while i < len(segments):
+        text = segments[i].get("text", "").strip()
+        if not text:
+            i += 1
+            continue
+        run_start = i
+        while i + 1 < len(segments) and segments[i + 1].get("text", "").strip() == text:
+            i += 1
+        run_length = i - run_start + 1
+        if run_length >= CROSS_SEG_REPEAT_MIN:
+            cross_segment.append({
+                "text": text,
+                "count": run_length,
+                "segment_range": [run_start, i],
+                "time_range": [
+                    round(segments[run_start]["start"], 2),
+                    round(segments[i]["end"], 2)
+                ]
+            })
+        i += 1
+
+    # 4b: Intra-segment word repetition
+    intra_segment = []
+    for seg_idx, seg in enumerate(segments):
+        words = seg.get("words", [])
+        if len(words) < INTRA_SEG_REPEAT_MIN:
+            continue
+        j = 0
+        while j < len(words):
+            w = strip_punct(words[j].get("word", ""))
+            if not w:
+                j += 1
+                continue
+            run_start_j = j
+            while j + 1 < len(words) and strip_punct(words[j + 1].get("word", "")) == w:
+                j += 1
+            run_length = j - run_start_j + 1
+            if run_length >= INTRA_SEG_REPEAT_MIN:
+                intra_segment.append({
+                    "segment": seg_idx,
+                    "word": w,
+                    "count": run_length,
+                    "time_range": [
+                        round(words[run_start_j].get("start", 0), 2),
+                        round(words[j].get("end", 0), 2)
+                    ],
+                    "segment_text": seg.get("text", "").strip()
+                })
+            j += 1
+
+    # 4c: Suspicious word durations (skip words without timestamps)
+    suspicious_durations = []
+    for seg_idx, seg in enumerate(segments):
+        for w in seg.get("words", []):
+            if "start" not in w or "end" not in w:
+                continue
+            dur = w["end"] - w["start"]
+            if dur > SUSPICIOUS_WORD_DURATION_SEC:
+                suspicious_durations.append({
+                    "segment": seg_idx,
+                    "word": w.get("word", ""),
+                    "duration_sec": round(dur, 2),
+                    "start": round(w["start"], 2),
+                    "end": round(w["end"], 2),
+                    "segment_text": seg.get("text", "").strip()
+                })
+
+    # 4d: High WPM segments (>2s duration only)
+    high_wpm_segments = []
+    for seg_idx, seg in enumerate(segments):
+        seg_dur = seg.get("end", 0) - seg.get("start", 0)
+        if seg_dur < HIGH_WPM_SEGMENT_MIN_DURATION:
+            continue
+        seg_words = len(seg.get("words", []))
+        seg_wpm = (seg_words / (seg_dur / 60)) if seg_dur > 0 else 0
+        if seg_wpm > HIGH_WPM_SEGMENT_THRESHOLD:
+            high_wpm_segments.append({
+                "segment": seg_idx,
+                "wpm": round(seg_wpm, 1),
+                "duration_sec": round(seg_dur, 2),
+                "word_count": seg_words,
+                "text": seg.get("text", "").strip()
+            })
+
+    return {
+        "cross_segment": cross_segment,
+        "intra_segment": intra_segment,
+        "suspicious_durations": suspicious_durations,
+        "high_wpm_segments": high_wpm_segments
+    }
+
+
+# ── Phase 5: Language Detection ──────────────────────────────────────────────
+
+def check_language(data: dict) -> dict:
+    """Flag segments with high non-ASCII character density."""
+    segments = data.get("segments", [])
+    non_english = []
+
+    for seg_idx, seg in enumerate(segments):
+        text = seg.get("text", "").strip()
+        if not text:
+            continue
+        non_ascii = sum(
+            1 for c in text
+            if ord(c) > 127 and unicodedata.category(c).startswith('L')
+        )
+        total_alpha = sum(1 for c in text if c.isalpha())
+        if total_alpha > 0:
+            density = non_ascii / total_alpha
+            if density > NON_ASCII_DENSITY_THRESHOLD:
+                non_english.append({
+                    "segment": seg_idx,
+                    "density": round(density, 2),
+                    "text": text
+                })
+
+    return {"non_english_segments": non_english}
+
+
+# ── Spot-check segment extraction ───────────────────────────────────────────
+
+def extract_spot_checks(data: dict, hallucination_results: dict) -> dict:
+    """Pre-extract segments that the LLM should review."""
+    segments = data.get("segments", [])
+    if not segments:
+        return {}
+
+    def seg_summary(idx: int) -> dict:
+        if 0 <= idx < len(segments):
+            return {"idx": idx, "text": segments[idx].get("text", "").strip()}
+        return {"idx": idx, "text": "(out of range)"}
+
+    # First 3 and last 3
+    first_3 = [seg_summary(i) for i in range(min(3, len(segments)))]
+    last_3 = [seg_summary(i) for i in range(max(0, len(segments) - 3), len(segments))]
+
+    # Longest segment by word count
+    longest_idx = max(range(len(segments)), key=lambda i: len(segments[i].get("words", [])))
+    longest = {
+        "idx": longest_idx,
+        "word_count": len(segments[longest_idx].get("words", [])),
+        "text": segments[longest_idx].get("text", "").strip()
+    }
+
+    # Highest WPM segment (>2s duration)
+    highest_wpm = None
+    best_wpm = 0
+    for i, seg in enumerate(segments):
+        dur = seg.get("end", 0) - seg.get("start", 0)
+        if dur < HIGH_WPM_SEGMENT_MIN_DURATION:
+            continue
+        seg_wpm = (len(seg.get("words", [])) / (dur / 60)) if dur > 0 else 0
+        if seg_wpm > best_wpm:
+            best_wpm = seg_wpm
+            highest_wpm = {
+                "idx": i,
+                "wpm": round(seg_wpm, 1),
+                "duration_sec": round(dur, 2),
+                "text": seg.get("text", "").strip()
+            }
+
+    # Context around hallucinations
+    flagged_indices = set()
+    for h in hallucination_results.get("cross_segment", []):
+        for idx in range(h["segment_range"][0], h["segment_range"][1] + 1):
+            flagged_indices.add(idx)
+    for h in hallucination_results.get("intra_segment", []):
+        flagged_indices.add(h["segment"])
+    for h in hallucination_results.get("suspicious_durations", []):
+        flagged_indices.add(h["segment"])
+
+    hallucination_context = []
+    for flagged_idx in sorted(flagged_indices):
+        context_start = max(0, flagged_idx - HALLUCINATION_CONTEXT_RADIUS)
+        context_end = min(len(segments), flagged_idx + HALLUCINATION_CONTEXT_RADIUS + 1)
+        context = [seg_summary(i) for i in range(context_start, context_end)]
+        hallucination_context.append({
+            "flagged_idx": flagged_idx,
+            "context": context
+        })
+
+    return {
+        "first_3": first_3,
+        "last_3": last_3,
+        "longest": longest,
+        "highest_wpm": highest_wpm,
+        "hallucination_context": hallucination_context
+    }
+
+
+# ── Phase 6: Flagged File Cross-Check ───────────────────────────────────────
+
+def check_flagged_file(batch_dir: str, all_hallucinations: dict) -> dict:
+    """Cross-check .flagged.json against detected issues."""
+    flagged_path = os.path.join(batch_dir, ".flagged.json")
+
+    if not os.path.exists(flagged_path):
+        # Collect all videos that had any hallucination finding
+        unflagged = []
+        for video_id, h in all_hallucinations.items():
+            has_issues = (
+                h["cross_segment"] or h["intra_segment"]
+                or h["suspicious_durations"] or h["high_wpm_segments"]
+            )
+            if has_issues:
+                unflagged.append(video_id)
+        return {
+            "exists": False,
+            "entries": 0,
+            "unflagged_issues": unflagged,
+            "stale": len(unflagged) > 0
+        }
+
+    try:
+        with open(flagged_path) as f:
+            flagged_data = json.load(f)
+    except (json.JSONDecodeError, OSError) as e:
+        return {
+            "exists": True,
+            "entries": 0,
+            "error": f"Could not read .flagged.json: {e}",
+            "unflagged_issues": [],
+            "stale": True
+        }
+
+    flagged_videos = set()
+    for entry in flagged_data:
+        video_name = entry.get("video", "")
+        flagged_videos.add(extract_video_id(video_name))
+
+    # Find issues detected now but not in .flagged.json
+    unflagged = []
+    for video_id, h in all_hallucinations.items():
+        has_issues = (
+            h["cross_segment"] or h["intra_segment"]
+            or h["suspicious_durations"] or h["high_wpm_segments"]
+        )
+        if has_issues and video_id not in flagged_videos:
+            unflagged.append(video_id)
+
+    return {
+        "exists": True,
+        "entries": len(flagged_data),
+        "unflagged_issues": unflagged,
+        "stale": len(unflagged) > 0
+    }
+
+
+# ── Verdict Logic ────────────────────────────────────────────────────────────
+
+def compute_verdict(structural: dict, stats: dict, hallucination: dict,
+                    language: dict) -> tuple[str, list[str], list[str]]:
+    """Compute PASS/FLAG/BLOCK verdict for a single video."""
+    flags = []
+    blocks = []
+
+    # Structural
+    if not structural["valid"]:
+        blocks.append("Structural validation failed")
+    for issue in structural["issues"]:
+        if issue["severity"] == "BLOCK":
+            blocks.append(f"Structural: {issue['msg']}")
+        elif issue["severity"] == "FLAG":
+            flags.append(f"Structural: {issue['msg']}")
+
+    # Stats
+    flags.extend(stats["flags"])
+    blocks.extend(stats["blocks"])
+
+    # Hallucination
+    for h in hallucination["cross_segment"]:
+        flags.append(
+            f"Cross-segment repetition: \"{h['text']}\" ×{h['count']} "
+            f"(segs {h['segment_range'][0]}-{h['segment_range'][1]})"
+        )
+    for h in hallucination["intra_segment"]:
+        flags.append(
+            f"Intra-segment repetition: \"{h['word']}\" ×{h['count']} "
+            f"in seg {h['segment']}"
+        )
+    for h in hallucination["suspicious_durations"]:
+        severity = "FLAG" if h["duration_sec"] > 10.0 else "INFO"
+        if severity == "FLAG":
+            flags.append(
+                f"Suspicious word duration: \"{h['word']}\" = {h['duration_sec']}s "
+                f"in seg {h['segment']}"
+            )
+    for h in hallucination["high_wpm_segments"]:
+        flags.append(
+            f"High WPM segment: {h['wpm']} WPM in seg {h['segment']} "
+            f"({h['word_count']} words / {h['duration_sec']}s)"
+        )
+
+    # Language
+    if language["non_english_segments"]:
+        flags.append(
+            f"{len(language['non_english_segments'])} segment(s) with "
+            f"high non-ASCII density (possible non-English)"
+        )
+
+    if blocks:
+        verdict = "BLOCK"
+    elif flags:
+        verdict = "FLAG"
+    else:
+        verdict = "PASS"
+
+    return verdict, flags, blocks
+
+
+# ── Main ─────────────────────────────────────────────────────────────────────
+
+def main():
+    if len(sys.argv) < 2:
+        print(f"Usage: {sys.argv[0]} <batch_dir>", file=sys.stderr)
+        sys.exit(1)
+
+    batch_dir = sys.argv[1]
+    if not os.path.isdir(batch_dir):
+        print(f"Error: {batch_dir} is not a directory", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Verifying Stage 02 output in: {batch_dir}")
+
+    # Phase 1: Inventory
+    inventory = check_inventory(batch_dir)
+    print(f"Found {len(inventory)} video directories")
+
+    all_hallucinations = {}  # video_id → hallucination results
+    video_reports = []
+    pass_count = 0
+    flag_count = 0
+    block_count = 0
+
+    for item in inventory:
+        video_id = item["video_id"]
+        print(f"  Checking: {video_id} ...", end=" ", flush=True)
+
+        if not item["present"]:
+            video_reports.append({
+                "video_id": video_id,
+                "dir": item["dir"],
+                "verdict": "BLOCK",
+                "structural": {"valid": False, "issues": [
+                    {"severity": "BLOCK", "msg": "No .full.json found"}
+                ]},
+                "stats": None,
+                "hallucination": None,
+                "language": None,
+                "flags": [],
+                "blocks": ["No .full.json found"],
+                "spot_check_segments": None
+            })
+            block_count += 1
+            print("BLOCK (no .full.json)")
+            continue
+
+        # Load data
+        try:
+            with open(item["full_json"]) as f:
+                data = json.load(f)
+        except (json.JSONDecodeError, OSError) as e:
+            video_reports.append({
+                "video_id": video_id,
+                "dir": item["dir"],
+                "verdict": "BLOCK",
+                "structural": {"valid": False, "issues": [
+                    {"severity": "BLOCK", "msg": f"Cannot read .full.json: {e}"}
+                ]},
+                "stats": None,
+                "hallucination": None,
+                "language": None,
+                "flags": [],
+                "blocks": [f"Cannot read .full.json: {e}"],
+                "spot_check_segments": None
+            })
+            block_count += 1
+            print("BLOCK (unreadable)")
+            continue
+
+        # Phase 2: Structural
+        structural = check_structural(data)
+
+        if not structural["valid"]:
+            video_reports.append({
+                "video_id": video_id,
+                "dir": item["dir"],
+                "verdict": "BLOCK",
+                "structural": structural,
+                "stats": None,
+                "hallucination": None,
+                "language": None,
+                "flags": [],
+                "blocks": [i["msg"] for i in structural["issues"] if i["severity"] == "BLOCK"],
+                "spot_check_segments": None
+            })
+            block_count += 1
+            print("BLOCK (structural)")
+            continue
+
+        # Phase 3: Statistics
+        audio_duration = get_audio_duration(batch_dir, item["dir"])
+        stats = check_stats(data, audio_duration)
+
+        # Phase 4: Hallucination
+        hallucination = check_hallucination(data)
+        all_hallucinations[video_id] = hallucination
+
+        # Phase 5: Language
+        language = check_language(data)
+
+        # Spot-check extraction
+        spot_checks = extract_spot_checks(data, hallucination)
+
+        # Verdict
+        verdict, flags, blocks = compute_verdict(
+            structural, stats, hallucination, language
+        )
+
+        video_reports.append({
+            "video_id": video_id,
+            "dir": item["dir"],
+            "verdict": verdict,
+            "structural": structural,
+            "stats": {
+                "segments": stats["segments"],
+                "words": stats["words"],
+                "duration_sec": stats["duration_sec"],
+                "audio_duration_sec": stats["audio_duration_sec"],
+                "wpm": stats["wpm"],
+                "coverage_pct": stats["coverage_pct"],
+                "gaps": stats["gaps"],
+                "word_boundary_violations_count": stats["word_boundary_violations_count"]
+            },
+            "hallucination": hallucination,
+            "language": language,
+            "flags": flags,
+            "blocks": blocks,
+            "spot_check_segments": spot_checks
+        })
+
+        if verdict == "BLOCK":
+            block_count += 1
+        elif verdict == "FLAG":
+            flag_count += 1
+        else:
+            pass_count += 1
+
+        print(verdict)
+
+    # Phase 6: Flagged file cross-check
+    flagged_status = check_flagged_file(batch_dir, all_hallucinations)
+
+    # Batch verdict
+    if block_count > 0:
+        batch_verdict = "BLOCK"
+    elif flag_count > 0 and (flag_count / len(video_reports)) > 0.05:
+        batch_verdict = "FLAG"
+    elif flag_count > 0:
+        batch_verdict = "PASS"  # Under 5% flagged
+    else:
+        batch_verdict = "PASS"
+
+    report = {
+        "batch_dir": batch_dir,
+        "verified_at": datetime.now(timezone.utc).isoformat(),
+        "video_count": len(video_reports),
+        "summary": {
+            "pass": pass_count,
+            "flag": flag_count,
+            "block": block_count
+        },
+        "videos": video_reports,
+        "flagged_file_status": flagged_status,
+        "batch_verdict": batch_verdict
+    }
+
+    output_path = os.path.join(batch_dir, ".verify-report.json")
+    with open(output_path, "w") as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+
+    print(f"\n{'='*60}")
+    print(f"Batch verdict: {batch_verdict}")
+    print(f"  PASS: {pass_count}  FLAG: {flag_count}  BLOCK: {block_count}")
+    print(f"  Flagged file: {'present' if flagged_status['exists'] else 'MISSING'}"
+          f"{' (STALE)' if flagged_status['stale'] else ''}")
+    print(f"Report written to: {output_path}")
+
+
+if __name__ == "__main__":
+    main()

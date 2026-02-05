@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
+import { ensureCleanSessionPage, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -8,38 +9,9 @@ test.describe('Approach Logging Flow', () => {
   // Run tests sequentially to avoid session conflicts
   test.describe.configure({ mode: 'serial' })
 
-  async function ensureCleanSession(page: import('@playwright/test').Page) {
-    await page.goto('/dashboard/tracking/session', { timeout: AUTH_TIMEOUT })
-    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-
-    // Wait for page content to load (either start button or active session view)
-    const startButton = page.getByTestId(SELECTORS.session.startButton)
-    const endButton = page.getByTestId(SELECTORS.session.endButton)
-    await expect(startButton.or(endButton)).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // If there's an active session, end it first to ensure clean state
-    const hasActiveSession = await endButton.isVisible().catch(() => false)
-    if (hasActiveSession) {
-      // Close quick log modal if open (might be left from previous test)
-      const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
-      if (await quickLogModal.isVisible().catch(() => false)) {
-        await page.getByTestId(SELECTORS.session.quickLogDismiss).click({ timeout: ACTION_TIMEOUT })
-        await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-      }
-
-      await endButton.click({ timeout: ACTION_TIMEOUT })
-      await page.getByRole('button', { name: /end session/i }).click({ timeout: AUTH_TIMEOUT })
-      await page.waitForURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
-
-      // Recursively ensure we have a clean session
-      await ensureCleanSession(page)
-      return
-    }
-  }
-
   test.beforeEach(async ({ page }) => {
-    // Arrange: Navigate to session tracker
-    await ensureCleanSession(page)
+    // Arrange: Navigate to session tracker with clean state
+    await ensureCleanSessionPage(page)
 
     // Start a fresh session for each test
     const startButton = page.getByTestId(SELECTORS.session.startButton)
@@ -53,21 +25,8 @@ test.describe('Approach Logging Flow', () => {
   })
 
   test.afterEach(async ({ page }) => {
-    // Cleanup: Close quick log modal if open
-    const quickLogModal = page.getByTestId(SELECTORS.session.quickLogModal)
-    if (await quickLogModal.isVisible().catch(() => false)) {
-      await page.getByTestId(SELECTORS.session.quickLogDismiss).click({ timeout: ACTION_TIMEOUT })
-      await expect(quickLogModal).not.toBeVisible({ timeout: AUTH_TIMEOUT })
-    }
-
-    // Cleanup: End session if still active
-    const endButton = page.getByTestId(SELECTORS.session.endButton)
-    const hasActiveSession = await endButton.isVisible().catch(() => false)
-    if (hasActiveSession) {
-      await endButton.click({ timeout: ACTION_TIMEOUT })
-      await page.getByRole('button', { name: /end session/i }).click({ timeout: AUTH_TIMEOUT })
-      await page.waitForURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
-    }
+    // Cleanup: End session via API (faster and more reliable)
+    await ensureNoActiveSessionViaAPI(page)
   })
 
   test('should open quick log modal after tapping approach', async ({ page }) => {

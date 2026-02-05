@@ -1,9 +1,8 @@
 import type { ProviderRequest, ProviderResponse } from "../types"
 import * as ollama from "./ollama"
-import * as openai from "./openai"
 import * as claude from "./claude"
 
-export type ProviderName = "ollama" | "openai" | "claude"
+export type ProviderName = "ollama" | "claude"
 
 /**
  * Get the appropriate provider based on name.
@@ -15,8 +14,6 @@ export function getProvider(
   switch (name) {
     case "ollama":
       return ollama.generate
-    case "openai":
-      return openai.generate
     case "claude":
       return claude.generate
     default:
@@ -28,10 +25,9 @@ export function getProvider(
  * Check if a provider name is valid.
  */
 export function isValidProvider(name: string): name is ProviderName {
-  return ["ollama", "openai", "claude"].includes(name)
+  return ["ollama", "claude"].includes(name)
 }
 
 // Re-export provider-specific errors
 export { OllamaError } from "./ollama"
-export { OpenAIError } from "./openai"
 export { ClaudeError } from "./claude"
