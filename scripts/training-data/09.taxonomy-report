@@ -1,0 +1,301 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/09.taxonomy-report
+
+Post-Pipeline Taxonomy Gap Report
+
+Reads:
+  - Enriched content files (from Stage 07):
+      data/07.content/<source>/<video>/*.enriched.json
+
+Reports:
+  - Unlisted concept frequency (techniques and topics that the LLM flagged
+    as not fitting the existing taxonomy)
+  - Aggregated across all processed videos
+
+This script runs AFTER the pipeline completes (not between stages).
+No LLM calls — pure aggregation of what Stage 07 already detected.
+
+Use:
+
+  A) Report for all enriched data:
+     ./scripts/training-data/09.taxonomy-report
+
+  B) Report for specific source:
+     ./scripts/training-data/09.taxonomy-report --source daily_evolution
+
+  C) JSON output:
+     ./scripts/training-data/09.taxonomy-report --json
+
+  D) Test data:
+     ./scripts/training-data/09.taxonomy-report --test
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+from collections import Counter
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def find_enriched_files(root: Path) -> List[Path]:
+    """Find all enriched JSON files."""
+    return sorted(root.rglob("*.enriched.json"))
+
+
+def parse_unlisted_from_enrichment(enrichment: Dict) -> Tuple[List[str], List[str]]:
+    """Extract unlisted techniques and topics from a single enrichment."""
+    unlisted = enrichment.get("unlisted_concepts", {})
+    if not isinstance(unlisted, dict):
+        return [], []
+
+    techniques = unlisted.get("techniques", [])
+    topics = unlisted.get("topics", [])
+
+    if not isinstance(techniques, list):
+        techniques = []
+    if not isinstance(topics, list):
+        topics = []
+
+    return (
+        [t for t in techniques if isinstance(t, str) and t.strip()],
+        [t for t in topics if isinstance(t, str) and t.strip()],
+    )
+
+
+def parse_unlisted_from_summary(summary: Dict) -> Tuple[List[str], List[str]]:
+    """Extract unlisted concepts from the file-level summary."""
+    unlisted = summary.get("unlisted_concepts", {})
+    if not isinstance(unlisted, dict):
+        return [], []
+
+    techniques = unlisted.get("techniques", [])
+    topics = unlisted.get("topics", [])
+
+    if not isinstance(techniques, list):
+        techniques = []
+    if not isinstance(topics, list):
+        topics = []
+
+    return (
+        [t for t in techniques if isinstance(t, str) and t.strip()],
+        [t for t in topics if isinstance(t, str) and t.strip()],
+    )
+
+
+def normalize_concept(raw: str) -> Tuple[str, str]:
+    """Split 'concept_name: description' into (name, description).
+
+    If no colon, treat the whole string as the name.
+    """
+    if ":" in raw:
+        name, desc = raw.split(":", 1)
+        return name.strip().lower(), desc.strip()
+    return raw.strip().lower(), ""
+
+
+def process_files(files: List[Path]) -> Dict[str, Any]:
+    """Process all enriched files and aggregate unlisted concepts."""
+
+    technique_counter: Counter = Counter()
+    topic_counter: Counter = Counter()
+    technique_examples: Dict[str, List[str]] = {}
+    topic_examples: Dict[str, List[str]] = {}
+    technique_sources: Dict[str, List[str]] = {}
+    topic_sources: Dict[str, List[str]] = {}
+
+    files_processed = 0
+    files_with_unlisted = 0
+    total_enrichments = 0
+    enrichments_with_unlisted = 0
+
+    for file_path in files:
+        try:
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[09.taxonomy-report] Warning: skipping {file_path.name}: {e}")
+            continue
+
+        files_processed += 1
+        video_id = data.get("video_id", file_path.stem)
+        enrichments = data.get("enrichments", [])
+        file_has_unlisted = False
+
+        if not isinstance(enrichments, list):
+            continue
+
+        for enrichment in enrichments:
+            if not isinstance(enrichment, dict):
+                continue
+
+            total_enrichments += 1
+            tech_list, topic_list = parse_unlisted_from_enrichment(enrichment)
+
+            if tech_list or topic_list:
+                enrichments_with_unlisted += 1
+                file_has_unlisted = True
+
+            for raw_tech in tech_list:
+                name, desc = normalize_concept(raw_tech)
+                technique_counter[name] += 1
+                if desc and name not in technique_examples:
+                    technique_examples[name] = []
+                if desc and desc not in technique_examples.get(name, []):
+                    technique_examples.setdefault(name, []).append(desc)
+                technique_sources.setdefault(name, []).append(video_id)
+
+            for raw_topic in topic_list:
+                name, desc = normalize_concept(raw_topic)
+                topic_counter[name] += 1
+                if desc and name not in topic_examples:
+                    topic_examples[name] = []
+                if desc and desc not in topic_examples.get(name, []):
+                    topic_examples.setdefault(name, []).append(desc)
+                topic_sources.setdefault(name, []).append(video_id)
+
+        if file_has_unlisted:
+            files_with_unlisted += 1
+
+    return {
+        "files_processed": files_processed,
+        "files_with_unlisted": files_with_unlisted,
+        "total_enrichments": total_enrichments,
+        "enrichments_with_unlisted": enrichments_with_unlisted,
+        "techniques": {
+            name: {
+                "count": count,
+                "examples": technique_examples.get(name, [])[:3],
+                "videos": sorted(set(technique_sources.get(name, [])))[:5],
+            }
+            for name, count in technique_counter.most_common()
+        },
+        "topics": {
+            name: {
+                "count": count,
+                "examples": topic_examples.get(name, [])[:3],
+                "videos": sorted(set(topic_sources.get(name, [])))[:5],
+            }
+            for name, count in topic_counter.most_common()
+        },
+    }
+
+
+def print_report(report: Dict[str, Any]) -> None:
+    """Print human-readable taxonomy gap report."""
+    print("=" * 60)
+    print("  TAXONOMY GAP REPORT")
+    print("=" * 60)
+    print()
+    print(f"  Files processed:           {report['files_processed']}")
+    print(f"  Files with unlisted:       {report['files_with_unlisted']}")
+    print(f"  Total enrichments:         {report['total_enrichments']}")
+    print(f"  Enrichments with unlisted: {report['enrichments_with_unlisted']}")
+    print()
+
+    techniques = report["techniques"]
+    topics = report["topics"]
+
+    if not techniques and not topics:
+        print("  No unlisted concepts found. Taxonomy covers all detected concepts.")
+        print()
+        return
+
+    if techniques:
+        print("-" * 60)
+        print("  UNLISTED TECHNIQUES (sorted by frequency)")
+        print("-" * 60)
+        for name, info in techniques.items():
+            count = info["count"]
+            examples = info["examples"]
+            videos = info["videos"]
+            print(f"\n  {name} ({count}x)")
+            if examples:
+                print(f"    Description: {examples[0]}")
+            if videos:
+                print(f"    Seen in: {', '.join(videos[:3])}")
+        print()
+
+    if topics:
+        print("-" * 60)
+        print("  UNLISTED TOPICS (sorted by frequency)")
+        print("-" * 60)
+        for name, info in topics.items():
+            count = info["count"]
+            examples = info["examples"]
+            videos = info["videos"]
+            print(f"\n  {name} ({count}x)")
+            if examples:
+                print(f"    Description: {examples[0]}")
+            if videos:
+                print(f"    Seen in: {', '.join(videos[:3])}")
+        print()
+
+    # Summary recommendation
+    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= 3]
+    high_freq_topics = [n for n, i in topics.items() if i["count"] >= 3]
+
+    if high_freq_techniques or high_freq_topics:
+        print("-" * 60)
+        print("  RECOMMENDATION: Consider adding to taxonomy")
+        print("-" * 60)
+        if high_freq_techniques:
+            print(f"\n  Techniques (3+ occurrences): {', '.join(high_freq_techniques)}")
+        if high_freq_topics:
+            print(f"\n  Topics (3+ occurrences):     {', '.join(high_freq_topics)}")
+        print()
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Post-pipeline taxonomy gap report"
+    )
+    parser.add_argument(
+        "--source",
+        help="Only report for a specific source (folder name)"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Report from test data (data/test/07.content/)"
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output JSON instead of human-readable report"
+    )
+
+    args = parser.parse_args()
+
+    # Determine data root
+    if args.test:
+        data_root = repo_root() / "data" / "test" / "07.content"
+    elif args.source:
+        data_root = repo_root() / "data" / "07.content" / args.source
+    else:
+        data_root = repo_root() / "data" / "07.content"
+
+    if not data_root.exists():
+        raise SystemExit(f"Data directory not found: {data_root}")
+
+    files = find_enriched_files(data_root)
+    if not files:
+        raise SystemExit(f"No .enriched.json files found in: {data_root}")
+
+    print(f"[09.taxonomy-report] Scanning {len(files)} enriched files in {data_root}")
+
+    report = process_files(files)
+
+    if args.json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+    else:
+        print_report(report)
+
+
+if __name__ == "__main__":
+    main()

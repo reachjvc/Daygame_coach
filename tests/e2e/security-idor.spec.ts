@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test'
 import {
-  login,
-  loginAsUserB,
   ensureNoActiveSessionViaAPI,
   createTestSessionViaAPI,
   createTestApproachViaAPI,
 } from './helpers/auth.helper'
 import { validateSecondUserConfig } from './fixtures/test-user'
+
+const USER_A_STATE = 'tests/e2e/.auth/user.json'
+const USER_B_STATE = 'tests/e2e/.auth/user-b.json'
 
 /**
  * Security E2E Tests: IDOR (Insecure Direct Object Reference) Protection
@@ -38,19 +39,17 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot GET User A session by ID', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User A logs in and creates a session
-      await login(pageA)
+      // Arrange: User A creates a session
       const sessionId = await createTestSessionViaAPI(pageA, 'IDOR Test Location')
 
-      // Act: User B logs in and tries to access User A's session by ID
-      await loginAsUserB(pageB)
+      // Act: User B tries to access User A's session by ID
       const idor_response = await pageB.request.get(`/api/tracking/session/${sessionId}`)
 
       // Assert: User B should NOT be able to see User A's session
@@ -67,20 +66,18 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot DELETE User A approach by ID', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User A logs in and creates a session with an approach
-      await login(pageA)
+      // Arrange: User A creates a session with an approach
       const sessionId = await createTestSessionViaAPI(pageA, 'IDOR Approach Test')
-      const approachId = await createTestApproachViaAPI(pageA, sessionId, 'ignored')
+      const approachId = await createTestApproachViaAPI(pageA, sessionId, 'short')
 
-      // Act: User B logs in and tries to delete User A's approach
-      await loginAsUserB(pageB)
+      // Act: User B tries to delete User A's approach
       const deleteResponse = await pageB.request.delete(`/api/tracking/approach/${approachId}`)
 
       // Assert: User B should NOT be able to delete User A's approach
@@ -108,21 +105,19 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot PUT/UPDATE User A session by ID', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     const originalLocation = 'IDOR Update Test'
 
     try {
-      // Arrange: User A logs in and creates a session
-      await login(pageA)
+      // Arrange: User A creates a session
       const sessionId = await createTestSessionViaAPI(pageA, originalLocation)
 
-      // Act: User B logs in and tries to update User A's session
-      await loginAsUserB(pageB)
+      // Act: User B tries to update User A's session
       const updateResponse = await pageB.request.put(`/api/tracking/session/${sessionId}`, {
         data: { location: 'HACKED BY USER B' },
       })
@@ -147,19 +142,17 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot end User A session by ID', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User A logs in and creates a session
-      await login(pageA)
+      // Arrange: User A creates a session
       const sessionId = await createTestSessionViaAPI(pageA, 'IDOR End Test')
 
-      // Act: User B logs in and tries to end User A's session
-      await loginAsUserB(pageB)
+      // Act: User B tries to end User A's session
       const endResponse = await pageB.request.post(`/api/tracking/session/${sessionId}/end`, {
         data: {},
       })
@@ -182,13 +175,11 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot access User A resources with random UUID', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create browser context for User B
-    const contextB = await browser.newContext()
+    // Arrange: Create browser context for User B with saved auth state
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User B logs in
-      await loginAsUserB(pageB)
 
       // Act: Try to access resources with random UUIDs
       const randomUuid = '00000000-0000-0000-0000-000000000001'
@@ -207,15 +198,14 @@ test.describe('Security: IDOR Protection', () => {
   test('User B cannot access User A progress by manipulating user_id', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Arrange: User A logs in and gets their progress
-      await login(pageA)
+      // Arrange: User A gets their progress
       const userAProgressResponse = await pageA.request.get('/api/inner-game/progress')
 
       // Get User A's user_id - if no progress exists, use a fake UUID to test IDOR anyway
@@ -228,8 +218,7 @@ test.describe('Security: IDOR Protection', () => {
         userAId = '00000000-0000-0000-0000-000000000001'
       }
 
-      // Act: User B logs in and tries to access User A's progress by ID
-      await loginAsUserB(pageB)
+      // Act: User B tries to access User A's progress by ID
 
       // Try to get progress with User A's ID in query params
       const idorResponse = await pageB.request.get(`/api/inner-game/progress?user_id=${userAId}`)

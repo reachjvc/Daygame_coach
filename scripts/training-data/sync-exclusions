@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# scripts/training-data/sync-exclusions
+#
+# Reads docs/excluded-videos.txt and:
+#   1. Injects excluded video IDs into per-source yt-dlp archive files
+#   2. Writes data/.excluded-video-ids.txt for use by other scripts
+#
+# Idempotent: safe to run multiple times.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+EXCLUDE_FILE="$ROOT_DIR/docs/excluded-videos.txt"
+DATA_DIR="$ROOT_DIR/data/01.download"
+IDS_FILE="$ROOT_DIR/data/.excluded-video-ids.txt"
+
+if [[ ! -f "$EXCLUDE_FILE" ]]; then
+    echo "[sync-exclusions] No exclusion file found: $EXCLUDE_FILE"
+    exit 0
+fi
+
+# Clear and rebuild the IDs file
+mkdir -p "$(dirname "$IDS_FILE")"
+: > "$IDS_FILE"
+
+injected=0
+while IFS= read -r line; do
+    # Strip inline comments and trim
+    line="${line%%#*}"
+    line="$(echo "$line" | xargs)"
+    [[ -z "$line" ]] && continue
+
+    # Parse: video_id | source_name | reason | date
+    video_id="$(echo "$line" | cut -d'|' -f1 | xargs)"
+    source_name="$(echo "$line" | cut -d'|' -f2 | xargs)"
+
+    [[ -z "$video_id" || -z "$source_name" ]] && continue
+
+    # Write to IDs file
+    echo "$video_id" >> "$IDS_FILE"
+
+    # Inject into yt-dlp archive file
+    source_dir="$DATA_DIR/$source_name"
+    mkdir -p "$source_dir"
+    archive="$source_dir/.youtube-dl-archive.audio.txt"
+
+    if [[ ! -f "$archive" ]]; then
+        touch "$archive"
+    fi
+
+    if ! grep -qF "youtube $video_id" "$archive" 2>/dev/null; then
+        echo "youtube $video_id" >> "$archive"
+        echo "[sync-exclusions] Injected $video_id into archive for $source_name"
+        injected=$((injected + 1))
+    fi
+done < "$EXCLUDE_FILE"
+
+echo "[sync-exclusions] Done: $injected new archive entries"

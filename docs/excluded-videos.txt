@@ -1,0 +1,14 @@
+# Videos permanently excluded from the pipeline.
+# Format: <video_id> | <source_name> | <reason> | <date>
+#
+# Adding a video here will:
+#   1. Inject it into the source's yt-dlp archive file (prevents re-download)
+#   2. Exclude it from download-missing-audio.sh gap detection
+#   3. Provide an audit trail of why it was excluded
+#
+# To exclude a new video:
+#   1. Add a line below
+#   2. Run: ./scripts/training-data/sync-exclusions
+#      (or it runs automatically at the start of final_pipeline)
+
+tZ2EacnJypk | natural_lifestyles_askthecoaches | Video unavailable on YouTube | 2026-02-05

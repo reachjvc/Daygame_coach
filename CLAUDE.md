@@ -2,47 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Changelog
-- 04-02-2026 - Added Test Failure Reporting rule + enforcement hook (NEVER dismiss failures without tracking)
-- 04-02-2026 - Added Pipeline Stage Verification rule (NEVER mark stages as PASS without user approval)
-- 04-02-2026 - Extended code review hook to include Python files and shell scripts (was TS/JS only)
-- 04-02-2026 - Added gamification tables to system-only list (milestones, user_tracking_stats, scenarios)
-- 04-02-2026 - Added Security Rules section (threat modeling, system-only tables, RLS checklist)
-- 03-02-2026 - Added idempotent seed scripts rule
-- 03-02-2026 - Fixed code-review subagent to use general-purpose (code-review type doesn't exist)
-
----
-
-## Tech Stack
-
-Next.js 16 app with Supabase (PostgreSQL + Auth), AI SDK (Anthropic/OpenAI), Tailwind CSS, Radix UI components, Zod validation, Stripe payments.
-
----
-
-## Development Commands
-
-```bash
-# Development
-npm run dev              # Start dev server (localhost:3000)
-npm run build            # Production build
-npm run lint             # ESLint
-
-# Testing
-npm test                 # Unit tests (Vitest) - run after EVERY code change
-npm run test:watch       # Unit tests in watch mode
-npm run test:integration # Integration tests with testcontainers
-npm run test:e2e         # E2E tests (Playwright) - requires dev server
-npm run test:all         # Run all test suites
-
-# Run single test file
-npx vitest run tests/unit/articles/articlesService.test.ts
-npx playwright test tests/e2e/auth-errors.spec.ts
-
-# Run tests matching pattern
-npx vitest run -t "should calculate"
-```
-
----
 
 ## ⛔ PRE-RESPONSE CHECKLIST (Complete Before Every Summary)
 
@@ -52,14 +11,12 @@ npx vitest run -t "should calculate"
 |---|-------|--------|
 | 1 | Did I write/modify code? | Run `npm test` first |
 | 2 | Did tests fail? | Report ALL failures, check `.test-known-failures.json` (Rule 10) |
-| 3 | Did I complete a task from a doc? | Update that doc NOW (before this message) |
-| 4 | Am I about to write new tests? | Read `docs/testing_behavior.md` first |
-| 5 | Did I modify any doc? | Add changelog entry with today's date |
-| 6 | Did I make major code changes? | Run `code-review` subagent (see below) |
-| 7 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
-| 8 | Did I run a pipeline stage? | Set status to PENDING, NEVER auto-PASS (Rule 9) |
+| 3 | Did I make major code changes? | Run `code-review` subagent (see below) |
+| 4 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
+| 5 | Did I run a pipeline stage? | Set status to PENDING, NEVER auto-PASS (Rule 9) |
+| 6 | Warn user EVERY TIME if there's security risks. Do not make changes with high risk without verifying that this is correct |
 
-if in doubt, ask user if documents should be updated or not .
+if in doubt, ask user if documents should be updated or not.
 
 **The doc is the source of truth, not your summary.**
 
@@ -81,30 +38,12 @@ CORRECT ORDER:
 3. Tell user "Done!"        ← Only after doc is updated
 ```
 
-**Why This Matters (Consequences):**
-| When you skip doc updates... | What happens |
-|------------------------------|--------------|
-| User starts new session | Next Claude has no context, asks same questions again |
-| User shares project with teammate | Teammate reads stale docs, makes wrong assumptions |
-| User returns after 2 weeks | Forgets what was done, doc doesn't help |
-| Pipeline doc not updated | Next pipeline run uses wrong assumptions, fails silently |
-
-**Real cost:** Every skipped doc update = 15-30 min of user's future time wasted.
-
 ### 2. Test-Driven Workflow
 
 - **Before writing tests**: Read `docs/testing_behavior.md`
 - **Between every step**: Run `npm test`
 - **If test fails**: Fix production code, add regression test
 - **Never proceed** with failing tests
-
-### 3. Changelog Required
-
-Every doc modification needs a changelog entry at the top:
-```
-TZ='Europe/Copenhagen' date '+%d-%m-%Y %H:%M'
-```
-Keep only 5 most recent entries.
 
 ### 4. No Fallback Mechanisms
 
@@ -114,39 +53,9 @@ Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the use
 
 20 extra hours for better architecture is worth it.
 
-### 6. Idempotent Seed Scripts
-
-Seed scripts must be **idempotent**: delete orphans first, then upsert. Running twice = same result.
-
 ### 7. Security Rules (CRITICAL for Auth/RLS/Payments)
 
 **When touching:** authentication, RLS policies, payments, permissions, or any table in the "system-only" list below.
-
-#### Threat Modeling Required
-
-Before writing any security-sensitive code, answer these questions:
-
-```
-1. TRUST MODEL: Who should be able to perform this action?
-   - Only the system/service role?
-   - Only the owning user?
-   - Any authenticated user?
-
-2. ABUSE CASE: What's the worst a malicious user could do with this capability?
-   - Can they grant themselves privileges?
-   - Can they access other users' data?
-   - Can they create fake records?
-
-3. HEDGE CHECK: Am I adding "just in case" code?
-   - If I wrote "if users need to..." → STOP. Ask the user instead.
-   - Never add dangerous capabilities speculatively.
-
-4. GAMIFICATION CHECK: Does this table store earned/computed data?
-   - Achievements, milestones, badges → System-only
-   - Aggregate stats (totals, streaks) → System-only
-   - XP, levels, scores → System-only
-   - If users could write directly, could they cheat?
-```
 
 #### System-Only Tables (NEVER User-Writable)
 
@@ -177,49 +86,19 @@ When writing RLS policies, verify:
 - [ ] Reserved SQL words (like `values`) are quoted
 - [ ] Test plan includes: anon blocked, wrong user_id blocked, mutation blocked
 
-#### Anti-Pattern: Speculative Permissions
-
-```
-BAD (what caused the purchases bug):
--- Purchases are typically created by Stripe webhooks
--- If users need to create purchases directly:  ← SPECULATIVE HEDGE
-CREATE POLICY "purchases_insert_own" ...
-
-GOOD:
--- Purchases created ONLY by Stripe webhooks via service role
--- NO user INSERT policy - this is intentional
-CREATE POLICY "purchases_select_own" ...  -- SELECT only
-```
-
 **Rule:** If you're uncertain whether users need a capability, ASK. Don't add dangerous policies "just in case."
 
 ---
 
 ### 8. Code Review Subagent (AUTOMATED via Stop Hook)
 
-**This is now enforced automatically.** A Stop hook (`.claude/hooks/check-code-review.sh`) blocks your response when:
-- 3+ non-doc files are modified
-- At least one is a code file (`.ts`, `.tsx`, `.js`, `.jsx`, `.py`, or shell scripts with shebang)
-
-**When triggered:** The hook injects a blocking message telling you to run the code-review subagent. You MUST run it before responding.
+After any medium or major code changes, invoke the code review subagent, BEFORE returning to user
 
 **How to invoke:** Use the Task tool with:
 ```
 subagent_type: "general-purpose"
 prompt: "Code review for recent changes. 1) Read docs/testing_behavior.md. 2) Run git diff to find changed files. 3) For each changed file: identify new exports, functions, components, types, and config. 4) Check tests/unit/ and tests/e2e/ for corresponding test coverage. 5) Run npm test to verify existing tests pass. 6) Report: what's tested, what's NOT tested (be specific: function names, edge cases, integration points), code quality notes. Do NOT implement tests - only identify gaps."
 ```
-
-**What it identifies:**
-- New exports/functions without unit tests
-- New components without E2E coverage
-- Untested edge cases (null handling, boundary values)
-- Missing integration points (API payloads, state persistence)
-- Code quality issues (magic numbers, missing validation)
-
-**Hook behavior:**
-- Blocks once per user message (uses marker file to avoid infinite loop)
-- Marker cleared on next user prompt (UserPromptSubmit hook)
-- Hook files: `.claude/hooks/check-code-review.sh`, `.claude/hooks/clear-code-review-marker.sh`
 
 ### 9. Pipeline Stage Verification (NEVER Auto-Pass)
 
@@ -230,73 +109,28 @@ When running pipeline stages (`scripts/training-data/*`):
 1. **Run the stage** - Execute the script, report results
 2. **Update doc with PENDING** - Set status to "PENDING VERIFICATION" or "RUN COMPLETE"
 3. **Report to user** - Show summary of what was processed
-4. **WAIT for user verification** - Only the user can change status to PASS
-
-```
-WRONG:
-1. Run pipeline stage
-2. Update doc: "Status: PASS"  ← NEVER DO THIS
-3. Tell user "Stage passed!"
-
-CORRECT:
-1. Run pipeline stage
-2. Update doc: "Status: PENDING VERIFICATION"
-3. Tell user "Stage complete. Please verify outputs at <path> before I mark as PASS."
-4. User says "looks good, mark as pass"
-5. THEN update doc: "Status: PASS"
-```
-
-**Why:** Pipeline outputs require human judgment (audio quality, transcript accuracy, feature validity). Automated execution ≠ quality verification.
+4. **WAIT for user verification** - Only the user can change status to PASS.
 
 **Applies to ALL stages in `docs/pipeline/stages/STAGE_*.md`**
 
-### 10. Test Failure Reporting (AUTOMATED via Stop Hook)
+### 10. Test Failure Reporting 
 
 **CRITICAL: Claude must NEVER dismiss test failures as "pre-existing" without verification.**
 
-A Stop hook (`.claude/hooks/check-test-results.sh`) blocks responses when:
-- Code files were modified AND
-- `npm test` fails
+### 11. Risky Code Changes (NEVER Remove Without Investigation)
 
-**Prohibited behaviors:**
-- Claiming failures are "pre-existing" without checking `.test-known-failures.json`
-- Reporting misleading stats (e.g., "11/13 passing" when 78 tests fail)
-- Summarizing failures instead of reporting them fully
-- Proceeding with work when tests are broken
+**CRITICAL: Never delete or remove code without understanding WHY it exists.**
 
-**Required behavior when tests fail:**
+When fixing errors (type errors, lint errors, build failures):
 
-1. **Report ALL failures** - List every failing test, not a summary
-2. **Check known failures file** - Compare against `.test-known-failures.json`
-3. **For NEW failures (not in tracking file):**
-   - STOP work immediately
-   - Report the failures to user
-   - Either FIX them or ask user how to proceed
-4. **For KNOWN failures (in tracking file):**
-   - May continue work
-   - Still report them as "known issues" (don't hide them)
-5. **To add a known failure:**
-   - Must have a reason (not "it was failing before")
-   - Must have a GitHub issue ticket
-   - Add to `.test-known-failures.json` with full test name
-
-**Known failures file structure:**
-```json
-{
-  "e2e": [
-    {
-      "test": "Articles Page › should display articles page",
-      "reason": "Flaky selector due to hydration timing",
-      "ticket": "https://github.com/owner/repo/issues/123",
-      "added": "2026-02-04"
-    }
-  ]
-}
+**WRONG approach (what caused the maxTokens bug):**
 ```
-
-**Hook files:** `.claude/hooks/check-test-results.sh`, `.claude/hooks/clear-test-marker.sh`
-
----
+1. See error: "maxTokens does not exist on type"
+2. Remove the line  ← DANGEROUS
+3. Build passes  ← False confidence
+4. Ship broken code that silently loses functionality
+```
+if unsure, verify with the user.
 
 ## Architecture (Enforced by tests/unit/architecture.test.ts)
 
@@ -348,15 +182,10 @@ Pre-commit hook (`.husky/pre-commit`) runs `npm test` automatically.
 ### Database Layer (`src/db/`)
 All database access via `*Repo.ts` files. Direct Supabase imports outside `src/db/` will fail architecture tests.
 
----
-
 ## Documentation
 
 - **Living docs** - Update existing files, don't create new
 - **One source** - Specs in `docs/slices/SLICE_*.md`
-- **Status headers** - Every doc needs `Status:` and `Updated:`
-
----
 
 ## Proactive Cleanup (After Major Tasks)
 

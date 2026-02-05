@@ -1,12 +1,12 @@
 import { test, expect, Page, BrowserContext } from '@playwright/test'
 import {
-  login,
-  logout,
-  loginAsUserB,
   ensureNoActiveSessionViaAPI,
   createTestSessionViaAPI,
 } from './helpers/auth.helper'
 import { validateSecondUserConfig } from './fixtures/test-user'
+
+const USER_A_STATE = 'tests/e2e/.auth/user.json'
+const USER_B_STATE = 'tests/e2e/.auth/user-b.json'
 
 /**
  * Security E2E Tests: Row Level Security (RLS) Data Isolation
@@ -39,15 +39,14 @@ test.describe('Security: RLS Data Isolation', () => {
   test('User B cannot see User A sessions in sessions list', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts for isolation
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Act: User A logs in and views their sessions
-      await login(pageA)
+      // Act: User A views their sessions
       await pageA.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
       await pageA.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
@@ -55,8 +54,7 @@ test.describe('Security: RLS Data Isolation', () => {
       const userASessionsResponse = await pageA.request.get('/api/tracking/sessions')
       const userASessions = await userASessionsResponse.json()
 
-      // Act: User B logs in and views sessions
-      await loginAsUserB(pageB)
+      // Act: User B views sessions
       await pageB.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
       await pageB.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
@@ -83,20 +81,18 @@ test.describe('Security: RLS Data Isolation', () => {
   test('User B cannot see User A stats', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Act: User A logs in and gets stats
-      await login(pageA)
+      // Act: User A gets stats
       const userAStatsResponse = await pageA.request.get('/api/tracking/stats')
       const userAStats = await userAStatsResponse.json()
 
-      // Act: User B logs in and gets stats
-      await loginAsUserB(pageB)
+      // Act: User B gets stats
       const userBStatsResponse = await pageB.request.get('/api/tracking/stats')
       const userBStats = await userBStatsResponse.json()
 
@@ -115,20 +111,18 @@ test.describe('Security: RLS Data Isolation', () => {
   test('User B cannot see User A inner game progress', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Act: User A logs in and gets progress
-      await login(pageA)
+      // Act: User A gets progress
       const userAProgressResponse = await pageA.request.get('/api/inner-game/progress')
       const userAProgress = await userAProgressResponse.json()
 
-      // Act: User B logs in and gets progress
-      await loginAsUserB(pageB)
+      // Act: User B gets progress
       const userBProgressResponse = await pageB.request.get('/api/inner-game/progress')
       const userBProgress = await userBProgressResponse.json()
 
@@ -152,19 +146,17 @@ test.describe('Security: RLS Data Isolation', () => {
   test('User B cannot modify User A data via API', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Act: User A logs in and creates a session
-      await login(pageA)
+      // Act: User A creates a session
       const sessionId = await createTestSessionViaAPI(pageA, 'RLS Test Location')
 
-      // Act: User B logs in and tries to end User A's session
-      await loginAsUserB(pageB)
+      // Act: User B tries to end User A's session
       const maliciousResponse = await pageB.request.post(`/api/tracking/session/${sessionId}/end`, {
         data: {},
       })
@@ -183,19 +175,17 @@ test.describe('Security: RLS Data Isolation', () => {
   test('User B cannot access User A milestones', async ({ browser }) => {
     test.skip(!hasSecondUser(), 'TEST_USER_B credentials not configured')
 
-    // Arrange: Create two separate browser contexts
-    const contextA = await browser.newContext()
-    const contextB = await browser.newContext()
+    // Arrange: Create two separate browser contexts with saved auth state
+    const contextA = await browser.newContext({ storageState: USER_A_STATE })
+    const contextB = await browser.newContext({ storageState: USER_B_STATE })
     const pageA = await contextA.newPage()
     const pageB = await contextB.newPage()
 
     try {
-      // Act: User A logs in and gets milestones
-      await login(pageA)
+      // Act: User A gets milestones
       const userAMilestonesResponse = await pageA.request.get('/api/tracking/milestones')
 
-      // Act: User B logs in and gets milestones
-      await loginAsUserB(pageB)
+      // Act: User B gets milestones
       const userBMilestonesResponse = await pageB.request.get('/api/tracking/milestones')
 
       // Assert: Each user gets their own milestones

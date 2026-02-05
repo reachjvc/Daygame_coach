@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { login } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -13,11 +12,6 @@ const AUTH_TIMEOUT = 15000
 const ACTION_TIMEOUT = 2000
 
 test.describe('Security: Input Validation', () => {
-  test.beforeEach(async ({ page }) => {
-    // Arrange: Login for authenticated endpoints
-    await login(page)
-  })
-
   test.describe('Numeric Validation', () => {
     test('rejects negative goal value when creating session', async ({ page }) => {
       // Act: Try to create session with negative goal

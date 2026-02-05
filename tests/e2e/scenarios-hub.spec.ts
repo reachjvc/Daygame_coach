@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
 test.describe('Scenarios Hub', () => {
   test.describe('Preview Mode (not logged in)', () => {
+    // Override storageState to ensure no auth tokens for preview mode tests
+    test.use({ storageState: { cookies: [], origins: [] } })
+
     test('should display scenarios hub in preview mode', async ({ page }) => {
       // Arrange: Navigate to scenarios without login
       await page.goto('/dashboard/scenarios', { timeout: AUTH_TIMEOUT })
@@ -27,8 +29,7 @@ test.describe('Scenarios Hub', () => {
 
   test.describe('Authenticated User', () => {
     test.beforeEach(async ({ page }) => {
-      // Arrange: Login and navigate to scenarios
-      await login(page)
+      // Arrange: Navigate to scenarios
       await page.goto('/dashboard/scenarios', { timeout: AUTH_TIMEOUT })
       await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     })

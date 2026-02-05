@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -19,8 +18,7 @@ const SLUGS = {
 
 test.describe('Field Report Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to field report page
-    await login(page)
+    // Arrange: Navigate to field report page
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
@@ -192,8 +190,7 @@ test.describe('Field Report Flow', () => {
 
 test.describe('Field Input Types', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to field report form with quick-log template
-    await login(page)
+    // Arrange: Navigate to field report form with quick-log template
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
@@ -274,7 +271,6 @@ test.describe('Field Input Types', () => {
 
 test.describe('Form Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page)
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
@@ -340,7 +336,6 @@ test.describe('Form Validation', () => {
 
 test.describe('Form Submission', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page)
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
@@ -404,8 +399,7 @@ test.describe('Form Submission', () => {
 
 test.describe('Post-Session Mood Picker', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to field report form
-    await login(page)
+    // Arrange: Navigate to field report form
     await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 

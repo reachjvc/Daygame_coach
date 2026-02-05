@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/08.conversations
+scripts/training-data/07.conversations
 
 Speaker Labeling + Conversation Boundaries using Claude Code CLI
 
@@ -10,22 +10,22 @@ Two-pass architecture:
 
 Reads:
   - Video type files (with full segment data):
-      data/07.video-type/<source>/<video>/*.video_type.json
+      data/06.video-type/<source>/<video>/*.video_type.json
 
 Writes:
   - Conversation files:
-      data/08.conversations/<source>/<video>/*.conversations.json
+      data/07.conversations/<source>/<video>/*.conversations.json
 
 Use:
 
   A) Test videos:
-     ./scripts/training-data/08.conversations --test
+     ./scripts/training-data/07.conversations --test
 
   B) Single file:
-     ./scripts/training-data/08.conversations --input data/test/07.video-type/video.video_type.json
+     ./scripts/training-data/07.conversations --input data/test/06.video-type/video.video_type.json
 
   C) Batch from sources file:
-     ./scripts/training-data/08.conversations --sources
+     ./scripts/training-data/07.conversations --sources
 
 Requirements:
   - Claude Code CLI installed and authenticated (claude command available)
@@ -50,7 +50,7 @@ from typing import Any, Dict, List, Optional, Tuple
 # ---------------------------
 
 SCHEMA_VERSION = "2.0.0"
-PIPELINE_VERSION = "08.conversations-cli-v1"
+PIPELINE_VERSION = "07.conversations-cli-v1"
 PROMPT_VERSION = "2.0.0"
 
 # Global debug flag (set via --debug CLI arg)
@@ -232,7 +232,7 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[s
     """Call Claude Code CLI with retry logic."""
     claude_bin = find_claude_binary()
     if not claude_bin:
-        print("[08.conversations] Error: Claude CLI binary not found")
+        print("[07.conversations] Error: Claude CLI binary not found")
         return None
 
     for attempt in range(retries):
@@ -248,19 +248,19 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[s
             else:
                 if attempt < retries - 1:
                     wait = 2 ** attempt
-                    print(f"[08.conversations] Claude CLI error, retrying in {wait}s...")
-                    print(f"[08.conversations]   stderr: {result.stderr[:200]}")
+                    print(f"[07.conversations] Claude CLI error, retrying in {wait}s...")
+                    print(f"[07.conversations]   stderr: {result.stderr[:200]}")
                     time.sleep(wait)
                     continue
-                print(f"[08.conversations] Claude CLI error: {result.stderr[:500]}")
+                print(f"[07.conversations] Claude CLI error: {result.stderr[:500]}")
         except subprocess.TimeoutExpired:
             if attempt < retries - 1:
-                print(f"[08.conversations] Timeout, retrying...")
+                print(f"[07.conversations] Timeout, retrying...")
                 time.sleep(2 ** attempt)
                 continue
-            print(f"[08.conversations] Claude CLI timeout after {timeout}s")
+            print(f"[07.conversations] Claude CLI timeout after {timeout}s")
         except FileNotFoundError:
-            print("[08.conversations] Error: 'claude' command not found. Install Claude Code CLI.")
+            print("[07.conversations] Error: 'claude' command not found. Install Claude Code CLI.")
             return None
     return None
 
@@ -269,20 +269,20 @@ def parse_json_response(response: str, debug: bool = False) -> Optional[Dict]:
     """Parse JSON object from LLM response."""
     if not response:
         if debug:
-            print("[08.conversations] DEBUG: Response is empty/None")
+            print("[07.conversations] DEBUG: Response is empty/None")
         return None
 
     if debug:
-        print(f"[08.conversations] DEBUG: Response length: {len(response)} chars")
-        print(f"[08.conversations] DEBUG: Response preview:\n{response[:1000]}")
-        print(f"[08.conversations] DEBUG: Response end:\n...{response[-500:]}")
+        print(f"[07.conversations] DEBUG: Response length: {len(response)} chars")
+        print(f"[07.conversations] DEBUG: Response preview:\n{response[:1000]}")
+        print(f"[07.conversations] DEBUG: Response end:\n...{response[-500:]}")
 
     try:
         # Try to find JSON in code block
         code_block_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
         if code_block_match:
             if debug:
-                print("[08.conversations] DEBUG: Found JSON in code block")
+                print("[07.conversations] DEBUG: Found JSON in code block")
             return json.loads(code_block_match.group(1))
 
         # Try to find raw JSON object
@@ -297,18 +297,18 @@ def parse_json_response(response: str, debug: bool = False) -> Optional[Dict]:
                     if bracket_count == 0:
                         json_str = response[start:i + 1]
                         if debug:
-                            print(f"[08.conversations] DEBUG: Extracted JSON ({len(json_str)} chars)")
+                            print(f"[07.conversations] DEBUG: Extracted JSON ({len(json_str)} chars)")
                         return json.loads(json_str)
             if debug:
-                print(f"[08.conversations] DEBUG: Unbalanced brackets, final count: {bracket_count}")
+                print(f"[07.conversations] DEBUG: Unbalanced brackets, final count: {bracket_count}")
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[08.conversations] JSON parse error: {e}")
-        print(f"[08.conversations] Response preview: {response[:500]}...")
+        print(f"[07.conversations] JSON parse error: {e}")
+        print(f"[07.conversations] Response preview: {response[:500]}...")
 
     # Save failed response to file for debugging
     debug_path = Path(__file__).parent / "debug_failed_response.txt"
     debug_path.write_text(response)
-    print(f"[08.conversations] DEBUG: Saved full response to {debug_path}")
+    print(f"[07.conversations] DEBUG: Saved full response to {debug_path}")
 
     return None
 
@@ -324,7 +324,7 @@ def label_speakers(segments: List[Dict], video_type: str) -> Dict[str, Dict[str,
     speakers = list(set(seg.get("pyannote_speaker", "UNKNOWN") for seg in segments))
 
     if video_type == "talking_head":
-        print("[08.conversations] Pass 1: Skipping speaker labeling for talking_head")
+        print("[07.conversations] Pass 1: Skipping speaker labeling for talking_head")
         return {
             speaker: {"role": "coach", "confidence": 0.95, "reasoning": "Single speaker in talking_head video"}
             for speaker in speakers
@@ -348,7 +348,7 @@ def label_speakers(segments: List[Dict], video_type: str) -> Dict[str, Dict[str,
         transcript=transcript_text
     )
 
-    print(f"[08.conversations] Pass 1: Labeling {len(speakers)} speakers...")
+    print(f"[07.conversations] Pass 1: Labeling {len(speakers)} speakers...")
 
     # Retry loop for non-deterministic Claude responses
     max_retries = 3
@@ -367,17 +367,17 @@ def label_speakers(segments: List[Dict], video_type: str) -> Dict[str, Dict[str,
             # Log results
             for speaker, label in labels.items():
                 conf = label.get("confidence", 0) * 100
-                print(f"[08.conversations]   {speaker}: {label.get('role')} ({conf:.0f}%) - {label.get('reasoning', '')[:50]}")
+                print(f"[07.conversations]   {speaker}: {label.get('role')} ({conf:.0f}%) - {label.get('reasoning', '')[:50]}")
 
             return labels
 
         # JSON parsing failed - retry
         if attempt < max_retries - 1:
-            print(f"[08.conversations]   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
+            print(f"[07.conversations]   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
             time.sleep(2)
 
     # All retries exhausted
-    print("[08.conversations]   ERROR: Speaker labeling failed after {max_retries} attempts")
+    print("[07.conversations]   ERROR: Speaker labeling failed after {max_retries} attempts")
     raise RuntimeError(f"Speaker labeling failed after {max_retries} retries - cannot proceed")
 
 
@@ -394,7 +394,7 @@ def detect_conversations(
 
     # For talking_head/podcast, all is commentary
     if video_type in ("talking_head", "podcast"):
-        print("[08.conversations] Pass 2: Skipping boundary detection for non-infield content")
+        print("[07.conversations] Pass 2: Skipping boundary detection for non-infield content")
         return [
             {"id": i, "segment_type": "commentary", "conversation_id": 0, "is_conversation_start": False}
             for i in range(len(segments))
@@ -417,7 +417,7 @@ def detect_conversations(
         segments=segments_text
     )
 
-    print(f"[08.conversations] Pass 2: Detecting boundaries in {len(segments)} segments...")
+    print(f"[07.conversations] Pass 2: Detecting boundaries in {len(segments)} segments...")
 
     # Retry loop for non-deterministic Claude responses
     max_retries = 3
@@ -430,7 +430,7 @@ def detect_conversations(
 
             # Validate count
             if len(classifications) != len(segments):
-                print(f"[08.conversations]   WARNING: Got {len(classifications)} classifications for {len(segments)} segments")
+                print(f"[07.conversations]   WARNING: Got {len(classifications)} classifications for {len(segments)} segments")
                 # Pad or truncate
                 while len(classifications) < len(segments):
                     classifications.append({
@@ -443,17 +443,17 @@ def detect_conversations(
 
             # Count conversations
             conv_ids = set(c.get("conversation_id", 0) for c in classifications if c.get("conversation_id", 0) > 0)
-            print(f"[08.conversations]   Found {len(conv_ids)} conversations")
+            print(f"[07.conversations]   Found {len(conv_ids)} conversations")
 
             return classifications
 
         # JSON parsing failed - retry
         if attempt < max_retries - 1:
-            print(f"[08.conversations]   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
+            print(f"[07.conversations]   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
             time.sleep(2)
 
     # All retries exhausted
-    print(f"[08.conversations]   ERROR: Boundary detection failed after {max_retries} attempts")
+    print(f"[07.conversations]   ERROR: Boundary detection failed after {max_retries} attempts")
     raise RuntimeError(f"Boundary detection failed after {max_retries} retries - cannot proceed")
 
 
@@ -480,14 +480,14 @@ def validate_results(
         unknown_ratio = len(unknown_speakers) / len(speaker_labels)
         if unknown_ratio > 0.5:
             flags.append(f"speakers_unknown_{len(unknown_speakers)}_of_{len(speaker_labels)}")
-            print(f"[08.conversations] FLAG: {len(unknown_speakers)}/{len(speaker_labels)} speakers unknown - NEEDS MANUAL REVIEW")
+            print(f"[07.conversations] FLAG: {len(unknown_speakers)}/{len(speaker_labels)} speakers unknown - NEEDS MANUAL REVIEW")
 
     # Check for 0 conversations in infield/compilation
     conv_ids = set(c.get("conversation_id", 0) for c in classifications if c.get("conversation_id", 0) > 0)
 
     if video_type in ("infield", "compilation") and len(conv_ids) == 0:
         flags.append("zero_conversations_in_infield")
-        print(f"[08.conversations] FLAG: 0 conversations detected in {video_type} video - NEEDS MANUAL REVIEW")
+        print(f"[07.conversations] FLAG: 0 conversations detected in {video_type} video - NEEDS MANUAL REVIEW")
 
     return flags
 
@@ -518,7 +518,7 @@ def compute_checksum(data: Any) -> str:
 def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
     """Process a single video_type.json file."""
 
-    print(f"\n[08.conversations] Processing: {input_path.name}")
+    print(f"\n[07.conversations] Processing: {input_path.name}")
 
     # Load input
     with input_path.open("r", encoding="utf-8") as f:
@@ -528,23 +528,23 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
     video_title = extract_video_title(str(input_path))
     video_id = extract_video_id(str(input_path))
 
-    # Get video_type from input (already classified by Stage 07)
+    # Get video_type from input (already classified by Stage 06)
     video_type_info = data.get("video_type", {})
     if isinstance(video_type_info, dict):
         video_type = video_type_info.get("type", "compilation")
     else:
         video_type = "compilation"
 
-    print(f"[08.conversations]   Video: \"{video_title}\" [{video_id}]")
-    print(f"[08.conversations]   Segments: {len(segments)}")
-    print(f"[08.conversations]   Video type: {video_type}")
+    print(f"[07.conversations]   Video: \"{video_title}\" [{video_id}]")
+    print(f"[07.conversations]   Segments: {len(segments)}")
+    print(f"[07.conversations]   Video type: {video_type}")
 
     if not segments:
-        print("[08.conversations]   No segments found")
+        print("[07.conversations]   No segments found")
         return {"video_type": video_type, "conversations": 0, "flags": ["no_segments"]}
 
     if dry_run:
-        print("[08.conversations]   [DRY RUN] Would process this file")
+        print("[07.conversations]   [DRY RUN] Would process this file")
         return {"video_type": video_type, "conversations": 0, "flags": []}
 
     start_time = time.time()
@@ -615,7 +615,7 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
         "video_type": {
             "type": video_type,
             "confidence": video_type_info.get("confidence") if isinstance(video_type_info, dict) else None,
-            "method": "from_stage_07",
+            "method": "from_stage_06",
             "reasoning": video_type_info.get("reasoning") if isinstance(video_type_info, dict) else None,
         },
         "speaker_labels": speaker_labels,
@@ -643,7 +643,7 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
         st = seg["segment_type"]
         type_counts[st] = type_counts.get(st, 0) + 1
 
-    print(f"[08.conversations] Results:")
+    print(f"[07.conversations] Results:")
     print(f"  Video type: {video_type}")
     print(f"  Conversations: {len(conversations)}")
     print(f"  Segment types: {type_counts}")
@@ -667,19 +667,19 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "07.video-type"
+    return repo_root() / "data" / "06.video-type"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "08.conversations"
+    return repo_root() / "data" / "07.conversations"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "07.video-type"
+    return repo_root() / "data" / "test" / "06.video-type"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "08.conversations"
+    return repo_root() / "data" / "test" / "07.conversations"
 
 
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
@@ -726,12 +726,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/08.conversations/)"
+        help="Output directory (defaults to data/07.conversations/)"
     )
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/07.video-type/)"
+        help="Process test videos (data/test/06.video-type/)"
     )
     parser.add_argument(
         "--sources",
@@ -764,11 +764,11 @@ def main() -> None:
     # Test Claude CLI availability
     claude_bin = find_claude_binary()
     if not claude_bin:
-        print("[08.conversations] Error: Claude CLI binary not found")
-        print("[08.conversations] Searched paths:")
+        print("[07.conversations] Error: Claude CLI binary not found")
+        print("[07.conversations] Searched paths:")
         for p in CLAUDE_BINARY_PATHS:
             print(f"  - {p}")
-        print("[08.conversations] Install Claude Code CLI: https://claude.ai/code")
+        print("[07.conversations] Install Claude Code CLI: https://claude.ai/code")
         return
 
     try:
@@ -779,11 +779,11 @@ def main() -> None:
             timeout=10
         )
         if result.returncode != 0:
-            print("[08.conversations] Warning: Claude CLI not responding properly")
+            print("[07.conversations] Warning: Claude CLI not responding properly")
         else:
-            print(f"[08.conversations] Using Claude CLI: {claude_bin}")
+            print(f"[07.conversations] Using Claude CLI: {claude_bin}")
     except subprocess.TimeoutExpired:
-        print("[08.conversations] Warning: Claude CLI slow to respond")
+        print("[07.conversations] Warning: Claude CLI slow to respond")
 
     # Determine input/output paths
     if args.test:
@@ -802,11 +802,11 @@ def main() -> None:
             output_path = compute_output_path(input_path, out_dir)
 
             if output_path.exists() and not args.overwrite:
-                print(f"[08.conversations] Output exists, skipping: {output_path}")
+                print(f"[07.conversations] Output exists, skipping: {output_path}")
                 return
 
             result = process_file(input_path, output_path, dry_run=args.dry_run)
-            print(f"\n[08.conversations] Done. Found {result['conversations']} conversations")
+            print(f"\n[07.conversations] Done. Found {result['conversations']} conversations")
             return
 
         in_dir = input_path
@@ -822,7 +822,7 @@ def main() -> None:
         for src_name, _ in parse_sources_file(sources_path):
             src_in_dir = input_root() / src_name
             if not src_in_dir.exists():
-                print(f"[08.conversations] Skipping {src_name}: no 07.video-type output")
+                print(f"[07.conversations] Skipping {src_name}: no 06.video-type output")
                 continue
 
             src_out_dir = output_root() / src_name
@@ -836,7 +836,7 @@ def main() -> None:
                 total_convs += result["conversations"]
                 total_files += 1
 
-        print(f"\n[08.conversations] Done. Processed {total_files} files, found {total_convs} conversations")
+        print(f"\n[07.conversations] Done. Processed {total_files} files, found {total_convs} conversations")
         return
     else:
         raise SystemExit("Provide --input, --test, or --sources")
@@ -844,12 +844,12 @@ def main() -> None:
     # Directory mode
     files = find_input_files(in_dir)
     if not files:
-        print(f"[08.conversations] No .video_type.json files found in: {in_dir}")
+        print(f"[07.conversations] No .video_type.json files found in: {in_dir}")
         return
 
-    print(f"[08.conversations] Input : {in_dir}")
-    print(f"[08.conversations] Output: {out_dir}")
-    print(f"[08.conversations] Files : {len(files)}")
+    print(f"[07.conversations] Input : {in_dir}")
+    print(f"[07.conversations] Output: {out_dir}")
+    print(f"[07.conversations] Files : {len(files)}")
 
     # Load state for checkpointing
     state_path = out_dir / ".conversations_state.json"
@@ -891,13 +891,13 @@ def main() -> None:
                 state.in_progress = None
                 save_state(state_path, state)
         except Exception as e:
-            print(f"[08.conversations] Error processing {input_file}: {e}")
+            print(f"[07.conversations] Error processing {input_file}: {e}")
             state.failures.append({"file": file_key, "error": str(e)})
             state.in_progress = None
             save_state(state_path, state)
             failed += 1
 
-    print(f"\n[08.conversations] Done.")
+    print(f"\n[07.conversations] Done.")
     print(f"  Processed: {processed}")
     print(f"  Skipped  : {skipped}")
     print(f"  Failed   : {failed}")

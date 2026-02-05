@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
 test.describe('Q&A Chat Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to Q&A page
-    await login(page)
+    // Arrange: Navigate to Q&A page
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })

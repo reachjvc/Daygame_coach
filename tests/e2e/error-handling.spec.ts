@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
+import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -17,10 +17,6 @@ const AUTH_TIMEOUT = 15000
 test.describe('Error Handling: API Failures', () => {
   // Run tests serially to avoid parallel conflicts with auth state and route handlers
   test.describe.configure({ mode: 'serial' })
-
-  test.beforeEach(async ({ page }) => {
-    await login(page)
-  })
 
   // Cleanup route handlers and sessions after each test
   test.afterEach(async ({ page }) => {

@@ -5,8 +5,8 @@ scripts/training-data/08.content
 Content Enrichment using Claude Code CLI
 
 Reads:
-  - Speaker-corrected conversation files:
-      data/07.speaker-correction/<source>/<video>/*.corrected.json
+  - Conversation files (from Stage 07):
+      data/07.conversations/<source>/<video>/*.conversations.json
 
 Writes:
   - Enriched conversation files:
@@ -29,7 +29,7 @@ Use:
      ./scripts/training-data/08.content --test
 
   B) Single file:
-     ./scripts/training-data/08.content --input data/test/07.speaker-correction/video.corrected.json
+     ./scripts/training-data/08.content --input data/test/07.conversations/video.conversations.json
 
   C) Batch from sources file:
      ./scripts/training-data/08.content --sources
@@ -464,7 +464,7 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "07.speaker-correction"
+    return repo_root() / "data" / "07.conversations"
 
 
 def output_root() -> Path:
@@ -472,7 +472,7 @@ def output_root() -> Path:
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "07.speaker-correction"
+    return repo_root() / "data" / "test" / "07.conversations"
 
 
 def test_output_root() -> Path:
@@ -482,8 +482,8 @@ def test_output_root() -> Path:
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
     """Compute output path from input path."""
     stem = input_path.stem
-    if stem.endswith(".corrected"):
-        stem = stem[:-len(".corrected")]
+    if stem.endswith(".conversations"):
+        stem = stem[:-len(".conversations")]
     return output_dir / f"{stem}.enriched.json"
 
 
@@ -505,8 +505,8 @@ def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
 
 
 def find_input_files(in_dir: Path) -> List[Path]:
-    """Find all corrected JSON files in directory."""
-    return sorted(in_dir.rglob("*.corrected.json"))
+    """Find all conversations JSON files in directory."""
+    return sorted(in_dir.rglob("*.conversations.json"))
 
 
 def main() -> None:
@@ -515,7 +515,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--input",
-        help="Input .corrected.json file or directory"
+        help="Input .conversations.json file or directory"
     )
     parser.add_argument(
         "--output",
@@ -524,7 +524,7 @@ def main() -> None:
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/07.speaker-correction/)"
+        help="Process test videos (data/test/07.conversations/)"
     )
     parser.add_argument(
         "--sources",
@@ -599,7 +599,7 @@ def main() -> None:
         for src_name, _ in parse_sources_file(sources_path):
             src_in_dir = input_root() / src_name
             if not src_in_dir.exists():
-                print(f"[08.content] Skipping {src_name}: no 07.speaker-correction output")
+                print(f"[08.content] Skipping {src_name}: no 07.conversations output")
                 continue
 
             src_out_dir = output_root() / src_name
@@ -621,7 +621,7 @@ def main() -> None:
     # Directory mode
     files = find_input_files(in_dir)
     if not files:
-        print(f"[08.content] No .corrected.json files found in: {in_dir}")
+        print(f"[08.content] No .conversations.json files found in: {in_dir}")
         return
 
     print(f"[08.content] Input : {in_dir}")

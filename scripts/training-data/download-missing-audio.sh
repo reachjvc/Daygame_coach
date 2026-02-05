@@ -1,45 +1,59 @@
 #!/usr/bin/env bash
-# scripts/training-data/redownload-missing-audio.sh
+# scripts/training-data/download-missing-audio.sh
 #
-# Re-downloads audio for videos that have info.json but no audio files.
-# Fails immediately on error and notifies user.
+# Downloads audio for videos that have info.json but no audio files.
+# Uses yt-dlp with cookies for authentication.
 #
 # Usage:
-#   ./scripts/training-data/redownload-missing-audio.sh [--dry-run]
+#   ./scripts/training-data/download-missing-audio.sh [--dry-run] [--limit N]
 
 set -euo pipefail
 
-# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+CYAN='\033[0;36m'
+NC='\033[0m'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DATA_DIR="$ROOT_DIR/data/01.download"
-LOG_FILE="$DATA_DIR/redownload-missing.log"
+LOG_FILE="$DATA_DIR/download-missing.log"
 COOKIES_FILE="$ROOT_DIR/docs/data_docs/www.youtube.com_cookies.txt"
 
 # Pacing to avoid bot detection
 SLEEP_MIN_SEC="${SLEEP_MIN_SEC:-30}"
 SLEEP_MAX_SEC="${SLEEP_MAX_SEC:-90}"
 
-# Audio processing settings
-ASR_SAMPLE_RATE=16000
-ASR_CLEAN_FILTERS="highpass=f=80,lowpass=f=8000,afftdn=nf=-25,alimiter=limit=0.97"
-ASR_RESYNC_FILTER="aresample=async=1:first_pts=0"
-
 DRY_RUN=0
-if [[ "${1:-}" == "--dry-run" ]]; then
-    DRY_RUN=1
+LIMIT=0
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --dry-run)
+            DRY_RUN=1
+            shift
+            ;;
+        --limit)
+            LIMIT="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            exit 1
+            ;;
+    esac
+done
+
+if [[ $DRY_RUN -eq 1 ]]; then
     echo -e "${YELLOW}DRY RUN MODE - no downloads will be performed${NC}"
 fi
 
 # Check dependencies
 check_deps() {
     local missing=0
-    for cmd in yt-dlp ffmpeg python3; do
+    for cmd in yt-dlp python3; do
         if ! command -v "$cmd" &>/dev/null; then
             echo -e "${RED}ERROR: $cmd not found${NC}"
             missing=1
@@ -61,8 +75,8 @@ find_missing_audio() {
     # Get dirs with info.json (exclude playlist folders [PL...])
     info_dirs=$(find "$DATA_DIR" -type f -name "*.info.json" | grep -v '\[PL' | sed 's|/[^/]*$||' | sort -u)
 
-    # Get dirs with audio files
-    audio_dirs=$(find "$DATA_DIR" -type f \( -name "*.webm" -o -name "*.m4a" -o -name "*.wav" -o -name "*.mp3" -o -name "*.opus" \) | sed 's|/[^/]*$||' | sort -u)
+    # Get dirs with audio files (any format)
+    audio_dirs=$(find "$DATA_DIR" -type f \( -name "*.audio.webm" -o -name "*.audio.m4a" -o -name "*.audio.opus" -o -name "*.audio.mp3" -o -name "*.webm" -o -name "*.m4a" -o -name "*.opus" -o -name "*.mp3" \) | sed 's|/[^/]*$||' | sort -u)
 
     # Find dirs in info_dirs but not in audio_dirs
     result=$(comm -23 <(echo "$info_dirs") <(echo "$audio_dirs"))
@@ -83,13 +97,12 @@ find_missing_audio() {
 get_video_url() {
     local info_json="$1"
     python3 -c "
-import json
-import sys
-with open('$info_json') as f:
+import json, sys
+with open(sys.argv[1]) as f:
     data = json.load(f)
     url = data.get('webpage_url') or data.get('url') or f\"https://www.youtube.com/watch?v={data.get('id', '')}\"
     print(url)
-"
+" "$info_json"
 }
 
 # Download audio for a single video
@@ -97,14 +110,12 @@ download_audio() {
     local dir="$1"
     local info_json
 
-    # Find the info.json file
     info_json=$(find "$dir" -name "*.info.json" -type f | head -1)
     if [[ -z "$info_json" ]]; then
         echo -e "${RED}ERROR: No info.json found in $dir${NC}"
         return 1
     fi
 
-    # Get video URL
     local url
     url=$(get_video_url "$info_json")
     if [[ -z "$url" || "$url" == "https://www.youtube.com/watch?v=" ]]; then
@@ -112,14 +123,13 @@ download_audio() {
         return 1
     fi
 
-    # Get video title for output naming
     local title
     title=$(python3 -c "
-import json
-with open('$info_json') as f:
+import json, sys
+with open(sys.argv[1]) as f:
     data = json.load(f)
     print(data.get('title', 'unknown')[:80])
-")
+" "$info_json")
 
     echo -e "${GREEN}Downloading: $title${NC}"
     echo "  URL: $url"
@@ -130,74 +140,51 @@ with open('$info_json') as f:
         return 0
     fi
 
-    # Download audio using yt-dlp
     local output_template="$dir/%(title)s [%(id)s].audio"
 
+    local dl_status=1
+
+    # Attempt 1: without cookies (avoids n-challenge issue with authenticated APIs)
+    echo -e "${CYAN}  Trying without cookies...${NC}"
     yt-dlp \
-        --cookies "$COOKIES_FILE" \
-        --extract-audio \
-        --audio-format best \
-        --audio-quality 0 \
+        -f "bestaudio/best" \
         --no-playlist \
         --output "$output_template.%(ext)s" \
-        --write-info-json \
         --no-overwrites \
         --retries 3 \
         --fragment-retries 3 \
+        --socket-timeout 30 \
+        --extractor-retries 3 \
         "$url" 2>&1 | tee -a "$LOG_FILE"
+    dl_status=${PIPESTATUS[0]}
 
-    local dl_status=${PIPESTATUS[0]}
+    # Attempt 2: with cookies (needed for age-restricted / member-only)
+    if [[ $dl_status -ne 0 ]]; then
+        echo -e "${YELLOW}  No-cookie attempt failed, retrying with cookies...${NC}"
+        yt-dlp \
+            --cookies "$COOKIES_FILE" \
+            -f "bestaudio/best" \
+            --no-playlist \
+            --output "$output_template.%(ext)s" \
+            --no-overwrites \
+            --retries 3 \
+            --fragment-retries 3 \
+            --socket-timeout 30 \
+            --extractor-retries 3 \
+            "$url" 2>&1 | tee -a "$LOG_FILE"
+        dl_status=${PIPESTATUS[0]}
+    fi
+
     if [[ $dl_status -ne 0 ]]; then
         echo -e "${RED}DOWNLOAD FAILED for: $title${NC}"
         echo "FAILED: $dir - $url" >> "$LOG_FILE"
         return 1
     fi
 
-    # Convert to ASR format
-    echo "  Converting to ASR format..."
-    local audio_file
-    audio_file=$(find "$dir" -type f \( -name "*.audio.webm" -o -name "*.audio.m4a" -o -name "*.audio.opus" \) | head -1)
-
-    if [[ -z "$audio_file" ]]; then
-        echo -e "${RED}ERROR: No audio file found after download in $dir${NC}"
-        return 1
-    fi
-
-    local stem="${audio_file%.*}"
-    local raw_out="${stem}.asr.raw16k.wav"
-    local clean_out="${stem}.asr.clean16k.wav"
-
-    # Create raw WAV
-    ffmpeg -nostdin -hide_banner -loglevel warning -y \
-        -i "$audio_file" \
-        -map 0:a:0? -vn -sn -dn \
-        -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
-        -af "$ASR_RESYNC_FILTER" \
-        "$raw_out"
-
-    if [[ ! -f "$raw_out" ]]; then
-        echo -e "${RED}ERROR: Failed to create raw WAV: $raw_out${NC}"
-        return 1
-    fi
-
-    # Create clean WAV
-    ffmpeg -nostdin -hide_banner -loglevel warning -y \
-        -i "$audio_file" \
-        -map 0:a:0? -vn -sn -dn \
-        -ac 1 -ar "$ASR_SAMPLE_RATE" -c:a pcm_s16le \
-        -af "$ASR_CLEAN_FILTERS,$ASR_RESYNC_FILTER" \
-        "$clean_out"
-
-    if [[ ! -f "$clean_out" ]]; then
-        echo -e "${RED}ERROR: Failed to create clean WAV: $clean_out${NC}"
-        return 1
-    fi
-
-    echo -e "${GREEN}  SUCCESS: Created $raw_out and $clean_out${NC}"
+    echo -e "${GREEN}  SUCCESS${NC}"
     return 0
 }
 
-# Random sleep between downloads
 random_sleep() {
     local sleep_sec=$((RANDOM % (SLEEP_MAX_SEC - SLEEP_MIN_SEC + 1) + SLEEP_MIN_SEC))
     echo "  Sleeping ${sleep_sec}s before next download..."
@@ -209,16 +196,21 @@ main() {
     check_deps
 
     echo "========================================"
-    echo "Re-download Missing Audio"
+    echo "Download Missing Audio"
     echo "========================================"
     echo "Data dir: $DATA_DIR"
     echo "Log file: $LOG_FILE"
+    echo "Cookies: $COOKIES_FILE"
     echo ""
 
-    # Initialize log
-    echo "=== Redownload started: $(date) ===" >> "$LOG_FILE"
+    # Verify cookies file is valid format
+    if ! head -1 "$COOKIES_FILE" | grep -qE '^#|^\.youtube\.com|^youtube\.com'; then
+        echo -e "${YELLOW}WARNING: Cookies file may not be in Netscape format${NC}"
+        echo "First line: $(head -1 "$COOKIES_FILE")"
+    fi
 
-    # Find missing audio directories
+    echo "=== Download started: $(date) ===" >> "$LOG_FILE"
+
     echo "Finding videos with missing audio..."
     local missing_dirs
     missing_dirs=$(find_missing_audio)
@@ -232,9 +224,14 @@ main() {
     fi
 
     echo -e "${YELLOW}Found $total videos with missing audio${NC}"
+
+    if [[ $LIMIT -gt 0 ]]; then
+        echo -e "${CYAN}Limiting to first $LIMIT videos${NC}"
+        missing_dirs=$(echo "$missing_dirs" | head -n "$LIMIT")
+        total=$LIMIT
+    fi
     echo ""
 
-    # Process each directory
     local count=0
     local failed=0
     local succeeded=0
@@ -252,26 +249,9 @@ main() {
             succeeded=$((succeeded + 1))
         else
             failed=$((failed + 1))
-
-            # FAIL FAST: Stop on first error
-            echo ""
-            echo -e "${RED}========================================"
-            echo "STOPPING: Download failed!"
-            echo "========================================"
-            echo "Completed: $succeeded"
-            echo "Failed: $failed"
-            echo "Remaining: $((total - count))"
-            echo ""
-            echo "Check log: $LOG_FILE"
-            echo -e "========================================${NC}"
-
-            # Send notification (bell character)
-            echo -e "\a"
-
-            exit 1
+            echo -e "${YELLOW}Warning: Download failed, continuing...${NC}"
         fi
 
-        # Sleep between downloads (except for last one)
         if [[ $count -lt $total && $DRY_RUN -eq 0 ]]; then
             random_sleep
         fi
@@ -286,9 +266,6 @@ main() {
     echo "Succeeded: $succeeded"
     echo "Failed: $failed"
     echo -e "========================================${NC}"
-
-    # Send notification
-    echo -e "\a"
 }
 
 main "$@"

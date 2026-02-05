@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
 test.describe('Tracking Dashboard', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to tracking dashboard
-    await login(page)
+    // Arrange: Navigate to tracking dashboard
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })
@@ -66,7 +64,6 @@ test.describe('Tracking Dashboard', () => {
 
 test.describe('Achievements Collapse', () => {
   test.beforeEach(async ({ page }) => {
-    await login(page)
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })

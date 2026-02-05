@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/10.structure
+scripts/training-data/09.structure
 
 Interaction Structure Extraction - Phase detection and outcome analysis
 
-Pipeline Stage 10: Extracts interaction phases (opener, hook, vibe, close) and
+Pipeline Stage 09: Extracts interaction phases (opener, hook, vibe, close) and
 determines outcomes (number, instagram, rejected, etc.) from enriched conversations.
 
 Reads:
-  - Enriched conversation JSONs (from Stage 09):
-      data/09.content/<source>/<video>/*.enriched.json
+  - Enriched conversation JSONs (from Stage 08):
+      data/08.content/<source>/<video>/*.enriched.json
 
 Writes:
   - Extracted interactions (one JSON object per line):
-      data/10.structure/<source>/<video>/*.interactions.jsonl
+      data/09.structure/<source>/<video>/*.interactions.jsonl
 
 Use:
 
   A) One source (video / playlist / channel):
-     ./scripts/training-data/10.structure "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+     ./scripts/training-data/09.structure "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 
   B) Batch from sources file:
-     ./scripts/training-data/10.structure --sources
-     ./scripts/training-data/10.structure --sources docs/sources.txt
+     ./scripts/training-data/09.structure --sources
+     ./scripts/training-data/09.structure --sources docs/sources.txt
 """
 
 from __future__ import annotations
@@ -440,7 +440,7 @@ def process_file(input_path: Path, output_path: Path, extractor: InteractionExtr
             }
             f.write(json.dumps(obj, default=_json_default) + "\n")
 
-    print(f"[10.structure] {input_path.name}: {len(interactions)} interactions")
+    print(f"[09.structure] {input_path.name}: {len(interactions)} interactions")
     return len(interactions)
 
 
@@ -450,11 +450,11 @@ def repo_root() -> Path:
 
 
 def enriched_root() -> Path:
-    return repo_root() / "data" / "09.content"
+    return repo_root() / "data" / "08.content"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "10.structure"
+    return repo_root() / "data" / "09.structure"
 
 
 def infer_name_from_input(input_path: Path) -> Optional[str]:
@@ -470,7 +470,7 @@ def infer_name_from_input(input_path: Path) -> Optional[str]:
         return None
     stage = parts[i + 1]
     name = parts[i + 2]
-    if stage in {"09.content", "10.structure"}:
+    if stage in {"08.content", "09.structure"}:
         return name
     return None
 
@@ -525,7 +525,7 @@ def compute_output_file_for_input_file(input_file: Path, out_dir: Path) -> Path:
 
 
 def find_input_files(in_dir: Path, video_filter: Optional[str]) -> List[Path]:
-    # Stage 10 reads from Stage 09 output: .enriched.json files
+    # Stage 09 reads from Stage 08 output: .enriched.json files
     preferred = sorted(in_dir.rglob("*.enriched.json"))
     files = preferred if preferred else sorted(in_dir.rglob("*.json"))
     if not video_filter:
@@ -536,7 +536,7 @@ def find_input_files(in_dir: Path, video_filter: Optional[str]) -> List[Path]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract interactions from conversation-labeled JSON files.")
-    parser.add_argument("name", nargs="?", help="Source name (folder under data/09.content).")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/08.content).")
     parser.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URLs filter by ID unless --video is set.")
     parser.add_argument("--channel", help="Alias for the positional name argument.")
     parser.add_argument(
@@ -546,8 +546,8 @@ def main() -> None:
         help="Process all sources from a sources.txt file (default: docs/sources.txt).",
     )
 
-    parser.add_argument("--input", help="Input JSON file or directory (defaults to data/09.content/<name>).")
-    parser.add_argument("--output", help="Output JSONL file or directory (defaults to data/10.structure/<name>).")
+    parser.add_argument("--input", help="Input JSON file or directory (defaults to data/08.content/<name>).")
+    parser.add_argument("--output", help="Output JSONL file or directory (defaults to data/09.structure/<name>).")
     parser.add_argument("--video", help="Optional filename substring filter when --input is a directory.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite already-written outputs.")
     parser.add_argument("--dry-run", action="store_true", help="Print what would happen, don’t write files.")
@@ -564,7 +564,7 @@ def main() -> None:
         if input_path.is_dir():
             files = find_input_files(input_path, video_filter=video_filter)
             if not files:
-                print(f"[10.structure] No input JSON files found under: {input_path}")
+                print(f"[09.structure] No input JSON files found under: {input_path}")
                 return
 
             written = 0
@@ -583,7 +583,7 @@ def main() -> None:
                 process_file(src, dest, extractor)
                 written += 1
 
-            print("[10.structure] Done.")
+            print("[09.structure] Done.")
             print(f"  written : {written}")
             print(f"  skipped : {skipped}")
             return
@@ -591,7 +591,7 @@ def main() -> None:
         # Single file input
         dest = output_path if output_path.suffix else compute_output_file_for_input_file(input_path, output_path)
         if dest.exists() and not args.overwrite:
-            print(f"[10.structure] Output exists, skipping: {dest}")
+            print(f"[09.structure] Output exists, skipping: {dest}")
             return
         if args.dry_run:
             print(f"[dry-run] Would write: {dest}")

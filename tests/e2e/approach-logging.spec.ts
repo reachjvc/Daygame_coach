@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -39,8 +38,7 @@ test.describe('Approach Logging Flow', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to session tracker
-    await login(page)
+    // Arrange: Navigate to session tracker
     await ensureCleanSession(page)
 
     // Start a fresh session for each test

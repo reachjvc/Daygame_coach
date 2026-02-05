@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login, ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
+import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -105,7 +105,6 @@ test.describe('Error Handling: Form Validation', () => {
 
   test.describe('Q&A Form', () => {
     test.beforeEach(async ({ page }) => {
-      await login(page)
       await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
       await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     })
@@ -165,10 +164,6 @@ test.describe('Error Handling: Form Validation', () => {
   })
 
   test.describe('Session Form', () => {
-    test.beforeEach(async ({ page }) => {
-      await login(page)
-    })
-
     // Cleanup any sessions that may have been created during tests
     test.afterEach(async ({ page }) => {
       await ensureNoActiveSessionViaAPI(page)

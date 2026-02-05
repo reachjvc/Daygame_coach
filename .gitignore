@@ -79,3 +79,4 @@ __pycache__/
 playwright-report/
 test-results/
 tests/integration/.test-connection.json
+tests/e2e/.auth/

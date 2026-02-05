@@ -3,6 +3,37 @@
 import { useState, useRef, useCallback, useEffect } from "react"
 import type { VoiceRecorderResult, UseVoiceRecorderReturn } from "../types"
 
+// Web Speech API types (not in standard TypeScript lib)
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  onresult: ((event: SpeechRecognitionEvent) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
+  start(): void
+  stop(): void
+  abort(): void
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+}
+
 const MAX_RECORDING_SECONDS = 120 // 2 minutes max
 
 /**
@@ -33,10 +64,7 @@ function getSupportedMimeType(): string {
  */
 function isSpeechRecognitionSupported(): boolean {
   if (typeof window === "undefined") return false
-  return !!(
-    window.SpeechRecognition ||
-    (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
-  )
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 }
 
 /**
@@ -56,7 +84,7 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
   const audioChunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const durationIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const transcriptRef = useRef<string>("")
 
   const isSupported = typeof window !== "undefined" &&
@@ -119,8 +147,8 @@ export function useVoiceRecorder(): UseVoiceRecorderReturn {
 
       // Start Web Speech API for transcription (if available)
       if (isSpeechRecognitionSupported()) {
-        const SpeechRecognitionClass = window.SpeechRecognition ||
-          (window as typeof window & { webkitSpeechRecognition: typeof SpeechRecognition }).webkitSpeechRecognition
+        const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition
+        if (!SpeechRecognitionClass) return // Type guard
 
         const recognition = new SpeechRecognitionClass()
         recognitionRef.current = recognition

@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
@@ -56,8 +55,7 @@ test.describe('Data Persistence - Session State', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and ensure clean state
-    await login(page)
+    // Arrange: Ensure clean state
     await ensureCleanSession(page)
   })
 
@@ -138,8 +136,7 @@ test.describe('Data Persistence - Session State', () => {
 
 test.describe('Data Persistence - Tracking Dashboard Stats', () => {
   test('should persist dashboard stats after page refresh', async ({ page }) => {
-    // Arrange: Login and navigate to tracking dashboard
-    await login(page)
+    // Arrange: Navigate to tracking dashboard
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 

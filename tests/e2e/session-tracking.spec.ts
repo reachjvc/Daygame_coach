@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
+import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external service latency
@@ -39,9 +39,13 @@ test.describe('Session Tracking Flow', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to session tracker
-    await login(page)
+    // Arrange: Navigate to session tracker
     await ensureCleanSession(page)
+  })
+
+  test.afterEach(async ({ page }) => {
+    // Cleanup: End any active session via API to prevent conflicts
+    await ensureNoActiveSessionViaAPI(page)
   })
 
   test('should display start session screen when no active session', async ({ page }) => {

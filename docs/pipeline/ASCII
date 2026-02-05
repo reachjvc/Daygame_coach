@@ -1,0 +1,127 @@
+
+   YouTube URLs (docs/sources.txt)
+             |
+             v
++--------------------------+
+|      01. DOWNLOAD        |    yt-dlp
+|  Download audio from YT  |    Rate-limited, backoff
++--------------------------+
+             |
+             |  data/01.download/<source>/<video>/*.wav
+             v
++--------------------------+
+|     02. TRANSCRIBE       |    Whisper large-v3
+|  Speech-to-text (raw)    |    Hallucination prevention
++--------------------------+
+             |
+             |  data/02.transcribe/.../*.full.json
+             v
++--------------------------+
+|       03. ALIGN          |    WhisperX
+|  Sentence-level timing   |    Better word boundaries
++--------------------------+
+             |
+             |  data/03.align/.../*.full.json
+             v
++--------------------------+
+|      04. DIARIZE         |    pyannote
+|  Who said what           |    SPEAKER_00, SPEAKER_01...
+|  (speaker labels)        |    Can misassign speakers
++--------------------------+
+             |
+             |  data/04.diarize/.../*.full.json
+             v
++--------------------------+
+|   05. AUDIO FEATURES     |    librosa / pyannote
+|  Pitch, energy, tempo,   |    Speaker embeddings
+|  spectral brightness     |
++--------------------------+
+             |
+             |  data/05.audio-features/.../*.audio_features.json
+             v
++============================================+
+|         LLM STAGES (Claude CLI)            |
++============================================+
+             |
+             v
++--------------------------+
+|  06. VIDEO TYPE +        |    1 LLM call / video
+|      CONVERSATIONS       |
+|                          |    Reads ALL segments
+|  Classify video:         |
+|   - infield              |    Speaker roles:
+|   - talking_head         |    SPEAKER_XX -> coach,
+|   - podcast              |    target, voiceover, other
+|   - compilation          |
+|                          |    Conversation boundaries:
+|  Speaker role assignment |    approach, commentary,
+|  + boundary detection    |    transition
+|  in single pass          |    conversation_id: 1,2,3...
+|                          |
+|  Also fixes diarization  |    Catches pyannote errors
+|  errors using context    |    via semantic understanding
++--------------------------+
+             |
+             |  data/06.video-type/.../*.conversations.json
+             v
++--------------------------+
+|    07. CONTENT           |    1 LLM call / video
+|                          |    2 prompt variants:
+|  INFIELD/COMPILATION:    |
+|   Per approach:          |    31 techniques taxonomy
+|    - Techniques used     |    22 topics taxonomy
+|    - Topics discussed    |
+|    - Turn-by-turn phases |    opener -> hook ->
+|    - Hook/investment     |    vibe -> close
+|   Per commentary block:  |
+|    - Teaching points     |    Interleaved with
+|    - Techniques discussed|    approaches by time
+|                          |
+|  TALKING_HEAD/PODCAST:   |
+|   Per topic section:     |    LLM identifies section
+|    - Techniques discussed|    boundaries from
+|    - Topics covered      |    full transcript
+|                          |
+|  ALL: unlisted_concepts  |    Taxonomy gap detection
+|   (techniques & topics   |    on every enrichment
+|    not in taxonomy)      |
++--------------------------+
+             |
+             |  data/07.content/.../*.enriched.json
+             v
++--------------------------+
+|    08. INGEST            |    Ollama embeddings
+|                          |    -> Supabase pgvector
+|  Approach chunks:        |
+|   Phase-based chunking   |    segmentType=INTERACTION
+|   with metadata          |    isRealExample=true
+|                          |
+|  Commentary chunks:      |    segmentType=COMMENTARY
+|   Simple text chunking   |    isRealExample=false
+|   + video_type metadata  |
+|                          |
+|  Incremental: skips      |    technique, topic, phase,
+|  unchanged sources       |    convo_id metadata
++--------------------------+
+             |
+             v
+     Supabase embeddings
+       (vector store)
+             |
+             v
+   RAG-powered Q&A chatbot
+
+
+=== POST-PIPELINE ===
+
++--------------------------+
+|  09. TAXONOMY REPORT     |    No LLM — pure aggregation
+|                          |
+|  Reads all enriched JSON |    Reports unlisted concept
+|  from data/07.content/   |    frequency across videos
+|                          |
+|  Identifies taxonomy     |    Recommends additions
+|  gaps: techniques and    |    for concepts with 3+
+|  topics the LLM flagged  |    occurrences
+|  as unlisted             |
++--------------------------+

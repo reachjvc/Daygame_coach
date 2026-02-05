@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external service latency
 
 test.describe('Settings Management Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to settings
-    await login(page)
+    // Arrange: Navigate to settings
     await page.goto('/dashboard/settings', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })

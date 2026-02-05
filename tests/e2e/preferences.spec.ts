@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
-import { login } from './helpers/auth.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000
 
 test.describe('Preferences / Onboarding Flow', () => {
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login and navigate to preferences
-    await login(page)
+    // Arrange: Navigate to preferences
     await page.goto('/preferences', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
   })

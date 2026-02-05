@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test'
-import { login } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 /**
@@ -21,8 +20,7 @@ test.describe('Error Handling: Authentication Errors', () => {
   })
 
   test('401 on API call mid-session shows error', async ({ page }) => {
-    // Arrange: Login and navigate to a protected page
-    await login(page)
+    // Arrange: Navigate to a protected page
     await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
@@ -50,8 +48,7 @@ test.describe('Error Handling: Authentication Errors', () => {
   })
 
   test('clearing cookies while on protected page shows error on next action', async ({ page }) => {
-    // Arrange: Login and navigate to dashboard
-    await login(page)
+    // Arrange: Navigate to dashboard
     await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
     await page.waitForSelector(`[data-testid="${SELECTORS.trackingDashboard.page}"]`, { timeout: AUTH_TIMEOUT })

@@ -318,7 +318,7 @@ Classify this video's content type.`
       prompt: userPrompt,
       schema: VideoTypeSchema,
       temperature: 0.3,
-      maxTokens: 500,
+      maxOutputTokens: 500,
     })
 
     llmCalls++
@@ -362,7 +362,7 @@ Map each speaker to their role based on their speech patterns.`
       prompt: userPrompt,
       schema: SpeakerLabelSchema,
       temperature: 0.3,
-      maxTokens: 1000,
+      maxOutputTokens: 1000,
     })
 
     llmCalls++
@@ -436,7 +436,7 @@ Return exactly ${batch.length} segment classifications.`
         prompt: userPrompt,
         schema: SegmentClassificationSchema,
         temperature: 0.3,
-        maxTokens: 3000,
+        maxOutputTokens: 3000,
       })
 
       llmCalls++

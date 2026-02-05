@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { login } from './helpers/auth.helper'
+import { ensureNoActiveSessionViaAPI } from './helpers/auth.helper'
 import { SELECTORS } from './helpers/selectors'
 
 const ACTION_TIMEOUT = 2000
@@ -39,9 +39,13 @@ test.describe('Start Session', () => {
   }
 
   test.beforeEach(async ({ page }) => {
-    // Arrange: Login first
-    await login(page)
+    // Arrange: Ensure clean session state
     await ensureCleanSession(page)
+  })
+
+  test.afterEach(async ({ page }) => {
+    // Cleanup: End any active session via API to prevent conflicts
+    await ensureNoActiveSessionViaAPI(page)
   })
 
   test('should display 0 approaches when starting a new session', async ({ page }) => {

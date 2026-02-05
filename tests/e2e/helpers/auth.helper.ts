@@ -58,7 +58,7 @@ export async function createTestSessionViaAPI(
 export async function createTestApproachViaAPI(
   page: Page,
   sessionId: string,
-  outcome: string = 'ignored'
+  outcome: string = 'short'
 ): Promise<string> {
   const response = await page.request.post('/api/tracking/approach', {
     data: {
