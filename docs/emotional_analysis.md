@@ -1,3 +1,8 @@
+---
+Status: Reference
+Updated: 2026-02-06
+---
+
 # Analysis: Recurring Thoughts of Ex After 5.5 Years
 
 ## My Original Question
