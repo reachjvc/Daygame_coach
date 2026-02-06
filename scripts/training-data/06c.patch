@@ -61,7 +61,7 @@ from pipeline_manifest import load_manifest, load_manifest_sources, manifest_fil
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.0"
+PIPELINE_VERSION = "06c.patch-v1.2"  # v1.2: Handle reclassify_as_commentary, lenient override matching
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -69,8 +69,10 @@ LOG_PREFIX = "[06c.patch]"
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
 
-# Confidence threshold: only auto-apply high-confidence misattribution fixes
+# Confidence thresholds: only auto-apply high-confidence fixes
 MIN_MISATTRIBUTION_CONFIDENCE = 0.7
+MIN_VIDEO_TYPE_CONFIDENCE = 0.85
+MIN_BOUNDARY_CONFIDENCE = 0.90  # Higher threshold - structural changes
 
 
 # ---------------------------
@@ -109,6 +111,46 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
 # Patching Logic
 # ---------------------------
 
+def _merge_conversations(segments: List[Dict], from_conv: int, to_conv: int) -> int:
+    """Reassign all segments from from_conv to to_conv. Returns count of segments moved."""
+    count = 0
+    for seg in segments:
+        if seg.get("conversation_id") == from_conv:
+            seg["conversation_id"] = to_conv
+            count += 1
+    return count
+
+
+def _split_conversation(
+    segments: List[Dict], conv_id: int, split_seg_id: int, new_conv_id: int
+) -> int:
+    """Split conversation at segment, assigning split_seg and after to new_conv_id.
+
+    Returns count of segments reassigned.
+    """
+    count = 0
+    in_split = False
+    for seg in segments:
+        if seg.get("conversation_id") != conv_id:
+            continue
+        if seg.get("id") == split_seg_id:
+            in_split = True
+        if in_split:
+            seg["conversation_id"] = new_conv_id
+            count += 1
+    return count
+
+
+def _get_next_conversation_id(segments: List[Dict]) -> int:
+    """Get the next available conversation ID."""
+    max_id = 0
+    for seg in segments:
+        conv_id = seg.get("conversation_id", 0)
+        if conv_id > max_id:
+            max_id = conv_id
+    return max_id + 1
+
+
 def apply_patches(
     conversations_data: Dict[str, Any],
     verification_data: Dict[str, Any],
@@ -137,6 +179,14 @@ def apply_patches(
         if seg_id is None or suggested_role is None:
             flags_not_fixed.append(
                 f"misattribution: incomplete entry (seg_id={seg_id}, suggested={suggested_role})"
+            )
+            continue
+
+        # Skip prose suggested_roles (should be role values like "coach", "target", "other", "mixed")
+        valid_roles = {"coach", "target", "other", "mixed"}
+        if suggested_role not in valid_roles:
+            flags_not_fixed.append(
+                f"misattribution: segment {seg_id} suggested_role '{suggested_role}' is not a valid role — skipping"
             )
             continue
 
@@ -181,10 +231,19 @@ def apply_patches(
         suggested_override = entry.get("suggested_override")
         current_override = entry.get("current_override")
         evidence = entry.get("evidence", "")
+        confidence = entry.get("confidence", 1.0)  # Default 1.0 for backwards compat
 
         if seg_id is None or suggested_override is None:
             flags_not_fixed.append(
                 f"collapse_issue: incomplete entry (seg_id={seg_id}, suggested={suggested_override})"
+            )
+            continue
+
+        # Skip prose suggested_overrides (should be role values like "coach", "target", "other")
+        valid_roles = {"coach", "target", "other", "mixed"}
+        if suggested_override not in valid_roles:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} suggested_override '{suggested_override}' is not a valid role — skipping"
             )
             continue
 
@@ -197,10 +256,27 @@ def apply_patches(
 
         actual_override = seg.get("speaker_role_override")
         actual_role = seg.get("speaker_role")
-        if current_override and actual_override != current_override and actual_role != current_override:
+
+        # Lenient current_override matching: treat null, None, "none", "none (raw label)", "" as equivalent
+        def normalize_override(val):
+            if val is None or val == "" or (isinstance(val, str) and val.lower().startswith("none")):
+                return None
+            return val
+
+        normalized_current = normalize_override(current_override)
+        normalized_actual = normalize_override(actual_override)
+
+        # Only check mismatch if current_override was specified and non-null
+        if normalized_current is not None and normalized_actual != normalized_current and actual_role != normalized_current:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} current_override mismatch "
                 f"(expected '{current_override}', found override='{actual_override}', role='{actual_role}') — skipping"
+            )
+            continue
+
+        if confidence < MIN_MISATTRIBUTION_CONFIDENCE:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} confidence {confidence:.0%} below threshold — skipping"
             )
             continue
 
@@ -217,14 +293,145 @@ def apply_patches(
             "evidence": evidence[:200],
         })
 
-    # --- Log boundary_issues as unfixed ---
+    # --- Apply video type fix ---
+    video_type_check = verification_data.get("video_type_check", {})
+    if not video_type_check.get("agrees", True):
+        suggested_type = video_type_check.get("suggested_type")
+        confidence = video_type_check.get("confidence", 0)
+        reasoning = video_type_check.get("reasoning", "")
+
+        if suggested_type and confidence >= MIN_VIDEO_TYPE_CONFIDENCE:
+            video_type_obj = conversations_data.get("video_type", {})
+            old_type = video_type_obj.get("type") if isinstance(video_type_obj, dict) else video_type_obj
+            if isinstance(video_type_obj, dict):
+                conversations_data["video_type"]["type"] = suggested_type
+            else:
+                conversations_data["video_type"] = {"type": suggested_type}
+            fixes_applied.append({
+                "field": "video_type",
+                "old": old_type,
+                "new": suggested_type,
+                "source": "video_type_check",
+                "confidence": confidence,
+                "reasoning": reasoning[:200],
+            })
+        elif suggested_type:
+            flags_not_fixed.append(
+                f"video_type: suggested '{suggested_type}' but confidence {confidence:.0%} "
+                f"below {MIN_VIDEO_TYPE_CONFIDENCE:.0%} threshold"
+            )
+
+    # --- Apply boundary fixes (or log as unfixed) ---
     for entry in verification_data.get("boundary_issues", []):
-        conv_id = entry.get("conversation_id", "?")
+        conv_id = entry.get("conversation_id")
         severity = entry.get("severity", "unknown")
         issue = entry.get("issue", "")
-        flags_not_fixed.append(
-            f"boundary_issue [{severity}]: Conv {conv_id} — {issue[:150]}"
-        )
+        suggested_fix = entry.get("suggested_fix")
+        confidence = entry.get("confidence", 0)
+
+        # Skip if no fix suggested or confidence too low
+        if not suggested_fix or confidence < MIN_BOUNDARY_CONFIDENCE:
+            reason = "no fix suggested" if not suggested_fix else f"confidence {confidence:.0%} below {MIN_BOUNDARY_CONFIDENCE:.0%}"
+            flags_not_fixed.append(
+                f"boundary_issue [{severity}]: Conv {conv_id} — {issue[:100]} ({reason})"
+            )
+            continue
+
+        # Apply the fix
+        if suggested_fix == "merge_with_next":
+            target_conv = conv_id + 1
+            count = _merge_conversations(segments, conv_id, target_conv)
+            if count > 0:
+                fixes_applied.append({
+                    "field": "conversation_id",
+                    "action": "merge",
+                    "from_conv": conv_id,
+                    "to_conv": target_conv,
+                    "segments_moved": count,
+                    "source": "boundary_issue",
+                    "confidence": confidence,
+                    "issue": issue[:150],
+                })
+            else:
+                flags_not_fixed.append(
+                    f"boundary_issue: merge_with_next for conv {conv_id} found no segments"
+                )
+
+        elif suggested_fix == "merge_with_previous":
+            target_conv = conv_id - 1
+            if target_conv < 1:
+                flags_not_fixed.append(
+                    f"boundary_issue: merge_with_previous for conv {conv_id} invalid (no previous)"
+                )
+                continue
+            count = _merge_conversations(segments, conv_id, target_conv)
+            if count > 0:
+                fixes_applied.append({
+                    "field": "conversation_id",
+                    "action": "merge",
+                    "from_conv": conv_id,
+                    "to_conv": target_conv,
+                    "segments_moved": count,
+                    "source": "boundary_issue",
+                    "confidence": confidence,
+                    "issue": issue[:150],
+                })
+            else:
+                flags_not_fixed.append(
+                    f"boundary_issue: merge_with_previous for conv {conv_id} found no segments"
+                )
+
+        elif suggested_fix.startswith("split_at_segment_"):
+            try:
+                split_seg_id = int(suggested_fix.split("_")[-1])
+            except ValueError:
+                flags_not_fixed.append(
+                    f"boundary_issue: invalid split format '{suggested_fix}'"
+                )
+                continue
+
+            new_conv_id = _get_next_conversation_id(segments)
+            count = _split_conversation(segments, conv_id, split_seg_id, new_conv_id)
+            if count > 0:
+                fixes_applied.append({
+                    "field": "conversation_id",
+                    "action": "split",
+                    "original_conv": conv_id,
+                    "split_at_segment": split_seg_id,
+                    "new_conv_id": new_conv_id,
+                    "segments_moved": count,
+                    "source": "boundary_issue",
+                    "confidence": confidence,
+                    "issue": issue[:150],
+                })
+            else:
+                flags_not_fixed.append(
+                    f"boundary_issue: split_at_segment_{split_seg_id} for conv {conv_id} found no segments"
+                )
+
+        elif suggested_fix == "reclassify_as_commentary":
+            # Move all segments from this conversation to commentary (conv_id=0)
+            count = _merge_conversations(segments, conv_id, 0)
+            if count > 0:
+                fixes_applied.append({
+                    "field": "conversation_id",
+                    "action": "reclassify_as_commentary",
+                    "from_conv": conv_id,
+                    "to_conv": 0,
+                    "segments_moved": count,
+                    "source": "boundary_issue",
+                    "confidence": confidence,
+                    "issue": issue[:150],
+                })
+            else:
+                flags_not_fixed.append(
+                    f"boundary_issue: reclassify_as_commentary for conv {conv_id} found no segments"
+                )
+
+        else:
+            flags_not_fixed.append(
+                f"boundary_issue [{severity}]: Conv {conv_id} — unknown fix type '{suggested_fix}'"
+            )
 
     # --- Log other_flags as unfixed ---
     for flag in verification_data.get("other_flags", []):

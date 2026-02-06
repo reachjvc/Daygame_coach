@@ -34,9 +34,29 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent.parent
 
 
+def is_playlist_id(id_str: str) -> bool:
+    """Check if an ID looks like a YouTube playlist ID rather than a video ID.
+
+    Playlist IDs start with PL, FL, UU, etc. and are 34+ chars.
+    Video IDs are exactly 11 characters.
+    """
+    playlist_prefixes = ("PL", "FL", "UU", "LL", "RD", "OL")
+    if id_str.startswith(playlist_prefixes):
+        return True
+    # Video IDs are exactly 11 chars; playlists are longer
+    if len(id_str) > 11:
+        return True
+    return False
+
+
 def extract_video_id(name: str) -> Optional[str]:
     match = re.search(r"\[([a-zA-Z0-9_-]+)\]", name)
-    return match.group(1) if match else None
+    if not match:
+        return None
+    id_str = match.group(1)
+    if is_playlist_id(id_str):
+        return None
+    return id_str
 
 
 # Title keywords that suggest infield content

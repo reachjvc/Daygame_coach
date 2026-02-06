@@ -1,6 +1,6 @@
 # Batch P002 - 90% infield / 10% talk
 # Created: 2026-02-05T13:55:28Z
-# Videos: 100
+# Videos: 97
 # Infield: 90, Talk: 10
 #
 # Format: source_name | video_folder_name
@@ -14,7 +14,6 @@ coach_kyle_how_to_approach_a_girl | How To Pick Up Girls At Your Gym (Proven Met
 coach_kyle_how_to_approach_a_girl | How To Talk To Girls In An Elevator 👋 #shorts [R8J9ae3bkrw]
 coach_kyle_how_to_approach_a_girl | How To Talk To Women Without Feeling Awkward [AnX8CX37goo]
 coach_kyle_how_to_approach_a_girl | How to Approach A Girl At The Bar 😈 (Without Getting Rejected) #shorts [6TencNrSXcs]
-coach_kyle_how_to_approach_a_girl | How to Approach a Girl [PLpp1UUwZH-Kqno9bKjk4FoDL7lnJyeHWZ]
 coach_kyle_how_to_approach_a_girl | How to Approach a Group of Girls (INFIELD) [tyI2OZCVhT8]
 coach_kyle_how_to_approach_a_girl | How to Cold APPROACH (Infield) [DGrky-wDxuQ]
 coach_kyle_how_to_approach_a_girl | How to Compliment Women (Without Pedestalizing Them) [rEFK-4dNPxA]
@@ -64,7 +63,6 @@ coach_kyle_how_to_approach_a_girl | Women WANT to be approached, just not how YO
 coach_kyle_how_to_approach_a_girl | Younger Women HATE When “Older Guys” Do This (6 UNATTRACTIVE Mistakes) [Ih8JD8HcLT8]
 coach_kyle_how_to_approach_a_girl | why your small talk is boring (4 EASY FIXES) [pHXV1XQr7W0]
 coach_kyle_infield | Drake Goes Man-To-Woman On Jessie Reyez!! (Interaction + Breakdown) [5gfclo7crNI]
-coach_kyle_infield | Infield [PLpp1UUwZH-KpdTjXwD8ZHlcO3-OE8hRUj]
 coach_kyle_infield | Simple cold approach： USE THESE EASY LINES to 10x dates [neZv2hbkABQ]
 coach_kyle_infield | What Happens When You Talk To Girls After Working Out？ (Infield) [u2R8_rF_j2s]
 coach_kyle_infield | What To Do When A Girl Looks At You 👀#shorts [h1-ySXfRbLY]
@@ -78,7 +76,6 @@ natural_lifestyles_meetingGirlsIRL | How to Pick Up Hippie Girls (As an analytic
 natural_lifestyles_meetingGirlsIRL | How to get Rejected like a BOSS - James Marshall Infield [WSFSpbFCPZo]
 natural_lifestyles_meetingGirlsIRL | I picked up a curvy Irish tourist in 5 minutes - How to get fast holiday hookups [N2UbTTfCfqg]
 natural_lifestyles_meetingGirlsIRL | James Marshall picks up 3 shy girls (how to relax, connect & seduce them) [IS2SoUgqDLE]
-natural_lifestyles_meetingGirlsIRL | Meeting Girls in Real Life [PLtfVGUer52V7lhPcOPFyr1n1cCBeXIB3z]
 natural_lifestyles_meetingGirlsIRL | Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]
 natural_lifestyles_meetingGirlsIRL | Psychedelic Farmer chats up Barcelona Ladies (How to get Dates this Summer w⧸ James Marshall) [LCkyC_QKIJE]
 natural_lifestyles_meetingGirlsIRL | Seducing A Fitness Model (Getting Through Rejections To Find Your Dream Girl) [jdDdgzdFPfs]

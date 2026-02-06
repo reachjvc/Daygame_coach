@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/sub-batch-create
+
+Split a batch manifest into sub-batches for depth-first pipeline processing.
+
+Usage:
+  A) Split P001 into sub-batches of 10 videos each:
+     ./sub-batch-create P001 --size 10
+
+  B) Preview without writing:
+     ./sub-batch-create P001 --size 10 --dry-run
+
+  C) Custom size:
+     ./sub-batch-create P001 --size 15
+
+Output:
+  - Sub-batch manifests: docs/pipeline/batches/P001.1.txt, P001.2.txt, ...
+  - Status file: docs/pipeline/batches/P001.status.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import List, Tuple
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent
+
+
+def load_manifest(manifest_path: Path) -> Tuple[List[str], List[str]]:
+    """Load manifest file. Returns (header_lines, video_lines)."""
+    headers = []
+    videos = []
+    with open(manifest_path) as f:
+        for line in f:
+            line = line.rstrip("\n\r")
+            if line.startswith("#"):
+                headers.append(line)
+            elif line.strip():
+                videos.append(line)
+    return headers, videos
+
+
+def split_into_chunks(items: List[str], size: int) -> List[List[str]]:
+    """Split list into chunks of given size."""
+    return [items[i : i + size] for i in range(0, len(items), size)]
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Split a batch manifest into sub-batches for depth-first processing."
+    )
+    parser.add_argument(
+        "batch_id",
+        help="Batch identifier (e.g., P001). Reads from docs/pipeline/batches/<batch_id>.txt",
+    )
+    parser.add_argument(
+        "--size",
+        type=int,
+        default=10,
+        help="Number of videos per sub-batch (default: 10)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview without writing files",
+    )
+
+    args = parser.parse_args()
+
+    root = repo_root()
+    batches_dir = root / "docs" / "pipeline" / "batches"
+    manifest_path = batches_dir / f"{args.batch_id}.txt"
+
+    if not manifest_path.exists():
+        print(f"ERROR: Manifest not found: {manifest_path}")
+        sys.exit(1)
+
+    # Load the batch manifest
+    headers, videos = load_manifest(manifest_path)
+    total_videos = len(videos)
+
+    if total_videos == 0:
+        print(f"ERROR: No videos found in {manifest_path}")
+        sys.exit(1)
+
+    # Split into sub-batches
+    chunks = split_into_chunks(videos, args.size)
+    num_sub_batches = len(chunks)
+
+    print(f"Batch {args.batch_id}: {total_videos} videos")
+    print(f"Sub-batch size: {args.size}")
+    print(f"Sub-batches: {num_sub_batches}")
+    print()
+
+    # Preview sub-batches
+    for i, chunk in enumerate(chunks, 1):
+        sub_id = f"{args.batch_id}.{i}"
+        print(f"  {sub_id}: {len(chunk)} videos")
+        if args.dry_run and i <= 3:
+            for line in chunk[:2]:
+                print(f"    {line[:60]}...")
+            if len(chunk) > 2:
+                print(f"    ...")
+
+    if args.dry_run:
+        print()
+        print("[DRY RUN] Would create:")
+        for i in range(1, num_sub_batches + 1):
+            print(f"  {batches_dir / f'{args.batch_id}.{i}.txt'}")
+        print(f"  {batches_dir / f'{args.batch_id}.status.json'}")
+        return
+
+    # Check if sub-batches already exist
+    existing = []
+    for i in range(1, num_sub_batches + 1):
+        sub_path = batches_dir / f"{args.batch_id}.{i}.txt"
+        if sub_path.exists():
+            existing.append(sub_path.name)
+
+    if existing:
+        print()
+        print(f"ERROR: Sub-batch files already exist: {', '.join(existing[:3])}...")
+        print("Delete existing sub-batches first or use a different batch_id.")
+        sys.exit(1)
+
+    # Write sub-batch manifests
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    for i, chunk in enumerate(chunks, 1):
+        sub_id = f"{args.batch_id}.{i}"
+        sub_path = batches_dir / f"{sub_id}.txt"
+
+        with open(sub_path, "w") as f:
+            f.write(f"# Sub-batch {sub_id} (from {args.batch_id})\n")
+            f.write(f"# Created: {now}\n")
+            f.write(f"# Videos: {len(chunk)}\n")
+            f.write(f"#\n")
+            f.write(f"# Format: source_name | video_folder_name\n")
+            for line in chunk:
+                f.write(f"{line}\n")
+
+    # Create status file
+    status = {
+        "batch_id": args.batch_id,
+        "created_at": now,
+        "total_videos": total_videos,
+        "sub_batch_size": args.size,
+        "sub_batches": {},
+    }
+
+    for i, chunk in enumerate(chunks, 1):
+        sub_id = f"{args.batch_id}.{i}"
+        status["sub_batches"][sub_id] = {
+            "status": "not_started",
+            "video_count": len(chunk),
+        }
+
+    status_path = batches_dir / f"{args.batch_id}.status.json"
+    with open(status_path, "w") as f:
+        json.dump(status, f, indent=2)
+        f.write("\n")
+
+    print()
+    print(f"Created {num_sub_batches} sub-batch manifests:")
+    for i in range(1, num_sub_batches + 1):
+        print(f"  {batches_dir / f'{args.batch_id}.{i}.txt'}")
+    print()
+    print(f"Status file: {status_path}")
+    print()
+    print("Next steps:")
+    print(f"  ./scripts/training-data/sub-batch-pipeline {args.batch_id}.1")
+
+
+if __name__ == "__main__":
+    main()

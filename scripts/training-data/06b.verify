@@ -54,7 +54,7 @@ from pipeline_manifest import load_manifest, load_manifest_sources, manifest_fil
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.1"  # v1.1: JSON conversion fallback for failed parses
+PIPELINE_VERSION = "06b.verify-v1.4"  # v1.4: Enforce structured fix fields for 06c auto-patching
 
 DEBUG_MODE = False
 
@@ -190,6 +190,19 @@ C) Overall: Does the output tell a coherent story of what happened in the video?
 
 ---
 
+CONFIDENCE CALIBRATION:
+
+For EVERY issue you flag, rate your confidence (0.0-1.0) that your suggested fix is correct:
+
+- 0.95+: Unambiguous. Clear textual evidence, no alternative interpretation possible.
+- 0.85-0.94: Very likely. Strong evidence, only minor ambiguity.
+- 0.70-0.84: Probable. Evidence supports this but meaningful uncertainty exists.
+- <0.70: Uncertain. Flag for human review but don't suggest a fix (set suggested_* to null).
+
+Be CALIBRATED: if you say 0.90, you should be wrong ~10% of the time, not 50%.
+
+---
+
 VIDEO TITLE: "{title}"
 
 VIDEO TYPE: {video_type} (confidence: {video_type_confidence})
@@ -207,9 +220,66 @@ FULL TRANSCRIPT ({segment_count} segments):
 
 ---
 
-OUTPUT: First, write a brief analysis for each of the 5 passes (2-4 sentences each). Then output a JSON object in a ```json code block:
+OUTPUT: First, write a brief analysis for each of the 5 passes (2-4 sentences each). Then output a JSON object in a ```json code block.
 
-{{"verdict": "APPROVE|FLAG|REJECT", "video_type_check": {{"agrees": true, "reasoning": "brief"}}, "conversation_verdicts": [{{"conversation_id": 1, "verdict": "OK|FLAG|ISSUE", "notes": "brief"}}], "misattributions": [{{"segment_id": 0, "current_role": "target", "suggested_role": "coach", "evidence": "why"}}], "boundary_issues": [{{"conversation_id": 1, "issue": "description", "severity": "minor|moderate|major"}}], "collapse_issues": [{{"speaker_id": "SPEAKER_01", "segment_id": 0, "current_override": "target", "suggested_override": "coach", "evidence": "why"}}], "other_flags": ["any other concerns"], "summary": "one paragraph overall assessment"}}
+CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields):
+
+1. video_type_check: If agrees=false, you MUST include:
+   - "suggested_type": one of "infield", "compilation", "talking_head", "podcast" (NOT prose)
+   - "confidence": 0.0-1.0
+
+2. misattributions: Each entry MUST include:
+   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose like "should be coach")
+   - "confidence": 0.0-1.0
+
+3. boundary_issues: Each entry MUST include:
+   - "suggested_fix": one of "merge_with_next", "merge_with_previous", "split_at_segment_N", "reclassify_as_commentary", or null (NOT prose)
+   - "confidence": 0.0-1.0
+   - For split fixes, N must be a real segment ID (e.g., "split_at_segment_29")
+
+4. collapse_issues: Each entry MUST include:
+   - "current_override": the actual current value (use null if no override exists, NOT "none" or prose)
+   - "suggested_override": one of "coach", "target", "other" (NOT prose like "should be SPEAKER_02")
+   - "confidence": 0.0-1.0
+
+EXAMPLE OUTPUT:
+
+```json
+{{
+  "verdict": "FLAG",
+  "video_type_check": {{
+    "agrees": false,
+    "suggested_type": "talking_head",
+    "confidence": 0.92,
+    "reasoning": "95% single speaker, not enough back-and-forth for podcast"
+  }},
+  "conversation_verdicts": [{{"conversation_id": 1, "verdict": "FLAG", "notes": "cold-open teaser duplicates later content"}}],
+  "misattributions": [{{
+    "segment_id": 490,
+    "current_role": "target",
+    "suggested_role": "coach",
+    "confidence": 0.95,
+    "evidence": "Says 'Hey, I'm James' — James is the coach per video title"
+  }}],
+  "boundary_issues": [{{
+    "conversation_id": 1,
+    "issue": "Segments 0-15 are cold-open teaser that duplicates content from later",
+    "severity": "moderate",
+    "suggested_fix": "split_at_segment_29",
+    "confidence": 0.90
+  }}],
+  "collapse_issues": [{{
+    "speaker_id": "SPEAKER_01",
+    "segment_id": 120,
+    "current_override": null,
+    "suggested_override": "target",
+    "confidence": 0.88,
+    "evidence": "Segment is during Conv 2, should be Conv 2's target not Conv 1's"
+  }}],
+  "other_flags": ["Transcription error at seg 11: target name transcribed as 'James' (coach's name)"],
+  "summary": "Video type misclassified as podcast, should be talking_head. One misattribution and boundary issue detected."
+}}
+```
 
 VERDICT RULES:
 - APPROVE: No errors found. Minor observations are fine.
@@ -217,6 +287,8 @@ VERDICT RULES:
 - REJECT: Clear errors that will corrupt downstream processing. E.g., coach and target roles are swapped for an entire conversation, or a conversation boundary is clearly wrong (two separate approaches merged).
 
 Be specific. Cite segment IDs and quote text when flagging issues. Empty arrays are fine if no issues found for a category.
+
+CRITICAL: When you identify multiple segments with the same issue (e.g., "segments 0, 5, 25, 118 are all coach audio on wrong speaker"), create a SEPARATE misattribution or collapse_issue entry for EACH segment. Do NOT summarize multiple fixable issues into one other_flags string. The other_flags array is ONLY for issues that cannot be expressed as individual segment fixes.
 """
 
 # Conversion prompt for when analysis is good but JSON parsing fails
@@ -230,14 +302,58 @@ Your analysis was thorough and correct. However, the JSON output was missing or 
 
 Please convert your analysis above into a valid JSON object. Output ONLY the JSON, no other text.
 
+CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields):
+
+1. video_type_check: If agrees=false, you MUST include:
+   - "suggested_type": one of "infield", "compilation", "talking_head", "podcast" (NOT prose)
+   - "confidence": 0.0-1.0
+
+2. misattributions: Each entry MUST include:
+   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose)
+   - "confidence": 0.0-1.0
+
+3. boundary_issues: Each entry MUST include:
+   - "suggested_fix": one of "merge_with_next", "merge_with_previous", "split_at_segment_N", "reclassify_as_commentary", or null
+   - "confidence": 0.0-1.0
+   - For split fixes, N must be a real segment ID (e.g., "split_at_segment_29")
+
+4. collapse_issues: Each entry MUST include:
+   - "current_override": the actual current value (use null if no override, NOT "none" or prose)
+   - "suggested_override": one of "coach", "target", "other" (NOT prose)
+   - "confidence": 0.0-1.0
+
 Required schema:
 {{
   "verdict": "APPROVE|FLAG|REJECT",
-  "video_type_check": {{"agrees": true|false, "reasoning": "brief explanation"}},
+  "video_type_check": {{
+    "agrees": true|false,
+    "suggested_type": "infield|compilation|talking_head|podcast",
+    "confidence": 0.92,
+    "reasoning": "brief explanation"
+  }},
   "conversation_verdicts": [{{"conversation_id": 1, "verdict": "OK|FLAG|ISSUE", "notes": "brief"}}],
-  "misattributions": [{{"segment_id": 123, "current_role": "target", "suggested_role": "coach", "evidence": "why this is wrong"}}],
-  "boundary_issues": [{{"conversation_id": 1, "issue": "description", "severity": "minor|moderate|major"}}],
-  "collapse_issues": [{{"speaker_id": "SPEAKER_01", "segment_id": 123, "current_override": "target", "suggested_override": "coach", "evidence": "why"}}],
+  "misattributions": [{{
+    "segment_id": 123,
+    "current_role": "target",
+    "suggested_role": "coach",
+    "confidence": 0.88,
+    "evidence": "why this is wrong"
+  }}],
+  "boundary_issues": [{{
+    "conversation_id": 1,
+    "issue": "description",
+    "severity": "minor|moderate|major",
+    "suggested_fix": "split_at_segment_29",
+    "confidence": 0.90
+  }}],
+  "collapse_issues": [{{
+    "speaker_id": "SPEAKER_01",
+    "segment_id": 123,
+    "current_override": null,
+    "suggested_override": "target",
+    "confidence": 0.88,
+    "evidence": "why"
+  }}],
   "other_flags": ["any other concerns as strings"],
   "summary": "one paragraph overall assessment"
 }}
@@ -246,7 +362,12 @@ Rules:
 - Extract ALL issues mentioned in your analysis
 - Use empty arrays [] for categories with no issues
 - Include segment IDs and evidence from your analysis
+- Include confidence scores (0.0-1.0) for each issue based on your certainty
+- For video_type_check: include suggested_type only if agrees=false, use null if agrees=true
+- For boundary_issues: include suggested_fix as exact value, not prose
+- For collapse_issues: use null for current_override if segment has no override, not "none" or "none (raw label)"
 - The verdict should match what you concluded (FLAG if issues found, APPROVE if none, REJECT if critical errors)
+- CRITICAL: Create a SEPARATE entry for EACH affected segment. Do NOT summarize multiple segment issues into one other_flags string.
 
 Output the JSON now:
 """

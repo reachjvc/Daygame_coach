@@ -146,7 +146,7 @@ TOPIC_TAXONOMY = {
 LOG_PREFIX = "[07.content]"
 
 PROMPT_VERSION = "1.1.0"
-PIPELINE_VERSION = "07.content-v1"
+PIPELINE_VERSION = "07.content-v1.1"  # v1.1: Fixed cross-ref to use segments, added upstream patch metadata
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -314,26 +314,32 @@ def validate_enrichment_output(
                     break
                 last_phase_idx = phase_idx
 
-    # --- 5. Cross-reference with Stage 06 ---
+    # --- 5. Cross-reference with upstream data ---
+    # Derive conversation IDs from segments (not stale conversations array)
+    # This handles 06c boundary fixes (merges/splits) correctly
     if stage06_data:
-        s06_conversations = stage06_data.get("conversations", [])
-        s06_conv_ids = {c["conversation_id"] for c in s06_conversations}
+        upstream_segments = stage06_data.get("segments", [])
+        # Build conv_ids from actual segment data (ground truth after 06c patches)
+        segment_conv_ids = {
+            s.get("conversation_id") for s in upstream_segments
+            if s.get("conversation_id", 0) > 0
+        }
 
         for i, enrichment in enumerate(enrichments):
             conv_id = enrichment.get("conversation_id")
-            if conv_id is not None and conv_id > 0 and conv_id not in s06_conv_ids:
+            if conv_id is not None and conv_id > 0 and conv_id not in segment_conv_ids:
                 results.append(ValidationResult(
                     "error", "phantom_conversation",
-                    f"Enrichment {i}: conversation_id {conv_id} does not exist in Stage 06 output"
+                    f"Enrichment {i}: conversation_id {conv_id} does not exist in segment data"
                 ))
 
-        # Enrichment count vs Stage 06 conversation count
+        # Enrichment count vs actual conversation count from segments
         approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
-        if len(approach_enrichments) != len(s06_conv_ids):
+        if len(approach_enrichments) != len(segment_conv_ids):
             results.append(ValidationResult(
                 "warning", "enrichment_count_mismatch",
                 f"Stage 07 has {len(approach_enrichments)} approach enrichments but "
-                f"Stage 06 has {len(s06_conv_ids)} conversations"
+                f"segment data has {len(segment_conv_ids)} conversations"
             ))
 
     # --- 6. Hook point / investment consistency ---
@@ -922,6 +928,9 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
             if isinstance(topic, str):
                 all_topics.add(topic)
 
+    # Extract upstream patch metadata (for RAG visibility into data quality)
+    upstream_patch = data.get("patch_metadata", {})
+
     # Build output
     output: Dict[str, Any] = {
         "metadata": {
@@ -934,6 +943,10 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
             "sections_enriched": len(section_enrichments),
             "processing_time_sec": elapsed,
             "model": "claude-cli",
+            # Upstream data quality info (for RAG context)
+            "upstream_verification_verdict": upstream_patch.get("verification_verdict"),
+            "upstream_fixes_applied": upstream_patch.get("fixes_applied_count", 0),
+            "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
         },
         "video_id": video_id,
         "video_type": data.get("video_type"),
@@ -973,8 +986,8 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
             for level in ["low", "medium", "high"]
         }
 
-    # Load Stage 06 data for cross-reference validation
-    stage06_data = data  # The input IS the Stage 06 output
+    # Cross-reference validation uses 06c patched data (segments are ground truth)
+    stage06_data = data
 
     # Validate output
     validation_results = validate_enrichment_output(output, stage06_data)
@@ -1010,6 +1023,10 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def verification_root() -> Path:
+    return repo_root() / "data" / "06b.verify"
+
+
 def input_root() -> Path:
     return repo_root() / "data" / "06c.patched"
 
@@ -1024,6 +1041,64 @@ def test_input_root() -> Path:
 
 def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "07.content"
+
+
+def test_verification_root() -> Path:
+    return repo_root() / "data" / "test" / "06b.verify"
+
+
+def extract_video_stem(input_path: Path) -> str:
+    """Extract video stem from input path (remove .conversations suffix)."""
+    stem = input_path.stem
+    if stem.endswith(".conversations"):
+        stem = stem[:-len(".conversations")]
+    return stem
+
+
+def load_verification_status(video_stem: str, source: str, verify_root: Path) -> Dict[str, Any]:
+    """Load 06b verification report for a video.
+
+    Returns dict with 'verdict' key (APPROVE/FLAG/REJECT or None if not found).
+    """
+    verify_path = verify_root / source / f"{video_stem}.verification.json"
+    if not verify_path.exists():
+        return {"verdict": None, "path": str(verify_path)}
+    try:
+        data = json.loads(verify_path.read_text(encoding="utf-8"))
+        data["path"] = str(verify_path)
+        return data
+    except (json.JSONDecodeError, OSError):
+        return {"verdict": None, "path": str(verify_path)}
+
+
+def should_process_video(
+    input_path: Path,
+    source: str,
+    verify_root: Path,
+    skip_verification: bool = False
+) -> Tuple[bool, str]:
+    """Check if video should be processed based on 06b verification status.
+
+    Returns (should_process, reason).
+    Only APPROVE videos proceed. FLAG and REJECT are blocked.
+    """
+    if skip_verification:
+        return True, "verification skipped (--skip-verification)"
+
+    video_stem = extract_video_stem(input_path)
+    status = load_verification_status(video_stem, source, verify_root)
+    verdict = status.get("verdict")
+
+    if verdict is None:
+        return False, f"no 06b verification found at {status.get('path', 'unknown')}"
+    if verdict == "APPROVE":
+        return True, "APPROVE"
+    if verdict == "FLAG":
+        return False, "FLAG verdict - needs manual review before proceeding"
+    if verdict == "REJECT":
+        return False, "REJECT verdict - critical issues found"
+
+    return False, f"unknown verdict: {verdict}"
 
 
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
@@ -1075,8 +1150,19 @@ def _run_named_source(args) -> None:
 
     total_convs = 0
     total_enriched = 0
+    skipped_verification = 0
 
     for input_file in files:
+        # Verification gate
+        should_process, reason = should_process_video(
+            input_file, name, verification_root(),
+            skip_verification=args.skip_verification
+        )
+        if not should_process:
+            print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
+            skipped_verification += 1
+            continue
+
         output_file = compute_output_path(input_file, out_dir)
         if output_file.exists() and not args.overwrite:
             continue
@@ -1084,6 +1170,8 @@ def _run_named_source(args) -> None:
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
 
+    if skipped_verification > 0:
+        print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
     print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations")
 
 
@@ -1132,6 +1220,11 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing output files"
     )
+    parser.add_argument(
+        "--skip-verification",
+        action="store_true",
+        help="Skip 06b verification gate (process all files regardless of verdict)"
+    )
 
     args = parser.parse_args()
 
@@ -1152,10 +1245,15 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print("[07.content] Warning: Claude CLI slow to respond")
 
-    # Determine input/output paths
+    # Determine input/output paths and verification root
+    verify_root = verification_root()  # default
+    is_test_mode = False
+
     if args.test:
         in_dir = test_input_root()
         out_dir = test_output_root()
+        verify_root = test_verification_root()
+        is_test_mode = True
     elif args.input:
         input_path = Path(args.input)
         if not input_path.exists():
@@ -1164,9 +1262,20 @@ def main() -> None:
             raise SystemExit(f"Input not found: {args.input}")
 
         if input_path.is_file():
-            # Single file mode
+            # Single file mode - extract source from parent directory
+            source_name = input_path.parent.name
             out_dir = Path(args.output) if args.output else output_root()
             output_path = compute_output_path(input_path, out_dir)
+
+            # Verification gate
+            should_process, reason = should_process_video(
+                input_path, source_name, verification_root(),
+                skip_verification=args.skip_verification
+            )
+            if not should_process:
+                print(f"{LOG_PREFIX} BLOCKED: {input_path.name} - {reason}")
+                print(f"{LOG_PREFIX} Use --skip-verification to override")
+                return
 
             if output_path.exists() and not args.overwrite:
                 print(f"[07.content] Output exists, skipping: {output_path}")
@@ -1202,13 +1311,27 @@ def main() -> None:
                 continue
 
             print(f"[07.content] Manifest: {src_name} ({len(files)} videos)")
+            skipped_verification = 0
             for input_file in files:
+                # Verification gate
+                should_process, reason = should_process_video(
+                    input_file, src_name, verification_root(),
+                    skip_verification=args.skip_verification
+                )
+                if not should_process:
+                    print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
+                    skipped_verification += 1
+                    continue
+
                 output_file = compute_output_path(input_file, src_out_dir)
                 if output_file.exists() and not args.overwrite:
                     continue
                 result = process_video_file(input_file, output_file, dry_run=args.dry_run)
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
+
+            if skipped_verification > 0:
+                print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
 
         print(f"\n[07.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
         return
@@ -1229,13 +1352,27 @@ def main() -> None:
             src_out_dir = output_root() / src_name
             files = find_input_files(src_in_dir)
 
+            skipped_verification = 0
             for input_file in files:
+                # Verification gate
+                should_process, reason = should_process_video(
+                    input_file, src_name, verification_root(),
+                    skip_verification=args.skip_verification
+                )
+                if not should_process:
+                    print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
+                    skipped_verification += 1
+                    continue
+
                 output_file = compute_output_path(input_file, src_out_dir)
                 if output_file.exists() and not args.overwrite:
                     continue
                 result = process_video_file(input_file, output_file, dry_run=args.dry_run)
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
+
+            if skipped_verification > 0:
+                print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
 
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
@@ -1251,9 +1388,13 @@ def main() -> None:
         print(f"[07.content] No .conversations.json files found in: {in_dir}")
         return
 
+    # Extract source name from directory path
+    source_name = in_dir.name
+
     print(f"[07.content] Input : {in_dir}")
     print(f"[07.content] Output: {out_dir}")
     print(f"[07.content] Files : {len(files)}")
+    print(f"[07.content] Source: {source_name}")
 
     # Load state for checkpointing
     state_path = out_dir / ".enrichment_state.json"
@@ -1266,6 +1407,7 @@ def main() -> None:
     failed = 0
     consecutive_failures = 0
     validation_failed = 0
+    skipped_verification = 0
 
     for input_file in files:
         file_key = str(input_file.relative_to(in_dir))
@@ -1273,6 +1415,16 @@ def main() -> None:
         # Skip if already completed
         if file_key in state.completed_files and not args.overwrite:
             skipped += 1
+            continue
+
+        # Verification gate
+        should_process, reason = should_process_video(
+            input_file, source_name, verify_root,
+            skip_verification=args.skip_verification
+        )
+        if not should_process:
+            print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
+            skipped_verification += 1
             continue
 
         output_file = compute_output_path(input_file, out_dir)
@@ -1327,7 +1479,8 @@ def main() -> None:
     # Print summary first
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed:           {processed}")
-    print(f"  Skipped:             {skipped}")
+    print(f"  Skipped (existing):  {skipped}")
+    print(f"  Blocked (verify):    {skipped_verification}")
     print(f"  Failed (exception):  {failed}")
     print(f"  Failed (validation): {validation_failed}")
     print(f"  Enriched:            {total_enriched}/{total_convs} conversations")

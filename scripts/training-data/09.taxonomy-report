@@ -24,10 +24,13 @@ Use:
   B) Report for specific source:
      ./scripts/training-data/09.taxonomy-report --source daily_evolution
 
-  C) JSON output:
+  C) Report for specific sub-batch (manifest filter):
+     ./scripts/training-data/09.taxonomy-report --manifest docs/pipeline/batches/P001.1.txt
+
+  D) JSON output:
      ./scripts/training-data/09.taxonomy-report --json
 
-  D) Test data:
+  E) Test data:
      ./scripts/training-data/09.taxonomy-report --test
 """
 
@@ -35,9 +38,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 
 def repo_root() -> Path:
@@ -47,6 +51,38 @@ def repo_root() -> Path:
 def find_enriched_files(root: Path) -> List[Path]:
     """Find all enriched JSON files."""
     return sorted(root.rglob("*.enriched.json"))
+
+
+def extract_video_id(name: str) -> Optional[str]:
+    """Extract video ID from filename or folder name (e.g., 'Title [abc123]' -> 'abc123')."""
+    match = re.search(r"\[([a-zA-Z0-9_-]{11})\]", name)
+    return match.group(1) if match else None
+
+
+def load_manifest_video_ids(manifest_path: Path) -> Set[str]:
+    """Load manifest and return set of video IDs."""
+    video_ids = set()
+    with open(manifest_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            vid_id = extract_video_id(line)
+            if vid_id:
+                video_ids.add(vid_id)
+    return video_ids
+
+
+def filter_files_by_manifest(files: List[Path], manifest_path: Path) -> List[Path]:
+    """Filter enriched files to only those in the manifest."""
+    video_ids = load_manifest_video_ids(manifest_path)
+    filtered = []
+    for f in files:
+        # Check if video ID is in filename or parent folder
+        vid_id = extract_video_id(f.name) or extract_video_id(f.parent.name)
+        if vid_id and vid_id in video_ids:
+            filtered.append(f)
+    return filtered
 
 
 def parse_unlisted_from_enrichment(enrichment: Dict) -> Tuple[List[str], List[str]]:
@@ -260,6 +296,10 @@ def main() -> None:
         help="Only report for a specific source (folder name)"
     )
     parser.add_argument(
+        "--manifest",
+        help="Only report for videos in this manifest file (e.g., P001.1.txt)"
+    )
+    parser.add_argument(
         "--test",
         action="store_true",
         help="Report from test data (data/test/07.content/)"
@@ -284,10 +324,23 @@ def main() -> None:
         raise SystemExit(f"Data directory not found: {data_root}")
 
     files = find_enriched_files(data_root)
-    if not files:
-        raise SystemExit(f"No .enriched.json files found in: {data_root}")
 
-    print(f"[09.taxonomy-report] Scanning {len(files)} enriched files in {data_root}")
+    # Filter by manifest if provided
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            raise SystemExit(f"Manifest not found: {manifest_path}")
+        files = filter_files_by_manifest(files, manifest_path)
+        label = f"manifest {manifest_path.name}"
+    else:
+        label = str(data_root)
+
+    if not files:
+        raise SystemExit(f"No .enriched.json files found in: {label}")
+
+    print(f"[09.taxonomy-report] Scanning {len(files)} enriched files ({label})")
 
     report = process_files(files)
 

@@ -1,0 +1,15 @@
+# Sub-batch P001.2 (from P001)
+# Created: 2026-02-06T12:26:19Z
+# Videos: 10
+#
+# Format: source_name | video_folder_name
+NICK_KRAUSER_OUTLAWDAYGAME | Outlaw Daygame - Part 9 - Brain Fry [IZB-_mImb5o]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #1 - Gutter Game [LCMW0fFEKQk]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #2 - Pushing Game Tech [8xw8sEUI0Pg]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #3 - Placing her on r⧸K [5iNacoxOBVc]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #4 - Street Presence [KCdbUbCTDDA]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #5 - Careening Off Road [PuyWa3xwIeU]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #6 - Happy Dog Face [Lhg-ycvVSro]
+austen_summers_meets_girls | 7 Minute Pull - Analysis [3u0I751NGN0]
+austen_summers_meets_girls | 7 Minute Pull [nFjdyAHcTgA]
+austen_summers_meets_girls | A Basic Daygame Approach Anyone Can Do [H3_8iPikhDw]

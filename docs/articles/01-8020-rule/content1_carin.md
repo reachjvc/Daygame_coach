@@ -1,7 +1,167 @@
-# Content Ideas: The Science of Learning from Experience
+# Content: The Science of Learning from Experience
 
-**Source:** 01-8020-rule/draft11.md
-**Generated:** 06-02-2026
+**Source:** 01-8020-rule/draft12.md
+**Updated:** 06-02-2026
+
+---
+
+## Trunk: Why Reviewing Your Mistakes Makes You Worse — YouTube Long-Form
+
+**Target length:** 10-12 minutes
+**Core promise:** Viewer learns why 1/3 of performance reviews backfire + a 3-question framework for productive self-analysis
+
+### Hook (0:00-0:45)
+**Opening line:** "A third of the time, reviewing your performance makes you worse. Not sometimes. Not occasionally. A third of the time. 607 studies confirmed it."
+
+**Visual:** Black screen → "1/3" fades in large → shifts to meta-analysis graphic
+
+**Why keep watching:** "In the next ten minutes, I'm going to show you what separates the reviews that build you up from the ones that tear you down. And it comes down to a single variable."
+
+### Segment 1: The Testosterone Study (0:45-2:30)
+- 2012 rugby study — players split into two groups
+- Both watched video of themselves
+- Group A: watched their successes
+- Group B: watched their mistakes
+- Result: Group A had 28-51% higher testosterone before next game
+- **Key line:** "The review itself wasn't the variable. The focus was."
+
+**Visual:** Split screen showing two players watching tape, hormone graphs
+
+### Segment 2: The Ego vs Task Split (2:30-4:00)
+- The meta-analysis explanation: egoic review shuts learning down
+- Self-criticizing vs. task-focused
+- Transition: "So if feedback can backfire, what do the best learners actually do?"
+
+**Visual:** Two paths diagram — ego path leads to shutdown, task path leads to learning
+
+### Segment 3: The Convergence Pattern (4:00-6:30)
+- Five unrelated fields, same discovery
+- **John Danaher (BJJ):** "The lock is just the full stop at the end of a sentence. It's the sentence that counts."
+- **US Army AARs:** Limited to 3-4 critical moments per operation
+- **Surgeons:** Review the minute before the complication
+- **Poker players:** Journal the hands that felt off, not every hand
+- **Sports psychologists:** Analyze 1-2 moments per game
+
+**Visual:** Icons for each field appearing around central insight
+
+**Key line:** "Not because the rest doesn't matter — because human learning can't process everything at once."
+
+### Segment 4: The Neuroscience (6:30-8:30)
+- Why the brain already knows which moments matter
+- Amygdala tags emotionally significant experiences for stronger encoding
+- Zheng et al (2022): amygdala → hippocampus pathway during emotional events
+- The moments you're still thinking about hours later = amygdala flagged them
+- Cognitive Load Theory: working memory holds 4-7 items
+- Exhaustive analysis overwhelms the system → brain forgets to protect itself
+
+**Visual:** Brain diagram showing amygdala-hippocampus connection, "4-7" overlay
+
+### Segment 5: The Framework (8:30-10:00)
+- Setup: "So instead of reconstructing everything, ask which moment you're still thinking about."
+- **Three Questions:**
+  1. What happened in the thirty seconds before that moment?
+  2. What were you trying to do?
+  3. What would you try differently?
+- Beginner caveat: Early on, broader documentation helps. But that phase ends sooner than most think.
+
+**Visual:** Clean slide with the 3 questions
+
+### Ending (10:00-10:45)
+- Callback: "Remember that 1/3 statistic? Now you know why."
+- Final thought: "The question isn't whether you review. It's whether you're feeding the right moments back to yourself."
+- **CTA:** "If you want the research papers I cited, link in the description."
+
+**Visual:** Return to "1/3" graphic → fade to channel logo
+
+---
+
+### Natural Branch Points
+1. The 1/3 finding + testosterone study → standalone short
+2. The Danaher quote + BJJ analysis method → standalone short
+3. The 5-field convergence → carousel or short
+4. Amygdala flagging / neuroscience angle → standalone short
+5. The 3 questions framework → standalone short + carousel
+6. Beginner vs experienced divide → potential discussion clip
+
+---
+
+## Branches from Trunk
+
+### Branch 1: "The Feedback Paradox"
+**Core insight:** Reviewing your performance can make you worse — the variable is ego vs task focus.
+**Supporting facts:**
+- 607-study meta-analysis: 1/3 of feedback decreased performance
+- Rugby study: reviewing successes → 28-51% higher testosterone
+- Mechanism: self-criticism shuts learning down
+
+**Snippet hooks:**
+- "A third of the time, feedback makes you WORSE."
+- "Same review time. Different focus. Different hormones."
+
+**Best platforms:** YT Short, LinkedIn, Twitter thread opener
+
+---
+
+### Branch 2: "What Danaher Knows"
+**Core insight:** Elite performers study the lead-up, not the finish.
+**Supporting facts:**
+- "The lock is just the full stop. It's the sentence that counts."
+- Grips, weight shifts, angles — the finish was already decided
+- Same pattern in Army AARs, surgical review, poker journaling
+
+**Snippet hooks:**
+- "John Danaher doesn't study the submission."
+- "By the time someone taps, it was already decided."
+
+**Best platforms:** YT Short, quote card, Instagram reel
+
+---
+
+### Branch 3: "The 5-Field Convergence"
+**Core insight:** Five unrelated domains landed on identical insight — depth on 1-2 moments beats breadth.
+**Supporting facts:**
+- BJJ coaches: study what happened before
+- US Army: 3-4 critical moments per AAR
+- Surgeons: the minute before the complication
+- Poker: hands that felt off
+- Sports psych: 1-2 moments per game
+
+**Snippet hooks:**
+- "BJJ, Army, poker, surgery, sports psych — same discovery."
+- "Not because the rest doesn't matter. Because learning can't process everything."
+
+**Best platforms:** Carousel (5 slides + hook + conclusion), YT Short, LinkedIn
+
+---
+
+### Branch 4: "Your Brain Already Knows"
+**Core insight:** The amygdala tags moments that matter. The ones you're still thinking about are the ones worth analyzing.
+**Supporting facts:**
+- McGaugh: amygdala tags emotionally significant moments
+- Zheng et al: amygdala-hippocampus pathway during emotional events
+- Working memory: 4-7 items — exhaustive review overwhelms system
+
+**Snippet hooks:**
+- "The moment you're still thinking about hours later? That's the one."
+- "Your brain protects itself by forgetting most of it."
+
+**Best platforms:** YT Short, Twitter, newsletter segment
+
+---
+
+### Branch 5: "The 3 Questions"
+**Core insight:** One moment. Three questions. That's the whole review.
+**Supporting facts:**
+- What happened in the 30 seconds before?
+- What were you trying to do?
+- What would you try differently?
+- Grounded in cognitive load + convergence pattern
+
+**Snippet hooks:**
+- "Stop reconstructing everything. Ask which moment you're still thinking about."
+- "Three questions. That's it."
+
+**Best platforms:** Carousel, YT Short, infographic, saveable post
 
 ---
 

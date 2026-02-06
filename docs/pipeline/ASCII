@@ -82,12 +82,16 @@
 |  06c. PATCH              |    No LLM — pure JSON
 |                          |    transform
 |  Auto-applies from 06b:  |
-|   - Misattributions      |    APPROVE: copy unchanged
-|   - Collapse issues      |    FLAG: apply fixes
-|                          |    REJECT: halt (blocked
-|  Flags but won't fix:    |      by 06b already)
-|   - Boundary issues      |
-|   - Other flags          |    Adds patch_metadata
+|   - Misattributions      |    conf ≥ 0.70
+|   - Collapse issues      |    conf ≥ 0.70
+|   - Video type fixes     |    conf ≥ 0.85
+|   - Boundary fixes:      |    conf ≥ 0.90
+|     merge_with_next      |
+|     merge_with_previous  |    APPROVE: copy unchanged
+|     split_at_segment_N   |    FLAG: apply fixes
+|                          |    REJECT: blocked by 06b
+|  Flags but won't fix:    |
+|   - other_flags          |    Adds patch_metadata
 +--------------------------+
              |
              |  data/06c.patched/.../*.conversations.json
