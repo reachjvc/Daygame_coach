@@ -54,7 +54,7 @@ from pipeline_manifest import load_manifest, load_manifest_sources, manifest_fil
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.0"
+PIPELINE_VERSION = "06b.verify-v1.1"  # v1.1: JSON conversion fallback for failed parses
 
 DEBUG_MODE = False
 
@@ -219,6 +219,38 @@ VERDICT RULES:
 Be specific. Cite segment IDs and quote text when flagging issues. Empty arrays are fine if no issues found for a category.
 """
 
+# Conversion prompt for when analysis is good but JSON parsing fails
+CONVERSION_PROMPT = """You previously analyzed a video verification task and produced this analysis:
+
+---
+{analysis}
+---
+
+Your analysis was thorough and correct. However, the JSON output was missing or malformed.
+
+Please convert your analysis above into a valid JSON object. Output ONLY the JSON, no other text.
+
+Required schema:
+{{
+  "verdict": "APPROVE|FLAG|REJECT",
+  "video_type_check": {{"agrees": true|false, "reasoning": "brief explanation"}},
+  "conversation_verdicts": [{{"conversation_id": 1, "verdict": "OK|FLAG|ISSUE", "notes": "brief"}}],
+  "misattributions": [{{"segment_id": 123, "current_role": "target", "suggested_role": "coach", "evidence": "why this is wrong"}}],
+  "boundary_issues": [{{"conversation_id": 1, "issue": "description", "severity": "minor|moderate|major"}}],
+  "collapse_issues": [{{"speaker_id": "SPEAKER_01", "segment_id": 123, "current_override": "target", "suggested_override": "coach", "evidence": "why"}}],
+  "other_flags": ["any other concerns as strings"],
+  "summary": "one paragraph overall assessment"
+}}
+
+Rules:
+- Extract ALL issues mentioned in your analysis
+- Use empty arrays [] for categories with no issues
+- Include segment IDs and evidence from your analysis
+- The verdict should match what you concluded (FLAG if issues found, APPROVE if none, REJECT if critical errors)
+
+Output the JSON now:
+"""
+
 
 # ---------------------------
 # State Management
@@ -346,6 +378,45 @@ def parse_json_response(response: str) -> Optional[Dict]:
     debug_path = Path(__file__).parent / "debug_06b_failed_response.txt"
     debug_path.write_text(response)
     print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
+
+    return None
+
+
+def convert_analysis_to_json(analysis: str, timeout: int = 120) -> Optional[Dict]:
+    """Convert a text analysis to JSON using a second LLM call.
+
+    This is the fallback when the original response had good analysis
+    but failed to produce valid JSON.
+    """
+    if not analysis or len(analysis) < 50:
+        return None
+
+    print(f"{LOG_PREFIX}   Attempting JSON conversion fallback...")
+
+    prompt = CONVERSION_PROMPT.format(analysis=analysis)
+
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        return None
+
+    try:
+        result = subprocess.run(
+            [claude_bin, "-p", prompt, "--output-format", "text"],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+        if result.returncode == 0:
+            converted = parse_json_response(result.stdout.strip())
+            if converted and "verdict" in converted:
+                print(f"{LOG_PREFIX}   JSON conversion successful!")
+                return converted
+            else:
+                print(f"{LOG_PREFIX}   JSON conversion produced invalid output")
+    except subprocess.TimeoutExpired:
+        print(f"{LOG_PREFIX}   JSON conversion timed out")
+    except Exception as e:
+        print(f"{LOG_PREFIX}   JSON conversion error: {e}")
 
     return None
 
@@ -496,19 +567,33 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
     max_retries = 3
     result = None
     raw_response = None
+    llm_calls = 0
+    used_conversion_fallback = False
+
     for attempt in range(max_retries):
         raw_response = call_claude(prompt, timeout=300)
+        llm_calls += 1
         result = parse_json_response(raw_response)
 
         if result and "verdict" in result:
             break
 
+        # JSON parsing failed - try conversion fallback before retrying full prompt
+        if raw_response and len(raw_response) > 100:
+            print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
+            result = convert_analysis_to_json(raw_response)
+            llm_calls += 1
+            if result and "verdict" in result:
+                used_conversion_fallback = True
+                print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
+                break
+
         if attempt < max_retries - 1:
-            print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
+            print(f"{LOG_PREFIX}   WARNING: Conversion also failed, retrying full prompt ({attempt + 2}/{max_retries})...")
             time.sleep(2)
 
     if not result or "verdict" not in result:
-        raise RuntimeError(f"Verification LLM failed after {max_retries} retries")
+        raise RuntimeError(f"Verification LLM failed after {max_retries} retries and conversion fallback")
 
     elapsed = time.time() - start_time
 
@@ -541,7 +626,8 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
         "metadata": {
             "input_file": str(input_path),
             "processing_time_sec": elapsed,
-            "llm_calls": 1,
+            "llm_calls": llm_calls,
+            **({"note": "Used JSON conversion fallback"} if used_conversion_fallback else {}),
         },
     }
 

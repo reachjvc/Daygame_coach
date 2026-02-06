@@ -9,7 +9,7 @@
 - **Medium confidence** — Flagged or praised 1-2 times. Likely real but could be context-dependent.
 - **Tentative** — Observed once or inferred. Treat as a hypothesis to test, not a rule to follow.
 
-**Updated:** 2026-02-05
+**Updated:** 2026-02-06
 **Source:** Primarily from 10 feedback rounds on the 80/20 field report article (01-8020-rule), Jan-Feb 2026. A small sample — these patterns may evolve.
 
 ---
@@ -313,6 +313,63 @@ These are the checks that have caught problems in previous drafts. Not exhaustiv
 - [ ] Is practical advice specific enough to follow?
 - [ ] Any known AI phrases? (Check Section 2)
 - [ ] Does the title match what the article actually covers?
+
+---
+
+## 11. When to Elaborate vs. When to Cut
+
+**Confidence: Medium** — Observed in one article, but the principle is clear.
+
+Not all elaboration is equal. Some adds necessary context; some restates what's already implied.
+
+### Elaboration that adds context = necessary
+
+**Example:** A BJJ coach's quote used the phrase "the sentence" as a metaphor. The target audience doesn't train BJJ. Without explanation, the metaphor is opaque.
+
+> Original: *"The lock is just the full stop at the end of a sentence," he says. "It's the sentence that counts."*
+
+> Fixed: *"The lock is just the full stop at the end of a sentence," he says. "It's the sentence that counts." The grip, the weight shift, the angle created — those earlier adjustments made the finish inevitable.*
+
+**Test:** Does the reader have the context to understand this? If not, unpack it.
+
+### Elaboration that restates = filler
+
+**Example:** A list of reflection questions, each followed by explanation:
+
+> *What happened in the thirty seconds before that moment? Not the moment itself — the lead-up. The shift in body language, the topic change...*
+
+The explanation restates what "thirty seconds before" already implies. Cut it.
+
+**Test:** Does the elaboration add information, or just rephrase the original statement?
+
+### Content that justifies relevance = structural filler
+
+**Example:** A paragraph existed to connect the article to daygame, but it didn't advance the argument — it just signaled "this applies to you." Moved to one line in the practical section.
+
+**Test:** Is this content advancing the argument, or justifying why the article belongs here? If the latter, it's probably misplaced or unnecessary.
+
+### Setup language vs. justification filler (clarification)
+
+**Confidence: Medium** — Observed in one article, clarified through editor feedback.
+
+Not all setup language is bad. The problem isn't introducing what's coming — it's:
+
+1. **Empty setup** — Announcing without delivering ("In this section we'll explore...")
+2. **Justification filler** — Re-invoking earlier research to justify why later content belongs
+
+**Example of justification filler:** The practical section said "The McGaugh research suggests these aren't random — the amygdala flags moments like these." But McGaugh was already established in the previous section. This sentence doesn't advance anything — it's justifying why the list belongs rather than letting the list stand.
+
+**The fix:** If earlier research already made the point, trust it. Don't re-explain in later sections. Let content stand on its own.
+
+**Test:** Am I explaining why this content connects to earlier content? Or am I actually adding something new? If the former, cut it.
+
+### Logical connectors need verification
+
+Words like "reverse," "however," "therefore," "because" claim specific logical relationships.
+
+**Example:** Two research findings were described as "reverse" of each other when they were actually complementary (both pointed in the same direction). The word was wrong.
+
+**Test:** Does this connector accurately describe the relationship between these ideas?
 
 ---
 

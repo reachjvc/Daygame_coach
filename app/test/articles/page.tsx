@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Markdown } from "@/components/ui/markdown"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -525,7 +526,7 @@ export default function ArticleEditorPage() {
   // Article selection state
   const [articles, setArticles] = useState<ArticleInfo[]>([])
   const [selectedArticleId, setSelectedArticleId] = useState<string>("")
-  const [selectedDraftVersion, setSelectedDraftVersion] = useState<number>(1)
+  const [selectedDraft, setSelectedDraft] = useState<string>("") // Full draft filename without .md
   const [loadedArticle, setLoadedArticle] = useState<LoadedArticle | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -575,11 +576,10 @@ export default function ArticleEditorPage() {
         if (data.articles?.length > 0) {
           const first = data.articles[0]
           setSelectedArticleId(first.id)
-          // Select latest draft
+          // Select latest draft (full filename without .md)
           if (first.drafts.length > 0) {
             const latestDraft = first.drafts[first.drafts.length - 1]
-            const version = parseInt(latestDraft.match(/\d+/)?.[0] || "1")
-            setSelectedDraftVersion(version)
+            setSelectedDraft(latestDraft.replace(/\.md$/, ""))
           }
         }
       } catch (error) {
@@ -593,13 +593,13 @@ export default function ArticleEditorPage() {
 
   // Fetch draft content when selection changes
   useEffect(() => {
-    if (!selectedArticleId || !selectedDraftVersion) return
+    if (!selectedArticleId || !selectedDraft) return
 
     async function fetchDraft() {
       setLoading(true)
       try {
         const res = await fetch(
-          `/api/test/articles?id=${selectedArticleId}&draft=${selectedDraftVersion}`
+          `/api/test/articles?id=${selectedArticleId}&draft=${selectedDraft}`
         )
         const data = await res.json()
         setLoadedArticle({
@@ -623,7 +623,7 @@ export default function ArticleEditorPage() {
       }
     }
     fetchDraft()
-  }, [selectedArticleId, selectedDraftVersion])
+  }, [selectedArticleId, selectedDraft])
 
   // Get available drafts for selected article
   const selectedArticle = articles.find((a) => a.id === selectedArticleId)
@@ -651,10 +651,10 @@ export default function ArticleEditorPage() {
 
   // Shared helper to refresh article data after phase transitions
   const refreshArticleData = useCallback(async () => {
-    if (!loadedArticle) return
+    if (!loadedArticle || !selectedDraft) return
     try {
       const res = await fetch(
-        `/api/test/articles?id=${loadedArticle.id}&draft=${loadedArticle.version}`
+        `/api/test/articles?id=${loadedArticle.id}&draft=${selectedDraft}`
       )
       if (!res.ok) {
         console.error("Failed to refresh article data")
@@ -672,14 +672,10 @@ export default function ArticleEditorPage() {
         phaseLocks: data.phaseLocks || {},
         structureUnlocks: data.structureUnlocks || [],
       })
-      // Sync selectedDraftVersion if version changed
-      if (data.version !== selectedDraftVersion) {
-        setSelectedDraftVersion(data.version)
-      }
     } catch (error) {
       console.error("Failed to refresh article data:", error)
     }
-  }, [loadedArticle, selectedDraftVersion])
+  }, [loadedArticle, selectedDraft])
 
   // Unlock structure to allow changes (Phase 4 → Phase 2)
   const handleUnlockStructure = async () => {
@@ -1747,8 +1743,7 @@ export default function ArticleEditorPage() {
                   const article = articles.find(a => a.id === e.target.value)
                   if (article?.drafts.length) {
                     const latestDraft = article.drafts[article.drafts.length - 1]
-                    const version = parseInt(latestDraft.match(/\d+/)?.[0] || "1")
-                    setSelectedDraftVersion(version)
+                    setSelectedDraft(latestDraft.replace(/\.md$/, ""))
                   }
                 }}
                 className="text-sm border rounded px-2 py-1 bg-background"
@@ -1764,15 +1759,22 @@ export default function ArticleEditorPage() {
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-muted-foreground">Version:</label>
               <select
-                value={selectedDraftVersion}
-                onChange={(e) => setSelectedDraftVersion(parseInt(e.target.value))}
+                value={selectedDraft}
+                onChange={(e) => setSelectedDraft(e.target.value)}
                 className="text-sm border rounded px-2 py-1 bg-background"
               >
                 {availableDrafts.map(draft => {
-                  const version = parseInt(draft.match(/\d+/)?.[0] || "1")
+                  const draftId = draft.replace(/\.md$/, "")
+                  const version = draft.match(/\d+/)?.[0] || "1"
+                  // Extract author suffix if present (e.g., "edwin" from "draft8_edwin.md")
+                  const authorMatch = draft.match(/^draft\d+_(\w+)\.md$/)
+                  const author = authorMatch ? authorMatch[1] : null
+                  const label = author
+                    ? `Draft ${version} (${author.charAt(0).toUpperCase() + author.slice(1)})`
+                    : `Draft ${version}`
                   return (
-                    <option key={draft} value={version}>
-                      Draft {version}
+                    <option key={draft} value={draftId}>
+                      {label}
                     </option>
                   )
                 })}
@@ -1827,7 +1829,14 @@ export default function ArticleEditorPage() {
           <div className="flex items-center justify-between">
             <div>
               <Badge variant="outline" className="mb-2">
-                Draft {selectedDraftVersion}
+                {(() => {
+                  const version = selectedDraft.match(/\d+/)?.[0] || "1"
+                  const authorMatch = selectedDraft.match(/^draft\d+_(\w+)$/)
+                  const author = authorMatch ? authorMatch[1] : null
+                  return author
+                    ? `Draft ${version} (${author.charAt(0).toUpperCase() + author.slice(1)})`
+                    : `Draft ${version}`
+                })()}
               </Badge>
               <h1 className="text-xl font-semibold">
                 {loadedArticle?.title || "Loading..."}
@@ -2027,12 +2036,10 @@ export default function ArticleEditorPage() {
                     </div>
                   )}
 
-                  <div className="prose prose-neutral dark:prose-invert max-w-none select-text" onContextMenu={(e) => handleContextMenu(e, section.id)}>
-                    {section.content.split('\n\n').map((paragraph, pIdx) => (
-                      <p key={pIdx} className="text-base leading-relaxed mb-4 last:mb-0">
-                        {renderHighlightedText(paragraph, section.id)}
-                      </p>
-                    ))}
+                  <div className="select-text" onContextMenu={(e) => handleContextMenu(e, section.id)}>
+                    <Markdown className="prose prose-neutral dark:prose-invert max-w-none">
+                      {section.content}
+                    </Markdown>
                   </div>
                 </CardContent>
               </Card>

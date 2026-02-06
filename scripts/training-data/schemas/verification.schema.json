@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "verification.schema.json",
+  "title": "Stage 06b Verification Output",
+  "description": "Schema for LLM verification of stage 06 video type classification output",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "type": "string",
+      "enum": ["APPROVE", "FLAG", "REJECT"],
+      "description": "Overall verification verdict"
+    },
+    "video_type_check": {
+      "type": "object",
+      "properties": {
+        "agrees": {
+          "type": "boolean",
+          "description": "Whether the verifier agrees with the video type classification"
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Brief explanation of agreement/disagreement"
+        }
+      },
+      "required": ["agrees", "reasoning"]
+    },
+    "conversation_verdicts": {
+      "type": "array",
+      "description": "Verdict for each conversation",
+      "items": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "integer",
+            "description": "The conversation ID being evaluated"
+          },
+          "verdict": {
+            "type": "string",
+            "enum": ["OK", "FLAG", "ISSUE"],
+            "description": "Verdict for this conversation"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Brief notes about the conversation"
+          }
+        },
+        "required": ["conversation_id", "verdict"]
+      }
+    },
+    "misattributions": {
+      "type": "array",
+      "description": "Segments where speaker role is incorrectly assigned",
+      "items": {
+        "type": "object",
+        "properties": {
+          "segment_id": {
+            "type": "integer",
+            "description": "The segment ID with wrong role"
+          },
+          "current_role": {
+            "type": "string",
+            "description": "The currently assigned role"
+          },
+          "suggested_role": {
+            "type": "string",
+            "description": "The correct role this segment should have"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "description": "Confidence in this correction (0-1)"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Evidence supporting this correction"
+          }
+        },
+        "required": ["segment_id", "current_role", "suggested_role", "evidence"]
+      }
+    },
+    "boundary_issues": {
+      "type": "array",
+      "description": "Problems with conversation boundaries",
+      "items": {
+        "type": "object",
+        "properties": {
+          "conversation_id": {
+            "type": "integer",
+            "description": "The conversation with boundary issues"
+          },
+          "issue": {
+            "type": "string",
+            "description": "Description of the boundary problem"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["minor", "moderate", "major"],
+            "description": "Severity of the boundary issue"
+          }
+        },
+        "required": ["conversation_id", "issue", "severity"]
+      }
+    },
+    "collapse_issues": {
+      "type": "array",
+      "description": "Problems with collapsed speaker override assignments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "speaker_id": {
+            "type": "string",
+            "description": "The speaker ID with collapse issues"
+          },
+          "segment_id": {
+            "type": "integer",
+            "description": "The specific segment with wrong override"
+          },
+          "current_override": {
+            "type": "string",
+            "description": "The current speaker_role_override value"
+          },
+          "suggested_override": {
+            "type": "string",
+            "description": "The correct override value"
+          },
+          "evidence": {
+            "type": "string",
+            "description": "Evidence supporting this correction"
+          }
+        },
+        "required": ["speaker_id", "segment_id", "suggested_override", "evidence"]
+      }
+    },
+    "other_flags": {
+      "type": "array",
+      "description": "Any other concerns not covered by other categories",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph overall assessment"
+    }
+  },
+  "required": [
+    "verdict",
+    "video_type_check",
+    "conversation_verdicts",
+    "misattributions",
+    "boundary_issues",
+    "collapse_issues",
+    "other_flags",
+    "summary"
+  ]
+}

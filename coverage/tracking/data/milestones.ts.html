@@ -262,7 +262,11 @@
 <a name='L197'></a><a href='#L197'>197</a>
 <a name='L198'></a><a href='#L198'>198</a>
 <a name='L199'></a><a href='#L199'>199</a>
-<a name='L200'></a><a href='#L200'>200</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L200'></a><a href='#L200'>200</a>
+<a name='L201'></a><a href='#L201'>201</a>
+<a name='L202'></a><a href='#L202'>202</a>
+<a name='L203'></a><a href='#L203'>203</a>
+<a name='L204'></a><a href='#L204'>204</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -285,7 +289,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -297,7 +301,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -452,7 +460,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">416x</span>
+<span class="cline-any cline-yes">404x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -496,7 +504,7 @@ export const TIER_INFO: Array&lt;{ name: MilestoneTier; label: string; icon: str
 // All Milestones
 // ============================================
 &nbsp;
-export const ALL_MILESTONES: Record&lt;string, MilestoneInfo&gt; = {
+export const ALL_MILESTONES = {
   // Volume - Approaches
   first_approach: { label: "First Steps", emoji: "👣", tier: "bronze", category: "Approaches", description: "Complete your first approach" },
   "5_approaches": { label: "Getting Started", emoji: "🌱", tier: "bronze", category: "Approaches", description: "Complete 5 approaches" },
@@ -549,8 +557,6 @@ export const ALL_MILESTONES: Record&lt;string, MilestoneInfo&gt; = {
   monthly_unlocked: { label: "Monthly Unlocked", emoji: "🔓", tier: "silver", category: "Reports", description: "Complete 4 weekly reviews" },
   quarterly_unlocked: { label: "Quarterly Unlocked", emoji: "🗝️", tier: "gold", category: "Reports", description: "Complete 3 monthly reviews" },
   // Fun/Variety
-  night_owl: { label: "Night Owl", emoji: "🦉", tier: "bronze", category: "Special", description: "Start a session after 9pm" },
-  early_bird: { label: "Early Bird", emoji: "🐦", tier: "bronze", category: "Special", description: "Start a session before 10am" },
   globetrotter: { label: "Globetrotter", emoji: "🌍", tier: "gold", category: "Special", description: "Approach in 5 different locations" },
   consistent: { label: "Consistent", emoji: "📈", tier: "silver", category: "Special", description: "Approach every day for a week" },
   marathon: { label: "Marathon Man", emoji: "🏃", tier: "gold", category: "Special", description: "Complete a 2+ hour session" },
@@ -607,7 +613,6 @@ export const ALL_MILESTONES: Record&lt;string, MilestoneInfo&gt; = {
   seated_master: { label: "Seated Master", emoji: "🛋️", tier: "gold", category: "Unique Sets", description: "Approach 25 seated sets" },
   first_foreign: { label: "Lost in Translation", emoji: "🗣️", tier: "silver", category: "Unique Sets", description: "Approach someone speaking a different language" },
   polyglot: { label: "Polyglot", emoji: "🌐", tier: "gold", category: "Unique Sets", description: "Approach girls speaking 5 different languages" },
-  first_celebrity: { label: "Star Struck", emoji: "⭐", tier: "gold", category: "Unique Sets", description: "Approach someone with model/celebrity vibes" },
   // Big milestones
   "2000_approaches": { label: "Approach God", emoji: "⚡", tier: "diamond", category: "Approaches", description: "Complete 2,000 approaches" },
   "5000_approaches": { label: "Living Legend", emoji: "🌟", tier: "diamond", category: "Approaches", description: "Complete 5,000 approaches" },
@@ -617,14 +622,21 @@ export const ALL_MILESTONES: Record&lt;string, MilestoneInfo&gt; = {
   "7_day_streak": { label: "Week Warrior", emoji: "📆", tier: "bronze", category: "Streaks", description: "7 consecutive days approaching" },
   "30_day_streak": { label: "Month Master", emoji: "🗓️", tier: "silver", category: "Streaks", description: "30 consecutive days approaching" },
   "100_day_streak": { label: "Century Streak", emoji: "💯", tier: "gold", category: "Streaks", description: "100 consecutive days approaching" },
-}
+} as const satisfies Record&lt;string, MilestoneInfo&gt;
+&nbsp;
+/**
+ * MilestoneType is derived from ALL_MILESTONES keys.
+ * This is the single source of truth - add/remove milestones from ALL_MILESTONES only.
+ */
+export type MilestoneType = keyof typeof ALL_MILESTONES
 &nbsp;
 // ============================================
 // Helper Functions
 // ============================================
 &nbsp;
 export function getMilestoneInfo(type: string): MilestoneInfo {
-  return ALL_MILESTONES[type] || { label: type, emoji: "🏅", tier: "bronze", category: "Other", description: "Achievement unlocked" }
+  // Cast needed because ALL_MILESTONES is const - graceful fallback for unknown/orphaned types
+  return (ALL_MILESTONES as Record&lt;string, MilestoneInfo&gt;)[type] || { label: type, emoji: "🏅", tier: "bronze", category: "Other", description: "Achievement unlocked" }
 }
 &nbsp;
 export function getTierColor(tier: MilestoneTier): string {
@@ -667,7 +679,7 @@ export function getAllTiers(): Set&lt;MilestoneTier&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-02T05:30:18.436Z
+                at 2026-02-06T06:30:14.490Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -76,11 +76,13 @@ async function listArticles(articlesDir: string) {
     }
 
     const drafts = files
-      .filter((f) => f.match(/^draft\d+\.md$/))
+      .filter((f) => f.match(/^draft\d+(_\w+)?\.md$/))
       .sort((a, b) => {
         const numA = parseInt(a.match(/\d+/)?.[0] || "0")
         const numB = parseInt(b.match(/\d+/)?.[0] || "0")
-        return numA - numB
+        if (numA !== numB) return numA - numB
+        // Same version number, sort by suffix (no suffix first)
+        return a.localeCompare(b)
       })
 
     const feedbacks = files
@@ -115,11 +117,13 @@ async function getArticleDetails(articlesDir: string, articleId: string) {
   }
 
   const drafts = files
-    .filter((f) => f.match(/^draft\d+\.md$/))
+    .filter((f) => f.match(/^draft\d+(_\w+)?\.md$/))
     .sort((a, b) => {
       const numA = parseInt(a.match(/\d+/)?.[0] || "0")
       const numB = parseInt(b.match(/\d+/)?.[0] || "0")
-      return numA - numB
+      if (numA !== numB) return numA - numB
+      // Same version number, sort by suffix (no suffix first)
+      return a.localeCompare(b)
     })
 
   const feedbacks = files.filter((f) => f.match(/^feedback\d+\.json$/)).sort()
@@ -138,7 +142,31 @@ async function getDraftContent(
   draftVersion: string
 ) {
   const folderPath = path.join(articlesDir, articleId)
-  const draftPath = path.join(folderPath, `draft${draftVersion}.md`)
+
+  // draftVersion can be a number (e.g., "8") or full filename (e.g., "draft8_edwin")
+  let draftPath: string
+  let actualFilename: string
+
+  if (draftVersion.startsWith("draft")) {
+    // Full filename passed (without .md extension)
+    actualFilename = draftVersion + ".md"
+    draftPath = path.join(folderPath, actualFilename)
+  } else {
+    // Version number passed - search for matching file
+    const files = await readdir(folderPath)
+    const matchingDrafts = files.filter(f => {
+      const match = f.match(/^draft(\d+)(_\w+)?\.md$/)
+      return match && match[1] === draftVersion
+    })
+
+    if (matchingDrafts.length === 0) {
+      throw new Error(`Draft version ${draftVersion} not found`)
+    }
+
+    // Prefer exact match (draftN.md) over suffixed (draftN_author.md)
+    actualFilename = matchingDrafts.find(f => f === `draft${draftVersion}.md`) || matchingDrafts[0]
+    draftPath = path.join(folderPath, actualFilename)
+  }
 
   // Read draft content
   const draftContent = await readFile(draftPath, "utf-8")

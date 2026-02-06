@@ -69,6 +69,9 @@ LOG_PREFIX = "[06c.patch]"
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
 
+# Confidence threshold: only auto-apply high-confidence misattribution fixes
+MIN_MISATTRIBUTION_CONFIDENCE = 0.7
+
 
 # ---------------------------
 # State Management
@@ -129,6 +132,7 @@ def apply_patches(
         current_role = entry.get("current_role")
         suggested_role = entry.get("suggested_role")
         evidence = entry.get("evidence", "")
+        confidence = entry.get("confidence", 1.0)  # Default 1.0 for backwards compat
 
         if seg_id is None or suggested_role is None:
             flags_not_fixed.append(
@@ -151,12 +155,21 @@ def apply_patches(
             )
             continue
 
+        if confidence < MIN_MISATTRIBUTION_CONFIDENCE:
+            flags_not_fixed.append(
+                f"misattribution: segment {seg_id} confidence {confidence:.0%} below threshold — skipping"
+            )
+            continue
+
         old_role = seg["speaker_role"]
+        old_override = seg.get("speaker_role_override")
         seg["speaker_role"] = suggested_role
+        if old_override is not None:
+            seg["speaker_role_override"] = suggested_role
         fixes_applied.append({
             "segment_id": seg_id,
-            "field": "speaker_role",
-            "old": old_role,
+            "field": "speaker_role" + ("+speaker_role_override" if old_override else ""),
+            "old": f"role={old_role}" + (f", override={old_override}" if old_override else ""),
             "new": suggested_role,
             "source": "misattribution",
             "evidence": evidence[:200],

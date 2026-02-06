@@ -1,4 +1,5 @@
 @import "tailwindcss" source(none);
+@plugin "@tailwindcss/typography";
 
 @source "./**/*.{js,ts,jsx,tsx}";
 @source "../src/**/*.{js,ts,jsx,tsx}";
@@ -126,6 +127,14 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /* Ensure bold text is visible even inside italics */
+  strong, b {
+    font-weight: 700 !important;
+  }
+  em strong, em b {
+    font-weight: 700 !important;
+    font-style: italic;
   }
 }
 

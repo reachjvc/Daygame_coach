@@ -1,8 +1,8 @@
 # Daily & Weekly Review Research Document
 **Status:** Research Complete (Expanded)
-**Updated:** 05-02-2026
-**Version:** 3.0 — Added 4 new research domains (#27-#30) for extreme user types (attachment/heartbreak, high performers, neurodivergent, clinical safety), expanded S2/S3, added 5 new templates, cultural humility note
-**Research Domains:** 30 (20 original + 6 from v2.0 + 4 from v3.0)
+**Updated:** 06-02-2026
+**Version:** 4.0 — Added motivation type variations (#31) covering McClelland's motivation types, approach/avoidance, mastery/performance goals, passion types, curiosity, self-concordance
+**Research Domains:** 31 (20 original + 6 from v2.0 + 4 from v3.0 + 1 from v4.0)
 **Companion to:** `docs/research/FIELD_REPORTS/full_research_doc_field_reports.md`
 
 ## Objective
@@ -1453,6 +1453,81 @@ When all three needs are satisfied, intrinsic motivation flourishes. When any is
 
 ---
 
+### 31. Motivation Type Variations
+
+**Sources:** McClelland, D.C. (1987) *Human Motivation*, Cambridge University Press; Elliot, A.J. & Harackiewicz, J.M. (1996) approach and avoidance achievement goals, *JPSP*; Dweck, C.S. (1986) motivational processes affecting learning, *American Psychologist*; Vallerand, R.J. et al. (2003) dualistic model of passion, *JPSP*; Loewenstein, G. (1994) psychology of curiosity, *Psychological Bulletin*; Kashdan, T.B. et al. (2018) five-dimensional curiosity scale, *JPSP*; Sheldon, K.M. & Elliot, A.J. (1999) goal striving and need satisfaction, *JPSP*.
+
+#### Key Findings
+
+**Murray/McClelland's Three Motivation Types:**
+- **Achievement motivation (nAch)**: Driven by accomplishment, mastery, excellence. These users want to improve skills, hit metrics, see tangible progress. They respond well to concrete goals, measurable outcomes, and competence-tracking prompts.
+- **Affiliation motivation (nAff)**: Driven by connection, belonging, relationships. These users care more about social bonds than personal achievement. "How many approaches?" matters less than "How connected did I feel?" They may feel alienated by purely achievement-focused metrics.
+- **Power motivation (nPow)**: Driven by influence, status, impact. These users want to affect others, lead, be respected. Success metrics include social proof, perceived status, and influence over outcomes.
+- Key insight: Standard review prompts assume achievement motivation. Telling an affiliation-motivated person "You achieved X this week" misses their actual satisfaction source (connection). Different motivation profiles need fundamentally different success definitions and review prompts.
+
+**Approach vs. Avoidance Motivation (Elliot):**
+- **Approach motivation**: Moving toward positive outcomes — "I want to get better," "I want to connect with interesting people," "I want to feel confident."
+- **Avoidance motivation**: Moving away from negative outcomes — "I don't want to be lonely," "I don't want to feel like a failure," "I don't want to regret not trying."
+- Effect on persistence: Approach motivation sustains effort through setbacks better; avoidance motivation creates anxiety and defensive processing.
+- Effect on learning: Approach orientation facilitates open exploration; avoidance orientation narrows attention to threats.
+- Review implication: Prompts can be framed in approach terms ("What did you move toward?") or avoidance terms ("What did you avoid that you shouldn't have?"). Match the user's default orientation initially, then gradually shift toward approach framing for long-term wellbeing.
+
+**Mastery vs. Performance Goals (Dweck, Elliot & Harackiewicz):**
+- **Mastery goals**: Focus on learning, improvement, skill development. "Am I getting better?" Success = growth, regardless of comparison to others.
+- **Performance goals**: Focus on demonstrating ability, comparison to others. "Am I better than others?" Success = favorable comparison.
+- Four-cell model:
+  - *Mastery-approach*: "I want to learn and improve" (healthiest for sustained engagement)
+  - *Mastery-avoidance*: "I don't want to lose my skills" (common in experts fearing decline)
+  - *Performance-approach*: "I want to outperform others" (can motivate but creates anxiety)
+  - *Performance-avoidance*: "I don't want to look incompetent" (most likely to quit after setbacks)
+- Response to failure: Mastery-oriented users interpret failure as feedback and persist; performance-oriented users interpret failure as evidence of inadequacy and may quit or avoid challenge.
+- Review implication: For mastery-oriented users, emphasize learning and skill trajectories. For performance-oriented users (who are common in competitive domains), gradually shift prompts toward mastery framing to build resilience.
+
+**Vallerand's Dualistic Model of Passion:**
+- **Harmonious passion**: Activity is integrated with identity but doesn't dominate it. Engagement is flexible and autonomous. Person can disengage without distress. Associated with positive outcomes: flow, positive affect, healthy relationships.
+- **Obsessive passion**: Activity controls the person, not vice versa. Engagement is rigid and compulsive. Person feels they *must* do it, experiences distress when prevented. Associated with negative outcomes: rumination, conflict, burnout, persistence even when harmful.
+- Warning signs of obsessive passion: Inability to take breaks without guilt/anxiety, relationship conflicts due to activity prioritization, continuing despite diminishing returns or harm, identity collapse when activity is unavailable.
+- The pursuit itself (dating, approaches, self-improvement) can become obsessive passion. The review system should detect this and not inadvertently feed it.
+- Review implication: Include prompts that check for healthy engagement vs. compulsion. "Could you take a week off without distress?" "Does this feel like choice or compulsion?" Watch for obsessive passion indicators and intervene with balance-oriented prompts.
+
+**Curiosity as Specific Intrinsic Motivation (Loewenstein, Kashdan):**
+- **Information gap theory**: Curiosity arises when we perceive a gap between what we know and what we want to know. Partial knowledge increases curiosity; complete ignorance or complete knowledge reduces it.
+- **Five dimensions of curiosity** (Kashdan): Joyous exploration (delight in new), deprivation sensitivity (need to reduce uncertainty), stress tolerance (willingness to embrace anxiety of unknown), social curiosity (interest in others), thrill seeking (willingness to take risks for novelty).
+- Different curiosity profiles need different prompts: High joyous exploration → "What surprised you?"; High deprivation sensitivity → "What questions do you still have?"; High social curiosity → "What did you learn about someone?"
+- Curiosity as review fuel: Prompts that spark curiosity ("What would happen if...?") drive engagement better than obligation prompts ("You should reflect on...").
+- Review implication: Leverage curiosity to drive reflection. Use information-gap framing ("What do you still not understand about what happened?"). Different curiosity profiles respond to different prompts.
+
+**Self-Concordance Theory (Sheldon & Elliot):**
+- Goals can be pursued for different reasons:
+  - *External*: "Others expect me to" — lowest concordance
+  - *Introjected*: "I'd feel guilty if I didn't" — low concordance
+  - *Identified*: "It's important to me personally" — high concordance
+  - *Intrinsic*: "I find it enjoyable and interesting" — highest concordance
+- Self-concordant goals → more effort invested → more likely to attain → more wellbeing from attainment.
+- Non-concordant goals → even successful attainment doesn't satisfy. "I did everything right but I still feel empty."
+- This explains why some users achieve their stated goals but remain dissatisfied: the goals weren't authentically theirs.
+- Review implication: Include self-concordance checks. "Why are you pursuing this? What would happen if you stopped?" Surface external vs. intrinsic motivation. Help users distinguish their authentic goals from introjected "shoulds."
+
+**Motivation Profile Stability vs. Change:**
+- Motivation types are relatively stable traits but can shift with intervention and context.
+- Life events can shift motivation: relationship loss may temporarily increase affiliation motivation; achievement may temporarily satisfy and shift focus elsewhere.
+- The review system should track motivation profile over time, not assume it's fixed.
+
+#### DESIGN_IMPLICATION
+- Add motivation type as a personalization dimension in S2: achievement/affiliation/power balance, approach/avoidance orientation, mastery/performance goal orientation
+- Create motivation-matched prompts:
+  - For nAch (achievement): "What skills improved?" "What metrics moved?" "What did you accomplish?"
+  - For nAff (affiliation): "Who did you connect with?" "What relationships deepened?" "Where did you feel belonging?"
+  - For nPow (power): "Where did you have impact?" "How did you influence outcomes?" "What respect did you earn?"
+- Approach vs. avoidance prompt variants: Default to approach framing ("What did you move toward?") but detect avoidance-oriented users and meet them where they are before shifting
+- Mastery vs. performance reframing: For performance-oriented users experiencing failure, explicitly reframe toward mastery ("What did this teach you?") to prevent dropout
+- Obsessive passion detection: If user shows compulsion indicators (guilt about breaks, rigid engagement, identity fusion), prompt for balance and flexibility. Don't inadvertently feed obsession with more tracking.
+- Curiosity-driven prompts: Use information-gap framing ("What questions emerged?"). Leverage specific curiosity dimensions based on user profile.
+- Self-concordance check (weekly/monthly): "Why are you doing this? Would you continue if no one was watching?" Help users distinguish authentic motivation from introjected shoulds.
+- Track motivation profile evolution over time — it's not static
+
+---
+
 ## Structural Design Sections
 
 ---
@@ -1580,6 +1655,24 @@ Layer 3: WEEKLY REVIEWS (pattern recognition, strategic)
 - Detected through: user-reported outcomes, goal achievement tracking, language patterns (purposelessness, "now what?")
 - See Section #28 for high performer psychology
 
+**8. Motivation Type (motivational)**
+| Type | Core Drive | Adaptation |
+|---|---|---|
+| Achievement (nAch) | Accomplishment, mastery, excellence | Metrics-focused prompts, skill tracking, competence emphasis |
+| Affiliation (nAff) | Connection, belonging, relationships | Connection-focused prompts, relationship quality tracking, belonging emphasis |
+| Power (nPow) | Influence, status, impact | Impact-focused prompts, social proof tracking, influence emphasis |
+
+| Orientation | Pattern | Adaptation |
+|---|---|---|
+| Approach | Moving toward positive outcomes | "What did you move toward?" framing, growth emphasis |
+| Avoidance | Moving away from negative outcomes | Meet where they are, gradually shift toward approach framing |
+| Mastery | Focus on learning and improvement | Learning-focused prompts, process over outcome |
+| Performance | Focus on comparison to others | Acknowledge but reframe toward mastery after setbacks |
+
+- Detected through: onboarding assessment, behavioral patterns (what prompts resonate, what gets skipped), language analysis (connection vs achievement language)
+- Watch for: obsessive passion indicators (compulsion, guilt about breaks, rigid engagement)
+- See Section #31 for detailed motivation type guidance
+
 #### Archetype Examples
 
 **"The Anxious Beginner"** (high neuroticism, newcomer, contemplation stage):
@@ -1631,6 +1724,22 @@ Layer 3: WEEKLY REVIEWS (pattern recognition, strategic)
 - Gratitude calibration prompts
 - Identity flexibility — not over-invested in achievement
 - Prompts for relationship quality alongside results
+
+**"The Affiliation-Driven Newcomer"** (nAff motivation, newcomer, approach orientation):
+- Connection-focused metrics over achievement metrics
+- "Who did you connect with?" over "How many approaches?"
+- Belonging and relationship quality prompts
+- Social support tracking as primary dimension
+- De-emphasize performance comparison
+- Frame progress in relational terms ("You're building connections")
+
+**"The Performance-Avoidant Staller"** (performance goals, avoidance orientation, developing):
+- High risk of dropout after setbacks (interprets failure as inadequacy)
+- Explicit mastery reframing: "What did you learn?" not "How did you compare?"
+- Validate fear of looking incompetent, then redirect
+- Gradual shift from performance to mastery framing
+- Lower stakes framing ("experiments" not "attempts")
+- Watch for avoidance behaviors and address directly
 
 #### Implementation Approach
 - Initial archetype detection through onboarding questionnaire (5-7 questions)
@@ -1826,7 +1935,7 @@ Every review should have:
 
 ## Synthesized Design Principles
 
-Drawing from all 30 research domains plus 4 structural sections, these are the cross-cutting principles that appeared consistently:
+Drawing from all 31 research domains plus 4 structural sections, these are the cross-cutting principles that appeared consistently:
 
 ### Principle 1: Observation Before Evaluation
 **Sources:** Contemplative practices (#13), Inner Game (#11), Time Perspective (#16), CBT (#5)
@@ -2010,7 +2119,7 @@ Add to Standard:
 
 ## Review Field Library
 
-All possible fields discovered across 30 research domains, categorized:
+All possible fields discovered across 31 research domains, categorized:
 
 ### State Check (REQUIRED PREAMBLE)
 | Field | Type | Source |
@@ -2089,6 +2198,11 @@ All possible fields discovered across 30 research domains, categorized:
 | Ethical reflection | "How did your actions affect others?" | High Performer (#28) |
 | Social connection trend | tracking social mentions over time | Clinical Safety (#30) |
 | Professional support prompt | "Would resources for extra support be helpful?" | Clinical Safety (#30) |
+| Motivation type check | achievement vs affiliation vs power emphasis this week | Motivation Types (#31) |
+| Approach/avoidance balance | "Moving toward or away from?" orientation | Motivation Types (#31) |
+| Mastery vs performance framing | "What did you learn?" vs "How did you compare?" | Motivation Types (#31) |
+| Obsessive passion check | "Could you take a break without distress?" | Motivation Types (#31) |
+| Curiosity-driven prompt | "What questions emerged this week?" | Motivation Types (#31) |
 
 ### Monthly/Quarterly (Deeper assessment)
 | Field | Type | Source |
@@ -2116,6 +2230,10 @@ All possible fields discovered across 30 research domains, categorized:
 | ND accommodation review | "What's working for how your brain works?" | Neurodivergent (#29) |
 | Strengths inventory (ND-affirming) | identify ND-related strengths, not just accommodations | Neurodivergent (#29) |
 | Review-harm audit | "Is this review system helping or hurting?" | Clinical Safety (#30) |
+| Motivation type assessment | nAch/nAff/nPow balance rating | Motivation Types (#31) |
+| Goal self-concordance check | "Why are you pursuing this? Would you continue if no one watched?" | Motivation Types (#31) |
+| Passion type indicator | harmonious vs obsessive engagement pattern | Motivation Types (#31) |
+| Motivation evolution tracking | how motivation profile has shifted over time | Motivation Types (#31) |
 
 ---
 
@@ -2305,6 +2423,11 @@ All possible fields discovered across 30 research domains, categorized:
 10. **RSD requires validation before reframe**: For users with ADHD experiencing rejection, always validate emotional intensity ("That sounds really painful") before any cognitive work.
 11. **Grief phase adapts heartbreak protocol**: Loss-orientation → soothing, no analysis; restoration-orientation → gentle forward-looking prompts.
 12. **Alexithymia bypasses emotion words**: Users who can't access emotions → sensation-based or pattern-based prompts, never force emotional labeling.
+13. **Motivation type selects prompt framing**: Achievement-motivated → metrics/skills focus; affiliation-motivated → connection/belonging focus; power-motivated → impact/influence focus.
+14. **Approach/avoidance matches user orientation**: Default to approach framing ("What did you move toward?"), but meet avoidance-oriented users where they are before gradually shifting.
+15. **Mastery reframe after setbacks**: For performance-oriented users experiencing failure, explicitly reframe toward mastery ("What did this teach you?") to prevent dropout.
+16. **Obsessive passion detection triggers balance prompts**: If user shows compulsion indicators (guilt about breaks, rigid engagement), prompt for flexibility and alternative activities.
+17. **Self-concordance check in goal-setting**: Monthly prompts to verify goals are authentically chosen ("Would you continue if no one watched?") — non-concordant goals don't satisfy even when achieved.
 
 ---
 
@@ -2506,9 +2629,22 @@ All possible fields discovered across 30 research domains, categorized:
 - Jobes, D.A. (2016). *Managing Suicidal Risk: A Collaborative Approach*, 2nd ed. Guilford Press.
 - International Coaching Federation. *ICF Code of Ethics* — Coaching vs. therapy scope distinctions.
 
+**Motivation Type Variations (New Section #31):**
+- McClelland, D.C. (1987). *Human Motivation*. Cambridge University Press.
+- Murray, H.A. (1938). *Explorations in Personality*. Oxford University Press.
+- Elliot, A.J. & Harackiewicz, J.M. (1996). Approach and avoidance achievement goals and intrinsic motivation. *JPSP*, 70(3), 461-475.
+- Elliot, A.J. & McGregor, H.A. (2001). A 2 × 2 achievement goal framework. *JPSP*, 80(3), 501-519.
+- Dweck, C.S. (1986). Motivational processes affecting learning. *American Psychologist*, 41(10), 1040-1048.
+- Dweck, C.S. & Leggett, E.L. (1988). A social-cognitive approach to motivation and personality. *Psychological Review*, 95(2), 256-273.
+- Vallerand, R.J. et al. (2003). Les passions de l'âme: On obsessive and harmonious passion. *JPSP*, 85(4), 756-767.
+- Vallerand, R.J. (2015). *The Psychology of Passion: A Dualistic Model*. Oxford University Press.
+- Loewenstein, G. (1994). The psychology of curiosity: A review and reinterpretation. *Psychological Bulletin*, 116(1), 75-98.
+- Kashdan, T.B. et al. (2018). The five-dimensional curiosity scale: Capturing the bandwidth of curiosity. *JPSP*, 114(5), 681-695.
+- Sheldon, K.M. & Elliot, A.J. (1999). Goal striving, need satisfaction, and longitudinal well-being. *JPSP*, 76(3), 482-497.
+
 ---
 
-**Methodology note:** All 30 research domains (20 original + 6 from v2.0 + 4 from v3.0) were investigated using AI training knowledge (web search was unavailable during research). All cited studies are real and well-known in their fields. Exact statistics (effect sizes, sample sizes) should be verified against original papers before use in production. Directional findings and relative magnitudes are reliable.
+**Methodology note:** All 31 research domains (20 original + 6 from v2.0 + 4 from v3.0 + 1 from v4.0) were investigated using AI training knowledge (web search was unavailable during research). All cited studies are real and well-known in their fields. Exact statistics (effect sizes, sample sizes) should be verified against original papers before use in production. Directional findings and relative magnitudes are reliable.
 
 **Cultural humility note:** The research base underlying this document reflects significant biases that users and implementers should be aware of:
 
@@ -2639,3 +2775,55 @@ This research reflects its sources. Implementers should adapt frameworks for cul
 
 ### Cultural Humility Note
 Added acknowledgment of WEIRD bias, individualist framing, emotion vocabulary differences, expression norm variation, honor/shame culture considerations, and religious/spiritual frameworks.
+
+---
+
+## Version 4.0 Summary of Additions
+
+### New Research Section (1)
+| # | Section | Key Contribution |
+|---|---|---|
+| 31 | Motivation Type Variations | McClelland's nAch/nAff/nPow, approach/avoidance orientation, mastery/performance goals, harmonious/obsessive passion, curiosity dimensions, self-concordance |
+
+### Enhanced S2 Personalization
+- Added **Dimension #8: Motivation Type** with tables for:
+  - Achievement/Affiliation/Power motivation types
+  - Approach vs Avoidance orientation
+  - Mastery vs Performance goal framing
+- Added 2 new archetype examples:
+  - "The Affiliation-Driven Newcomer"
+  - "The Performance-Avoidant Staller"
+
+### New Template Adaptation Rules (5)
+| # | Rule |
+|---|---|
+| 13 | Motivation type selects prompt framing |
+| 14 | Approach/avoidance matches user orientation |
+| 15 | Mastery reframe after setbacks |
+| 16 | Obsessive passion detection triggers balance prompts |
+| 17 | Self-concordance check in goal-setting |
+
+### New Fields Added to Field Library
+**Weekly:**
+- Motivation type check
+- Approach/avoidance balance
+- Mastery vs performance framing
+- Obsessive passion check
+- Curiosity-driven prompt
+
+**Monthly/Quarterly:**
+- Motivation type assessment (nAch/nAff/nPow)
+- Goal self-concordance check
+- Passion type indicator
+- Motivation evolution tracking
+
+### New Sources Added
+- McClelland (Human Motivation)
+- Murray (Explorations in Personality)
+- Elliot & Harackiewicz (approach/avoidance achievement goals)
+- Elliot & McGregor (2×2 achievement goal framework)
+- Dweck (motivational processes, goal orientation)
+- Vallerand (dualistic model of passion)
+- Loewenstein (psychology of curiosity)
+- Kashdan (five-dimensional curiosity scale)
+- Sheldon & Elliot (self-concordance)
