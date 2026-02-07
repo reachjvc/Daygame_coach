@@ -103,7 +103,8 @@ These don’t require human labels, but they catch regressions:
 
 Pick one (or both):
 1. **Gold labels (best):** a small set of approaches where you agree the correct techniques/topics/phases are known.
-2. **LLM judge (fast):** a rubric-scoring script that grades Stage 07 output against transcript + taxonomy, with caching.
+2. **LLM judge (fast):** a rubric-scoring script that grades Stage 07 output against transcript + taxonomy, with caching:
+   - `python3 scripts/training-data/validation/semantic_judge.py --manifest docs/pipeline/batches/CANARY.1.txt --n 5 --seed 1`
 
 Goal: keep semantic evaluation small (canary + holdout), and only expand once it’s stable.
 
