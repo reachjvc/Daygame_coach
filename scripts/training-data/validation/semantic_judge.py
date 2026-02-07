@@ -367,6 +367,12 @@ def main() -> None:
     parser.add_argument("--batch-id", help="Batch id for caching/output directory (defaults to manifest stem)")
     parser.add_argument("--n", type=int, default=5, help="Number of approach conversations to judge")
     parser.add_argument("--seed", type=int, default=1, help="Random seed")
+    parser.add_argument(
+        "--max-per-video",
+        type=int,
+        default=1,
+        help="Max conversations to judge per video (default: 1 to keep samples diverse)",
+    )
     parser.add_argument("--max-segments", type=int, default=120, help="Max transcript segments to include per conversation")
     parser.add_argument("--timeout", type=int, default=300, help="Claude timeout per judgement (seconds)")
     parser.add_argument("--no-write", action="store_true", help="Do not write judgement files")
@@ -422,7 +428,28 @@ def main() -> None:
 
     rnd = random.Random(args.seed)
     n = max(1, min(args.n, len(requests)))
-    sample = rnd.sample(requests, n)
+
+    # Sample with optional per-video cap to avoid over-weighting compilation videos.
+    shuffled = list(requests)
+    rnd.shuffle(shuffled)
+    picked: List[JudgementRequest] = []
+    per_vid: Dict[str, int] = {}
+    max_per_video = max(0, int(args.max_per_video))
+    for req in shuffled:
+        if len(picked) >= n:
+            break
+        if max_per_video > 0 and per_vid.get(req.video_id, 0) >= max_per_video:
+            continue
+        picked.append(req)
+        per_vid[req.video_id] = per_vid.get(req.video_id, 0) + 1
+
+    if len(picked) < n:
+        # If the cap was too strict for the requested n, fill the remainder without the cap.
+        remaining = [r for r in shuffled if r not in picked]
+        need = n - len(picked)
+        picked.extend(remaining[:need])
+
+    sample = picked
 
     out_dir = judgement_root(batch_id)
     if not args.no_write:

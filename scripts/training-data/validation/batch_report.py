@@ -238,10 +238,30 @@ def load_validation_files(source: Optional[str] = None) -> List[Dict]:
     return validations
 
 
+def load_semantic_judgements(batch_id: str, manifest_ids: Optional[Set[str]] = None) -> List[Dict[str, Any]]:
+    """Load semantic judge outputs from data/validation_judgements/<batch_id>/*.judge.json."""
+    root = repo_root() / "data" / "validation_judgements" / batch_id
+    if not root.exists():
+        return []
+    out: List[Dict[str, Any]] = []
+    for f in sorted(root.glob("*.judge.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        vid = data.get("video_id")
+        if manifest_ids and (not isinstance(vid, str) or vid not in manifest_ids):
+            continue
+        data["_source_file"] = str(f)
+        out.append(data)
+    return out
+
+
 def compute_batch_stats(
     conversations_files: List[Dict],
     enriched_files: List[Dict],
     validation_files: List[Dict],
+    semantic_judgements: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Compute aggregate statistics for a batch."""
 
@@ -463,6 +483,45 @@ def compute_batch_stats(
         },
     }
 
+    # --- Semantic judge statistics (optional) ---
+    if semantic_judgements:
+        overall_scores: List[int] = []
+        major_errors = 0
+        hallucinations = 0
+        dim_totals: Counter = Counter()
+        dim_counts: Counter = Counter()
+
+        for j in semantic_judgements:
+            scores = j.get("scores", {}) if isinstance(j.get("scores"), dict) else {}
+            try:
+                overall_scores.append(int(scores.get("overall_score_0_100", 0)))
+            except Exception:
+                pass
+            flags = j.get("flags", {}) if isinstance(j.get("flags"), dict) else {}
+            if flags.get("major_errors") is True:
+                major_errors += 1
+            if flags.get("hallucination_suspected") is True:
+                hallucinations += 1
+
+            for dim in ["technique_accuracy", "topic_accuracy", "phase_accuracy", "summary_quality", "overall_usefulness"]:
+                v = scores.get(dim)
+                if isinstance(v, (int, float)):
+                    dim_totals[dim] += float(v)
+                    dim_counts[dim] += 1
+
+        stats["semantic_judge"] = {
+            "total_judgements": len(semantic_judgements),
+            "mean_overall_score_0_100": (
+                sum(overall_scores) / max(len(overall_scores), 1) if overall_scores else 0
+            ),
+            "major_error_rate": major_errors / max(len(semantic_judgements), 1),
+            "hallucination_rate": hallucinations / max(len(semantic_judgements), 1),
+            "mean_dimension_scores_0_5": {
+                dim: (dim_totals[dim] / dim_counts[dim]) if dim_counts[dim] else 0
+                for dim in ["technique_accuracy", "topic_accuracy", "phase_accuracy", "summary_quality", "overall_usefulness"]
+            },
+        }
+
     return stats
 
 
@@ -636,8 +695,15 @@ def main() -> None:
         print(f"{LOG_PREFIX} No data found to report on")
         sys.exit(0)
 
+    semantic_judgements = load_semantic_judgements(args.batch_id, manifest_ids if manifest_ids else None)
+
     # Compute statistics
-    stats = compute_batch_stats(conversations_files, enriched_files, validation_files)
+    stats = compute_batch_stats(
+        conversations_files,
+        enriched_files,
+        validation_files,
+        semantic_judgements=semantic_judgements,
+    )
 
     # Compare with prior batches
     drift_flags = []
@@ -668,6 +734,7 @@ def main() -> None:
         s06 = stats.get("stage_06", {})
         s07 = stats.get("stage_07", {})
         val = stats.get("validation", {})
+        sem = stats.get("semantic_judge", {})
 
         print(f"\n{LOG_PREFIX} Batch Report: {args.batch_id}")
         print(f"{'='*60}")
@@ -730,6 +797,16 @@ def main() -> None:
             print(f"\nDrift Detection:")
             for flag in drift_flags:
                 print(f"  [{flag.get('check')}] {flag.get('message')}")
+
+        if sem:
+            print(f"\nSemantic Judge (sampled):")
+            print(f"  Total judgements:        {sem.get('total_judgements', 0)}")
+            print(f"  Mean overall score:      {sem.get('mean_overall_score_0_100', 0):.1f} / 100")
+            print(f"  Major error rate:        {sem.get('major_error_rate', 0):.1%}")
+            print(f"  Hallucination rate:      {sem.get('hallucination_rate', 0):.1%}")
+            dims = sem.get('mean_dimension_scores_0_5', {})
+            if dims:
+                print(f"  Mean dimension scores:   {dims}")
 
 
 if __name__ == "__main__":
