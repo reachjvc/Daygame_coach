@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 LOG_PREFIX = "[07.content]"
 
 PROMPT_VERSION = "1.2.0"  # v1.2: Stricter taxonomy enforcement, close phase clarification
-PIPELINE_VERSION = "07.content-v1.2"  # v1.2: Robust 06b verification discovery + optional FLAG-allowed gate
+PIPELINE_VERSION = "07.content-v1.3"  # v1.3: Include seg_id hints for transcript-quality indexing; v1.2: robust 06b gate
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -753,10 +753,11 @@ def build_infield_prompt(
         segs = block["segments"]
         turns = []
         for j, seg in enumerate(segs):
+            seg_id = seg.get("id", j)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
             if text:
-                turns.append(f"  [{j}] {speaker.upper()}: {text}")
+                turns.append(f"  [{j}] (seg_id={seg_id}) {speaker.upper()}: {text}")
 
         if turns:
             content_items.append({
@@ -776,9 +777,10 @@ End: {block['end']:.1f}s
         segments = conversations[conv_id]
         turns = []
         for i, seg in enumerate(segments):
+            seg_id = seg.get("id", i)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
-            turns.append(f"  [{i}] {speaker.upper()}: {text}")
+            turns.append(f"  [{i}] (seg_id={seg_id}) {speaker.upper()}: {text}")
 
         content_items.append({
             "sort_key": segments[0].get("start", 0),
@@ -879,10 +881,13 @@ Do NOT flag:
 - Foreign words/names that fit the context
 
 Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": N, "reason": "brief explanation of what seems wrong"}}
+{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
+IMPORTANT: SEG_ID must be the global segment id shown as (seg_id=...) in the transcript lines,
+NOT the per-conversation [0], [1], ... turn index.
 
 Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+IMPORTANT: segment_index is also the global seg_id (despite the name).
 
 Return empty arrays if transcript quality is good.
 
@@ -958,10 +963,11 @@ def build_talking_head_prompt(segments: List[Dict], video_id: str) -> str:
     # Format full transcript
     turns = []
     for i, seg in enumerate(segments):
+        seg_id = seg.get("id", i)
         speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
         text = seg.get("text", "").strip()
         if text:
-            turns.append(f"  [{i}] {speaker.upper()}: {text}")
+            turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
 
     transcript = chr(10).join(turns)
 
@@ -988,8 +994,8 @@ FOR EACH SECTION, analyze:
 1. SECTION INDEX: Sequential starting at 1
 2. TYPE: "talking_head_section"
 3. DESCRIPTION: Concise 10-20 word summary of what the coach is teaching
-4. START SEGMENT: Index of first segment in this section
-5. END SEGMENT: Index of last segment in this section
+4. START SEGMENT: Global segment id (seg_id) of first segment in this section
+5. END SEGMENT: Global segment id (seg_id) of last segment in this section
 6. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only.
    CRITICAL: Only use technique names from the list above.
    If a technique is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
@@ -1015,10 +1021,12 @@ Do NOT flag:
 - Foreign words/names that fit the context
 
 Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": N, "reason": "brief explanation of what seems wrong"}}
+{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
+IMPORTANT: SEG_ID must match the global segment id shown in the transcript lines.
 
 Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+IMPORTANT: segment_index is the global seg_id (despite the name).
 
 Return empty arrays if transcript quality is good.
 
