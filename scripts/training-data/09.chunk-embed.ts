@@ -869,13 +869,36 @@ async function main() {
         }
       }
 
-      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg, idx) => ({
-        speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
-        text: seg.text ?? "",
-        start: seg.start,
-        end: seg.end,
-        phase: phaseMap.get(idx),
-      }))
+      // Stage 07 writes turn_phases[].segment as a global segments[].id (it remaps from
+      // conversation-local indices before writing). Older artifacts may still contain
+      // conversation-local indices, so we fall back to idx when the global id lookup fails.
+      let usedLocalPhaseIndex = false
+      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg, idx) => {
+        const globalSegId = seg.id
+        const globalPhase =
+          globalSegId !== undefined ? phaseMap.get(globalSegId) : undefined
+        const localPhase = phaseMap.get(idx)
+        const phase = globalPhase ?? localPhase
+
+        if (globalSegId !== undefined && globalPhase === undefined && localPhase !== undefined) {
+          usedLocalPhaseIndex = true
+        }
+
+        return {
+          speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
+          text: seg.text ?? "",
+          start: seg.start,
+          end: seg.end,
+          phase,
+        }
+      })
+
+      if (usedLocalPhaseIndex) {
+        console.warn(
+          `   ⚠️  turn_phases appears to use conversation-local indices for conv ${convId}; ` +
+            `expected global segments[].id (legacy Stage 07 artifact?)`
+        )
+      }
 
       const row: InteractionJsonlRow = {
         id: `approach_${convId}`,
