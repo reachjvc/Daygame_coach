@@ -54,7 +54,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.4"  # v1.4: Enforce structured fix fields for 06c auto-patching
+PIPELINE_VERSION = "06b.verify-v1.5"  # v1.5: Remove non-schema role values (e.g., "mixed") from patch suggestions
 
 DEBUG_MODE = False
 
@@ -229,7 +229,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose like "should be coach")
+   - "suggested_role": one of "coach", "target", "other", "voiceover" (NOT prose like "should be coach")
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
@@ -309,7 +309,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose)
+   - "suggested_role": one of "coach", "target", "other", "voiceover" (NOT prose)
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
