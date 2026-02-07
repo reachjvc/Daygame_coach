@@ -157,8 +157,8 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.2.0"  # v1.2: Stricter taxonomy enforcement, close phase clarification
-PIPELINE_VERSION = "07.content-v1.3"  # v1.3: Include seg_id hints for transcript-quality indexing; v1.2: robust 06b gate
+PROMPT_VERSION = "1.2.1"  # v1.2.1: Stronger post_hook dependency rules for hook_point/investment_level
+PIPELINE_VERSION = "07.content-v1.4"  # v1.4: Normalize LLM drift on hook_point/investment_level when post_hook missing
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -213,6 +213,158 @@ def fuzzy_evidence_match(evidence: str, transcript_text: str, threshold: float =
             return True
 
     return best_ratio >= threshold
+
+
+def normalize_enrichments(enrichments: List[Dict[str, Any]]) -> List[str]:
+    """Normalize known LLM drift patterns before validation.
+
+    Keep this conservative: only coerce obviously-invalid combinations that
+    otherwise block the pipeline, and prefer dropping derived fields over
+    inventing missing structure.
+    """
+    repairs: List[str] = []
+    valid_topics = set(TOPIC_TAXONOMY.keys())
+    valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
+    topic_canon = {k.lower(): k for k in valid_topics}
+    technique_canon = {k.lower(): k for k in valid_techniques}
+
+    for i, e in enumerate(enrichments):
+        if not isinstance(e, dict):
+            repairs.append(f"enrichment {i}: non-dict entry ignored")
+            continue
+
+        # Ensure unlisted_concepts is present and writable
+        unlisted = e.get("unlisted_concepts")
+        if not isinstance(unlisted, dict):
+            unlisted = {}
+        unlisted_techniques = unlisted.get("techniques")
+        if not isinstance(unlisted_techniques, list):
+            unlisted_techniques = []
+        unlisted_topics = unlisted.get("topics")
+        if not isinstance(unlisted_topics, list):
+            unlisted_topics = []
+        unlisted["techniques"] = unlisted_techniques
+        unlisted["topics"] = unlisted_topics
+        e["unlisted_concepts"] = unlisted
+
+        # Normalize topics_discussed: keep only taxonomy entries; auto-move invalid ones to unlisted_concepts.
+        topics_discussed = e.get("topics_discussed")
+        if topics_discussed is not None and not isinstance(topics_discussed, list):
+            repairs.append(f"enrichment {i}: topics_discussed not a list -> []")
+            topics_discussed = []
+            e["topics_discussed"] = topics_discussed
+        if isinstance(topics_discussed, list):
+            normalized_topics: List[str] = []
+            for t in topics_discussed:
+                if not isinstance(t, str):
+                    continue
+                raw = t.strip()
+                if not raw:
+                    continue
+                canon = topic_canon.get(raw.lower())
+                if canon:
+                    normalized_topics.append(canon)
+                else:
+                    unlisted_topics.append(
+                        f"{raw}: auto-moved from topics_discussed (not in taxonomy)"
+                    )
+                    repairs.append(
+                        f"enrichment {i}: invalid topic '{raw}' moved to unlisted_concepts"
+                    )
+            e["topics_discussed"] = normalized_topics
+
+        def normalize_technique_list(field_name: str) -> None:
+            items = e.get(field_name)
+            if items is None:
+                return
+            if not isinstance(items, list):
+                repairs.append(f"enrichment {i}: {field_name} not a list -> []")
+                e[field_name] = []
+                return
+
+            kept: List[Dict[str, Any]] = []
+            for item in items:
+                if not isinstance(item, dict):
+                    continue
+                tech_name = item.get("technique")
+                if not isinstance(tech_name, str) or not tech_name.strip():
+                    kept.append(item)
+                    continue
+
+                raw = tech_name.strip()
+                canon = technique_canon.get(raw.lower())
+                if canon:
+                    if raw != canon:
+                        repairs.append(
+                            f"enrichment {i}: normalized technique '{raw}' -> '{canon}'"
+                        )
+                        item["technique"] = canon
+                    kept.append(item)
+                    continue
+
+                unlisted_techniques.append(
+                    f"{raw}: auto-moved from {field_name} (not in taxonomy)"
+                )
+                repairs.append(
+                    f"enrichment {i}: invalid technique '{raw}' moved to unlisted_concepts"
+                )
+                # Drop invalid technique entry
+
+            e[field_name] = kept
+
+        normalize_technique_list("techniques_used")
+        normalize_technique_list("techniques_discussed")
+
+        if e.get("type") != "approach":
+            continue
+
+        # Normalize empty-ish fields
+        if e.get("hook_point") in ("", {}, []):
+            e["hook_point"] = None
+        if e.get("investment_level") in ("", {}, []):
+            e["investment_level"] = None
+
+        turn_phases = e.get("turn_phases")
+        if turn_phases is None:
+            e["turn_phases"] = []
+            turn_phases = e["turn_phases"]
+        elif not isinstance(turn_phases, list):
+            repairs.append(
+                f"conv {e.get('conversation_id', '?')}: turn_phases not a list -> []"
+            )
+            e["turn_phases"] = []
+            turn_phases = e["turn_phases"]
+
+        phases_present = {
+            tp.get("phase")
+            for tp in turn_phases
+            if isinstance(tp, dict) and tp.get("phase")
+        }
+
+        # hook_point + investment_level are only meaningful if post_hook is reached.
+        if "post_hook" not in phases_present:
+            cleared = False
+            if e.get("hook_point") is not None:
+                e["hook_point"] = None
+                cleared = True
+            if e.get("investment_level") is not None:
+                e["investment_level"] = None
+                cleared = True
+            if cleared:
+                repairs.append(
+                    f"conv {e.get('conversation_id', '?')}: cleared hook_point/investment_level (no post_hook phase)"
+                )
+            continue
+
+        # Enforce investment_level vocabulary when post_hook exists.
+        inv = e.get("investment_level")
+        if inv not in (None, "low", "medium", "high"):
+            repairs.append(
+                f"conv {e.get('conversation_id', '?')}: invalid investment_level {inv!r} -> null"
+            )
+            e["investment_level"] = None
+
+    return repairs
 
 
 def validate_enrichment_output(
@@ -848,7 +1000,10 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
    - Use the segment index [0], [1], etc. to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
-   Provide a brief "signal". If no hook point, set to null.
+   Provide a brief "signal".
+   IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
+   If no post_hook phase is present, set hook_point to null and investment_level to null.
+   If no hook point, set to null.
 8. INVESTMENT LEVEL: "low"/"medium"/"high" if post_hook reached, else null.
    - "low": Barely crossed — asked one polite question back, still mostly reactive
    - "medium": Engaged, asking questions, responsive, but he's still somewhat leading
@@ -1220,15 +1375,6 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
-    # Collect unlisted concepts across all enrichments
-    all_unlisted_techniques: List[str] = []
-    all_unlisted_topics: List[str] = []
-    for e in enrichments:
-        unlisted = e.get("unlisted_concepts", {})
-        if isinstance(unlisted, dict):
-            all_unlisted_techniques.extend(unlisted.get("techniques", []))
-            all_unlisted_topics.extend(unlisted.get("topics", []))
-
     # Categorize enrichments by type
     approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
     commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
@@ -1242,6 +1388,21 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     add_phase_confidence_to_enrichments(
         enrichments, conversations, low_quality_segments, speaker_labels
     )
+
+    normalization_repairs = normalize_enrichments(enrichments)
+    if normalization_repairs:
+        preview = "; ".join(normalization_repairs[:3])
+        suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
+        print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
+
+    # Collect unlisted concepts across all enrichments (post-normalization).
+    all_unlisted_techniques: List[str] = []
+    all_unlisted_topics: List[str] = []
+    for e in enrichments:
+        unlisted = e.get("unlisted_concepts", {})
+        if isinstance(unlisted, dict):
+            all_unlisted_techniques.extend(unlisted.get("techniques", []) or [])
+            all_unlisted_topics.extend(unlisted.get("topics", []) or [])
 
     # Collect all techniques (from both techniques_used and techniques_discussed)
     all_techniques = set()
@@ -1279,6 +1440,9 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
             "upstream_verification_verdict": upstream_patch.get("verification_verdict"),
             "upstream_fixes_applied": upstream_patch.get("fixes_applied_count", 0),
             "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
+            # LLM drift normalization (best-effort repairs) applied before validation.
+            "normalization_repairs_count": len(normalization_repairs),
+            "normalization_repairs_preview": normalization_repairs[:5],
         },
         "video_id": video_id,
         "video_type": data.get("video_type"),
