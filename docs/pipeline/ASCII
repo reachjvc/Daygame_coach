@@ -58,6 +58,15 @@
 |  + boundary detection    |    transition
 |  in single pass          |    conversation_id: 1,2,3...
 |                          |
+|  Transcript quality:     |    transcript_confidence:
+|   LLM assesses overall   |    score: 1-100
+|   transcript coherence   |    reasoning: "..."
+|                          |
+|  Teaser detection:       |    is_teaser: true
+|   Identifies intro       |    teaser_of_conversation_id
+|   previews that repeat   |    Stage 09 skips these
+|   later in video         |
+|                          |
 |  Also fixes diarization  |    Catches pyannote errors
 |  errors using context    |    via semantic understanding
 +--------------------------+
@@ -122,18 +131,64 @@
              |  data/07.content/.../*.enriched.json
              v
 +--------------------------+
-|    08. INGEST            |    Ollama embeddings
-|                          |    -> Supabase pgvector
-|  Approach chunks:        |
-|   Phase-based chunking   |    segmentType=INTERACTION
-|   with metadata          |    isRealExample=true
+|  08. TAXONOMY VALIDATION |    No LLM — pure aggregation
 |                          |
-|  Commentary chunks:      |    segmentType=COMMENTARY
-|   Simple text chunking   |    isRealExample=false
-|   + video_type metadata  |
+|  QUALITY GATE            |    Reads all enriched JSON
+|                          |    from data/07.content/
+|  Validates taxonomy      |
+|  coverage before prep    |    Exit code 0 = PASS
+|                          |    Exit code 1 = FAIL
+|  Blocks on high-freq     |
+|  unlisted concepts       |    --threshold N (default 3)
+|  (>= threshold)          |    --strict (any unlisted)
 |                          |
-|  Incremental: skips      |    technique, topic, phase,
-|  unchanged sources       |    convo_id metadata
+|  Reports:                |    data/08.taxonomy-validation/
+|   - unlisted techniques  |    report.json
+|   - unlisted topics      |
+|   - recommendation       |
++--------------------------+
+             |
+             |  data/08.taxonomy-validation/report.json
+             |  (exits 1 if high-frequency unlisted found)
+             v
++--------------------------+
+|  09. CHUNK & EMBED       |    Ollama embeddings
+|                          |    (no DB writes)
+|  Transforms enriched     |
+|  content into chunks     |    Outputs JSON files
+|  with embeddings         |
+|                          |
+|  Approach chunks:        |    Hybrid phase-based:
+|   Phase-based chunking   |    - merge tiny (<100 chars)
+|   with metadata          |    - split huge (>2000 chars)
+|                          |    segmentType=INTERACTION
+|  Commentary chunks:      |    isRealExample=true
+|   Simple text chunking   |
+|   + video_type metadata  |    segmentType=COMMENTARY
+|                          |    isRealExample=false
+|  Parent references:      |
+|   videoId (MD5 hash)     |    Enables sibling fetch:
+|   videoType, channel     |    "get full conversation"
+|   conversationId         |
+|                          |
+|  Incremental: skips      |    Hash-based change
+|  unchanged sources       |    detection
++--------------------------+
+             |
+             |  data/09.chunks/<source>/<video>.chunks.json
+             |  data/09.chunks/.chunk_state.json
+             v
++--------------------------+
+|  10. INGEST              |    Supabase pgvector
+|                          |    (DB writes only)
+|  Reads chunk files       |
+|  from Stage 09           |    Reads .chunks.json
+|                          |
+|  Inserts embeddings      |    deleteEmbeddingsBySource
+|  into Supabase           |    storeEmbeddings
+|                          |
+|  Incremental: skips      |    Hash-based change
+|  unchanged chunks        |    detection
 +--------------------------+
              |
              v
@@ -144,16 +199,33 @@
    RAG-powered Q&A chatbot
 
 
-=== POST-PIPELINE ===
+=== END GOAL: SMART RAG RETRIEVAL ===
+
+Current: Vector similarity on dialogue text only.
+Target:  Metadata-aware retrieval + query understanding.
 
 +--------------------------+
-|  09. TAXONOMY REPORT     |    No LLM — pure aggregation
+|  QUERY TIME FLOW         |
+|  (future enhancement)    |
 |                          |
-|  Reads all enriched JSON |    Reports unlisted concept
-|  from data/07.content/   |    frequency across videos
-|                          |
-|  Identifies taxonomy     |    Recommends additions
-|  gaps: techniques and    |    for concepts with 3+
-|  topics the LLM flagged  |    occurrences
-|  as unlisted             |
+|  User question           |
+|       ↓                  |
+|  LLM query parsing       |    Extract intent:
+|  "she studies medicine"  |    {topic: career,
+|       ↓                  |     keyword: medicine}
+|  Metadata filter         |    WHERE topics ? 'career'
+|  + Vector search         |    AND content ~ 'medicine'
+|       ↓                  |    ORDER BY similarity
+|  Top chunks + metadata   |
+|       ↓                  |
+|  Claude sees:            |    [TECHNIQUE: qualification]
+|  enriched context        |    [TOPIC: career]
 +--------------------------+
+
+REQUIRES (in order):
+1. [ ] Wire metadata filters in retrieval.ts
+2. [ ] Add query parsing (rules → LLM)
+3. [ ] Re-embed with metadata prefix (Stage 09)
+4. [ ] Show metadata to Claude in prompt
+
+See: docs/pipeline/claude_automation.md

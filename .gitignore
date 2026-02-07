@@ -41,6 +41,7 @@ next-env.d.ts
 
 # Training data (large local assets)
 /data
+/batch-views
 training-data
 training-data/**
 !training-data/

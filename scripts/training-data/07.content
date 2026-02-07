@@ -61,6 +61,18 @@ from pipeline_manifest import load_manifest, load_manifest_sources, manifest_fil
 
 
 # ---------------------------
+# Claude CLI Binary Paths (for VS Code extension and system installs)
+# ---------------------------
+
+CLAUDE_BINARY_PATHS = [
+    "claude",
+    Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    "/usr/local/bin/claude",
+]
+
+
+# ---------------------------
 # Technique and Topic Taxonomies (synced with STAGE_07_content.md)
 # ---------------------------
 
@@ -145,7 +157,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.1.0"
+PROMPT_VERSION = "1.2.0"  # v1.2: Stricter taxonomy enforcement, close phase clarification
 PIPELINE_VERSION = "07.content-v1.1"  # v1.1: Fixed cross-ref to use segments, added upstream patch metadata
 
 # Failure budget
@@ -462,12 +474,34 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
     state_path.write_text(json.dumps(asdict(state), indent=2))
 
 
+def find_claude_binary() -> Optional[str]:
+    """Find Claude CLI binary in known locations."""
+    for path in CLAUDE_BINARY_PATHS:
+        path = Path(path)
+        if path.exists() and path.is_file():
+            return str(path)
+        if str(path) == "claude":
+            try:
+                result = subprocess.run(["which", "claude"], capture_output=True, text=True)
+                if result.returncode == 0:
+                    return "claude"
+            except Exception:
+                pass
+    return None
+
+
 def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[str]:
     """Call Claude Code CLI with retry logic."""
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+        print(f"{LOG_PREFIX} Searched: {[str(p) for p in CLAUDE_BINARY_PATHS]}")
+        return None
+
     for attempt in range(retries):
         try:
             result = subprocess.run(
-                ["claude", "-p", prompt, "--output-format", "text"],
+                [claude_bin, "-p", prompt, "--output-format", "text"],
                 capture_output=True,
                 text=True,
                 timeout=timeout
@@ -477,18 +511,18 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[s
             else:
                 if attempt < retries - 1:
                     wait = 2 ** attempt
-                    print(f"[07.content] Claude CLI error, retrying in {wait}s...")
+                    print(f"{LOG_PREFIX} Claude CLI error, retrying in {wait}s...")
                     time.sleep(wait)
                     continue
-                print(f"[07.content] Claude CLI error: {result.stderr[:200]}")
+                print(f"{LOG_PREFIX} Claude CLI error: {result.stderr[:200]}")
         except subprocess.TimeoutExpired:
             if attempt < retries - 1:
-                print(f"[07.content] Timeout, retrying...")
+                print(f"{LOG_PREFIX} Timeout, retrying...")
                 time.sleep(2 ** attempt)
                 continue
-            print(f"[07.content] Claude CLI timeout after {timeout}s")
+            print(f"{LOG_PREFIX} Claude CLI timeout after {timeout}s")
         except FileNotFoundError:
-            print("[07.content] Error: 'claude' command not found. Install Claude Code CLI.")
+            print(f"{LOG_PREFIX} Error: 'claude' command not found. Install Claude Code CLI.")
             return None
     return None
 
@@ -539,6 +573,44 @@ def group_commentary_blocks(segments: List[Dict]) -> List[Dict]:
         })
 
     return blocks
+
+
+def remap_enrichment_segment_indices(
+    enrichments: List[Dict],
+    conversations: Dict[int, List[Dict]],
+) -> None:
+    """Convert relative segment indices in enrichments to global segment IDs.
+
+    The prompt sent to Claude uses relative indices [0], [1], [2]... for each
+    conversation (cleaner for the LLM to read). But the segments in the output
+    JSON use global IDs. This function remaps the enrichment references to match.
+
+    Modifies enrichments in place.
+    """
+    for enrichment in enrichments:
+        if enrichment.get("type") != "approach":
+            continue
+
+        conv_id = enrichment.get("conversation_id")
+        if conv_id is None or conv_id not in conversations:
+            continue
+
+        conv_segments = conversations[conv_id]
+
+        # Build mapping: relative index -> global segment ID
+        rel_to_global = {i: seg["id"] for i, seg in enumerate(conv_segments)}
+
+        # Remap techniques_used[].segment
+        for tech in enrichment.get("techniques_used", []):
+            rel_idx = tech.get("segment")
+            if rel_idx is not None and rel_idx in rel_to_global:
+                tech["segment"] = rel_to_global[rel_idx]
+
+        # Remap turn_phases[].segment
+        for phase in enrichment.get("turn_phases", []):
+            rel_idx = phase.get("segment")
+            if rel_idx is not None and rel_idx in rel_to_global:
+                phase["segment"] = rel_to_global[rel_idx]
 
 
 def build_infield_prompt(
@@ -624,8 +696,12 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 1. TYPE: "approach"
 2. CONVERSATION_ID: The conversation number
 3. DESCRIPTION: Concise 10-20 word summary
-4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote
-5. TOPICS: List topics discussed (only include actually discussed topics)
+4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote.
+   CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
+   If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+5. TOPICS: List topics discussed from the TOPIC REFERENCE list only.
+   CRITICAL: Only use topic names from the TOPIC REFERENCE above.
+   If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
 6. TURN PHASES: Label each turn with its interaction phase.
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
@@ -637,9 +713,14 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - "post_hook": She's flipped. Actively participating — asking questions back,
      sharing information voluntarily, initiating topics, longer responses.
    - "close": Logistics and closing — number, Instagram, instant date, time bridge.
+     IMPORTANT: Once the coach initiates close logistics (asks for number, mentions Instagram,
+     proposes plans), ALL remaining segments are "close" phase — even if banter/teasing continues.
+     The close phase often includes continued rapport-building alongside logistics discussion.
+     Don't flip back to post_hook just because there's playful banter after he's started closing.
    Rules:
    - Phases always progress forward: open -> pre_hook -> post_hook -> close
    - A turn's phase must NEVER go backwards
+   - Once close begins, it continues until the end (no regression to earlier phases)
    - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
    - Use the segment index [0], [1], etc. to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
@@ -657,8 +738,8 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 1. TYPE: "commentary"
 2. BLOCK INDEX: Sequential starting at 1
 3. DESCRIPTION: 10-20 word summary of what the coach is teaching/explaining
-4. TECHNIQUES DISCUSSED: Techniques the coach explains, references, or demonstrates via example
-5. TOPICS DISCUSSED: Topics covered in the commentary
+4. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
 6. UNLISTED CONCEPTS: Same format as above
 
 TRANSCRIPT QUALITY: If you notice segments with suspected Whisper transcription artifacts,
@@ -761,9 +842,12 @@ FOR EACH SECTION, analyze:
 3. DESCRIPTION: Concise 10-20 word summary of what the coach is teaching
 4. START SEGMENT: Index of first segment in this section
 5. END SEGMENT: Index of last segment in this section
-6. TECHNIQUES DISCUSSED: Techniques from the taxonomy that the coach explains,
-   demonstrates via example, or references. Include technique ID and brief example quote.
-7. TOPICS DISCUSSED: Topics from the taxonomy that are covered
+6. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only.
+   CRITICAL: Only use technique names from the list above.
+   If a technique is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
+7. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only.
+   CRITICAL: Only use topic names from the list above.
+   If a topic is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
 8. UNLISTED CONCEPTS: Report any technique or topic that doesn't fit the taxonomy.
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
@@ -910,6 +994,9 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
     commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
+
+    # Remap relative segment indices to global IDs
+    remap_enrichment_segment_indices(enrichments, conversations)
 
     # Collect all techniques (from both techniques_used and techniques_discussed)
     all_techniques = set()
@@ -1229,21 +1316,26 @@ def main() -> None:
     args = parser.parse_args()
 
     # Test Claude CLI availability
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+        print(f"{LOG_PREFIX} Searched: {[str(p) for p in CLAUDE_BINARY_PATHS]}")
+        print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
+        return
+
     try:
         result = subprocess.run(
-            ["claude", "--version"],
+            [claude_bin, "--version"],
             capture_output=True,
             text=True,
             timeout=10
         )
         if result.returncode != 0:
-            print("[07.content] Warning: Claude CLI not responding properly")
-    except FileNotFoundError:
-        print("[07.content] Error: 'claude' command not found")
-        print("[07.content] Install Claude Code CLI: https://claude.ai/code")
-        return
+            print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
+        else:
+            print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
     except subprocess.TimeoutExpired:
-        print("[07.content] Warning: Claude CLI slow to respond")
+        print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
     # Determine input/output paths and verification root
     verify_root = verification_root()  # default

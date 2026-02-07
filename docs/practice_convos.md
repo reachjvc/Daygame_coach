@@ -40,7 +40,7 @@ After opener, make 2 STATEMENTS before any question. Statements don't require he
 1. OPENER (I can do this)
 2. STATEMENT: what made me approach (specific, not "du er sød")
 3. STATEMENT: cold read / assumption / playful guess
-4. NOW I can ask something - or just let her respond to the statements
+4. NOW I can ask something - or just let her respond to the statements [i still feel like i need more than just 2 statements, before i begin interview mode, the vibe isnt there]
 ```
 
 **Why statements > questions:**
@@ -65,14 +65,14 @@ After opener, make 2 STATEMENTS before any question. Statements don't require he
 
 **Energi/vibe observations:**
 - "Du har sådan en fokuseret energi. Som om du tænker over noget"
-- "Du ser ud som om du faktisk ved hvor du skal hen - det er sjældent herinde"
+- "Du ser ud som om du faktisk ved hvor du skal hen - det er sjældent herinde" [slightly off, second sentence]
 - "Du har lidt en 'don't fuck with me' vibe. Det kan jeg godt lide"
 - "Du gik som om du var på en mission"
-- "Du har sådan en rolig udstråling - de fleste mennesker virker mere stressede"
+- "Du har sådan en rolig udstråling - de fleste mennesker virker mere stressede" [slightly off, second sentence]
 - "Der var noget ved måden du [kiggede på X / gik / stod] på"
 
 **Specifik observation:**
-- "Jeg kunne godt lide din stil - det ser ud som om du faktisk har tænkt over det"
+- "Jeg kunne godt lide din stil - det ser ud som om du faktisk har tænkt over det" [slightly off, second sentence]
 - "Du så ud som om du nød din egen verden lige der"
 - "Du havde sådan et lille smil som om du vidste noget andre ikke gør"
 - "Du så eftertænksom ud - som om du var midt i en god tanke"
@@ -81,16 +81,15 @@ After opener, make 2 STATEMENTS before any question. Statements don't require he
 - "Du har noget over dig der fik mig til at stoppe op"
 
 **Kontrast-statements (hvad der gør hende anderledes):**
-- "De fleste mennesker her ser stressede ud. Du virker faktisk til stede"
+- "De fleste mennesker her ser stressede ud. Du virker faktisk til stede" [off]
 - "Alle andre kigger ned i deres telefon. Du kiggede faktisk op"
-- "Du skiller dig ud fra mængden - på den gode måde"
+- "Du skiller dig ud fra mængden - på den gode måde" [for sød]
 - "Der er noget ved dig der ikke matcher resten af København"
 - "Du har en energi der er anderledes end hvad jeg normalt ser"
 
 **Direkte/ærlige:**
 - "Jeg så dig og tænkte - hende skal jeg snakke med"
 - "Du fangede min opmærksomhed og jeg ville ærgre mig hvis jeg ikke sagde noget"
-- "Jeg går normalt ikke hen til fremmede, men du virkede interessant"
 - "Ærligt - jeg har ingen god grund. Du så bare interessant ud"
 
 ---
@@ -99,14 +98,14 @@ After opener, make 2 STATEMENTS before any question. Statements don't require he
 
 **Hvor er hun fra:**
 - "Du ser ikke ud som om du er herfra. Der er noget ved dig der ikke matcher byen"
-- "Jeg får sådan nogle [sydeuropæiske/østeuropæiske/skandinaviske] vibes fra dig"
-- "Lad mig gætte - du er ikke fra København oprindeligt"
-- "Du har noget over dig der virker mere [internationalt/eksotisk/anderledes]"
+- "Jeg får sådan nogle [sydeuropæiske/østeuropæiske/skandinaviske] vibes fra dig"  [i only approach danish girls, so they always look like theyre from here]
+- "Lad mig gætte - du er ikke fra København oprindeligt" [off]
+- "Du har noget over dig der virker mere [internationalt/eksotisk/anderledes]" [off]
 
 **Hvad laver hun:**
-- "Du ser ud som om du laver noget kreativt... eller måske bare ønsker du gjorde"
+- "Du ser ud som om du laver noget kreativt... eller måske bare ønsker du gjorde" [slightly off]
 - "Jeg får stærke [kunstner/jurist/iværksætter] vibes. Er jeg tæt på?"
-- "Du virker som en der har et job hvor du faktisk bruger din hjerne"
+- "Du virker som en der har et job hvor du faktisk bruger din hjerne" [Okay, ja, men hvad så bagefter?]
 - "Lad mig gætte - du arbejder enten med mennesker eller du hader at arbejde med mennesker"
 - "Du ser ud som en der har mange projekter kørende"
 

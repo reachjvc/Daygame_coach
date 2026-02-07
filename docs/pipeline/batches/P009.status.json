@@ -1,0 +1,48 @@
+{
+  "batch_id": "P009",
+  "created_at": "2026-02-06T20:12:57Z",
+  "total_videos": 91,
+  "sub_batch_size": 10,
+  "sub_batches": {
+    "P009.1": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.2": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.3": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.4": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.5": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.6": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.7": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.8": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.9": {
+      "status": "not_started",
+      "video_count": 10
+    },
+    "P009.10": {
+      "status": "not_started",
+      "video_count": 1
+    }
+  }
+}

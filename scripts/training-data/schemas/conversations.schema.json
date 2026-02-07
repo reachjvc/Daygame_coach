@@ -4,7 +4,7 @@
   "title": "Conversations (06)",
   "description": "Output schema for 06.conversations - video type, speaker labels, and conversation boundaries (Claude LLM)",
   "type": "object",
-  "required": ["video_id", "source_file", "processed_at", "video_type", "speaker_labels", "segments", "conversations", "metadata"],
+  "required": ["video_id", "source_file", "processed_at", "video_type", "transcript_confidence", "speaker_labels", "segments", "conversations", "metadata"],
   "properties": {
     "video_id": {
       "type": "string",
@@ -40,6 +40,23 @@
         "reasoning": {
           "type": "string",
           "description": "LLM explanation for classification"
+        }
+      }
+    },
+    "transcript_confidence": {
+      "type": "object",
+      "description": "LLM assessment of transcript quality and reliability",
+      "required": ["score"],
+      "properties": {
+        "score": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "Transcript quality score (1-100). 90-100=excellent, 70-89=good, 50-69=fair, 30-49=poor, 1-29=unusable"
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "LLM explanation for the transcript quality assessment"
         }
       }
     },
@@ -111,6 +128,14 @@
             "type": "string",
             "enum": ["coach", "target", "voiceover", "other", "unknown"],
             "description": "Per-segment role override for collapsed speakers. Takes precedence over speaker_role derived from speaker_labels."
+          },
+          "is_teaser": {
+            "type": "boolean",
+            "description": "True if this segment is a teaser/preview of content that appears later in the video"
+          },
+          "teaser_of_conversation_id": {
+            "type": ["integer", "null"],
+            "description": "The conversation_id of the full version that this teaser previews (null if unable to match)"
           }
         }
       }

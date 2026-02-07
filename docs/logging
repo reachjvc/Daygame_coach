@@ -1,3 +1,8 @@
+2026-02-06
+- Created expanded cross-browser compatibility test plan in docs/plans/plan_cross_browser_compat.md (includes route matrix + deterministic E2E/integration steps).
+- Decision logged: use dedicated Supabase test project for E2E.
+- Added explicit “prompt user” checklist at top of plan to gate implementation.
+
 2026-02-05
 - Reviewed UI/layout, responsive patterns, and browser-specific APIs for cross-browser/mobile risks.
 - Identified key issues: header/nav mobile overflow, vh-based layouts, voice recording API support gaps, SVG map styling/injection risks, modern CSS feature fallbacks, hidden scrollbars, and history/beforeunload behavior.

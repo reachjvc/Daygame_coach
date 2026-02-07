@@ -1,0 +1,6 @@
+# Sub-batch P008.10 (from P008)
+# Created: 2026-02-06T20:12:55Z
+# Videos: 1
+#
+# Format: source_name | video_folder_name
+daily_evolution | Going Out Alone + How To Create Wingmen [u8H0G62JFJ8]

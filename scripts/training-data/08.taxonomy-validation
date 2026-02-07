@@ -1,0 +1,456 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/08.taxonomy-validation
+
+Taxonomy Validation Gate (Stage 08)
+
+Quality gate that validates taxonomy coverage before data preparation.
+Blocks pipeline if high-frequency unlisted concepts are detected.
+
+Reads:
+  - Enriched content files (from Stage 07):
+      data/07.content/<source>/<video>/*.enriched.json
+
+Writes:
+  - Validation report:
+      data/08.taxonomy-validation/report.json
+
+Exit codes:
+  0 - PASS: No high-frequency unlisted concepts (below threshold)
+  1 - FAIL: High-frequency unlisted concepts detected (at or above threshold)
+
+Use:
+
+  A) Validate all enriched data (threshold=3):
+     ./scripts/training-data/08.taxonomy-validation
+
+  B) Custom threshold:
+     ./scripts/training-data/08.taxonomy-validation --threshold 5
+
+  C) Strict mode (fail on ANY unlisted):
+     ./scripts/training-data/08.taxonomy-validation --strict
+
+  D) Validate specific source:
+     ./scripts/training-data/08.taxonomy-validation --source daily_evolution
+
+  E) Validate specific manifest:
+     ./scripts/training-data/08.taxonomy-validation --manifest docs/pipeline/batches/P001.1.txt
+
+  F) Skip writing report file:
+     ./scripts/training-data/08.taxonomy-validation --no-report
+
+  G) Test data:
+     ./scripts/training-data/08.taxonomy-validation --test
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from collections import Counter
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def find_enriched_files(root: Path) -> List[Path]:
+    """Find all enriched JSON files."""
+    return sorted(root.rglob("*.enriched.json"))
+
+
+def extract_video_id(name: str) -> Optional[str]:
+    """Extract video ID from filename or folder name (e.g., 'Title [abc123]' -> 'abc123')."""
+    match = re.search(r"\[([a-zA-Z0-9_-]{11})\]", name)
+    return match.group(1) if match else None
+
+
+def load_manifest_video_ids(manifest_path: Path) -> Set[str]:
+    """Load manifest and return set of video IDs."""
+    video_ids = set()
+    with open(manifest_path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            vid_id = extract_video_id(line)
+            if vid_id:
+                video_ids.add(vid_id)
+    return video_ids
+
+
+def filter_files_by_manifest(files: List[Path], manifest_path: Path) -> List[Path]:
+    """Filter enriched files to only those in the manifest."""
+    video_ids = load_manifest_video_ids(manifest_path)
+    filtered = []
+    for f in files:
+        vid_id = extract_video_id(f.name) or extract_video_id(f.parent.name)
+        if vid_id and vid_id in video_ids:
+            filtered.append(f)
+    return filtered
+
+
+def parse_unlisted_from_enrichment(enrichment: Dict) -> Tuple[List[str], List[str]]:
+    """Extract unlisted techniques and topics from a single enrichment."""
+    unlisted = enrichment.get("unlisted_concepts", {})
+    if not isinstance(unlisted, dict):
+        return [], []
+
+    techniques = unlisted.get("techniques", [])
+    topics = unlisted.get("topics", [])
+
+    if not isinstance(techniques, list):
+        techniques = []
+    if not isinstance(topics, list):
+        topics = []
+
+    return (
+        [t for t in techniques if isinstance(t, str) and t.strip()],
+        [t for t in topics if isinstance(t, str) and t.strip()],
+    )
+
+
+def normalize_concept(raw: str) -> Tuple[str, str]:
+    """Split 'concept_name: description' into (name, description)."""
+    if ":" in raw:
+        name, desc = raw.split(":", 1)
+        return name.strip().lower(), desc.strip()
+    return raw.strip().lower(), ""
+
+
+def process_files(files: List[Path]) -> Dict[str, Any]:
+    """Process all enriched files and aggregate unlisted concepts."""
+
+    technique_counter: Counter = Counter()
+    topic_counter: Counter = Counter()
+    technique_examples: Dict[str, List[str]] = {}
+    topic_examples: Dict[str, List[str]] = {}
+    technique_sources: Dict[str, List[str]] = {}
+    topic_sources: Dict[str, List[str]] = {}
+
+    files_processed = 0
+    files_with_unlisted = 0
+    total_enrichments = 0
+    enrichments_with_unlisted = 0
+
+    for file_path in files:
+        try:
+            data = json.loads(file_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"[08.taxonomy-validation] Warning: skipping {file_path.name}: {e}")
+            continue
+
+        files_processed += 1
+        video_id = data.get("video_id", file_path.stem)
+        enrichments = data.get("enrichments", [])
+        file_has_unlisted = False
+
+        if not isinstance(enrichments, list):
+            continue
+
+        for enrichment in enrichments:
+            if not isinstance(enrichment, dict):
+                continue
+
+            total_enrichments += 1
+            tech_list, topic_list = parse_unlisted_from_enrichment(enrichment)
+
+            if tech_list or topic_list:
+                enrichments_with_unlisted += 1
+                file_has_unlisted = True
+
+            for raw_tech in tech_list:
+                name, desc = normalize_concept(raw_tech)
+                technique_counter[name] += 1
+                if desc and name not in technique_examples:
+                    technique_examples[name] = []
+                if desc and desc not in technique_examples.get(name, []):
+                    technique_examples.setdefault(name, []).append(desc)
+                technique_sources.setdefault(name, []).append(video_id)
+
+            for raw_topic in topic_list:
+                name, desc = normalize_concept(raw_topic)
+                topic_counter[name] += 1
+                if desc and name not in topic_examples:
+                    topic_examples[name] = []
+                if desc and desc not in topic_examples.get(name, []):
+                    topic_examples.setdefault(name, []).append(desc)
+                topic_sources.setdefault(name, []).append(video_id)
+
+        if file_has_unlisted:
+            files_with_unlisted += 1
+
+    return {
+        "files_processed": files_processed,
+        "files_with_unlisted": files_with_unlisted,
+        "total_enrichments": total_enrichments,
+        "enrichments_with_unlisted": enrichments_with_unlisted,
+        "techniques": {
+            name: {
+                "count": count,
+                "examples": technique_examples.get(name, [])[:3],
+                "videos": sorted(set(technique_sources.get(name, [])))[:5],
+            }
+            for name, count in technique_counter.most_common()
+        },
+        "topics": {
+            name: {
+                "count": count,
+                "examples": topic_examples.get(name, [])[:3],
+                "videos": sorted(set(topic_sources.get(name, [])))[:5],
+            }
+            for name, count in topic_counter.most_common()
+        },
+    }
+
+
+def evaluate_validation(report: Dict[str, Any], threshold: int, strict: bool) -> Dict[str, Any]:
+    """Evaluate validation status based on threshold and strict mode."""
+    techniques = report["techniques"]
+    topics = report["topics"]
+
+    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= threshold]
+    high_freq_topics = [n for n, i in topics.items() if i["count"] >= threshold]
+
+    any_unlisted = bool(techniques) or bool(topics)
+    high_freq_unlisted = bool(high_freq_techniques) or bool(high_freq_topics)
+
+    if strict and any_unlisted:
+        status = "FAIL"
+        reason = "Strict mode: unlisted concepts detected"
+    elif high_freq_unlisted:
+        status = "FAIL"
+        reason = f"High-frequency unlisted concepts (>= {threshold} occurrences)"
+    elif any_unlisted:
+        status = "WARNING"
+        reason = f"Unlisted concepts found but below threshold ({threshold})"
+    else:
+        status = "PASS"
+        reason = "No unlisted concepts"
+
+    return {
+        "status": status,
+        "reason": reason,
+        "threshold": threshold,
+        "strict_mode": strict,
+        "high_frequency_unlisted": {
+            "techniques": high_freq_techniques,
+            "topics": high_freq_topics,
+        },
+        "total_unlisted": {
+            "techniques": len(techniques),
+            "topics": len(topics),
+        },
+    }
+
+
+def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
+    """Print human-readable taxonomy validation report."""
+    status = validation["status"]
+    status_emoji = {"PASS": "✅", "WARNING": "⚠️", "FAIL": "❌"}.get(status, "❓")
+
+    print("=" * 60)
+    print("  TAXONOMY VALIDATION (Stage 08)")
+    print("=" * 60)
+    print()
+    print(f"  Status:                    {status_emoji} {status}")
+    print(f"  Reason:                    {validation['reason']}")
+    print(f"  Threshold:                 {validation['threshold']}")
+    print(f"  Strict mode:               {validation['strict_mode']}")
+    print()
+    print(f"  Files processed:           {report['files_processed']}")
+    print(f"  Files with unlisted:       {report['files_with_unlisted']}")
+    print(f"  Total enrichments:         {report['total_enrichments']}")
+    print(f"  Enrichments with unlisted: {report['enrichments_with_unlisted']}")
+    print()
+
+    techniques = report["techniques"]
+    topics = report["topics"]
+    high_tech = validation["high_frequency_unlisted"]["techniques"]
+    high_topics = validation["high_frequency_unlisted"]["topics"]
+
+    if not techniques and not topics:
+        print("  No unlisted concepts found. Taxonomy covers all detected concepts.")
+        print()
+        return
+
+    if high_tech or high_topics:
+        print("-" * 60)
+        print("  HIGH-FREQUENCY UNLISTED (blocking)")
+        print("-" * 60)
+        if high_tech:
+            print(f"\n  Techniques: {', '.join(high_tech)}")
+        if high_topics:
+            print(f"\n  Topics:     {', '.join(high_topics)}")
+        print()
+
+    if techniques:
+        print("-" * 60)
+        print("  ALL UNLISTED TECHNIQUES (sorted by frequency)")
+        print("-" * 60)
+        for name, info in techniques.items():
+            count = info["count"]
+            marker = " [BLOCKING]" if name in high_tech else ""
+            print(f"\n  {name} ({count}x){marker}")
+            if info["examples"]:
+                print(f"    Description: {info['examples'][0]}")
+            if info["videos"]:
+                print(f"    Seen in: {', '.join(info['videos'][:3])}")
+        print()
+
+    if topics:
+        print("-" * 60)
+        print("  ALL UNLISTED TOPICS (sorted by frequency)")
+        print("-" * 60)
+        for name, info in topics.items():
+            count = info["count"]
+            marker = " [BLOCKING]" if name in high_topics else ""
+            print(f"\n  {name} ({count}x){marker}")
+            if info["examples"]:
+                print(f"    Description: {info['examples'][0]}")
+            if info["videos"]:
+                print(f"    Seen in: {', '.join(info['videos'][:3])}")
+        print()
+
+    if status == "FAIL":
+        print("-" * 60)
+        print("  ACTION REQUIRED")
+        print("-" * 60)
+        print()
+        print("  Pipeline blocked. Options:")
+        print("    1. Add the unlisted concepts to the taxonomy in 07.content")
+        print("    2. Re-run with higher --threshold")
+        print("    3. Manually verify and exclude problematic files")
+        print()
+
+
+def save_report(
+    report: Dict[str, Any],
+    validation: Dict[str, Any],
+    output_dir: Path,
+    label: str,
+) -> Path:
+    """Save validation report to JSON file."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / "report.json"
+
+    output_data = {
+        "version": 1,
+        "stage": "08.taxonomy-validation",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "source": label,
+        "validation": validation,
+        "details": report,
+    }
+
+    output_path.write_text(json.dumps(output_data, indent=2, ensure_ascii=False) + "\n")
+    return output_path
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Taxonomy validation gate (Stage 08)"
+    )
+    parser.add_argument(
+        "--source",
+        help="Only validate a specific source (folder name)"
+    )
+    parser.add_argument(
+        "--manifest",
+        help="Only validate videos in this manifest file (e.g., P001.1.txt)"
+    )
+    parser.add_argument(
+        "--threshold",
+        type=int,
+        default=3,
+        help="Fail if any concept has >= this many occurrences (default: 3)"
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Fail on ANY unlisted concepts (threshold=1)"
+    )
+    parser.add_argument(
+        "--test",
+        action="store_true",
+        help="Validate test data (data/test/07.content/)"
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output JSON to stdout instead of human-readable report"
+    )
+    parser.add_argument(
+        "--no-report",
+        action="store_true",
+        help="Skip writing report file to data/08.taxonomy-validation/"
+    )
+
+    args = parser.parse_args()
+
+    # Determine data root
+    if args.test:
+        data_root = repo_root() / "data" / "test" / "07.content"
+        output_dir = repo_root() / "data" / "test" / "08.taxonomy-validation"
+    elif args.source:
+        data_root = repo_root() / "data" / "07.content" / args.source
+        output_dir = repo_root() / "data" / "08.taxonomy-validation"
+    else:
+        data_root = repo_root() / "data" / "07.content"
+        output_dir = repo_root() / "data" / "08.taxonomy-validation"
+
+    if not data_root.exists():
+        print(f"[08.taxonomy-validation] Error: Data directory not found: {data_root}", file=sys.stderr)
+        return 1
+
+    files = find_enriched_files(data_root)
+
+    # Filter by manifest if provided
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            print(f"[08.taxonomy-validation] Error: Manifest not found: {manifest_path}", file=sys.stderr)
+            return 1
+        files = filter_files_by_manifest(files, manifest_path)
+        label = f"manifest:{manifest_path.name}"
+    else:
+        label = str(data_root)
+
+    if not files:
+        print(f"[08.taxonomy-validation] Error: No .enriched.json files found in: {label}", file=sys.stderr)
+        return 1
+
+    print(f"[08.taxonomy-validation] Scanning {len(files)} enriched files ({label})")
+
+    report = process_files(files)
+    validation = evaluate_validation(report, args.threshold, args.strict)
+
+    if args.json:
+        output_data = {
+            "validation": validation,
+            "details": report,
+        }
+        print(json.dumps(output_data, indent=2, ensure_ascii=False))
+    else:
+        print_report(report, validation)
+
+    # Save report file
+    if not args.no_report:
+        report_path = save_report(report, validation, output_dir, label)
+        print(f"[08.taxonomy-validation] Report saved: {report_path}")
+
+    # Return exit code based on status
+    if validation["status"] == "FAIL":
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

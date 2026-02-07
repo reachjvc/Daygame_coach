@@ -1,0 +1,15 @@
+# Sub-batch P003.1 (from P003)
+# Created: 2026-02-06T20:02:11Z
+# Videos: 10
+#
+# Format: source_name | video_folder_name
+austen_summers_client_results | First Nightgame Pull and Daygame Pull - Immersion Results [M4sX7Xd9lV4]
+austen_summers_client_results | First Sober Pull - Immersion Testimonial [zzRdjIz3YLg]
+austen_summers_client_results | From Approach Anxiety to Getting Instagram Models - Elvio Academy Mentorship Testimonial [0fXt-cwzDwc]
+austen_summers_client_results | From Complete Beginner to Instadates and Pulls - Immersion Testimonial [zNRFeTDJQ5c]
+austen_summers_client_results | Instadates, Pulls, and Closes with Personal 10's - Immersion Results [71xUMBrQjnc]
+austen_summers_client_results | No Experience with Pickup to Getting Numbers! [l9WyhPG6_So]
+austen_summers_client_results | No More Approach Anxiety - Bootcamp Testimonial [HNnswkVaeEs]
+austen_summers_client_results | Pulled 4 times in 5 Days - Immersion Results [MS1JrFBtw3g]
+austen_summers_client_results | Pulled Twice on the First Night [cj-efzMEpM8]
+austen_summers_client_results | Pulled and Closed an OnlyFans Model! ｜ Mentorship Results [xcHP6sZHxX0]

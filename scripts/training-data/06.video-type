@@ -56,9 +56,9 @@ from pipeline_manifest import load_manifest, load_manifest_sources, manifest_fil
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "3.1.0"
-PIPELINE_VERSION = "06.video-type-v3.1"
-PROMPT_VERSION = "3.1.0"
+SCHEMA_VERSION = "3.3.0"
+PIPELINE_VERSION = "06.video-type-v3.3"
+PROMPT_VERSION = "3.3.0"
 
 DEBUG_MODE = False
 
@@ -311,10 +311,12 @@ def write_validation_results(
 # Prompts
 # ---------------------------
 
-ANALYZE_VIDEO_PROMPT = """You are analyzing a daygame coaching video. Your THREE tasks in a single pass:
+ANALYZE_VIDEO_PROMPT = """You are analyzing a daygame coaching video. Your FIVE tasks in a single pass:
 1. Classify the video type
 2. Assign a role to each speaker
 3. Detect conversation boundaries
+4. Assess transcript quality (how reliable/accurate is the transcription)
+5. Identify teaser/preview segments (content shown in intro that repeats later)
 
 VIDEO TYPES:
 
@@ -417,6 +419,49 @@ CRITICAL RULES:
 6. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
 7. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
 
+TRANSCRIPT QUALITY ASSESSMENT:
+
+Evaluate the overall quality and reliability of the transcript. Consider:
+
+1. COHERENCE: Does the text flow logically? Can you follow conversations?
+2. SPEAKER CLARITY: Can you distinguish who is speaking? Are speaker changes clear?
+3. ASR ARTIFACTS: Are there obvious transcription errors? (repeated words, nonsense, garbled text)
+4. COMPLETENESS: Does the transcript seem complete or are there gaps/missing dialogue?
+5. LANGUAGE ISSUES: Wrong language detected? Mixed languages causing confusion?
+
+Output a confidence score from 1-100:
+- 90-100: Excellent - clear, coherent, easy to follow, minimal errors
+- 70-89: Good - mostly clear, some minor issues but usable
+- 50-69: Fair - noticeable issues, some segments unclear but core content understandable
+- 30-49: Poor - significant issues, hard to follow, many errors
+- 1-29: Unusable - severely garbled, mostly nonsense, cannot reliably extract meaning
+
+TEASER/PREVIEW DETECTION:
+
+Many YouTube videos show a "teaser" or "highlight reel" in the first 30-60 seconds, then replay that same content in full later. This creates duplicate content we want to skip during embedding.
+
+TEASER PATTERNS:
+1. Short clip at video start (0-60s) showing an exciting moment
+2. Coach voiceover on top: "Watch what happens..." or "Coming up..."
+3. Same conversation appears in full later in the video
+4. Often has different audio (music, narration) than the full version
+
+HOW TO IDENTIFY:
+- Compare early segments (first 60s) to later content
+- Look for matching dialogue/content that appears twice
+- Teaser is usually shorter/edited version of the full conversation
+- Coach may talk OVER the teaser, making it harder to follow
+
+MARKING TEASERS:
+- If a segment is a teaser preview of content that appears later, add:
+  "is_teaser": true
+  "teaser_of_conversation_id": N (the conversation_id of the full version)
+- If you cannot match the teaser to a specific conversation, use:
+  "is_teaser": true
+  "teaser_of_conversation_id": null
+- Only mark the TEASER segments, not the full conversation later
+- Teaser segments should still have conversation_id: 0 (they're preview content)
+
 VIDEO TITLE: "{title}"
 
 SPEAKERS FOUND: {speakers}
@@ -427,8 +472,8 @@ SPEAKER STATS:
 FULL TRANSCRIPT ({segment_count} segments):
 {transcript}
 
-OUTPUT: First, briefly reason about the video type and speaker assignments (2-3 sentences). Then output the JSON object in a ```json code block with this exact structure:
-{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|target|unknown (ONLY for collapsed speakers, omit otherwise)"}}, ...]}}
+OUTPUT: First, briefly reason about the video type, speaker assignments, transcript quality, and any teasers (3-5 sentences). Then output the JSON object in a ```json code block with this exact structure:
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
 """
 
 
@@ -568,10 +613,10 @@ def parse_json_response(response: str) -> Optional[Dict]:
 
 def analyze_video(
     title: str, segments: List[Dict]
-) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
-    """Classify video type, label speakers, and detect conversation boundaries in a single LLM call.
+) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
+    """Classify video type, label speakers, assess transcript quality, and detect conversation boundaries in a single LLM call.
 
-    Returns (video_type_dict, speaker_labels_dict, segment_classifications, extra_flags).
+    Returns (video_type_dict, transcript_confidence_dict, speaker_labels_dict, segment_classifications, extra_flags).
     """
     speakers = sorted(set(seg.get("pyannote_speaker", "UNKNOWN") for seg in segments))
 
@@ -627,6 +672,12 @@ def analyze_video(
             labels = result["speaker_labels"]
             classifications = result["segments"]
 
+            # Extract transcript_confidence (with fallback for older responses)
+            transcript_conf = result.get("transcript_confidence", {
+                "score": 70,
+                "reasoning": "Not assessed (legacy response)"
+            })
+
             # Ensure all speakers have labels
             for speaker in speakers:
                 if speaker not in labels:
@@ -652,13 +703,15 @@ def analyze_video(
             # Log results
             conf = vtype.get("confidence", 0)
             print(f"{LOG_PREFIX}   Video type: {vtype.get('type')} ({conf * 100:.0f}%)")
+            tconf = transcript_conf.get("score", 0)
+            print(f"{LOG_PREFIX}   Transcript quality: {tconf}/100 - {transcript_conf.get('reasoning', '')[:60]}")
             for speaker, label in labels.items():
                 lconf = label.get("confidence", 0) * 100
                 print(f"{LOG_PREFIX}   {speaker}: {label.get('role')} ({lconf:.0f}%) - {label.get('reasoning', '')[:50]}")
             conv_ids = set(c.get("conversation_id", 0) for c in classifications if c.get("conversation_id", 0) > 0)
             print(f"{LOG_PREFIX}   Conversations: {len(conv_ids)}")
 
-            return vtype, labels, classifications, extra_flags
+            return vtype, transcript_conf, labels, classifications, extra_flags
 
         if attempt < max_retries - 1:
             print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, retrying ({attempt + 2}/{max_retries})...")
@@ -776,8 +829,8 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
 
     start_time = time.time()
 
-    # Single-pass analysis: video type + speakers + boundaries
-    video_type_info, speaker_labels, classifications, extra_flags = analyze_video(video_title, segments)
+    # Single-pass analysis: video type + transcript quality + speakers + boundaries
+    video_type_info, transcript_confidence, speaker_labels, classifications, extra_flags = analyze_video(video_title, segments)
 
     video_type = video_type_info.get("type", "compilation")
 
@@ -831,6 +884,13 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
         if override:
             out_seg["speaker_role_override"] = override
 
+        # Include teaser fields if present
+        is_teaser = classification.get("is_teaser")
+        if is_teaser:
+            out_seg["is_teaser"] = True
+            teaser_of = classification.get("teaser_of_conversation_id")
+            out_seg["teaser_of_conversation_id"] = teaser_of
+
         output_segments.append(out_seg)
 
     # Build conversation summaries
@@ -862,6 +922,10 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
             "type": video_type,
             "confidence": video_type_info.get("confidence"),
             "reasoning": video_type_info.get("reasoning"),
+        },
+        "transcript_confidence": {
+            "score": transcript_confidence.get("score", 70),
+            "reasoning": transcript_confidence.get("reasoning", ""),
         },
         "speaker_labels": speaker_labels,
         "segments": output_segments,

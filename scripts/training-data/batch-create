@@ -40,11 +40,12 @@ def is_playlist_id(id_str: str) -> bool:
     Playlist IDs start with PL, FL, UU, etc. and are 34+ chars.
     Video IDs are exactly 11 characters.
     """
+    # Video IDs are exactly 11 characters - trust length over prefix
+    if len(id_str) == 11:
+        return False
+    # Playlist IDs are longer and often start with specific prefixes
     playlist_prefixes = ("PL", "FL", "UU", "LL", "RD", "OL")
-    if id_str.startswith(playlist_prefixes):
-        return True
-    # Video IDs are exactly 11 chars; playlists are longer
-    if len(id_str) > 11:
+    if len(id_str) > 11 or id_str.startswith(playlist_prefixes):
         return True
     return False
 

@@ -1,0 +1,6 @@
+# Sub-batch P012.10 (from P012)
+# Created: 2026-02-06T20:12:59Z
+# Videos: 1
+#
+# Format: source_name | video_folder_name
+daily_evolution | Strangers Opinions Are Destroying Your Life [3Fw_m4haF04]

@@ -33,14 +33,25 @@ cd "$REPO_ROOT"
 
 BATCHES_DIR="$REPO_ROOT/docs/pipeline/batches"
 DATA_DIR="$REPO_ROOT/data"
+VIEWS_DIR="$REPO_ROOT/batch-views"
 
-# Stage definitions
+# Stage definitions (all stages for view generation)
 declare -A STAGE_DIRS=(
+  ["01"]="01.download"
+  ["02"]="02.transcribe"
+  ["03"]="03.align"
+  ["04"]="04.diarize"
+  ["05"]="05.audio-features"
   ["06"]="06.video-type"
   ["06b"]="06b.verify"
   ["06c"]="06c.patched"
   ["07"]="07.content"
 )
+# Stages with nested source/video folder structure
+NESTED_STAGES=("01" "02" "03" "04" "05")
+# Stages with flat file structure (no source subfolders)
+FLAT_STAGES=("06" "06b" "06c" "07")
+
 declare -A STAGE_SCRIPTS=(
   ["06"]="$REPO_ROOT/scripts/training-data/06.video-type"
   ["06b"]="$REPO_ROOT/scripts/training-data/06b.verify"
@@ -48,12 +59,20 @@ declare -A STAGE_SCRIPTS=(
   ["07"]="$REPO_ROOT/scripts/training-data/07.content"
 )
 declare -A STAGE_PATTERNS=(
+  ["01"]="*.wav"
+  ["02"]="*.full.json"
+  ["03"]="*.full.json"
+  ["04"]="*.full.json"
+  ["05"]="*.audio_features.json"
   ["06"]="*.conversations.json"
   ["06b"]="*.verification.json"
   ["06c"]="*.conversations.json"
   ["07"]="*.enriched.json"
 )
-STAGE_ORDER=("06" "06b" "06c" "07")
+# Stages that can be run via this pipeline
+RUNNABLE_STAGES=("06" "06b" "06c" "07")
+# All stages for view generation
+ALL_STAGES=("01" "02" "03" "04" "05" "06" "06b" "06c" "07")
 
 # Modes
 MODE=""
@@ -69,12 +88,18 @@ Usage:
   ./sub-batch-pipeline P001.1 --status           Per-stage status with file paths
   ./sub-batch-pipeline P001.1 --stage 06         Run stage 06 only
   ./sub-batch-pipeline P001.1 --stage 06b        Run stage 06b only
-  ./sub-batch-pipeline P001.1 --view             Create symlink view in data/P001.1/
+  ./sub-batch-pipeline P001.1 --view             Create symlink view in batch-views/P001/P001.1/
   ./sub-batch-pipeline P001.1 --approve          Mark as approved
   ./sub-batch-pipeline P001 --status             Batch-level status
 
 Options:
   --dry-run    Preview without running
+
+View structure:
+  batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
+  - Nested stages (01-05): symlinks to actual files
+  - Flat stages (06-07): symlinks organized by source/video
+  - .pending marker: stage not yet run for that video
 EOF
 }
 
@@ -169,8 +194,11 @@ show_sub_batch_status() {
   while IFS='|' read -r source folder || [[ -n "$source" ]]; do
     [[ "$source" =~ ^# ]] && continue
     [[ -z "$source" ]] && continue
-    source=$(echo "$source" | xargs)
-    folder=$(echo "$folder" | xargs)
+    # Trim leading/trailing whitespace without collapsing internal spaces
+    source="${source#"${source%%[![:space:]]*}"}"
+    source="${source%"${source##*[![:space:]]}"}"
+    folder="${folder#"${folder%%[![:space:]]*}"}"
+    folder="${folder%"${folder##*[![:space:]]}"}"
     vid_id=$(extract_video_id "$folder")
     [[ -n "$vid_id" ]] && video_ids+=("$vid_id:$source:$folder")
   done < "$manifest"
@@ -181,7 +209,7 @@ show_sub_batch_status() {
   echo "=== Sub-batch $sub_id Status ($total videos) ==="
   echo ""
 
-  for stage in "${STAGE_ORDER[@]}"; do
+  for stage in "${RUNNABLE_STAGES[@]}"; do
     local stage_dir="${STAGE_DIRS[$stage]}"
     local pattern="${STAGE_PATTERNS[$stage]}"
     local found=0
@@ -202,7 +230,7 @@ show_sub_batch_status() {
       fi
 
       if [[ "$found_file" == true ]]; then
-        ((found++))
+        ((++found))
       else
         missing+=("$folder")
       fi
@@ -310,7 +338,7 @@ run_stage() {
 
   local script="${STAGE_SCRIPTS[$stage]:-}"
   if [[ -z "$script" ]]; then
-    error "Unknown stage: $stage (valid: ${STAGE_ORDER[*]})"
+    error "Unknown stage: $stage (valid: ${RUNNABLE_STAGES[*]})"
   fi
 
   local stage_dir="${STAGE_DIRS[$stage]}"
@@ -362,56 +390,105 @@ PYEOF
   fi
 }
 
+# Check if stage is nested (has source/video folder structure)
+is_nested_stage() {
+  local stage="$1"
+  for s in "${NESTED_STAGES[@]}"; do
+    [[ "$s" == "$stage" ]] && return 0
+  done
+  return 1
+}
+
 # Create symlink view for a stage
 create_stage_view() {
   local sub_id="$1"
   local stage="$2"
+  local batch_id
+  batch_id=$(get_batch_id "$sub_id")
 
-  local view_dir="$DATA_DIR/$sub_id/$stage"
-  local stage_dir="${STAGE_DIRS[$stage]}"
+  local stage_dir="${STAGE_DIRS[$stage]:-}"
+  [[ -z "$stage_dir" ]] && return 0
+
   local pattern="${STAGE_PATTERNS[$stage]}"
   local manifest="$BATCHES_DIR/${sub_id}.txt"
+  local view_base="$VIEWS_DIR/$batch_id/$sub_id/$stage_dir"
 
-  mkdir -p "$view_dir"
+  # Clear existing view for this stage
+  rm -rf "$view_base" 2>/dev/null || true
 
-  # Get video IDs from manifest
+  local link_count=0
+  local pending_count=0
+
+  # Process each video from manifest
   while IFS='|' read -r source folder || [[ -n "$source" ]]; do
     [[ "$source" =~ ^# ]] && continue
     [[ -z "$source" ]] && continue
-    source=$(echo "$source" | xargs)
-    folder=$(echo "$folder" | xargs)
+    # Trim leading/trailing whitespace without collapsing internal spaces
+    source="${source#"${source%%[![:space:]]*}"}"
+    source="${source%"${source##*[![:space:]]}"}"
+    folder="${folder#"${folder%%[![:space:]]*}"}"
+    folder="${folder%"${folder##*[![:space:]]}"}"
     vid_id=$(extract_video_id "$folder")
     [[ -z "$vid_id" ]] && continue
 
-    # Find matching files and create symlinks
-    while IFS= read -r -d '' f; do
-      local rel_path="${f#$DATA_DIR/$stage_dir/}"
-      local link_name=$(basename "$f")
+    # Create source/video folder structure in view
+    local video_view_dir="$view_base/$source/$folder"
+    mkdir -p "$video_view_dir"
 
-      # Create symlink if not exists
-      if [[ ! -L "$view_dir/$link_name" ]]; then
-        ln -sf "$f" "$view_dir/$link_name" 2>/dev/null || true
+    local found_file=false
+
+    if is_nested_stage "$stage"; then
+      # Nested stage: data/<stage>/<source>/<video>/
+      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
+      if [[ -d "$src_video_dir" ]]; then
+        # Symlink all matching files in the video folder
+        while IFS= read -r -d '' f; do
+          found_file=true
+          local link_name=$(basename "$f")
+          local rel_target
+          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+          ((++link_count))
+        done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
       fi
-    done < <(find "$DATA_DIR/$stage_dir" -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+    else
+      # Flat stage: data/<stage>/ (files directly in stage folder)
+      while IFS= read -r -d '' f; do
+        found_file=true
+        local link_name=$(basename "$f")
+        local rel_target
+        rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+        ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+        ((++link_count))
+      done < <(find "$DATA_DIR/$stage_dir" -maxdepth 1 -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+    fi
+
+    # Create .pending marker if no files found
+    if [[ "$found_file" == false ]]; then
+      touch "$video_view_dir/.pending"
+      ((++pending_count))
+    fi
   done < "$manifest"
 
-  local count=$(find "$view_dir" -type l 2>/dev/null | wc -l)
-  echo "  View: $view_dir ($count files)"
+  echo "  $stage_dir: $link_count files, $pending_count pending"
 }
 
 # Create full symlink view for all stages
 create_full_view() {
   local sub_id="$1"
+  local batch_id
+  batch_id=$(get_batch_id "$sub_id")
 
   echo ""
   echo "=== Creating View for $sub_id ==="
+  echo ""
 
-  for stage in "${STAGE_ORDER[@]}"; do
+  for stage in "${ALL_STAGES[@]}"; do
     create_stage_view "$sub_id" "$stage"
   done
 
   echo ""
-  echo "Browse: $DATA_DIR/$sub_id/"
+  echo "Browse: $VIEWS_DIR/$batch_id/$sub_id/"
 }
 
 # Update status
@@ -463,10 +540,16 @@ approve_sub_batch() {
   update_status "$batch_id" "$sub_id" "approved"
 
   # Remove symlink view folder
-  local view_dir="$DATA_DIR/$sub_id"
+  local view_dir="$VIEWS_DIR/$batch_id/$sub_id"
   if [[ -d "$view_dir" ]]; then
     echo "Removing view folder: $view_dir"
     rm -rf "$view_dir"
+  fi
+
+  # Also clean old-style view folder if exists
+  local old_view_dir="$DATA_DIR/$sub_id"
+  if [[ -d "$old_view_dir" ]]; then
+    rm -rf "$old_view_dir"
   fi
 
   echo "Approved: $sub_id"

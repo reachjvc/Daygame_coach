@@ -44,13 +44,20 @@ Signed off 05-02-2026. 3 Todd V videos excluded (age-restricted). 2 minor warnin
 - [ ] Verify techniques in transcript, phases progress correctly
 - [ ] Sign-off
 
-### Stage 08 — Ingest
+### Stage 08 — Taxonomy Validation
 - [ ] Run on 12 videos
-- [ ] Verify chunks, metadata, vector search
+- [ ] Verify exit code 0 (PASS), review any unlisted concepts
 - [ ] Sign-off
 
-### Stage 09 — Taxonomy Report
-- [ ] Run, review unlisted concepts with 3+ occurrences
+### Stage 09 — Chunk & Embed
+- [ ] Run on 12 videos
+- [ ] Verify .chunks.json files created with embeddings
+- [ ] Sign-off
+
+### Stage 10 — Ingest
+- [ ] Run on 12 videos
+- [ ] Verify chunks in Supabase, vector search works
+- [ ] Sign-off
 
 ### End-to-End
 - [ ] Run `batch_report.py --all --batch-id R2`
@@ -80,3 +87,54 @@ Signed off 05-02-2026. 3 Todd V videos excluded (age-restricted). 2 minor warnin
 - [x] Evidence: fuzzy match >30% mismatch → block
 - [x] Batch report: stats + drift detection
 - [ ] Rate limit handling (test on R2)
+
+---
+
+## End Goal: Smart RAG Retrieval
+
+Current RAG does basic vector similarity on dialogue text. End goal is intelligent retrieval using all pipeline metadata.
+
+### Target Architecture
+
+```
+INGESTION (Stage 09):
+  Embed WITH metadata prefix:
+  "[TOPIC: career] [TECHNIQUE: qualification] [PHASE: pre_hook]
+   Coach: What do you study? Girl: Medicine..."
+
+QUERY TIME:
+  User question → LLM query parsing → structured intent
+       ↓
+  {topic: "career", keyword: "medicine", intent: "response script"}
+       ↓
+  Metadata filter: WHERE topics ? 'career' AND content ~ 'medicine'
+  + Vector search: ORDER BY embedding <-> query_embedding
+       ↓
+  Top chunks + relevant metadata → Claude
+```
+
+### Requirements
+
+| Component | Status | Description |
+|-----------|--------|-------------|
+| Store metadata | ✅ Done | topics, techniques, phase in Supabase JSONB |
+| Embed metadata | ❌ TODO | Re-embed with metadata prefix in Stage 09 |
+| Query parsing | ❌ TODO | LLM/rules to extract intent from question |
+| Metadata filters | ❌ TODO | Use parsed intent to filter before vector search |
+| Show metadata to Claude | ❌ TODO | Include relevant techniques/topics in prompt |
+
+### Why This Matters
+
+User asks: "what to say when she studies medicine"
+
+| Approach | Result |
+|----------|--------|
+| Current (vector only) | Might return generic career talk |
+| With metadata + parsing | Finds exact chunk where girl said "medicine" |
+
+### Implementation Order
+
+1. Wire up metadata filters in retrieval.ts (use existing stored metadata)
+2. Add query parsing (rules first, LLM later)
+3. Re-embed with metadata prefix (requires Stage 09 re-run)
+4. Show relevant metadata to Claude in prompt
