@@ -367,6 +367,11 @@ def main() -> None:
     parser.add_argument("--batch-id", required=True, help="Batch identifier (e.g., R1, R2, P001)")
     parser.add_argument("--compare", action="store_true", help="Compare against prior batches")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
+    parser.add_argument(
+        "--no-write",
+        action="store_true",
+        help="Do not write report file to data/batch_reports (stdout only)",
+    )
 
     args = parser.parse_args()
 
@@ -404,9 +409,10 @@ def main() -> None:
         report["drift_detection"] = drift_flags
 
     # Save report
-    report_path = batch_reports_dir() / f"batch_{args.batch_id}.json"
-    report_path.write_text(json.dumps(report, indent=2))
-    print(f"{LOG_PREFIX} Report saved to: {report_path}")
+    if not args.no_write:
+        report_path = batch_reports_dir() / f"batch_{args.batch_id}.json"
+        report_path.write_text(json.dumps(report, indent=2))
+        print(f"{LOG_PREFIX} Report saved to: {report_path}")
 
     # Output
     if args.json:
