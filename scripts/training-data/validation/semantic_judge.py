@@ -471,11 +471,29 @@ def main() -> None:
             "seed": args.seed,
         }
 
+        overall = 0
         try:
             overall = int(parsed.get("scores", {}).get("overall_score_0_100", 0))
             scores.append(overall)
         except Exception:
-            pass
+            overall = 0
+
+        flags = parsed.get("flags", {}) if isinstance(parsed.get("flags"), dict) else {}
+        major = sum(
+            1
+            for it in (parsed.get("issues", []) or [])
+            if isinstance(it, dict) and it.get("severity") == "major"
+        )
+        minor = sum(
+            1
+            for it in (parsed.get("issues", []) or [])
+            if isinstance(it, dict) and it.get("severity") == "minor"
+        )
+        print(
+            f"{LOG_PREFIX}   Score={overall:3d} "
+            f"flags={{major_errors={bool(flags.get('major_errors'))}, hallucination={bool(flags.get('hallucination_suspected'))}}} "
+            f"issues={{major={major}, minor={minor}}}"
+        )
 
         if not args.no_write:
             out_path.write_text(json.dumps(parsed, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -494,4 +512,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
