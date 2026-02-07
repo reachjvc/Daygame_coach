@@ -19,10 +19,13 @@
 #   D) Create symlink view for browsing:
 #      ./sub-batch-pipeline P001.1 --view
 #
-#   E) Mark sub-batch as approved:
+#   E) Run validations for a sub-batch manifest:
+#      ./sub-batch-pipeline P001.1 --validate
+#
+#   F) Mark sub-batch as approved:
 #      ./sub-batch-pipeline P001.1 --approve
 #
-#   F) Show batch-level status:
+#   G) Show batch-level status:
 #      ./sub-batch-pipeline P001 --status
 
 set -euo pipefail
@@ -89,6 +92,7 @@ Usage:
   ./sub-batch-pipeline P001.1 --stage 06         Run stage 06 only
   ./sub-batch-pipeline P001.1 --stage 06b        Run stage 06b only
   ./sub-batch-pipeline P001.1 --view             Create symlink view in batch-views/P001/P001.1/
+  ./sub-batch-pipeline P001.1 --validate         Run cross-stage validators for this sub-batch
   ./sub-batch-pipeline P001.1 --approve          Mark as approved
   ./sub-batch-pipeline P001 --status             Batch-level status
 
@@ -588,6 +592,20 @@ approve_sub_batch() {
   echo "Approved: $sub_id"
 }
 
+validate_sub_batch() {
+  local sub_id="$1"
+  local manifest="$BATCHES_DIR/${sub_id}.txt"
+  if [[ ! -f "$manifest" ]]; then
+    error "Sub-batch manifest not found: $manifest"
+  fi
+
+  echo ""
+  echo "=== Validations: $sub_id ==="
+  echo ""
+
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_cross_stage.py" --manifest "$manifest"
+}
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -613,6 +631,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --approve)
       MODE="approve"
+      shift
+      ;;
+    --validate)
+      MODE="validate"
       shift
       ;;
     --stage)
@@ -684,6 +706,12 @@ case "$MODE" in
       error "--approve requires a sub-batch ID (e.g., P001.1)"
     fi
     approve_sub_batch "$SUB_BATCH_ID"
+    ;;
+  validate)
+    if ! is_sub_batch "$SUB_BATCH_ID"; then
+      error "--validate requires a sub-batch ID (e.g., P001.1)"
+    fi
+    validate_sub_batch "$SUB_BATCH_ID"
     ;;
   *)
     # Default: show status
