@@ -9,7 +9,6 @@
 # To exclude a new video:
 #   1. Add a line below
 #   2. Run: ./scripts/training-data/sync-exclusions
-#      (or it runs automatically at the start of final_pipeline)
 
 tZ2EacnJypk | natural_lifestyles_askthecoaches | Video unavailable on YouTube | 2026-02-05
 wv-U9drRpAo | TODD_V | Age-restricted, YouTube serves silent audio-only streams (-91 dB) | 2026-02-05

@@ -272,7 +272,8 @@ def main():
             f.write(f"{s} | {folder}\n")
 
     print(f"\nManifest written: {manifest_path}")
-    print(f"Run with: ./scripts/training-data/final_pipeline --manifest {manifest_path.relative_to(root)} --skip-ingest")
+    print(f"Next: ./scripts/training-data/sub-batch-create {manifest_path.stem}")
+    print(f"Then: ./scripts/training-data/sub-batch-pipeline {manifest_path.stem}.1 --status")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
-# Pipeline Audit Template (Audit-Only)
+# Pipeline Audit (Codex)
+**Status:** Complete
+**Updated:** 06-02-2026
 
 **Purpose:** Produce a reviewable audit of pipeline files, inconsistencies, and cleanup candidates. No code changes. No refactors.
 

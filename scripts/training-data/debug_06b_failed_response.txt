@@ -1,6 +1,0 @@
-Verdict: **FLAG**. The output is mostly correct but has several issues that should be reviewed:
-
-1. **Segment 399** — target override likely wrong; the "14 children" marriage joke is coach speech misattributed via diarization
-2. **Segments 515-517** — SPEAKER_04 coach override is wrong; "allow yourself to be coached" is clearly a student testimonial
-3. **Conv 7** — should be commentary, not its own conversation (no target, coach-only speech about the venue)
-4. **Conv 4** — 1-second fragment that's too minimal to be a real conversation

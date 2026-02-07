@@ -1,4 +1,6 @@
 # Pipeline Audit Template (Audit-Only)
+**Status:** Template
+**Updated:** 07-02-2026
 
 **Purpose:** Produce a reviewable audit of pipeline files, inconsistencies, and cleanup candidates. No code changes. No refactors.
 
@@ -13,7 +15,7 @@
 
 ## 2) Canonical Pipeline Map (As Found)
 - Stage list with script path, inputs, outputs.
-- Orchestration entry points used (batches, sub-batch, final_pipeline, etc.).
+- Orchestration entry points used (batches, sub-batch-pipeline, etc.).
 
 ## 3) File Inventory (In Scope)
 - List key files grouped by category:
