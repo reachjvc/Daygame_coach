@@ -22,6 +22,9 @@ Use:
 
   D) Output JSON report:
      python validate_cross_stage.py --all --json
+
+  E) Validate a sub-batch manifest:
+     python validate_cross_stage.py --manifest docs/pipeline/batches/P001.1.txt
 """
 
 from __future__ import annotations
@@ -38,6 +41,27 @@ from typing import Any, Dict, List, Optional, Tuple, Iterable, Set
 LOG_PREFIX = "[cross-stage]"
 
 _VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+_BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
+
+
+def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
+    """Load docs/pipeline/batches/*.txt manifest and return the set of video ids."""
+    ids: Set[str] = set()
+    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        src = parts[0].strip()
+        if source and src != source:
+            continue
+        folder = parts[1].strip()
+        m = _BRACKET_ID_RE.search(folder)
+        if m:
+            ids.add(m.group(1))
+    return ids
 
 
 @dataclass
@@ -387,6 +411,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06/06c and 07")
     parser.add_argument("--s06", help="Stage 06 or 06c output file (conversations.json)")
     parser.add_argument("--s07", help="Stage 07 output file (enriched.json)")
+    parser.add_argument("--manifest", help="Validate only videos listed in a batch/sub-batch manifest file")
     parser.add_argument("--source", help="Validate all videos in a source directory")
     parser.add_argument("--all", action="store_true", help="Validate all sources")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
@@ -412,6 +437,39 @@ def main() -> None:
         video_id = s06_data.get("video_id", s06_path.stem)
 
         all_results = validate_cross_stage(s06_data, s07_data, video_id)
+
+    elif args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Manifest file not found: {manifest_path}", file=sys.stderr)
+            sys.exit(1)
+
+        manifest_ids = _load_manifest_ids(manifest_path, source=args.source)
+        if not manifest_ids:
+            print(f"{LOG_PREFIX} No video ids found in manifest: {manifest_path}")
+            sys.exit(0)
+
+        pairs = find_video_pairs(None)
+        pairs = [p for p in pairs if p[2] in manifest_ids]
+
+        missing = sorted(manifest_ids - {vid for _, _, vid in pairs})
+        if missing:
+            # Missing pairs aren't necessarily an error (stage outputs may not exist yet), but they are actionable.
+            print(f"{LOG_PREFIX} WARN  Missing stage 06/07 pairs for {len(missing)} manifest video(s)")
+
+        if not pairs:
+            print(f"{LOG_PREFIX} No matching Stage 06/07 file pairs found for manifest videos")
+            sys.exit(0)
+
+        print(f"{LOG_PREFIX} Found {len(pairs)}/{len(manifest_ids)} manifest video pair(s) to validate")
+
+        for s06_path, s07_path, video_id in pairs:
+            s06_data = json.loads(s06_path.read_text())
+            s07_data = json.loads(s07_path.read_text())
+            results = validate_cross_stage(s06_data, s07_data, video_id)
+            all_results.extend(results)
 
     elif args.source or args.all:
         pairs = find_video_pairs(args.source if args.source else None)
