@@ -1,6 +1,6 @@
 # Codex Pipeline Validation Plan (Supplement)
 
-**Status:** Draft (in progress)
+**Status:** Draft (in progress; partially implemented on `pipeline-validation-hardening`)
 **Updated:** 2026-02-07
 
 This document is intentionally structured to merge cleanly with `docs/pipeline/audits/claude_pipeline_validation.md`.
@@ -11,10 +11,10 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Output layout consistency (root-flat vs source-flat vs source-video) and how to make validators robust
 - Snapshot-derived baseline signals (non-authoritative) + reproducible measurement commands (execution phase)
 
-**Planning-only note (important):**
-- This document is a plan. While drafting/reviewing it: do not run pipeline stages and do not generate new reports/artifacts/state files.
-- The only allowed new artifact right now is this plan file itself: `docs/pipeline/audits/codex_pipeline_validation.md`.
-- This doc references *future* artifacts (stage reports, batch rollups, quarantine index) and includes example commands. Treat anything that writes under `data/` as execution-phase only.
+**Doc scope note (important):**
+- This document is the long-form spec/checklist and is intended to merge cleanly with Claude’s audit.
+- Implementation work has started on branch `pipeline-validation-hardening` (separate worktree), including canary manifests and validation tooling improvements.
+- For the concrete execution loop and handoff instructions, see: `docs/pipeline/audits/pipeline_validation_runbook.md`.
 
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.
@@ -38,11 +38,10 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Stage 09/10 idempotency keys:
   - current code uses title-derived stems; this doc recommends `sourceKey = <channel>/<video_id>.txt`
 
-**Non-goals (planning phase):**
-- Do not run pipeline stages or generate any new `data/*` artifacts while drafting/reviewing this plan.
-- Do not implement code changes yet; this document is the spec/checklist we will evaluate before coding.
+**Non-goals (still):**
+- Don’t redesign the taxonomy content yet; measure drift first (treat taxonomy expansion as a human decision).
 - Do not optimize for speed/cost yet; correctness + observability come first.
-- Do not redesign taxonomy content yet; treat Stage 08 as a gate/validator and measure drift before expanding lists.
+- Don’t “fix” quality by loosening validators without recording why (prefer normalization + explicit debt tracking).
 
 **Assumptions (make explicit during merge if Claude differs):**
 - `video_id` (11-char YouTube id) is the stable primary key; titles/stems are display-only.
@@ -63,12 +62,10 @@ Produce a thorough, high-quality evaluation + validation plan for the full video
 - Specify automated detection, validators, and prompt-quality upgrades
 - Reduce errors and improve output sharpness
 
-**Constraints:**
-- This is a planning and validation document only
-- Do not change code during analysis
-- Do not optimize for speed
-- Make the plan detailed and checklist-driven
-- Quality over speed: extra effort for better architecture is worth it
+**Constraints (execution discipline):**
+- Make changes on a branch/worktree (do not destabilize main while iterating).
+- Prefer deterministic validators + reports over ad-hoc manual spot checks.
+- Treat anything that writes under `data/` as “execution phase” and keep it reproducible via manifests.
 
 ---
 
@@ -1002,6 +999,7 @@ Stage 06b (`scripts/training-data/06b.verify`):
 Stage 07 (`scripts/training-data/07.content`):
 - Make transcript-quality reporting index unambiguous for infield prompts (include global `segments[].id` in the prompt or extend remapping to `low_quality_segments` / `transcript_artifacts`).
 - Add explicit “evidence quoting” guidance to reduce `evidence_mismatch` without inflating verbosity.
+- Add a conservative normalization layer for common LLM drift (invalid topics/techniques moved into `unlisted_concepts`, hook/investment cleared when `post_hook` is absent), and surface “repairs applied” as warnings/metadata.
 
 Long transcript mitigation (06/06b/07):
 - Add a deterministic prompt shortening strategy for very long videos:
@@ -1032,7 +1030,11 @@ Calibration must be data-driven:
 
 ## 11) Batch Testing Plan (Concrete Runs)
 
-Use `docs/pipeline/test_videos.txt` as the canonical *selection list* for curated test videos.
+Use runnable manifests under `docs/pipeline/batches/` as the canonical test sets:
+- `docs/pipeline/batches/CANARY.1.txt` (fast regression set; cheap, diverse)
+- `docs/pipeline/batches/HOLDOUT.1.txt` (rotating holdout; run less frequently to reduce overfitting)
+
+`docs/pipeline/test_videos.txt` can remain as a candidate pool, but it is not directly runnable.
 
 Important format note:
 - `docs/pipeline/test_videos.txt` is **not** a pipeline `--manifest` file. Stage scripts and batch tooling expect the manifest format:
@@ -1047,6 +1049,10 @@ Required runs:
 1. `--manifest` run with 1 video (repeat 5x) to validate determinism.
 2. `--manifest` run with 2 videos (repeat 3x) to validate sub-batch boundaries.
 3. `--manifest` run with 10 videos (repeat 2x) to validate scaled behavior.
+
+Human review (spot checks):
+- Generate a small Markdown review pack from Stage 07 outputs:
+  - `python3 scripts/training-data/validation/sample_review.py --manifest docs/pipeline/batches/CANARY.1.txt --n 3 --seed 1`
 
 Track:
 - stage gates triggered

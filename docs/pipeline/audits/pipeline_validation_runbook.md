@@ -2,7 +2,8 @@
 
 **Branch:** `pipeline-validation-hardening`  
 **Worktree (current):** `/tmp/daygame-coach-pipeline-validation-hardening`  
-**Canary manifest:** `docs/pipeline/batches/CANARY.1.txt`
+**Canary manifest:** `docs/pipeline/batches/CANARY.1.txt`  
+**Holdout manifest:** `docs/pipeline/batches/HOLDOUT.1.txt`
 
 This runbook exists so another agent can pick up work without any chat history.
 
@@ -21,6 +22,11 @@ Expected right now (after a successful run):
 - 06c outputs: `data/06c.patched/<source>/*.conversations.json`
 - 07 outputs:  `data/07.content/<source>/*.enriched.json` and `*.enriched.validation.json`
 - Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
+
+## Holdout Set (HOLDOUT.1)
+
+`HOLDOUT.1` is a second manifest intended to be run less frequently.
+Use it to catch regressions that might not appear in `CANARY.1` and to reduce overfitting.
 
 ## Where the Plan Lives
 

@@ -1,0 +1,18 @@
+# Sub-batch HOLDOUT.1
+# Created: 2026-02-07
+# Videos: 7
+#
+# Purpose:
+# - Rotating holdout set for Stage 06b/06c/07 iteration to reduce overfitting to CANARY.*.
+# - Run less frequently than CANARY.* (higher cost / longer videos).
+# - Keep diverse types (infield/compilation/talking_head/podcast) and sources.
+#
+# Format: source_name | video_folder_name
+austen_summers_meets_girls | How to Take Home a Swedish Blonde [D1t_K8hjJzc]
+coach_kyle_how_to_approach_a_girl | How To Approach ANY GIRL in Public And Get Her Number (Step-By-Step) [QyCyJSK7IFw]
+coach_kyle_how_to_approach_a_girl | Get a Date in 5 Minutes： Full Infield Interaction (Cold Approach) [e2dLEB-AwmA]
+coach_kyle_how_to_approach_a_girl | Do you have NICE GUY syndrome？ (Women hate this) [5NowaRBlzP8]
+daily_evolution | 10 Years Of Game (My Greatest Advice) [yVbiH29D3Q0]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #2 - Pushing Game Tech [8xw8sEUI0Pg]
+NICK_KRAUSER_OUTLAWDAYGAME | Outlaw Daygame - Part 11 - Grunts & Shoves [v31iSEwaGFI]
+
