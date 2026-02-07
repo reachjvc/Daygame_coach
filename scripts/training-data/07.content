@@ -1687,6 +1687,7 @@ def main() -> None:
         if not manifest_path.exists():
             raise SystemExit(f"Manifest file not found: {manifest_path}")
 
+        out_base = Path(args.output) if args.output else output_root()
         sources_map = load_manifest_sources(manifest_path)
         total_convs = 0
         total_enriched = 0
@@ -1697,7 +1698,7 @@ def main() -> None:
                 print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
 
-            src_out_dir = output_root() / src_name
+            src_out_dir = out_base / src_name
             files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
             if not files:
                 print(f"[07.content] Skipping {src_name}: no manifest videos found in input")
@@ -1734,6 +1735,7 @@ def main() -> None:
         if not sources_path.exists():
             raise SystemExit(f"Sources file not found: {sources_path}")
 
+        out_base = Path(args.output) if args.output else output_root()
         total_convs = 0
         total_enriched = 0
 
@@ -1743,7 +1745,7 @@ def main() -> None:
                 print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
 
-            src_out_dir = output_root() / src_name
+            src_out_dir = out_base / src_name
             files = find_input_files(src_in_dir)
 
             skipped_verification = 0

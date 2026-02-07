@@ -878,6 +878,7 @@ def _run_sources(args) -> None:
     if not sources_path.exists():
         raise SystemExit(f"Sources file not found: {sources_path}")
 
+    out_base = Path(args.output) if args.output else output_root()
     total_fixes = 0
     total_files = 0
 
@@ -887,8 +888,7 @@ def _run_sources(args) -> None:
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
 
-        src_s06b_dir = s06b_root() / src_name
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
 
         for input_file in files:
@@ -914,6 +914,7 @@ def _run_manifest(args) -> None:
     if not manifest_path.exists():
         raise SystemExit(f"Manifest file not found: {manifest_path}")
 
+    out_base = Path(args.output) if args.output else output_root()
     sources_map = load_manifest_sources(manifest_path)
 
     for src_name, vid_ids in sorted(sources_map.items()):
@@ -922,8 +923,7 @@ def _run_manifest(args) -> None:
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
 
-        src_s06b_dir = s06b_root() / src_name
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
         if not files:
             print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
