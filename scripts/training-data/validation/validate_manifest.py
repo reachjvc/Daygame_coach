@@ -141,6 +141,7 @@ def main() -> None:
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
     idx_s06c = _index_paths_by_video_id(s06c_root, "*.conversations.json", manifest_ids)
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
+    idx_s07_val = _index_paths_by_video_id(s07_root, "*.validation.json", manifest_ids)
     idx_s06b = _index_paths_by_video_id(s06b_root, "*.verification.json", manifest_ids)
 
     verdict_counts: Counter = Counter()
@@ -151,6 +152,15 @@ def main() -> None:
     issues: List[Dict[str, Any]] = []
     check_counts: Counter = Counter()
     validated_pairs = 0
+    cross_stage_errors = 0
+    cross_stage_warnings = 0
+
+    # Stage 07 quality signals (from per-file validation + normalization metadata)
+    stage07_val_errors = 0
+    stage07_val_warnings = 0
+    stage07_warning_types: Counter = Counter()
+    stage07_normalization_repairs_total = 0
+    stage07_videos_with_repairs = 0
 
     blocked_by_gate = 0
     allowed_by_gate = 0
@@ -166,17 +176,89 @@ def main() -> None:
         s06c_candidates = idx_s06c.get(vid) or []
         s06_candidates = idx_s06.get(vid) or []
         s07_candidates = idx_s07.get(vid) or []
+        s07v_candidates = idx_s07_val.get(vid) or []
         v_candidates = idx_s06b.get(vid) or []
 
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
+        s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
         v_path = _pick_best_candidate(v_candidates, src) if v_candidates else None
 
         if not s06c_path:
             missing_s06c.append(vid)
         if not s07_path:
             missing_s07.append(vid)
+
+        # Stage 07 per-file validation handling
+        if s07_path and not s07v_path:
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "warning",
+                "check": "missing_stage07_validation",
+                "message": "Stage 07 enriched output exists but no .validation.json was found",
+                "s07": str(s07_path),
+            })
+            check_counts["warning:missing_stage07_validation"] += 1
+
+        if (not s07_path) and s07v_path:
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "stage07_partial_write",
+                "message": "Stage 07 validation exists but enriched output is missing (partial write / validation failure)",
+                "s07_validation": str(s07v_path),
+            })
+            check_counts["error:stage07_partial_write"] += 1
+
+        if s07v_path:
+            s07v = _load_json(s07v_path)
+            if not s07v:
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "warning",
+                    "check": "unreadable_stage07_validation",
+                    "message": "Could not read Stage 07 validation JSON",
+                    "s07_validation": str(s07v_path),
+                })
+                check_counts["warning:unreadable_stage07_validation"] += 1
+            else:
+                summary = s07v.get("summary", {})
+                v_err = summary.get("errors", 0)
+                v_warn = summary.get("warnings", 0)
+                if isinstance(v_err, int) and v_err:
+                    stage07_val_errors += v_err
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "stage07_validation_errors",
+                        "message": f"Stage 07 validation reports {v_err} error(s)",
+                        "s07_validation": str(s07v_path),
+                    })
+                    check_counts["error:stage07_validation_errors"] += 1
+                if isinstance(v_warn, int) and v_warn:
+                    stage07_val_warnings += v_warn
+
+                    # Summarize warning types for this video (avoid spamming per-warning issues).
+                    w_counts: Counter = Counter()
+                    for r in s07v.get("results", []) or []:
+                        if r.get("severity") == "warning":
+                            w_counts[r.get("check", "unknown")] += 1
+                            stage07_warning_types[r.get("check", "unknown")] += 1
+
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "warning",
+                        "check": "stage07_validation_warnings",
+                        "message": f"Stage 07 validation reports {v_warn} warning(s): {dict(w_counts)}",
+                        "s07_validation": str(s07v_path),
+                    })
+                    check_counts["warning:stage07_validation_warnings"] += 1
 
         verdict: Optional[str] = None
         if not v_path:
@@ -219,6 +301,7 @@ def main() -> None:
                     "s07": str(s07_path),
                 })
                 check_counts["unreadable_json"] += 1
+                cross_stage_errors += 1
                 continue
 
             validated_pairs += 1
@@ -236,6 +319,26 @@ def main() -> None:
                     "s07": str(s07_path),
                 })
                 check_counts[f"{r.severity}:{r.check}"] += 1
+                if r.severity == "error":
+                    cross_stage_errors += 1
+                elif r.severity == "warning":
+                    cross_stage_warnings += 1
+
+            # Stage 07 normalization metadata (best-effort drift repairs)
+            meta = s07_data.get("metadata", {}) if isinstance(s07_data, dict) else {}
+            repairs = meta.get("normalization_repairs_count", 0)
+            if isinstance(repairs, int) and repairs > 0:
+                stage07_videos_with_repairs += 1
+                stage07_normalization_repairs_total += repairs
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "warning",
+                    "check": "stage07_normalization_repairs",
+                    "message": f"Stage 07 applied {repairs} normalization repair(s) before validation",
+                    "s07": str(s07_path),
+                })
+                check_counts["warning:stage07_normalization_repairs"] += 1
 
         # Sanity: Stage 07 output existing despite REJECT verdict is suspicious.
         if verdict == "REJECT" and s07_path:
@@ -279,8 +382,19 @@ def main() -> None:
             "flag_allowed": gate_flag_allowed,
             "flag_blocked": gate_flag_blocked,
         },
+        "stage07_validation": {
+            "errors": stage07_val_errors,
+            "warnings": stage07_val_warnings,
+            "warning_types": dict(stage07_warning_types),
+            "normalization_repairs_total": stage07_normalization_repairs_total,
+            "videos_with_repairs": stage07_videos_with_repairs,
+        },
         "cross_stage": {
             "validated_pairs": validated_pairs,
+            "errors": cross_stage_errors,
+            "warnings": cross_stage_warnings,
+        },
+        "issues_summary": {
             "errors": errors,
             "warnings": warnings,
         },
@@ -310,7 +424,16 @@ def main() -> None:
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
         )
 
-        print(f"{LOG_PREFIX} Cross-stage: validated_pairs={validated_pairs}, errors={errors}, warnings={warnings}")
+        print(
+            f"{LOG_PREFIX} Cross-stage: validated_pairs={validated_pairs}, "
+            f"errors={cross_stage_errors}, warnings={cross_stage_warnings}"
+        )
+        if stage07_val_errors or stage07_val_warnings or stage07_normalization_repairs_total:
+            print(
+                f"{LOG_PREFIX} Stage07 validation: errors={stage07_val_errors}, warnings={stage07_val_warnings}, "
+                f"normalization_repairs={stage07_normalization_repairs_total}"
+            )
+        print(f"{LOG_PREFIX} Issues total: errors={errors}, warnings={warnings}")
         print(f"{LOG_PREFIX} Result: {'PASS' if passed else 'FAIL'} ({elapsed:.1f}s)")
 
         if issues:
@@ -339,4 +462,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

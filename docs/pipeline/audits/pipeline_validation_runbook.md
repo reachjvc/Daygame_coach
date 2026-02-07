@@ -20,7 +20,7 @@ Expected right now (after a successful run):
 - 06b outputs: `data/06b.verify/<source>/*.verification.json`
 - 06c outputs: `data/06c.patched/<source>/*.conversations.json`
 - 07 outputs:  `data/07.content/<source>/*.enriched.json` and `*.enriched.validation.json`
-- Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS
+- Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
 
 ## Where the Plan Lives
 
@@ -44,6 +44,11 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ```
 
 ### 2) PASS/FAIL harness (read-only)
+
+This includes:
+- artifact presence checks (06b/06c/07)
+- cross-stage consistency (06/06c vs 07)
+- Stage 07 per-file validation summary (warnings/errors) and partial-write detection
 
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py \
@@ -112,4 +117,3 @@ To continue later:
 3. Run the canary loop above
 
 Generated `data/*` artifacts are not committed; they are reproducible from the scripts + manifests.
-

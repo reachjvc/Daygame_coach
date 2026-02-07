@@ -33,8 +33,9 @@ import re
 import sys
 import time
 from collections import Counter
+from statistics import median
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 LOG_PREFIX = "[batch-report]"
 
@@ -65,6 +66,27 @@ def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set
     return ids
 
 
+def _load_manifest_entries(manifest_path: Path, source: Optional[str] = None) -> List[Tuple[str, str]]:
+    """Return list of (source, video_id) for all manifest rows."""
+    out: List[Tuple[str, str]] = []
+    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        src = parts[0].strip()
+        if source and src != source:
+            continue
+        folder = parts[1].strip()
+        m = _BRACKET_ID_RE.search(folder)
+        if not m:
+            continue
+        out.append((src, m.group(1)))
+    return out
+
+
 def _extract_video_id(data: Dict[str, Any]) -> Optional[str]:
     vid = data.get("video_id")
     if isinstance(vid, str) and vid:
@@ -88,6 +110,68 @@ def _filter_by_manifest(files: List[Dict], manifest_ids: Set[str]) -> List[Dict]
     return out
 
 
+def _video_id_for_path(p: Path) -> Optional[str]:
+    m = _BRACKET_ID_RE.search(str(p))
+    return m.group(1) if m else None
+
+
+def _index_paths_by_video_id(
+    stage_root: Path,
+    glob_pattern: str,
+    only_ids: Optional[Set[str]] = None,
+) -> Dict[str, List[Path]]:
+    out: Dict[str, List[Path]] = {}
+    if not stage_root.exists():
+        return out
+    for p in stage_root.rglob(glob_pattern):
+        vid = _video_id_for_path(p)
+        if not vid:
+            continue
+        if only_ids and vid not in only_ids:
+            continue
+        out.setdefault(vid, []).append(p)
+    return out
+
+
+def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]) -> Path:
+    def rank(p: Path) -> Tuple[int, int, float, str]:
+        source_bonus = 1 if (preferred_source and preferred_source in p.parts) else 0
+        depth = len(p.parts)
+        try:
+            mtime = p.stat().st_mtime
+        except OSError:
+            mtime = 0.0
+        return (source_bonus, depth, mtime, str(p))
+
+    return sorted(candidates, key=rank, reverse=True)[0]
+
+
+def _load_json_files(
+    stage_root: Path,
+    glob_pattern: str,
+    *,
+    stage_name: str,
+    source_filter: Optional[str],
+    only_ids: Optional[Set[str]],
+    preferred_source_by_vid: Optional[Dict[str, str]] = None,
+) -> List[Dict]:
+    root = stage_root / source_filter if source_filter else stage_root
+    idx = _index_paths_by_video_id(root, glob_pattern, only_ids=only_ids)
+    files: List[Dict] = []
+    for vid in sorted(idx.keys()):
+        candidates = idx[vid]
+        preferred_source = preferred_source_by_vid.get(vid) if preferred_source_by_vid else source_filter
+        best = _pick_best_candidate(candidates, preferred_source)
+        try:
+            data = json.loads(best.read_text())
+            data["_source_file"] = str(best)
+            data["_stage"] = stage_name
+            files.append(data)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"{LOG_PREFIX} WARNING: Could not read {best}: {e}")
+    return files
+
+
 def batch_reports_dir() -> Path:
     d = repo_root() / "data" / "batch_reports"
     d.mkdir(parents=True, exist_ok=True)
@@ -95,60 +179,62 @@ def batch_reports_dir() -> Path:
 
 
 def load_enriched_files(source: Optional[str] = None) -> List[Dict]:
-    """Load all enriched.json files from data/07.content/."""
+    """Load enriched.json files from data/07.content/, de-duped by video_id."""
     content_root = repo_root() / "data" / "07.content"
-    search_dirs = [content_root / source] if source else [content_root]
-
-    files: List[Dict] = []
-    for search_dir in search_dirs:
-        if not search_dir.exists():
-            continue
-        for f in sorted(search_dir.rglob("*.enriched.json")):
-            try:
-                data = json.loads(f.read_text())
-                data["_source_file"] = str(f)
-                files.append(data)
-            except (json.JSONDecodeError, IOError) as e:
-                print(f"{LOG_PREFIX} WARNING: Could not read {f}: {e}")
-    return files
+    return _load_json_files(
+        content_root,
+        "*.enriched.json",
+        stage_name="07.content",
+        source_filter=source,
+        only_ids=None,
+    )
 
 
 def load_conversations_files(source: Optional[str] = None) -> List[Dict]:
-    """Load all conversations.json files from data/06.video-type/."""
+    """Load conversations.json files, preferring 06c.patched when present."""
+    patched_root = repo_root() / "data" / "06c.patched"
     vtype_root = repo_root() / "data" / "06.video-type"
-    search_dirs = [vtype_root / source] if source else [vtype_root]
+
+    idx_06c = _index_paths_by_video_id(
+        patched_root / source if source else patched_root,
+        "*.conversations.json",
+        only_ids=None,
+    )
+    idx_06 = _index_paths_by_video_id(
+        vtype_root / source if source else vtype_root,
+        "*.conversations.json",
+        only_ids=None,
+    )
 
     files: List[Dict] = []
-    for search_dir in search_dirs:
-        if not search_dir.exists():
+    for vid in sorted(set(idx_06c.keys()) | set(idx_06.keys())):
+        candidates = idx_06c.get(vid) or idx_06.get(vid) or []
+        if not candidates:
             continue
-        for f in sorted(search_dir.rglob("*.conversations.json")):
-            try:
-                data = json.loads(f.read_text())
-                data["_source_file"] = str(f)
-                files.append(data)
-            except (json.JSONDecodeError, IOError) as e:
-                print(f"{LOG_PREFIX} WARNING: Could not read {f}: {e}")
+        stage_name = "06c.patched" if vid in idx_06c else "06.video-type"
+        best = _pick_best_candidate(candidates, preferred_source=source)
+        try:
+            data = json.loads(best.read_text())
+            data["_source_file"] = str(best)
+            data["_stage"] = stage_name
+            files.append(data)
+        except (json.JSONDecodeError, IOError) as e:
+            print(f"{LOG_PREFIX} WARNING: Could not read {best}: {e}")
     return files
 
 
 def load_validation_files(source: Optional[str] = None) -> List[Dict]:
-    """Load all .validation.json files from both stage directories."""
+    """Load .validation.json files (de-duped by video_id)."""
     validations: List[Dict] = []
     for stage_dir in ["06.video-type", "07.content"]:
         root = repo_root() / "data" / stage_dir
-        search_dirs = [root / source] if source else [root]
-        for search_dir in search_dirs:
-            if not search_dir.exists():
-                continue
-            for f in sorted(search_dir.rglob("*.validation.json")):
-                try:
-                    data = json.loads(f.read_text())
-                    data["_source_file"] = str(f)
-                    data["_stage"] = stage_dir
-                    validations.append(data)
-                except (json.JSONDecodeError, IOError):
-                    pass
+        validations.extend(_load_json_files(
+            root,
+            "*.validation.json",
+            stage_name=stage_dir,
+            source_filter=source,
+            only_ids=None,
+        ))
     return validations
 
 
@@ -204,8 +290,33 @@ def compute_batch_stats(
     evidence_lengths: List[int] = []
     unlisted_techniques: Counter = Counter()
     unlisted_topics: Counter = Counter()
+    topics_per_approach: List[int] = []
+    techniques_per_approach: List[int] = []
+    turn_phase_coverage: List[float] = []
+    phase_confidence_means: List[float] = []
+
+    total_low_quality_segments = 0
+    total_transcript_artifacts = 0
+    normalization_repairs_total = 0
+    videos_with_repairs = 0
 
     for enriched_file in enriched_files:
+        meta = enriched_file.get("metadata", {})
+        repairs = meta.get("normalization_repairs_count", 0)
+        if isinstance(repairs, int) and repairs > 0:
+            videos_with_repairs += 1
+            normalization_repairs_total += repairs
+
+        total_low_quality_segments += len(enriched_file.get("low_quality_segments", []) or [])
+        total_transcript_artifacts += len(enriched_file.get("transcript_artifacts", []) or [])
+
+        # Build conversation segment counts for phase coverage (uses Stage 06/06c conversation_id in segments).
+        conv_seg_counts: Counter = Counter()
+        for seg in enriched_file.get("segments", []) or []:
+            cid = seg.get("conversation_id")
+            if isinstance(cid, int) and cid > 0:
+                conv_seg_counts[cid] += 1
+
         enrichments = enriched_file.get("enrichments", [])
 
         for e in enrichments:
@@ -216,6 +327,22 @@ def compute_batch_stats(
                 inv = e.get("investment_level")
                 if inv:
                     investment_counts[inv] += 1
+
+                topics_per_approach.append(len(e.get("topics_discussed", []) or []))
+                techniques_per_approach.append(len(e.get("techniques_used", []) or []))
+
+                # Phase coverage: how many conversation segments got a phase label.
+                conv_id = e.get("conversation_id")
+                if isinstance(conv_id, int) and conv_id > 0:
+                    seg_total = conv_seg_counts.get(conv_id, 0)
+                    if seg_total > 0:
+                        turn_phase_coverage.append(len(e.get("turn_phases", []) or []) / seg_total)
+
+                pc = e.get("phase_confidence", {})
+                if isinstance(pc, dict) and pc:
+                    vals = [v for v in pc.values() if isinstance(v, (int, float))]
+                    if vals:
+                        phase_confidence_means.append(sum(vals) / len(vals))
 
             # Techniques
             for tech in e.get("techniques_used", []):
@@ -253,12 +380,35 @@ def compute_batch_stats(
         "phase_distribution": dict(phase_counts),
         "hook_rate": hook_count / max(approach_count, 1),
         "investment_distribution": dict(investment_counts),
+        "mean_topics_per_approach": (
+            sum(topics_per_approach) / max(len(topics_per_approach), 1)
+            if topics_per_approach else 0
+        ),
+        "median_topics_per_approach": median(topics_per_approach) if topics_per_approach else 0,
+        "mean_techniques_per_approach": (
+            sum(techniques_per_approach) / max(len(techniques_per_approach), 1)
+            if techniques_per_approach else 0
+        ),
+        "median_techniques_per_approach": median(techniques_per_approach) if techniques_per_approach else 0,
+        "mean_turn_phase_coverage": (
+            sum(turn_phase_coverage) / max(len(turn_phase_coverage), 1)
+            if turn_phase_coverage else 0
+        ),
+        "median_turn_phase_coverage": median(turn_phase_coverage) if turn_phase_coverage else 0,
+        "mean_phase_confidence": (
+            sum(phase_confidence_means) / max(len(phase_confidence_means), 1)
+            if phase_confidence_means else 0
+        ),
         "mean_evidence_length": (
             sum(evidence_lengths) / max(len(evidence_lengths), 1)
             if evidence_lengths else 0
         ),
         "unlisted_techniques": dict(unlisted_techniques.most_common(20)),
         "unlisted_topics": dict(unlisted_topics.most_common(20)),
+        "total_low_quality_segments": total_low_quality_segments,
+        "total_transcript_artifacts": total_transcript_artifacts,
+        "videos_with_normalization_repairs": videos_with_repairs,
+        "normalization_repairs_total": normalization_repairs_total,
     }
 
     # --- Validation statistics ---
@@ -267,16 +417,33 @@ def compute_batch_stats(
     warning_types: Counter = Counter()
     error_types: Counter = Counter()
 
+    stage_validation: Dict[str, Dict[str, Any]] = {}
+
     for vf in validation_files:
         summary = vf.get("summary", {})
         total_errors += summary.get("errors", 0)
         total_warnings += summary.get("warnings", 0)
 
+        stage = vf.get("_stage", "unknown")
+        if stage not in stage_validation:
+            stage_validation[stage] = {
+                "total_validations": 0,
+                "total_errors": 0,
+                "total_warnings": 0,
+                "error_types": Counter(),
+                "warning_types": Counter(),
+            }
+        stage_validation[stage]["total_validations"] += 1
+        stage_validation[stage]["total_errors"] += summary.get("errors", 0)
+        stage_validation[stage]["total_warnings"] += summary.get("warnings", 0)
+
         for result in vf.get("results", []):
             if result.get("severity") == "error":
                 error_types[result.get("check", "unknown")] += 1
+                stage_validation[stage]["error_types"][result.get("check", "unknown")] += 1
             elif result.get("severity") == "warning":
                 warning_types[result.get("check", "unknown")] += 1
+                stage_validation[stage]["warning_types"][result.get("check", "unknown")] += 1
 
     stats["validation"] = {
         "total_validations": len(validation_files),
@@ -284,6 +451,16 @@ def compute_batch_stats(
         "total_warnings": total_warnings,
         "error_types": dict(error_types.most_common()),
         "warning_types": dict(warning_types.most_common()),
+        "by_stage": {
+            stage: {
+                "total_validations": d["total_validations"],
+                "total_errors": d["total_errors"],
+                "total_warnings": d["total_warnings"],
+                "error_types": dict(d["error_types"].most_common()),
+                "warning_types": dict(d["warning_types"].most_common()),
+            }
+            for stage, d in stage_validation.items()
+        },
     }
 
     return stats
@@ -507,6 +684,16 @@ def main() -> None:
         print(f"  Hook rate:                {s07.get('hook_rate', 0):.1%}")
         print(f"  Investment distribution:  {s07.get('investment_distribution', {})}")
         print(f"  Mean evidence length:     {s07.get('mean_evidence_length', 0):.0f} chars")
+        print(f"  Mean topics/approach:     {s07.get('mean_topics_per_approach', 0):.1f} (median {s07.get('median_topics_per_approach', 0)})")
+        print(f"  Mean techniques/approach: {s07.get('mean_techniques_per_approach', 0):.1f} (median {s07.get('median_techniques_per_approach', 0)})")
+        print(f"  Phase coverage:           {s07.get('mean_turn_phase_coverage', 0):.1%} (median {s07.get('median_turn_phase_coverage', 0):.1%})")
+        print(f"  Mean phase confidence:    {s07.get('mean_phase_confidence', 0):.2f}")
+        print(f"  Transcript artifacts:     {s07.get('total_transcript_artifacts', 0)}")
+        print(f"  Low-quality segments:     {s07.get('total_low_quality_segments', 0)}")
+        print(
+            f"  Normalization repairs:    {s07.get('normalization_repairs_total', 0)} "
+            f"(videos={s07.get('videos_with_normalization_repairs', 0)})"
+        )
 
         top_techniques = list(s07.get("technique_frequency", {}).items())[:10]
         if top_techniques:
@@ -528,6 +715,16 @@ def main() -> None:
             print(f"  Error types:              {val.get('error_types', {})}")
         if val.get("warning_types"):
             print(f"  Warning types:            {val.get('warning_types', {})}")
+
+        by_stage = val.get("by_stage", {})
+        if by_stage:
+            print(f"\n  Validation breakdown by stage:")
+            for stage, s in sorted(by_stage.items()):
+                print(
+                    f"    {stage}: errors={s.get('total_errors', 0)} "
+                    f"warnings={s.get('total_warnings', 0)} "
+                    f"(n={s.get('total_validations', 0)})"
+                )
 
         if drift_flags:
             print(f"\nDrift Detection:")
