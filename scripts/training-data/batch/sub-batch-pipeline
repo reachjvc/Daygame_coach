@@ -599,16 +599,20 @@ validate_sub_batch() {
     error "Sub-batch manifest not found: $manifest"
   fi
 
+  local rc=0
+
   echo ""
   echo "=== Validations: $sub_id ==="
   echo ""
 
-  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" --manifest "$manifest"
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" --manifest "$manifest" || rc=$?
 
   echo ""
   echo "=== Batch Report (manifest-filtered) ==="
   echo ""
-  python3 "$REPO_ROOT/scripts/training-data/validation/batch_report.py" --all --manifest "$manifest" --batch-id "$sub_id" --no-write
+  python3 "$REPO_ROOT/scripts/training-data/validation/batch_report.py" --all --manifest "$manifest" --batch-id "$sub_id" --no-write || rc=$?
+
+  return "$rc"
 }
 
 # Parse arguments
