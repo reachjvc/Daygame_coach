@@ -604,6 +604,11 @@ validate_sub_batch() {
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_cross_stage.py" --manifest "$manifest"
+
+  echo ""
+  echo "=== Batch Report (manifest-filtered) ==="
+  echo ""
+  python3 "$REPO_ROOT/scripts/training-data/validation/batch_report.py" --all --manifest "$manifest" --batch-id "$sub_id" --no-write
 }
 
 # Parse arguments
