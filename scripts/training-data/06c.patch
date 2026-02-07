@@ -19,9 +19,10 @@ Writes:
 Auto-applies:
   - misattributions: changes speaker_role on matched segments
   - collapse_issues: changes speaker_role + speaker_role_override
+  - boundary_issues: applies merge/split/reclassify when suggested_fix is present and confidence is high
+    (and recomputes conversations[] summary)
 
 Flags but does NOT fix:
-  - boundary_issues
   - other_flags
 
 Use:
@@ -54,6 +55,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import jsonschema
+
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 
@@ -61,7 +64,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.2"  # v1.2: Handle reclassify_as_commentary, lenient override matching
+PIPELINE_VERSION = "06c.patch-v1.3"  # v1.3: Enforce schema-valid patches, recompute conversations[] after boundary fixes
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -73,6 +76,9 @@ MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
 MIN_MISATTRIBUTION_CONFIDENCE = 0.7
 MIN_VIDEO_TYPE_CONFIDENCE = 0.85
 MIN_BOUNDARY_CONFIDENCE = 0.90  # Higher threshold - structural changes
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
+_CACHED_SCHEMA: Optional[Dict[str, Any]] = None
 
 
 # ---------------------------
@@ -105,6 +111,67 @@ def load_state(state_path: Path) -> ProcessingState:
 def save_state(state_path: Path, state: ProcessingState) -> None:
     state_path.parent.mkdir(parents=True, exist_ok=True)
     state_path.write_text(json.dumps(asdict(state), indent=2))
+
+def _load_schema() -> Optional[Dict[str, Any]]:
+    if not SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: Schema not found at {SCHEMA_PATH}")
+        return None
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _get_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = _load_schema()
+    return _CACHED_SCHEMA
+
+
+def _validate_conversations_schema(conversations_data: Dict[str, Any]) -> None:
+    """Validate patched output against conversations.schema.json. Raises on failure."""
+    schema = _get_schema()
+    if not schema:
+        return
+    try:
+        jsonschema.validate(instance=conversations_data, schema=schema)
+    except jsonschema.ValidationError as e:
+        path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+        raise RuntimeError(f"Patched conversations schema invalid at {path}: {e.message[:200]}")
+
+
+def _recompute_conversations_summary(
+    segments: List[Dict[str, Any]],
+    old_conversations: Any,
+) -> List[Dict[str, Any]]:
+    """Rebuild conversations[] from segments[].conversation_id while preserving extra fields when possible."""
+    old_by_id: Dict[int, Dict[str, Any]] = {}
+    if isinstance(old_conversations, list):
+        for c in old_conversations:
+            if not isinstance(c, dict):
+                continue
+            cid = c.get("conversation_id")
+            if isinstance(cid, int):
+                old_by_id[cid] = c
+
+    conv_segments: Dict[int, List[Dict[str, Any]]] = {}
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        cid = seg.get("conversation_id", 0)
+        if isinstance(cid, int) and cid > 0:
+            conv_segments.setdefault(cid, []).append(seg)
+
+    out: List[Dict[str, Any]] = []
+    for cid, segs in sorted(conv_segments.items()):
+        base = dict(old_by_id.get(cid) or {})
+        base["conversation_id"] = cid
+        base["segment_ids"] = [
+            s.get("id") for s in segs if isinstance(s.get("id"), int)
+        ]
+        base["start_time"] = segs[0].get("start", 0)
+        base["end_time"] = segs[-1].get("end", 0)
+        out.append(base)
+
+    return out
 
 
 # ---------------------------
@@ -182,8 +249,8 @@ def apply_patches(
             )
             continue
 
-        # Skip prose suggested_roles (should be role values like "coach", "target", "other", "mixed")
-        valid_roles = {"coach", "target", "other", "mixed"}
+        # Skip prose suggested_roles (should be schema-valid role values)
+        valid_roles = {"coach", "target", "other", "voiceover", "unknown"}
         if suggested_role not in valid_roles:
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} suggested_role '{suggested_role}' is not a valid role — skipping"
@@ -228,6 +295,7 @@ def apply_patches(
     # --- Apply collapse issue fixes ---
     for entry in verification_data.get("collapse_issues", []):
         seg_id = entry.get("segment_id")
+        reported_speaker_id = entry.get("speaker_id")
         suggested_override = entry.get("suggested_override")
         current_override = entry.get("current_override")
         evidence = entry.get("evidence", "")
@@ -239,8 +307,8 @@ def apply_patches(
             )
             continue
 
-        # Skip prose suggested_overrides (should be role values like "coach", "target", "other")
-        valid_roles = {"coach", "target", "other", "mixed"}
+        # Skip prose suggested_overrides (should be schema-valid role values)
+        valid_roles = {"coach", "target", "other", "voiceover", "unknown"}
         if suggested_override not in valid_roles:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} suggested_override '{suggested_override}' is not a valid role — skipping"
@@ -251,6 +319,30 @@ def apply_patches(
         if seg is None:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} not found in conversations data"
+            )
+            continue
+
+        # Only apply collapse_issues to segments whose speaker is actually marked as collapsed.
+        seg_speaker_id = seg.get("speaker_id")
+        speaker_labels = conversations_data.get("speaker_labels", {}) or {}
+        collapse_meta = conversations_data.get("speaker_collapse") or {}
+        collapsed_ids = set(collapse_meta.get("collapsed_speakers", [])) if isinstance(collapse_meta, dict) and collapse_meta.get("detected") else set()
+        is_collapsed_speaker = False
+        if seg_speaker_id and seg_speaker_id in collapsed_ids:
+            is_collapsed_speaker = True
+        elif seg_speaker_id and isinstance(speaker_labels, dict):
+            is_collapsed_speaker = speaker_labels.get(seg_speaker_id, {}).get("role") == "collapsed"
+
+        if not is_collapsed_speaker:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} speaker_id '{seg_speaker_id}' is not marked collapsed — skipping"
+            )
+            continue
+
+        if reported_speaker_id and seg_speaker_id and reported_speaker_id != seg_speaker_id:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} speaker_id mismatch "
+                f"(expected '{reported_speaker_id}', found '{seg_speaker_id}') — skipping"
             )
             continue
 
@@ -475,6 +567,9 @@ def patch_file(
             "note": "No verification report found — copied unchanged",
         }
 
+        # Even when copying unchanged, ensure the output is schema-valid.
+        _validate_conversations_schema(patched)
+
         if not dry_run:
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("w", encoding="utf-8") as f:
@@ -507,6 +602,13 @@ def patch_file(
         # FLAG — apply patches
         fixes_applied, flags_not_fixed = apply_patches(patched, verification_data)
 
+    # Always recompute conversations[] from segments after patching to keep semantic consistency,
+    # especially when boundary fixes are auto-applied.
+    patched["conversations"] = _recompute_conversations_summary(
+        patched.get("segments", []),
+        patched.get("conversations"),
+    )
+
     patched["patch_metadata"] = {
         "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "pipeline_version": PIPELINE_VERSION,
@@ -518,11 +620,44 @@ def patch_file(
         "flags_not_fixed_count": len(flags_not_fixed),
     }
 
+    # Fail fast if patched output violates the Stage 06 conversations schema.
+    _validate_conversations_schema(patched)
+
     # Print summary
     if fixes_applied:
         print(f"{LOG_PREFIX}   Fixes applied: {len(fixes_applied)}")
         for fix in fixes_applied:
-            print(f"{LOG_PREFIX}     seg {fix['segment_id']}: {fix['old']} → {fix['new']} ({fix['source']})")
+            src = fix.get("source", "unknown")
+            if "segment_id" in fix:
+                seg_id = fix.get("segment_id")
+                print(f"{LOG_PREFIX}     seg {seg_id}: {fix.get('old')} → {fix.get('new')} ({src})")
+                continue
+
+            action = fix.get("action")
+            if action == "merge":
+                print(
+                    f"{LOG_PREFIX}     merge conv {fix.get('from_conv')} → {fix.get('to_conv')} "
+                    f"({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+            if action == "split":
+                print(
+                    f"{LOG_PREFIX}     split conv {fix.get('original_conv')} at seg {fix.get('split_at_segment')} "
+                    f"→ conv {fix.get('new_conv_id')} ({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+            if action == "reclassify_as_commentary":
+                print(
+                    f"{LOG_PREFIX}     reclassify conv {fix.get('from_conv')} → commentary "
+                    f"({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+
+            field = fix.get("field", "unknown_field")
+            if "old" in fix or "new" in fix:
+                print(f"{LOG_PREFIX}     {field}: {fix.get('old')} → {fix.get('new')} ({src})")
+            else:
+                print(f"{LOG_PREFIX}     {field}: {fix} ({src})")
     if flags_not_fixed:
         print(f"{LOG_PREFIX}   Flags not fixed: {len(flags_not_fixed)}")
         for flag in flags_not_fixed:
