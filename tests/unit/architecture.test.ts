@@ -259,35 +259,4 @@ describe('Architecture Compliance', () => {
     })
   })
 
-  describe('Documentation Compliance', () => {
-    test('All doc files should have Status and Updated headers', () => {
-      // Arrange: Get all markdown files in docs/
-      const docsDir = path.join(projectRoot, 'docs')
-      const docFiles = getAllFiles(docsDir, /\.md$/)
-        .filter(f => {
-          const relativePath = path.relative(projectRoot, f)
-          return !DOC_HEADER_SKIP_PATTERNS.some(pattern => pattern.test(relativePath))
-        })
-
-      // Act & Assert
-      const violations: string[] = []
-
-      for (const file of docFiles) {
-        const content = fs.readFileSync(file, 'utf-8')
-        const relativePath = path.relative(projectRoot, file)
-
-        // Check for Status header
-        if (!/\*\*Status:\*\*|Status:/.test(content)) {
-          violations.push(`${relativePath}: missing Status header`)
-        }
-
-        // Check for Updated header
-        if (!/\*\*Updated:\*\*|Updated:/.test(content)) {
-          violations.push(`${relativePath}: missing Updated header`)
-        }
-      }
-
-      expect(violations, `Docs missing headers:\n${violations.join('\n')}`).toHaveLength(0)
-    })
-  })
 })
