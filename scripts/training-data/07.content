@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 LOG_PREFIX = "[07.content]"
 
 PROMPT_VERSION = "1.2.0"  # v1.2: Stricter taxonomy enforcement, close phase clarification
-PIPELINE_VERSION = "07.content-v1.1"  # v1.1: Fixed cross-ref to use segments, added upstream patch metadata
+PIPELINE_VERSION = "07.content-v1.2"  # v1.2: Robust 06b verification discovery + optional FLAG-allowed gate
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -1380,14 +1380,60 @@ def extract_video_stem(input_path: Path) -> str:
     return stem
 
 
-def load_verification_status(video_stem: str, source: str, verify_root: Path) -> Dict[str, Any]:
+def _find_verification_for_input(
+    input_path: Path,
+    source: str,
+    verify_root: Path,
+) -> Optional[Path]:
+    """Find a matching 06b verification report for a Stage 06c input file.
+
+    Supports multiple on-disk layouts:
+    - source-video: data/06b.verify/<source>/<video_dir>/<stem>.verification.json
+    - source-flat:  data/06b.verify/<source>/<stem>.verification.json
+    - root-flat:    data/06b.verify/<stem>.verification.json
+    """
+    video_stem = extract_video_stem(input_path)
+    verification_name = f"{video_stem}.verification.json"
+
+    # Strategy 1: mirror relative path from input_root() into verify_root
+    try:
+        rel = input_path.parent.relative_to(input_root())
+        candidate = verify_root / rel / verification_name
+        if candidate.exists():
+            return candidate
+    except ValueError:
+        pass
+
+    # Strategy 2: source-flat
+    candidate = verify_root / source / verification_name
+    if candidate.exists():
+        return candidate
+
+    # Strategy 3: root-flat
+    candidate = verify_root / verification_name
+    if candidate.exists():
+        return candidate
+
+    # Strategy 4: recursive search (prefer under source/)
+    src_dir = verify_root / source
+    if src_dir.exists():
+        for found in src_dir.rglob(verification_name):
+            return found
+    for found in verify_root.rglob(verification_name):
+        return found
+
+    return None
+
+
+def load_verification_status(input_path: Path, source: str, verify_root: Path) -> Dict[str, Any]:
     """Load 06b verification report for a video.
 
     Returns dict with 'verdict' key (APPROVE/FLAG/REJECT or None if not found).
     """
-    verify_path = verify_root / source / f"{video_stem}.verification.json"
-    if not verify_path.exists():
-        return {"verdict": None, "path": str(verify_path)}
+    verify_path = _find_verification_for_input(input_path, source, verify_root)
+    if not verify_path:
+        expected = verify_root / source / f"{extract_video_stem(input_path)}.verification.json"
+        return {"verdict": None, "path": str(expected)}
     try:
         data = json.loads(verify_path.read_text(encoding="utf-8"))
         data["path"] = str(verify_path)
@@ -1400,18 +1446,18 @@ def should_process_video(
     input_path: Path,
     source: str,
     verify_root: Path,
-    skip_verification: bool = False
+    skip_verification: bool = False,
+    allow_flag: bool = False,
 ) -> Tuple[bool, str]:
     """Check if video should be processed based on 06b verification status.
 
     Returns (should_process, reason).
-    Only APPROVE videos proceed. FLAG and REJECT are blocked.
+    APPROVE always proceeds. FLAG proceeds only when --allow-flag is set. REJECT is blocked.
     """
     if skip_verification:
         return True, "verification skipped (--skip-verification)"
 
-    video_stem = extract_video_stem(input_path)
-    status = load_verification_status(video_stem, source, verify_root)
+    status = load_verification_status(input_path, source, verify_root)
     verdict = status.get("verdict")
 
     if verdict is None:
@@ -1419,6 +1465,8 @@ def should_process_video(
     if verdict == "APPROVE":
         return True, "APPROVE"
     if verdict == "FLAG":
+        if allow_flag:
+            return True, "FLAG (allowed by --allow-flag)"
         return False, "FLAG verdict - needs manual review before proceeding"
     if verdict == "REJECT":
         return False, "REJECT verdict - critical issues found"
@@ -1481,7 +1529,8 @@ def _run_named_source(args) -> None:
         # Verification gate
         should_process, reason = should_process_video(
             input_file, name, verification_root(),
-            skip_verification=args.skip_verification
+            skip_verification=args.skip_verification,
+            allow_flag=args.allow_flag,
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -1550,6 +1599,11 @@ def main() -> None:
         action="store_true",
         help="Skip 06b verification gate (process all files regardless of verdict)"
     )
+    parser.add_argument(
+        "--allow-flag",
+        action="store_true",
+        help="Allow FLAG verdicts to proceed (still blocks REJECT)"
+    )
 
     args = parser.parse_args()
 
@@ -1599,12 +1653,13 @@ def main() -> None:
 
             # Verification gate
             should_process, reason = should_process_video(
-                input_path, source_name, verification_root(),
-                skip_verification=args.skip_verification
+                input_path, source_name, verify_root,
+                skip_verification=args.skip_verification,
+                allow_flag=args.allow_flag,
             )
             if not should_process:
                 print(f"{LOG_PREFIX} BLOCKED: {input_path.name} - {reason}")
-                print(f"{LOG_PREFIX} Use --skip-verification to override")
+                print(f"{LOG_PREFIX} Use --skip-verification to override (or --allow-flag for FLAG)")
                 return
 
             if output_path.exists() and not args.overwrite:
@@ -1645,8 +1700,9 @@ def main() -> None:
             for input_file in files:
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file, src_name, verification_root(),
-                    skip_verification=args.skip_verification
+                    input_file, src_name, verify_root,
+                    skip_verification=args.skip_verification,
+                    allow_flag=args.allow_flag,
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -1686,8 +1742,9 @@ def main() -> None:
             for input_file in files:
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file, src_name, verification_root(),
-                    skip_verification=args.skip_verification
+                    input_file, src_name, verify_root,
+                    skip_verification=args.skip_verification,
+                    allow_flag=args.allow_flag,
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -1750,7 +1807,8 @@ def main() -> None:
         # Verification gate
         should_process, reason = should_process_video(
             input_file, source_name, verify_root,
-            skip_verification=args.skip_verification
+            skip_verification=args.skip_verification,
+            allow_flag=args.allow_flag,
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
