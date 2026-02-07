@@ -603,7 +603,7 @@ validate_sub_batch() {
   echo "=== Validations: $sub_id ==="
   echo ""
 
-  python3 "$REPO_ROOT/scripts/training-data/validation/validate_cross_stage.py" --manifest "$manifest"
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" --manifest "$manifest"
 
   echo ""
   echo "=== Batch Report (manifest-filtered) ==="
