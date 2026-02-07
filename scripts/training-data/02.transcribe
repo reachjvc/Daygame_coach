@@ -6,7 +6,7 @@ STEP 2 — RAW TRANSCRIPTION (large-v3 only)
 
 Usage:
   A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./02.transcribe --sources docs/sources.txt
+  B) Batch sources:  ./02.transcribe --sources docs/pipeline/sources.txt
   C) Single file:    ./02.transcribe --audio path/to/audio.wav --out output.full.json
   D) Manifest batch: ./02.transcribe --manifest docs/pipeline/batches/P001.txt
 
@@ -46,7 +46,7 @@ from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple
 
 import numpy as np
 
-from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_dirs
+from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_dirs
 
 # --------------------------
 # Torch import
@@ -858,7 +858,7 @@ if __name__ == "__main__":
     p.add_argument("source_name", nargs="?", help="Source name (folder under data/01.download).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
-    p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--sources", nargs="?", const="docs/pipeline/sources.txt", help="Process all sources from sources file.")
     p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
     p.add_argument("--audio", help="Single-file input path.")
     p.add_argument("--out", help="Single-file output .full.json.")

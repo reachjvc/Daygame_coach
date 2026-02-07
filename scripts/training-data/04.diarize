@@ -6,7 +6,7 @@ STEP 4 — SPEAKER DIARIZATION (pyannote)
 
 Usage:
   A) Single source:  ./04.diarize "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./04.diarize --sources docs/sources.txt
+  B) Batch sources:  ./04.diarize --sources docs/pipeline/sources.txt
   C) Single file:    ./04.diarize --input path/to/aligned.full.json --audio path/to/audio.wav --out output.full.json
 
 Takes aligned transcription from 03.align and adds speaker labels (SPEAKER_00, SPEAKER_01)
@@ -35,7 +35,7 @@ from typing import Any, Dict, Iterator, List, Optional, Set, Tuple
 
 import numpy as np
 
-from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_dirs
+from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_dirs
 
 # --------------------------
 # Torch import + safe-globals allowlist
@@ -739,7 +739,7 @@ if __name__ == "__main__":
     p.add_argument("source_name", nargs="?", help="Source name (folder under data/03.align).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
-    p.add_argument("--sources", nargs="?", const="docs/sources.txt", help="Process all sources from sources file.")
+    p.add_argument("--sources", nargs="?", const="docs/pipeline/sources.txt", help="Process all sources from sources file.")
     p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
     p.add_argument("--input", help="Single-file input aligned JSON.")
     p.add_argument("--audio", help="Single-file input audio path.")

@@ -19,7 +19,7 @@ Usage:
     ./scripts/training-data/01.download "<source_name>" "<youtube_url>"
 
   Download all sources from config:
-    ./scripts/training-data/01.download --sources docs/sources.txt
+    ./scripts/training-data/01.download --sources docs/pipeline/sources.txt
 
 Examples:
   ./scripts/training-data/01.download "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
@@ -649,7 +649,7 @@ download_one() {
 }
 
 download_from_sources() {
-  local sources_file="${1:-$ROOT_DIR/docs/sources.txt}"
+  local sources_file="${1:-$ROOT_DIR/docs/pipeline/sources.txt}"
   [[ -f "$sources_file" ]] || { echo "❌ Sources file not found: $sources_file"; exit 1; }
 
   # Initialize session state

@@ -1,0 +1,280 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/batch/batch-create
+
+Create a batch manifest for pipeline processing.
+
+Usage:
+  A) Auto-generate from source classification (next N unprocessed videos):
+     ./batch-create --size 100 --phase 1 --batch-id P001
+
+  B) Auto-generate from a specific source:
+     ./batch-create --source daily_evolution --size 100 --batch-id P003
+
+  C) Preview without writing:
+     ./batch-create --size 100 --phase 1 --dry-run
+
+  D) Generate from all unprocessed videos (no phase filter):
+     ./batch-create --size 100 --batch-id P001
+
+Manifest files are written to docs/pipeline/batches/<batch_id>.txt
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parent.parent.parent.parent
+
+
+def is_playlist_id(id_str: str) -> bool:
+    """Check if an ID looks like a YouTube playlist ID rather than a video ID.
+
+    Playlist IDs start with PL, FL, UU, etc. and are 34+ chars.
+    Video IDs are exactly 11 characters.
+    """
+    # Video IDs are exactly 11 characters - trust length over prefix
+    if len(id_str) == 11:
+        return False
+    # Playlist IDs are longer and often start with specific prefixes
+    playlist_prefixes = ("PL", "FL", "UU", "LL", "RD", "OL")
+    if len(id_str) > 11 or id_str.startswith(playlist_prefixes):
+        return True
+    return False
+
+
+def extract_video_id(name: str) -> Optional[str]:
+    match = re.search(r"\[([a-zA-Z0-9_-]+)\]", name)
+    if not match:
+        return None
+    id_str = match.group(1)
+    if is_playlist_id(id_str):
+        return None
+    return id_str
+
+
+# Title keywords that suggest infield content
+INFIELD_KEYWORDS = [
+    "infield", "approach", "pickup", "pick up", "picks up", "daygame",
+    "cold approach", "meet girl", "meets girl", "meeting girl",
+    "street game", "pull", "number close", "instant date",
+]
+
+
+def title_suggests_infield(title: str) -> bool:
+    title_lower = title.lower()
+    return any(kw in title_lower for kw in INFIELD_KEYWORDS)
+
+
+def load_source_classification(path: Path) -> Dict[str, dict]:
+    """Load source classification file. Returns dict of source_name -> {type, confidence, phase}."""
+    sources = {}
+    if not path.exists():
+        return sources
+    with open(path) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = [p.strip() for p in line.split("|")]
+            if len(parts) >= 4:
+                sources[parts[0]] = {
+                    "type": parts[1],
+                    "confidence": parts[2],
+                    "phase": int(parts[3]),
+                }
+    return sources
+
+
+def find_all_downloaded_videos(data_root: Path) -> List[Tuple[str, str, str]]:
+    """Find all downloaded videos. Returns list of (source_name, folder_name, video_id)."""
+    download_root = data_root / "01.download"
+    if not download_root.exists():
+        return []
+
+    videos = []
+    for source_dir in sorted(download_root.iterdir()):
+        if not source_dir.is_dir():
+            continue
+        source_name = source_dir.name
+        # Skip non-source directories
+        if source_name in ("r2batch", "test_single") or source_name.endswith(".log"):
+            continue
+        for video_dir in sorted(source_dir.iterdir()):
+            if not video_dir.is_dir():
+                continue
+            vid_id = extract_video_id(video_dir.name)
+            if vid_id:
+                videos.append((source_name, video_dir.name, vid_id))
+    return videos
+
+
+def find_processed_video_ids(data_root: Path, stage: str) -> Set[str]:
+    """Find video IDs that already have output in a given stage."""
+    stage_root = data_root / stage
+    if not stage_root.exists():
+        return set()
+
+    processed = set()
+    for source_dir in stage_root.iterdir():
+        if not source_dir.is_dir():
+            continue
+        for item in source_dir.iterdir():
+            vid_id = extract_video_id(item.name)
+            if vid_id:
+                processed.add(vid_id)
+    return processed
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Create a batch manifest for pipeline processing."
+    )
+    parser.add_argument("--batch-id", required=True, help="Batch identifier (e.g., P001)")
+    parser.add_argument("--size", type=int, default=100, help="Number of videos per batch (default: 100)")
+    parser.add_argument("--phase", type=int, help="Only include sources from this priority phase (1-4)")
+    parser.add_argument("--source", help="Only include videos from this specific source")
+    parser.add_argument("--skip-processed", default="07.content",
+                        help="Skip videos that already have output in this stage (default: 07.content)")
+    parser.add_argument("--infield-first", action="store_true", default=True,
+                        help="Sort by infield likelihood (default: true)")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing manifest file")
+
+    args = parser.parse_args()
+
+    root = repo_root()
+    data_root = root / "data"
+    classification_path = root / "docs" / "pipeline" / "source-classification.txt"
+    batches_dir = root / "docs" / "pipeline" / "batches"
+
+    # Load source classification
+    source_class = load_source_classification(classification_path)
+
+    # Find all downloaded videos
+    all_videos = find_all_downloaded_videos(data_root)
+    print(f"Total downloaded videos: {len(all_videos)}")
+
+    # Filter by source if specified
+    if args.source:
+        all_videos = [(s, f, v) for s, f, v in all_videos if s == args.source]
+        print(f"Filtered to source '{args.source}': {len(all_videos)} videos")
+
+    # Filter by phase if specified
+    if args.phase is not None:
+        allowed_sources = {s for s, info in source_class.items() if info["phase"] == args.phase}
+        # Include unclassified sources in phase 2
+        for s, f, v in all_videos:
+            if s not in source_class and args.phase == 2:
+                allowed_sources.add(s)
+        all_videos = [(s, f, v) for s, f, v in all_videos if s in allowed_sources]
+        print(f"Filtered to phase {args.phase}: {len(all_videos)} videos")
+
+    # Skip already-processed videos
+    if args.skip_processed:
+        processed_ids = find_processed_video_ids(data_root, args.skip_processed)
+        before = len(all_videos)
+        all_videos = [(s, f, v) for s, f, v in all_videos if v not in processed_ids]
+        skipped = before - len(all_videos)
+        if skipped:
+            print(f"Skipped {skipped} already-processed videos (stage: {args.skip_processed})")
+
+    # Also skip videos already in existing manifests
+    existing_manifest_ids: Set[str] = set()
+    if batches_dir.exists():
+        for manifest_file in batches_dir.glob("*.txt"):
+            with open(manifest_file) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    vid_id = extract_video_id(line)
+                    if vid_id:
+                        existing_manifest_ids.add(vid_id)
+    if existing_manifest_ids:
+        before = len(all_videos)
+        all_videos = [(s, f, v) for s, f, v in all_videos if v not in existing_manifest_ids]
+        skipped = before - len(all_videos)
+        if skipped:
+            print(f"Skipped {skipped} videos already in other manifests")
+
+    print(f"Available for batch: {len(all_videos)} videos")
+
+    if not all_videos:
+        print("No videos available for batching.")
+        sys.exit(0)
+
+    # Sort: by phase, then infield keyword in title, then source name, then folder name
+    def sort_key(item):
+        source_name, folder_name, vid_id = item
+        info = source_class.get(source_name, {"phase": 3, "type": "unknown"})
+        phase = info["phase"]
+        is_infield_source = 0 if info["type"] == "infield" else 1
+        is_infield_title = 0 if title_suggests_infield(folder_name) else 1
+        return (phase, is_infield_source, is_infield_title, source_name, folder_name)
+
+    if args.infield_first:
+        all_videos.sort(key=sort_key)
+
+    # Take the batch
+    batch = all_videos[:args.size]
+
+    # Print summary
+    print(f"\nBatch {args.batch_id}: {len(batch)} videos")
+    source_counts: Dict[str, int] = {}
+    infield_count = 0
+    for s, f, v in batch:
+        source_counts[s] = source_counts.get(s, 0) + 1
+        info = source_class.get(s, {})
+        if info.get("type") == "infield" or title_suggests_infield(f):
+            infield_count += 1
+
+    print(f"  Estimated infield: {infield_count}/{len(batch)}")
+    print(f"  Sources:")
+    for s, count in sorted(source_counts.items(), key=lambda x: -x[1]):
+        info = source_class.get(s, {"type": "?", "phase": "?"})
+        print(f"    {s}: {count} videos (type={info.get('type', '?')}, phase={info.get('phase', '?')})")
+
+    if args.dry_run:
+        print(f"\n[DRY RUN] Would write manifest to: {batches_dir / f'{args.batch_id}.txt'}")
+        print(f"\nFirst 10 videos:")
+        for s, f, v in batch[:10]:
+            print(f"  {s} | {f}")
+        return
+
+    # Write manifest
+    batches_dir.mkdir(parents=True, exist_ok=True)
+    manifest_path = batches_dir / f"{args.batch_id}.txt"
+
+    if manifest_path.exists():
+        print(f"\nERROR: Manifest already exists: {manifest_path}")
+        print(f"Choose a different --batch-id or delete the existing file.")
+        sys.exit(1)
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    phase_str = f" Phase {args.phase}" if args.phase else ""
+    source_str = f" Source: {args.source}" if args.source else ""
+
+    with open(manifest_path, "w") as f:
+        f.write(f"# Batch {args.batch_id} -{phase_str}{source_str}\n")
+        f.write(f"# Created: {now}\n")
+        f.write(f"# Videos: {len(batch)}\n")
+        f.write(f"# Estimated infield: {infield_count}/{len(batch)}\n")
+        f.write(f"#\n")
+        f.write(f"# Format: source_name | video_folder_name\n")
+        for s, folder, vid_id in batch:
+            f.write(f"{s} | {folder}\n")
+
+    print(f"\nManifest written: {manifest_path}")
+    print(f"Next: ./scripts/training-data/batch/sub-batch-create {manifest_path.stem}")
+    print(f"Then: ./scripts/training-data/batch/sub-batch-pipeline {manifest_path.stem}.1 --status")
+
+
+if __name__ == "__main__":
+    main()

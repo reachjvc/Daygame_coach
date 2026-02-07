@@ -49,7 +49,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import jsonschema
 
-from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
+from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 
 # ---------------------------
@@ -1093,7 +1093,7 @@ def main() -> None:
     parser.add_argument(
         "--sources",
         nargs="?",
-        const="docs/sources.txt",
+        const="docs/pipeline/sources.txt",
         help="Process all sources from sources.txt file"
     )
     parser.add_argument(

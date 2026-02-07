@@ -1,0 +1,38 @@
+# docs/pipeline/sources.txt
+# Format (one per line):
+#   ChannelName|YouTubeURL
+
+# DO NOT EDIT!!!
+#
+# Example:
+daily_evolution|https://www.youtube.com/watch?v=utuuVOXJunM
+daily_evolution|https://www.youtube.com/@Evolutiondaily
+social_stoic|https://www.youtube.com/@SocialStoicYouTube
+natural_lifestyles_innergrowth|https://www.youtube.com/watch?v=S0CyzHycb6g&list=PLtfVGUer52V5v9nE1ZEULzMhOZUF8J7xy
+natural_lifestyles_femalepsychology|https://www.youtube.com/watch?v=Y2hyrJ7ez1A&list=PLtfVGUer52V7X2zMqLM7W-60Smmu8DZp2
+natural_lifestyles_meetingGirlsIRL|https://www.youtube.com/watch?v=2h9wq53QIQk&list=PLtfVGUer52V7lhPcOPFyr1n1cCBeXIB3z
+natural_lifestyles_lifestyledesign|https://www.youtube.com/watch?v=aS031DVfbcI&list=PLtfVGUer52V6qsTT0959tfVtuYaY6MjCT
+natural_lifestyles_students|https://www.youtube.com/watch?v=e_9z70DeKYs&list=PLtfVGUer52V7aImnrzNw2iMXBVWLxYo12
+natural_lifestyles_lifestyleacademy|https://www.youtube.com/watch?v=FppC96p4aOo&list=PLtfVGUer52V5KZ3afAm_AyXYJzYAceJNQ
+natural_lifestyles_askthecoaches|https://www.youtube.com/watch?v=tZ2EacnJypk&list=PLtfVGUer52V6bnSBeCAqyIKU0Kv4Ctp0n
+natural_lifestyles_mastermind|https://www.youtube.com/watch?v=mokxaBSVVqc&list=PLtfVGUer52V6lCyAKEklvpVQrJfkzztPF
+TODD_V|https://www.youtube.com/watch?v=kNQ3yfxCRYI&list=PLzU3cz5O2LJT_2OHrVUoOD-2ChfLPGRUu
+TODD_V_CONVERSATION_TOPICS|https://www.youtube.com/watch?v=og1DZLKpJSY&list=PL76nuCstxs7im4stUENWFhdPJJ_zU457G
+TODD_V_VERBAL_GAME|https://www.youtube.com/watch?v=oxOih6GwSXI&list=PL76nuCstxs7j9qSlhAx0dZ9XWA2IXo5Rr
+TODD_V_THESYSTEM|https://www.youtube.com/watch?v=yPwm1vMCUxs&list=PL76nuCstxs7hSLoOuT0kqhaKuXgjvFqDi
+TODD_V_WINNERGAME|https://www.youtube.com/watch?v=mSDp-30BUTM&list=PL76nuCstxs7hkFTVNdailtYe1iPyrD-Su
+TODD_V_TRUTH|https://www.youtube.com/watch?v=UQGBDNdlU3I&list=PL76nuCstxs7i3rHp25K8WNI55wksQihRX
+TODD_V_OPENING|https://www.youtube.com/watch?v=050mAG7O4LY&list=PL76nuCstxs7jpcbJ3B5Cbrs7-4gTwjBWF
+TODD_V_TEXTINGMISTAKES|https://www.youtube.com/watch?v=9dc_0jBJU7o&list=PL76nuCstxs7jN-W8vRzO6HGiEPtlWIw9T
+NICK_KRAUSER_JOYOFDAYGAME|https://www.youtube.com/watch?v=2RZKlRFw2EE&list=PLnbvO7QZZgaZMXbXIk11sGpggnP-8-D8W
+NICK_KRAUSER_VIRTUARESI|https://www.youtube.com/watch?v=LCMW0fFEKQk&list=PLnbvO7QZZgaaqw_ddq8Ds2z_kxERyDh9l
+NICK_KRAUSER_OUTLAWDAYGAME|https://www.youtube.com/watch?v=2RoRRRU1WZo&list=PLnbvO7QZZgaY8gxOSsSY3mclgGymuGqAI
+NICK_KRAUSER_WOMANIZER|https://www.youtube.com/watch?v=uE9vQhwrg8k&list=PLnbvO7QZZgaZmdwDMvxpSaj09e2WTq8u7
+playing_with_fire_infield|https://www.youtube.com/watch?v=9r6_bAyzIZE&list=PLissspJvKZ-947uB5T14N720Os3g3saUt
+austen_summers_meets_girls|https://www.youtube.com/watch?v=jPHmLAZON_s&list=PLUgGv97CRhXM9qdxj2oJp8eyPBQ5SSD2s
+austen_summers_client_results|https://www.youtube.com/watch?v=MS1JrFBtw3g&list=PLUgGv97CRhXOPJUQ_ff1HND77kGlEAf7G
+coach_kyle_deep_videos|https://www.youtube.com/watch?v=RFC1DMQwYas&list=PLpp1UUwZH-Kp10APCSaO_7kycD_AdMuLT
+coach_kyle_infield|https://www.youtube.com/watch?v=h1-ySXfRbLY&list=PLpp1UUwZH-KpdTjXwD8ZHlcO3-OE8hRUj&index=1
+coach_kyle_how_to_approach_a_girl|https://www.youtube.com/watch?v=n3kggZOyB3o&list=PLpp1UUwZH-Kqno9bKjk4FoDL7lnJyeHWZ
+
+#can find more about inner game etc., from playing with fire

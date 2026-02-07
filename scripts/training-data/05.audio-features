@@ -16,7 +16,7 @@
 #
 #   B) Batch from sources file:
 #      ./scripts/training-data/05.audio-features --sources
-#      ./scripts/training-data/05.audio-features --sources docs/sources.txt
+#      ./scripts/training-data/05.audio-features --sources docs/pipeline/sources.txt
 #
 #   C) Single-file mode:
 #      python3 scripts/training-data/05.audio-features \
@@ -69,7 +69,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
 
-from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
+from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 try:
     import librosa  # type: ignore
@@ -730,8 +730,8 @@ if __name__ == "__main__":
     p.add_argument(
         "--sources",
         nargs="?",
-        const="docs/sources.txt",
-        help="Process all sources from a sources.txt file (default: docs/sources.txt).",
+        const="docs/pipeline/sources.txt",
+        help="Process all sources from a sources.txt file (default: docs/pipeline/sources.txt).",
     )
     p.add_argument("--manifest", help="Manifest file: only process videos listed (docs/pipeline/batches/P001.txt).")
 

@@ -57,7 +57,7 @@ from dataclasses import dataclass, asdict, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-from pipeline_manifest import load_manifest, load_manifest_sources, manifest_filter_files
+from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 
 # ---------------------------
@@ -613,6 +613,128 @@ def remap_enrichment_segment_indices(
                 phase["segment"] = rel_to_global[rel_idx]
 
 
+def compute_phase_confidence(
+    enrichment: Dict,
+    conversations: Dict[int, List[Dict]],
+    low_quality_segments: List[Dict],
+    speaker_labels: Dict[str, Dict],
+) -> Dict[str, float]:
+    """Compute confidence score for each phase in a conversation.
+
+    Confidence is based on:
+    - Proportion of segments with good transcription quality
+    - Speaker diarization issues (collapsed/unknown speakers)
+
+    Returns dict mapping phase name to confidence score (0.0-1.0).
+    """
+    if enrichment.get("type") != "approach":
+        return {}
+
+    conv_id = enrichment.get("conversation_id")
+    if conv_id is None or conv_id not in conversations:
+        return {}
+
+    conv_segments = conversations[conv_id]
+    turn_phases = enrichment.get("turn_phases", [])
+
+    if not turn_phases:
+        return {}
+
+    # Build set of low-quality segment IDs for fast lookup
+    low_quality_ids = {lq.get("segment") for lq in low_quality_segments}
+
+    # Group segments by phase
+    # turn_phases has {"segment": global_id, "phase": "open"|"pre_hook"|...}
+    phase_segments: Dict[str, List[Dict]] = {}
+    segment_to_phase: Dict[int, str] = {}
+
+    for tp in turn_phases:
+        seg_id = tp.get("segment")
+        phase = tp.get("phase")
+        if seg_id is not None and phase:
+            segment_to_phase[seg_id] = phase
+
+    # Map segments to their phases
+    for seg in conv_segments:
+        seg_id = seg.get("id")
+        phase = segment_to_phase.get(seg_id)
+        if phase:
+            if phase not in phase_segments:
+                phase_segments[phase] = []
+            phase_segments[phase].append(seg)
+
+    # Compute confidence for each phase
+    phase_confidence: Dict[str, float] = {}
+
+    for phase, segments in phase_segments.items():
+        if not segments:
+            continue
+
+        total = len(segments)
+        low_quality_count = 0
+        speaker_issue_count = 0
+
+        for seg in segments:
+            seg_id = seg.get("id")
+
+            # Check if segment is flagged as low quality
+            if seg_id in low_quality_ids:
+                low_quality_count += 1
+
+            # Check speaker issues
+            speaker_role = (seg.get("speaker_role") or "").lower()
+            speaker_id = seg.get("speaker_id")
+
+            if speaker_role in ("collapsed", "unknown", "mixed/unclear"):
+                speaker_issue_count += 1
+            elif speaker_id and speaker_id in speaker_labels:
+                speaker_conf = speaker_labels[speaker_id].get("confidence", 1.0)
+                if speaker_conf < 0.5:
+                    speaker_issue_count += 1
+
+        # Calculate confidence
+        # Base: proportion of good segments
+        good_segments = total - low_quality_count
+        transcript_factor = good_segments / total if total > 0 else 1.0
+
+        # Speaker factor: proportion without issues
+        clean_speakers = total - speaker_issue_count
+        speaker_factor = clean_speakers / total if total > 0 else 1.0
+
+        # Collapsed speaker is a bigger penalty
+        has_collapsed = any(
+            (seg.get("speaker_role") or "").lower() == "collapsed"
+            for seg in segments
+        )
+        collapsed_penalty = 0.85 if has_collapsed else 1.0
+
+        # Combined confidence
+        confidence = transcript_factor * (0.7 + 0.3 * speaker_factor) * collapsed_penalty
+
+        # Clamp to [0.1, 1.0]
+        phase_confidence[phase] = round(max(0.1, min(1.0, confidence)), 2)
+
+    return phase_confidence
+
+
+def add_phase_confidence_to_enrichments(
+    enrichments: List[Dict],
+    conversations: Dict[int, List[Dict]],
+    low_quality_segments: List[Dict],
+    speaker_labels: Dict[str, Dict],
+) -> None:
+    """Add phase_confidence field to each approach enrichment. Modifies in place."""
+    for enrichment in enrichments:
+        if enrichment.get("type") != "approach":
+            continue
+
+        phase_conf = compute_phase_confidence(
+            enrichment, conversations, low_quality_segments, speaker_labels
+        )
+        if phase_conf:
+            enrichment["phase_confidence"] = phase_conf
+
+
 def build_infield_prompt(
     conversations: Dict[int, List[Dict]],
     commentary_blocks: List[Dict],
@@ -742,59 +864,85 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
 6. UNLISTED CONCEPTS: Same format as above
 
-TRANSCRIPT QUALITY: If you notice segments with suspected Whisper transcription artifacts,
-include additional entries in the array with type "transcript_artifact". Flag:
-- Repeated filler words that don't fit conversational context (e.g., "yeah yeah yeah yeah yeah" filling a gap)
-- Nonsensical repeated phrases
-- Text that appears to be hallucinated rather than real speech
-Do NOT flag natural speech patterns (e.g., someone genuinely saying "yes, yes" twice).
-Format: {{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-Return no transcript_artifact entries if no artifacts detected.
+TRANSCRIPT QUALITY ASSESSMENT:
+Evaluate the transcription quality of each segment. Flag segments where the ASR (Whisper)
+appears to have produced inaccurate or garbage output. Look for:
+- Text that doesn't make sense in the conversational context
+- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
+- Garbled or nonsensical phrases
+- Language confusion (random foreign words that don't fit)
+- Multiple sentences incorrectly merged without punctuation
 
-OUTPUT FORMAT: Return a JSON array containing one object for each approach conversation
+Do NOT flag:
+- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
+- Run-on sentences that still make sense (fast speech accurately transcribed)
+- Foreign words/names that fit the context
+
+Output a "low_quality_segments" array listing segments with poor transcription:
+{{"segment": N, "reason": "brief explanation of what seems wrong"}}
+
+Also flag specific artifact types with "transcript_artifact" entries:
+{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+
+Return empty arrays if transcript quality is good.
+
+OUTPUT FORMAT: Return a JSON object with this structure:
+{{
+  "enrichments": [...],  // array of approach/commentary enrichments
+  "low_quality_segments": [...],  // segments with poor transcription
+  "transcript_artifacts": [...]  // specific artifact entries
+}}
+
+The enrichments array should contain one object for each approach conversation
 AND each commentary block, in chronological order. Include any transcript_artifact entries
 at the end of the array. Output ONLY valid JSON.
 
 EXAMPLE:
-[
-  {{
-    "type": "commentary",
-    "block_index": 1,
-    "description": "Coach introduces the session and explains his approach style",
-    "techniques_discussed": [{{"technique": "direct_opener", "example": "I always open direct"}}],
-    "topics_discussed": ["personality"],
-    "unlisted_concepts": {{"techniques": [], "topics": []}}
-  }},
-  {{
-    "conversation_id": 1,
-    "type": "approach",
-    "description": "Direct opener on tourist, builds attraction with cold reads, number close",
-    "techniques_used": [
-      {{"technique": "direct_opener", "segment": 0, "example": "Hey, I saw you and had to say hi"}},
-      {{"technique": "cold_read", "segment": 3, "example": "You look like you do yoga"}}
-    ],
-    "topics_discussed": ["origin", "career", "travel"],
-    "turn_phases": [
-      {{"segment": 0, "phase": "open"}},
-      {{"segment": 1, "phase": "open"}},
-      {{"segment": 2, "phase": "pre_hook"}},
-      {{"segment": 3, "phase": "pre_hook"}},
-      {{"segment": 4, "phase": "post_hook"}},
-      {{"segment": 5, "phase": "close"}}
-    ],
-    "hook_point": {{"signal": "she asked where he's from unprompted"}},
-    "investment_level": "medium",
-    "unlisted_concepts": {{"techniques": [], "topics": []}}
-  }},
-  {{
-    "type": "commentary",
-    "block_index": 2,
-    "description": "Coach breaks down the previous approach, highlights the cold read",
-    "techniques_discussed": [{{"technique": "cold_read", "example": "When I said you look like a yoga teacher..."}}],
-    "topics_discussed": ["behavior"],
-    "unlisted_concepts": {{"techniques": [], "topics": []}}
-  }}
-]
+{{
+  "enrichments": [
+    {{
+      "type": "commentary",
+      "block_index": 1,
+      "description": "Coach introduces the session and explains his approach style",
+      "techniques_discussed": [{{"technique": "direct_opener", "example": "I always open direct"}}],
+      "topics_discussed": ["personality"],
+      "unlisted_concepts": {{"techniques": [], "topics": []}}
+    }},
+    {{
+      "conversation_id": 1,
+      "type": "approach",
+      "description": "Direct opener on tourist, builds attraction with cold reads, number close",
+      "techniques_used": [
+        {{"technique": "direct_opener", "segment": 0, "example": "Hey, I saw you and had to say hi"}},
+        {{"technique": "cold_read", "segment": 3, "example": "You look like you do yoga"}}
+      ],
+      "topics_discussed": ["origin", "career", "travel"],
+      "turn_phases": [
+        {{"segment": 0, "phase": "open"}},
+        {{"segment": 1, "phase": "open"}},
+        {{"segment": 2, "phase": "pre_hook"}},
+        {{"segment": 3, "phase": "pre_hook"}},
+        {{"segment": 4, "phase": "post_hook"}},
+        {{"segment": 5, "phase": "close"}}
+      ],
+      "hook_point": {{"signal": "she asked where he's from unprompted"}},
+      "investment_level": "medium",
+      "unlisted_concepts": {{"techniques": [], "topics": []}}
+    }},
+    {{
+      "type": "commentary",
+      "block_index": 2,
+      "description": "Coach breaks down the previous approach, highlights the cold read",
+      "techniques_discussed": [{{"technique": "cold_read", "example": "When I said you look like a yoga teacher..."}}],
+      "topics_discussed": ["behavior"],
+      "unlisted_concepts": {{"techniques": [], "topics": []}}
+    }}
+  ],
+  "low_quality_segments": [
+    {{"segment": 7, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
+  ],
+  "transcript_artifacts": []
+}}
 
 YOUR JSON RESPONSE:"""
 
@@ -852,80 +1000,161 @@ FOR EACH SECTION, analyze:
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
 
-TRANSCRIPT QUALITY: If you notice segments with suspected Whisper transcription artifacts,
-include additional entries in the array with type "transcript_artifact". Flag:
-- Repeated filler words that don't fit conversational context (e.g., "yeah yeah yeah yeah yeah" filling a gap)
-- Nonsensical repeated phrases
-- Text that appears to be hallucinated rather than real speech
-Do NOT flag natural speech patterns (e.g., someone genuinely saying "yes, yes" twice).
-Format: {{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-Return no transcript_artifact entries if no artifacts detected.
+TRANSCRIPT QUALITY ASSESSMENT:
+Evaluate the transcription quality of each segment. Flag segments where the ASR (Whisper)
+appears to have produced inaccurate or garbage output. Look for:
+- Text that doesn't make sense in the conversational context
+- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
+- Garbled or nonsensical phrases
+- Language confusion (random foreign words that don't fit)
+- Multiple sentences incorrectly merged without punctuation
 
-OUTPUT FORMAT: Return a JSON array with one object per section.
-Include any transcript_artifact entries at the end of the array.
+Do NOT flag:
+- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
+- Run-on sentences that still make sense (fast speech accurately transcribed)
+- Foreign words/names that fit the context
+
+Output a "low_quality_segments" array listing segments with poor transcription:
+{{"segment": N, "reason": "brief explanation of what seems wrong"}}
+
+Also flag specific artifact types with "transcript_artifact" entries:
+{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+
+Return empty arrays if transcript quality is good.
+
+OUTPUT FORMAT: Return a JSON object with this structure:
+{{
+  "enrichments": [...],  // array of section enrichments
+  "low_quality_segments": [...],  // segments with poor transcription
+  "transcript_artifacts": [...]  // specific artifact entries
+}}
+
 Output ONLY valid JSON, no explanation text.
 
 EXAMPLE:
-[
-  {{
-    "section_index": 1,
-    "type": "talking_head_section",
-    "description": "Introduction to direct game and why it works on the street",
-    "start_segment": 0,
-    "end_segment": 12,
-    "techniques_discussed": [
-      {{"technique": "direct_opener", "example": "You walk up and say I think you're cute"}}
-    ],
-    "topics_discussed": ["personality", "behavior"],
-    "unlisted_concepts": {{"techniques": [], "topics": []}}
-  }},
-  {{
-    "section_index": 2,
-    "type": "talking_head_section",
-    "description": "How to transition from opener to building attraction",
-    "start_segment": 13,
-    "end_segment": 28,
-    "techniques_discussed": [
-      {{"technique": "cold_read", "example": "After the opener, throw out an assumption about her"}}
-    ],
-    "topics_discussed": ["hobby", "personality"],
-    "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}}
-  }}
-]
+{{
+  "enrichments": [
+    {{
+      "section_index": 1,
+      "type": "talking_head_section",
+      "description": "Introduction to direct game and why it works on the street",
+      "start_segment": 0,
+      "end_segment": 12,
+      "techniques_discussed": [
+        {{"technique": "direct_opener", "example": "You walk up and say I think you're cute"}}
+      ],
+      "topics_discussed": ["personality", "behavior"],
+      "unlisted_concepts": {{"techniques": [], "topics": []}}
+    }},
+    {{
+      "section_index": 2,
+      "type": "talking_head_section",
+      "description": "How to transition from opener to building attraction",
+      "start_segment": 13,
+      "end_segment": 28,
+      "techniques_discussed": [
+        {{"technique": "cold_read", "example": "After the opener, throw out an assumption about her"}}
+      ],
+      "topics_discussed": ["hobby", "personality"],
+      "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}}
+    }}
+  ],
+  "low_quality_segments": [],
+  "transcript_artifacts": []
+}}
 
 YOUR JSON RESPONSE:"""
 
     return prompt
 
 
-def parse_enrichment_response(response: str) -> List[Dict]:
-    """Parse JSON array from LLM response."""
+@dataclass
+class ParsedEnrichmentResponse:
+    """Parsed response from Claude enrichment call."""
+    enrichments: List[Dict]
+    low_quality_segments: List[Dict]
+    transcript_artifacts: List[Dict]
+
+
+def parse_enrichment_response(response: str) -> ParsedEnrichmentResponse:
+    """Parse JSON response from LLM.
+
+    Handles both new format (JSON object with enrichments/low_quality_segments/transcript_artifacts)
+    and legacy format (JSON array of enrichments with transcript_artifact entries mixed in).
+    """
+    empty_result = ParsedEnrichmentResponse([], [], [])
+
     if not response:
-        return []
+        return empty_result
 
     try:
-        # Try to find JSON array in code block
-        code_block_match = re.search(r"```(?:json)?\s*(\[[\s\S]*?\])\s*```", response)
-        if code_block_match:
-            return json.loads(code_block_match.group(1))
+        # Try to find JSON object in code block
+        code_block_obj_match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", response)
+        if code_block_obj_match:
+            data = json.loads(code_block_obj_match.group(1))
+            if isinstance(data, dict) and "enrichments" in data:
+                return ParsedEnrichmentResponse(
+                    enrichments=data.get("enrichments", []),
+                    low_quality_segments=data.get("low_quality_segments", []),
+                    transcript_artifacts=data.get("transcript_artifacts", []),
+                )
 
-        # Try to find raw JSON array
-        start = response.find("[")
-        if start != -1:
+        # Try to find JSON array in code block (legacy format)
+        code_block_arr_match = re.search(r"```(?:json)?\s*(\[[\s\S]*?\])\s*```", response)
+        if code_block_arr_match:
+            arr = json.loads(code_block_arr_match.group(1))
+            return _parse_legacy_array(arr)
+
+        # Try to find raw JSON object
+        obj_start = response.find("{")
+        if obj_start != -1:
+            brace_count = 0
+            for i, char in enumerate(response[obj_start:], obj_start):
+                if char == "{":
+                    brace_count += 1
+                elif char == "}":
+                    brace_count -= 1
+                    if brace_count == 0:
+                        json_str = response[obj_start:i + 1]
+                        data = json.loads(json_str)
+                        if isinstance(data, dict) and "enrichments" in data:
+                            return ParsedEnrichmentResponse(
+                                enrichments=data.get("enrichments", []),
+                                low_quality_segments=data.get("low_quality_segments", []),
+                                transcript_artifacts=data.get("transcript_artifacts", []),
+                            )
+                        break
+
+        # Try to find raw JSON array (legacy format)
+        arr_start = response.find("[")
+        if arr_start != -1:
             bracket_count = 0
-            for i, char in enumerate(response[start:], start):
+            for i, char in enumerate(response[arr_start:], arr_start):
                 if char == "[":
                     bracket_count += 1
                 elif char == "]":
                     bracket_count -= 1
                     if bracket_count == 0:
-                        json_str = response[start:i + 1]
-                        return json.loads(json_str)
+                        json_str = response[arr_start:i + 1]
+                        arr = json.loads(json_str)
+                        return _parse_legacy_array(arr)
+
     except (json.JSONDecodeError, ValueError) as e:
         print(f"[07.content] JSON parse error: {e}")
         print(f"[07.content] Response preview: {response[:500]}...")
 
-    return []
+    return empty_result
+
+
+def _parse_legacy_array(arr: List[Dict]) -> ParsedEnrichmentResponse:
+    """Parse legacy format where transcript_artifacts are mixed in the array."""
+    transcript_artifacts = [e for e in arr if e.get("type") == "transcript_artifact"]
+    enrichments = [e for e in arr if e.get("type") != "transcript_artifact"]
+    return ParsedEnrichmentResponse(
+        enrichments=enrichments,
+        low_quality_segments=[],
+        transcript_artifacts=transcript_artifacts,
+    )
 
 
 def process_video_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
@@ -971,13 +1200,15 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
 
     enrichments: List[Dict] = []
     transcript_artifacts: List[Dict] = []
+    low_quality_segments: List[Dict] = []
     if response:
-        all_entries = parse_enrichment_response(response)
-        # Separate transcript_artifact entries from enrichment entries
-        transcript_artifacts = [e for e in all_entries if e.get("type") == "transcript_artifact"]
-        enrichments = [e for e in all_entries if e.get("type") != "transcript_artifact"]
+        parsed = parse_enrichment_response(response)
+        enrichments = parsed.enrichments
+        transcript_artifacts = parsed.transcript_artifacts
+        low_quality_segments = parsed.low_quality_segments
+        quality_msg = f", {len(low_quality_segments)} low-quality segs" if low_quality_segments else ""
         artifact_msg = f", {len(transcript_artifacts)} artifacts" if transcript_artifacts else ""
-        print(f"[07.content]   Got {len(enrichments)} enrichments{artifact_msg} in {elapsed:.1f}s")
+        print(f"[07.content]   Got {len(enrichments)} enrichments{quality_msg}{artifact_msg} in {elapsed:.1f}s")
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
@@ -997,6 +1228,12 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
 
     # Remap relative segment indices to global IDs
     remap_enrichment_segment_indices(enrichments, conversations)
+
+    # Compute phase confidence for each approach enrichment
+    speaker_labels = data.get("speaker_labels", {})
+    add_phase_confidence_to_enrichments(
+        enrichments, conversations, low_quality_segments, speaker_labels
+    )
 
     # Collect all techniques (from both techniques_used and techniques_discussed)
     all_techniques = set()
@@ -1041,6 +1278,7 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         "speaker_corrections": data.get("speaker_corrections", []),
         "segments": segments,
         "enrichments": enrichments,
+        "low_quality_segments": low_quality_segments,
         "transcript_artifacts": transcript_artifacts,
         "summary": {
             "total_conversations": len(approach_convs),
@@ -1290,7 +1528,7 @@ def main() -> None:
     parser.add_argument(
         "--sources",
         nargs="?",
-        const="docs/sources.txt",
+        const="docs/pipeline/sources.txt",
         help="Process all sources from sources.txt file"
     )
     parser.add_argument(

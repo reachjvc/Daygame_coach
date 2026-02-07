@@ -82,6 +82,8 @@ type ChunkMetadata = {
   videoType: string
   channel: string
   confidence?: number
+  // Phase confidence from Stage 07 LLM evaluation (0.0-1.0)
+  phaseConfidence?: number
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
 }
@@ -156,6 +158,8 @@ type ContentEnrichment = {
   topics_discussed?: unknown
   turn_phases?: Array<{ segment?: number; phase?: string }>
   investment_level?: string
+  // Phase confidence from Stage 07 LLM evaluation
+  phase_confidence?: Record<string, number>
 }
 
 type EnrichedFile = {
@@ -181,6 +185,8 @@ type InternalChunk = {
   videoId?: string
   videoType?: string
   channel?: string
+  // Phase confidence from Stage 07 (0.0-1.0)
+  phaseConfidence?: number
   // Quality flags
   problematicReason?: string[]
 }
@@ -893,6 +899,16 @@ async function main() {
         }
       }
 
+      // Add phaseConfidence from enrichment to each chunk based on its phase
+      const phaseConfidenceMap = enrichment.phase_confidence
+      if (phaseConfidenceMap) {
+        for (const chunk of phaseChunks) {
+          if (chunk.phase && phaseConfidenceMap[chunk.phase] !== undefined) {
+            chunk.phaseConfidence = phaseConfidenceMap[chunk.phase]
+          }
+        }
+      }
+
       if (phaseChunks.length > 0) {
         internalChunks.push(...phaseChunks)
       }
@@ -1012,6 +1028,9 @@ async function main() {
       }
       if (chunk.investmentLevel) {
         metadata.investmentLevel = chunk.investmentLevel
+      }
+      if (chunk.phaseConfidence !== undefined) {
+        metadata.phaseConfidence = chunk.phaseConfidence
       }
       if (chunk.problematicReason && chunk.problematicReason.length > 0) {
         metadata.problematicReason = chunk.problematicReason
