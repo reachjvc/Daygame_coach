@@ -49,7 +49,7 @@ declare -A STAGE_DIRS=(
 )
 # Stages with nested source/video folder structure
 NESTED_STAGES=("01" "02" "03" "04" "05")
-# Stages with flat file structure (no source subfolders)
+# Stages that often write source-scoped flat outputs (data/<stage>/<source>/*.json) in --manifest mode
 FLAT_STAGES=("06" "06b" "06c" "07")
 
 declare -A STAGE_SCRIPTS=(
@@ -452,15 +452,48 @@ create_stage_view() {
         done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
       fi
     else
-      # Flat stage: data/<stage>/ (files directly in stage folder)
-      while IFS= read -r -d '' f; do
-        found_file=true
-        local link_name=$(basename "$f")
-        local rel_target
-        rel_target=$(realpath --relative-to="$video_view_dir" "$f")
-        ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
-        ((++link_count))
-      done < <(find "$DATA_DIR/$stage_dir" -maxdepth 1 -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+      # Source-scoped flat stage (06-07 family):
+      # - Preferred (future/canonical): data/<stage>/<source>/<video>/
+      # - Current (manifest runs):      data/<stage>/<source>/*.json
+      # - Legacy (ad-hoc runs):         data/<stage>/*.json
+
+      # 1) Source-video layout (if present)
+      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
+      if [[ -d "$src_video_dir" ]]; then
+        while IFS= read -r -d '' f; do
+          found_file=true
+          local link_name=$(basename "$f")
+          local rel_target
+          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+          ((++link_count))
+        done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
+      fi
+
+      # 2) Source-flat layout (if present)
+      local src_source_dir="$DATA_DIR/$stage_dir/$source"
+      if [[ "$found_file" == false && -d "$src_source_dir" ]]; then
+        while IFS= read -r -d '' f; do
+          found_file=true
+          local link_name=$(basename "$f")
+          local rel_target
+          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+          ((++link_count))
+        done < <(find "$src_source_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+      fi
+
+      # 3) Root-flat fallback
+      if [[ "$found_file" == false && -d "$DATA_DIR/$stage_dir" ]]; then
+        while IFS= read -r -d '' f; do
+          found_file=true
+          local link_name=$(basename "$f")
+          local rel_target
+          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+          ((++link_count))
+        done < <(find "$DATA_DIR/$stage_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+      fi
     fi
 
     # Create .pending marker if no files found
