@@ -28,13 +28,16 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Iterable, Set
 
 LOG_PREFIX = "[cross-stage]"
+
+_VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 
 
 @dataclass
@@ -58,6 +61,16 @@ def validate_cross_stage(
 ) -> List[ValidationResult]:
     """Validate consistency between Stage 06 and Stage 07 outputs."""
     results: List[ValidationResult] = []
+
+    # --- 0. Video id consistency ---
+    s06_vid = s06_data.get("video_id")
+    s07_vid = s07_data.get("video_id")
+    if s06_vid and s07_vid and s06_vid != s07_vid:
+        results.append(ValidationResult(
+            "warning", "video_id_mismatch",
+            f"Stage 06 video_id '{s06_vid}' != Stage 07 video_id '{s07_vid}'",
+            video_id or (s06_vid or s07_vid or ""),
+        ))
 
     # --- 1. Video type consistency ---
     s06_video_type = s06_data.get("video_type", {})
@@ -89,6 +102,12 @@ def validate_cross_stage(
     s06_segments = s06_data.get("segments", [])
     s07_segments = s07_data.get("segments", [])
 
+    s06_seg_by_id: Dict[int, Dict[str, Any]] = {}
+    for seg in s06_segments:
+        seg_id = seg.get("id")
+        if isinstance(seg_id, int):
+            s06_seg_by_id[seg_id] = seg
+
     if len(s06_segments) != len(s07_segments):
         results.append(ValidationResult(
             "warning", "segment_count_changed",
@@ -111,8 +130,13 @@ def validate_cross_stage(
             ))
 
     # --- 3. Conversation coverage ---
-    s06_conversations = s06_data.get("conversations", [])
-    s06_conv_ids = {c["conversation_id"] for c in s06_conversations}
+    # Derive conv ids from segments (ground truth) instead of relying on the summary list,
+    # since 06c patching can modify segments[].conversation_id and the summary can drift.
+    s06_conv_ids: Set[int] = set()
+    for seg in s06_segments:
+        conv_id = seg.get("conversation_id", 0)
+        if isinstance(conv_id, int) and conv_id > 0:
+            s06_conv_ids.add(conv_id)
 
     s07_enrichments = s07_data.get("enrichments", [])
     s07_approach_conv_ids = {
@@ -148,8 +172,34 @@ def validate_cross_stage(
     for enrichment in s07_enrichments:
         if enrichment.get("type") != "approach":
             continue
+        conv_id = enrichment.get("conversation_id")
+        conv_seg_ids = {
+            s.get("id")
+            for s in s06_segments
+            if isinstance(s.get("id"), int) and s.get("conversation_id") == conv_id
+        }
+
         for tp in enrichment.get("turn_phases", []):
             seg_idx = tp.get("segment")
+            if seg_idx is not None and seg_idx not in s06_seg_by_id:
+                results.append(ValidationResult(
+                    "warning", "turn_phase_unknown_segment",
+                    f"Stage 07 turn_phases references segment {seg_idx} which does not exist in Stage 06 segments[].id",
+                    video_id,
+                ))
+                break
+
+            if seg_idx is not None and conv_id is not None:
+                s06_seg = s06_seg_by_id.get(seg_idx)
+                if s06_seg and s06_seg.get("conversation_id") != conv_id:
+                    results.append(ValidationResult(
+                        "warning", "turn_phase_wrong_conversation",
+                        f"Stage 07 conv {conv_id} turn_phases references segment {seg_idx} "
+                        f"but Stage 06 assigns it to conv {s06_seg.get('conversation_id')}",
+                        video_id,
+                    ))
+                    break
+
             if seg_idx is not None and seg_idx in s06_commentary_seg_ids:
                 results.append(ValidationResult(
                     "warning", "commentary_in_approach",
@@ -158,6 +208,46 @@ def validate_cross_stage(
                     video_id,
                 ))
                 break  # one warning per enrichment is enough
+
+        # Techniques used should also reference valid segments for this conversation.
+        for tech in enrichment.get("techniques_used", []) or []:
+            if not isinstance(tech, dict):
+                continue
+            seg_idx = tech.get("segment")
+            if seg_idx is None:
+                continue
+            if seg_idx not in s06_seg_by_id:
+                results.append(ValidationResult(
+                    "warning", "technique_unknown_segment",
+                    f"Stage 07 techniques_used references segment {seg_idx} which does not exist in Stage 06 segments[].id",
+                    video_id,
+                ))
+                break
+            if conv_id is not None:
+                s06_seg = s06_seg_by_id.get(seg_idx)
+                if s06_seg and s06_seg.get("conversation_id") != conv_id:
+                    results.append(ValidationResult(
+                        "warning", "technique_wrong_conversation",
+                        f"Stage 07 conv {conv_id} techniques_used references segment {seg_idx} "
+                        f"but Stage 06 assigns it to conv {s06_seg.get('conversation_id')}",
+                        video_id,
+                    ))
+                    break
+
+        # Phase coverage sanity: warn if we have a conversation but no phase references.
+        if conv_id is not None and conv_seg_ids:
+            phase_seg_ids = {
+                tp.get("segment")
+                for tp in enrichment.get("turn_phases", []) or []
+                if isinstance(tp, dict) and isinstance(tp.get("segment"), int)
+            }
+            if phase_seg_ids and not (phase_seg_ids & conv_seg_ids):
+                results.append(ValidationResult(
+                    "warning", "turn_phases_no_conv_segments",
+                    f"Stage 07 conv {conv_id} turn_phases does not reference any segments from that conversation "
+                    f"(possible index semantic drift)",
+                    video_id,
+                ))
 
     # --- 5. Speaker labels consistency ---
     s06_labels = s06_data.get("speaker_labels", {})
@@ -178,6 +268,31 @@ def validate_cross_stage(
                     video_id,
                 ))
 
+    # --- 6. Transcript quality indices (indexing contract sanity) ---
+    # Stage 07 emits low_quality_segments[].segment and transcript_artifacts[].segment_index.
+    # These should reference global Stage 06/07 segment ids; if they don't, the evidence becomes non-actionable.
+    for lq in s07_data.get("low_quality_segments", []) or []:
+        if not isinstance(lq, dict):
+            continue
+        seg_idx = lq.get("segment")
+        if isinstance(seg_idx, int) and seg_idx not in s06_seg_by_id:
+            results.append(ValidationResult(
+                "warning", "low_quality_unknown_segment",
+                f"Stage 07 low_quality_segments references segment {seg_idx} which does not exist in Stage 06 segments[].id",
+                video_id,
+            ))
+
+    for art in s07_data.get("transcript_artifacts", []) or []:
+        if not isinstance(art, dict):
+            continue
+        seg_idx = art.get("segment_index")
+        if isinstance(seg_idx, int) and seg_idx not in s06_seg_by_id:
+            results.append(ValidationResult(
+                "warning", "transcript_artifact_unknown_segment",
+                f"Stage 07 transcript_artifacts references segment_index {seg_idx} which does not exist in Stage 06 segments[].id",
+                video_id,
+            ))
+
     if not any(r.severity == "error" for r in results):
         results.append(ValidationResult("info", "cross_stage_passed", "All cross-stage checks passed", video_id))
 
@@ -187,33 +302,83 @@ def validate_cross_stage(
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
+def _extract_video_id_from_path(p: Path) -> Optional[str]:
+    m = _VIDEO_ID_RE.search(str(p))
+    return m.group(1) if m else None
+
+
+def _extract_video_id_from_json(p: Path) -> Optional[str]:
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    vid = data.get("video_id")
+    return vid if isinstance(vid, str) and vid else None
+
+
+def _video_id_for_file(p: Path) -> Optional[str]:
+    return _extract_video_id_from_path(p) or _extract_video_id_from_json(p)
+
+
+def _index_by_video_id(files: Iterable[Path]) -> Dict[str, List[Path]]:
+    out: Dict[str, List[Path]] = {}
+    for p in files:
+        vid = _video_id_for_file(p)
+        if not vid:
+            continue
+        out.setdefault(vid, []).append(p)
+    return out
+
+
+def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]) -> Path:
+    def rank(p: Path) -> Tuple[int, int, str]:
+        # Prefer candidates whose path includes the source folder name (when available),
+        # and prefer deeper (more specific) layouts (source-video > source-flat > root-flat).
+        source_bonus = 1 if (preferred_source and preferred_source in p.parts) else 0
+        depth = len(p.parts)
+        return (source_bonus, depth, str(p))
+
+    return sorted(candidates, key=rank, reverse=True)[0]
+
 
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
     """Find matching Stage 06/07 output file pairs."""
-    s06_root = repo_root() / "data" / "06c.patched"
-    if not s06_root.exists():
-        s06_root = repo_root() / "data" / "06.video-type"
+    s06c_root = repo_root() / "data" / "06c.patched"
+    s06_root = repo_root() / "data" / "06.video-type"
     s07_root = repo_root() / "data" / "07.content"
 
+    if not s07_root.exists():
+        return []
+
+    # Index Stage 06 candidates by video_id (prefer patched artifacts when present).
+    s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
+    s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
+
+    s06c_by_vid = _index_by_video_id(s06c_files)
+    s06_by_vid = _index_by_video_id(s06_files)
+
+    # Enumerate Stage 07 outputs (layout-agnostic).
+    if source and (s07_root / source).exists():
+        s07_files = sorted((s07_root / source).rglob("*.enriched.json"))
+    else:
+        s07_files = sorted(s07_root.rglob("*.enriched.json"))
+        if source:
+            # If the caller requested a source but Stage 07 layout is root-flat,
+            # we can only best-effort filter by path parts.
+            s07_files = [p for p in s07_files if source in p.parts]
+
     pairs: List[Tuple[Path, Path, str]] = []
-
-    search_dirs = [s06_root / source] if source else list(s06_root.iterdir()) if s06_root.exists() else []
-
-    for source_dir in search_dirs:
-        if not source_dir.is_dir():
+    for s07_file in s07_files:
+        vid = _video_id_for_file(s07_file)
+        if not vid:
             continue
-        source_name = source_dir.name
 
-        for s06_file in sorted(source_dir.rglob("*.conversations.json")):
-            # Find matching Stage 07 file
-            stem = s06_file.stem
-            if stem.endswith(".conversations"):
-                stem = stem[:-len(".conversations")]
-            s07_file = s07_root / source_name / f"{stem}.enriched.json"
+        candidates = s06c_by_vid.get(vid) or s06_by_vid.get(vid)
+        if not candidates:
+            continue
 
-            if s07_file.exists():
-                video_id = stem
-                pairs.append((s06_file, s07_file, video_id))
+        s06_file = _pick_best_candidate(candidates, preferred_source=source)
+        pairs.append((s06_file, s07_file, vid))
 
     return pairs
 
