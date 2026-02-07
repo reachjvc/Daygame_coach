@@ -256,6 +256,9 @@ OUTPUT: First, write a brief analysis for each of the 5 passes (2-4 sentences ea
 
 CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields):
 
+0. conversation_verdicts: Each entry MUST use:
+   - "verdict": one of "OK", "FLAG", "ISSUE" (NOT "APPROVE" or "REJECT")
+
 1. video_type_check: If agrees=false, you MUST include:
    - "suggested_type": one of "infield", "compilation", "talking_head", "podcast" (NOT prose)
    - "confidence": 0.0-1.0
@@ -574,6 +577,42 @@ def convert_analysis_to_json(analysis: str, timeout: int = 120) -> Optional[Dict
     return None
 
 
+def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
+    """Best-effort normalization to satisfy verification.schema.json without hiding real issues."""
+    if not isinstance(raw, list):
+        return []
+
+    def normalize_verdict(v: Any) -> str:
+        if v is None:
+            return "FLAG"
+        s = str(v).strip().upper()
+        if s in {"OK", "FLAG", "ISSUE"}:
+            return s
+        # Common model drift: use overall verdict vocabulary at the conversation level.
+        if s in {"APPROVE", "APPROVED", "PASS", "PASSED"}:
+            return "OK"
+        if s in {"REJECT", "REJECTED", "FAIL", "FAILED", "ERROR"}:
+            return "ISSUE"
+        return "FLAG"
+
+    normalized: List[Dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        cid = item.get("conversation_id")
+        try:
+            cid_int = int(cid)  # allow numeric strings
+        except Exception:
+            continue
+
+        out = dict(item)
+        out["conversation_id"] = cid_int
+        out["verdict"] = normalize_verdict(item.get("verdict"))
+        normalized.append(out)
+
+    return normalized
+
+
 # ---------------------------
 # Verification Logic
 # ---------------------------
@@ -752,6 +791,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
 
     # Build verification output
     verdict = result.get("verdict", "FLAG")
+    conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
     misattributions = result.get("misattributions", [])
     boundary_issues = result.get("boundary_issues", [])
     collapse_issues = result.get("collapse_issues", [])
@@ -759,6 +799,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
 
     total_issues = (
         len(misattributions)
+        + len([c for c in conversation_verdicts if c.get("verdict") == "ISSUE"])
         + len([b for b in boundary_issues if b.get("severity") in ("moderate", "major")])
         + len(collapse_issues)
         + len(other_flags)
@@ -770,7 +811,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
         "pipeline_version": PIPELINE_VERSION,
         "verdict": verdict,
         "video_type_check": result.get("video_type_check", {}),
-        "conversation_verdicts": result.get("conversation_verdicts", []),
+        "conversation_verdicts": conversation_verdicts,
         "misattributions": misattributions,
         "boundary_issues": boundary_issues,
         "collapse_issues": collapse_issues,

@@ -117,7 +117,7 @@
             "description": "The specific segment with wrong override"
           },
           "current_override": {
-            "type": "string",
+            "type": ["string", "null"],
             "description": "The current speaker_role_override value"
           },
           "suggested_override": {
