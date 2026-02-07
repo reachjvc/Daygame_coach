@@ -19,6 +19,9 @@ Use:
 
   D) JSON output:
      python batch_report.py --all --batch-id R1 --json
+
+  E) Restrict to a batch/sub-batch manifest:
+     python batch_report.py --all --manifest docs/pipeline/batches/P001.1.txt --batch-id P001.1
 """
 
 from __future__ import annotations
@@ -26,17 +29,63 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import sys
 import time
 from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 LOG_PREFIX = "[batch-report]"
+
+_BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
+
+
+def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
+    """Load docs/pipeline/batches/*.txt manifest and return the set of video ids."""
+    ids: Set[str] = set()
+    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        src = parts[0].strip()
+        if source and src != source:
+            continue
+        folder = parts[1].strip()
+        m = _BRACKET_ID_RE.search(folder)
+        if m:
+            ids.add(m.group(1))
+    return ids
+
+
+def _extract_video_id(data: Dict[str, Any]) -> Optional[str]:
+    vid = data.get("video_id")
+    if isinstance(vid, str) and vid:
+        return vid
+    src = data.get("_source_file")
+    if isinstance(src, str):
+        m = _BRACKET_ID_RE.search(src)
+        if m:
+            return m.group(1)
+    return None
+
+
+def _filter_by_manifest(files: List[Dict], manifest_ids: Set[str]) -> List[Dict]:
+    if not manifest_ids:
+        return files
+    out: List[Dict] = []
+    for data in files:
+        vid = _extract_video_id(data)
+        if vid and vid in manifest_ids:
+            out.append(data)
+    return out
 
 
 def batch_reports_dir() -> Path:
@@ -364,6 +413,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Batch statistics report and drift detection")
     parser.add_argument("--source", help="Report for a specific source")
     parser.add_argument("--all", action="store_true", help="Report for all sources")
+    parser.add_argument("--manifest", help="Only include videos listed in a batch/sub-batch manifest file")
     parser.add_argument("--batch-id", required=True, help="Batch identifier (e.g., R1, R2, P001)")
     parser.add_argument("--compare", action="store_true", help="Compare against prior batches")
     parser.add_argument("--json", action="store_true", help="Output JSON report")
@@ -381,10 +431,29 @@ def main() -> None:
 
     source = args.source if args.source else None
 
+    manifest_ids: Set[str] = set()
+    manifest_path: Optional[Path] = None
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Manifest file not found: {manifest_path}", file=sys.stderr)
+            sys.exit(1)
+        manifest_ids = _load_manifest_ids(manifest_path, source=source)
+        if not manifest_ids:
+            print(f"{LOG_PREFIX} No video ids found in manifest: {manifest_path}")
+            sys.exit(0)
+
     # Load data
     conversations_files = load_conversations_files(source)
     enriched_files = load_enriched_files(source)
     validation_files = load_validation_files(source)
+
+    if manifest_ids:
+        conversations_files = _filter_by_manifest(conversations_files, manifest_ids)
+        enriched_files = _filter_by_manifest(enriched_files, manifest_ids)
+        validation_files = _filter_by_manifest(validation_files, manifest_ids)
 
     if not conversations_files and not enriched_files:
         print(f"{LOG_PREFIX} No data found to report on")
@@ -403,6 +472,7 @@ def main() -> None:
         "batch_id": args.batch_id,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "source_filter": source or "all",
+        **({"manifest": str(manifest_path), "manifest_videos": len(manifest_ids)} if manifest_path else {}),
         "stats": stats,
     }
     if drift_flags:
