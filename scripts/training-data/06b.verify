@@ -259,6 +259,9 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
 0. conversation_verdicts: Each entry MUST use:
    - "verdict": one of "OK", "FLAG", "ISSUE" (NOT "APPROVE" or "REJECT")
 
+0b. Top-level verdict MUST be:
+   - "verdict": one of "APPROVE", "FLAG", "REJECT" (NOT "OK" or "ISSUE")
+
 1. video_type_check: If agrees=false, you MUST include:
    - "suggested_type": one of "infield", "compilation", "talking_head", "podcast" (NOT prose)
    - "confidence": 0.0-1.0
@@ -613,6 +616,20 @@ def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
     return normalized
 
 
+def normalize_overall_verdict(v: Any) -> str:
+    if v is None:
+        return "FLAG"
+    s = str(v).strip().upper()
+    if s in {"APPROVE", "FLAG", "REJECT"}:
+        return s
+    # Common drift: use conversation-level vocabulary at the top level.
+    if s in {"OK", "PASS", "PASSED", "APPROVED"}:
+        return "APPROVE"
+    if s in {"ISSUE", "FAIL", "FAILED", "ERROR"}:
+        return "REJECT"
+    return "FLAG"
+
+
 # ---------------------------
 # Verification Logic
 # ---------------------------
@@ -790,7 +807,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
     elapsed = time.time() - start_time
 
     # Build verification output
-    verdict = result.get("verdict", "FLAG")
+    verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
     conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
     misattributions = result.get("misattributions", [])
     boundary_issues = result.get("boundary_issues", [])
