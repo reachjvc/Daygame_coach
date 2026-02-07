@@ -6,6 +6,16 @@ export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
 export type GoalPeriod = "daily" | "weekly" | "monthly" | "custom"
 
 /**
+ * Metrics that can be linked to goals for auto-sync with tracking data
+ */
+export type LinkedMetric =
+  | "approaches_weekly"
+  | "sessions_weekly"
+  | "numbers_weekly"
+  | "instadates_weekly"
+  | null
+
+/**
  * Database row type for user_goals table
  */
 export interface UserGoalRow {
@@ -23,6 +33,7 @@ export interface UserGoalRow {
   best_streak: number
   is_active: boolean
   is_archived: boolean
+  linked_metric: LinkedMetric
   created_at: string
   updated_at: string
 }
@@ -37,6 +48,7 @@ export interface UserGoalInsert {
   period?: GoalPeriod
   target_value: number
   custom_end_date?: string
+  linked_metric?: LinkedMetric
 }
 
 /**
@@ -51,6 +63,7 @@ export interface UserGoalUpdate {
   current_value?: number
   is_active?: boolean
   is_archived?: boolean
+  linked_metric?: LinkedMetric
 }
 
 /**

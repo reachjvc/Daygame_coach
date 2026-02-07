@@ -16,6 +16,7 @@ export type ScenarioType =
   | "topic-pivot"
   | "assumption-game"
   | "her-question"
+  | "keep-it-going"
   | "practice-career-response"
   | "hobby-response"
   | "compliment-delivery"
@@ -36,6 +37,7 @@ export type ChatScenarioType =
   | "practice-openers"
   | "practice-career-response"
   | "practice-shittests"
+  | "keep-it-going"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Difficulty Types (shared across all scenarios)
@@ -184,6 +186,7 @@ export type ScenarioId =
   | "topic-pivot"
   | "assumption-game"
   | "her-question"
+  | "keep-it-going"
   | "practice-career-response"
   | "hobby-response"
   | "compliment-delivery"

@@ -54,6 +54,18 @@ import {
 import { evaluateOpenerResponse } from "@/src/scenarios/chat/evaluator"
 import { evaluateCareerResponse } from "@/src/scenarios/career/evaluator"
 import { evaluateShittestResponse } from "@/src/scenarios/shittests/evaluator"
+import {
+  generateKeepItGoingScenario,
+  generateKeepItGoingIntro,
+  evaluateKeepItGoingResponse,
+  getResponseQuality,
+  pickResponse,
+  pickHerQuestion,
+  pickCloseResponse,
+  getCloseOutcome,
+  getPhase,
+  type Language,
+} from "@/src/scenarios/keepitgoing"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Service-specific Types (not exported to other modules)
@@ -173,6 +185,13 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
       ? generateCareerScenario(archetype, difficulty, scenarioSeed)
       : null
 
+  // Get language from profile or default to Danish
+  const language: Language = (profile?.preferred_language as Language) || "da"
+  const keepItGoingContext =
+    scenario_type === "keep-it-going"
+      ? generateKeepItGoingScenario(scenarioSeed, language)
+      : null
+
   const location = "street"
 
   // Handle first message (intro)
@@ -189,6 +208,15 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
     if (scenario_type === "practice-shittests") {
       return {
         text: generateShittestScenarioIntro(archetype, difficulty, location),
+        archetype: archetype.name,
+        difficulty,
+        isIntroduction: true,
+      }
+    }
+
+    if (scenario_type === "keep-it-going" && keepItGoingContext) {
+      return {
+        text: generateKeepItGoingIntro(keepItGoingContext),
         archetype: archetype.name,
         difficulty,
         isIntroduction: true,
@@ -215,7 +243,41 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
   void systemPrompt
   void difficultyModifier
 
-  // Generate placeholder response
+  // Evaluate user's response
+  const currentTurn = conversation_history.filter((entry) => entry.role === "user").length + 1
+
+  // Handle keep-it-going scenario
+  if (scenario_type === "keep-it-going" && keepItGoingContext) {
+    const evaluation = evaluateKeepItGoingResponse(request.message, language)
+    const quality = getResponseQuality(evaluation.small.score)
+    const phase = getPhase(currentTurn, request.message, language)
+
+    // Generate response based on quality and phase
+    let responseText: string
+    if (phase === "close") {
+      // Calculate average score from conversation history
+      const avgScore = evaluation.small.score // For now, use current score
+      const outcome = getCloseOutcome(avgScore)
+      responseText = pickCloseResponse(outcome, language)
+    } else if (quality === "positive" && currentTurn >= 3) {
+      // She asks a question back after consecutive high scores
+      responseText = pickHerQuestion(language)
+    } else {
+      responseText = pickResponse(quality, language)
+    }
+
+    const milestoneEvaluation =
+      currentTurn % 5 === 0 ? { ...evaluation.milestone, turn: currentTurn } : undefined
+
+    return {
+      text: responseText,
+      archetype: archetype.name,
+      evaluation: evaluation.small,
+      milestoneEvaluation,
+    }
+  }
+
+  // Generate placeholder response for other scenarios
   const placeholderResponse =
     scenario_type === "practice-career-response" && careerScenario
       ? generateCareerPlaceholderResponse(request.message, archetype.name, difficulty, careerScenario.jobTitle)
@@ -227,9 +289,6 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
             archetype.commonShittests
           )
         : generatePlaceholderResponse(request.message, archetype.name, difficulty)
-
-  // Evaluate user's response
-  const currentTurn = conversation_history.filter((entry) => entry.role === "user").length + 1
 
   const evaluationResult =
     scenario_type === "practice-career-response" && careerScenario

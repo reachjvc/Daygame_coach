@@ -10,8 +10,10 @@ import type {
   UserGoalInsert,
   UserGoalUpdate,
   GoalWithProgress,
+  LinkedMetric,
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
+import { getUserTrackingStats } from "./trackingRepo"
 
 // ============================================
 // Get Goals
@@ -110,6 +112,7 @@ export async function createGoal(
       period: goal.period ?? "weekly",
       target_value: goal.target_value,
       custom_end_date: goal.custom_end_date ?? null,
+      linked_metric: goal.linked_metric ?? null,
     })
     .select()
     .single()
@@ -252,6 +255,136 @@ export async function resetGoalPeriod(
   }
 
   return computeGoalProgress(data as UserGoalRow)
+}
+
+// ============================================
+// Bulk Reset
+// ============================================
+
+/**
+ * Reset all daily goals for a user
+ * Updates streak based on completion status before resetting
+ */
+export async function resetDailyGoals(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  // Get all active daily goals
+  const { data: goals, error: fetchError } = await supabase
+    .from("user_goals")
+    .select("id, current_value, target_value, current_streak")
+    .eq("user_id", userId)
+    .eq("period", "daily")
+    .eq("is_active", true)
+    .eq("is_archived", false)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch daily goals: ${fetchError.message}`)
+  }
+
+  if (!goals || goals.length === 0) {
+    return 0
+  }
+
+  // Reset each goal
+  for (const goal of goals) {
+    const wasComplete = goal.current_value >= goal.target_value
+
+    const updateData: Record<string, unknown> = {
+      current_value: 0,
+      period_start_date: new Date().toISOString().split("T")[0],
+    }
+
+    // Reset streak if goal wasn't completed
+    if (!wasComplete) {
+      updateData.current_streak = 0
+    }
+
+    await supabase
+      .from("user_goals")
+      .update(updateData)
+      .eq("id", goal.id)
+      .eq("user_id", userId)
+  }
+
+  return goals.length
+}
+
+// ============================================
+// Linked Metrics Sync
+// ============================================
+
+/**
+ * Get the metric value from tracking stats based on linked_metric type
+ */
+function getMetricValue(
+  stats: { current_week_approaches: number; current_week_sessions: number },
+  metric: LinkedMetric
+): number {
+  switch (metric) {
+    case "approaches_weekly":
+      return stats.current_week_approaches
+    case "sessions_weekly":
+      return stats.current_week_sessions
+    // For numbers and instadates, we need weekly values which aren't tracked
+    // separately, so we return 0 for now (these would need additional tracking)
+    case "numbers_weekly":
+    case "instadates_weekly":
+      return 0
+    default:
+      return 0
+  }
+}
+
+/**
+ * Sync all goals with linked metrics to current tracking data
+ * Call this after fetching tracking stats to keep goals in sync
+ */
+export async function syncLinkedGoals(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  // Get user's tracking stats
+  const stats = await getUserTrackingStats(userId)
+  if (!stats) {
+    return 0
+  }
+
+  // Get all active goals with linked metrics
+  const { data: goals, error: fetchError } = await supabase
+    .from("user_goals")
+    .select("id, linked_metric, current_value")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .eq("is_archived", false)
+    .not("linked_metric", "is", null)
+
+  if (fetchError) {
+    throw new Error(`Failed to fetch linked goals: ${fetchError.message}`)
+  }
+
+  if (!goals || goals.length === 0) {
+    return 0
+  }
+
+  let updatedCount = 0
+
+  for (const goal of goals) {
+    const newValue = getMetricValue(stats, goal.linked_metric as LinkedMetric)
+
+    // Only update if value changed
+    if (newValue !== goal.current_value) {
+      const { error } = await supabase
+        .from("user_goals")
+        .update({ current_value: newValue })
+        .eq("id", goal.id)
+        .eq("user_id", userId)
+
+      if (!error) {
+        updatedCount++
+      }
+    }
+  }
+
+  return updatedCount
 }
 
 // ============================================

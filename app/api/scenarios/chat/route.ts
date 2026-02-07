@@ -8,6 +8,7 @@ const ScenarioTypeSchema = z.enum([
   "practice-openers",
   "practice-career-response",
   "practice-shittests",
+  "keep-it-going",
 ])
 
 const MessageSchema = z.object({

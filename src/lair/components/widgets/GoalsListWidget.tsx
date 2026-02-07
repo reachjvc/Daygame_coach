@@ -1,20 +1,36 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { Plus, Pencil, Archive, RotateCcw, Flame, Target } from "lucide-react"
+import { useEffect, useState, useCallback, useMemo } from "react"
+import { Plus, Pencil, Archive, RotateCcw, Flame, Target, ArrowUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { GOAL_CATEGORIES, getCategoryConfig } from "../../data/goalCategories"
 import { GoalFormModal } from "../GoalFormModal"
 
 type FilterCategory = "all" | string
+type SortOption = "newest" | "progress" | "streak" | "category"
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "newest", label: "Newest" },
+  { value: "progress", label: "Progress" },
+  { value: "streak", label: "Streak" },
+  { value: "category", label: "Category" },
+]
 
 export function GoalsListWidget({ collapsed }: WidgetProps) {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [filter, setFilter] = useState<FilterCategory>("all")
+  const [sortBy, setSortBy] = useState<SortOption>("newest")
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
 
@@ -79,13 +95,29 @@ export function GoalsListWidget({ collapsed }: WidgetProps) {
     }
   }
 
-  if (collapsed) return null
+  // Filter and sort goals
+  const sortedGoals = useMemo(() => {
+    const filtered = filter === "all" ? goals : goals.filter((g) => g.category === filter)
 
-  const filteredGoals =
-    filter === "all" ? goals : goals.filter((g) => g.category === filter)
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "progress":
+          return b.progress_percentage - a.progress_percentage
+        case "streak":
+          return b.current_streak - a.current_streak
+        case "category":
+          return a.category.localeCompare(b.category)
+        case "newest":
+        default:
+          return 0 // Already sorted by created_at desc from API
+      }
+    })
+  }, [goals, filter, sortBy])
 
   // Get unique categories from goals for filter
   const activeCategories = [...new Set(goals.map((g) => g.category))]
+
+  if (collapsed) return null
 
   if (isLoading) {
     return (
@@ -105,36 +137,54 @@ export function GoalsListWidget({ collapsed }: WidgetProps) {
   return (
     <>
       <div className="space-y-4">
-        {/* Category Filter */}
-        <div className="flex flex-wrap gap-1.5">
-          <Badge
-            variant={filter === "all" ? "default" : "outline"}
-            className="cursor-pointer"
-            onClick={() => setFilter("all")}
-          >
-            All ({goals.length})
-          </Badge>
-          {GOAL_CATEGORIES.filter((c) => activeCategories.includes(c.id)).map(
-            (cat) => {
-              const count = goals.filter((g) => g.category === cat.id).length
-              return (
-                <Badge
-                  key={cat.id}
-                  variant={filter === cat.id ? "default" : "outline"}
-                  className={`cursor-pointer gap-1 ${
-                    filter === cat.id ? cat.bgColor : ""
-                  }`}
-                  onClick={() => setFilter(cat.id)}
-                >
-                  {cat.name} ({count})
-                </Badge>
-              )
-            }
+        {/* Category Filter + Sort */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1.5">
+            <Badge
+              variant={filter === "all" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setFilter("all")}
+            >
+              All ({goals.length})
+            </Badge>
+            {GOAL_CATEGORIES.filter((c) => activeCategories.includes(c.id)).map(
+              (cat) => {
+                const count = goals.filter((g) => g.category === cat.id).length
+                return (
+                  <Badge
+                    key={cat.id}
+                    variant={filter === cat.id ? "default" : "outline"}
+                    className={`cursor-pointer gap-1 ${
+                      filter === cat.id ? cat.bgColor : ""
+                    }`}
+                    onClick={() => setFilter(cat.id)}
+                  >
+                    {cat.name} ({count})
+                  </Badge>
+                )
+              }
+            )}
+          </div>
+
+          {goals.length > 1 && (
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+              <SelectTrigger className="w-[100px] h-7 text-xs">
+                <ArrowUpDown className="h-3 w-3 mr-1" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SORT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
 
         {/* Goals List */}
-        {filteredGoals.length === 0 ? (
+        {sortedGoals.length === 0 ? (
           <div className="text-center py-6">
             <Target className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-3">
@@ -149,7 +199,7 @@ export function GoalsListWidget({ collapsed }: WidgetProps) {
           </div>
         ) : (
           <div className="space-y-2">
-            {filteredGoals.map((goal) => {
+            {sortedGoals.map((goal) => {
               const config = getCategoryConfig(goal.category)
               const Icon = config.icon
 

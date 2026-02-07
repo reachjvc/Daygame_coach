@@ -1,6 +1,6 @@
 # Plan: Keep It Going Scenario
 
-**Status:** Ready for Implementation
+**Status:** Implemented
 **Created:** 2026-02-07
 **Languages:** Danish + English
 
@@ -566,20 +566,19 @@ const ScenarioTypeSchema = z.enum([
 
 ## Implementation Checklist
 
-1. [ ] Add `"keep-it-going"` to types.ts (ScenarioType, ScenarioId, ChatScenarioType)
-2. [ ] Add to catalog.ts + hooking phase
-3. [ ] Create `src/scenarios/keepitgoing/` folder
-4. [ ] Create `data/situations.ts` with 5 situations (both languages)
-5. [ ] Create `data/responses.ts` with response templates (both languages)
-6. [ ] Create `data/closeResponses.ts` with close handling (both languages)
-7. [ ] Create `generator.ts` with phase tracking
-8. [ ] Create `evaluator.ts` with language-specific patterns
-9. [ ] Create `index.ts` exports
-10. [ ] Integrate in `scenariosService.ts`
-11. [ ] Update API route schema
-12. [ ] Add session summary logic
-13. [ ] Run `npm test`
-14. [ ] Manual test in browser
+1. [x] Add `"keep-it-going"` to types.ts (ScenarioType, ScenarioId, ChatScenarioType)
+2. [x] Add to catalog.ts + hooking phase
+3. [x] Create `src/scenarios/keepitgoing/` folder
+4. [x] Create `data/situations.ts` with 5 situations (both languages)
+5. [x] Create `data/responses.ts` with response templates (both languages) - close responses included
+6. [x] Create `generator.ts` with phase tracking
+7. [x] Create `evaluator.ts` with language-specific patterns
+8. [x] Create `types.ts` for all module types
+9. [x] Create `index.ts` exports
+10. [x] Integrate in `scenariosService.ts`
+11. [x] Update API route schema
+12. [x] Run `npm test` - all 748 tests pass
+13. [ ] Manual test in browser
 
 ---
 

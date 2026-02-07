@@ -18,8 +18,16 @@ import {
   GOAL_CATEGORIES,
   getCategoryConfig,
   type GoalCategoryConfig,
+  type GoalSuggestion,
 } from "../data/goalCategories"
-import type { GoalWithProgress, GoalPeriod, GoalTrackingType } from "@/src/db/goalTypes"
+import type { GoalWithProgress, GoalPeriod, GoalTrackingType, LinkedMetric } from "@/src/db/goalTypes"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface GoalFormModalProps {
   open: boolean
@@ -39,6 +47,14 @@ const TRACKING_TYPE_OPTIONS: { value: GoalTrackingType; label: string; descripti
   { value: "boolean", label: "Yes/No", description: "Simple done or not done" },
 ]
 
+const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string }[] = [
+  { value: null, label: "None (manual tracking)" },
+  { value: "approaches_weekly", label: "Weekly approaches" },
+  { value: "sessions_weekly", label: "Weekly sessions" },
+  { value: "numbers_weekly", label: "Weekly numbers" },
+  { value: "instadates_weekly", label: "Weekly instadates" },
+]
+
 export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,6 +66,7 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
   const [trackingType, setTrackingType] = useState<GoalTrackingType>("counter")
   const [period, setPeriod] = useState<GoalPeriod>("weekly")
   const [targetValue, setTargetValue] = useState(1)
+  const [linkedMetric, setLinkedMetric] = useState<LinkedMetric>(null)
 
   const isEditing = !!goal
 
@@ -69,6 +86,7 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
       setTrackingType(goal.tracking_type)
       setPeriod(goal.period)
       setTargetValue(goal.target_value)
+      setLinkedMetric(goal.linked_metric)
     }
   }, [goal])
 
@@ -79,6 +97,7 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
     setTrackingType("counter")
     setPeriod("weekly")
     setTargetValue(1)
+    setLinkedMetric(null)
     setError(null)
   }
 
@@ -86,8 +105,11 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
   const categoryConfig = getCategoryConfig(effectiveCategory)
   const suggestions = categoryConfig.suggestions
 
-  const handleSuggestionClick = (suggestion: string) => {
-    setTitle(suggestion)
+  const handleSuggestionClick = (suggestion: GoalSuggestion) => {
+    setTitle(suggestion.title)
+    setTargetValue(suggestion.defaultTarget)
+    setPeriod(suggestion.defaultPeriod)
+    setTrackingType("counter")
   }
 
   const handleSubmit = async () => {
@@ -111,6 +133,7 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
         tracking_type: trackingType,
         period,
         target_value: trackingType === "boolean" ? 1 : targetValue,
+        linked_metric: effectiveCategory === "daygame" && period === "weekly" ? linkedMetric : null,
       }
 
       const url = isEditing ? `/api/goals/${goal.id}` : "/api/goals"
@@ -215,12 +238,12 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
                 <div className="flex flex-wrap gap-1.5">
                   {suggestions.map((suggestion) => (
                     <Badge
-                      key={suggestion}
+                      key={suggestion.title}
                       variant="outline"
                       className="cursor-pointer text-xs hover:bg-muted"
                       onClick={() => handleSuggestionClick(suggestion)}
                     >
-                      {suggestion}
+                      {suggestion.title}
                     </Badge>
                   ))}
                 </div>
@@ -301,6 +324,31 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
               ))}
             </div>
           </div>
+
+          {/* Linked Metric (only for daygame + weekly goals) */}
+          {effectiveCategory === "daygame" && period === "weekly" && (
+            <div className="space-y-2">
+              <Label>Auto-Sync with Tracking</Label>
+              <Select
+                value={linkedMetric ?? "none"}
+                onValueChange={(v) => setLinkedMetric(v === "none" ? null : (v as LinkedMetric))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select metric to sync" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LINKED_METRIC_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Goal progress will automatically update from your session data
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-md bg-destructive/10 text-destructive text-sm">

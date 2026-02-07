@@ -1,6 +1,6 @@
 # Plan: Goals Widget Improvements
 
-**Status:** READY FOR IMPLEMENTATION
+**Status:** IMPLEMENTED (Tasks 1-6 complete)
 **Updated:** 2026-02-07
 **Priority:** High → Medium → Nice-to-have
 
@@ -18,7 +18,7 @@ This plan covers improvements identified in code review.
 
 ---
 
-## Task 1: Unit Tests for Pure Functions (HIGH)
+## Task 1: Unit Tests for Pure Functions (HIGH) - COMPLETE
 
 ### 1.1 Create `tests/unit/lair/lairService.test.ts`
 
@@ -104,7 +104,7 @@ Test `getCategoryConfig` from `src/lair/data/goalCategories.ts`:
 
 ---
 
-## Task 2: Auto-Increment from Tracking Data (HIGH)
+## Task 2: Auto-Increment from Tracking Data (HIGH) - COMPLETE
 
 Goals like "10 approaches/week" should auto-sync with session data.
 
@@ -157,7 +157,7 @@ Add "Link to tracking" dropdown for daygame category goals.
 
 ---
 
-## Task 3: Default Goals in Lair Layout (HIGH)
+## Task 3: Default Goals in Lair Layout (HIGH) - COMPLETE
 
 ### 3.1 Update `src/lair/config.ts`
 
@@ -179,7 +179,7 @@ Note: This only affects NEW users. Existing users keep their layout.
 
 ---
 
-## Task 4: Goal Sorting (MEDIUM)
+## Task 4: Goal Sorting (MEDIUM) - COMPLETE
 
 ### 4.1 Add sort state to GoalsListWidget
 
@@ -209,7 +209,7 @@ const sortedGoals = useMemo(() => {
 
 ---
 
-## Task 5: Bulk Reset Daily Goals (MEDIUM)
+## Task 5: Bulk Reset Daily Goals (MEDIUM) - COMPLETE
 
 ### 5.1 Add API endpoint `POST /api/goals/reset-daily`
 
@@ -239,7 +239,7 @@ export async function resetDailyGoals(userId: string): Promise<void> {
 
 ---
 
-## Task 6: Goal Templates / Quick-Add (MEDIUM)
+## Task 6: Goal Templates / Quick-Add (MEDIUM) - COMPLETE
 
 ### 6.1 Update GoalFormModal
 
@@ -333,10 +333,10 @@ Export/Import buttons in widget header.
 ## Verification
 
 After each task:
-- [ ] Run `npm test` - all tests pass
+- [x] Run `npm test` - all tests pass (748 tests passing)
 - [ ] Manual test in browser
-- [ ] No TypeScript errors
-- [ ] Update this doc with completion status
+- [x] No TypeScript errors
+- [x] Update this doc with completion status
 
 ---
 

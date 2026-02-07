@@ -10,6 +10,13 @@ import {
   Briefcase,
   type LucideIcon,
 } from "lucide-react"
+import type { GoalPeriod } from "@/src/db/goalTypes"
+
+export interface GoalSuggestion {
+  title: string
+  defaultTarget: number
+  defaultPeriod: GoalPeriod
+}
 
 export interface GoalCategoryConfig {
   id: string
@@ -19,7 +26,7 @@ export interface GoalCategoryConfig {
   bgColor: string // Tailwind background color class
   borderColor: string // Tailwind border color class
   progressColor: string // Tailwind color for progress bar
-  suggestions: string[]
+  suggestions: GoalSuggestion[]
 }
 
 export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
@@ -32,11 +39,11 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     borderColor: "border-blue-500/30",
     progressColor: "bg-blue-500",
     suggestions: [
-      "Go to gym 4x per week",
-      "Do 100 pushups daily",
-      "Hit 10,000 steps daily",
-      "Complete 3 strength sessions",
-      "Stretch for 15 mins daily",
+      { title: "Go to gym 4x per week", defaultTarget: 4, defaultPeriod: "weekly" },
+      { title: "Do 100 pushups daily", defaultTarget: 100, defaultPeriod: "daily" },
+      { title: "Hit 10,000 steps daily", defaultTarget: 10000, defaultPeriod: "daily" },
+      { title: "Complete 3 strength sessions", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Stretch for 15 mins daily", defaultTarget: 15, defaultPeriod: "daily" },
     ],
   },
   {
@@ -48,11 +55,11 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     borderColor: "border-green-500/30",
     progressColor: "bg-green-500",
     suggestions: [
-      "Eat 150g protein daily",
-      "No alcohol 5 days/week",
-      "Meal prep on Sunday",
-      "Drink 3L water daily",
-      "No sugar after 6pm",
+      { title: "Eat 150g protein daily", defaultTarget: 150, defaultPeriod: "daily" },
+      { title: "No alcohol 5 days/week", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "Meal prep on Sunday", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "Drink 3L water daily", defaultTarget: 3, defaultPeriod: "daily" },
+      { title: "No sugar after 6pm", defaultTarget: 1, defaultPeriod: "daily" },
     ],
   },
   {
@@ -64,11 +71,11 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     borderColor: "border-red-500/30",
     progressColor: "bg-red-500",
     suggestions: [
-      "Run 5km 3x per week",
-      "20 mins cardio daily",
-      "10,000 steps on off days",
-      "Cycle to work",
-      "Swimming 2x per week",
+      { title: "Run 5km 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "20 mins cardio daily", defaultTarget: 20, defaultPeriod: "daily" },
+      { title: "10,000 steps on off days", defaultTarget: 10000, defaultPeriod: "daily" },
+      { title: "Cycle to work", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "Swimming 2x per week", defaultTarget: 2, defaultPeriod: "weekly" },
     ],
   },
   {
@@ -80,11 +87,11 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     borderColor: "border-orange-500/30",
     progressColor: "bg-orange-500",
     suggestions: [
-      "10 approaches per week",
-      "3 sessions per week",
-      "Get 2 numbers weekly",
-      "1 instadate monthly",
-      "Record 5 voice notes",
+      { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly" },
+      { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly" },
+      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
     ],
   },
   {
@@ -96,11 +103,11 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     borderColor: "border-purple-500/30",
     progressColor: "bg-purple-500",
     suggestions: [
-      "Deep work 4 hours daily",
-      "No social media before noon",
-      "Read 30 mins daily",
-      "Write 500 words daily",
-      "Complete 3 high-value tasks",
+      { title: "Deep work 4 hours daily", defaultTarget: 4, defaultPeriod: "daily" },
+      { title: "No social media before noon", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Read 30 mins daily", defaultTarget: 30, defaultPeriod: "daily" },
+      { title: "Write 500 words daily", defaultTarget: 500, defaultPeriod: "daily" },
+      { title: "Complete 3 high-value tasks", defaultTarget: 3, defaultPeriod: "daily" },
     ],
   },
 ]
@@ -120,7 +127,7 @@ export const DEFAULT_CATEGORY_CONFIG: Omit<GoalCategoryConfig, "id" | "name"> = 
   bgColor: "bg-gray-500/10",
   borderColor: "border-gray-500/30",
   progressColor: "bg-gray-400",
-  suggestions: [],
+  suggestions: [] as GoalSuggestion[],
 }
 
 /**

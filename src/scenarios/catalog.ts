@@ -60,6 +60,13 @@ export const SCENARIO_CATALOG: Record<ScenarioId, ScenarioDef> = {
     status: "placeholder",
     comingSoon: true,
   },
+  "keep-it-going": {
+    id: "keep-it-going",
+    title: "Keep It Going",
+    description: "She gave a short answer. Keep the vibe alive without interview mode.",
+    icon: MessageSquare,
+    status: "available",
+  },
 
   // Vibing & Connection
   "practice-career-response": {
@@ -203,7 +210,7 @@ export const PHASE_CATALOG: PhaseDef[] = [
     title: "Hooking & Interest",
     icon: Sparkles,
     description: "Build curiosity and investment",
-    scenarioIds: ["topic-pivot", "assumption-game", "her-question"],
+    scenarioIds: ["topic-pivot", "assumption-game", "her-question", "keep-it-going"],
   },
   {
     id: "vibing",

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Check, Circle, Calendar } from "lucide-react"
+import { Check, Circle, Calendar, RotateCcw, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
@@ -10,6 +10,7 @@ import { getCategoryConfig } from "../../data/goalCategories"
 export function TodayGoalsWidget({ collapsed }: WidgetProps) {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isResetting, setIsResetting] = useState(false)
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -32,6 +33,24 @@ export function TodayGoalsWidget({ collapsed }: WidgetProps) {
   useEffect(() => {
     fetchGoals()
   }, [fetchGoals])
+
+  const handleResetAll = async () => {
+    if (isResetting) return
+
+    setIsResetting(true)
+    try {
+      const res = await fetch("/api/goals/reset-daily", {
+        method: "POST",
+      })
+      if (res.ok) {
+        await fetchGoals()
+      }
+    } catch (error) {
+      console.error("Failed to reset daily goals:", error)
+    } finally {
+      setIsResetting(false)
+    }
+  }
 
   const handleToggle = async (goal: GoalWithProgress) => {
     try {
@@ -91,8 +110,28 @@ export function TodayGoalsWidget({ collapsed }: WidgetProps) {
 
   return (
     <div className="space-y-3">
-      <div className="text-xs text-muted-foreground">
-        {completedCount} of {goals.length} complete
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">
+          {completedCount} of {goals.length} complete
+        </div>
+        {goals.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-xs text-muted-foreground"
+            onClick={handleResetAll}
+            disabled={isResetting}
+          >
+            {isResetting ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <>
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Reset All
+              </>
+            )}
+          </Button>
+        )}
       </div>
 
       <div className="space-y-2">
