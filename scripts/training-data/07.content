@@ -45,6 +45,7 @@ Requirements:
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import difflib
 import hashlib
 import json
@@ -232,6 +233,73 @@ def normalize_enrichments(
     topic_canon = {k.lower(): k for k in valid_topics}
     technique_canon = {k.lower(): k for k in valid_techniques}
 
+    # --- 0) Best-effort conversation_id remap (approach enrichments only) ---
+    # The LLM occasionally emits "conversation_id" values that drift from Stage 06c, even when
+    # segment references are correct. This causes:
+    #   - phantom_enrichments (Stage 07 conv ids not present in Stage 06)
+    #   - technique_wrong_conversation / turn_phase_wrong_conversation warnings
+    #
+    # We can safely remap conversation_id when the referenced segments overwhelmingly belong
+    # to a single Stage 06 conversation. We deliberately do NOT remap to conv 0 (commentary).
+    if seg_by_id is not None and conversations is not None:
+        valid_conv_ids: Set[int] = {c for c in conversations.keys() if isinstance(c, int) and c > 0}
+        for i, e in enumerate(enrichments):
+            if not isinstance(e, dict) or e.get("type") != "approach":
+                continue
+
+            def _collect_segment_refs(en: Dict[str, Any]) -> List[int]:
+                refs: List[int] = []
+                for tp in en.get("turn_phases", []) or []:
+                    if isinstance(tp, dict) and isinstance(tp.get("segment"), int):
+                        refs.append(int(tp["segment"]))
+                for tech in en.get("techniques_used", []) or []:
+                    if isinstance(tech, dict) and isinstance(tech.get("segment"), int):
+                        refs.append(int(tech["segment"]))
+                hook = en.get("hook_point")
+                if isinstance(hook, dict) and isinstance(hook.get("segment"), int):
+                    refs.append(int(hook["segment"]))
+                return refs
+
+            refs = _collect_segment_refs(e)
+            if not refs:
+                continue
+
+            conv_counts: Counter = Counter()
+            mapped = 0
+            for seg_id in refs:
+                seg = seg_by_id.get(seg_id)
+                if not isinstance(seg, dict):
+                    continue
+                conv_id = seg.get("conversation_id")
+                if isinstance(conv_id, int):
+                    conv_counts[conv_id] += 1
+                    mapped += 1
+
+            if not conv_counts or mapped == 0:
+                continue
+
+            inferred_conv_id, inferred_count = conv_counts.most_common(1)[0]
+            inferred_ratio = inferred_count / mapped
+
+            # Conservative thresholds:
+            # - for small evidence sets, require unanimity (ratio=1.0)
+            # - for larger sets, allow a little noise
+            if mapped < 8 and inferred_ratio < 1.0:
+                continue
+            if mapped >= 8 and inferred_ratio < 0.6:
+                continue
+
+            if not (isinstance(inferred_conv_id, int) and inferred_conv_id in valid_conv_ids):
+                continue
+
+            current_conv_id = e.get("conversation_id")
+            if current_conv_id != inferred_conv_id:
+                e["conversation_id"] = inferred_conv_id
+                repairs.append(
+                    f"enrichment {i}: remapped conversation_id {current_conv_id!r} -> {inferred_conv_id} "
+                    f"(segment refs agree {inferred_count}/{mapped})"
+                )
+
     for i, e in enumerate(enrichments):
         if not isinstance(e, dict):
             repairs.append(f"enrichment {i}: non-dict entry ignored")
@@ -417,6 +485,90 @@ def normalize_enrichments(
                 f"conv {e.get('conversation_id', '?')}: invalid investment_level {inv!r} -> null"
             )
             e["investment_level"] = None
+
+    # --- 7) Deduplicate approach enrichments that target the same conversation_id ---
+    # This can happen after conversation_id remapping (or due to LLM duplication). Prefer merging over dropping.
+    def _merge_lists_unique(dst: List[Any], src: List[Any], key_fn) -> List[Any]:
+        seen = {key_fn(x) for x in dst}
+        for x in src:
+            k = key_fn(x)
+            if k in seen:
+                continue
+            dst.append(x)
+            seen.add(k)
+        return dst
+
+    def _as_list(v: Any) -> List[Any]:
+        return v if isinstance(v, list) else []
+
+    by_conv: Dict[int, int] = {}  # conv_id -> index in enrichments
+    to_drop: Set[int] = set()
+    for idx, e in enumerate(enrichments):
+        if not isinstance(e, dict) or e.get("type") != "approach":
+            continue
+        conv_id = e.get("conversation_id")
+        if not isinstance(conv_id, int) or conv_id <= 0:
+            continue
+        if conv_id not in by_conv:
+            by_conv[conv_id] = idx
+            continue
+
+        # Merge into the first occurrence.
+        dst = enrichments[by_conv[conv_id]]
+        if not isinstance(dst, dict):
+            continue
+
+        # Prefer longer, non-empty description.
+        dst_desc = dst.get("description")
+        src_desc = e.get("description")
+        if isinstance(src_desc, str) and src_desc.strip():
+            if not (isinstance(dst_desc, str) and dst_desc.strip()) or len(src_desc) > len(dst_desc):
+                dst["description"] = src_desc
+
+        # Fill missing scalar fields.
+        if dst.get("hook_point") in (None, "", {}, []) and e.get("hook_point") not in (None, "", {}, []):
+            dst["hook_point"] = e.get("hook_point")
+        if dst.get("investment_level") in (None, "", {}, []) and e.get("investment_level") not in (None, "", {}, []):
+            dst["investment_level"] = e.get("investment_level")
+
+        # Merge list fields.
+        dst["topics_discussed"] = list(
+            dict.fromkeys(
+                [t for t in _as_list(dst.get("topics_discussed")) if isinstance(t, str)]
+                + [t for t in _as_list(e.get("topics_discussed")) if isinstance(t, str)]
+            )
+        )
+
+        dst["techniques_used"] = _merge_lists_unique(
+            [x for x in _as_list(dst.get("techniques_used")) if isinstance(x, dict)],
+            [x for x in _as_list(e.get("techniques_used")) if isinstance(x, dict)],
+            key_fn=lambda x: (x.get("technique"), x.get("segment"), x.get("example")),
+        )
+        dst["turn_phases"] = _merge_lists_unique(
+            [x for x in _as_list(dst.get("turn_phases")) if isinstance(x, dict)],
+            [x for x in _as_list(e.get("turn_phases")) if isinstance(x, dict)],
+            key_fn=lambda x: (x.get("segment"), x.get("phase")),
+        )
+
+        # Merge unlisted concepts (strings) if present.
+        dst_unlisted = dst.get("unlisted_concepts")
+        if not isinstance(dst_unlisted, dict):
+            dst_unlisted = {}
+        src_unlisted = e.get("unlisted_concepts")
+        if isinstance(src_unlisted, dict):
+            for k in ("techniques", "topics"):
+                a = [x for x in _as_list(dst_unlisted.get(k)) if isinstance(x, str)]
+                b = [x for x in _as_list(src_unlisted.get(k)) if isinstance(x, str)]
+                dst_unlisted[k] = list(dict.fromkeys(a + b))
+        dst["unlisted_concepts"] = dst_unlisted
+
+        to_drop.add(idx)
+        repairs.append(
+            f"merged duplicate approach enrichment for conv {conv_id} (kept index {by_conv[conv_id]}, dropped index {idx})"
+        )
+
+    if to_drop:
+        enrichments[:] = [e for i, e in enumerate(enrichments) if i not in to_drop]
 
     return repairs
 
@@ -1458,19 +1610,8 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
-    # Categorize enrichments by type
-    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
-    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
-    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
-
     # Remap relative segment indices to global IDs
     remap_enrichment_segment_indices(enrichments, conversations)
-
-    # Compute phase confidence for each approach enrichment
-    speaker_labels = data.get("speaker_labels", {})
-    add_phase_confidence_to_enrichments(
-        enrichments, conversations, low_quality_segments, speaker_labels
-    )
 
     seg_by_id = {
         s.get("id"): s
@@ -1482,6 +1623,17 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         preview = "; ".join(normalization_repairs[:3])
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
+
+    # Compute phase confidence for each approach enrichment (after normalization, since conv ids may have been remapped)
+    speaker_labels = data.get("speaker_labels", {})
+    add_phase_confidence_to_enrichments(
+        enrichments, conversations, low_quality_segments, speaker_labels
+    )
+
+    # Categorize enrichments by type (post-normalization, so counts reflect dedupe/remaps)
+    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
+    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
+    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
 
     # Collect unlisted concepts across all enrichments (post-normalization).
     all_unlisted_techniques: List[str] = []
@@ -1711,12 +1863,6 @@ def revalidate_video_file(
     enrichments: List[Dict[str, Any]] = output.get("enrichments", []) or []
     low_quality_segments: List[Dict[str, Any]] = output.get("low_quality_segments", []) or []
 
-    # Recompute phase confidence (deterministic).
-    speaker_labels = stage06_data.get("speaker_labels", {})
-    add_phase_confidence_to_enrichments(
-        enrichments, conversations, low_quality_segments, speaker_labels
-    )
-
     # Apply normalization (deterministic repairs before validation).
     seg_by_id = {
         s.get("id"): s
@@ -1724,6 +1870,12 @@ def revalidate_video_file(
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
     normalization_repairs = normalize_enrichments(enrichments, seg_by_id=seg_by_id, conversations=conversations)
+
+    # Recompute phase confidence (deterministic) after normalization, since conv ids may have been remapped.
+    speaker_labels = stage06_data.get("speaker_labels", {})
+    add_phase_confidence_to_enrichments(
+        enrichments, conversations, low_quality_segments, speaker_labels
+    )
 
     meta = output.get("metadata")
     if not isinstance(meta, dict):
