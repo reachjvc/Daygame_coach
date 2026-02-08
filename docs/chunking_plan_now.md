@@ -350,8 +350,8 @@ Girl: Haha no, medicine actually
 ./scripts/training-data/06c.patch --sources
 
 # 3. Run new Stage 09
-node --import tsx/esm scripts/training-data/09.chunk-embed.ts --full
+node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --full
 
 # 4. Run Stage 10 to ingest
-node --import tsx/esm scripts/training-data/10.ingest.ts --full
+node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
 ```

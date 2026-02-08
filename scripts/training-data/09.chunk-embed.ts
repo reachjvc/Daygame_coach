@@ -17,11 +17,11 @@
  *       data/09.chunks/.chunk_state.json
  *
  * Use:
- *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts
- *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --source daily_evolution
- *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
- *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --dry-run
- *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --source daily_evolution
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)

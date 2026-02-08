@@ -94,7 +94,7 @@ Note: if `data/validation_judgements/<batch_id>/` exists (from `semantic_judge.p
 This stage calls Ollama at `QA_CONFIG.ollama.baseUrl` (default `http://localhost:11434`) and requires the embedding model to exist.
 
 ```bash
-node --import tsx/esm scripts/training-data/09.chunk-embed.ts \
+node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```
 
@@ -110,7 +110,7 @@ python3 scripts/training-data/validation/validate_chunks.py \
 Start with a dry run on the canary:
 
 ```bash
-node --import tsx/esm scripts/training-data/10.ingest.ts \
+node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts \
   --dry-run \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```

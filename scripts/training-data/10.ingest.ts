@@ -16,12 +16,12 @@
  *       data/.ingest_state.json
  *
  * Use:
- *   node --import tsx/esm scripts/training-data/10.ingest.ts
- *   node --import tsx/esm scripts/training-data/10.ingest.ts --source daily_evolution
- *   node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt
- *   node --import tsx/esm scripts/training-data/10.ingest.ts --dry-run
- *   node --import tsx/esm scripts/training-data/10.ingest.ts --verify
- *   node --import tsx/esm scripts/training-data/10.ingest.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --source daily_evolution
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)
