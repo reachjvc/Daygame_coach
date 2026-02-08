@@ -157,8 +157,8 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.2.1"  # v1.2.1: Stronger post_hook dependency rules for hook_point/investment_level
-PIPELINE_VERSION = "07.content-v1.4"  # v1.4: Normalize LLM drift on hook_point/investment_level when post_hook missing
+PROMPT_VERSION = "1.2.2"  # v1.2.2: Require technique evidence segments to be COACH turns
+PIPELINE_VERSION = "07.content-v1.5"  # v1.5: Add validation warning for techniques anchored to non-coach segments
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -384,6 +384,11 @@ def validate_enrichment_output(
     # Build full transcript text for evidence checking
     segments = output.get("segments", [])
     full_transcript = " ".join(s.get("text", "") for s in segments)
+    seg_by_id = {
+        s.get("id"): s
+        for s in segments
+        if isinstance(s, dict) and isinstance(s.get("id"), int)
+    }
 
     # --- 1. Technique taxonomy enforcement ---
     valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
@@ -454,6 +459,27 @@ def validate_enrichment_output(
                     "warning", "elevated_evidence_mismatch_rate",
                     f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
                     f"don't match transcript"
+                ))
+
+    # --- 3b. Technique evidence should anchor to coach turns ---
+    for i, enrichment in enumerate(enrichments):
+        if enrichment.get("type") != "approach":
+            continue
+        for tech in enrichment.get("techniques_used", []) or []:
+            if not isinstance(tech, dict):
+                continue
+            seg_id = tech.get("segment")
+            if not isinstance(seg_id, int):
+                continue
+            seg = seg_by_id.get(seg_id)
+            if not seg:
+                continue
+            role = seg.get("speaker_role")
+            if role and role != "coach":
+                results.append(ValidationResult(
+                    "warning", "technique_on_non_coach_segment",
+                    f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
+                    f"technique '{tech.get('technique', '?')}' cites seg {seg_id} spoken by '{role}'"
                 ))
 
     # --- 4. Turn phase progression ---
@@ -975,6 +1001,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   IMPORTANT: The segment index you cite for a technique MUST refer to a COACH turn (not TARGET/OTHER).
+   If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
+   COACH segment that is doing the technique (or omit the technique if you can't anchor it to a COACH turn).
 5. TOPICS: List topics discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
