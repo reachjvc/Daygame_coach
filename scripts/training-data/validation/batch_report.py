@@ -271,6 +271,8 @@ def compute_batch_stats(
     video_type_counts: Counter = Counter()
     conversations_per_infield: List[int] = []
     unknown_speaker_count = 0
+    student_speaker_count = 0
+    videos_with_students = 0
     total_speaker_count = 0
 
     for conv_file in conversations_files:
@@ -283,10 +285,17 @@ def compute_batch_stats(
             conversations_per_infield.append(len(convs))
 
         labels = conv_file.get("speaker_labels", {})
+        has_student = False
         for label in labels.values():
             total_speaker_count += 1
-            if label.get("role") == "unknown":
+            role = label.get("role")
+            if role == "unknown":
                 unknown_speaker_count += 1
+            elif role == "student":
+                student_speaker_count += 1
+                has_student = True
+        if has_student:
+            videos_with_students += 1
 
     stats["stage_06"] = {
         "videos_processed": len(conversations_files),
@@ -297,6 +306,13 @@ def compute_batch_stats(
         ),
         "unknown_speaker_rate": (
             unknown_speaker_count / max(total_speaker_count, 1)
+        ),
+        "student_speaker_rate": (
+            student_speaker_count / max(total_speaker_count, 1)
+        ),
+        "videos_with_students": videos_with_students,
+        "student_video_rate": (
+            videos_with_students / max(len(conversations_files), 1)
         ),
     }
 
@@ -775,6 +791,8 @@ def main() -> None:
         print(f"  Video types:              {s06.get('video_type_distribution', {})}")
         print(f"  Mean convs/infield:       {s06.get('mean_conversations_per_infield', 0):.1f}")
         print(f"  Unknown speaker rate:     {s06.get('unknown_speaker_rate', 0):.1%}")
+        print(f"  Student speaker rate:     {s06.get('student_speaker_rate', 0):.1%}")
+        print(f"  Videos with students:     {s06.get('videos_with_students', 0)} ({s06.get('student_video_rate', 0):.1%})")
 
         print(f"\nStage 07 (Content Enrichment):")
         print(f"  Videos enriched:          {s07.get('videos_enriched', 0)}")

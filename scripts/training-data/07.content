@@ -157,8 +157,8 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.2.2"  # v1.2.2: Require technique evidence segments to be COACH turns
-PIPELINE_VERSION = "07.content-v1.6"  # v1.6: Normalize technique evidence anchored to non-coach segments (best-effort shift)
+PROMPT_VERSION = "1.2.3"  # v1.2.3: Allow technique evidence segments to be COACH or STUDENT turns
+PIPELINE_VERSION = "07.content-v1.7"  # v1.7: Treat student as approacher in evidence validation/normalization
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -322,9 +322,10 @@ def normalize_enrichments(
         if e.get("type") != "approach":
             continue
 
-        # If a technique cites a TARGET/OTHER segment, try shifting it to the nearest prior COACH segment
-        # in the same conversation. This is a best-effort repair: keep the technique, but anchor evidence
-        # to the coach's line when possible (better for RAG quoting and downstream segment-linking).
+        # If a technique cites a non-approacher segment, try shifting it to the nearest prior approacher
+        # turn (coach/student) in the same conversation. This is a best-effort repair: keep the technique,
+        # but anchor evidence to the approacher's line when possible (better for RAG quoting and downstream
+        # segment-linking).
         if seg_by_id is not None and conversations is not None:
             conv_id = e.get("conversation_id")
             if isinstance(conv_id, int) and conv_id in conversations:
@@ -340,19 +341,19 @@ def normalize_enrichments(
                         continue
                     seg = seg_by_id.get(seg_id) if seg_by_id else None
                     role = seg.get("speaker_role") if isinstance(seg, dict) else None
-                    if role == "coach" or role is None:
+                    if role in ("coach", "student") or role is None:
                         continue
                     start_idx = id_to_idx.get(seg_id)
                     if start_idx is None:
                         continue
 
-                    # Walk backwards to find a coach turn.
+                    # Walk backwards to find an approacher turn.
                     new_seg_id: Optional[int] = None
                     for j in range(start_idx - 1, -1, -1):
                         cand = conv_segs[j]
                         cand_id = cand.get("id")
                         cand_role = cand.get("speaker_role")
-                        if isinstance(cand_id, int) and cand_role == "coach":
+                        if isinstance(cand_id, int) and cand_role in ("coach", "student"):
                             new_seg_id = cand_id
                             break
 
@@ -361,14 +362,14 @@ def normalize_enrichments(
 
                     old_seg_id = seg_id
                     tech["segment"] = new_seg_id
-                    # Prefer anchoring the example to the coach line we point at.
-                    coach_text = (seg_by_id.get(new_seg_id, {}).get("text", "") if seg_by_id else "").strip()
-                    if coach_text:
-                        tech["example"] = coach_text
+                    # Prefer anchoring the example to the approacher line we point at.
+                    anchor_text = (seg_by_id.get(new_seg_id, {}).get("text", "") if seg_by_id else "").strip()
+                    if anchor_text:
+                        tech["example"] = anchor_text
 
                     repairs.append(
                         f"conv {conv_id}: shifted technique '{tech.get('technique', '?')}' "
-                        f"segment {old_seg_id} ({role}) -> {new_seg_id} (coach)"
+                        f"segment {old_seg_id} ({role}) -> {new_seg_id} (approacher)"
                     )
 
         # Normalize empty-ish fields
@@ -514,7 +515,7 @@ def validate_enrichment_output(
                     f"don't match transcript"
                 ))
 
-    # --- 3b. Technique evidence should anchor to coach turns ---
+    # --- 3b. Technique evidence should anchor to approacher turns (coach/student) ---
     for i, enrichment in enumerate(enrichments):
         if enrichment.get("type") != "approach":
             continue
@@ -528,7 +529,7 @@ def validate_enrichment_output(
             if not seg:
                 continue
             role = seg.get("speaker_role")
-            if role and role != "coach":
+            if role and role not in ("coach", "student"):
                 results.append(ValidationResult(
                     "warning", "technique_on_non_coach_segment",
                     f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
@@ -1054,9 +1055,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: The segment index you cite for a technique MUST refer to a COACH turn (not TARGET/OTHER).
+   IMPORTANT: The segment index you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
-   COACH segment that is doing the technique (or omit the technique if you can't anchor it to a COACH turn).
+   COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
 5. TOPICS: List topics discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.

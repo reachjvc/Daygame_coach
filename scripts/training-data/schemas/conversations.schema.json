@@ -69,7 +69,7 @@
         "properties": {
           "role": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other", "unknown", "collapsed"]
+            "enum": ["coach", "student", "target", "voiceover", "other", "unknown", "collapsed"]
           },
           "confidence": {
             "type": "number",
@@ -107,7 +107,7 @@
           },
           "speaker_role": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other", "unknown"],
+            "enum": ["coach", "student", "target", "voiceover", "other", "unknown"],
             "description": "Semantic role derived from speaker_labels"
           },
           "segment_type": {
@@ -126,7 +126,7 @@
           },
           "speaker_role_override": {
             "type": "string",
-            "enum": ["coach", "target", "voiceover", "other", "unknown"],
+            "enum": ["coach", "student", "target", "voiceover", "other", "unknown"],
             "description": "Per-segment role override for collapsed speakers. Takes precedence over speaker_role derived from speaker_labels."
           },
           "is_teaser": {

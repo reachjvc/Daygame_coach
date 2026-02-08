@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.5"  # v1.5: Remove non-schema role values (e.g., "mixed") from patch suggestions
+PIPELINE_VERSION = "06b.verify-v1.6"  # v1.6: Add "student" role option for patch suggestions
 
 DEBUG_MODE = False
 
@@ -126,19 +126,24 @@ A) Does the person labeled "coach" behave like a coach throughout?
    - Makes camera-facing comments between approaches
    - Introduces himself by name
 
-B) Does the person labeled "target" behave like a target throughout?
+B) Does the person labeled "student" behave like a coached student/participant?
+   - Runs approaches/drills but is not the instructor/coach
+   - May receive feedback, practice openers, or give student-style field reports
+   - If the "student" is actually just a wing/friend/bystander, they should be "other"
+
+C) Does the person labeled "target" behave like a target throughout?
    - Responds to questions (short answers, especially early on)
    - Gives personal info when asked (name, origin, occupation)
    - Reacts (laughing, surprise, hesitation)
    - Shorter turns than coach, especially at start
 
-C) CRITICAL CHECK — Self-introductions:
+D) CRITICAL CHECK — Self-introductions:
    If ANY segment contains "I'm [name]", "my name is [name]", "I'm called [name]", or similar:
    - Who is introducing themselves?
    - Is the role assignment correct for that person?
    - In a daygame approach, when the coach asks "what's your name?" and then someone says "I'm [name]", that person is typically giving THEIR OWN name. But if the name matches the video title's coach name, it's the COACH introducing himself.
 
-D) Are there any segments where the assigned role clearly contradicts the text?
+E) Are there any segments where the assigned role clearly contradicts the text?
    - A "target" segment that sounds like camera commentary
    - A "coach" segment that sounds like a shy response to a question
    - A "commentary" segment that's clearly part of a live conversation
@@ -197,7 +202,7 @@ For each collapsed speaker, review a sample of their segments:
 A) Do segments overridden as "target" actually sound like target speech?
    - Answering questions, giving short responses, reacting
 
-B) Do segments overridden as "coach" actually sound like coach speech?
+B) Do segments overridden as "coach" or "student" actually sound like approacher speech?
    - Opening, leading, questioning, complimenting
 
 C) Do segments overridden as "other" make sense as bystander speech?
@@ -267,7 +272,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "voiceover" (NOT prose like "should be coach")
+   - "suggested_role": one of "coach", "student", "target", "other", "voiceover" (NOT prose like "should be coach")
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
@@ -277,7 +282,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
 
 4. collapse_issues: Each entry MUST include:
    - "current_override": the actual current value (use null if no override exists, NOT "none" or prose)
-   - "suggested_override": one of "coach", "target", "other" (NOT prose like "should be SPEAKER_02")
+   - "suggested_override": one of "coach", "student", "target", "other" (NOT prose like "should be SPEAKER_02")
    - "confidence": 0.0-1.0
 
 EXAMPLE OUTPUT:
@@ -347,7 +352,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "voiceover" (NOT prose)
+   - "suggested_role": one of "coach", "student", "target", "other", "voiceover" (NOT prose)
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
@@ -357,7 +362,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
 
 4. collapse_issues: Each entry MUST include:
    - "current_override": the actual current value (use null if no override, NOT "none" or prose)
-   - "suggested_override": one of "coach", "target", "other" (NOT prose)
+   - "suggested_override": one of "coach", "student", "target", "other" (NOT prose)
    - "confidence": 0.0-1.0
 
 Required schema:

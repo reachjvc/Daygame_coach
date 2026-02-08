@@ -64,7 +64,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.3"  # v1.3: Enforce schema-valid patches, recompute conversations[] after boundary fixes
+PIPELINE_VERSION = "06c.patch-v1.4"  # v1.4: Allow "student" role in patch suggestions
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -250,7 +250,7 @@ def apply_patches(
             continue
 
         # Skip prose suggested_roles (should be schema-valid role values)
-        valid_roles = {"coach", "target", "other", "voiceover", "unknown"}
+        valid_roles = {"coach", "student", "target", "other", "voiceover", "unknown"}
         if suggested_role not in valid_roles:
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} suggested_role '{suggested_role}' is not a valid role — skipping"
@@ -308,7 +308,7 @@ def apply_patches(
             continue
 
         # Skip prose suggested_overrides (should be schema-valid role values)
-        valid_roles = {"coach", "target", "other", "voiceover", "unknown"}
+        valid_roles = {"coach", "student", "target", "other", "voiceover", "unknown"}
         if suggested_override not in valid_roles:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} suggested_override '{suggested_override}' is not a valid role — skipping"

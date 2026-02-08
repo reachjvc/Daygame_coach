@@ -386,6 +386,7 @@ function buildMetadataPrefix(
 function mapSpeakerLabel(raw?: string): string {
   const s = (raw ?? "").toLowerCase().trim()
   if (s === "coach") return "Coach"
+  if (s === "student") return "Student"
   if (s === "target") return "Girl"
   if (s === "voiceover") return "Voiceover"
   if (s === "ambiguous") return "Ambiguous"

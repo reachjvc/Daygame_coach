@@ -56,9 +56,9 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "3.3.0"
-PIPELINE_VERSION = "06.video-type-v3.3"
-PROMPT_VERSION = "3.3.0"
+SCHEMA_VERSION = "3.4.0"
+PIPELINE_VERSION = "06.video-type-v3.4"
+PROMPT_VERSION = "3.4.0"
 
 DEBUG_MODE = False
 
@@ -181,10 +181,10 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
         # When collapse is detected, check resolved segment roles for coach/target presence
         segment_roles = set(s.get("speaker_role", "unknown") for s in output_segments)
 
-        if "coach" not in roles and "coach" not in segment_roles:
+        if not (("coach" in roles or "student" in roles) or ("coach" in segment_roles or "student" in segment_roles)):
             results.append(ValidationResult(
                 "warning", "no_coach_speaker",
-                f"No speaker labeled as coach (even after collapse resolution). "
+                f"No speaker labeled as coach/student (even after collapse resolution). "
                 f"Global roles: {roles}, Segment roles: {sorted(segment_roles)}"
             ))
 
@@ -214,10 +214,10 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
             ))
     else:
         # Standard checks (no collapse)
-        if "coach" not in roles:
+        if "coach" not in roles and "student" not in roles:
             results.append(ValidationResult(
                 "warning", "no_coach_speaker",
-                f"No speaker labeled as coach. Roles found: {roles}"
+                f"No speaker labeled as coach/student. Roles found: {roles}"
             ))
 
         if video_type in ("infield", "compilation") and "target" not in roles:
@@ -355,28 +355,33 @@ SPEAKER ROLES:
    - Commentary to camera between approaches
    - May reference teaching ("guys", "as you can see")
 
-2. "target" - Women being approached
+2. "student" - A coached student/participant (immersion program)
+   - May deliver openers and run an approach, but is not the instructor/coach
+   - Often receives feedback, practices drills, or gives student-style field reports
+   - If unsure, label as "other" (do NOT overuse "student")
+
+3. "target" - Women being approached
    - Responds to questions (short answers initially)
    - Asked about herself (not asking)
    - Gives name when asked
    - May laugh, show surprise, hesitation
    - Typically shorter turns than coach
 
-3. "voiceover" - Post-production narration
+4. "voiceover" - Post-production narration
    - Instructional tone disconnected from live action
    - No back-and-forth dialogue
    - Perfect sentences (not fragmented)
    - "Notice how he..." or "Watch what happens..."
 
-4. "other" - Background voices, friends, staff
+5. "other" - Background voices, friends, staff
    - Brief interjections
    - Not involved in approach
 
-5. "unknown" - Cannot determine with confidence
+6. "unknown" - Cannot determine with confidence
    - Mark as unknown if unsure
    - Flag for manual review
 
-6. "collapsed" - Pyannote merged multiple real speakers into this ID
+7. "collapsed" - Pyannote merged multiple real speakers into this ID
    - Shows BOTH coach AND target speech patterns
    - Per-segment roles provided via speaker_role_override in the segments array
 
@@ -404,15 +409,16 @@ CONVERSATION BOUNDARY RULES:
 - Segments with same conversation_id must be contiguous
 
 CRITICAL RULES:
-1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the coach, NEVER the target
+1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the APPROACHER (coach OR student), NEVER the target
 2. The person giving SHORT RESPONSES to questions is typically the target
 3. If unsure about a speaker, mark as "unknown" with low confidence - DO NOT GUESS
 4. Consider speech patterns across ALL segments, not just one or two
-5. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH coach AND target patterns (opens conversations AND gives short responses to questions), this indicates pyannote merged multiple speakers into one ID.
+5. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH approacher patterns (coach/student: opens conversations, leads) AND target patterns (short responses), this indicates pyannote merged multiple speakers into one ID.
    When you detect this:
    a) In speaker_labels: Set that speaker's role to "collapsed" with confidence 0.3 and reasoning starting with "mixed_diarization_error: " followed by a brief description
    b) In segments: For EACH segment from the collapsed speaker, add a "speaker_role_override" field:
       - "coach" if the segment delivers an opener, compliment, cold read, or camera commentary
+      - "student" if the segment is a coached participant running an approach/drill (not the instructor)
       - "target" if the segment is a short response to a question, gives personal info when asked, or reacts to the coach
       - "unknown" if you genuinely cannot determine from context
    c) Only add speaker_role_override to segments from collapsed speakers. Omit it for all other segments.
@@ -473,7 +479,7 @@ FULL TRANSCRIPT ({segment_count} segments):
 {transcript}
 
 OUTPUT: First, briefly reason about the video type, speaker assignments, transcript quality, and any teasers (3-5 sentences). Then output the JSON object in a ```json code block with this exact structure:
-{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|student|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
 """
 
 
@@ -763,7 +769,7 @@ def resolve_speaker_roles(
             classification = classifications[i] if i < len(classifications) else {}
             override = classification.get("speaker_role_override", "unknown")
 
-            if override in ("coach", "target", "voiceover", "other"):
+            if override in ("coach", "student", "target", "voiceover", "other"):
                 reassigned += 1
             else:
                 override = "unknown"
