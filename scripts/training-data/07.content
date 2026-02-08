@@ -531,12 +531,109 @@ def normalize_enrichments(
                     # Prefer anchoring the example to the approacher line we point at.
                     anchor_text = (seg_by_id.get(new_seg_id, {}).get("text", "") if seg_by_id else "").strip()
                     if anchor_text:
+                        prev = tech.get("example")
+                        if (
+                            isinstance(prev, str)
+                            and prev.strip()
+                            and prev != anchor_text
+                            and "example_llm" not in tech
+                        ):
+                            tech["example_llm"] = prev
                         tech["example"] = anchor_text
 
                     repairs.append(
                         f"conv {conv_id}: shifted technique '{tech.get('technique', '?')}' "
                         f"segment {old_seg_id} ({role}) -> {new_seg_id} (approacher)"
                     )
+
+                # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
+                # to a coach/student segment within this conversation where the evidence appears.
+                #
+                # This handles a common drift pattern: the LLM picks the right quote but assigns
+                # the wrong segment id (often far away in the same conversation).
+                def _norm_text(s: str) -> str:
+                    s = (s or "").lower()
+                    s = re.sub(r"[^a-z0-9]+", " ", s)
+                    s = re.sub(r"\s+", " ", s).strip()
+                    return s
+
+                def _find_evidence_anchor_segment_id(
+                    example: str,
+                    prefer_near: int,
+                    *,
+                    max_window: int = 3,
+                ) -> Optional[int]:
+                    ev = _norm_text(example)
+                    if not ev or len(ev) < 8:
+                        return None
+
+                    matches: List[int] = []
+                    for w in range(1, max_window + 1):
+                        for start in range(0, max(0, len(conv_segs) - w + 1)):
+                            window = conv_segs[start : start + w]
+                            # Only anchor to coach/student windows to avoid pointing techniques at targets.
+                            if any(seg.get("speaker_role") not in ("coach", "student") for seg in window):
+                                continue
+                            window_text = " ".join((seg.get("text") or "") for seg in window)
+                            norm_window = _norm_text(window_text)
+                            if ev and ev in norm_window:
+                                sid = window[0].get("id")
+                                if isinstance(sid, int):
+                                    matches.append(sid)
+                                continue
+                            # Fuzzy fallback for segment-boundary duplication and minor ASR drift.
+                            if w >= 2 and window_text and fuzzy_evidence_match(example, window_text, threshold=0.8):
+                                sid = window[0].get("id")
+                                if isinstance(sid, int):
+                                    matches.append(sid)
+
+                    if not matches:
+                        return None
+
+                    # Prefer the closest match to the original segment id to avoid surprising jumps.
+                    return sorted(matches, key=lambda sid: (abs(sid - prefer_near), sid))[0]
+
+                for tech in e.get("techniques_used", []) or []:
+                    if not isinstance(tech, dict):
+                        continue
+                    seg_id = tech.get("segment")
+                    example = tech.get("example")
+                    if not isinstance(seg_id, int) or not isinstance(example, str) or not example.strip():
+                        continue
+
+                    new_seg_id = _find_evidence_anchor_segment_id(example, seg_id)
+                    if new_seg_id is None:
+                        continue
+
+                    if new_seg_id != seg_id:
+                        old_seg_id = seg_id
+                        tech["segment"] = new_seg_id
+                        repairs.append(
+                            f"conv {conv_id}: re-anchored technique '{tech.get('technique', '?')}' "
+                            f"segment {old_seg_id} -> {new_seg_id} (evidence match)"
+                        )
+
+                    # If we could match evidence to a coach/student window, prefer storing the exact
+                    # transcript line for the referenced segment as the example, so evidence is
+                    # segment-aligned (and we preserve the ability to flag hallucinated examples).
+                    effective_seg_id = tech.get("segment")
+                    if isinstance(effective_seg_id, int):
+                        seg = seg_by_id.get(effective_seg_id) if seg_by_id else None
+                        seg_text = (seg.get("text") if isinstance(seg, dict) else "") or ""
+                        seg_role = seg.get("speaker_role") if isinstance(seg, dict) else None
+                        seg_text = seg_text.strip()
+                        if seg_text and seg_role in ("coach", "student"):
+                            current_example = tech.get("example")
+                            if not isinstance(current_example, str):
+                                current_example = ""
+                            if not fuzzy_evidence_match(current_example, seg_text, threshold=0.75):
+                                if current_example.strip() and "example_llm" not in tech:
+                                    tech["example_llm"] = current_example
+                                tech["example"] = seg_text
+                                repairs.append(
+                                    f"conv {conv_id}: refreshed technique '{tech.get('technique', '?')}' "
+                                    f"example from segment {effective_seg_id}"
+                                )
 
         # Normalize empty-ish fields
         if e.get("hook_point") in ("", {}, []):
@@ -554,6 +651,54 @@ def normalize_enrichments(
             )
             e["turn_phases"] = []
             turn_phases = e["turn_phases"]
+
+        # Normalize phase annotations:
+        # - drop phases that point outside the conversation
+        # - de-dupe: one phase per segment id (prefer later phases if duplicated)
+        # - enforce monotonic phase progression by segment id (no going backwards)
+        if conversations is not None:
+            conv_id = e.get("conversation_id")
+            if isinstance(conv_id, int) and conv_id in conversations:
+                conv_seg_ids: Set[int] = {
+                    int(s.get("id"))
+                    for s in (conversations.get(conv_id) or [])
+                    if isinstance(s, dict) and isinstance(s.get("id"), int)
+                }
+                phase_rank = {p: i for i, p in enumerate(PHASE_ORDER)}
+                by_seg: Dict[int, str] = {}
+
+                for tp in turn_phases:
+                    if not isinstance(tp, dict):
+                        continue
+                    sid = tp.get("segment")
+                    ph = tp.get("phase")
+                    if not isinstance(sid, int) or sid not in conv_seg_ids:
+                        continue
+                    if not isinstance(ph, str) or ph not in phase_rank:
+                        continue
+                    prev = by_seg.get(sid)
+                    if prev is None or phase_rank[ph] > phase_rank.get(prev, 0):
+                        by_seg[sid] = ph
+
+                if conv_seg_ids:
+                    min_conv = min(conv_seg_ids)
+                    if min_conv not in by_seg:
+                        by_seg[min_conv] = "open"
+                        repairs.append(f"conv {conv_id}: added missing open phase for segment {min_conv}")
+
+                if by_seg:
+                    normalized: List[Dict[str, Any]] = []
+                    current_rank = 0
+                    for sid, ph in sorted(by_seg.items()):
+                        r = phase_rank.get(ph, 0)
+                        if r < current_rank:
+                            ph = PHASE_ORDER[current_rank]
+                            repairs.append(f"conv {conv_id}: clamped phase for segment {sid} to {ph}")
+                        else:
+                            current_rank = r
+                        normalized.append({"segment": sid, "phase": ph})
+                    e["turn_phases"] = normalized
+                    turn_phases = normalized
 
         phases_present = {
             tp.get("phase")
@@ -789,18 +934,35 @@ def validate_enrichment_output(
         evidence_mismatches = 0
         evidence_total = 0
         empty_evidence = 0
+        segment_evidence_mismatches = 0
+        segment_evidence_total = 0
         for i, enrichment in enumerate(enrichments):
             for tech in enrichment.get("techniques_used", []):
+                # "example" may be normalized to the segment's transcript text; keep the original
+                # LLM-provided quote (if any) in example_llm for hallucination detection.
                 example = tech.get("example", "")
-                if example:
+                example_llm = tech.get("example_llm", "")
+                evidence = example_llm if isinstance(example_llm, str) and example_llm.strip() else example
+                if evidence:
                     evidence_total += 1
-                    if not fuzzy_evidence_match(example, full_transcript):
+                    if not fuzzy_evidence_match(evidence, full_transcript):
                         evidence_mismatches += 1
                         results.append(ValidationResult(
                             "warning", "evidence_mismatch",
                             f"Enrichment {i}: technique '{tech.get('technique', '?')}' "
-                            f"evidence not found in transcript: \"{example[:80]}...\""
+                            f"evidence not found in transcript: \"{str(evidence)[:80]}...\""
                         ))
+                    seg_id = tech.get("segment")
+                    if isinstance(seg_id, int) and seg_id in seg_by_id:
+                        segment_evidence_total += 1
+                        seg_text = (seg_by_id.get(seg_id, {}).get("text", "") or "").strip()
+                        if seg_text and isinstance(example, str) and example.strip() and not fuzzy_evidence_match(example, seg_text, threshold=0.75):
+                            segment_evidence_mismatches += 1
+                            results.append(ValidationResult(
+                                "warning", "evidence_not_on_referenced_segment",
+                                f"Enrichment {i}: technique '{tech.get('technique', '?')}' "
+                                f"evidence doesn't match referenced segment {seg_id}"
+                            ))
                 else:
                     empty_evidence += 1
 
@@ -817,6 +979,14 @@ def validate_enrichment_output(
                     "error", "high_evidence_mismatch_rate",
                     f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
                     f"don't match transcript (threshold: 30%)"
+                ))
+        if segment_evidence_total > 0:
+            seg_mismatch_rate = segment_evidence_mismatches / segment_evidence_total
+            if seg_mismatch_rate > 0.7:
+                results.append(ValidationResult(
+                    "warning", "high_segment_evidence_mismatch_rate",
+                    f"{segment_evidence_mismatches}/{segment_evidence_total} ({seg_mismatch_rate:.0%}) "
+                    f"evidence strings don't match their referenced segments"
                 ))
             elif mismatch_rate > 0.1:
                 results.append(ValidationResult(

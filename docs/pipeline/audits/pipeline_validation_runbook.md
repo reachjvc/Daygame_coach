@@ -28,7 +28,7 @@ Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
 - 06b verdicts: `APPROVE=2`, `FLAG=5` (no `REJECT`)
 - Stage 07 warnings (total=15): `transcript_artifact=8`, `technique_on_non_coach_segment=6`, `evidence_mismatch=1`
 - Stage 07 normalization repairs: `13` repairs across `4` videos (best-effort deterministic fixes; see `metadata.normalization_repairs_*`)
-- NOTE: semantic judge results become **stale** any time Stage 07 outputs are rewritten; rerun `semantic_judge.py` after prompt/normalization changes.
+- NOTE: semantic judge results become **stale** when their `request_fingerprint` no longer matches the current Stage 07 output for that `(video_id, conversation_id)`. `batch_report.py` will report fresh vs stale; rerun `semantic_judge.py` after prompt/normalization changes.
 
 ## Holdout Set (HOLDOUT.1)
 

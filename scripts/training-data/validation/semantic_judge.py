@@ -505,6 +505,18 @@ def main() -> None:
             existing = load_json(out_path)
             if existing and existing.get("request_fingerprint") == request_fingerprint:
                 print(f"{LOG_PREFIX} Cache hit: {out_path.name}")
+                # Backfill request metadata without re-judging.
+                if not args.no_write:
+                    req_meta = existing.get("request")
+                    if not isinstance(req_meta, dict):
+                        existing["request"] = {
+                            "prompt_version": req.prompt_version,
+                            "max_segments": args.max_segments,
+                            "transcript_segment_ids": [
+                                s.get("id") for s in req.transcript_segments if isinstance(s.get("id"), int)
+                            ],
+                        }
+                        out_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
                 judged += 1
                 try:
                     scores.append(int(existing.get("scores", {}).get("overall_score_0_100", 0)))
@@ -521,6 +533,13 @@ def main() -> None:
 
         # Attach metadata for caching/audit
         parsed["request_fingerprint"] = request_fingerprint
+        parsed["request"] = {
+            "prompt_version": req.prompt_version,
+            "max_segments": args.max_segments,
+            "transcript_segment_ids": [
+                s.get("id") for s in req.transcript_segments if isinstance(s.get("id"), int)
+            ],
+        }
         parsed["judged_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
         parsed["judge"] = {
             "tool": "claude-cli",

@@ -27,6 +27,7 @@ Use:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -40,6 +41,9 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 LOG_PREFIX = "[batch-report]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
+
+SEMANTIC_JUDGE_DEFAULT_PROMPT_VERSION = "1.0.0"
+SEMANTIC_JUDGE_DEFAULT_MAX_SEGMENTS = 200
 
 
 def repo_root() -> Path:
@@ -113,6 +117,72 @@ def _filter_by_manifest(files: List[Dict], manifest_ids: Set[str]) -> List[Dict]
 def _video_id_for_path(p: Path) -> Optional[str]:
     m = _BRACKET_ID_RE.search(str(p))
     return m.group(1) if m else None
+
+
+def stable_hash(obj: Any) -> str:
+    payload = json.dumps(obj, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _infer_source_from_stage07_path(p: str) -> Optional[str]:
+    """Infer source name from a Stage 07 path like .../data/07.content/<source>/..."""
+    try:
+        parts = Path(p).parts
+        idx = parts.index("07.content")
+        if idx + 1 < len(parts):
+            src = parts[idx + 1]
+            if src and src != "07.content":
+                return src
+    except Exception:
+        pass
+    return None
+
+
+def _build_stage07_semantic_request_index(
+    enriched_files: List[Dict[str, Any]],
+) -> Dict[Tuple[str, int], Dict[str, Any]]:
+    """Build an index of the current Stage 07 "approach" conversations for fingerprint checks."""
+    out: Dict[Tuple[str, int], Dict[str, Any]] = {}
+    for ef in enriched_files:
+        vid = ef.get("video_id")
+        if not isinstance(vid, str) or not vid:
+            continue
+
+        source = ef.get("source")
+        if not isinstance(source, str) or not source:
+            p = ef.get("_source_file")
+            if isinstance(p, str):
+                inferred = _infer_source_from_stage07_path(p)
+                if inferred:
+                    source = inferred
+        if not isinstance(source, str):
+            source = ""
+
+        segments = ef.get("segments", []) or []
+        conv_seg_ids: Dict[int, List[int]] = {}
+        for s in segments:
+            if not isinstance(s, dict):
+                continue
+            cid = s.get("conversation_id")
+            sid = s.get("id")
+            if isinstance(cid, int) and cid > 0 and isinstance(sid, int):
+                conv_seg_ids.setdefault(cid, []).append(sid)
+
+        for e in ef.get("enrichments", []) or []:
+            if not isinstance(e, dict) or e.get("type") != "approach":
+                continue
+            cid = e.get("conversation_id")
+            if not isinstance(cid, int) or cid <= 0:
+                continue
+            seg_ids = sorted(conv_seg_ids.get(cid, []))
+            out[(vid, cid)] = {
+                "video_id": vid,
+                "source": source,
+                "conversation_id": cid,
+                "enrichment": e,
+                "transcript_segments": seg_ids,
+            }
+    return out
 
 
 def _index_paths_by_video_id(
@@ -501,33 +571,50 @@ def compute_batch_stats(
 
     # --- Semantic judge statistics (optional) ---
     if semantic_judgements:
-        # If Stage 07 outputs were regenerated/revalidated after judgements were produced,
-        # the cached judge files may be stale. Use a cheap mtime heuristic to avoid
-        # reporting misleading averages.
-        s07_mtime_by_vid: Dict[str, float] = {}
-        for ef in enriched_files:
-            vid = ef.get("video_id")
-            p = ef.get("_source_file")
-            if not isinstance(vid, str) or not isinstance(p, str):
-                continue
-            try:
-                s07_mtime_by_vid[vid] = Path(p).stat().st_mtime
-            except OSError:
-                continue
-
+        # Detect "fresh" by comparing request_fingerprint against the current Stage 07
+        # enrichment + segment ids, not by file mtimes (Stage 07 revalidate rewrites files
+        # even when content is unchanged).
+        s07_req_by_vid_conv = _build_stage07_semantic_request_index(enriched_files)
         fresh: List[Dict[str, Any]] = []
         stale = 0
+        stale_missing_or_deleted = 0
+        stale_fingerprint_mismatch = 0
         for j in semantic_judgements:
             vid = j.get("video_id")
-            p = j.get("_source_file")
-            if isinstance(vid, str) and isinstance(p, str) and vid in s07_mtime_by_vid:
-                try:
-                    judge_mtime = Path(p).stat().st_mtime
-                except OSError:
-                    judge_mtime = 0.0
-                if s07_mtime_by_vid[vid] > judge_mtime:
-                    stale += 1
-                    continue
+            cid = j.get("conversation_id")
+            if not isinstance(vid, str) or not isinstance(cid, int):
+                stale += 1
+                stale_missing_or_deleted += 1
+                continue
+
+            req = s07_req_by_vid_conv.get((vid, cid))
+            if not req:
+                stale += 1
+                stale_missing_or_deleted += 1
+                continue
+
+            req_meta = j.get("request", {}) if isinstance(j.get("request"), dict) else {}
+            prompt_version = req_meta.get("prompt_version")
+            if not isinstance(prompt_version, str) or not prompt_version:
+                prompt_version = SEMANTIC_JUDGE_DEFAULT_PROMPT_VERSION
+            max_segments = req_meta.get("max_segments")
+            if not isinstance(max_segments, int) or max_segments <= 0:
+                max_segments = SEMANTIC_JUDGE_DEFAULT_MAX_SEGMENTS
+
+            expected_fingerprint = stable_hash({
+                "video_id": req["video_id"],
+                "source": req["source"],
+                "conversation_id": req["conversation_id"],
+                "enrichment": req["enrichment"],
+                "transcript_segments": req["transcript_segments"],
+                "prompt_version": prompt_version,
+                "max_segments": max_segments,
+            })
+            if j.get("request_fingerprint") != expected_fingerprint:
+                stale += 1
+                stale_fingerprint_mismatch += 1
+                continue
+
             fresh.append(j)
 
         overall_scores: List[int] = []
@@ -558,6 +645,8 @@ def compute_batch_stats(
             "total_judgements": len(semantic_judgements),
             "fresh_judgements": len(fresh),
             "stale_judgements": stale,
+            "stale_missing_or_deleted": stale_missing_or_deleted,
+            "stale_fingerprint_mismatch": stale_fingerprint_mismatch,
             "mean_overall_score_0_100": (
                 sum(overall_scores) / max(len(overall_scores), 1) if overall_scores else 0
             ),
