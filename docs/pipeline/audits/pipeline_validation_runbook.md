@@ -114,6 +114,7 @@ These don’t require human labels, but they catch regressions:
 - normalization repairs count (how often we “fixed” LLM drift)
 - phase sanity (regressions, post_hook dependencies, etc.)
 - transcript artifact rates (ASR garbage surfaced by Stage 07)
+- speaker-role drift: how often the pipeline labels a `student` speaker (should stay rare globally; track via `batch_report.py`)
 
 ### Real semantic quality (needs a reference)
 

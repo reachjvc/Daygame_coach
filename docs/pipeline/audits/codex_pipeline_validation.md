@@ -250,10 +250,10 @@ The patch flow is effectively an API contract:
 Stage 06b output (producer) -> Stage 06c patcher (consumer) -> Stage 06c conversations output (must satisfy `conversations.schema.json`) -> Stage 07 enrichment (consumer).
 
 **Current ground truth enums (from `scripts/training-data/schemas/conversations.schema.json`):**
-- `speaker_labels.*.role`: `coach|target|voiceover|other|unknown|collapsed`
+- `speaker_labels.*.role`: `coach|student|target|voiceover|other|unknown|collapsed`
 - `segments[].segment_type`: `approach|commentary|transition`
-- `segments[].speaker_role`: `coach|target|voiceover|other|unknown` (note: `collapsed` is not valid at the segment level)
-- `segments[].speaker_role_override`: `coach|target|voiceover|other|unknown`
+- `segments[].speaker_role`: `coach|student|target|voiceover|other|unknown` (note: `collapsed` is not valid at the segment level)
+- `segments[].speaker_role_override`: `coach|student|target|voiceover|other|unknown`
 
 **Observed contract drift (current code + data):**
 - 06b emits values like `mixed` / `mixed/unclear` in patch fields.
@@ -793,7 +793,7 @@ Deterministic validation needed (currently missing):
 - for `collapse_issues`, if the above checks fail: skip the patch and record `patch_skipped_invalid_value` (avoid creating overrides on normal segments).
 
 Current contract drift to fix (as implemented today in `scripts/training-data/06c.patch`):
-- `valid_roles` currently includes `mixed` for misattribution/collapse fixes and can write it into `segments[].speaker_role`; this violates `scripts/training-data/schemas/conversations.schema.json`.
+- `valid_roles` must exactly match `scripts/training-data/schemas/conversations.schema.json` enums. (Branch fix: removed `mixed`, added `student`.)
 - The script docstring claims boundary issues are not auto-fixed, but the implementation *does* auto-apply boundary fixes when `suggested_fix` is present and confidence is high. If we keep this behavior, it must be paired with post-patch invariants + recomputed `conversations[]`.
 
 Evidence:
