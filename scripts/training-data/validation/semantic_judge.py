@@ -247,14 +247,44 @@ class JudgementRequest:
     prompt_version: str = "1.0.0"
 
     def to_prompt(self, max_segments: int) -> str:
+        # Ensure the judge sees any segments explicitly referenced by the enrichment.
+        referenced: set[int] = set()
+        for t in self.enrichment.get("techniques_used", []) or []:
+            if isinstance(t, dict) and isinstance(t.get("segment"), int):
+                referenced.add(int(t["segment"]))
+        for tp in self.enrichment.get("turn_phases", []) or []:
+            if isinstance(tp, dict) and isinstance(tp.get("segment"), int):
+                referenced.add(int(tp["segment"]))
+
         seg_lines: List[str] = []
-        for s in self.transcript_segments[:max_segments]:
+        head = self.transcript_segments[:max_segments]
+        head_ids = {s.get("id") for s in head if isinstance(s.get("id"), int)}
+        for s in head:
             seg_id = s.get("id")
             speaker = s.get("speaker_role") or s.get("speaker_id") or "unknown"
             text = (s.get("text") or "").strip()
             seg_lines.append(f"[{seg_id}] {speaker}: {text}")
+
+        missing_refs = sorted([sid for sid in referenced if sid not in head_ids])
+        if missing_refs:
+            seg_lines.append("")
+            seg_lines.append("REFERENCED SEGMENTS (outside cap):")
+            by_id = {
+                s.get("id"): s
+                for s in self.transcript_segments
+                if isinstance(s.get("id"), int)
+            }
+            for sid in missing_refs:
+                s = by_id.get(sid)
+                if not s:
+                    continue
+                speaker = s.get("speaker_role") or s.get("speaker_id") or "unknown"
+                text = (s.get("text") or "").strip()
+                seg_lines.append(f"[{sid}] {speaker}: {text}")
+
         if len(self.transcript_segments) > max_segments:
-            seg_lines.append(f"... ({len(self.transcript_segments) - max_segments} more segments omitted)")
+            omitted = len(self.transcript_segments) - len(head)
+            seg_lines.append(f"... ({omitted} more segments omitted)")
 
         enrichment_json = json.dumps(self.enrichment, ensure_ascii=False, indent=2)
         taxonomy = {
@@ -373,7 +403,7 @@ def main() -> None:
         default=1,
         help="Max conversations to judge per video (default: 1 to keep samples diverse)",
     )
-    parser.add_argument("--max-segments", type=int, default=120, help="Max transcript segments to include per conversation")
+    parser.add_argument("--max-segments", type=int, default=200, help="Max transcript segments to include per conversation")
     parser.add_argument("--timeout", type=int, default=300, help="Claude timeout per judgement (seconds)")
     parser.add_argument("--no-write", action="store_true", help="Do not write judgement files")
 
