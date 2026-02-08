@@ -9,6 +9,7 @@ import {
   handleResetSandboxSettings,
   handleUpdateDifficulty,
   handleUpdateVoiceLanguage,
+  handleUpdatePreferredLanguage,
   handleCancelSubscription,
   handleReactivateSubscription,
   createBillingPortalSession,
@@ -71,6 +72,16 @@ export async function updateVoiceLanguage(language: string): Promise<void> {
   await handleUpdateVoiceLanguage(userId, language)
   revalidatePath(SETTINGS_CONFIG.paths.settings)
   revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+}
+
+/**
+ * Update preferred language for scenario content
+ */
+export async function updatePreferredLanguage(language: string): Promise<void> {
+  const userId = await requireAuth()
+  await handleUpdatePreferredLanguage(userId, language)
+  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath("/scenarios")
 }
 
 /**

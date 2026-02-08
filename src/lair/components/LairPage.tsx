@@ -119,13 +119,11 @@ export function LairPage({ initialLayout, onSaveLayout }: LairPageProps) {
               </TabsTrigger>
             ))}
           </TabsList>
-          {isEditMode && (
-            <WidgetLibraryDrawer
-              layout={layout}
-              tabId={layout.activeTabId}
-              onAddWidget={handleAddWidget}
-            />
-          )}
+          <WidgetLibraryDrawer
+            layout={layout}
+            tabId={layout.activeTabId}
+            onAddWidget={handleAddWidget}
+          />
         </div>
 
         {/* Tab Content */}

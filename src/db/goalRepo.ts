@@ -30,7 +30,7 @@ export async function getUserGoals(userId: string): Promise<GoalWithProgress[]> 
     .select("*")
     .eq("user_id", userId)
     .eq("is_archived", false)
-    .order("created_at", { ascending: false })
+    .order("position", { ascending: true })
 
   if (error) {
     throw new Error(`Failed to get goals: ${error.message}`)
@@ -54,7 +54,7 @@ export async function getGoalsByCategory(
     .eq("user_id", userId)
     .eq("category", category)
     .eq("is_archived", false)
-    .order("created_at", { ascending: false })
+    .order("position", { ascending: true })
 
   if (error) {
     throw new Error(`Failed to get goals by category: ${error.message}`)
@@ -102,6 +102,18 @@ export async function createGoal(
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
+  // Get max position for this user's active goals (new goals go at end)
+  const { data: maxPosData } = await supabase
+    .from("user_goals")
+    .select("position")
+    .eq("user_id", userId)
+    .eq("is_archived", false)
+    .order("position", { ascending: false })
+    .limit(1)
+    .single()
+
+  const nextPosition = maxPosData ? maxPosData.position + 1 : 0
+
   const { data, error } = await supabase
     .from("user_goals")
     .insert({
@@ -113,6 +125,7 @@ export async function createGoal(
       target_value: goal.target_value,
       custom_end_date: goal.custom_end_date ?? null,
       linked_metric: goal.linked_metric ?? null,
+      position: goal.position ?? nextPosition,
     })
     .select()
     .single()
@@ -385,6 +398,34 @@ export async function syncLinkedGoals(userId: string): Promise<number> {
   }
 
   return updatedCount
+}
+
+// ============================================
+// Reorder Goals
+// ============================================
+
+/**
+ * Reorder goals by updating their positions
+ * @param goalIds - Array of goal IDs in desired order (index 0 = position 0 = primary)
+ */
+export async function reorderGoals(
+  userId: string,
+  goalIds: string[]
+): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  // Update each goal's position based on array index
+  for (let i = 0; i < goalIds.length; i++) {
+    const { error } = await supabase
+      .from("user_goals")
+      .update({ position: i })
+      .eq("id", goalIds[i])
+      .eq("user_id", userId)
+
+    if (error) {
+      throw new Error(`Failed to reorder goals: ${error.message}`)
+    }
+  }
 }
 
 // ============================================

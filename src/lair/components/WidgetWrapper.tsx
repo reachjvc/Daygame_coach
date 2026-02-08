@@ -7,7 +7,6 @@ import { Card, CardHeader, CardTitle, CardAction, CardContent } from "@/componen
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import type { WidgetDefinition, WidgetProps } from "../types"
-import { WIDGET_SIZE_CONFIG } from "../config"
 
 interface WidgetWrapperProps {
   widget: WidgetDefinition
@@ -38,7 +37,6 @@ export function WidgetWrapper({
     transition,
   }
 
-  const sizeConfig = WIDGET_SIZE_CONFIG[widget.size]
   const WidgetComponent = widget.component
 
   const widgetProps: WidgetProps = {
@@ -47,14 +45,20 @@ export function WidgetWrapper({
     isEditMode,
   }
 
+  // Tailwind needs full class names visible at build time - dynamic interpolation doesn't work
+  const sizeClasses: Record<string, string> = {
+    small: "col-span-1",
+    medium: "col-span-1",
+    large: "col-span-1 sm:col-span-2 lg:col-span-2",
+    full: "col-span-1 sm:col-span-2 lg:col-span-3",
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        sizeConfig.mobile,
-        `sm:${sizeConfig.tablet}`,
-        `lg:${sizeConfig.desktop}`,
+        sizeClasses[widget.size] || "col-span-1",
         isDragging && "opacity-50 z-50"
       )}
     >
@@ -66,7 +70,7 @@ export function WidgetWrapper({
               {...listeners}
               className="cursor-grab active:cursor-grabbing touch-none"
             >
-              <GripVertical className="h-5 w-5 text-muted-foreground" />
+              <GripVertical className="h-5 w-5 text-muted-foreground shrink-0" />
             </div>
           )}
           <CardTitle className="text-sm font-medium flex items-center gap-2">

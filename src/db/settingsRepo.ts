@@ -141,6 +141,44 @@ export async function updateVoiceLanguage(userId: string, language: string): Pro
 }
 
 /**
+ * Get preferred language for scenarios (content language).
+ */
+export async function getPreferredLanguage(userId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("preferred_language")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null
+    }
+    throw new Error(`Failed to get preferred language: ${error.message}`)
+  }
+
+  return data?.preferred_language ?? null
+}
+
+/**
+ * Update preferred language for scenarios (content language).
+ */
+export async function updatePreferredLanguage(userId: string, language: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ preferred_language: language })
+    .eq("id", userId)
+
+  if (error) {
+    throw new Error(`Failed to update preferred language: ${error.message}`)
+  }
+}
+
+/**
  * Get the user's active subscription purchase.
  */
 export async function getActiveSubscriptionPurchase(

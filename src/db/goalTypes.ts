@@ -34,6 +34,7 @@ export interface UserGoalRow {
   is_active: boolean
   is_archived: boolean
   linked_metric: LinkedMetric
+  position: number
   created_at: string
   updated_at: string
 }
@@ -49,6 +50,7 @@ export interface UserGoalInsert {
   target_value: number
   custom_end_date?: string
   linked_metric?: LinkedMetric
+  position?: number
 }
 
 /**
@@ -64,6 +66,7 @@ export interface UserGoalUpdate {
   is_active?: boolean
   is_archived?: boolean
   linked_metric?: LinkedMetric
+  position?: number
 }
 
 /**

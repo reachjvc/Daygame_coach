@@ -1,8 +1,39 @@
 # Plan: Keep It Going Scenario
 
-**Status:** Implemented
+**Status:** Complete (AI Integrated)
 **Created:** 2026-02-07
+**Updated:** 2026-02-08
 **Languages:** Danish + English
+
+---
+
+## Current Architecture
+
+All evaluation and response generation is now handled by Claude AI via `chat.ts`:
+- **Evaluation:** `evaluateWithAI()` in `chat.ts` - Claude scores user responses
+- **Response Generation:** `generateAIResponse()` in `chat.ts` - Claude generates woman's responses
+- **Close Handling:** `generateCloseResponse()` in `chat.ts` - Claude handles conversation endings
+
+The original regex-based `evaluator.ts` and template-based `responses.ts` have been removed in favor of AI-generated content.
+
+### Key Files (Current):
+- `src/scenarios/keepitgoing/chat.ts` - AI evaluation + response generation (Claude)
+- `src/scenarios/keepitgoing/generator.ts` - Scenario setup, context management
+- `src/scenarios/keepitgoing/types.ts` - Type definitions
+- `src/scenarios/keepitgoing/data/situations.ts` - 10 situations
+- `src/scenarios/keepitgoing/claudeCode.ts` - Claude Code CLI integration
+- `src/scenarios/components/ScenariosHub.tsx` - Situation picker modal
+- `src/scenarios/components/ChatWindow.tsx` - Chat UI
+
+### Next Improvement:
+See `PLAN_REALISTIC_WOMAN_RESPONSES.md` for data-driven woman response profiles.
+
+### Run Tests:
+```bash
+npm test
+```
+
+---
 
 ---
 
@@ -60,18 +91,20 @@ All situations, openers, responses, and evaluation patterns need both versions.
 
 ---
 
-## File Structure
+## File Structure (Current)
 
 ```
 src/scenarios/keepitgoing/
-├── index.ts
-├── generator.ts
-├── evaluator.ts
+├── index.ts              # Exports
+├── generator.ts          # Scenario setup, context
+├── chat.ts               # AI evaluation + response generation
+├── claudeCode.ts         # Claude Code CLI integration
+├── types.ts              # Type definitions
 └── data/
-    ├── situations.ts      # 3 situations, both languages
-    ├── openers.ts         # Pre-written openers per situation
-    └── responses.ts       # Her response templates
+    └── situations.ts     # 10 situations, both languages
 ```
+
+Note: `evaluator.ts` (regex) and `responses.ts` (templates) were removed when AI integration was completed.
 
 ---
 
@@ -272,7 +305,12 @@ ${yourTurnLabel}`
 
 ---
 
-## 5. Evaluator (src/scenarios/keepitgoing/evaluator.ts)
+## 5. Evaluator (HISTORICAL - Replaced by AI)
+
+> **Note:** This regex-based evaluator was replaced by `evaluateWithAI()` in `chat.ts`.
+> Kept here for reference only.
+
+### Original: src/scenarios/keepitgoing/evaluator.ts (deleted)
 
 ```typescript
 import type { EvaluationResult } from "../types"
@@ -435,7 +473,12 @@ function buildFeedback(checks: Record<string, boolean>, language: Language): str
 
 ---
 
-## 6. Placeholder Responses (src/scenarios/keepitgoing/data/responses.ts)
+## 6. Placeholder Responses (HISTORICAL - Replaced by AI)
+
+> **Note:** These template responses were replaced by `generateAIResponse()` in `chat.ts`.
+> Kept here for reference only.
+
+### Original: src/scenarios/keepitgoing/data/responses.ts (deleted)
 
 ```typescript
 import type { Language } from "./situations"
@@ -509,45 +552,10 @@ export function pickResponse(
 
 ---
 
-## 7. Service Integration (src/scenarios/scenariosService.ts)
+## 7. Service Integration (HISTORICAL)
 
-Add imports:
-```typescript
-import {
-  generateKeepItGoingScenario,
-  generateKeepItGoingIntro,
-} from "./keepitgoing/generator"
-import { evaluateKeepItGoingResponse } from "./keepitgoing/evaluator"
-import { pickResponse } from "./keepitgoing/data/responses"
-```
-
-In `handleChatMessage`, add routing:
-```typescript
-const keepItGoingScenario =
-  scenario_type === "keep-it-going"
-    ? generateKeepItGoingScenario(archetype, difficulty, scenarioSeed, "da") // or get from user prefs
-    : null
-
-// In isFirstMessage block:
-if (scenario_type === "keep-it-going" && keepItGoingScenario) {
-  return {
-    text: generateKeepItGoingIntro(keepItGoingScenario),
-    archetype: archetype.name,
-    difficulty,
-    isIntroduction: true,
-  }
-}
-
-// In placeholder response section:
-if (scenario_type === "keep-it-going" && keepItGoingScenario) {
-  const evaluation = evaluateKeepItGoingResponse(request.message, keepItGoingScenario.language)
-  const quality = evaluation.small.score >= 7 ? "positive" :
-                  evaluation.small.score >= 5 ? "neutral" :
-                  evaluation.small.score >= 3 ? "deflect" : "skeptical"
-  const response = pickResponse(quality, keepItGoingScenario.language)
-  // ...
-}
-```
+> **Note:** The actual implementation uses `chat.ts` for AI-based evaluation and response generation.
+> See `src/scenarios/scenariosService.ts` for current implementation.
 
 ---
 
@@ -569,16 +577,16 @@ const ScenarioTypeSchema = z.enum([
 1. [x] Add `"keep-it-going"` to types.ts (ScenarioType, ScenarioId, ChatScenarioType)
 2. [x] Add to catalog.ts + hooking phase
 3. [x] Create `src/scenarios/keepitgoing/` folder
-4. [x] Create `data/situations.ts` with 5 situations (both languages)
-5. [x] Create `data/responses.ts` with response templates (both languages) - close responses included
+4. [x] Create `data/situations.ts` with 10 situations (both languages)
+5. [x] ~~Create `data/responses.ts`~~ → Replaced by AI generation in `chat.ts`
 6. [x] Create `generator.ts` with phase tracking
-7. [x] Create `evaluator.ts` with language-specific patterns
+7. [x] ~~Create `evaluator.ts`~~ → Replaced by AI evaluation in `chat.ts`
 8. [x] Create `types.ts` for all module types
 9. [x] Create `index.ts` exports
 10. [x] Integrate in `scenariosService.ts`
 11. [x] Update API route schema
-12. [x] Run `npm test` - all 748 tests pass
-13. [ ] Manual test in browser
+12. [x] AI integration complete - Claude handles evaluation + responses
+13. [x] Manual testing complete
 
 ---
 
@@ -616,8 +624,8 @@ Din tur.
 
 | Question | Decision |
 |----------|----------|
-| LLM or placeholder? | **Placeholder first** |
-| Situations? | **5** (bookstore, café, street, metro, mall) |
+| LLM or placeholder? | **LLM (Claude via AI SDK)** |
+| Situations? | **10** (bookstore, café, street, metro, mall, gym, grocery, park, busstop, library) |
 | Languages? | **Danish + English** |
 | Turns? | **~20** (user drives until close) |
 

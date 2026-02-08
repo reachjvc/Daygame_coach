@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Send, XCircle } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ChatScenarioType } from "@/src/scenarios/types";
+import type { KeepItGoingContext } from "@/src/scenarios/keepitgoing/types";
 
 interface ChatMessage {
   id: string;
@@ -33,15 +34,20 @@ interface MilestoneEvaluation extends SmallEvaluation {
 interface VoiceChatWindowProps {
   onClose: () => void;
   scenarioType: ChatScenarioType;
+  /** For keep-it-going: specific situation to use */
+  situationId?: string;
 }
 
-export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps) {
+export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceChatWindowProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [currentArchetype, setCurrentArchetype] = useState<string>("");
   const messageIdRef = useRef(0);
   const sessionIdRef = useRef<string>(`session-${Date.now()}-${Math.random().toString(36).substring(7)}`);
+
+  // For keep-it-going: store context for state persistence across turns
+  const [keepItGoingContext, setKeepItGoingContext] = useState<KeepItGoingContext | null>(null);
 
   const addMessage = (
     sender: ChatMessage["sender"],
@@ -89,6 +95,8 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
           session_id: sessionIdRef.current,
           scenario_type: scenarioType,
           conversation_history: conversationHistory,
+          // For keep-it-going: pass context for state persistence
+          ...(scenarioType === "keep-it-going" && keepItGoingContext && { keepItGoingContext }),
         }),
       });
 
@@ -105,6 +113,11 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
 
       if (archetype && !currentArchetype) {
         setCurrentArchetype(archetype);
+      }
+
+      // For keep-it-going: store updated context for next turn
+      if (data.keepItGoingContext) {
+        setKeepItGoingContext(data.keepItGoingContext);
       }
 
       addMessage("ai", aiResponseText, { archetype });
@@ -146,10 +159,11 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
     }
   }, [messages]);
 
-  const scenarioTitles = {
+  const scenarioTitles: Record<ChatScenarioType, string> = {
     "practice-openers": "Practice Openers",
     "practice-career-response": "Practice Career Response",
     "practice-shittests": "Practice Shit-Tests",
+    "keep-it-going": "Keep It Going",
   };
 
   // Get initial woman description when chat opens
@@ -169,6 +183,8 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
             session_id: sessionIdRef.current,
             scenario_type: scenarioType,
             conversation_history: [],
+            // For keep-it-going: pass selected situation
+            ...(scenarioType === "keep-it-going" && situationId && { situation_id: situationId }),
           }),
         });
 
@@ -176,6 +192,10 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
           const data = await response.json();
           if (data.archetype) {
             setCurrentArchetype(data.archetype);
+          }
+          // For keep-it-going: store initial context
+          if (data.keepItGoingContext) {
+            setKeepItGoingContext(data.keepItGoingContext);
           }
           setMessages([
             {

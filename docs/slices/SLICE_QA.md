@@ -1,6 +1,8 @@
 # Vertical Slice: Q&A Coach
 **Status:** Reference
-**Updated:** 29-01-2026 07:46 (Danish time)
+**Updated:** 07-02-2026 (Danish time)
+
+**IMPORTANT:** Claude API provider has been disabled to save API costs. Q&A only supports Ollama (local) provider.
 
 ## Slice Purpose
 
@@ -45,8 +47,8 @@ The UI must render these sections from the API response:
     "maxChunkChars": 8000
   },
   "generation": {
-    "provider": "claude",
-    "model": "claude-3-5-haiku-20241022",
+    "provider": "ollama",
+    "model": "llama3.1",
     "maxOutputTokens": 2048,
     "temperature": 0.7
   }
@@ -61,8 +63,8 @@ The UI must render these sections from the API response:
 | `retrieval.topK` | int | No | Number of chunks to retrieve (default: 8, max: 20) |
 | `retrieval.minScore` | float | No | Minimum similarity score (default: 0.5) |
 | `retrieval.maxChunkChars` | int | No | Max chars per chunk (default: 8000) |
-| `generation.provider` | string | No | LLM provider: "ollama", "openai", "claude" (default: "claude") |
-| `generation.model` | string | No | Model name (default: `claude-3-5-haiku-20241022` for Claude, `gpt-4o-mini` for OpenAI, `llama3.1` for Ollama) |
+| `generation.provider` | string | No | LLM provider: only "ollama" is supported (Claude disabled to save API costs) |
+| `generation.model` | string | No | Model name (default: `llama3.1` for Ollama) |
 | `generation.maxOutputTokens` | int | No | Max output tokens (default: 2048, max: 4096) |
 | `generation.temperature` | float | No | Temperature 0.0-1.0 (default: 0.7) |
 
@@ -103,8 +105,8 @@ The UI must render these sections from the API response:
     ]
   },
   "meta": {
-    "provider": "claude",
-    "model": "claude-3-5-haiku-20241022",
+    "provider": "ollama",
+    "model": "llama3.1",
     "latencyMs": 1250,
     "tokensUsed": 856
   }
@@ -248,7 +250,7 @@ Confidence is NOT "LLM guessing its own correctness."
 
 ## Provider Contract
 
-**File:** `src/qa/providers/ollama.ts` (and openai.ts, claude.ts)
+**File:** `src/qa/providers/ollama.ts` (Claude provider disabled to save API costs)
 
 ```typescript
 export interface ProviderRequest {
@@ -379,9 +381,8 @@ src/qa/
 ├── config.ts             # QA-specific config
 ├── providers/
 │   ├── index.ts          # Provider factory
-│   ├── ollama.ts         # Ollama provider
-│   ├── openai.ts         # OpenAI provider
-│   └── claude.ts         # Claude provider
+│   ├── ollama.ts         # Ollama provider (only active provider)
+│   └── claude.ts         # Claude provider (disabled)
 └── components/
     └── QAPage.tsx        # UI component
 

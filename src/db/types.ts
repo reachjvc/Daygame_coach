@@ -68,6 +68,7 @@ export interface ProfileRow {
   scenarios_completed?: number | null
   subscription_cancelled_at?: string | null
   voice_language?: string | null
+  preferred_language?: string | null
   // Legacy preference fields (from old project)
   age_range_start?: number | null
   age_range_end?: number | null
@@ -99,6 +100,7 @@ export interface ProfileUpdate {
   scenarios_completed?: number | null
   subscription_cancelled_at?: string | null
   voice_language?: string | null
+  preferred_language?: string | null
 }
 
 // ============================================

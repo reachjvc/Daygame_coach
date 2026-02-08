@@ -6,6 +6,7 @@
  */
 
 import type { ComponentType } from "react"
+import type { KeepItGoingContext } from "./keepitgoing/types"
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Scenario Types
@@ -159,6 +160,10 @@ export type ChatRequest = {
   session_id?: string
   scenario_type: ChatScenarioType
   conversation_history?: ChatHistoryMessage[]
+  /** For keep-it-going: specific situation to use (bookstore, cafe, etc.) */
+  situation_id?: string
+  /** For keep-it-going: context from previous turn (state persistence) */
+  keepItGoingContext?: KeepItGoingContext
 }
 
 export type ChatResponse = {
@@ -175,6 +180,8 @@ export type ChatResponse = {
     suggestedNextLine?: string
     turn: number
   }
+  /** For keep-it-going: updated context for next turn */
+  keepItGoingContext?: KeepItGoingContext
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -246,6 +253,36 @@ export interface Archetype {
     sentenceLength: "short" | "medium" | "long"
   }
   commonShittests: string[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Recommendation Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Weights for each scenario (0.0 - 1.0) */
+export type ScenarioWeights = Record<ScenarioId, number>
+
+/** A goal pattern with regex and scenario weights */
+export interface GoalPattern {
+  /** Regex pattern to match goal text */
+  pattern: RegExp
+  /** Human-readable description */
+  description: string
+  /** Weights for each scenario (0.0 - 1.0) */
+  weights: ScenarioWeights
+}
+
+/** A user goal for recommendation matching */
+export interface UserGoal {
+  title: string
+}
+
+/** Score result for a scenario recommendation */
+export interface ScenarioScore {
+  scenarioId: ScenarioId
+  score: number
+  /** Which goal patterns contributed to this score */
+  matchedPatterns: string[]
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

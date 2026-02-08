@@ -21,6 +21,8 @@ export type { UserLairConfigRow, UserLairLayout, TabConfig, UserWidgetConfig }
 
 export type WidgetSize = "small" | "medium" | "large" | "full"
 
+export type WidgetVariant = "default" | "premium"
+
 export type WidgetCategory =
   | "progress"    // XP, streaks, milestones
   | "tracking"    // Sessions, approaches, stats
@@ -40,6 +42,10 @@ export interface WidgetDefinition {
   premium?: boolean
   /** Data sources this widget needs (for documentation) */
   requiresData?: string[]
+  /** Visual variant: default or premium (enhanced styling) */
+  variant?: WidgetVariant
+  /** Hidden from "Add Widget" dialog (for legacy/deprecated widgets) */
+  hidden?: boolean
 }
 
 // ============================================

@@ -102,4 +102,99 @@ export const SITUATIONS: Situation[] = [
       en: '"Haha, thanks?" *stops, smiles slightly*',
     },
   },
+  {
+    id: "gym",
+    location: {
+      da: "Fitnesscenter",
+      en: "Gym",
+    },
+    setup: {
+      da: "Hun er mellem sæt, tjekker sin telefon.",
+      en: "She's between sets, checking her phone.",
+    },
+    yourOpener: {
+      da: "Hey - to sekunder. Du ser ud som en der faktisk ved hvad hun laver herinde.",
+      en: "Hey - quick. You look like someone who actually knows what she's doing in here.",
+    },
+    herFirstResponse: {
+      da: '"Haha, tak? Øh, jeg prøver." *tager høretelefoner af*',
+      en: '"Haha, thanks? Uh, I try." *takes headphones off*',
+    },
+  },
+  {
+    id: "grocery",
+    location: {
+      da: "Supermarked",
+      en: "Grocery store",
+    },
+    setup: {
+      da: "Hun kigger på grøntsager, ser fokuseret ud.",
+      en: "She's looking at vegetables, looks focused.",
+    },
+    yourOpener: {
+      da: "Hey - den der avocado er ikke moden endnu. Bare så du ved det.",
+      en: "Hey - that avocado isn't ripe yet. Just so you know.",
+    },
+    herFirstResponse: {
+      da: '"Øh, hvad? Hvordan kan du se det?" *kigger op*',
+      en: '"Uh, what? How can you tell?" *looks up*',
+    },
+  },
+  {
+    id: "park",
+    location: {
+      da: "Park",
+      en: "Park",
+    },
+    setup: {
+      da: "Hun sidder på en bænk og læser.",
+      en: "She's sitting on a bench reading.",
+    },
+    yourOpener: {
+      da: "Hey - du ser ud som en der faktisk nyder at læse og ikke bare gør det for billedet.",
+      en: "Hey - you look like someone who actually enjoys reading and isn't just doing it for the gram.",
+    },
+    herFirstResponse: {
+      da: '*kigger op* "Haha, ja? Det er bare en god bog."',
+      en: '*looks up* "Haha, yeah? It\'s just a good book."',
+    },
+  },
+  {
+    id: "busstop",
+    location: {
+      da: "Busstoppested",
+      en: "Bus stop",
+    },
+    setup: {
+      da: "Hun venter på bussen, ser lidt træt ud.",
+      en: "She's waiting for the bus, looks a bit tired.",
+    },
+    yourOpener: {
+      da: "Hey - du har den der 'jeg håber virkelig bussen kommer til tiden' energi.",
+      en: "Hey - you have that 'I really hope the bus is on time' energy.",
+    },
+    herFirstResponse: {
+      da: '*smiler træt* "Haha, ja. Den er altid forsinket."',
+      en: '*smiles tiredly* "Haha, yeah. It\'s always late."',
+    },
+  },
+  {
+    id: "library",
+    location: {
+      da: "Bibliotek",
+      en: "Library",
+    },
+    setup: {
+      da: "Hun kigger på hylderne, ser koncentreret ud.",
+      en: "She's browsing the shelves, looks concentrated.",
+    },
+    yourOpener: {
+      da: "Hey - hurtigt. Du ser ud som en der faktisk låner bøger og ikke bare bruger wifi'et.",
+      en: "Hey - quick. You look like someone who actually borrows books and doesn't just use the wifi.",
+    },
+    herFirstResponse: {
+      da: '*griner stille* "Haha, ja. Wifi er bonus."',
+      en: '*laughs quietly* "Haha, yeah. Wifi is a bonus."',
+    },
+  },
 ]

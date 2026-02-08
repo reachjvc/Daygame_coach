@@ -260,11 +260,15 @@ export function reorderWidgets(
 
 /**
  * Get all available widgets grouped by category.
+ * Excludes hidden/deprecated widgets.
  */
 export function getWidgetsByCategory(): Record<string, WidgetDefinition[]> {
   const byCategory: Record<string, WidgetDefinition[]> = {}
 
   for (const widget of Object.values(widgetRegistry)) {
+    // Skip hidden widgets (legacy/deprecated)
+    if (widget.hidden) continue
+
     if (!byCategory[widget.category]) {
       byCategory[widget.category] = []
     }
@@ -276,17 +280,20 @@ export function getWidgetsByCategory(): Record<string, WidgetDefinition[]> {
 
 /**
  * Get widgets that are not in a specific tab.
+ * Excludes hidden/deprecated widgets from being added.
  */
 export function getAvailableWidgetsForTab(
   layout: UserLairLayout,
   tabId: string
 ): WidgetDefinition[] {
   const tab = layout.tabs.find(t => t.id === tabId)
-  if (!tab) return Object.values(widgetRegistry)
+  const allVisible = Object.values(widgetRegistry).filter(w => !w.hidden)
+
+  if (!tab) return allVisible
 
   const usedWidgetIds = new Set(tab.widgets.map(w => w.widgetId))
 
-  return Object.values(widgetRegistry).filter(w => !usedWidgetIds.has(w.id))
+  return allVisible.filter(w => !usedWidgetIds.has(w.id))
 }
 
 /**

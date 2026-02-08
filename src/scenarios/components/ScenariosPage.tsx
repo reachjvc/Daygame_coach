@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { createServerSupabaseClient } from "@/src/db/server"
 import type { DifficultyLevel } from "../openers/data/energy"
 import { ScenariosHub } from "@/src/scenarios/components/ScenariosHub"
+import { updatePreferredLanguage } from "@/src/settings/actions"
 
 function getRecommendedDifficulty(userLevel: number | null | undefined): DifficultyLevel {
   const level = userLevel ?? 1
@@ -58,11 +59,24 @@ export async function ScenariosPage() {
     )
   }
 
+  // Query profile - preferred_language is optional (might not exist yet)
   const { data: profile } = await supabase
     .from("profiles")
     .select("has_purchased, onboarding_completed, level, scenarios_completed")
     .eq("id", user.id)
     .single()
+
+  // Separate query for preferred_language (gracefully handle if column doesn't exist)
+  let preferredLanguage: string | null = null
+  const { data: langData, error: langError } = await supabase
+    .from("profiles")
+    .select("preferred_language")
+    .eq("id", user.id)
+    .single()
+  if (!langError && langData) {
+    preferredLanguage = langData.preferred_language ?? null
+  }
+  // If langError, column might not exist yet - use default
 
   // Preview mode for users without subscription
   if (!profile?.has_purchased) {
@@ -157,6 +171,8 @@ export async function ScenariosPage() {
           userLevel={profile?.level ?? 1}
           scenariosCompleted={profile?.scenarios_completed ?? 0}
           isPreviewMode={false}
+          initialLanguage={(preferredLanguage as "da" | "en") ?? "da"}
+          onLanguageChange={updatePreferredLanguage}
         />
       </main>
     </div>

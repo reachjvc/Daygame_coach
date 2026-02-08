@@ -19,7 +19,7 @@ export interface RetrievalOptions {
 }
 
 export interface GenerationOptions {
-  provider?: "ollama" | "claude"
+  provider?: "ollama" // Claude disabled to save API costs
   model?: string
   maxOutputTokens?: number
   temperature?: number
@@ -132,7 +132,7 @@ export interface RAGConfig {
 }
 
 export interface DefaultsConfig {
-  provider: "ollama" | "claude"
+  provider: "ollama" // Claude disabled to save API costs
   topK: number
   minScore: number
   maxChunkChars: number

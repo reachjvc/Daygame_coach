@@ -52,6 +52,14 @@
       "Grep",
       "WebSearch",
       "WebFetch"
+    ],
+    "deny": [
+      "Read(*.env*)",
+      "Read(**/.env*)",
+      "Edit(*.env*)",
+      "Edit(**/.env*)",
+      "Write(*.env*)",
+      "Write(**/.env*)"
     ]
   },
   "hooks": {

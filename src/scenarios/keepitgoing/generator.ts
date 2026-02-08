@@ -6,49 +6,10 @@
  */
 
 import { SITUATIONS } from "./data/situations"
-import type { Language, ConversationPhase, KeepItGoingContext } from "./types"
+import { hashSeed } from "../shared/seeding"
+import type { Language, ConversationPhase, KeepItGoingContext, ResponseQuality } from "./types"
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-function hashSeed(seed: string): number {
-  let hash = 0
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = Math.imul(31, hash) + seed.charCodeAt(i)
-  }
-  return hash
-}
-
-// Close patterns
-const CLOSE_PATTERNS: Record<Language, RegExp[]> = {
-  da: [
-    /hvad er dit nummer/i,
-    /giv mig dit nummer/i,
-    /lad os tage en kaffe/i,
-    /skal vi bytte numre/i,
-    /jeg skal videre/i,
-    /kan jeg få dit nummer/i,
-    /skriv til mig/i,
-  ],
-  en: [
-    /what's your number/i,
-    /give me your number/i,
-    /let's grab coffee/i,
-    /should we exchange numbers/i,
-    /i gotta go/i,
-    /can i get your number/i,
-    /text me/i,
-  ],
-}
-
-function isCloseAttempt(userMessage: string, language: Language): boolean {
-  return CLOSE_PATTERNS[language].some((p) => p.test(userMessage))
-}
-
-export function getPhase(turnCount: number, userMessage: string, language: Language): ConversationPhase {
-  if (isCloseAttempt(userMessage, language)) return "close"
-
+export function getPhase(turnCount: number): ConversationPhase {
   if (turnCount <= 4) return "hook"
   if (turnCount <= 12) return "vibe"
   if (turnCount <= 18) return "invest"
@@ -59,9 +20,20 @@ export function getPhase(turnCount: number, userMessage: string, language: Langu
 // Generator Functions
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function generateKeepItGoingScenario(seed: string, language: Language = "en"): KeepItGoingContext {
-  const index = Math.abs(hashSeed(seed)) % SITUATIONS.length
-  const situation = SITUATIONS[index]
+export function generateKeepItGoingScenario(
+  seed: string,
+  language: Language = "en",
+  situationId?: string
+): KeepItGoingContext {
+  // If situationId provided, find that situation; otherwise use seed-based random
+  let situation = situationId
+    ? SITUATIONS.find((s) => s.id === situationId)
+    : undefined
+
+  if (!situation) {
+    const index = Math.abs(hashSeed(seed)) % SITUATIONS.length
+    situation = SITUATIONS[index]
+  }
 
   return {
     situation,
@@ -71,6 +43,12 @@ export function generateKeepItGoingScenario(seed: string, language: Language = "
     consecutiveHighScores: 0,
     averageScore: 0,
     totalScore: 0,
+    usedResponses: {
+      positive: [],
+      neutral: [],
+      deflect: [],
+      skeptical: [],
+    },
   }
 }
 
@@ -96,13 +74,22 @@ ${yourTurnLabel}`
 export function updateContext(
   context: KeepItGoingContext,
   userMessage: string,
-  score: number
+  score: number,
+  usedResponse?: { quality: ResponseQuality; index: number }
 ): KeepItGoingContext {
   const newTurnCount = context.turnCount + 1
   const newTotalScore = context.totalScore + score
   const newAverageScore = newTotalScore / newTurnCount
   const newConsecutiveHighScores = score >= 7 ? context.consecutiveHighScores + 1 : 0
-  const newPhase = getPhase(newTurnCount, userMessage, context.language)
+  const newPhase = getPhase(newTurnCount)
+
+  // Track used response for deduplication
+  const newUsedResponses = usedResponse
+    ? {
+        ...context.usedResponses,
+        [usedResponse.quality]: [...context.usedResponses[usedResponse.quality], usedResponse.index],
+      }
+    : context.usedResponses
 
   return {
     ...context,
@@ -111,5 +98,6 @@ export function updateContext(
     consecutiveHighScores: newConsecutiveHighScores,
     averageScore: newAverageScore,
     totalScore: newTotalScore,
+    usedResponses: newUsedResponses,
   }
 }

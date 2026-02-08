@@ -1,8 +1,9 @@
 # Scenarios API Contracts
 **Status:** Reference
-**Updated:** 29-01-2026
+**Updated:** 07-02-2026
 
 ## Changelog
+- 07-02-2026 - Opener evaluator now uses heuristic-only (no API calls)
 - 29-01-2026 17:15 - Split from SLICE_SCENARIOS.md
 
 ---
@@ -47,7 +48,7 @@ Generate an opener encounter.
 
 ### POST /api/scenarios/openers/evaluate
 
-Evaluate a user's opener.
+Evaluate a user's opener using heuristic-only evaluation (no API calls to save costs).
 
 **Request:**
 ```json
@@ -71,8 +72,10 @@ Evaluate a user's opener.
     "improvements": ["Could be more specific"],
     "suggestedRewrite": "Hey, quick one - I noticed..."
   },
-  "fallback": false
+  "fallback": true
 }
+
+**Note:** `fallback` is always `true` now (heuristic evaluator only).
 ```
 
 ---

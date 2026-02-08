@@ -36,6 +36,8 @@ export interface KeepItGoingContext {
   consecutiveHighScores: number
   averageScore: number
   totalScore: number
+  /** Track used response indices to avoid repetition */
+  usedResponses: Record<ResponseQuality, number[]>
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

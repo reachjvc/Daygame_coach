@@ -16,10 +16,7 @@ import { WeeklyStatsWidget } from "../components/widgets/WeeklyStatsWidget"
 import { SessionStarterWidget } from "../components/widgets/SessionStarterWidget"
 import { RecentSessionsWidget } from "../components/widgets/RecentSessionsWidget"
 import { LevelProgressWidget } from "../components/widgets/LevelProgressWidget"
-import { GoalProgressWidget } from "../components/widgets/GoalProgressWidget"
-import { TodayGoalsWidget } from "../components/widgets/TodayGoalsWidget"
-import { GoalsListWidget } from "../components/widgets/GoalsListWidget"
-import { GoalStreaksWidget } from "../components/widgets/GoalStreaksWidget"
+import { MissionControlWidget } from "../components/widgets/MissionControlWidget"
 
 // ============================================
 // Progress & Gamification Widgets
@@ -266,40 +263,56 @@ const practiceWidgets: WidgetDefinition[] = [
 
 const goalsWidgets: WidgetDefinition[] = [
   {
-    id: "goals-list",
-    name: "Goals",
-    description: "All your goals with filters",
-    category: "goals",
-    size: "large",
-    component: GoalsListWidget,
-    requiresData: ["goals"],
-  },
-  {
     id: "goal-progress",
-    name: "Goal Progress",
-    description: "Progress bars for active goals",
+    name: "Mission Control",
+    description: "Your goals command center - full width with internal sections",
     category: "goals",
-    size: "medium",
-    component: GoalProgressWidget,
+    size: "full",
+    component: MissionControlWidget,
     requiresData: ["goals"],
+    variant: "premium",
   },
+  // Legacy widget IDs - kept for backwards compatibility with saved layouts
+  // These all render the same MissionControlWidget now
   {
     id: "today-goals",
-    name: "Today's Goals",
-    description: "Goals due today",
+    name: "Mission Control",
+    description: "Consolidated into Mission Control",
     category: "goals",
-    size: "medium",
-    component: TodayGoalsWidget,
+    size: "full",
+    component: MissionControlWidget,
     requiresData: ["goals"],
+    hidden: true, // Don't show in "Add Widget" dialog
   },
   {
     id: "goal-streaks",
-    name: "Goal Streaks",
-    description: "Consecutive days hitting goals",
+    name: "Mission Control",
+    description: "Consolidated into Mission Control",
     category: "goals",
-    size: "small",
-    component: GoalStreaksWidget,
+    size: "full",
+    component: MissionControlWidget,
     requiresData: ["goals"],
+    hidden: true,
+  },
+  {
+    id: "goals-list",
+    name: "Mission Control",
+    description: "Consolidated into Mission Control",
+    category: "goals",
+    size: "full",
+    component: MissionControlWidget,
+    requiresData: ["goals"],
+    hidden: true,
+  },
+  {
+    id: "weekly-summary",
+    name: "Mission Control",
+    description: "Consolidated into Mission Control",
+    category: "goals",
+    size: "full",
+    component: MissionControlWidget,
+    requiresData: ["goals"],
+    hidden: true,
   },
 ]
 

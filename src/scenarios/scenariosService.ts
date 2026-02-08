@@ -57,13 +57,11 @@ import { evaluateShittestResponse } from "@/src/scenarios/shittests/evaluator"
 import {
   generateKeepItGoingScenario,
   generateKeepItGoingIntro,
-  evaluateKeepItGoingResponse,
-  getResponseQuality,
-  pickResponse,
-  pickHerQuestion,
-  pickCloseResponse,
+  updateContext,
   getCloseOutcome,
-  getPhase,
+  generateAIResponse,
+  generateCloseResponse,
+  evaluateWithAI,
   type Language,
 } from "@/src/scenarios/keepitgoing"
 
@@ -177,7 +175,9 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   const scenario_type = request.scenario_type
   const conversation_history = request.conversation_history || []
-  const isFirstMessage = conversation_history.length === 0
+  // For keep-it-going: if context is passed, it's a continuation (not first message)
+  const hasKeepItGoingContext = scenario_type === "keep-it-going" && request.keepItGoingContext
+  const isFirstMessage = conversation_history.length === 0 && !hasKeepItGoingContext
 
   const scenarioSeed = request.session_id || `${userId}-${scenario_type}`
   const careerScenario =
@@ -187,9 +187,11 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   // Get language from profile or default to Danish
   const language: Language = (profile?.preferred_language as Language) || "da"
-  const keepItGoingContext =
+
+  // For keep-it-going: use passed context (state persistence) or generate fresh
+  let keepItGoingContext =
     scenario_type === "keep-it-going"
-      ? generateKeepItGoingScenario(scenarioSeed, language)
+      ? request.keepItGoingContext ?? generateKeepItGoingScenario(scenarioSeed, language, request.situation_id)
       : null
 
   const location = "street"
@@ -220,6 +222,7 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
         archetype: archetype.name,
         difficulty,
         isIntroduction: true,
+        keepItGoingContext, // Return initial context for client to store
       }
     }
 
@@ -248,32 +251,61 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   // Handle keep-it-going scenario
   if (scenario_type === "keep-it-going" && keepItGoingContext) {
-    const evaluation = evaluateKeepItGoingResponse(request.message, language)
-    const quality = getResponseQuality(evaluation.small.score)
-    const phase = getPhase(currentTurn, request.message, language)
+    // Use AI to evaluate user's response
+    const aiEval = await evaluateWithAI(
+      request.message,
+      keepItGoingContext.language,
+      keepItGoingContext,
+      userId
+    )
+
+    // Build conversation history for AI response generation (with sliding window)
+    const MAX_HISTORY_MESSAGES = 8 // 4 pairs - reduces token usage significantly
+    const aiConversationHistory = (conversation_history || [])
+      .filter((msg) => msg.role === "user" || msg.role === "assistant")
+      .slice(-MAX_HISTORY_MESSAGES)
+      .map((msg) => ({
+        role: msg.role as "user" | "assistant",
+        content: msg.content,
+      }))
 
     // Generate response based on quality and phase
     let responseText: string
-    if (phase === "close") {
-      // Calculate average score from conversation history
-      const avgScore = evaluation.small.score // For now, use current score
-      const outcome = getCloseOutcome(avgScore)
-      responseText = pickCloseResponse(outcome, language)
-    } else if (quality === "positive" && currentTurn >= 3) {
-      // She asks a question back after consecutive high scores
-      responseText = pickHerQuestion(language)
+
+    if (keepItGoingContext.conversationPhase === "close") {
+      // Use accumulated average score for close outcome
+      const outcome = getCloseOutcome(keepItGoingContext.averageScore)
+      responseText = await generateCloseResponse(keepItGoingContext, outcome, request.message, userId)
     } else {
-      responseText = pickResponse(quality, language)
+      // Use AI to generate response based on quality
+      responseText = await generateAIResponse({
+        context: keepItGoingContext,
+        userMessage: request.message,
+        quality: aiEval.quality,
+        conversationHistory: aiConversationHistory,
+        userId,
+      })
     }
 
+    // Update context with new score
+    const updatedContext = updateContext(
+      keepItGoingContext,
+      request.message,
+      aiEval.score,
+      undefined
+    )
+
     const milestoneEvaluation =
-      currentTurn % 5 === 0 ? { ...evaluation.milestone, turn: currentTurn } : undefined
+      updatedContext.turnCount % 5 === 0
+        ? { score: aiEval.score, feedback: aiEval.feedback, strengths: [], improvements: [], turn: updatedContext.turnCount }
+        : undefined
 
     return {
       text: responseText,
       archetype: archetype.name,
-      evaluation: evaluation.small,
+      evaluation: { score: aiEval.score, feedback: aiEval.feedback },
       milestoneEvaluation,
+      keepItGoingContext: updatedContext,
     }
   }
 

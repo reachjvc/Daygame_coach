@@ -7,6 +7,7 @@
 
 import type { Archetype } from "../shared/archetypes";
 import { DIFFICULTY_LEVELS, type DifficultyLevel } from "../shared/difficulty";
+import { hashSeed } from "../shared/seeding";
 import { ENHANCED_OUTFITS } from "../openers/data/outfits";
 import {
   type CareerOption,
@@ -29,14 +30,6 @@ export interface CareerScenarioContext {
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
-
-function hashSeed(seed: string): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i += 1) {
-    hash = Math.imul(31, hash) + seed.charCodeAt(i);
-  }
-  return hash;
-}
 
 function pickDeterministic<T>(items: T[], seed: string): T {
   if (items.length === 0) {

@@ -95,8 +95,6 @@ export const DEFAULT_LAIR_LAYOUT: UserLairLayout = {
       name: "Goals",
       widgets: [
         { widgetId: "goal-progress", position: 0, collapsed: false },
-        { widgetId: "today-goals", position: 1, collapsed: false },
-        { widgetId: "goal-streaks", position: 2, collapsed: false },
       ],
     },
     {

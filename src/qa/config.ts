@@ -26,7 +26,7 @@ export const QA_CONFIG: QAConfig = {
   },
 
   defaults: {
-    provider: (process.env.AI_PROVIDER as "ollama" | "claude") || "claude",
+    provider: "ollama", // Only use local Ollama (no paid API calls)
     // Retrieve more examples when available so answers can show multiple infield excerpts.
     topK: 8,
     minScore: 0.5,

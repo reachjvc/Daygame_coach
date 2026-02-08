@@ -1,12 +1,14 @@
 import type { ProviderRequest, ProviderResponse } from "../types"
 import * as ollama from "./ollama"
-import * as claude from "./claude"
 
-export type ProviderName = "ollama" | "claude"
+export type ProviderName = "ollama"
 
 /**
  * Get the appropriate provider based on name.
  * This factory pattern keeps the service layer decoupled from specific providers.
+ *
+ * NOTE: Claude provider has been disabled to avoid API costs.
+ * Only local Ollama is supported.
  */
 export function getProvider(
   name: ProviderName
@@ -14,10 +16,8 @@ export function getProvider(
   switch (name) {
     case "ollama":
       return ollama.generate
-    case "claude":
-      return claude.generate
     default:
-      throw new Error(`Unknown provider: ${name}`)
+      throw new Error(`Unknown provider: ${name}. Only "ollama" is supported (Claude disabled to save API costs).`)
   }
 }
 
@@ -25,9 +25,8 @@ export function getProvider(
  * Check if a provider name is valid.
  */
 export function isValidProvider(name: string): name is ProviderName {
-  return ["ollama", "claude"].includes(name)
+  return name === "ollama"
 }
 
 // Re-export provider-specific errors
 export { OllamaError } from "./ollama"
-export { ClaudeError } from "./claude"

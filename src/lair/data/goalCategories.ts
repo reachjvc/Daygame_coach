@@ -10,18 +10,23 @@ import {
   Briefcase,
   type LucideIcon,
 } from "lucide-react"
-import type { GoalPeriod } from "@/src/db/goalTypes"
+import type { GoalPeriod, LinkedMetric } from "@/src/db/goalTypes"
 
 export interface GoalSuggestion {
   title: string
   defaultTarget: number
   defaultPeriod: GoalPeriod
+  linkedMetric?: LinkedMetric
+  /** If true, this is a "featured" template shown prominently */
+  featured?: boolean
 }
 
 export interface GoalCategoryConfig {
   id: string
   name: string
   icon: LucideIcon
+  /** Hex color value for dynamic styling */
+  hex: string
   color: string // Tailwind text color class
   bgColor: string // Tailwind background color class
   borderColor: string // Tailwind border color class
@@ -34,6 +39,7 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     id: "fitness",
     name: "Fitness",
     icon: Dumbbell,
+    hex: "#3b82f6",
     color: "text-blue-500",
     bgColor: "bg-blue-500/10",
     borderColor: "border-blue-500/30",
@@ -50,6 +56,7 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     id: "eating",
     name: "Eating",
     icon: Utensils,
+    hex: "#22c55e",
     color: "text-green-500",
     bgColor: "bg-green-500/10",
     borderColor: "border-green-500/30",
@@ -66,6 +73,7 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     id: "cardio",
     name: "Cardio",
     icon: Heart,
+    hex: "#ef4444",
     color: "text-red-500",
     bgColor: "bg-red-500/10",
     borderColor: "border-red-500/30",
@@ -82,15 +90,16 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     id: "daygame",
     name: "Daygame",
     icon: MessageCircle,
+    hex: "#f97316",
     color: "text-orange-500",
     bgColor: "bg-orange-500/10",
     borderColor: "border-orange-500/30",
     progressColor: "bg-orange-500",
     suggestions: [
-      { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly" },
-      { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly" },
-      { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly" },
-      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly", linkedMetric: "approaches_weekly", featured: true },
+      { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly", linkedMetric: "sessions_weekly", featured: true },
+      { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly", linkedMetric: "numbers_weekly" },
+      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly", linkedMetric: "instadates_weekly" },
       { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
     ],
   },
@@ -98,6 +107,7 @@ export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
     id: "business",
     name: "Business",
     icon: Briefcase,
+    hex: "#a855f7",
     color: "text-purple-500",
     bgColor: "bg-purple-500/10",
     borderColor: "border-purple-500/30",
@@ -123,6 +133,7 @@ export const GOAL_CATEGORY_MAP: Record<string, GoalCategoryConfig> =
  */
 export const DEFAULT_CATEGORY_CONFIG: Omit<GoalCategoryConfig, "id" | "name"> = {
   icon: Briefcase,
+  hex: "#9ca3af",
   color: "text-gray-400",
   bgColor: "bg-gray-500/10",
   borderColor: "border-gray-500/30",

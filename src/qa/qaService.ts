@@ -206,13 +206,8 @@ export function createMetaCognition(
 /**
  * Get the default model for a provider.
  */
-export function getDefaultModel(provider: "ollama" | "claude"): string {
-  switch (provider) {
-    case "ollama":
-      return QA_CONFIG.ollama.chatModel
-    case "claude":
-      return QA_CONFIG.claude.model
-  }
+export function getDefaultModel(provider: "ollama"): string {
+  return QA_CONFIG.ollama.chatModel
 }
 
 /**

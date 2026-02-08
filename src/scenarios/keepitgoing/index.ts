@@ -1,7 +1,7 @@
 /**
  * Keep It Going Sub-Module - Public API
  *
- * Scenario generation and evaluation for conversation continuation practice.
+ * Scenario generation and AI-based evaluation for conversation continuation practice.
  * Train using statements, cold reads, and interesting questions instead of interview mode.
  */
 
@@ -23,21 +23,16 @@ export {
   getPhase,
 } from "./generator"
 
-// Evaluator
+// AI Chat & Evaluation
 export {
-  evaluateKeepItGoingResponse,
-  getResponseQuality,
+  generateAIResponse,
+  generateCloseResponse,
+  evaluateWithAI,
   getCloseOutcome,
-  getSuggestedLine,
-} from "./evaluator"
+} from "./chat"
+
+// Claude Code Integration
+export { useClaudeCode } from "./claudeCode"
 
 // Data
 export { SITUATIONS } from "./data/situations"
-export {
-  pickResponse,
-  pickHerQuestion,
-  pickCloseResponse,
-  RESPONSES,
-  HER_QUESTIONS,
-  CLOSE_RESPONSES,
-} from "./data/responses"

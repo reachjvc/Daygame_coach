@@ -26,26 +26,21 @@ import {
   type PhaseDef,
 } from "@/src/scenarios/catalog";
 import type { ChatScenarioType } from "@/src/scenarios/types";
+import { SITUATIONS } from "@/src/scenarios/keepitgoing/data/situations";
+import { ScenarioSettingsBar } from "./ScenarioSettingsBar";
 
 interface ScenariosHubProps {
   recommendedDifficulty: DifficultyLevel;
   userLevel: number;
   scenariosCompleted: number;
   isPreviewMode?: boolean;
+  initialLanguage?: "da" | "en";
+  onLanguageChange?: (language: string) => Promise<void>;
 }
 
-// Get recommended scenarios based on user progress
-function getRecommendedScenarios(userLevel: number, scenariosCompleted: number): ScenarioId[] {
-  // Early users: focus on fundamentals
-  if (scenariosCompleted < 5) {
-    return ["practice-openers", "practice-career-response", "practice-shittests"];
-  }
-  // Getting comfortable: mix of phases
-  if (scenariosCompleted < 15) {
-    return ["practice-openers", "practice-career-response", "practice-shittests"];
-  }
-  // Experienced: still the core 3 until more are available
-  return ["practice-openers", "practice-career-response", "practice-shittests"];
+// Get recommended scenarios - fixed set of 3
+function getRecommendedScenarios(): ScenarioId[] {
+  return ["practice-shittests", "keep-it-going", "practice-career-response"];
 }
 
 // Helper to check if scenario is available
@@ -67,7 +62,7 @@ function getPhaseProgress(phase: PhaseDef) {
 }
 
 function isVoiceChatScenario(id: ScenarioId): id is ChatScenarioType {
-  return id === "practice-career-response" || id === "practice-shittests";
+  return id === "practice-career-response" || id === "practice-shittests" || id === "keep-it-going";
 }
 
 export function ScenariosHub({
@@ -75,15 +70,32 @@ export function ScenariosHub({
   userLevel,
   scenariosCompleted,
   isPreviewMode = false,
+  initialLanguage = "da",
+  onLanguageChange,
 }: ScenariosHubProps) {
   const [activeScenario, setActiveScenario] = useState<ScenarioId | null>(null);
   const [expandedPhases, setExpandedPhases] = useState<Set<string>>(
-    new Set(["opening", "vibing", "resistance"]) // Default expanded
+    new Set(["opening", "hooking", "vibing", "resistance"]) // Default expanded
   );
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [selectedScenarioName, setSelectedScenarioName] = useState<string>("");
+  // Situation picker for keep-it-going
+  const [showSituationPicker, setShowSituationPicker] = useState(false);
+  const [selectedSituationId, setSelectedSituationId] = useState<string | null>(null);
+  // Pre-selected encounter from settings bar (session-only)
+  const [preSelectedEncounterId, setPreSelectedEncounterId] = useState<string | null>(null);
+  // Current language for displaying situation picker
+  const [currentLanguage, setCurrentLanguage] = useState<"da" | "en">(initialLanguage);
 
-  const recommendedScenarioIds = getRecommendedScenarios(userLevel, scenariosCompleted);
+  const recommendedScenarioIds = getRecommendedScenarios();
+
+  // Handle language change from settings bar
+  const handleLanguageChange = async (language: string) => {
+    setCurrentLanguage(language as "da" | "en");
+    if (onLanguageChange) {
+      await onLanguageChange(language);
+    }
+  };
 
   // Handle scenario click - gate in preview mode
   const handleScenarioClick = (scenario: ScenarioDef) => {
@@ -92,9 +104,25 @@ export function ScenariosHub({
     if (isPreviewMode) {
       setSelectedScenarioName(scenario.title);
       setShowSignupPrompt(true);
+    } else if (scenario.id === "keep-it-going") {
+      // If user pre-selected an encounter via settings bar, use it directly
+      if (preSelectedEncounterId) {
+        setSelectedSituationId(preSelectedEncounterId);
+        setActiveScenario("keep-it-going");
+      } else {
+        // Show situation picker for keep-it-going
+        setShowSituationPicker(true);
+      }
     } else {
       setActiveScenario(scenario.id);
     }
+  };
+
+  // Handle situation selection for keep-it-going
+  const handleSituationSelect = (situationId: string) => {
+    setSelectedSituationId(situationId);
+    setShowSituationPicker(false);
+    setActiveScenario("keep-it-going");
   };
 
   // Handle active scenario rendering (only when not in preview mode)
@@ -172,6 +200,54 @@ export function ScenariosHub({
         </div>
       )}
 
+      {/* Situation Picker Modal for Keep It Going */}
+      {showSituationPicker && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-safe pb-safe">
+          <div
+            className="bg-card border border-border rounded-lg shadow-xl max-w-2xl w-full p-6 relative max-h-[80vh] overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="situation-picker-title"
+          >
+            <button
+              onClick={() => setShowSituationPicker(false)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-5" />
+            </button>
+
+            <h3 id="situation-picker-title" className="text-xl font-bold text-foreground mb-2">
+              {currentLanguage === "da" ? "Vælg en Situation" : "Choose a Situation"}
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              {currentLanguage === "da"
+                ? "Vælg hvor samtalen finder sted. Du har allerede åbnet - nu skal du holde den i gang."
+                : "Pick where the conversation takes place. You've already opened - now keep it going."}
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              {SITUATIONS.map((situation) => (
+                <Card
+                  key={situation.id}
+                  className="p-4 bg-card border-border hover:border-primary/50 cursor-pointer transition-all"
+                  onClick={() => handleSituationSelect(situation.id)}
+                >
+                  <h4 className="font-semibold text-foreground mb-1">
+                    {situation.location[currentLanguage]}
+                  </h4>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {situation.setup[currentLanguage]}
+                  </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    &quot;{situation.yourOpener[currentLanguage]}&quot;
+                  </p>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto">
         <h1 className="text-balance text-4xl font-bold tracking-tight text-foreground mb-3">
@@ -184,6 +260,16 @@ export function ScenariosHub({
           }
         </p>
       </div>
+
+      {/* Settings Bar - only for authenticated users */}
+      {!isPreviewMode && onLanguageChange && (
+        <ScenarioSettingsBar
+          initialLanguage={currentLanguage}
+          onLanguageChange={handleLanguageChange}
+          selectedEncounter={preSelectedEncounterId}
+          onEncounterChange={setPreSelectedEncounterId}
+        />
+      )}
 
       {/* Recommended Section */}
       {recommendedScenarios.length > 0 && (
@@ -343,8 +429,12 @@ export function ScenariosHub({
       {/* Voice Chat Window for non-opener scenarios (only when not in preview mode) */}
       {!isPreviewMode && activeScenario && isVoiceChatScenario(activeScenario) && (
         <VoiceChatWindow
-          onClose={() => setActiveScenario(null)}
+          onClose={() => {
+            setActiveScenario(null);
+            setSelectedSituationId(null);
+          }}
           scenarioType={activeScenario}
+          situationId={activeScenario === "keep-it-going" ? selectedSituationId ?? undefined : undefined}
         />
       )}
     </div>

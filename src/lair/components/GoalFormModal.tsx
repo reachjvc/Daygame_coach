@@ -57,16 +57,19 @@ const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string }[] = [
 
 export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMode, setSubmitMode] = useState<"add" | "continue" | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Form state
   const [title, setTitle] = useState("")
-  const [category, setCategory] = useState<string>("fitness")
+  const [category, setCategory] = useState<string>("daygame")
   const [customCategory, setCustomCategory] = useState("")
   const [trackingType, setTrackingType] = useState<GoalTrackingType>("counter")
   const [period, setPeriod] = useState<GoalPeriod>("weekly")
   const [targetValue, setTargetValue] = useState(1)
   const [linkedMetric, setLinkedMetric] = useState<LinkedMetric>(null)
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null)
 
   const isEditing = !!goal
 
@@ -92,13 +95,15 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
 
   const resetForm = () => {
     setTitle("")
-    setCategory("fitness")
+    setCategory("daygame")
     setCustomCategory("")
     setTrackingType("counter")
     setPeriod("weekly")
     setTargetValue(1)
     setLinkedMetric(null)
+    setSelectedSuggestion(null)
     setError(null)
+    setSuccessMessage(null)
   }
 
   const effectiveCategory = category === "custom" ? customCategory : category
@@ -106,13 +111,28 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
   const suggestions = categoryConfig.suggestions
 
   const handleSuggestionClick = (suggestion: GoalSuggestion) => {
+    // Toggle off if clicking same suggestion
+    if (selectedSuggestion === suggestion.title) {
+      setSelectedSuggestion(null)
+      setTitle("")
+      setTargetValue(1)
+      setPeriod("weekly")
+      setLinkedMetric(null)
+      return
+    }
+
+    setSelectedSuggestion(suggestion.title)
     setTitle(suggestion.title)
     setTargetValue(suggestion.defaultTarget)
     setPeriod(suggestion.defaultPeriod)
     setTrackingType("counter")
+    // Auto-set linked metric for daygame suggestions
+    if (suggestion.linkedMetric && effectiveCategory === "daygame") {
+      setLinkedMetric(suggestion.linkedMetric)
+    }
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (keepOpen = false) => {
     if (!title.trim()) {
       setError("Please enter a goal title")
       return
@@ -124,7 +144,9 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
     }
 
     setIsSubmitting(true)
+    setSubmitMode(keepOpen ? "continue" : "add")
     setError(null)
+    setSuccessMessage(null)
 
     try {
       const payload = {
@@ -150,13 +172,28 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
         throw new Error(data.error || "Failed to save goal")
       }
 
-      onOpenChange(false)
-      resetForm()
       onSuccess?.()
+
+      if (keepOpen) {
+        // Reset form but keep modal open for adding more goals
+        const addedTitle = title.trim()
+        setTitle("")
+        setSelectedSuggestion(null)
+        setTargetValue(1)
+        setLinkedMetric(null)
+        setSuccessMessage(`Added "${addedTitle}"`)
+        // Auto-clear success message after 2s
+        setTimeout(() => setSuccessMessage(null), 2000)
+        // Keep category as-is for multi-goal flow
+      } else {
+        onOpenChange(false)
+        resetForm()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save goal")
     } finally {
       setIsSubmitting(false)
+      setSubmitMode(null)
     }
   }
 
@@ -185,16 +222,23 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
             <div className="flex flex-wrap gap-2">
               {GOAL_CATEGORIES.map((cat) => {
                 const Icon = cat.icon
+                const isSelected = category === cat.id
                 return (
                   <Badge
                     key={cat.id}
-                    variant={category === cat.id ? "default" : "outline"}
-                    className={`cursor-pointer gap-1.5 ${
-                      category === cat.id ? cat.bgColor : ""
-                    }`}
+                    variant="outline"
+                    className="cursor-pointer gap-1.5 transition-colors border-transparent"
+                    style={{
+                      backgroundColor: isSelected ? cat.hex : `${cat.hex}15`,
+                      color: isSelected ? "white" : cat.hex,
+                    }}
                     onClick={() => {
                       setCategory(cat.id)
                       setCustomCategory("")
+                      setSelectedSuggestion(null)
+                      setTitle("")
+                      setTargetValue(1)
+                      setLinkedMetric(null)
                     }}
                   >
                     <Icon className="size-3" />
@@ -203,9 +247,19 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
                 )
               })}
               <Badge
-                variant={category === "custom" ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setCategory("custom")}
+                variant="outline"
+                className="cursor-pointer transition-colors border-transparent"
+                style={{
+                  backgroundColor: category === "custom" ? "#6b7280" : "#6b728015",
+                  color: category === "custom" ? "white" : "#6b7280",
+                }}
+                onClick={() => {
+                  setCategory("custom")
+                  setSelectedSuggestion(null)
+                  setTitle("")
+                  setTargetValue(1)
+                  setLinkedMetric(null)
+                }}
               >
                 + Custom
               </Badge>
@@ -228,24 +282,37 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
               id="title"
               placeholder="What do you want to achieve?"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                // Clear suggestion selection if user customizes
+                if (selectedSuggestion && e.target.value !== selectedSuggestion) {
+                  setSelectedSuggestion(null)
+                }
+              }}
             />
 
             {/* Suggestions */}
-            {suggestions.length > 0 && !title && (
+            {suggestions.length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-xs text-muted-foreground">Suggestions:</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {suggestions.map((suggestion) => (
-                    <Badge
-                      key={suggestion.title}
-                      variant="outline"
-                      className="cursor-pointer text-xs hover:bg-muted"
-                      onClick={() => handleSuggestionClick(suggestion)}
-                    >
-                      {suggestion.title}
-                    </Badge>
-                  ))}
+                  {suggestions.map((suggestion) => {
+                    const isSelected = selectedSuggestion === suggestion.title
+                    return (
+                      <Badge
+                        key={suggestion.title}
+                        variant="outline"
+                        className="cursor-pointer text-xs transition-colors border-transparent"
+                        style={{
+                          backgroundColor: isSelected ? categoryConfig.hex : `${categoryConfig.hex}15`,
+                          color: isSelected ? "white" : categoryConfig.hex,
+                        }}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                      >
+                        {suggestion.title}
+                      </Badge>
+                    )
+                  })}
                 </div>
               </div>
             )}
@@ -255,20 +322,30 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
           <div className="space-y-2">
             <Label>Tracking Type</Label>
             <div className="grid grid-cols-2 gap-2">
-              {TRACKING_TYPE_OPTIONS.map((option) => (
-                <Button
-                  key={option.value}
-                  type="button"
-                  variant={trackingType === option.value ? "default" : "outline"}
-                  className="h-auto py-2 px-3 flex-col items-start"
-                  onClick={() => setTrackingType(option.value)}
-                >
-                  <span className="font-medium">{option.label}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {option.description}
-                  </span>
-                </Button>
-              ))}
+              {TRACKING_TYPE_OPTIONS.map((option) => {
+                const isSelected = trackingType === option.value
+                return (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant="outline"
+                    className="h-auto py-2 px-3 flex-col items-start transition-colors"
+                    style={isSelected ? {
+                      backgroundColor: categoryConfig.hex,
+                      color: "white",
+                      borderColor: "transparent",
+                    } : undefined}
+                    onClick={() => setTrackingType(option.value)}
+                  >
+                    <span className="font-medium">{option.label}</span>
+                    <span className={`text-xs ${
+                      isSelected ? "text-white/70" : "text-muted-foreground"
+                    }`}>
+                      {option.description}
+                    </span>
+                  </Button>
+                )
+              })}
             </div>
           </div>
 
@@ -311,17 +388,26 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
           <div className="space-y-2">
             <Label>Reset Period</Label>
             <div className="flex gap-2">
-              {PERIOD_OPTIONS.map((option) => (
-                <Button
-                  key={option.value}
-                  type="button"
-                  variant={period === option.value ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setPeriod(option.value)}
-                >
-                  {option.label}
-                </Button>
-              ))}
+              {PERIOD_OPTIONS.map((option) => {
+                const isSelected = period === option.value
+                return (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="transition-colors"
+                    style={isSelected ? {
+                      backgroundColor: categoryConfig.hex,
+                      color: "white",
+                      borderColor: "transparent",
+                    } : undefined}
+                    onClick={() => setPeriod(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                )
+              })}
             </div>
           </div>
 
@@ -355,9 +441,15 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
               {error}
             </div>
           )}
+
+          {successMessage && (
+            <div className="p-3 rounded-md bg-green-500/10 text-green-600 dark:text-green-400 text-sm">
+              {successMessage}
+            </div>
+          )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -365,8 +457,24 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
           >
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? (
+          {!isEditing && (
+            <Button
+              variant="secondary"
+              onClick={() => handleSubmit(true)}
+              disabled={isSubmitting || !title.trim()}
+            >
+              {submitMode === "continue" ? (
+                <>
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                  Adding...
+                </>
+              ) : (
+                "Add & Continue"
+              )}
+            </Button>
+          )}
+          <Button onClick={() => handleSubmit(false)} disabled={isSubmitting}>
+            {submitMode === "add" ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-2" />
                 Saving...

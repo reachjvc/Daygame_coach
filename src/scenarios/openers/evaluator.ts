@@ -1,7 +1,5 @@
-import { generateObject, zodSchema } from "ai"
+import { zodSchema } from "ai"
 import { z } from "zod"
-
-import { getStructuredOutputModel } from "@/src/scenarios/providers/structuredModel"
 
 const DifficultySchema = z.enum(["beginner", "intermediate", "advanced", "expert", "master"])
 
@@ -202,23 +200,7 @@ export async function evaluateOpener(opener: string, encounterInput: unknown) {
 
   const encounter = parsedEncounter.data
 
-  try {
-    const system = buildEvaluationSystemPrompt(encounter)
-    const prompt = `Opener:\n${opener}`
-
-    const result = await generateObject({
-      model: getStructuredOutputModel(),
-      system,
-      prompt,
-      schema: EvaluationSchema,
-      temperature: 0.3,
-      maxOutputTokens: 350,
-    })
-
-    return { evaluation: result.object, fallback: false as const }
-  } catch (error) {
-    console.error("Openers evaluation failed, falling back to heuristic evaluator:", error)
-    const fallback = evaluateHeuristically(opener, encounter)
-    return { evaluation: fallback, fallback: true as const }
-  }
+  // Use heuristic evaluator only (no API calls to save costs)
+  const evaluation = evaluateHeuristically(opener, encounter)
+  return { evaluation, fallback: true as const }
 }

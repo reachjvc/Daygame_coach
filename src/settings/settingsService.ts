@@ -10,6 +10,7 @@ import {
   resetSandboxSettings as repoResetSandboxSettings,
   updateDifficulty as repoUpdateDifficulty,
   updateVoiceLanguage as repoUpdateVoiceLanguage,
+  updatePreferredLanguage as repoUpdatePreferredLanguage,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
   updateSubscriptionCancelledAt,
@@ -105,6 +106,26 @@ export async function handleUpdateVoiceLanguage(
   }
 
   await repoUpdateVoiceLanguage(userId, language)
+}
+
+// ============================================
+// Preferred Language (Scenario Content)
+// ============================================
+
+const VALID_PREFERRED_LANGUAGES = new Set(["da", "en"])
+
+/**
+ * Update preferred language for scenario content.
+ */
+export async function handleUpdatePreferredLanguage(
+  userId: string,
+  language: string
+): Promise<void> {
+  if (!VALID_PREFERRED_LANGUAGES.has(language)) {
+    throw createSettingsError("Invalid preferred language", "INVALID_INPUT")
+  }
+
+  await repoUpdatePreferredLanguage(userId, language)
 }
 
 // ============================================
