@@ -98,7 +98,19 @@ python3 scripts/training-data/validation/batch_report.py \
 
 Note: if `data/validation_judgements/<batch_id>/` exists (from `semantic_judge.py`), the batch report will include a semantic-score summary.
 
-### 4) Chunk + embed (Stage 09; Ollama)
+### 4) Taxonomy Gate (Stage 08; deterministic)
+
+This is a taxonomy drift detector, not a truth detector.
+It reports which concepts the LLM placed into `unlisted_concepts` and how often they recur.
+
+By default it only **fails** on high-frequency unlisted concepts (topics threshold is stricter than techniques).
+
+```bash
+python3 scripts/training-data/08.taxonomy-validation \
+  --manifest docs/pipeline/batches/CANARY.1.txt
+```
+
+### 5) Chunk + embed (Stage 09; Ollama)
 
 This stage calls Ollama at `QA_CONFIG.ollama.baseUrl` (default `http://localhost:11434`) and requires the embedding model to exist.
 
@@ -107,14 +119,14 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```
 
-### 5) Validate chunk files (read-only)
+### 6) Validate chunk files (read-only)
 
 ```bash
 python3 scripts/training-data/validation/validate_chunks.py \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```
 
-### 6) Ingest (Stage 10; DB writes)
+### 7) Ingest (Stage 10; DB writes)
 
 Start with a dry run on the canary:
 
@@ -127,7 +139,10 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts \
 Only run a real ingest when you explicitly want to update Supabase. Stage 10 is idempotent with `sourceKey`,
 but it still performs DB writes and should be treated as “production-impacting”.
 
-### 7) Retrieval smoke test (end-to-end)
+Note: when running with `--manifest`, Stage 10 will refuse to ingest if the corresponding Stage 08 report is `FAIL`
+unless you pass `--skip-taxonomy-gate`.
+
+### 8) Retrieval smoke test (end-to-end)
 
 This calls Ollama + Supabase retrieval and prints the top matches:
 
