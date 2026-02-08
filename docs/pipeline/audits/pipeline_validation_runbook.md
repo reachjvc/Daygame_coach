@@ -21,6 +21,7 @@ Expected right now (after a successful run):
 - 06b outputs: `data/06b.verify/<source>/*.verification.json`
 - 06c outputs: `data/06c.patched/<source>/*.conversations.json`
 - 07 outputs:  `data/07.content/<source>/*.enriched.json` and `*.enriched.validation.json`
+- 09 outputs:  `data/09.chunks/<source>/*.chunks.json` and `data/09.chunks/.chunk_state.json`
 - Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
 
 Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
@@ -87,6 +88,35 @@ python3 scripts/training-data/validation/batch_report.py \
 ```
 
 Note: if `data/validation_judgements/<batch_id>/` exists (from `semantic_judge.py`), the batch report will include a semantic-score summary.
+
+### 4) Chunk + embed (Stage 09; Ollama)
+
+This stage calls Ollama at `QA_CONFIG.ollama.baseUrl` (default `http://localhost:11434`) and requires the embedding model to exist.
+
+```bash
+node --import tsx/esm scripts/training-data/09.chunk-embed.ts \
+  --manifest docs/pipeline/batches/CANARY.1.txt
+```
+
+### 5) Validate chunk files (read-only)
+
+```bash
+python3 scripts/training-data/validation/validate_chunks.py \
+  --manifest docs/pipeline/batches/CANARY.1.txt
+```
+
+### 6) Ingest (Stage 10; DB writes)
+
+Start with a dry run on the canary:
+
+```bash
+node --import tsx/esm scripts/training-data/10.ingest.ts \
+  --dry-run \
+  --manifest docs/pipeline/batches/CANARY.1.txt
+```
+
+Only run a real ingest when you explicitly want to update Supabase. Stage 10 is idempotent with `sourceKey`,
+but it still performs DB writes and should be treated as “production-impacting”.
 
 ## How to Interpret Failures
 
