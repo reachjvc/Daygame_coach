@@ -485,13 +485,42 @@ def compute_batch_stats(
 
     # --- Semantic judge statistics (optional) ---
     if semantic_judgements:
+        # If Stage 07 outputs were regenerated/revalidated after judgements were produced,
+        # the cached judge files may be stale. Use a cheap mtime heuristic to avoid
+        # reporting misleading averages.
+        s07_mtime_by_vid: Dict[str, float] = {}
+        for ef in enriched_files:
+            vid = ef.get("video_id")
+            p = ef.get("_source_file")
+            if not isinstance(vid, str) or not isinstance(p, str):
+                continue
+            try:
+                s07_mtime_by_vid[vid] = Path(p).stat().st_mtime
+            except OSError:
+                continue
+
+        fresh: List[Dict[str, Any]] = []
+        stale = 0
+        for j in semantic_judgements:
+            vid = j.get("video_id")
+            p = j.get("_source_file")
+            if isinstance(vid, str) and isinstance(p, str) and vid in s07_mtime_by_vid:
+                try:
+                    judge_mtime = Path(p).stat().st_mtime
+                except OSError:
+                    judge_mtime = 0.0
+                if s07_mtime_by_vid[vid] > judge_mtime:
+                    stale += 1
+                    continue
+            fresh.append(j)
+
         overall_scores: List[int] = []
         major_errors = 0
         hallucinations = 0
         dim_totals: Counter = Counter()
         dim_counts: Counter = Counter()
 
-        for j in semantic_judgements:
+        for j in fresh:
             scores = j.get("scores", {}) if isinstance(j.get("scores"), dict) else {}
             try:
                 overall_scores.append(int(scores.get("overall_score_0_100", 0)))
@@ -511,11 +540,13 @@ def compute_batch_stats(
 
         stats["semantic_judge"] = {
             "total_judgements": len(semantic_judgements),
+            "fresh_judgements": len(fresh),
+            "stale_judgements": stale,
             "mean_overall_score_0_100": (
                 sum(overall_scores) / max(len(overall_scores), 1) if overall_scores else 0
             ),
-            "major_error_rate": major_errors / max(len(semantic_judgements), 1),
-            "hallucination_rate": hallucinations / max(len(semantic_judgements), 1),
+            "major_error_rate": major_errors / max(len(fresh), 1),
+            "hallucination_rate": hallucinations / max(len(fresh), 1),
             "mean_dimension_scores_0_5": {
                 dim: (dim_totals[dim] / dim_counts[dim]) if dim_counts[dim] else 0
                 for dim in ["technique_accuracy", "topic_accuracy", "phase_accuracy", "summary_quality", "overall_usefulness"]
@@ -801,12 +832,19 @@ def main() -> None:
         if sem:
             print(f"\nSemantic Judge (sampled):")
             print(f"  Total judgements:        {sem.get('total_judgements', 0)}")
-            print(f"  Mean overall score:      {sem.get('mean_overall_score_0_100', 0):.1f} / 100")
-            print(f"  Major error rate:        {sem.get('major_error_rate', 0):.1%}")
-            print(f"  Hallucination rate:      {sem.get('hallucination_rate', 0):.1%}")
-            dims = sem.get('mean_dimension_scores_0_5', {})
-            if dims:
-                print(f"  Mean dimension scores:   {dims}")
+            fresh = sem.get("fresh_judgements", sem.get("total_judgements", 0))
+            stale = sem.get("stale_judgements", 0)
+            if stale:
+                print(f"  Fresh judgements:        {fresh} (stale={stale})")
+            if fresh <= 0:
+                print(f"  NOTE: No fresh judgements (Stage 07 outputs are newer). Rerun semantic_judge.py.")
+            else:
+                print(f"  Mean overall score:      {sem.get('mean_overall_score_0_100', 0):.1f} / 100")
+                print(f"  Major error rate:        {sem.get('major_error_rate', 0):.1%}")
+                print(f"  Hallucination rate:      {sem.get('hallucination_rate', 0):.1%}")
+                dims = sem.get('mean_dimension_scores_0_5', {})
+                if dims:
+                    print(f"  Mean dimension scores:   {dims}")
 
 
 if __name__ == "__main__":

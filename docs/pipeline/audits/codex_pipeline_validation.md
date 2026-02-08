@@ -1,7 +1,7 @@
 # Codex Pipeline Validation Plan (Supplement)
 
 **Status:** Draft (in progress; partially implemented on `pipeline-validation-hardening`)
-**Updated:** 2026-02-07
+**Updated:** 2026-02-08
 
 This document is intentionally structured to merge cleanly with `docs/pipeline/audits/claude_pipeline_validation.md`.
 
@@ -1000,6 +1000,7 @@ Stage 07 (`scripts/training-data/07.content`):
 - Make transcript-quality reporting index unambiguous for infield prompts (include global `segments[].id` in the prompt or extend remapping to `low_quality_segments` / `transcript_artifacts`).
 - Add explicit “evidence quoting” guidance to reduce `evidence_mismatch` without inflating verbosity.
 - Add a conservative normalization layer for common LLM drift (invalid topics/techniques moved into `unlisted_concepts`, hook/investment cleared when `post_hook` is absent), and surface “repairs applied” as warnings/metadata.
+  - Implemented (branch `pipeline-validation-hardening`): `07.content-v1.6` adds best-effort normalization for `technique_on_non_coach_segment` (shift to prior coach turn when possible), plus `--revalidate` to apply normalization + re-run validation without calling Claude.
 
 Long transcript mitigation (06/06b/07):
 - Add a deterministic prompt shortening strategy for very long videos:
@@ -1016,6 +1017,7 @@ Requirements:
   - `prompt_version` (prompt text)
   - `model` (Claude model identifier if available)
 - Any prompt change must bump `prompt_version`, and stage reports must capture the version used so drift can be attributed.
+  - Implemented (Stage 07): `scripts/training-data/07.content` now writes `pipeline_version` + `prompt_version` into `.enriched.json` and `.enriched.validation.json` (and preserves them during `--revalidate`).
 
 ---
 

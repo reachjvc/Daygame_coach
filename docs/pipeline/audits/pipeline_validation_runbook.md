@@ -23,6 +23,12 @@ Expected right now (after a successful run):
 - 07 outputs:  `data/07.content/<source>/*.enriched.json` and `*.enriched.validation.json`
 - Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
 
+Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
+- 06b verdicts: `APPROVE=2`, `FLAG=5` (no `REJECT`)
+- Stage 07 warnings (total=15): `transcript_artifact=8`, `technique_on_non_coach_segment=6`, `evidence_mismatch=1`
+- Stage 07 normalization repairs: `13` repairs across `4` videos (best-effort deterministic fixes; see `metadata.normalization_repairs_*`)
+- NOTE: semantic judge results become **stale** any time Stage 07 outputs are rewritten; rerun `semantic_judge.py` after prompt/normalization changes.
+
 ## Holdout Set (HOLDOUT.1)
 
 `HOLDOUT.1` is a second manifest intended to be run less frequently.
@@ -47,6 +53,14 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ./scripts/training-data/06b.verify --manifest docs/pipeline/batches/CANARY.1.txt
 ./scripts/training-data/06c.patch  --manifest docs/pipeline/batches/CANARY.1.txt
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag
+```
+
+### 1b) Revalidate Stage 07 (no Claude; deterministic)
+
+Use this after changing Stage 07 normalization/validators, to refresh outputs without rerunning the LLM:
+
+```bash
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --revalidate
 ```
 
 ### 2) PASS/FAIL harness (read-only)
