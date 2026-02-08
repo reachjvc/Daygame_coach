@@ -16,11 +16,12 @@
  *       data/.ingest_state.json
  *
  * Use:
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --source daily_evolution
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --dry-run
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts --source daily_evolution
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts --dry-run
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts --verify
+ *   node --import tsx/esm scripts/training-data/10.ingest.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -53,6 +54,7 @@ type Args = {
   dryRun: boolean
   verifyOnly: boolean
   source: string | null
+  manifest: string | null
 }
 
 type ChunkMetadata = {
@@ -100,6 +102,7 @@ type ChunksFile = {
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
+  let manifest: string | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -109,6 +112,12 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--source=")) {
       source = arg.split("=", 2)[1]
     }
+    if (arg === "--manifest" && argv[i + 1]) {
+      manifest = argv[++i]
+    }
+    if (arg.startsWith("--manifest=")) {
+      manifest = arg.split("=", 2)[1]
+    }
   }
 
   return {
@@ -116,6 +125,7 @@ function parseArgs(argv: string[]): Args {
     dryRun: flags.has("--dry-run"),
     verifyOnly: flags.has("--verify"),
     source,
+    manifest,
   }
 }
 
@@ -165,6 +175,36 @@ async function listChunkFiles(rootDir: string): Promise<string[]> {
   return out.sort((a, b) => a.localeCompare(b))
 }
 
+// ---------------------------------------------------------------------------
+// Manifest filtering
+// ---------------------------------------------------------------------------
+
+const MANIFEST_VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+
+function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
+  const abs = path.isAbsolute(manifestPath)
+    ? manifestPath
+    : path.join(process.cwd(), manifestPath)
+  const raw = fs.readFileSync(abs, "utf-8")
+  const out = new Map<string, Set<string>>()
+
+  for (const rawLine of raw.split("\n")) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith("#")) continue
+    const parts = line.split("|", 2).map((p) => p.trim())
+    if (parts.length !== 2) continue
+    const [source, folder] = parts
+    const m = folder.match(MANIFEST_VIDEO_ID_RE)
+    const vid = m?.[1]
+    if (!source || !vid) continue
+    const set = out.get(source) ?? new Set<string>()
+    set.add(vid)
+    out.set(source, set)
+  }
+
+  return out
+}
+
 function hashFile(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
 }
@@ -204,19 +244,65 @@ async function main() {
 
   const state = await loadState(statePath)
 
-  const scanDir = args.source ? path.join(chunksDir, args.source) : chunksDir
-
-  if (!fs.existsSync(scanDir)) {
-    console.error(`❌ Missing directory: ${scanDir}`)
-    console.error(`   Run Stage 09 (chunk-embed) first to generate chunk files.`)
-    process.exit(1)
+  let manifestAllowList: Map<string, Set<string>> | null = null
+  if (args.manifest) {
+    try {
+      manifestAllowList = loadManifestAllowList(args.manifest)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`❌ Could not read manifest: ${args.manifest} (${msg})`)
+      process.exit(1)
+    }
+    if (manifestAllowList.size === 0) {
+      console.error(`❌ Manifest had no valid entries: ${args.manifest}`)
+      process.exit(1)
+    }
   }
 
-  const chunkFiles = await listChunkFiles(scanDir)
-  if (chunkFiles.length === 0) {
-    console.log(`No .chunks.json files found under ${scanDir}`)
-    console.log(`Run Stage 09 (chunk-embed) first to generate chunk files.`)
-    return
+  let chunkFiles: string[] = []
+  let missingFromManifest = 0
+
+  if (manifestAllowList) {
+    const sources = args.source
+      ? [args.source]
+      : Array.from(manifestAllowList.keys()).sort((a, b) => a.localeCompare(b))
+    for (const src of sources) {
+      const ids = manifestAllowList.get(src)
+      if (!ids) continue
+      for (const vid of Array.from(ids).sort((a, b) => a.localeCompare(b))) {
+        const candidate = path.join(chunksDir, src, `${vid}.chunks.json`)
+        if (fs.existsSync(candidate)) {
+          chunkFiles.push(candidate)
+        } else {
+          missingFromManifest++
+        }
+      }
+    }
+
+    if (chunkFiles.length === 0) {
+      const prefix = args.source ? `source '${args.source}' ` : ""
+      console.log(`No .chunks.json files found for ${prefix}manifest ${args.manifest}`)
+      console.log(`Run Stage 09 (chunk-embed) first to generate chunk files.`)
+      if (missingFromManifest > 0) {
+        console.log(`Missing expected chunk files: ${missingFromManifest}`)
+      }
+      return
+    }
+  } else {
+    const scanDir = args.source ? path.join(chunksDir, args.source) : chunksDir
+
+    if (!fs.existsSync(scanDir)) {
+      console.error(`❌ Missing directory: ${scanDir}`)
+      console.error(`   Run Stage 09 (chunk-embed) first to generate chunk files.`)
+      process.exit(1)
+    }
+
+    chunkFiles = await listChunkFiles(scanDir)
+    if (chunkFiles.length === 0) {
+      console.log(`No .chunks.json files found under ${scanDir}`)
+      console.log(`Run Stage 09 (chunk-embed) first to generate chunk files.`)
+      return
+    }
   }
 
   const toIngest: Array<{
@@ -277,6 +363,10 @@ async function main() {
   console.log("💾 INGEST TO SUPABASE (Stage 10)")
   console.log("================================")
   console.log(`Source:       ${args.source ?? "all"}`)
+  if (args.manifest) console.log(`Manifest:     ${args.manifest}`)
+  if (missingFromManifest > 0) {
+    console.log(`Missing:      ${missingFromManifest} manifest chunk file(s) not found`)
+  }
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
   console.log(`State file:   ${statePath}`)
