@@ -46,6 +46,15 @@ This file is the execution loop, not the full design spec.
 
 ## Repeatable Canary Loop
 
+### 0) Optional: reset embeddings table (DB destructive)
+
+If you want a clean slate for retrieval testing, wipe the `embeddings` table first:
+
+```bash
+node node_modules/tsx/dist/cli.mjs scripts/training-data/00.reset-embeddings.ts --count
+node node_modules/tsx/dist/cli.mjs scripts/training-data/00.reset-embeddings.ts --wipe-all --yes
+```
+
 ### 1) Run LLM stages (writes under `data/`)
 
 Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex sandbox, these runs may require escalation.
@@ -117,6 +126,15 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts \
 
 Only run a real ingest when you explicitly want to update Supabase. Stage 10 is idempotent with `sourceKey`,
 but it still performs DB writes and should be treated as “production-impacting”.
+
+### 7) Retrieval smoke test (end-to-end)
+
+This calls Ollama + Supabase retrieval and prints the top matches:
+
+```bash
+node node_modules/tsx/dist/cli.mjs scripts/training-data/11.retrieval-smoke.ts \
+  "approach a girl in public"
+```
 
 ## How to Interpret Failures
 
