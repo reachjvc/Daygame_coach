@@ -72,6 +72,8 @@ python3 scripts/training-data/validation/batch_report.py \
   --no-write
 ```
 
+Note: if `data/validation_judgements/<batch_id>/` exists (from `semantic_judge.py`), the batch report will include a semantic-score summary.
+
 ## How to Interpret Failures
 
 ### Stage output missing but validation exists
