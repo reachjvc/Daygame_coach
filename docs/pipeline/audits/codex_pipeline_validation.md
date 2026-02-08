@@ -691,6 +691,24 @@ Threshold alignment (plan item):
 Gate:
 - FAIL on CRITICAL severity.
 
+Transcription garbage (severity + remediation plan):
+1. Separate **minor** vs **major** ASR garbage in reporting:
+   - Minor (usually tolerable): short word repetition, minor mishears (“Trader Joe’s” -> “Cherry Joe’s”), brief duplicated lines.
+   - Major (usually harmful): long repetition loops, sustained nonsense/gibberish, sexually explicit nonsense segments, timestamp coverage gaps.
+2. Track *where* garbage occurs:
+   - % of segments flagged overall
+   - % of **approach** segments flagged vs commentary-only (approach contamination matters more for RAG)
+3. Choose remediation by measured severity (avoid premature “fix the ASR” work):
+   - If mostly minor: keep as warnings + exclude from downstream embeddings/chunks (Stage 09 filter).
+   - If major or approach-contaminating: A/B test ASR improvements on canary+holdout before changing defaults.
+4. ASR improvement experiments (A/B, small sample first):
+   - Whisper model/config variants (quality vs speed) on the same manifest.
+   - Optional audio pre-processing variants (noise reduction / normalization) and measure impact via `verify-02`.
+   - Success criteria: lower major garbage rate without increasing coverage loss or hallucinated repetition.
+5. Targeted “re-transcribe” option (only if needed):
+   - Re-run ASR only for videos that exceed a major-garbage threshold.
+   - Keep outputs side-by-side (versioned) so we can compare downstream effects.
+
 ### 8.3 Stage 03 (Align)
 
 Deterministic validation:
@@ -972,6 +990,38 @@ Acceptance criteria (prompt change qualifies as “better”):
 - No increase in schema-invalid outputs.
 - Net reduction in blocking errors and in high-severity warnings.
 - Cost does not increase materially (unless explicitly accepted for quality reasons).
+
+### 9.5.1 Semantic Judge Calibration (Make Scores Interpretable)
+
+The `semantic_judge.py` rubric scores (0-100) are **not** a ground-truth metric. They are useful as a *trend* signal only if we calibrate them and keep the judge rubric aligned with our own schema/contracts.
+
+Plan:
+1. Treat `overall_score_0_100` as a *secondary* metric. Primary: `major_error_rate`, `hallucination_rate`, and the distribution of major issue types.
+2. Build a small “gold-lite” set (cheap human label) to anchor interpretation:
+   - `GOLDLITE.1`: 20-40 approach conversations sampled across `CANARY.*` + `HOLDOUT.*` (mix lengths and video types).
+   - For each, a human records one of: `good_for_retrieval`, `usable_with_warnings`, `not_usable` plus 1-2 notes.
+   - Compute how judge score correlates to those bins; pick score thresholds *after* seeing this.
+3. Align judge rubric with Stage 07 schema:
+   - Explicitly define the allowed phase labels (`open|pre_hook|post_hook|close`) and instruct the judge not to penalize missing “mid” phases if they are not part of the schema.
+   - Require the judge to treat `segment` references as global `segments[].id` (and to flag when phases/techniques reference non-existent or non-conversation segments).
+4. Prefer *pairwise* A/B comparisons for prompt iteration (less brittle than absolute numbers):
+   - Given two enrichments for the same conversation, ask judge “which is better for retrieval and why?” and record a win/loss.
+   - Use absolute scoring only for quick sanity checks.
+5. Sample size discipline:
+   - Always report `n` and confidence bounds (at least p50/p90, not only mean).
+   - Keep canary samples small (quota control) but run holdout periodically to avoid overfitting.
+
+### 9.5.2 Retrieval-First Evaluation (More Direct Than Rubric)
+
+If the real objective is “answers get better”, rubric scores can be misleading. Add a retrieval proxy metric:
+1. Generate a query set (deterministic):
+   - Either hand-curated queries (best) or auto-generated from Stage 07 enrichments (cheaper).
+2. Run retrieval (Stage 11 smoke + vector search) and compute:
+   - `precision@k` (are top-k chunks relevant?)
+   - “evidence support” (does the returned chunk actually contain the claimed technique/topic?)
+3. Keep this lightweight:
+   - Small query set on `CANARY.*` for fast regression.
+   - Larger query set on `HOLDOUT.*` monthly / after major changes.
 
 ### 9.6 High-Impact Prompt Improvements Needed (Concrete Backlog)
 
