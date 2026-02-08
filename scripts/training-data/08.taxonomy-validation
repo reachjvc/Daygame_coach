@@ -13,7 +13,7 @@ Reads:
 
 Writes:
   - Validation report:
-      data/08.taxonomy-validation/report.json
+      data/08.taxonomy-validation/<label>.report.json
 
 Exit codes:
   0 - PASS: No high-frequency unlisted concepts (below threshold)
@@ -57,6 +57,15 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
+
+
+_SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def safe_report_name(raw: str) -> str:
+    """Normalize user/manifest labels into safe filenames."""
+    cleaned = _SAFE_NAME_RE.sub("_", (raw or "").strip()).strip("_")
+    return cleaned or "report"
 
 
 def find_enriched_files(root: Path) -> List[Path]:
@@ -334,10 +343,11 @@ def save_report(
     validation: Dict[str, Any],
     output_dir: Path,
     label: str,
+    report_name: str,
 ) -> Path:
     """Save validation report to JSON file."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "report.json"
+    output_path = output_dir / f"{safe_report_name(report_name)}.report.json"
 
     output_data = {
         "version": 1,
@@ -420,8 +430,12 @@ def main() -> int:
             return 1
         files = filter_files_by_manifest(files, manifest_path)
         label = f"manifest:{manifest_path.name}"
+        report_name = manifest_path.stem
+    elif args.source:
+        report_name = args.source
     else:
         label = str(data_root)
+        report_name = "test" if args.test else "all"
 
     if not files:
         print(f"[08.taxonomy-validation] Error: No .enriched.json files found in: {label}", file=sys.stderr)
@@ -443,7 +457,7 @@ def main() -> int:
 
     # Save report file
     if not args.no_report:
-        report_path = save_report(report, validation, output_dir, label)
+        report_path = save_report(report, validation, output_dir, label, report_name)
         print(f"[08.taxonomy-validation] Report saved: {report_path}")
 
     # Return exit code based on status

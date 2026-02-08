@@ -143,12 +143,12 @@
 |  (>= threshold)          |    --strict (any unlisted)
 |                          |
 |  Reports:                |    data/08.taxonomy-validation/
-|   - unlisted techniques  |    report.json
+|   - unlisted techniques  |    <label>.report.json
 |   - unlisted topics      |
 |   - recommendation       |
 +--------------------------+
              |
-             |  data/08.taxonomy-validation/report.json
+             |  data/08.taxonomy-validation/<label>.report.json
              |  (exits 1 if high-frequency unlisted found)
              v
 +--------------------------+
@@ -167,7 +167,7 @@
 |   + video_type metadata  |    segmentType=COMMENTARY
 |                          |    isRealExample=false
 |  Parent references:      |
-|   videoId (MD5 hash)     |    Enables sibling fetch:
+|   videoId (YouTube id)   |    Enables sibling fetch:
 |   videoType, channel     |    "get full conversation"
 |   conversationId         |
 |                          |
@@ -175,7 +175,7 @@
 |  unchanged sources       |    detection
 +--------------------------+
              |
-             |  data/09.chunks/<source>/<video>.chunks.json
+             |  data/09.chunks/<source>/<video_id>.chunks.json
              |  data/09.chunks/.chunk_state.json
              v
 +--------------------------+

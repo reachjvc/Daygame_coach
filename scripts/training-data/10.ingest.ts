@@ -74,6 +74,9 @@ type Chunk = {
 
 type ChunksFile = {
   version: 1
+  // Stable idempotency key for ingestion and state tracking.
+  // Format: "<channel>/<youtube_video_id>.txt"
+  sourceKey?: string
   sourceFile: string
   sourceHash: string
   embeddingModel: string
@@ -81,7 +84,11 @@ type ChunksFile = {
   chunkOverlap: number
   videoType: string
   channel: string
+  // YouTube video id (11 chars). Newer Stage 09 artifacts include this.
+  videoId?: string
   videoTitle: string
+  // Stage 07 stem (title + [video_id] + audio variant suffix). Optional.
+  videoStem?: string
   generatedAt: string
   chunks: Chunk[]
 }
@@ -237,7 +244,23 @@ async function main() {
       continue
     }
 
-    const sourceKey = path.join(chunksData.channel, `${chunksData.videoTitle}.txt`)
+    let sourceKey = ""
+    if (typeof chunksData.sourceKey === "string" && chunksData.sourceKey.trim()) {
+      sourceKey = chunksData.sourceKey.trim()
+    } else if (typeof chunksData.channel === "string" && chunksData.channel.trim()) {
+      const videoId = typeof chunksData.videoId === "string" ? chunksData.videoId.trim() : ""
+      if (/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+        sourceKey = path.join(chunksData.channel, `${videoId}.txt`)
+      } else {
+        // Backwards compatibility for older Stage 09 artifacts.
+        console.warn(
+          `Warning: Missing videoId for ${filePath}; falling back to channel/title-based sourceKey (unstable).`
+        )
+        sourceKey = path.join(chunksData.channel, `${chunksData.videoTitle}.txt`)
+      }
+    } else {
+      sourceKey = path.basename(filePath, ".chunks.json")
+    }
 
     const prev = state.sources[sourceKey]
     const isUnchanged = !args.force && prev?.chunksHash === fileHash
@@ -281,7 +304,7 @@ async function main() {
 
   for (const item of toIngest) {
     const { sourceKey, chunksData, fileHash } = item
-    const { channel, videoTitle, videoType, chunks } = chunksData
+    const { channel, videoTitle, videoType, chunks, videoId } = chunksData
 
     console.log("")
     console.log(`🔁 Ingesting: ${sourceKey} (${chunks.length} chunks)`)
@@ -299,6 +322,9 @@ async function main() {
 
       if (videoType) {
         metadata.video_type = videoType
+      }
+      if (typeof videoId === "string" && /^[A-Za-z0-9_-]{11}$/.test(videoId)) {
+        metadata.video_id = videoId
       }
 
       if (chunk.metadata.conversationId !== undefined) {

@@ -96,6 +96,9 @@ type Chunk = {
 
 type ChunksFile = {
   version: 1
+  // Stable idempotency key for ingestion and state tracking.
+  // Format: "<channel>/<youtube_video_id>.txt"
+  sourceKey: string
   sourceFile: string
   sourceHash: string
   embeddingModel: string
@@ -103,7 +106,12 @@ type ChunksFile = {
   chunkOverlap: number
   videoType: string
   channel: string
+  // YouTube video id (11 chars). Primary key for videos.
+  videoId: string
+  // Display-only title (may be derived from filename if missing upstream).
   videoTitle: string
+  // Filename stem (includes [video_id] and audio variant suffixes); useful for tracing to Stage 07 artifacts.
+  videoStem: string
   generatedAt: string
   chunks: Chunk[]
 }
@@ -166,6 +174,9 @@ type EnrichedFile = {
   video_id?: string
   video_title?: string
   video_type?: { type?: string }
+  metadata?: {
+    source_file?: string
+  }
   speaker_labels?: SpeakerLabels
   segments?: ContentSegment[]
   enrichments?: ContentEnrichment[]
@@ -262,18 +273,6 @@ async function listJsonlFiles(rootDir: string, suffix: string): Promise<string[]
 
 function hashFile(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
-}
-
-/**
- * Generate a deterministic videoId from channel + video stem.
- * Uses MD5 truncated to 12 chars for reasonable uniqueness + readability.
- */
-function generateVideoId(channel: string, videoStem: string): string {
-  return crypto
-    .createHash("md5")
-    .update(`${channel}/${videoStem}`)
-    .digest("hex")
-    .slice(0, 12)
 }
 
 async function loadState(
@@ -607,6 +606,48 @@ function chunkCommentaryText(
 // Extraction helpers
 // ---------------------------------------------------------------------------
 
+const VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+
+function isValidVideoId(raw: unknown): raw is string {
+  return typeof raw === "string" && /^[A-Za-z0-9_-]{11}$/.test(raw)
+}
+
+function extractVideoIdFromText(text: string): string | null {
+  const m = text.match(VIDEO_ID_RE)
+  return m?.[1] ?? null
+}
+
+function isPlausibleChannelName(raw: string | null | undefined): raw is string {
+  if (!raw) return false
+  const s = raw.trim()
+  if (!s) return false
+  // Channel/source dirs are stable identifiers (no brackets, no file suffixes).
+  if (s.includes("[") || s.includes("]")) return false
+  if (s.endsWith(".json") || s.endsWith(".enriched")) return false
+  if (s.includes(".audio.asr.")) return false
+  return true
+}
+
+function extractChannelFromSourceFile(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.trim()) return null
+  const normalized = raw.replace(/\\/g, "/")
+  // Example: data/06c.patched/<channel>/<stem>.conversations.json
+  const m = normalized.match(
+    /data\/(?:06c\.patched|06\.video-type|06b\.verify|07\.content|05\.audio-features)\/([^/]+)\//
+  )
+  return m?.[1] ?? null
+}
+
+function displayTitleFromStem(videoStem: string): string {
+  // Stage 07 filenames are: "<title> [VIDEO_ID].audio.asr.clean16k"
+  let s = videoStem
+  for (const suffix of [".audio.asr.clean16k", ".audio.asr.raw16k"]) {
+    if (s.endsWith(suffix)) s = s.slice(0, -suffix.length)
+  }
+  s = s.replace(/\s*\[[A-Za-z0-9_-]{11}\]\s*$/, "").trim()
+  return s || videoStem
+}
+
 function normalizeVideoStemFromEnrichedFilename(filePath: string): string {
   let base = path.basename(filePath, ".enriched.json")
   if (base.endsWith(".interactions")) base = base.slice(0, -".interactions".length)
@@ -750,65 +791,113 @@ async function main() {
     return
   }
 
-  const toProcess: Array<{
+  const candidates: Array<{
     filePath: string
     sourceKey: string
     channel: string
+    videoId: string
     videoStem: string
-    rawContent: string
+    videoTitle: string
     fileHash: string
     videoType: string
-    parsedFile: EnrichedFile
+    rank: number
   }> = []
-  let unchanged = 0
+  let skippedBadJson = 0
+  let skippedNoContent = 0
+  let skippedNoVideoId = 0
 
   for (const filePath of enrichedFiles) {
     const relEnrichedPath = path.relative(enrichedDir, filePath)
-    const channel = relEnrichedPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
+    const relParts = relEnrichedPath.split(path.sep).filter(Boolean)
+    const channelCandidate = relParts.length > 1 ? relParts[0] : null
     const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
-    const sourceKey = path.join(channel, `${videoStem}.txt`)
 
     const rawContent = await fsp.readFile(filePath, "utf-8")
     const fileHash = hashFile(rawContent)
 
-    let parsedFile: EnrichedFile | null = null
+    let parsedFile: EnrichedFile
     try {
       parsedFile = JSON.parse(rawContent)
     } catch {
+      skippedBadJson++
       continue
     }
 
-    const fileVideoType = extractVideoType(parsedFile?.video_type)
-    const fileSegments = parsedFile?.segments
-    const fileEnrichments = parsedFile?.enrichments
-
+    const fileSegments = parsedFile.segments
+    const fileEnrichments = parsedFile.enrichments
     const hasContent =
       Array.isArray(fileSegments) &&
       Array.isArray(fileEnrichments) &&
       fileEnrichments.length > 0
 
     if (!hasContent) {
+      skippedNoContent++
       continue
     }
 
-    const prev = state.sources[sourceKey]
-    const isUnchanged = !force && prev?.enrichedHash === fileHash
+    const videoId =
+      (isValidVideoId(parsedFile.video_id) ? parsedFile.video_id : null) ||
+      extractVideoIdFromText(videoStem) ||
+      extractVideoIdFromText(relEnrichedPath)
 
+    if (!videoId) {
+      skippedNoVideoId++
+      continue
+    }
+
+    const channelFromMeta = extractChannelFromSourceFile(parsedFile.metadata?.source_file)
+    const channel = isPlausibleChannelName(channelCandidate)
+      ? channelCandidate
+      : channelFromMeta ?? "unknown"
+
+    const sourceKey = path.join(channel, `${videoId}.txt`)
+    const fileVideoType = extractVideoType(parsedFile.video_type)
+    const videoTitle =
+      typeof parsedFile.video_title === "string" && parsedFile.video_title.trim()
+        ? parsedFile.video_title.trim()
+        : displayTitleFromStem(videoStem)
+
+    candidates.push({
+      filePath,
+      sourceKey,
+      channel,
+      videoId,
+      videoStem,
+      videoTitle,
+      fileHash,
+      videoType: fileVideoType,
+      // Prefer deeper paths (source-flat over root-flat) when duplicates exist.
+      rank: relParts.length,
+    })
+  }
+
+  // Deduplicate by stable sourceKey (channel + video_id).
+  const bestByKey = new Map<string, (typeof candidates)[number]>()
+  let deduped = 0
+  for (const cand of candidates) {
+    const prev = bestByKey.get(cand.sourceKey)
+    if (
+      !prev ||
+      cand.rank > prev.rank ||
+      (cand.rank === prev.rank && cand.filePath.localeCompare(prev.filePath) < 0)
+    ) {
+      if (prev) deduped++
+      bestByKey.set(cand.sourceKey, cand)
+    } else {
+      deduped++
+    }
+  }
+
+  const toProcess: Array<(typeof candidates)[number]> = []
+  let unchanged = 0
+  for (const cand of Array.from(bestByKey.values()).sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))) {
+    const prev = state.sources[cand.sourceKey]
+    const isUnchanged = !force && prev?.enrichedHash === cand.fileHash
     if (isUnchanged) {
       unchanged++
       continue
     }
-
-    toProcess.push({
-      filePath,
-      sourceKey,
-      channel,
-      videoStem,
-      rawContent,
-      fileHash,
-      videoType: fileVideoType,
-      parsedFile: parsedFile!,
-    })
+    toProcess.push(cand)
   }
 
   console.log("================================")
@@ -817,6 +906,10 @@ async function main() {
   console.log(`Source:       ${args.source ?? "all"}`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To process:   ${toProcess.length}${force ? " (forced)" : ""}`)
+  if (deduped > 0) console.log(`Deduped:      ${deduped} duplicate enriched artifact(s)`)
+  if (skippedBadJson > 0) console.log(`Skipped:      ${skippedBadJson} unreadable JSON file(s)`)
+  if (skippedNoVideoId > 0) console.log(`Skipped:      ${skippedNoVideoId} file(s) missing video_id`)
+  if (skippedNoContent > 0) console.log(`Skipped:      ${skippedNoContent} file(s) with no content`)
   console.log(`Chunk size:   ${chunkSize}`)
   console.log(`Overlap:      ${chunkOverlap}`)
   console.log(`Model:        ${embeddingModel}`)
@@ -834,13 +927,21 @@ async function main() {
   }
 
   for (const item of toProcess) {
-    const { sourceKey, channel, videoStem, fileHash, videoType, parsedFile, filePath } = item
-
-    // Generate deterministic videoId for parent references
-    const videoId = generateVideoId(channel, videoStem)
+    const { sourceKey, channel, videoId, videoStem, videoTitle, videoType, filePath } = item
 
     console.log("")
     console.log(`🔁 Processing: ${sourceKey} (videoId: ${videoId})`)
+
+    const rawContent = await fsp.readFile(filePath, "utf-8")
+    const fileHash = hashFile(rawContent)
+
+    let parsedFile: EnrichedFile
+    try {
+      parsedFile = JSON.parse(rawContent)
+    } catch {
+      console.warn(`   ⚠️  Skipping unreadable JSON: ${filePath}`)
+      continue
+    }
 
     const internalChunks: InternalChunk[] = []
 
@@ -1075,9 +1176,10 @@ async function main() {
     const outputDir = path.join(chunksDir, channel)
     await fsp.mkdir(outputDir, { recursive: true })
 
-    const outputPath = path.join(outputDir, `${videoStem}.chunks.json`)
+    const outputPath = path.join(outputDir, `${videoId}.chunks.json`)
     const chunksFile: ChunksFile = {
       version: 1,
+      sourceKey,
       sourceFile: filePath,
       sourceHash: fileHash,
       embeddingModel,
@@ -1085,7 +1187,9 @@ async function main() {
       chunkOverlap,
       videoType,
       channel,
-      videoTitle: videoStem,
+      videoId,
+      videoTitle,
+      videoStem,
       generatedAt: new Date().toISOString(),
       chunks,
     }

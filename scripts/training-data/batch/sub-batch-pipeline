@@ -442,13 +442,27 @@ create_stage_view() {
 
     local found_file=false
 
-    if is_nested_stage "$stage"; then
-      # Nested stage: data/<stage>/<source>/<video>/
-      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
-      if [[ -d "$src_video_dir" ]]; then
-        # Symlink all matching files in the video folder
-        while IFS= read -r -d '' f; do
-          found_file=true
+	    if is_nested_stage "$stage"; then
+	      # Nested stage: data/<stage>/<source>/<video>/
+	      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
+	      if [[ ! -d "$src_video_dir" && -d "$DATA_DIR/$stage_dir/$source" ]]; then
+	        # Folder names in manifests are display-only and can drift (unicode punctuation, title edits).
+	        # Resolve nested stage dirs by video_id when the exact folder is missing.
+	        while IFS= read -r -d '' d; do
+	          local bn
+	          bn=$(basename "$d")
+	          local alt_id
+	          alt_id=$(extract_video_id "$bn")
+	          if [[ -n "$alt_id" && "$alt_id" == "$vid_id" ]]; then
+	            src_video_dir="$d"
+	            break
+	          fi
+	        done < <(find "$DATA_DIR/$stage_dir/$source" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+	      fi
+	      if [[ -d "$src_video_dir" ]]; then
+	        # Symlink all matching files in the video folder
+	        while IFS= read -r -d '' f; do
+	          found_file=true
           local link_name=$(basename "$f")
           local rel_target
           rel_target=$(realpath --relative-to="$video_view_dir" "$f")

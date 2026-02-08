@@ -131,13 +131,16 @@ def main() -> None:
 
     manifest_ids: Set[str] = {vid for _, vid, _ in entries}
     source_by_vid: Dict[str, str] = {vid: src for src, vid, _ in entries}
+    folder_by_vid: Dict[str, str] = {vid: folder for src, vid, folder in entries}
 
     data_root = repo_root() / "data"
+    s01_root = data_root / "01.download"
     s06_root = data_root / "06.video-type"
     s06c_root = data_root / "06c.patched"
     s07_root = data_root / "07.content"
     s06b_root = data_root / "06b.verify"
 
+    idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
     idx_s06c = _index_paths_by_video_id(s06c_root, "*.conversations.json", manifest_ids)
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
@@ -146,6 +149,7 @@ def main() -> None:
 
     verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
+    missing_s01: List[str] = []
     missing_s06c: List[str] = []
     missing_s07: List[str] = []
 
@@ -172,7 +176,9 @@ def main() -> None:
 
     for vid in sorted(manifest_ids):
         src = source_by_vid.get(vid, "")
+        folder_text = folder_by_vid.get(vid, "")
 
+        s01_candidates = idx_s01_wav.get(vid) or []
         s06c_candidates = idx_s06c.get(vid) or []
         s06_candidates = idx_s06.get(vid) or []
         s07_candidates = idx_s07.get(vid) or []
@@ -189,6 +195,19 @@ def main() -> None:
             missing_s06c.append(vid)
         if not s07_path:
             missing_s07.append(vid)
+
+        # Stage 01 download integrity: at least one .wav exists for this video id (raw16k/clean16k/legacy).
+        if not s01_candidates:
+            missing_s01.append(vid)
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "missing_stage01_audio",
+                "message": "No Stage 01 .wav found for this video_id (download incomplete or mis-filed)",
+                "manifest_folder": folder_text,
+            })
+            check_counts["error:missing_stage01_audio"] += 1
 
         # Stage 07 per-file validation handling
         if s07_path and not s07v_path:
@@ -420,7 +439,8 @@ def main() -> None:
         )
 
         print(
-            f"{LOG_PREFIX} Presence: missing 06b.verify={len(missing_verify)}, "
+            f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
+            f"missing 06b.verify={len(missing_verify)}, "
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
         )
 

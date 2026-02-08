@@ -90,7 +90,7 @@ Produce a thorough, high-quality evaluation + validation plan for the full video
 | 06b. Verify | scripts/training-data/06b.verify | LLM (Claude) | .conversations.json | .verification.json |
 | 06c. Patch | scripts/training-data/06c.patch | Deterministic | .conversations.json + .verification.json | .conversations.json (patched) |
 | 07. Content | scripts/training-data/07.content | LLM (Claude) | .conversations.json (patched) | .enriched.json, .validation.json |
-| 08. Taxonomy | scripts/training-data/08.taxonomy-validation | Deterministic | .enriched.json (all) | report.json |
+| 08. Taxonomy | scripts/training-data/08.taxonomy-validation | Deterministic | .enriched.json (all) | `<label>.report.json` |
 | 09. Chunk & Embed | scripts/training-data/09.chunk-embed.ts | ML (Ollama) | .enriched.json | .chunks.json, .chunk_state.json |
 | 10. Ingest | scripts/training-data/10.ingest.ts | Deterministic | .chunks.json | Supabase embeddings table |
 
@@ -266,7 +266,7 @@ A video is **RAG-ready** if it meets ALL of the following criteria:
 | No Fragment Convs | All convs ≥10s with coach+target | 06b boundary_issues | Yes |
 | Evidence Match Rate | ≥70% | 07 .validation.json | Yes |
 | Phase Ordering | No regressions | 07 validation | Yes |
-| Taxonomy Coverage | 0 high-freq unlisted | 08 report.json | Warn |
+| Taxonomy Coverage | 0 high-freq unlisted | 08 `<label>.report.json` | Warn |
 | Chunk Quality | All chunks 100-2000 chars | 09 .chunk_state.json | Warn |
 
 **RAG-Ready Labels:**
@@ -331,7 +331,7 @@ For every stage, define a concrete "evidence bundle":
 | 06b | .verification.json | Verdict (APPROVE/FLAG/REJECT) | .verification.json | Verdict != REJECT |
 | 06c | metadata.patched_from | Fix count applied | .conversations.json | Confidence threshold checks |
 | 07 | .validation.json | Evidence match rate, phase ordering | .enriched.json | Fuzzy evidence matching |
-| 08 | report.json | Unlisted count, high-freq count | report.json | Exit code 0 |
+| 08 | `<label>.report.json` | Unlisted count, high-freq count | `<label>.report.json` | Exit code 0 |
 | 09 | .chunk_state.json | Chunk count, hash match | .chunks.json | Hash verification |
 | 10 | .ingest_state.json | Row count inserted | Supabase rows | Insert success |
 

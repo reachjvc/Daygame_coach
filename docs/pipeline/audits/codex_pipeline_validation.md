@@ -120,7 +120,7 @@ Produce a thorough, high-quality evaluation + validation plan for the full video
 | 06b. Verify | `scripts/training-data/06b.verify` | LLM (Claude) | `.conversations.json` | `.verification.json` |
 | 06c. Patch | `scripts/training-data/06c.patch` | Deterministic | `.verification.json` + `.conversations.json` | patched `.conversations.json` (adds `patch_metadata`) |
 | 07. Content | `scripts/training-data/07.content` | LLM (Claude) | patched `.conversations.json` | `.enriched.json` + `.enriched.validation.json` |
-| 08. Taxonomy | `scripts/training-data/08.taxonomy-validation` | Deterministic | `.enriched.json` | `data/08.taxonomy-validation/report.json` (gate via exit code) |
+| 08. Taxonomy | `scripts/training-data/08.taxonomy-validation` | Deterministic | `.enriched.json` | `data/08.taxonomy-validation/<label>.report.json` (gate via exit code) |
 | 09. Chunk & Embed | `scripts/training-data/09.chunk-embed.ts` | ML (Ollama) | `.enriched.json` | `data/09.chunks/<source>/*.chunks.json` |
 | 10. Ingest | `scripts/training-data/10.ingest.ts` | Deterministic | `.chunks.json` | Supabase rows (+ `data/.ingest_state.json`) |
 
@@ -226,8 +226,9 @@ These are the defaults I would implement unless you explicitly choose otherwise.
    - Run it after 07 (or as part of 07’s post-validation) and fail fast on structural mismatches.
 
 5. **Stage 08 taxonomy report must be batch-scoped**
-   - Current `data/08.taxonomy-validation/report.json` overwrites.
-   - Default should be `data/08.taxonomy-validation/<batch_id>.report.json` (or manifest-named) to support drift + audits.
+   - Implemented (2026-02-08 on `pipeline-validation-hardening`): Stage 08 writes `data/08.taxonomy-validation/<label>.report.json`
+     where `<label>` is the manifest stem (preferred), source name, or `all`/`test`.
+   - Historical note: older runs wrote `report.json` and overwrote; treat any docs/scripts still referencing `report.json` as legacy.
 
 ---
 
@@ -848,8 +849,7 @@ Implementation notes (current `validate_cross_stage.py` issues to fix):
 ### 8.11 Stage 08 (Taxonomy Gate)
 
 Deterministic:
-- run per batch; current default writes `data/08.taxonomy-validation/report.json` (overwrites)
-- until report naming is batch-scoped, prefer running with `--no-report` and rely on per-video stage reports for evidence
+- run per batch/sub-batch; Stage 08 writes `data/08.taxonomy-validation/<label>.report.json` (manifest stem is preferred)
 - include threshold, strict flag, file count scanned, top concepts with examples and video ids
 
 Gate:
@@ -882,16 +882,11 @@ Config/contract notes (current code reality):
   - `unknown` is schema-valid but should be tracked as a quality signal (high unknown rates should downgrade readiness).
 
 Source key stability (important for idempotent ingest):
-- Stage 09 currently derives `sourceKey` from the enriched filename stem (`<title> [video_id].audio.asr.clean16k...`).
-- Stage 09 also derives `metadata.videoId` as a hash of `channel/videoStem` (title-dependent); this is not stable if filenames change.
-- Stage 10 uses that `sourceKey` for delete+replace behavior and state tracking.
-- If filenames change (normalization, title edits), you can accidentally create “new” sources and leave old embeddings orphaned.
-
-Recommended plan:
-- Use a stable key: `sourceKey = <channel>/<video_id>.txt`
-- Derive `video_id` from the JSON content (`enriched.video_id`), not from filenames (filenames/titles are not stable).
-- Ensure the chunks file carries `video_id` (stable) and `video_title` (display) as separate fields.
-- Stage 10 should compute `sourceKey` from `video_id`, and treat titles/stems as display-only metadata.
+- Implemented (2026-02-08 on `pipeline-validation-hardening`):
+  - Stage 09 now uses a stable key: `sourceKey = <channel>/<video_id>.txt`
+  - Stage 09 writes `videoId` (YouTube id) at the chunks-file top-level and uses it for `metadata.videoId` (no title-dependent hashing).
+  - Stage 10 prefers `chunksData.sourceKey` (or `channel + videoId`) for delete+replace and state tracking.
+- Legacy note: older Stage 09 artifacts used title-derived stems; treat those as unstable and avoid mixing them with stable-key runs unless you also migrate/clean old embeddings.
 
 Additional deterministic checks:
 - Validate that for each approach enrichment:
