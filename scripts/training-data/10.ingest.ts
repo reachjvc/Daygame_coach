@@ -22,6 +22,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --dry-run
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -55,6 +56,7 @@ type Args = {
   verifyOnly: boolean
   source: string | null
   manifest: string | null
+  skipTaxonomyGate: boolean
 }
 
 type ChunkMetadata = {
@@ -126,6 +128,7 @@ function parseArgs(argv: string[]): Args {
     verifyOnly: flags.has("--verify"),
     source,
     manifest,
+    skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
   }
 }
 
@@ -205,6 +208,52 @@ function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
   return out
 }
 
+function safeReportName(raw: string): string {
+  const cleaned = (raw || "").trim().replace(/[^A-Za-z0-9._-]+/g, "_").replace(/^_+|_+$/g, "")
+  return cleaned || "report"
+}
+
+function checkTaxonomyGate(manifestPath: string): void {
+  const stem = path.basename(manifestPath, path.extname(manifestPath))
+  const reportPath = path.join(
+    process.cwd(),
+    "data",
+    "08.taxonomy-validation",
+    `${safeReportName(stem)}.report.json`
+  )
+
+  if (!fs.existsSync(reportPath)) {
+    console.error(`❌ Missing Stage 08 report: ${reportPath}`)
+    console.error(`   Run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+    process.exit(1)
+  }
+
+  let data: unknown
+  try {
+    data = JSON.parse(fs.readFileSync(reportPath, "utf-8"))
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`❌ Could not read Stage 08 report: ${reportPath} (${msg})`)
+    process.exit(1)
+  }
+
+  const status = (data as any)?.validation?.status
+  const reason = (data as any)?.validation?.reason
+
+  if (status === "FAIL") {
+    console.error(`❌ Stage 08 taxonomy gate FAIL (${reportPath})`)
+    if (typeof reason === "string" && reason.trim()) console.error(`   Reason: ${reason.trim()}`)
+    process.exit(1)
+  }
+
+  if (status === "WARNING") {
+    console.warn(`⚠️  Stage 08 taxonomy gate WARNING (${reportPath})`)
+    if (typeof reason === "string" && reason.trim()) console.warn(`   Reason: ${reason.trim()}`)
+  } else if (status !== "PASS") {
+    console.warn(`⚠️  Stage 08 taxonomy gate status is unknown (${String(status)}). Proceeding anyway.`)
+  }
+}
+
 function hashFile(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
 }
@@ -243,6 +292,10 @@ async function main() {
   const statePath = path.join(process.cwd(), "data", ".ingest_state.json")
 
   const state = await loadState(statePath)
+
+  if (args.manifest && !args.skipTaxonomyGate) {
+    checkTaxonomyGate(args.manifest)
+  }
 
   let manifestAllowList: Map<string, Set<string>> | null = null
   if (args.manifest) {
