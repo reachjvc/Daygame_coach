@@ -313,7 +313,7 @@ These are errors that can silently degrade downstream output unless explicitly g
 - Stage 06b: 13 verification reports
 - Stage 06c: 13 patched conversations
 - Stage 07: 12 enriched outputs
-- Stage 08/09/10: not yet run in snapshot (`data/08.taxonomy-validation` and `data/09.chunks` absent)
+- Stage 08/09/10: not yet run in this 2026-02-07 snapshot; later validated on `CANARY.1` (2026-02-08 on `pipeline-validation-hardening`) including Stage 09 chunk+embed and Stage 10 ingest with a Stage 08 gate for manifest runs.
 
 **Stage 06 validation errors (blocking output writes):**
 - `video_type_segment_mismatch`: 15
