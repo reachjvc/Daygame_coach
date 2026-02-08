@@ -17,10 +17,11 @@
  *       data/09.chunks/.chunk_state.json
  *
  * Use:
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --source daily_evolution
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --dry-run
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --full
+ *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts
+ *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --source daily_evolution
+ *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --dry-run
+ *   node --import tsx/esm scripts/training-data/09.chunk-embed.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -56,6 +57,7 @@ type Args = {
   force: boolean
   dryRun: boolean
   source: string | null
+  manifest: string | null
 }
 
 type SegmentType = "INTERACTION" | "EXPLANATION" | "COMMENTARY" | "UNKNOWN"
@@ -210,6 +212,7 @@ type InternalChunk = {
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
+  let manifest: string | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -219,12 +222,19 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--source=")) {
       source = arg.split("=", 2)[1]
     }
+    if (arg === "--manifest" && argv[i + 1]) {
+      manifest = argv[++i]
+    }
+    if (arg.startsWith("--manifest=")) {
+      manifest = arg.split("=", 2)[1]
+    }
   }
 
   return {
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     source,
+    manifest,
   }
 }
 
@@ -305,6 +315,36 @@ async function saveState(statePath: string, state: ChunkStateV1): Promise<void> 
 
 async function sleep(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// ---------------------------------------------------------------------------
+// Manifest filtering
+// ---------------------------------------------------------------------------
+
+const MANIFEST_VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+
+function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
+  const abs = path.isAbsolute(manifestPath)
+    ? manifestPath
+    : path.join(process.cwd(), manifestPath)
+  const raw = fs.readFileSync(abs, "utf-8")
+  const out = new Map<string, Set<string>>()
+
+  for (const rawLine of raw.split("\n")) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith("#")) continue
+    const parts = line.split("|", 2).map((p) => p.trim())
+    if (parts.length !== 2) continue
+    const [source, folder] = parts
+    const m = folder.match(MANIFEST_VIDEO_ID_RE)
+    const vid = m?.[1]
+    if (!source || !vid) continue
+    const set = out.get(source) ?? new Set<string>()
+    set.add(vid)
+    out.set(source, set)
+  }
+
+  return out
 }
 
 // ---------------------------------------------------------------------------
@@ -696,6 +736,59 @@ function extractVideoType(vt: unknown): string {
 // Embedding generation
 // ---------------------------------------------------------------------------
 
+const OLLAMA_REQUEST_TIMEOUT_MS = 25_000
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function checkOllamaReady(baseUrl: string, model: string): Promise<void> {
+  const url = `${baseUrl}/api/tags`
+  let response: Response
+  try {
+    response = await fetchWithTimeout(url, { method: "GET" }, 2000)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      `Ollama is not reachable at ${baseUrl} (${msg}). ` +
+        `Start it with 'ollama serve' and ensure OLLAMA_API_URL is correct.`
+    )
+  }
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "")
+    throw new Error(
+      `Ollama health check failed (${response.status}) at ${url}: ${body.slice(0, 200)}`
+    )
+  }
+
+  try {
+    const data = (await response.json()) as { models?: Array<{ name?: string }> }
+    const names = (data.models ?? [])
+      .map((m) => (typeof m?.name === "string" ? m.name : ""))
+      .filter(Boolean)
+    const ok = names.some((n) => n === model || n.startsWith(`${model}:`))
+    if (!ok) {
+      console.warn(
+        `⚠️  Ollama embedding model '${model}' not found in /api/tags. ` +
+          `You may need: ollama pull ${model}`
+      )
+    }
+  } catch {
+    // Non-fatal: model existence will be validated by the /api/embeddings call anyway.
+  }
+}
+
 async function generateEmbedding(
   text: string,
   baseUrl: string,
@@ -704,11 +797,11 @@ async function generateEmbedding(
   const MAX_LENGTH = 8000
   const inputText = text.length > MAX_LENGTH ? text.substring(0, MAX_LENGTH) : text
 
-  const response = await fetch(`${baseUrl}/api/embeddings`, {
+  const response = await fetchWithTimeout(`${baseUrl}/api/embeddings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model, prompt: inputText }),
-  })
+  }, OLLAMA_REQUEST_TIMEOUT_MS)
 
   if (!response.ok) {
     const body = await response.text()
@@ -766,6 +859,21 @@ async function main() {
 
   const state = await loadState(statePath, { embeddingModel, chunkSize, chunkOverlap })
 
+  let manifestAllowList: Map<string, Set<string>> | null = null
+  if (args.manifest) {
+    try {
+      manifestAllowList = loadManifestAllowList(args.manifest)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`❌ Could not read manifest: ${args.manifest} (${msg})`)
+      process.exit(1)
+    }
+    if (manifestAllowList.size === 0) {
+      console.error(`❌ Manifest had no valid entries: ${args.manifest}`)
+      process.exit(1)
+    }
+  }
+
   let force = args.force
   if (
     state.embeddingModel !== embeddingModel ||
@@ -779,16 +887,25 @@ async function main() {
     state.chunkOverlap = chunkOverlap
   }
 
-  const scanDir = args.source ? path.join(enrichedDir, args.source) : enrichedDir
+  let enrichedFiles: string[] = []
 
-  if (!fs.existsSync(scanDir)) {
-    console.error(`❌ Missing directory: ${scanDir}`)
-    process.exit(1)
+  if (manifestAllowList && !args.source) {
+    for (const src of Array.from(manifestAllowList.keys()).sort((a, b) => a.localeCompare(b))) {
+      const srcDir = path.join(enrichedDir, src)
+      if (!fs.existsSync(srcDir)) continue
+      enrichedFiles.push(...(await listJsonlFiles(srcDir, ".enriched.json")))
+    }
+  } else {
+    const scanDir = args.source ? path.join(enrichedDir, args.source) : enrichedDir
+    if (!fs.existsSync(scanDir)) {
+      console.error(`❌ Missing directory: ${scanDir}`)
+      process.exit(1)
+    }
+    enrichedFiles = await listJsonlFiles(scanDir, ".enriched.json")
   }
 
-  const enrichedFiles = await listJsonlFiles(scanDir, ".enriched.json")
   if (enrichedFiles.length === 0) {
-    console.log(`No .enriched.json files found under ${scanDir}`)
+    console.log(`No .enriched.json files found under ${args.source ?? "data/07.content/"}`)
     return
   }
 
@@ -806,12 +923,22 @@ async function main() {
   let skippedBadJson = 0
   let skippedNoContent = 0
   let skippedNoVideoId = 0
+  let skippedNotInManifest = 0
 
   for (const filePath of enrichedFiles) {
     const relEnrichedPath = path.relative(enrichedDir, filePath)
     const relParts = relEnrichedPath.split(path.sep).filter(Boolean)
     const channelCandidate = relParts.length > 1 ? relParts[0] : null
     const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
+
+    if (manifestAllowList && channelCandidate) {
+      const vidFromFilename = extractVideoIdFromText(videoStem) || extractVideoIdFromText(relEnrichedPath)
+      const allowed = vidFromFilename ? manifestAllowList.get(channelCandidate) : null
+      if (!allowed || !vidFromFilename || !allowed.has(vidFromFilename)) {
+        skippedNotInManifest++
+        continue
+      }
+    }
 
     const rawContent = await fsp.readFile(filePath, "utf-8")
     const fileHash = hashFile(rawContent)
@@ -854,6 +981,14 @@ async function main() {
     const channel = isPlausibleChannelName(channelCandidate)
       ? channelCandidate
       : channelFromJson ?? channelFromMeta ?? "unknown"
+
+    if (manifestAllowList) {
+      const allowed = manifestAllowList.get(channel)
+      if (!allowed || !allowed.has(videoId)) {
+        skippedNotInManifest++
+        continue
+      }
+    }
 
     const sourceKey = path.join(channel, `${videoId}.txt`)
     const fileVideoType = extractVideoType(parsedFile.video_type)
@@ -909,12 +1044,14 @@ async function main() {
   console.log("📦 CHUNK & EMBED (Stage 09)")
   console.log("================================")
   console.log(`Source:       ${args.source ?? "all"}`)
+  if (args.manifest) console.log(`Manifest:     ${args.manifest}`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To process:   ${toProcess.length}${force ? " (forced)" : ""}`)
   if (deduped > 0) console.log(`Deduped:      ${deduped} duplicate enriched artifact(s)`)
   if (skippedBadJson > 0) console.log(`Skipped:      ${skippedBadJson} unreadable JSON file(s)`)
   if (skippedNoVideoId > 0) console.log(`Skipped:      ${skippedNoVideoId} file(s) missing video_id`)
   if (skippedNoContent > 0) console.log(`Skipped:      ${skippedNoContent} file(s) with no content`)
+  if (skippedNotInManifest > 0) console.log(`Skipped:      ${skippedNotInManifest} file(s) not in manifest`)
   console.log(`Chunk size:   ${chunkSize}`)
   console.log(`Overlap:      ${chunkOverlap}`)
   console.log(`Model:        ${embeddingModel}`)
@@ -930,6 +1067,9 @@ async function main() {
     console.log("✅ Nothing to process.")
     return
   }
+
+  // Preflight Ollama once (avoid failing mid-run with unclear errors).
+  await checkOllamaReady(ollamaBaseUrl, embeddingModel)
 
   for (const item of toProcess) {
     const { sourceKey, channel, videoId, videoStem, videoTitle, videoType, filePath } = item
