@@ -171,6 +171,7 @@ type ContentEnrichment = {
 }
 
 type EnrichedFile = {
+  source?: string
   video_id?: string
   video_title?: string
   video_type?: { type?: string }
@@ -845,10 +846,14 @@ async function main() {
       continue
     }
 
+    const channelFromJson =
+      typeof parsedFile.source === "string" && parsedFile.source.trim()
+        ? parsedFile.source.trim()
+        : null
     const channelFromMeta = extractChannelFromSourceFile(parsedFile.metadata?.source_file)
     const channel = isPlausibleChannelName(channelCandidate)
       ? channelCandidate
-      : channelFromMeta ?? "unknown"
+      : channelFromJson ?? channelFromMeta ?? "unknown"
 
     const sourceKey = path.join(channel, `${videoId}.txt`)
     const fileVideoType = extractVideoType(parsedFile.video_type)

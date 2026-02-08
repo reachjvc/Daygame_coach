@@ -159,7 +159,7 @@ TOPIC_TAXONOMY = {
 LOG_PREFIX = "[07.content]"
 
 PROMPT_VERSION = "1.2.3"  # v1.2.3: Allow technique evidence segments to be COACH or STUDENT turns
-PIPELINE_VERSION = "07.content-v1.7"  # v1.7: Treat student as approacher in evidence validation/normalization
+PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -1555,6 +1555,35 @@ def _parse_legacy_array(arr: List[Dict]) -> ParsedEnrichmentResponse:
     )
 
 
+_BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+
+def extract_video_id_from_text(text: str) -> Optional[str]:
+    m = _BRACKET_ID_RE.search(text or "")
+    return m.group(1) if m else None
+
+
+def extract_video_title_from_stem(stem: str) -> str:
+    # Mirror Stage 06b's title extraction logic; stems are display-only.
+    name = stem or ""
+    name = re.sub(r"\.(conversations|enriched|verification)$", "", name)
+    name = re.sub(r"\.audio\.asr\.(raw|clean)16k$", "", name)
+    m = re.match(r"^(.+?)\s*\[", name)
+    return m.group(1).strip() if m else name
+
+
+def derive_source_from_path(p: Path) -> Optional[str]:
+    # Prefer extracting from stage folder layout markers when possible.
+    parts = p.parts
+    for marker in ("06c.patched", "06.video-type", "07.content", "05.audio-features", "01.download"):
+        if marker in parts:
+            idx = parts.index(marker)
+            if idx + 1 < len(parts):
+                return parts[idx + 1]
+    # Fallback: assume parent dir is the source.
+    return p.parent.name or None
+
+
 def process_video_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
@@ -1565,7 +1594,24 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         data = json.load(f)
 
     segments = data.get("segments", [])
-    video_id = data.get("video_id", input_path.stem)
+    source = derive_source_from_path(input_path) or "unknown"
+
+    video_id_raw = data.get("video_id")
+    if isinstance(video_id_raw, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id_raw):
+        video_id = video_id_raw
+    else:
+        video_id = (
+            extract_video_id_from_text(input_path.name)
+            or extract_video_id_from_text(input_path.stem)
+            or "unknown"
+        )
+
+    video_title_raw = data.get("video_title")
+    if isinstance(video_title_raw, str) and video_title_raw.strip():
+        video_title = video_title_raw.strip()
+    else:
+        video_title = extract_video_title_from_stem(input_path.stem)
+
     video_type = get_video_type_str(data)
 
     if not segments:
@@ -1687,6 +1733,8 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         # Version tags (safe additive fields; helps drift detection downstream).
         "pipeline_version": PIPELINE_VERSION,
         "prompt_version": PROMPT_VERSION,
+        "source": source,
+        "video_title": video_title,
         "video_id": video_id,
         "video_type": data.get("video_type"),
         "speaker_labels": data.get("speaker_labels"),
@@ -1855,6 +1903,8 @@ def revalidate_video_file(
 
     # Keep Stage 06c as the source of truth for transcript fields (Stage 07 should mirror it).
     output["video_id"] = stage06_data.get("video_id", output.get("video_id"))
+    output["source"] = derive_source_from_path(input_path) or output.get("source") or "unknown"
+    output["video_title"] = extract_video_title_from_stem(input_path.stem)
     output["video_type"] = stage06_data.get("video_type", output.get("video_type"))
     output["speaker_labels"] = stage06_data.get("speaker_labels", output.get("speaker_labels"))
     output["speaker_corrections"] = stage06_data.get("speaker_corrections", output.get("speaker_corrections", []))
