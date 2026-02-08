@@ -220,6 +220,7 @@ def normalize_enrichments(
     enrichments: List[Dict[str, Any]],
     seg_by_id: Optional[Dict[int, Dict[str, Any]]] = None,
     conversations: Optional[Dict[int, List[Dict[str, Any]]]] = None,
+    commentary_blocks: Optional[List[Dict[str, Any]]] = None,
 ) -> List[str]:
     """Normalize known LLM drift patterns before validation.
 
@@ -243,6 +244,23 @@ def normalize_enrichments(
     # to a single Stage 06 conversation. We deliberately do NOT remap to conv 0 (commentary).
     if seg_by_id is not None and conversations is not None:
         valid_conv_ids: Set[int] = {c for c in conversations.keys() if isinstance(c, int) and c > 0}
+
+        # Segment id -> commentary block index (1-based). Only populated when we have commentary_blocks.
+        seg_to_commentary_block: Dict[int, int] = {}
+        if isinstance(commentary_blocks, list) and commentary_blocks:
+            for block_index, block in enumerate(commentary_blocks, start=1):
+                if not isinstance(block, dict):
+                    continue
+                segs = block.get("segments", [])
+                if not isinstance(segs, list):
+                    continue
+                for seg in segs:
+                    if not isinstance(seg, dict):
+                        continue
+                    seg_id = seg.get("id")
+                    if isinstance(seg_id, int):
+                        seg_to_commentary_block[seg_id] = block_index
+
         for i, e in enumerate(enrichments):
             if not isinstance(e, dict) or e.get("type") != "approach":
                 continue
@@ -287,6 +305,86 @@ def normalize_enrichments(
             if mapped < 8 and inferred_ratio < 1.0:
                 continue
             if mapped >= 8 and inferred_ratio < 0.6:
+                continue
+
+            # Special case: the LLM sometimes emits an "approach" enrichment whose segment refs
+            # actually point into conversation_id=0 (commentary). In that case, convert the
+            # enrichment to a commentary block enrichment instead of remapping conv_id.
+            if inferred_conv_id == 0:
+                if not seg_to_commentary_block:
+                    continue
+
+                # Choose the most likely block_index by vote over referenced segments.
+                block_counts: Counter = Counter()
+                for seg_id in refs:
+                    bi = seg_to_commentary_block.get(seg_id)
+                    if isinstance(bi, int):
+                        block_counts[bi] += 1
+
+                if not block_counts:
+                    continue
+
+                block_index, block_count = block_counts.most_common(1)[0]
+                # If refs are spread across multiple blocks, avoid guessing.
+                if inferred_count >= 8 and (block_count / max(1, inferred_count)) < 0.6:
+                    continue
+
+                current_conv_id = e.get("conversation_id")
+
+                # Convert approach -> commentary.
+                e["type"] = "commentary"
+                e.pop("conversation_id", None)
+                e["block_index"] = block_index
+
+                # Move techniques_used -> techniques_discussed (drop segment pointers; commentaries are block-level).
+                techniques_discussed: List[Dict[str, Any]] = []
+                existing_discussed = e.get("techniques_discussed")
+                if isinstance(existing_discussed, list):
+                    for t in existing_discussed:
+                        if not isinstance(t, dict):
+                            continue
+                        name = t.get("technique")
+                        if not isinstance(name, str) or not name.strip():
+                            continue
+                        td: Dict[str, Any] = {"technique": name.strip()}
+                        ex = t.get("example")
+                        if isinstance(ex, str) and ex.strip():
+                            td["example"] = ex.strip()
+                        techniques_discussed.append(td)
+
+                for t in e.get("techniques_used", []) or []:
+                    if not isinstance(t, dict):
+                        continue
+                    name = t.get("technique")
+                    if not isinstance(name, str) or not name.strip():
+                        continue
+                    td = {"technique": name.strip()}
+                    ex = t.get("example")
+                    if isinstance(ex, str) and ex.strip():
+                        td["example"] = ex.strip()
+                    techniques_discussed.append(td)
+
+                # Dedupe discussed techniques.
+                seen_discussed: Set[Tuple[Any, Any]] = set()
+                deduped: List[Dict[str, Any]] = []
+                for td in techniques_discussed:
+                    key = (td.get("technique"), td.get("example"))
+                    if key in seen_discussed:
+                        continue
+                    seen_discussed.add(key)
+                    deduped.append(td)
+
+                e["techniques_discussed"] = deduped
+                e.pop("techniques_used", None)
+
+                # Drop approach-only fields.
+                for k in ("turn_phases", "hook_point", "investment_level", "phase_confidence"):
+                    e.pop(k, None)
+
+                repairs.append(
+                    f"enrichment {i}: converted approach conv {current_conv_id!r} -> "
+                    f"commentary block {block_index} (segment refs mostly conv0 {inferred_count}/{mapped})"
+                )
                 continue
 
             if not (isinstance(inferred_conv_id, int) and inferred_conv_id in valid_conv_ids):
@@ -569,6 +667,66 @@ def normalize_enrichments(
 
     if to_drop:
         enrichments[:] = [e for i, e in enumerate(enrichments) if i not in to_drop]
+
+    # --- 7b) Deduplicate commentary enrichments that target the same block_index ---
+    # This can happen if the LLM duplicates blocks or if an approach was converted to commentary.
+    by_block: Dict[int, int] = {}  # block_index -> index in enrichments
+    to_drop_blocks: Set[int] = set()
+    for idx, e in enumerate(enrichments):
+        if not isinstance(e, dict) or e.get("type") != "commentary":
+            continue
+        block_index = e.get("block_index")
+        if not isinstance(block_index, int) or block_index <= 0:
+            continue
+        if block_index not in by_block:
+            by_block[block_index] = idx
+            continue
+
+        dst = enrichments[by_block[block_index]]
+        if not isinstance(dst, dict):
+            continue
+
+        # Prefer longer, non-empty description.
+        dst_desc = dst.get("description")
+        src_desc = e.get("description")
+        if isinstance(src_desc, str) and src_desc.strip():
+            if not (isinstance(dst_desc, str) and dst_desc.strip()) or len(src_desc) > len(dst_desc):
+                dst["description"] = src_desc
+
+        # Merge list fields.
+        dst["topics_discussed"] = list(
+            dict.fromkeys(
+                [t for t in _as_list(dst.get("topics_discussed")) if isinstance(t, str)]
+                + [t for t in _as_list(e.get("topics_discussed")) if isinstance(t, str)]
+            )
+        )
+
+        dst["techniques_discussed"] = _merge_lists_unique(
+            [x for x in _as_list(dst.get("techniques_discussed")) if isinstance(x, dict)],
+            [x for x in _as_list(e.get("techniques_discussed")) if isinstance(x, dict)],
+            key_fn=lambda x: (x.get("technique"), x.get("example")),
+        )
+
+        # Merge unlisted concepts (strings) if present.
+        dst_unlisted = dst.get("unlisted_concepts")
+        if not isinstance(dst_unlisted, dict):
+            dst_unlisted = {}
+        src_unlisted = e.get("unlisted_concepts")
+        if isinstance(src_unlisted, dict):
+            for k in ("techniques", "topics"):
+                a = [x for x in _as_list(dst_unlisted.get(k)) if isinstance(x, str)]
+                b = [x for x in _as_list(src_unlisted.get(k)) if isinstance(x, str)]
+                dst_unlisted[k] = list(dict.fromkeys(a + b))
+        dst["unlisted_concepts"] = dst_unlisted
+
+        to_drop_blocks.add(idx)
+        repairs.append(
+            f"merged duplicate commentary enrichment for block {block_index} "
+            f"(kept index {by_block[block_index]}, dropped index {idx})"
+        )
+
+    if to_drop_blocks:
+        enrichments[:] = [e for i, e in enumerate(enrichments) if i not in to_drop_blocks]
 
     return repairs
 
@@ -1664,7 +1822,12 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
         for s in segments
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
-    normalization_repairs = normalize_enrichments(enrichments, seg_by_id=seg_by_id, conversations=conversations)
+    normalization_repairs = normalize_enrichments(
+        enrichments,
+        seg_by_id=seg_by_id,
+        conversations=conversations,
+        commentary_blocks=commentary_blocks,
+    )
     if normalization_repairs:
         preview = "; ".join(normalization_repairs[:3])
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
@@ -1888,6 +2051,7 @@ def revalidate_video_file(
         return {"conversations": 0, "enriched": 0, "validation_passed": False}
 
     conversations = group_segments_by_conversation(segments)
+    commentary_blocks = group_commentary_blocks(segments)
 
     # Load existing Stage 07 output.
     if not output_path.exists():
@@ -1919,7 +2083,12 @@ def revalidate_video_file(
         for s in segments
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
-    normalization_repairs = normalize_enrichments(enrichments, seg_by_id=seg_by_id, conversations=conversations)
+    normalization_repairs = normalize_enrichments(
+        enrichments,
+        seg_by_id=seg_by_id,
+        conversations=conversations,
+        commentary_blocks=commentary_blocks,
+    )
 
     # Recompute phase confidence (deterministic) after normalization, since conv ids may have been remapped.
     speaker_labels = stage06_data.get("speaker_labels", {})

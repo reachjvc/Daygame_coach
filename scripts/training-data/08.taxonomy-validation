@@ -27,6 +27,9 @@ Use:
   B) Custom threshold:
      ./scripts/training-data/08.taxonomy-validation --threshold 5
 
+  B2) Custom thresholds (separate techniques vs topics):
+     ./scripts/training-data/08.taxonomy-validation --threshold-techniques 10 --threshold-topics 3
+
   C) Strict mode (fail on ANY unlisted):
      ./scripts/training-data/08.taxonomy-validation --strict
 
@@ -218,13 +221,19 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
     }
 
 
-def evaluate_validation(report: Dict[str, Any], threshold: int, strict: bool) -> Dict[str, Any]:
-    """Evaluate validation status based on threshold and strict mode."""
+def evaluate_validation(
+    report: Dict[str, Any],
+    *,
+    threshold_techniques: int,
+    threshold_topics: int,
+    strict: bool,
+) -> Dict[str, Any]:
+    """Evaluate validation status based on per-domain thresholds and strict mode."""
     techniques = report["techniques"]
     topics = report["topics"]
 
-    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= threshold]
-    high_freq_topics = [n for n, i in topics.items() if i["count"] >= threshold]
+    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= threshold_techniques]
+    high_freq_topics = [n for n, i in topics.items() if i["count"] >= threshold_topics]
 
     any_unlisted = bool(techniques) or bool(topics)
     high_freq_unlisted = bool(high_freq_techniques) or bool(high_freq_topics)
@@ -234,10 +243,16 @@ def evaluate_validation(report: Dict[str, Any], threshold: int, strict: bool) ->
         reason = "Strict mode: unlisted concepts detected"
     elif high_freq_unlisted:
         status = "FAIL"
-        reason = f"High-frequency unlisted concepts (>= {threshold} occurrences)"
+        reason = (
+            "High-frequency unlisted concepts "
+            f"(techniques>={threshold_techniques}, topics>={threshold_topics})"
+        )
     elif any_unlisted:
         status = "WARNING"
-        reason = f"Unlisted concepts found but below threshold ({threshold})"
+        reason = (
+            "Unlisted concepts found but below threshold "
+            f"(techniques<{threshold_techniques}, topics<{threshold_topics})"
+        )
     else:
         status = "PASS"
         reason = "No unlisted concepts"
@@ -245,7 +260,8 @@ def evaluate_validation(report: Dict[str, Any], threshold: int, strict: bool) ->
     return {
         "status": status,
         "reason": reason,
-        "threshold": threshold,
+        "threshold_techniques": threshold_techniques,
+        "threshold_topics": threshold_topics,
         "strict_mode": strict,
         "high_frequency_unlisted": {
             "techniques": high_freq_techniques,
@@ -269,7 +285,8 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
     print()
     print(f"  Status:                    {status_emoji} {status}")
     print(f"  Reason:                    {validation['reason']}")
-    print(f"  Threshold:                 {validation['threshold']}")
+    print(f"  Threshold (techniques):    {validation['threshold_techniques']}")
+    print(f"  Threshold (topics):        {validation['threshold_topics']}")
     print(f"  Strict mode:               {validation['strict_mode']}")
     print()
     print(f"  Files processed:           {report['files_processed']}")
@@ -333,7 +350,7 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print()
         print("  Pipeline blocked. Options:")
         print("    1. Add the unlisted concepts to the taxonomy in 07.content")
-        print("    2. Re-run with higher --threshold")
+        print("    2. Re-run with higher --threshold (both) or --threshold-topics/--threshold-techniques")
         print("    3. Manually verify and exclude problematic files")
         print()
 
@@ -377,8 +394,20 @@ def main() -> int:
     parser.add_argument(
         "--threshold",
         type=int,
+        default=None,
+        help="Legacy: set BOTH thresholds to this value (overrides per-domain thresholds)"
+    )
+    parser.add_argument(
+        "--threshold-techniques",
+        type=int,
+        default=10,
+        help="Fail if any unlisted technique has >= this many occurrences (default: 10)"
+    )
+    parser.add_argument(
+        "--threshold-topics",
+        type=int,
         default=3,
-        help="Fail if any concept has >= this many occurrences (default: 3)"
+        help="Fail if any unlisted topic has >= this many occurrences (default: 3)"
     )
     parser.add_argument(
         "--strict",
@@ -444,7 +473,19 @@ def main() -> int:
     print(f"[08.taxonomy-validation] Scanning {len(files)} enriched files ({label})")
 
     report = process_files(files)
-    validation = evaluate_validation(report, args.threshold, args.strict)
+
+    threshold_techniques = args.threshold_techniques
+    threshold_topics = args.threshold_topics
+    if args.threshold is not None:
+        threshold_techniques = args.threshold
+        threshold_topics = args.threshold
+
+    validation = evaluate_validation(
+        report,
+        threshold_techniques=threshold_techniques,
+        threshold_topics=threshold_topics,
+        strict=args.strict,
+    )
 
     if args.json:
         output_data = {
