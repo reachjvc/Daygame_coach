@@ -872,13 +872,41 @@ def normalize_enrichments(
                             f"conv {conv_id}: normalized close phase start to seg {close_start} (close technique present)"
                         )
                 else:
-                    # If the LLM labeled "close" but there's no close technique at all, and we see
-                    # a non-dating CTA (subscribe/channel), downgrade close to prior phase.
+                    # If the LLM labeled "close" but there's no explicit close technique at all,
+                    # downgrade close unless we see explicit close cues in the transcript.
                     if "close" in set(tp_map.values()):
                         conv_segs = [
                             s for s in (conversations.get(conv_id) or [])
                             if isinstance(s, dict)
                         ]
+                        # Explicit close cues: contact exchange or an actual invite.
+                        # This is intentionally conservative; if we can't find cues, we prefer
+                        # not to claim the interaction reached a close attempt.
+                        close_contact_cue_re = re.compile(
+                            r"\b(number|phone|instagram|\big\b|whatsapp|snap(?:chat)?)\b"
+                            r"|\btext me\b"
+                            r"|\bcall me\b",
+                            re.IGNORECASE,
+                        )
+                        close_invite_cue_re = re.compile(
+                            r"\b(grab|get|go for)\b (?:a |some )?(?:drink|coffee|tea|water)\b"
+                            r"|\bhang out\b"
+                            r"|\bmeet up\b"
+                            r"|\bwe should (?:hang|meet)\b"
+                            r"|\bcome with (?:me|us)\b"
+                            r"|\bjoin (?:me|us)\b"
+                            r"|\bwalk with (?:me|us)\b"
+                            r"|\blet'?s (?:grab|get|go|hang|meet|walk)\b"
+                            r"|\bwhy (?:don't|dont) we\b",
+                            re.IGNORECASE,
+                        )
+                        conv_has_close_cue = any(
+                            ((close_contact_cue_re.search((s.get("text") or "")) is not None) or
+                             (close_invite_cue_re.search((s.get("text") or "")) is not None))
+                            for s in conv_segs
+                            if (s.get("speaker_role") or "").lower() in ("coach", "student")
+                            and isinstance(s.get("text"), str)
+                        )
                         has_cta = False
                         for s in conv_segs:
                             role = (s.get("speaker_role") or "").lower()
@@ -892,7 +920,7 @@ def normalize_enrichments(
                                 has_cta = True
                                 break
 
-                        if has_cta:
+                        if has_cta and not conv_has_close_cue:
                             non_close_phases = [p for p in tp_map.values() if p != "close"]
                             fallback_close = "pre_hook"
                             if non_close_phases:
@@ -904,6 +932,19 @@ def normalize_enrichments(
                             if tp_changed:
                                 repairs.append(
                                     f"conv {conv_id}: removed close phase (subscribe/channel CTA; no close techniques)"
+                                )
+                        elif not conv_has_close_cue:
+                            non_close_phases = [p for p in tp_map.values() if p != "close"]
+                            fallback_close = "pre_hook"
+                            if non_close_phases:
+                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
+                            for sid, ph in list(tp_map.items()):
+                                if ph == "close":
+                                    tp_map[sid] = fallback_close
+                                    tp_changed = True
+                            if tp_changed:
+                                repairs.append(
+                                    f"conv {conv_id}: removed close phase (no explicit close cues; no close techniques)"
                                 )
 
                 if tp_changed:

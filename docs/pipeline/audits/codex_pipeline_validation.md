@@ -24,6 +24,7 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Stage 07 normalization now:
   - re-anchors technique evidence by matching quotes back to transcript (with a fallback when diarization is wrong or the target is quoting the coach)
   - repairs phase drift: close starts at the earliest close-technique segment (sticky), drops CTA-driven “close”, and removes post_hook false-positives on minimal target engagement
+  - removes `close` when it is unsupported (no close techniques and no explicit invite/contact-exchange cue in the transcript), to prevent “logistics fishing” from being mislabeled as a close attempt
 - Canary (`CANARY.1`) was rerun through Stage 07 revalidation; Stage 07/08 remain warning-only (no hard failures) and Barcelona compilation now processes cleanly (Stage 07 passes with transcript-artifact warnings only).
 - Semantic judge prompt is now iterating (`v1.2.8` currently); it’s useful for spotting regressions, but treat phase-related “major” flags as directional until the rubric stabilizes.
 
