@@ -20,6 +20,7 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Stage 07 prompt `v1.4.x` switched infield/compilation transcript references to global segment ids (`[SEG_ID] ...`) and disabled relative-index remapping.
   This fixed a real failure mode on compilation videos where the first approach starts after commentary (segment id offsets caused phase/tech refs to drift/collapse).
 - Stage 07 prompt `v1.4.2` tightened labeling around “joke intent” (esp. `statement_of_intent`) and clarified that non-dating CTAs (e.g. “subscribe to my channel”) should not start `close`.
+- Stage 07 prompt `v1.4.3` updated the phase contract so `close` starts only on explicit invites/contact exchange (not schedule “fishing” probes).
 - Stage 07 normalization now:
   - re-anchors technique evidence by matching quotes back to transcript (with a fallback when diarization is wrong or the target is quoting the coach)
   - repairs phase drift: close starts at the earliest close-technique segment (sticky), drops CTA-driven “close”, and removes post_hook false-positives on minimal target engagement
