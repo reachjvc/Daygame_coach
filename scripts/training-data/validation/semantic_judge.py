@@ -253,7 +253,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.4"
+    prompt_version: str = "1.2.5"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -337,6 +337,7 @@ STICKY CLOSE CLARIFICATION (most important):
 - It is EXPECTED that "close" can contain attraction-building banter, role-play, teasing, and rapport after a contact exchange attempt.
 - Do NOT penalize an enrichment for having playful/attraction content inside "close". That's correct under this contract.
 - Do NOT require post_hook/hook_point/investment_level after close begins. If close starts before any hook, hook_point and investment_level being null is correct.
+- If a close attempt happens early (before any clear hook), it is still correct for the rest of the conversation to remain "close" and for post_hook/hook_point/investment_level to remain null.
 
 SEGMENT REFERENCE TOLERANCE:
 - Segment ids are global transcript ids (the numbers in [brackets]).
@@ -349,6 +350,7 @@ SEVERITY + CATEGORIZATION GUIDELINES:
 - Use issue.type that matches the field: technique/topic/phase/summary/other.
 - Mark an issue as MAJOR only if it materially harms retrieval usefulness or is clearly wrong (wrong technique, wrong topic, invalid phase order, missing hook/investment when post_hook is present, etc).
 - Description-level inaccuracies (e.g., mentioning a number close when none is shown) are usually MINOR unless the description is fundamentally misleading.
+- The boundary between open vs pre_hook vs post_hook can be subjective; small boundary disagreements should be MINOR unless they break the monotonic phase order or clearly misrepresent the interaction.
 
 TASK:
 1) Judge whether the enrichment is accurate and useful for retrieval (RAG).
