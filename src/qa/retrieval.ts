@@ -361,6 +361,15 @@ export async function retrieveRelevantChunks(
       return typeBonus + exampleBonus
     })()
 
+    const qualityAdjustment = (() => {
+      // Metadata-driven downranking (small on purpose). This should not "hide" rare but relevant clips.
+      // Stage 09 emits chunkConfidence in [0, 1] based on transcript/speaker/phase quality signals.
+      const raw = match.metadata?.chunkConfidence
+      const cc = typeof raw === "number" && raw >= 0 && raw <= 1 ? raw : 1.0
+      // Max penalty ~= -0.12 (only for cc=0). Keep similarity dominant.
+      return -0.12 * (1.0 - cc)
+    })()
+
     const anchorGatingAdjustment = (() => {
       // If the user asks about "studying medicine", avoid matching idioms/plant-medicine talk that lack education/career context.
       if (!studyAnchors) return 0
@@ -382,7 +391,7 @@ export async function retrieveRelevantChunks(
       return phraseBoost + missingContextPenalty + idiomPenalty
     })()
 
-    const combinedScore = baseScore + interactionBonus + anchorGatingAdjustment
+    const combinedScore = baseScore + interactionBonus + qualityAdjustment + anchorGatingAdjustment
 
     return { match, combinedScore }
   })
