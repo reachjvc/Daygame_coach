@@ -57,7 +57,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # ---------------------------
 
 SCHEMA_VERSION = "3.4.0"
-PIPELINE_VERSION = "06.video-type-v3.4"
+PIPELINE_VERSION = "06.video-type-v3.4.1"  # v3.4.1: Add --model passthrough + record model metadata
 PROMPT_VERSION = "3.4.0"
 
 DEBUG_MODE = False
@@ -534,15 +534,24 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[str]:
+def call_claude(
+    prompt: str,
+    retries: int = 3,
+    timeout: int = 300,
+    model: Optional[str] = None,
+) -> Optional[str]:
     claude_bin = find_claude_binary()
     if not claude_bin:
         raise RuntimeError("Claude CLI binary not found - cannot proceed")
 
+    cmd: List[str] = [claude_bin, "-p", prompt, "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
     for attempt in range(retries):
         try:
             result = subprocess.run(
-                [claude_bin, "-p", prompt, "--output-format", "text"],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -618,7 +627,9 @@ def parse_json_response(response: str) -> Optional[Dict]:
 # ---------------------------
 
 def analyze_video(
-    title: str, segments: List[Dict]
+    title: str,
+    segments: List[Dict],
+    claude_model: Optional[str] = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """Classify video type, label speakers, assess transcript quality, and detect conversation boundaries in a single LLM call.
 
@@ -670,7 +681,7 @@ def analyze_video(
 
     max_retries = 3
     for attempt in range(max_retries):
-        response = call_claude(prompt, timeout=300)
+        response = call_claude(prompt, timeout=300, model=claude_model)
         result = parse_json_response(response)
 
         if result and "video_type" in result and "speaker_labels" in result and "segments" in result:
@@ -811,7 +822,12 @@ def compute_checksum(data: Any) -> str:
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+def process_file(
+    input_path: Path,
+    output_path: Path,
+    dry_run: bool = False,
+    claude_model: Optional[str] = None,
+) -> Dict[str, Any]:
     """Process a single audio_features.json file through single-pass LLM analysis."""
 
     print(f"\n{LOG_PREFIX} Processing: {input_path.name}")
@@ -836,7 +852,11 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
     start_time = time.time()
 
     # Single-pass analysis: video type + transcript quality + speakers + boundaries
-    video_type_info, transcript_confidence, speaker_labels, classifications, extra_flags = analyze_video(video_title, segments)
+    video_type_info, transcript_confidence, speaker_labels, classifications, extra_flags = analyze_video(
+        video_title,
+        segments,
+        claude_model=claude_model,
+    )
 
     video_type = video_type_info.get("type", "compilation")
 
@@ -945,6 +965,8 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
             "input_checksum": compute_checksum(data),
             "llm_calls": 1,
             "processing_time_sec": elapsed,
+            "model": "claude-cli",
+            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
         },
     }
 
@@ -1121,6 +1143,10 @@ def main() -> None:
         action="store_true",
         help="Enable debug logging for LLM responses"
     )
+    parser.add_argument(
+        "--model",
+        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+    )
 
     args = parser.parse_args()
 
@@ -1148,6 +1174,9 @@ def main() -> None:
             print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
+
+    if isinstance(args.model, str) and args.model.strip():
+        print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
 
     # Route to appropriate mode
     if args.test:
@@ -1179,7 +1208,7 @@ def _run_input(args) -> None:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        result = process_file(input_path, output_path, dry_run=args.dry_run)
+        result = process_file(input_path, output_path, dry_run=args.dry_run, claude_model=args.model)
         print(f"\n{LOG_PREFIX} Done. Type: {result.get('video_type')}, Conversations: {result.get('conversations')}")
         return
 
@@ -1210,7 +1239,7 @@ def _run_sources(args) -> None:
             if output_file.exists() and not args.overwrite:
                 continue
             try:
-                result = process_file(input_file, output_file, dry_run=args.dry_run)
+                result = process_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
                 total_convs += result.get("conversations", 0)
                 total_files += 1
             except Exception as e:
@@ -1286,7 +1315,7 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
         save_state(state_path, state)
 
         try:
-            result = process_file(input_file, output_file, dry_run=args.dry_run)
+            result = process_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
             total_convs += result.get("conversations", 0)
             processed += 1
 

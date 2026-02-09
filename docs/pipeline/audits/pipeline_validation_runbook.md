@@ -95,6 +95,8 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 Examples:
 
 ```bash
+./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
+./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag --model sonnet
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --allow-flag --model opus
 ```

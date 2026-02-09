@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.6"  # v1.6: Add "student" role option for patch suggestions
+PIPELINE_VERSION = "06b.verify-v1.7"  # v1.7: Add --model passthrough + record model metadata
 
 DEBUG_MODE = False
 
@@ -467,15 +467,24 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[str]:
+def call_claude(
+    prompt: str,
+    retries: int = 3,
+    timeout: int = 300,
+    model: Optional[str] = None,
+) -> Optional[str]:
     claude_bin = find_claude_binary()
     if not claude_bin:
         raise RuntimeError("Claude CLI binary not found — cannot proceed")
 
+    cmd: List[str] = [claude_bin, "-p", prompt, "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
     for attempt in range(retries):
         try:
             result = subprocess.run(
-                [claude_bin, "-p", prompt, "--output-format", "text"],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -546,7 +555,11 @@ def parse_json_response(response: str) -> Optional[Dict]:
     return None
 
 
-def convert_analysis_to_json(analysis: str, timeout: int = 120) -> Optional[Dict]:
+def convert_analysis_to_json(
+    analysis: str,
+    timeout: int = 120,
+    model: Optional[str] = None,
+) -> Optional[Dict]:
     """Convert a text analysis to JSON using a second LLM call.
 
     This is the fallback when the original response had good analysis
@@ -559,24 +572,14 @@ def convert_analysis_to_json(analysis: str, timeout: int = 120) -> Optional[Dict
 
     prompt = CONVERSION_PROMPT.format(analysis=analysis)
 
-    claude_bin = find_claude_binary()
-    if not claude_bin:
-        return None
-
     try:
-        result = subprocess.run(
-            [claude_bin, "-p", prompt, "--output-format", "text"],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-        if result.returncode == 0:
-            converted = parse_json_response(result.stdout.strip())
-            if converted and "verdict" in converted:
-                print(f"{LOG_PREFIX}   JSON conversion successful!")
-                return converted
-            else:
-                print(f"{LOG_PREFIX}   JSON conversion produced invalid output")
+        raw = call_claude(prompt, retries=1, timeout=timeout, model=model)
+        converted = parse_json_response(raw or "")
+        if converted and "verdict" in converted:
+            print(f"{LOG_PREFIX}   JSON conversion successful!")
+            return converted
+        else:
+            print(f"{LOG_PREFIX}   JSON conversion produced invalid output")
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX}   JSON conversion timed out")
     except Exception as e:
@@ -749,7 +752,12 @@ def build_verification_prompt(data: Dict) -> str:
     )
 
 
-def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+def verify_file(
+    input_path: Path,
+    output_path: Path,
+    dry_run: bool = False,
+    claude_model: Optional[str] = None,
+) -> Dict[str, Any]:
     """Verify a single stage 06 conversations.json file."""
 
     print(f"\n{LOG_PREFIX} Verifying: {input_path.name}")
@@ -785,7 +793,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
     used_conversion_fallback = False
 
     for attempt in range(max_retries):
-        raw_response = call_claude(prompt, timeout=300)
+        raw_response = call_claude(prompt, timeout=300, model=claude_model)
         llm_calls += 1
         result = parse_json_response(raw_response)
 
@@ -795,7 +803,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
         # JSON parsing failed - try conversion fallback before retrying full prompt
         if raw_response and len(raw_response) > 100:
             print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
-            result = convert_analysis_to_json(raw_response)
+            result = convert_analysis_to_json(raw_response, model=claude_model)
             llm_calls += 1
             if result and "verdict" in result:
                 used_conversion_fallback = True
@@ -843,6 +851,8 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
             "input_file": str(input_path),
             "processing_time_sec": elapsed,
             "llm_calls": llm_calls,
+            "model": "claude-cli",
+            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
             **({"note": "Used JSON conversion fallback"} if used_conversion_fallback else {}),
         },
     }
@@ -988,6 +998,10 @@ def main() -> None:
         action="store_true",
         help="Enable debug logging for LLM responses"
     )
+    parser.add_argument(
+        "--model",
+        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+    )
 
     args = parser.parse_args()
 
@@ -1015,6 +1029,9 @@ def main() -> None:
             print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
+
+    if isinstance(args.model, str) and args.model.strip():
+        print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
 
     # Route to appropriate mode
     if args.test:
@@ -1046,7 +1063,7 @@ def _run_input(args) -> None:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        result = verify_file(input_path, output_path, dry_run=args.dry_run)
+        result = verify_file(input_path, output_path, dry_run=args.dry_run, claude_model=args.model)
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, Issues: {result.get('issues', 0)}")
         return
 
@@ -1077,7 +1094,7 @@ def _run_sources(args) -> None:
             if output_file.exists() and not args.overwrite:
                 continue
             try:
-                result = verify_file(input_file, output_file, dry_run=args.dry_run)
+                result = verify_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
                 total_issues += result.get("issues", 0)
                 total_files += 1
             except Exception as e:
@@ -1150,7 +1167,7 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
         save_state(state_path, state)
 
         try:
-            result = verify_file(input_file, output_file, dry_run=args.dry_run)
+            result = verify_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
             processed += 1
             consecutive_failures = 0
 
