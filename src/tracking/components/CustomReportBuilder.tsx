@@ -26,6 +26,8 @@ import {
   Clock,
   MapPin,
   TrendingUp,
+  FileText,
+  LayoutTemplate,
 } from "lucide-react"
 
 import type { FieldDefinition, FieldCategory, SessionSummaryData } from "@/src/tracking/types"
@@ -41,10 +43,18 @@ interface CustomReportBuilderProps {
   onSaved: () => void
 }
 
-// A filled field with its value
+// Mode for the builder
+type BuilderMode = "select" | "template-only" | "report"
+
+// A filled field with its value (for report mode)
 interface FilledField {
   field: FieldDefinition
   value: unknown
+}
+
+// A selected field without value (for template-only mode)
+interface SelectedField {
+  field: FieldDefinition
 }
 
 // Category color classes (can't use dynamic Tailwind classes)
@@ -94,12 +104,21 @@ const CATEGORY_COLORS_MAP: Record<FieldCategory, { border: string; bg: string; d
 }
 
 export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomReportBuilderProps) {
-  // Main free-text field (always present)
+  // Builder mode: select (initial), template-only, or report
+  const [mode, setMode] = useState<BuilderMode>("select")
+
+  // Template name (used in both modes)
+  const [templateName, setTemplateName] = useState("")
+
+  // Main free-text field (always present in report mode)
   const [mainFieldTitle, setMainFieldTitle] = useState("")
   const [mainFieldValue, setMainFieldValue] = useState("")
 
-  // Additional fields that user has added and filled
+  // Additional fields that user has added and filled (report mode)
   const [filledFields, setFilledFields] = useState<FilledField[]>([])
+
+  // Selected fields without values (template-only mode)
+  const [selectedFields, setSelectedFields] = useState<SelectedField[]>([])
 
   // Field being actively edited (expanded)
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null)
@@ -120,23 +139,35 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
 
-  // Available fields (exclude already filled ones)
+  // Available fields (exclude already filled/selected ones based on mode)
   const availableFields = useMemo(() => {
-    const filledIds = new Set(filledFields.map(f => f.field.id))
-    let fields = FIELD_LIBRARY.filter(f => !filledIds.has(f.id))
+    const usedIds = mode === "template-only"
+      ? new Set(selectedFields.map(f => f.field.id))
+      : new Set(filledFields.map(f => f.field.id))
+    let fields = FIELD_LIBRARY.filter(f => !usedIds.has(f.id))
 
     if (activeCategory !== "all") {
       fields = fields.filter(f => f.category === activeCategory)
     }
 
     return fields
-  }, [filledFields, activeCategory])
+  }, [filledFields, selectedFields, activeCategory, mode])
 
-  // Click a field from the picker to start filling it
+  // Click a field from the picker to start filling it (report mode)
   const startFillingField = (field: FieldDefinition) => {
     setExpandedFieldId(field.id)
     setPendingFieldValue(getDefaultValue(field))
     setShowFieldPicker(false)
+  }
+
+  // Add a field to template (template-only mode - no value needed)
+  const addFieldToTemplate = (field: FieldDefinition) => {
+    setSelectedFields([...selectedFields, { field }])
+  }
+
+  // Remove a field from template (template-only mode)
+  const removeFieldFromTemplate = (fieldId: string) => {
+    setSelectedFields(selectedFields.filter(f => f.field.id !== fieldId))
   }
 
   // Get default value for a field type
@@ -187,48 +218,39 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
     ? FIELD_LIBRARY.find(f => f.id === expandedFieldId)
     : null
 
-  // Save report
-  const saveReport = async () => {
-    if (!mainFieldValue.trim() && filledFields.length === 0) return
+  // Save template only (template-only mode)
+  const saveTemplateOnly = async () => {
+    if (!templateName.trim() && selectedFields.length === 0) return
 
     setIsSaving(true)
     setSaveError(null)
 
-    // Build fields array with post-session mood
-    const allFields = [
-      ...filledFields.map(f => ({
-        id: f.field.id,
-        label: f.field.label,
-        type: f.field.type,
-        value: f.value,
-      })),
-      // Include post-session mood if set
-      ...(postSessionMood !== null ? [{
-        id: SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD,
-        label: "How are you feeling now?",
-        type: "number" as const,
-        value: postSessionMood,
-      }] : []),
-    ]
+    // Build fields array for template (structure only, matching TemplateField interface)
+    const templateFields = selectedFields.map(f => ({
+      id: f.field.id,
+      label: f.field.label,
+      type: f.field.type,
+      placeholder: f.field.placeholder,
+      required: f.field.required,
+      options: f.field.options,
+      min: f.field.min,
+      max: f.field.max,
+      rows: f.field.rows,
+    }))
 
     try {
       const response = await fetch("/api/tracking/templates/custom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: mainFieldTitle || "Custom Report",
-          report_date: reportDate?.toISOString() || undefined,
-          mainField: {
-            title: mainFieldTitle,
-            value: mainFieldValue,
-          },
-          fields: allFields,
+          name: templateName || "Custom Template",
+          fields: templateFields,
         }),
       })
 
       if (!response.ok) {
         const data = await response.json()
-        throw new Error(data.error || "Failed to save")
+        throw new Error(data.error || "Failed to save template")
       }
 
       setIsSaved(true)
@@ -237,6 +259,97 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
       setSaveError(error instanceof Error ? error.message : "Failed to save")
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // Save template AND report (report mode)
+  const saveTemplateAndReport = async () => {
+    if (!mainFieldValue.trim() && filledFields.length === 0) return
+
+    setIsSaving(true)
+    setSaveError(null)
+
+    // Build fields array for template (structure, matching TemplateField interface)
+    const templateFields = filledFields.map(f => ({
+      id: f.field.id,
+      label: f.field.label,
+      type: f.field.type,
+      placeholder: f.field.placeholder,
+      required: f.field.required,
+      options: f.field.options,
+      min: f.field.min,
+      max: f.field.max,
+      rows: f.field.rows,
+    }))
+
+    try {
+      // Step 1: Save the template
+      const templateResponse = await fetch("/api/tracking/templates/custom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: templateName || mainFieldTitle || "Custom Template",
+          fields: templateFields,
+        }),
+      })
+
+      if (!templateResponse.ok) {
+        const data = await templateResponse.json()
+        throw new Error(data.error || "Failed to save template")
+      }
+
+      const template = await templateResponse.json()
+
+      // Step 2: Create field report with values
+      const reportFields: Record<string, unknown> = {}
+
+      // Add main field value
+      if (mainFieldValue.trim()) {
+        reportFields["main_notes"] = mainFieldValue
+      }
+
+      // Add all filled field values
+      for (const f of filledFields) {
+        reportFields[f.field.id] = f.value
+      }
+
+      // Add post-session mood if set
+      if (postSessionMood !== null) {
+        reportFields[SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD] = postSessionMood
+      }
+
+      const reportResponse = await fetch("/api/tracking/field-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          template_id: template.id,
+          title: mainFieldTitle || "Custom Report",
+          report_date: reportDate?.toISOString(),
+          fields: reportFields,
+          is_draft: false,
+        }),
+      })
+
+      if (!reportResponse.ok) {
+        const data = await reportResponse.json()
+        throw new Error(data.error || "Failed to save report")
+      }
+
+      setIsSaved(true)
+      onSaved()
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : "Failed to save")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  // Main save handler based on mode
+  const handleSave = () => {
+    if (mode === "template-only") {
+      saveTemplateOnly()
+    } else {
+      saveTemplateAndReport()
     }
   }
 
@@ -363,15 +476,97 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
     gradient: "from-emerald-500/30 via-emerald-500/10 to-teal-500/20",
   }
 
+  // Mode selection screen
+  if (mode === "select") {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8" data-testid="custom-builder-mode-select">
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Choose Different Template
+        </button>
+
+        {/* Header */}
+        <div className="rounded-2xl overflow-hidden mb-8 border border-border/50">
+          <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
+            <div className="flex items-center gap-4">
+              <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
+                <Settings2 className="size-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Custom Report Builder</h1>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  Create your own field layout
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mode selection cards */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">What would you like to do?</h2>
+
+          {/* Template Only Option */}
+          <button
+            onClick={() => setMode("template-only")}
+            className="w-full text-left p-6 rounded-2xl border-2 border-border hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
+            data-testid="mode-template-only"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                <LayoutTemplate className="size-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">Create Template Only</h3>
+                <p className="text-muted-foreground mt-1">
+                  Design a reusable field layout. Save it for future reports without writing content now.
+                </p>
+              </div>
+            </div>
+          </button>
+
+          {/* Report + Template Option */}
+          <button
+            onClick={() => setMode("report")}
+            className="w-full text-left p-6 rounded-2xl border-2 border-border hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group"
+            data-testid="mode-report"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                <FileText className="size-6" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg">Write Report Now</h3>
+                <p className="text-muted-foreground mt-1">
+                  Add fields, fill them out, and save both the template and your report in one go.
+                </p>
+                {sessionData && (
+                  <Badge variant="secondary" className="mt-2 bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300">
+                    Session data available: {sessionData.approachCount} approaches
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Main builder UI (for both template-only and report modes)
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-4 py-8" data-testid={`custom-builder-${mode}`}>
       {/* Back button */}
       <button
-        onClick={onBack}
+        onClick={() => setMode("select")}
         className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
       >
         <ArrowLeft className="size-4" />
-        Choose Different Template
+        Back to Options
       </button>
 
       {/* Header with gradient */}
@@ -379,19 +574,23 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
         <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
-              <Settings2 className="size-6" />
+              {mode === "template-only" ? <LayoutTemplate className="size-6" /> : <Settings2 className="size-6" />}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Custom Report</h1>
+              <h1 className="text-2xl font-bold">
+                {mode === "template-only" ? "Create Template" : "Custom Report"}
+              </h1>
               <p className="text-muted-foreground text-sm mt-0.5">
-                Your fields, your way.
+                {mode === "template-only"
+                  ? "Design your field layout for future use"
+                  : "Your fields, your way"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Session summary mini-card */}
-        {sessionData && (
+        {/* Session summary mini-card (only in report mode) */}
+        {mode === "report" && sessionData && (
           <div className="p-4 bg-card border-t border-border/50">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-4 text-sm">
@@ -422,56 +621,122 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
 
       {/* Main content */}
       <div className="space-y-6">
-        {/* Main free-text field - always present */}
-        <Card className="p-6 space-y-5">
-          {/* Title section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
+        {/* Template-only mode: just name and field selection */}
+        {mode === "template-only" && (
+          <Card className="p-6 space-y-5">
+            <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
-                Report Title
+                Template Name
               </label>
-              <DatePicker
-                date={reportDate}
-                onDateChange={setReportDate}
-                data-testid="report-date-display"
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Give your template a name..."
+                className="text-lg font-medium"
+                data-testid="template-name-input"
+              />
+              <p className="text-sm text-muted-foreground">
+                Choose a descriptive name so you can find it later.
+              </p>
+            </div>
+          </Card>
+        )}
+
+        {/* Report mode: full form with title, notes, and values */}
+        {mode === "report" && (
+          <Card className="p-6 space-y-5">
+            {/* Template name (hidden but used for saving) */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">
+                Template Name <span className="text-muted-foreground font-normal">(for reuse)</span>
+              </label>
+              <Input
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Name this template for future use..."
+                className="text-sm"
+                data-testid="template-name-input"
               />
             </div>
-            <Input
-              value={mainFieldTitle}
-              onChange={(e) => setMainFieldTitle(e.target.value)}
-              placeholder="Give your report a title..."
-              className="text-lg font-medium"
+
+            <div className="h-px bg-border" />
+
+            {/* Title section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">
+                  Report Title
+                </label>
+                <DatePicker
+                  date={reportDate}
+                  onDateChange={setReportDate}
+                  data-testid="report-date-display"
+                />
+              </div>
+              <Input
+                value={mainFieldTitle}
+                onChange={(e) => setMainFieldTitle(e.target.value)}
+                placeholder="Give your report a title..."
+                className="text-lg font-medium"
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-border" />
+
+            {/* Main text area */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-foreground">
+                Your Notes
+              </label>
+              <Textarea
+                value={mainFieldValue}
+                onChange={(e) => setMainFieldValue(e.target.value)}
+                placeholder="Write freely about your session, what happened, the conversation, how you felt - or anything else."
+                rows={8}
+                className="resize-none text-base"
+              />
+            </div>
+
+            {/* Session Import Section - shows session context and current mood picker */}
+            <SessionImportSection
+              sessionData={sessionData ?? null}
+              postSessionMood={postSessionMood}
+              onPostSessionMoodChange={setPostSessionMood}
             />
-          </div>
+          </Card>
+        )}
 
-          {/* Divider */}
-          <div className="h-px bg-border" />
+        {/* Selected fields (template-only mode - no values) */}
+        {mode === "template-only" && selectedFields.map(({ field }) => (
+          <Card key={field.id} className="p-4" data-testid={`selected-field-${field.id}`}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <div className={`size-2 rounded-full ${CATEGORY_COLORS_MAP[field.category].dot}`} />
+                  <h3 className="font-medium">{field.label}</h3>
+                  <Badge variant="outline" className={`text-xs ${CATEGORY_COLORS_MAP[field.category].text}`}>
+                    {field.type}
+                  </Badge>
+                </div>
+                {field.description && (
+                  <p className="text-sm text-muted-foreground mt-1 ml-4">{field.description}</p>
+                )}
+              </div>
+              <button
+                onClick={() => removeFieldFromTemplate(field.id)}
+                className="text-muted-foreground hover:text-destructive transition-colors"
+                data-testid={`remove-field-${field.id}`}
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+          </Card>
+        ))}
 
-          {/* Main text area */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">
-              Your Notes
-            </label>
-            <Textarea
-              value={mainFieldValue}
-              onChange={(e) => setMainFieldValue(e.target.value)}
-              placeholder="Write freely about your session, what happened, the conversation, how you felt - or anything else."
-              rows={8}
-              className="resize-none text-base"
-            />
-          </div>
-
-          {/* Session Import Section - shows session context and current mood picker */}
-          <SessionImportSection
-            sessionData={sessionData ?? null}
-            postSessionMood={postSessionMood}
-            onPostSessionMoodChange={setPostSessionMood}
-          />
-        </Card>
-
-        {/* Filled fields */}
-        {filledFields.map(({ field, value }) => (
-          <Card key={field.id} className="p-4">
+        {/* Filled fields (report mode - with values) */}
+        {mode === "report" && filledFields.map(({ field, value }) => (
+          <Card key={field.id} className="p-4" data-testid={`filled-field-${field.id}`}>
             <div className="flex items-start justify-between gap-2 mb-2">
               <div>
                 <h3 className="font-medium">{field.label}</h3>
@@ -490,8 +755,8 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
           </Card>
         ))}
 
-        {/* Field being added (expanded) */}
-        {expandedField && (
+        {/* Field being added (expanded) - only in report mode */}
+        {mode === "report" && expandedField && (
           <Card className="p-4 border-primary/50 bg-primary/5">
             <div className="flex items-start justify-between gap-2 mb-3">
               <div>
@@ -527,7 +792,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
         )}
 
         {/* Add field button / picker */}
-        {!expandedField && (
+        {(mode === "template-only" || !expandedField) && (
           <div className="space-y-3">
             <button
               onClick={() => setShowFieldPicker(!showFieldPicker)}
@@ -573,8 +838,9 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
                     return (
                       <button
                         key={field.id}
-                        onClick={() => startFillingField(field)}
+                        onClick={() => mode === "template-only" ? addFieldToTemplate(field) : startFillingField(field)}
                         className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${fieldColors.border} ${fieldColors.bg}`}
+                        data-testid={`field-option-${field.id}`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -614,22 +880,29 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
             <Button
               variant="outline"
               className="flex-1 h-12 rounded-xl transition-all hover:bg-muted"
-              onClick={onBack}
+              onClick={() => setMode("select")}
               disabled={isSaving}
             >
               Cancel
             </Button>
             <Button
               className="flex-1 h-12 rounded-xl transition-all"
-              onClick={saveReport}
-              disabled={isSaving || isSaved || (!mainFieldValue.trim() && filledFields.length === 0)}
+              onClick={handleSave}
+              disabled={isSaving || isSaved || (
+                mode === "template-only"
+                  ? selectedFields.length === 0
+                  : (!mainFieldValue.trim() && filledFields.length === 0)
+              )}
+              data-testid="save-button"
             >
               {isSaving ? (
                 <><Loader2 className="size-4 animate-spin mr-2" /> Saving...</>
               ) : isSaved ? (
                 <><Check className="size-4 mr-2" /> Saved</>
+              ) : mode === "template-only" ? (
+                <><Save className="size-4 mr-2" /> Save Template</>
               ) : (
-                <><Save className="size-4 mr-2" /> Save Report</>
+                <><Save className="size-4 mr-2" /> Save Report &amp; Template</>
               )}
             </Button>
           </div>

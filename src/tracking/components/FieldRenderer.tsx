@@ -60,7 +60,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
     }
   }
 
-  const isConversationField = field.id === "conversation" && field.type === "textarea"
+  const isConversationField = field.allowAudio && field.type === "textarea"
 
   const inputClassName = cn(
     "transition-all duration-200 bg-background border-border/50",
@@ -81,7 +81,102 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
           />
         )
 
-      case "textarea":
+      case "textarea": {
+        // Multiple textareas mode (for conversations, etc.)
+        if (field.multiple) {
+          // Backward compatibility: convert string to array
+          const items = Array.isArray(value) ? value : (value ? [value as string] : [""])
+
+          // Auto-migrate string to array on first render
+          if (typeof value === 'string' && value !== '') {
+            onChange([value])
+          } else if (!value || (Array.isArray(value) && value.length === 0)) {
+            onChange([""])
+          }
+
+          return (
+            <div className="space-y-3" data-testid={`field-multiple-${field.id}`}>
+              {items.map((item, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="flex gap-2">
+                    <textarea
+                      data-testid={`field-multiple-${field.id}-${index}`}
+                      placeholder={`${field.placeholder || field.label} ${items.length > 1 ? `#${index + 1}` : ""}`}
+                      value={(item as string) || ""}
+                      onChange={(e: ChangeEvent<HTMLTextAreaElement>) => {
+                        const newItems = [...items]
+                        newItems[index] = e.target.value
+                        onChange(newItems)
+                      }}
+                      rows={field.rows || 4}
+                      className={cn(
+                        "flex-1 min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all duration-200",
+                        variant === "card" && "bg-background/50 border-border/50 focus:border-primary"
+                      )}
+                    />
+                    <div className="flex flex-col gap-1">
+                      {field.allowAudio && (
+                        <>
+                          <VoiceRecorderButton
+                            onComplete={(result) => {
+                              if (!result.transcription) return
+                              const newItems = [...items]
+                              const current = (newItems[index] as string) || ""
+                              const separator = current ? " " : ""
+                              newItems[index] = current + separator + result.transcription
+                              onChange(newItems)
+                            }}
+                            data-testid={`voice-btn-${field.id}-${index}`}
+                          />
+                          <AudioUploadButton
+                            onComplete={(result) => {
+                              if (result.transcription) {
+                                const newItems = [...items]
+                                const current = (newItems[index] as string) || ""
+                                const separator = current ? "\n\n" : ""
+                                newItems[index] = current + separator + result.transcription
+                                onChange(newItems)
+                              }
+                            }}
+                            data-testid={`audio-upload-${field.id}-${index}`}
+                          />
+                        </>
+                      )}
+                      {items.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          data-testid={`field-multiple-remove-${field.id}-${index}`}
+                          onClick={() => {
+                            const newItems = items.filter((_, i) => i !== index)
+                            onChange(newItems.length > 0 ? newItems : [""])
+                          }}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                data-testid={`field-multiple-add-${field.id}`}
+                onClick={() => onChange([...items, ""])}
+                className="w-full"
+              >
+                <Plus className="size-4 mr-2" />
+                Add {field.label}
+              </Button>
+            </div>
+          )
+        }
+
+        // Single textarea mode (default)
         return (
           <textarea
             id={field.id}
@@ -96,6 +191,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
             )}
           />
         )
+      }
 
       case "number":
         return (
@@ -278,6 +374,34 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         )
       }
 
+      case "slider": {
+        const min = field.min ?? 1
+        const max = field.max ?? 10
+        const currentValue = (value as number) ?? Math.floor((min + max) / 2)
+        return (
+          <div className="space-y-3" data-testid={`field-slider-${field.id}`}>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min={min}
+                max={max}
+                value={currentValue}
+                onChange={(e) => onChange(Number(e.target.value))}
+                className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+                data-testid={`field-slider-input-${field.id}`}
+              />
+              <div className="w-12 h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center text-xl font-bold shadow-lg">
+                {currentValue}
+              </div>
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground px-1">
+              <span>{min}</span>
+              <span>{max}</span>
+            </div>
+          </div>
+        )
+      }
+
       case "datetime":
         return (
           <Input
@@ -399,7 +523,8 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
     }
   }
 
-  const showLabelVoice = VOICE_LABEL_TYPES.has(field.type)
+  // Show voice/audio buttons in label only for single textareas (not multiple)
+  const showLabelVoice = VOICE_LABEL_TYPES.has(field.type) && !field.multiple
 
   return (
     <div className={cn(
@@ -426,7 +551,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         )}
       </div>
       {renderField()}
-      {isConversationField && audioBlobUrl && (
+      {isConversationField && audioBlobUrl && !field.multiple && (
         <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg">
           <audio src={audioBlobUrl} controls className="h-8 flex-1" />
           <Button

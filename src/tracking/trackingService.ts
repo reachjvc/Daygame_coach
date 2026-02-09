@@ -31,6 +31,8 @@ import {
   // Field Reports
   createFieldReport as repoCreateFieldReport,
   updateFieldReport as repoUpdateFieldReport,
+  getFieldReport as repoGetFieldReport,
+  deleteFieldReport as repoDeleteFieldReport,
   getUserFieldReports as repoGetUserFieldReports,
   getDraftFieldReports as repoGetDraftFieldReports,
   getFieldReportTemplates as repoGetFieldReportTemplates,
@@ -209,6 +211,14 @@ export async function updateFieldReport(
   updates: FieldReportUpdate
 ): Promise<FieldReportRow> {
   return repoUpdateFieldReport(reportId, updates)
+}
+
+export async function getFieldReport(reportId: string): Promise<FieldReportRow | null> {
+  return repoGetFieldReport(reportId)
+}
+
+export async function deleteFieldReport(reportId: string, userId: string): Promise<void> {
+  return repoDeleteFieldReport(reportId, userId)
 }
 
 export async function getUserFieldReports(

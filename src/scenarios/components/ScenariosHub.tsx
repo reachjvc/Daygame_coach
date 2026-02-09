@@ -429,6 +429,7 @@ export function ScenariosHub({
       {/* Voice Chat Window for non-opener scenarios (only when not in preview mode) */}
       {!isPreviewMode && activeScenario && isVoiceChatScenario(activeScenario) && (
         <VoiceChatWindow
+          key={`${activeScenario}:${activeScenario === "keep-it-going" ? selectedSituationId ?? "random" : "default"}`}
           onClose={() => {
             setActiveScenario(null);
             setSelectedSituationId(null);

@@ -143,7 +143,7 @@ export interface ApproachUpdate {
 // Field Report Templates
 // ============================================
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'scale' | 'datetime' | 'list' | 'tags' | 'audio'
+export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'scale' | 'slider' | 'datetime' | 'list' | 'tags' | 'audio'
 
 export interface TemplateField {
   id: string
@@ -157,6 +157,8 @@ export interface TemplateField {
   max?: number        // For scale/number
   rows?: number       // For textarea
   count?: number      // For list type
+  multiple?: boolean  // For textarea - render as array of textareas with add/remove
+  allowAudio?: boolean // For textarea - show audio recording/upload buttons
 }
 
 export interface FieldReportTemplateRow {
@@ -515,6 +517,7 @@ export interface MilestoneRow {
   milestone_type: MilestoneType
   achieved_at: string
   value: number | null
+  session_id: string | null
   created_at: string
 }
 
@@ -522,6 +525,7 @@ export interface MilestoneInsert {
   user_id: string
   milestone_type: MilestoneType
   value?: number
+  session_id?: string
 }
 
 // ============================================
@@ -567,6 +571,13 @@ export interface SessionWithApproaches extends SessionRow {
   approaches: ApproachRow[]
 }
 
+export interface SessionAchievement {
+  milestone_type: string
+  emoji: string
+  label: string
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'diamond'
+}
+
 export interface SessionSummary {
   id: string
   started_at: string
@@ -585,6 +596,7 @@ export interface SessionSummary {
     number: number
     instadate: number
   }
+  achievements: SessionAchievement[]
 }
 
 export interface DailyStats {

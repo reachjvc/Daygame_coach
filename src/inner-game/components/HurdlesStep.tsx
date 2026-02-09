@@ -14,6 +14,8 @@ type HurdlesStepProps = {
   completedSteps: InnerGameStep[]
   onBack: () => void
   onComplete: (response: string, inferredValues: InferredValue[]) => void
+  onBackToHub?: () => void
+  onStartFresh?: () => void
 }
 
 const STOIC_QUOTE = "The obstacle is the way."
@@ -25,6 +27,8 @@ export function HurdlesStep({
   completedSteps,
   onBack,
   onComplete,
+  onBackToHub,
+  onStartFresh,
 }: HurdlesStepProps) {
   const {
     response,
@@ -109,7 +113,21 @@ export function HurdlesStep({
             nextLabel="Analyze My Hurdles"
             isLoading={isLoading}
             nextDisabled={response.length < 20}
+            onBackToHub={onBackToHub}
           />
+
+          {/* Start fresh link */}
+          {onStartFresh && (
+            <div className="text-center pt-4 border-t border-border/50 mt-6">
+              <button
+                type="button"
+                onClick={onStartFresh}
+                className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -169,7 +187,21 @@ export function HurdlesStep({
             onBack={onBack}
             onNext={handleContinue}
             nextLabel="Continue to Prioritization"
+            onBackToHub={onBackToHub}
           />
+
+          {/* Start fresh link */}
+          {onStartFresh && (
+            <div className="text-center pt-4 border-t border-border/50 mt-6">
+              <button
+                type="button"
+                onClick={onStartFresh}
+                className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

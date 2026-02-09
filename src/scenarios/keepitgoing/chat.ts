@@ -8,10 +8,17 @@
 import { generateText } from "ai"
 import { anthropic } from "@ai-sdk/anthropic"
 
-import type { Language, KeepItGoingContext, ResponseQuality, CloseOutcome } from "./types"
+import type { Language, KeepItGoingContext, ResponseQuality, CloseOutcome, EvalResult, InterestBucket } from "./types"
 import { useClaudeCode, queryClaudeCodeJSON, queryClaudeCode } from "./claudeCode"
 import { logAIUsage, checkUserBudget } from "@/src/api_ai/apiAiService"
 import type { ModelName } from "@/src/api_ai/types"
+import { getInterestBucket, getBucketProfile, PROFILES, RUBRIC } from "./realisticProfiles"
+import { getPhase } from "./generator"
+
+type ConversationMessage = {
+  role: "user" | "assistant"
+  content: string
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // System Prompts
@@ -24,7 +31,7 @@ REGLER:
 - Svar KORT (max 1-2 sætninger)
 - Brug *handlinger* i stjerner som *smiler* eller *kigger væk*
 - Vær realistisk - ikke for nem, ikke for svær
-- Match hans energi: god replik = varm respons, dårlig = kort/kølig
+- Beløn ikke middelmådige replikker med varme
 - Aldrig break character
 - Svar på dansk`,
 
@@ -34,23 +41,31 @@ RULES:
 - Keep responses SHORT (max 1-2 sentences)
 - Use *actions* in asterisks like *smiles* or *looks away*
 - Be realistic - not too easy, not too difficult
-- Match his energy: good line = warm response, bad = short/cold
+- Do not reward mediocre lines with warmth
 - Never break character
 - Respond in English`,
 }
 
 const QUALITY_INSTRUCTIONS: Record<Language, Record<ResponseQuality, string>> = {
   da: {
-    positive: "Han sagde noget godt. Du er interesseret, varm, måske flirtende. Giv lidt tilbage.",
-    neutral: "Det var okay. Du er nysgerrig men afventende. Giv ham en chance mere.",
-    deflect: "Det var kedeligt/interview-agtigt. Svar kort og distanceret. Han skal arbejde hårdere.",
-    skeptical: "Det var for try-hard eller weird. Vis skepsis, træk dig lidt tilbage.",
+    positive:
+      "Han sagde noget godt. Indenfor din nuværende interesse: vær en anelse varmere/mere engageret (men følg stadig bucket-reglerne).",
+    neutral:
+      "Det var okay. Hold dig omkring din nuværende baseline og giv ham en chance mere (følg bucket-reglerne).",
+    deflect:
+      "Det var kedeligt/interview-agtigt. Svar kort og distanceret, evt. med en deflect (følg bucket-reglerne).",
+    skeptical:
+      "Det var try-hard eller weird. Vis skepsis, træk dig lidt tilbage og gør det nemt at afslutte (følg bucket-reglerne).",
   },
   en: {
-    positive: "He said something good. You're interested, warm, maybe flirty. Give something back.",
-    neutral: "It was okay. You're curious but waiting. Give him another chance.",
-    deflect: "It was boring/interview-like. Respond briefly and distantly. He needs to work harder.",
-    skeptical: "It was too try-hard or weird. Show skepticism, step back a bit.",
+    positive:
+      "He said something good. Within your current interest: be slightly warmer/more engaged (but still obey your bucket rules).",
+    neutral:
+      "It was okay. Stay around your current baseline and give him another chance (obey your bucket rules).",
+    deflect:
+      "It was boring/interview-like. Respond briefly and distantly, maybe with a deflect (obey your bucket rules).",
+    skeptical:
+      "It was too try-hard or weird. Show skepticism, step back, and make it easy to end (obey your bucket rules).",
   },
 }
 
@@ -63,14 +78,29 @@ const EVAL_SYSTEM_PROMPT = `You are an expert dating coach evaluating a man's co
 SCORING CRITERIA (1-10):
 - Statements/observations > questions (7-8 points)
 - Cold reads ("you seem like...", "I bet you...") = excellent (8-9 points)
+- Threading (referencing what she just said) = good (7-8 points)
+- Playful teases = good (7-8 points)
 - Digging deeper after her response = good (7 points)
 - Interview questions ("what do you do?", "where are you from?") = bad (3-4 points)
 - Try-hard/overly smooth lines = bad (2-3 points)
 - Too long/rambling = penalty (-1)
 - Short, punchy, playful = bonus (+1)
+- Sexual too soon (before she's warm) = very bad (1-2 points)
+- Creepy/uncomfortable = very bad (1 point)
+
+TAGS (pick 0-2 that apply):
+- threading: references or builds on her previous statement
+- cold_read: makes an assumption about her personality/vibe
+- tease: playful push-pull that makes her laugh
+- interview_question: logical question without play
+- too_long: overly wordy, more than 2 sentences
+- try_hard: needy, seeking validation, over-complimenting
+- sexual_too_soon: sexual comment when she's not warm yet
+- creepy: uncomfortable, invasive, or violating boundaries
+- ignored_soft_exit: she said "I have to go" but he kept pressing
 
 RESPONSE FORMAT (JSON only, no markdown):
-{"score":7,"feedback":"Short feedback in same language as input","quality":"positive"}
+{"score":7,"feedback":"Short feedback in same language as input","quality":"positive","tags":["threading"]}
 
 quality must be one of: "positive", "neutral", "deflect", "skeptical"
 - positive: score >= 7
@@ -78,14 +108,9 @@ quality must be one of: "positive", "neutral", "deflect", "skeptical"
 - deflect: score 3-4
 - skeptical: score <= 2`
 
-interface EvalResult {
-  score: number
-  feedback: string
-  quality: ResponseQuality
-}
-
 export async function evaluateWithAI(
   userMessage: string,
+  recentConversation: ConversationMessage[],
   language: Language,
   context: KeepItGoingContext,
   userId: string
@@ -104,7 +129,42 @@ export async function evaluateWithAI(
       ? `Sted: ${context.situation.location[language]}. ${context.situation.setup[language]}`
       : `Location: ${context.situation.location[language]}. ${context.situation.setup[language]}`
 
-  const userPrompt = `${situationContext}\n\nHis response: "${userMessage}"\n\nEvaluate in ${language === "da" ? "Danish" : "English"}.`
+  // Include recent conversation for threading + "ignored soft exit" detection.
+  const conversationWindow =
+    recentConversation.length > 0
+      ? recentConversation
+          .map((m) => `${m.role === "user" ? "Him" : "Her"}: ${m.content}`)
+          .join("\n")
+      : `Her: "${context.situation.herFirstResponse[language]}"`
+
+  const lastHerMessage =
+    [...recentConversation].reverse().find((m) => m.role === "assistant")?.content ||
+    context.situation.herFirstResponse[language]
+
+  const herContext =
+    language === "da"
+      ? `Hendes sidste besked: "${lastHerMessage}"`
+      : `Her last message: "${lastHerMessage}"`
+
+  const interestContext =
+    language === "da"
+      ? `Hendes nuværende interesse: ${context.interestLevel}/10`
+      : `Her current interest: ${context.interestLevel}/10`
+
+  const conversationLabel =
+    language === "da" ? "Seneste samtale (nyeste nederst):" : "Recent conversation (most recent last):"
+
+  const userPrompt = `${situationContext}
+
+${conversationLabel}
+${conversationWindow}
+
+${herContext}
+${interestContext}
+
+His response: "${userMessage}"
+
+Evaluate in ${language === "da" ? "Danish" : "English"}. Check if he threads on her message.`
 
   // Use Claude Code if enabled (no tracking for local CLI)
   if (useClaudeCode()) {
@@ -114,6 +174,7 @@ export async function evaluateWithAI(
       score: Math.max(1, Math.min(10, parsed.score)),
       feedback: parsed.feedback,
       quality: parsed.quality,
+      tags: parsed.tags || [],
     }
   }
 
@@ -190,6 +251,7 @@ export async function evaluateWithAI(
     score: Math.max(1, Math.min(10, parsed.score)),
     feedback: parsed.feedback,
     quality: parsed.quality as ResponseQuality,
+    tags: parsed.tags || [],
   }
 }
 
@@ -200,25 +262,108 @@ export async function evaluateWithAI(
 /** Max message pairs to include in AI context (user + assistant = 1 pair) */
 const MAX_HISTORY_PAIRS = 4
 
-interface ChatMessage {
-  role: "user" | "assistant"
-  content: string
-}
-
 /**
  * Apply sliding window to conversation history.
  * Keeps only the last N message pairs to reduce token usage.
  */
-function applyHistoryWindow(history: ChatMessage[]): ChatMessage[] {
+function applyHistoryWindow(history: ConversationMessage[]): ConversationMessage[] {
   const maxMessages = MAX_HISTORY_PAIRS * 2
   return history.length <= maxMessages ? history : history.slice(-maxMessages)
+}
+
+function countWords(text: string): number {
+  const trimmed = text.trim()
+  if (!trimmed) return 0
+  return trimmed.split(/\s+/).filter(Boolean).length
+}
+
+function countSentences(text: string): number {
+  const trimmed = text.trim()
+  if (!trimmed) return 0
+  const parts = trimmed.split(/[.!?]+/).map((s) => s.trim()).filter(Boolean)
+  return parts.length || 1
+}
+
+function countActions(text: string): number {
+  const matches = text.match(/\*[^*]+\*/g)
+  return matches ? matches.length : 0
+}
+
+function validateWomanResponse(
+  text: string,
+  bucket: InterestBucket,
+  profile: ReturnType<typeof getBucketProfile>
+): string[] {
+  const violations: string[] = []
+  const trimmed = text.trim()
+  if (!trimmed) violations.push("empty response")
+
+  const wordCount = countWords(trimmed)
+  if (wordCount > profile.wordCount.max) {
+    violations.push(`too many words (${wordCount} > ${profile.wordCount.max})`)
+  }
+
+  const sentenceCount = countSentences(trimmed)
+  if (sentenceCount > PROFILES.global.maxSentences) {
+    violations.push(`too many sentences (${sentenceCount} > ${PROFILES.global.maxSentences})`)
+  }
+
+  const actions = countActions(trimmed)
+  if (actions > PROFILES.global.actions.maxPerMessage) {
+    violations.push(`too many *actions* (${actions} > ${PROFILES.global.actions.maxPerMessage})`)
+  }
+
+  if (bucket === "cold" && trimmed.includes("?")) {
+    violations.push("asked a question in cold bucket")
+  }
+
+  return violations
+}
+
+function clampWomanResponse(
+  text: string,
+  bucket: InterestBucket,
+  profile: ReturnType<typeof getBucketProfile>
+): string {
+  let out = text.trim()
+
+  // Keep at most one *action*
+  let keptFirstAction = false
+  out = out.replace(/\*[^*]+\*/g, (m) => {
+    if (!keptFirstAction) {
+      keptFirstAction = true
+      return m
+    }
+    return ""
+  })
+
+  // Max N sentences (best-effort)
+  const sentences = out.match(/[^.!?]+[.!?]?/g)
+  if (sentences && sentences.length > PROFILES.global.maxSentences) {
+    out = sentences.slice(0, PROFILES.global.maxSentences).join(" ").trim()
+  }
+
+  // Cold bucket: never ask questions back
+  if (bucket === "cold") {
+    out = out.replace(/\?/g, "")
+  }
+
+  // Max words
+  const words = out.split(/\s+/).filter(Boolean)
+  if (words.length > profile.wordCount.max) {
+    out = words.slice(0, profile.wordCount.max).join(" ").trim()
+  }
+
+  // Normalize whitespace after deletions
+  out = out.replace(/\s{2,}/g, " ").trim()
+  return out
 }
 
 interface GenerateResponseOptions {
   context: KeepItGoingContext
   userMessage: string
   quality: ResponseQuality
-  conversationHistory: ChatMessage[]
+  conversationHistory: ConversationMessage[]
   userId: string
 }
 
@@ -233,10 +378,12 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
   }
 
   const systemPrompt = buildSystemPrompt(context, quality)
+  const bucket = getInterestBucket(context.interestLevel)
+  const profile = getBucketProfile(bucket)
 
   // Build messages array with windowed conversation history (reduces token usage)
   const windowedHistory = applyHistoryWindow(conversationHistory)
-  const messages: ChatMessage[] = [
+  const messages: ConversationMessage[] = [
     { role: "assistant", content: situation.herFirstResponse[language] },
     ...windowedHistory,
     { role: "user", content: userMessage },
@@ -248,8 +395,16 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
       .map((m) => `${m.role === "user" ? "Him" : "Her"}: ${m.content}`)
       .join("\n")
     const fullPrompt = `${systemPrompt}\n\nConversation so far:\n${conversationText}\n\nRespond as her (1-2 sentences max, no quotes around response):`
-    const response = queryClaudeCode(fullPrompt)
-    return response
+    const response = queryClaudeCode(fullPrompt).trim()
+    const violations = validateWomanResponse(response, bucket, profile)
+    if (violations.length === 0) return response
+
+    const retryPrompt = `${systemPrompt}\n\nConversation so far:\n${conversationText}\n\nYour previous response violated constraints:\n- ${violations.join(
+      "\n- "
+    )}\n\nRewrite as her (obey ALL rules, no quotes):`
+    const retry = queryClaudeCode(retryPrompt).trim()
+    const retryViolations = validateWomanResponse(retry, bucket, profile)
+    return retryViolations.length ? clampWomanResponse(retry, bucket, profile) : retry
   }
 
   // Use Anthropic API with tracking
@@ -300,15 +455,70 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
     )
   }
 
-  return result.text.trim()
+  let text = result.text.trim()
+  const violations = validateWomanResponse(text, bucket, profile)
+  if (violations.length === 0) return text
+
+  // One retry with lower temperature and explicit constraint reminder.
+  const retryStartTime = Date.now()
+  const retrySystemPrompt = `${systemPrompt}
+
+IMPORTANT: Your previous response violated constraints:
+- ${violations.join("\n- ")}
+
+Rewrite your response to comply. Output only the corrected response (no quotes).`
+
+  const retryResult = await generateText({
+    model: anthropic(model),
+    system: retrySystemPrompt,
+    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    maxTokens: 100,
+    temperature: 0.3,
+  })
+
+  try {
+    const conversationForLog = messages.map((m) => `${m.role}: ${m.content}`).join("\n")
+    await logAIUsage({
+      userId,
+      feature: "keep-it-going",
+      scenarioId: context.situation.id,
+      model,
+      operation: "generate_response_retry",
+      usage: {
+        inputTokens: retryResult.usage.promptTokens,
+        outputTokens: retryResult.usage.completionTokens,
+        cacheCreationTokens: retryResult.providerMetadata?.anthropic?.cacheCreationInputTokens,
+        cacheReadTokens: retryResult.providerMetadata?.anthropic?.cacheReadInputTokens,
+      },
+      responseTimeMs: Date.now() - retryStartTime,
+      systemPrompt: retrySystemPrompt,
+      userPrompt: conversationForLog,
+      aiResponse: retryResult.text,
+    })
+  } catch (logError) {
+    console.error(`[generateAIResponse] FAILED to log retry AI usage:`, logError)
+  }
+
+  text = retryResult.text.trim()
+  const retryViolations = validateWomanResponse(text, bucket, profile)
+  return retryViolations.length ? clampWomanResponse(text, bucket, profile) : text
 }
 
 function buildSystemPrompt(context: KeepItGoingContext, quality: ResponseQuality): string {
-  const { language, situation } = context
+  const { language, situation, interestLevel } = context
   const lang = language
 
   const basePrompt = SYSTEM_PROMPTS[lang]
   const qualityInstruction = QUALITY_INSTRUCTIONS[lang][quality]
+
+  // This response is to his current line (the next processed turn)
+  const nextTurnCount = context.turnCount + 1
+  const phase = getPhase(nextTurnCount)
+
+  // Get bucket-specific constraints
+  const bucket = getInterestBucket(interestLevel)
+  const profile = getBucketProfile(bucket)
+  const bucketConstraints = getBucketConstraints(bucket, profile, lang)
 
   const contextInfo =
     lang === "da"
@@ -316,18 +526,96 @@ function buildSystemPrompt(context: KeepItGoingContext, quality: ResponseQuality
 - Sted: ${situation.location[lang]}
 - Situation: ${situation.setup[lang]}
 - Hans åbner: "${situation.yourOpener[lang]}"
+- Tur: ${nextTurnCount} (fase: ${phase})
+- Din interesse: ${interestLevel}/10 (${getBucketLabel(bucket, lang)})
+
+${bucketConstraints}
 
 DENNE REPLIK: ${qualityInstruction}`
       : `CONTEXT:
 - Location: ${situation.location[lang]}
 - Situation: ${situation.setup[lang]}
 - His opener: "${situation.yourOpener[lang]}"
+- Turn: ${nextTurnCount} (phase: ${phase})
+- Your interest: ${interestLevel}/10 (${getBucketLabel(bucket, lang)})
+
+${bucketConstraints}
 
 THIS LINE: ${qualityInstruction}`
 
   return `${basePrompt}
 
 ${contextInfo}`
+}
+
+function getBucketLabel(bucket: InterestBucket, lang: Language): string {
+  const labels: Record<InterestBucket, Record<Language, string>> = {
+    cold: { da: "kold", en: "cold" },
+    guarded: { da: "afventende", en: "guarded" },
+    curious: { da: "nysgerrig", en: "curious" },
+    interested: { da: "interesseret", en: "interested" },
+  }
+  return labels[bucket][lang]
+}
+
+function getBucketConstraints(bucket: InterestBucket, profile: ReturnType<typeof getBucketProfile>, lang: Language): string {
+  if (lang === "da") {
+    switch (bucket) {
+      case "cold":
+        return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
+- Max ${profile.wordCount.max} ord
+- Stil ALDRIG spørgsmål tilbage
+- Du kan ignorere, afvise, eller forlade
+- Vær kort og uimponeret
+- Du er IKKE her for at være sød`
+      case "guarded":
+        return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
+- Hold det kort (${profile.wordCount.min}-${profile.wordCount.max} ord)
+- Stil sjældent spørgsmål tilbage
+- Vær høflig men distanceret
+- Giv ham en chance, men invester ikke endnu`
+      case "curious":
+        return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
+- Du må gerne svare lidt længere (${profile.wordCount.min}-${profile.wordCount.max} ord)
+- Du kan stille et spørgsmål tilbage sommetider
+- Vær engageret og måske lidt legesyg
+- Men du er IKKE forelsket endnu`
+      case "interested":
+        return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
+- Du kan svare lidt længere (${profile.wordCount.min}-${profile.wordCount.max} ord)
+- Du må gerne stille spørgsmål og investere
+- Vær varm og legesyg, måske flirtende
+- Stadig realistisk - ikke overkompenserende`
+    }
+  } else {
+    switch (bucket) {
+      case "cold":
+        return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
+- Max ${profile.wordCount.max} words
+- NEVER ask questions back
+- You can ignore, dismiss, or leave
+- Be short and unimpressed
+- You are NOT here to be nice`
+      case "guarded":
+        return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
+- Keep it short (${profile.wordCount.min}-${profile.wordCount.max} words)
+- Rarely ask questions back
+- Be polite but distant
+- Give him a chance, but don't invest yet`
+      case "curious":
+        return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
+- You can respond a bit longer (${profile.wordCount.min}-${profile.wordCount.max} words)
+- You can ask a question back sometimes
+- Be engaged and maybe a bit playful
+- But you're NOT in love yet`
+      case "interested":
+        return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
+- You can respond longer (${profile.wordCount.min}-${profile.wordCount.max} words)
+- You can ask questions and invest
+- Be warm and playful, maybe flirty
+- Still realistic - not overcompensating`
+    }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -426,6 +714,94 @@ ${outcomeInstructions[language][outcome]}`
   } catch (logError) {
     console.error(`[generateCloseResponse] FAILED to log AI usage:`, logError)
     // Don't throw - continue execution even if logging fails
+  }
+
+  return result.text.trim()
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Early Exit Response Generation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Generate a response when the woman ends the conversation early.
+ * This is triggered by the rubric end rules (exitRisk >= 3, cold + deflect, etc.)
+ */
+export async function generateExitResponse(
+  context: KeepItGoingContext,
+  endReason: string | undefined,
+  userId: string
+): Promise<string> {
+  const { language, situation } = context
+
+  // Check budget before making API call
+  const budget = await checkUserBudget(userId)
+  if (!budget.withinBudget) {
+    throw new Error("Budget exceeded - cannot generate exit response")
+  }
+
+  const exitInstructions: Record<Language, string> = {
+    da: `Du forlader samtalen. Årsag: ${endReason || "du har mistet interessen"}.
+Giv en kort, realistisk afsluttende replik (1 sætning max).
+Eksempler:
+- "Jeg skal videre." *vender sig væk*
+- "Det var hyggeligt." *begynder at gå*
+- "Okay, hej." *går*`,
+    en: `You're ending the conversation. Reason: ${endReason || "you've lost interest"}.
+Give a short, realistic exit line (1 sentence max).
+Examples:
+- "I have to go." *turns away*
+- "Nice meeting you." *starts walking*
+- "Okay, bye." *leaves*`,
+  }
+
+  const systemPrompt = `${SYSTEM_PROMPTS[language]}
+
+KONTEKST / CONTEXT:
+- ${language === "da" ? "Sted" : "Location"}: ${situation.location[language]}
+
+${exitInstructions[language]}`
+
+  // Use Claude Code if enabled (no tracking for local CLI)
+  if (useClaudeCode()) {
+    const fullPrompt = `${systemPrompt}\n\nRespond as her leaving (1 sentence max, no quotes around response):`
+    const response = queryClaudeCode(fullPrompt)
+    return response
+  }
+
+  // Use Anthropic API with tracking
+  const startTime = Date.now()
+  const model = (process.env.AI_MODEL || "claude-3-5-haiku-20241022") as ModelName
+
+  const result = await generateText({
+    model: anthropic(model),
+    system: systemPrompt,
+    messages: [{ role: "user", content: "Generate exit response" }],
+    maxTokens: 50,
+    temperature: 0.8,
+  })
+
+  // Log AI usage (with error handling to prevent crashes)
+  try {
+    await logAIUsage({
+      userId,
+      feature: "keep-it-going",
+      scenarioId: context.situation.id,
+      model,
+      operation: "generate_exit",
+      usage: {
+        inputTokens: result.usage.promptTokens,
+        outputTokens: result.usage.completionTokens,
+        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
+        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+      },
+      responseTimeMs: Date.now() - startTime,
+      systemPrompt,
+      userPrompt: "exit",
+      aiResponse: result.text,
+    })
+  } catch (logError) {
+    console.error(`[generateExitResponse] FAILED to log AI usage:`, logError)
   }
 
   return result.text.trim()

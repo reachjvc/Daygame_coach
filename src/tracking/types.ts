@@ -124,6 +124,8 @@ export interface Principle {
   icon: ReactNode
   insight?: string
   stat?: string
+  /** Goal categories this principle applies to (for showing tips during goal creation) */
+  goalCategories?: string[]
 }
 
 // ============================================

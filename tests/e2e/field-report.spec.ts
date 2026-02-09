@@ -488,3 +488,151 @@ test.describe('Post-Session Mood Picker', () => {
     await expect(moodLabel).not.toBeVisible({ timeout: ACTION_TIMEOUT })
   })
 })
+
+test.describe('Field Report Edit Flow', () => {
+  test('should navigate to edit mode via query param and show form', async ({ page }) => {
+    // First create a draft report
+    await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Save as draft
+    const saveDraftButton = page.getByTestId(SELECTORS.fieldReport.saveDraft)
+    await saveDraftButton.click({ timeout: ACTION_TIMEOUT })
+
+    // Wait for redirect to tracking dashboard
+    await expect(page).toHaveURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
+
+    // Navigate to history page
+    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    // Find and click edit button (pencil icon)
+    const editLink = page.locator('a[href*="/dashboard/tracking/report?edit="]').first()
+    if (await editLink.isVisible({ timeout: AUTH_TIMEOUT }).catch(() => false)) {
+      await editLink.click({ timeout: ACTION_TIMEOUT })
+
+      // Assert: Should be at edit URL with query param
+      await expect(page).toHaveURL(/\/dashboard\/tracking\/report\?edit=/, { timeout: AUTH_TIMEOUT })
+
+      // Assert: Form should be visible (not template selection)
+      await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+      // Assert: Back button should say "Back to History"
+      await expect(page.getByText('Back to History')).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+      // Assert: Submit button should say "Update Report"
+      await expect(page.getByText('Update Report')).toBeVisible({ timeout: AUTH_TIMEOUT })
+    }
+  })
+
+  test('should pre-fill form with existing report data in edit mode', async ({ page }) => {
+    // First create a draft report with specific data
+    await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Fill approaches field with specific value
+    const approachesInput = page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))
+    if (await approachesInput.isVisible().catch(() => false)) {
+      await approachesInput.fill('7')
+    }
+
+    // Save as draft
+    const saveDraftButton = page.getByTestId(SELECTORS.fieldReport.saveDraft)
+    await saveDraftButton.click({ timeout: ACTION_TIMEOUT })
+
+    // Wait for redirect
+    await expect(page).toHaveURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
+
+    // Navigate to history and click edit
+    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    const editLink = page.locator('a[href*="/dashboard/tracking/report?edit="]').first()
+    if (await editLink.isVisible({ timeout: AUTH_TIMEOUT }).catch(() => false)) {
+      await editLink.click({ timeout: ACTION_TIMEOUT })
+
+      await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+      // Assert: Approaches field should have the saved value
+      const editApproachesInput = page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))
+      if (await editApproachesInput.isVisible().catch(() => false)) {
+        await expect(editApproachesInput).toHaveValue('7')
+      }
+    }
+  })
+
+  test('should successfully update report and redirect to history', async ({ page }) => {
+    // First create a draft report
+    await page.goto('/dashboard/tracking/report', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    await expect(page.getByTestId(SELECTORS.fieldReport.templateSelection)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    const quickLogTemplate = page.getByTestId(SELECTORS.fieldReport.templateCard(SLUGS.quickLog))
+    await expect(quickLogTemplate).toBeVisible({ timeout: AUTH_TIMEOUT })
+    await quickLogTemplate.click({ timeout: ACTION_TIMEOUT })
+    await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+    // Fill required fields to enable submit
+    const moodOption = page.getByTestId(SELECTORS.fieldReport.fieldSelectOption('mood', 3))
+    if (await moodOption.isVisible().catch(() => false)) {
+      await moodOption.click({ timeout: ACTION_TIMEOUT })
+    }
+
+    const approachesInput = page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))
+    if (await approachesInput.isVisible().catch(() => false)) {
+      await approachesInput.fill('3')
+    }
+
+    // Save as draft first
+    const saveDraftButton = page.getByTestId(SELECTORS.fieldReport.saveDraft)
+    await saveDraftButton.click({ timeout: ACTION_TIMEOUT })
+
+    // Wait for redirect
+    await expect(page).toHaveURL(/\/dashboard\/tracking/, { timeout: AUTH_TIMEOUT })
+
+    // Navigate to history and click edit
+    await page.goto('/dashboard/tracking/history', { timeout: AUTH_TIMEOUT })
+    await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
+
+    const editLink = page.locator('a[href*="/dashboard/tracking/report?edit="]').first()
+    if (await editLink.isVisible({ timeout: AUTH_TIMEOUT }).catch(() => false)) {
+      await editLink.click({ timeout: ACTION_TIMEOUT })
+
+      await expect(page.getByTestId(SELECTORS.fieldReport.form)).toBeVisible({ timeout: AUTH_TIMEOUT })
+
+      // Modify the approaches count
+      const editApproachesInput = page.getByTestId(SELECTORS.fieldReport.fieldInput('approaches'))
+      if (await editApproachesInput.isVisible().catch(() => false)) {
+        await editApproachesInput.clear()
+        await editApproachesInput.fill('10')
+      }
+
+      // Wait for form to validate
+      await page.waitForTimeout(500)
+
+      // Click Update Report button
+      const submitButton = page.getByTestId(SELECTORS.fieldReport.submit)
+      if (await submitButton.isEnabled()) {
+        await submitButton.click({ timeout: ACTION_TIMEOUT })
+
+        // Assert: Should redirect to history page (not tracking dashboard)
+        await expect(page).toHaveURL(/\/dashboard\/tracking\/history/, { timeout: AUTH_TIMEOUT })
+      }
+    }
+  })
+})

@@ -7,11 +7,16 @@ import {
   getOrCreateProgress,
   updateProgress as updateProgressRepo,
   resetProgress as resetProgressRepo,
+  resetSection as resetSectionRepo,
   type InnerGameProgressRow,
+  type SectionName,
 } from "@/src/db/innerGameProgressRepo"
 import { deleteAllComparisons } from "@/src/db/valueComparisonRepo"
+import { deleteUserValues } from "@/src/db/valuesRepo"
 import { CATEGORIES } from "../config"
 import { InnerGameStep, type InnerGameProgress } from "../types"
+
+export type { SectionName }
 
 /**
  * Convert database row to service type.
@@ -89,6 +94,25 @@ export async function resetUserProgress(userId: string): Promise<InnerGameProgre
   // Delete all comparisons first
   await deleteAllComparisons(userId)
   const row = await resetProgressRepo(userId)
+  return rowToProgress(row)
+}
+
+/**
+ * Reset a specific section and all dependent sections.
+ * Handles clearing related tables (user_values for values, comparisons for all).
+ */
+export async function resetUserSection(
+  userId: string,
+  section: SectionName
+): Promise<InnerGameProgress> {
+  // Clear related tables based on section being reset
+  if (section === "values") {
+    await deleteUserValues(userId)
+  }
+  // All sections cascade to cutting, so always clear comparisons
+  await deleteAllComparisons(userId)
+
+  const row = await resetSectionRepo(userId, section)
   return rowToProgress(row)
 }
 

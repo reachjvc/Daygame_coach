@@ -1,8 +1,69 @@
 # Plan: Realistic Conversation Logic (MVP) from 224 Transcribed Videos (Diarized Subset)
 
-**Status:** Phase 0-1 DONE, Phase 2 ready
+**Status:** Phase 5 COMPLETE - Release Gate Passed ✅
 **Created:** 2026-02-07
-**Updated:** 2026-02-08
+**Updated:** 2026-02-09
+
+## Phase 5 Results (completed 2026-02-09) - Release Gate
+- **All 10 verification tests passed** (`scripts/verify-realistic-responses.ts`)
+- **All 760 unit tests pass**
+
+### Verification Results:
+1. ✅ **Pacing**: Interest capped in early turns (T1-2: max 6, T3-4: max 7)
+2. ✅ **Cold bucket**: Profile enforces `shouldAskBack=false`, `questionBackRate=0`, `wordCount.max=8`
+3. ✅ **Interview patterns**: Correctly increase exitRisk (+2) and decrease interest (-2)
+4. ✅ **Interview exit**: Triggers early exit after first deflect at low interest ("low interest + annoyance")
+5. ✅ **Sexual too soon**: Major interest drop (-4) and exitRisk increase (+3) → immediate exit
+6. ✅ **Creepy**: Triggers immediate exit (`exitRisk=3` → "she is done / uncomfortable")
+7. ✅ **Sticky end**: Further messages blocked after exit (multiple attempts correctly rejected)
+8. ✅ **Reset**: New scenario has fresh state (`isEnded=false`, `interest=4`, `exitRisk=0`, `turnCount=0`)
+9. ✅ **Good lines**: Gradual warming respecting pacing caps (4 → 6 → 6 → 7 → 7 → 8)
+10. ✅ **Mixed session**: Realistic ups/downs (interest: 4→6→4→6→7, exitRisk: 0→0→2→1→0)
+
+### RUBRIC Configuration Verified:
+- Interest: start=4 (guarded), range=[1, 10]
+- ExitRisk: start=0, range=[0, 3]
+- Pacing caps: `[{turnMax:2, maxInterest:6}, {turnMax:4, maxInterest:7}]`
+- End rules: 3 conditions (exitRisk≥3, low interest+annoyance, cold not warming)
+
+### Files Created:
+- `scripts/verify-realistic-responses.ts` - Automated Phase 5 verification
+
+## Phase 4 Results (completed 2026-02-09)
+- **All 7 verification items passed:**
+  1. ✅ Sticky end - `scenariosService.ts:256-272` returns "She's already gone" without re-evaluating
+  2. ✅ Evaluation context window - 4-pair sliding window passed to `evaluateWithAI`
+  3. ✅ Tag hygiene - filters to valid tags only, max 2 per turn
+  4. ✅ Output constraint enforcement - validate/clamp/retry with logging
+  5. ✅ Prompt sycophancy conflicts fixed - bucket-relative instructions, "Do not reward mediocre lines"
+  6. ✅ Turn/phase in prompt - includes turn count + phase
+  7. ✅ Sexuality handling - playbook has typical vs rare examples
+- **Files modified:**
+  - `src/scenarios/keepitgoing/types.ts` - Added 5 context fields + EvalResult + bucket types
+  - `src/scenarios/schemas.ts` - Zod validation for new fields
+  - `src/scenarios/keepitgoing/generator.ts` - `updateInterestFromRubric()` function
+  - `src/scenarios/keepitgoing/chat.ts` - Contextual eval, bucket-aware prompts, validate/clamp/retry
+  - `src/scenarios/keepitgoing/realisticProfiles.ts` - TypeScript exports of profiles/rubric
+  - `src/scenarios/scenariosService.ts` - Early exit handling, interest updates
+- **All 760 tests pass**
+
+## Phase 3 Results (completed 2026-02-09)
+- **Prompt C executed** - draft_04 artifacts generated
+- **v1 frozen** - copied to `data/woman-responses/final/`:
+  - `playbook.md` - behavior rules by interest bucket
+  - `profiles.json` - numeric targets from actual data
+  - `rubric.json` - scoring tags and end rules
+- **Low-confidence extractions excluded from driving rules**: bzUa2cB61hU, ndYaBU7K82o, wHQW1s5FzkY
+- See `data/woman-responses/drafts/draft_04_changelog.md` for details
+
+## Phase 2 Results (completed 2026-02-08)
+- **25 videos extracted**, **336 turns** (pilot + 4 batches)
+- Step 2.5 gates:
+  - Cold (1-3): 20/20 ✅
+  - Interested (8-10): 36/20 ✅
+  - Exit moves: 8/5 ✅
+- Distribution: Cold 6%, Guarded 42%, Curious 42%, Interested 11%
+- Word counts: Cold=7.5, Guarded=7.5, Curious=9.9, Interested=12.3
 
 ## Goal
 Use the transcripts to teach the app more realistic conversation dynamics for scenarios (starting with `keep-it-going`).
@@ -456,6 +517,46 @@ If pilot fails: refine the prompts/taxonomy/schema now, not later.
 ---
 
 # Phase 2: Batch loop (core iteration)
+
+## Batch 01 Status: DONE
+- Videos: `ndYaBU7K82o`, `KURlBcRF6-M`, `-gg0Ykxalkk`, `n0smMRCqVmc`, `5sTASDqe0u8`
+
+## Batch 02 Status: DONE
+- Videos: `jPHmLAZON_s`, `x2kk9HoXjnI`, `e2dLEB-AwmA`, `H3_8iPikhDw`, `wHQW1s5FzkY`
+
+## Batch 03 Status: DONE (2026-02-08)
+- Videos extracted:
+  - `fbRpUOxqWcs` - Casey Neistat Picking Up Girls (8 turns, mixed)
+  - `qWqNDrjfUvc` - How to Ask a Girl Out (11 turns, infield)
+  - `bzUa2cB61hU` - Latina MILF (11 turns, mixed)
+  - `iOSpNACA9VI` - Barcelona Documentary (16 turns, mixed)
+  - `rMNSFU7TyIg` - Girls At Stores (0 turns - educational, no infield)
+- Key findings:
+  - **Cold/exit examples found:** "I have to go" (fbRpUOxqWcs, iOSpNACA9VI), "I have a boyfriend" (qWqNDrjfUvc, iOSpNACA9VI), "Bye" exits (bzUa2cB61hU)
+  - **rMNSFU7TyIg was educational only** - no actual infield dialogue captured
+
+## Batch 04 Status: DONE (2026-02-08)
+- Videos extracted (focused on interested turns):
+  - `nFjdyAHcTgA` - 7 Minute Pull (16 turns, infield) - **6 interested turns**
+  - `qxJbBcLOnbg` - Date with Canadian Girl (10 turns, mixed) - **5 interested turns**
+  - `9I7JBV15FNM` - Florida Date Secret Beach (11 turns, mixed) - **6 interested turns**
+  - `6ImEzB6NhiI` - 5 Easy Steps INSTANT Date (17 turns, mixed) - **4 interested turns**
+  - `FNpZs1VhwaA` - From DISINTEREST to Getting Her Number (14 turns, mixed) - **8 interested turns**
+- Key findings:
+  - **29 new interested (8-10) turns** - major boost to coverage
+  - **Interested examples include:** "I think you're the one", "You can sit on me. Yes! Yes!", she offers number, she initiates rooftop invite, "A hundred percent" (to going back to his place), qualifies herself ("I have daddy issues")
+  - **FNpZs1VhwaA shows cold->interested progression:** Turn 1 interest=3 (doesn't stop) -> Turn 14 interest=9 (fully engaged)
+- Cumulative metrics after batch 04:
+  - 25 videos, 336 turns total
+  - Cold (1-3): 20 turns (6.0%), deflect_rate=70%, word_mean=7.5
+  - Guarded (4-5): 140 turns (41.7%), question_back_rate=16%
+  - Curious (6-7): 140 turns (41.7%), word_count_mean=10, flirt_rate=14%
+  - Interested (8-10): 36 turns (10.7%), word_mean=12.3, flirt_rate=47%, question_back_rate=22%
+  - **ALL COVERAGE TARGETS MET:**
+    - Cold (1-3): 20 (target: >=20) PASS
+    - Interested (8-10): 36 (target: >=20) PASS
+    - Exit turns: 8 (target: >=5) PASS
+
 We process batches of 5 videos and produce `draft_XX`.
 
 ## MVP scope (recommended)
@@ -647,14 +748,38 @@ If you cannot get enough cold/exit examples from the diarized subset:
 ---
 
 # Phase 3: Freeze v1
+## Step 3.0: Generate the missing draft artifacts (required)
+Before you can freeze, you must have a concrete draft with:
+- playbook
+- profiles
+- rubric
+- changelog
+
+If you only have metrics (common when extraction was the focus), run Prompt C now to produce:
+- `data/woman-responses/drafts/draft_04_playbook.md`
+- `data/woman-responses/drafts/draft_04_profiles.json`
+- `data/woman-responses/drafts/draft_04_rubric.json`
+- `data/woman-responses/drafts/draft_04_changelog.md`
+
+Evidence weighting (MVP):
+- Prefer `confidence: high|medium` extractions as primary evidence.
+- Treat `confidence: low` and `video_type: educational` as weak evidence (do not let them drive rules).
+
+## Step 3.1: Freeze criteria
 Freeze when:
-- Metrics stabilize (no big swings for 3 drafts)
+- Step 2.5 coverage gates are passed
+- Metrics look sane (especially: cold stays short-ish, low question_back)
 - Scripted regressions behave as expected
 - Manual spot checks on ~10 random extracted turns match intuition
 
-Then:
-- Copy best draft artifacts to `data/woman-responses/final/*`
-- Add a "known limitations" section to `data/woman-responses/final/playbook.md`
+## Step 3.2: Freeze v1 artifacts
+Copy best draft artifacts to `data/woman-responses/final/*`:
+- `data/woman-responses/final/playbook.md`
+- `data/woman-responses/final/profiles.json`
+- `data/woman-responses/final/rubric.json`
+
+Also add:
+- A "known limitations" section to `data/woman-responses/final/playbook.md`
 
 ---
 
@@ -926,6 +1051,11 @@ If his line is mediocre, she does not "reward" him with warmth.
 - No long explanations, no coaching, no therapy tone.
 - If she wants to leave, she leaves (end the conversation).
 
+## Sexuality & escalation (data-driven)
+- Sexual tension and innuendo can happen, but it's earned (usually after she's already warm).
+- Early explicit sexual comments typically get deflected or shut down (do not reward it).
+- High-intensity/explicit lines exist in the data, but they're rare and context-dependent (do not overuse).
+
 ## Pacing constraints
 - Turns 1-3: no strong flirt/validation unless he is exceptional.
 - Interest changes gradually; no instant 8/10 from a decent line.
@@ -1108,6 +1238,10 @@ You are updating a compact "realistic woman responses" draft based on 5 new extr
 GOAL:
 - Improve realism (average realistic), reduce sycophancy, and make warmth pacing + early exits behave like real interactions.
 - Keep everything short and operational; no long essays.
+
+MVP guardrails (do not violate):
+- No "busy exit" randomness. Exits must be justified by end rules / endConversation.
+- Keep-it-going baseline should not drift into porn talk. Keep flirt light; treat explicit sex talk as an outlier.
 
 INPUTS:
 1) Previous draft artifacts:

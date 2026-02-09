@@ -14,6 +14,8 @@ type PeakExperienceStepProps = {
   completedSteps: InnerGameStep[]
   onBack: () => void
   onComplete: (response: string, inferredValues: InferredValue[]) => void
+  onBackToHub?: () => void
+  onStartFresh?: () => void
 }
 
 const CSIKSZENTMIHALYI_QUOTE = "The best moments in our lives are not the passive, receptive, relaxing times... The best moments usually occur if a person's body or mind is stretched to its limits in a voluntary effort to accomplish something difficult and worthwhile."
@@ -25,6 +27,8 @@ export function PeakExperienceStep({
   completedSteps,
   onBack,
   onComplete,
+  onBackToHub,
+  onStartFresh,
 }: PeakExperienceStepProps) {
   const {
     response,
@@ -110,7 +114,21 @@ export function PeakExperienceStep({
             nextLabel="Analyze My Experience"
             isLoading={isLoading}
             nextDisabled={response.length < 20}
+            onBackToHub={onBackToHub}
           />
+
+          {/* Start fresh link */}
+          {onStartFresh && (
+            <div className="text-center pt-4 border-t border-border/50 mt-6">
+              <button
+                type="button"
+                onClick={onStartFresh}
+                className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -170,7 +188,21 @@ export function PeakExperienceStep({
             onBack={onBack}
             onNext={handleContinue}
             nextLabel="Continue"
+            onBackToHub={onBackToHub}
           />
+
+          {/* Start fresh link */}
+          {onStartFresh && (
+            <div className="text-center pt-4 border-t border-border/50 mt-6">
+              <button
+                type="button"
+                onClick={onStartFresh}
+                className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

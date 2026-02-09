@@ -103,6 +103,15 @@ export const CreateFieldReportSchema = z.object({
   { message: "Cannot specify both template_id and system_template_slug" }
 )
 
+export const UpdateFieldReportSchema = z.object({
+  title: z.string().max(200).optional(),
+  fields: z.record(z.string(), z.unknown()).optional(),
+  approach_count: z.number().int().min(0).max(1000).optional(),
+  location: z.string().max(200).optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  is_draft: z.boolean().optional(),
+})
+
 export const FavoriteActionSchema = z.object({
   templateId: z.string().uuid(),
   action: z.enum(["add", "remove"]),
@@ -112,15 +121,27 @@ export const FavoriteActionSchema = z.object({
 // Review Schemas
 // ============================================
 
+// Template ID can be a UUID (user templates) or "system-{slug}" (system templates)
+const TemplateIdSchema = z.string().refine(
+  (val) => {
+    // Allow system template IDs
+    if (val.startsWith("system-")) return true
+    // Allow valid UUIDs
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val)
+  },
+  { message: "Must be a valid UUID or system template ID" }
+)
+
 export const CreateReviewSchema = z.object({
   review_type: ReviewTypeSchema,
-  template_id: z.string().uuid().optional(),
+  template_id: TemplateIdSchema.optional().nullable(),
   fields: z.record(z.string(), z.unknown()),
   period_start: z.string().datetime(),
   period_end: z.string().datetime(),
-  previous_commitment: z.string().max(1000).optional(),
-  commitment_fulfilled: z.boolean().optional(),
-  new_commitment: z.string().max(1000).optional(),
+  previous_commitment: z.string().max(1000).optional().nullable(),
+  commitment_fulfilled: z.boolean().optional().nullable(),
+  new_commitment: z.string().max(1000).optional().nullable(),
   is_draft: z.boolean().default(false),
 })
 
@@ -133,5 +154,6 @@ export type UpdateSessionInput = z.infer<typeof UpdateSessionSchema>
 export type CreateApproachInput = z.infer<typeof CreateApproachSchema>
 export type UpdateApproachInput = z.infer<typeof UpdateApproachSchema>
 export type CreateFieldReportInput = z.infer<typeof CreateFieldReportSchema>
+export type UpdateFieldReportInput = z.infer<typeof UpdateFieldReportSchema>
 export type FavoriteActionInput = z.infer<typeof FavoriteActionSchema>
 export type CreateReviewInput = z.infer<typeof CreateReviewSchema>

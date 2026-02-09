@@ -17,6 +17,8 @@ type CuttingStepPageProps = {
   completedSteps: InnerGameStep[]
   onBack: () => void
   onComplete: (coreValues: CoreValue[], aspirationalValues: { id: string }[]) => void
+  onBackToHub?: () => void
+  onStartFresh?: () => void
 }
 
 type Phase = "aspirational" | "pairwise" | "ranking"
@@ -29,6 +31,8 @@ export function CuttingStepPage({
   completedSteps,
   onBack,
   onComplete,
+  onBackToHub,
+  onStartFresh,
 }: CuttingStepPageProps) {
   // Merge all values from all sources
   const allValues = useMemo(() => {
@@ -287,7 +291,21 @@ export function CuttingStepPage({
             onBack={onBack}
             onNext={handleComplete}
             nextLabel="Confirm My Values"
+            onBackToHub={onBackToHub}
           />
+
+          {/* Start fresh link */}
+          {onStartFresh && (
+            <div className="text-center pt-4 border-t border-border/50 mt-6">
+              <button
+                type="button"
+                onClick={onStartFresh}
+                className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+              >
+                Start fresh
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>

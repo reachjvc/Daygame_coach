@@ -655,6 +655,7 @@ download_one() {
         rc=$?
         echo "⚠️ Audio step ended (code $rc). Log: $log_audio"
         log_failed_download "$source_name" "$youtube_url" "AUDIO_DOWNLOAD_FAILED_CODE_$rc"
+        cleanup_orphaned_metadata "$output_dir"
         [[ "$rc" -eq 77 ]] && return 77
         [[ "$rc" -eq 78 ]] && return 78
       }

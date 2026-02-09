@@ -48,6 +48,7 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
 
   // For keep-it-going: store context for state persistence across turns
   const [keepItGoingContext, setKeepItGoingContext] = useState<KeepItGoingContext | null>(null);
+  const conversationEnded = scenarioType === "keep-it-going" && Boolean(keepItGoingContext?.isEnded);
 
   const addMessage = (
     sender: ChatMessage["sender"],
@@ -69,7 +70,7 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || conversationEnded) return;
 
     const userMessage = inputMessage;
     setInputMessage("");
@@ -115,10 +116,10 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
         setCurrentArchetype(archetype);
       }
 
-      // For keep-it-going: store updated context for next turn
-      if (data.keepItGoingContext) {
-        setKeepItGoingContext(data.keepItGoingContext);
-      }
+          // For keep-it-going: store updated context for next turn
+          if (data.keepItGoingContext) {
+            setKeepItGoingContext(data.keepItGoingContext);
+          }
 
       addMessage("ai", aiResponseText, { archetype });
 
@@ -241,6 +242,11 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
                 Practicing with: <span className="text-primary font-semibold">{currentArchetype}</span>
               </p>
             )}
+            {conversationEnded && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Conversation ended{keepItGoingContext?.endReason ? `: ${keepItGoingContext.endReason}` : "."}
+              </p>
+            )}
           </div>
           <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-destructive/10">
             <XCircle className="h-6 w-6 text-muted-foreground hover:text-destructive" />
@@ -282,16 +288,16 @@ export function VoiceChatWindow({ onClose, scenarioType, situationId }: VoiceCha
         <div className="p-4 border-t border-border bg-card flex items-center gap-2">
           <form onSubmit={handleSendMessage} className="flex-1 flex gap-2">
             <Input
-              placeholder="Type what you'd say..."
+              placeholder={conversationEnded ? "Conversation ended" : "Type what you'd say..."}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              disabled={isLoading}
+              disabled={isLoading || conversationEnded}
               className="flex-1 bg-background border-border text-foreground placeholder:text-muted-foreground"
               autoFocus
             />
             <Button
               type="submit"
-              disabled={isLoading || !inputMessage.trim()}
+              disabled={isLoading || conversationEnded || !inputMessage.trim()}
               size="icon"
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >

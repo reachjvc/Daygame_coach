@@ -4,7 +4,9 @@ import {
   systemTemplateToRow,
   isSystemTemplate,
   type SystemTemplateSlug,
+  getSystemReviewTemplatesAsRows,
 } from "@/src/tracking/data/templates"
+import { getMilestoneInfo, type MilestoneTier } from "@/src/tracking/data/milestones"
 
 // Helper to get ISO week string (e.g., "2026-W04")
 export function getISOWeekString(date: Date): string {
@@ -42,6 +44,7 @@ import type {
   SessionUpdate,
   SessionWithApproaches,
   SessionSummary,
+  SessionAchievement,
   ApproachRow,
   ApproachInsert,
   ApproachUpdate,
@@ -190,7 +193,7 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
   })
 
   // Update session-related stats and milestones
-  await updateSessionStats(session.user_id, {
+  await updateSessionStats(session.user_id, sessionId, {
     approachCount: totalApproaches,
     goalMet,
     durationMinutes,
@@ -255,6 +258,7 @@ export async function reactivateSession(sessionId: string): Promise<SessionWithA
 // Called when a session ends to update stats and check milestones
 async function updateSessionStats(
   userId: string,
+  sessionId: string,
   sessionInfo: {
     approachCount: number
     goalMet: boolean
@@ -318,8 +322,8 @@ async function updateSessionStats(
   // Variety milestones
   if (uniqueLocations.length >= 5) potentialMilestones.push({ type: "globetrotter" })
 
-  // Award all in batch
-  await checkAndAwardMilestones(userId, potentialMilestones)
+  // Award all in batch (with sessionId to link achievements to this session)
+  await checkAndAwardMilestones(userId, potentialMilestones, sessionId)
 }
 
 // Check if current week is "active" and update weekly streak accordingly
@@ -458,15 +462,24 @@ export async function deleteSession(sessionId: string, userId: string): Promise<
   // Total approaches/numbers/etc. remain as historical records
 }
 
+// Tier order for sorting achievements (rarest first)
+const TIER_ORDER: Record<SessionAchievement['tier'], number> = {
+  diamond: 0,
+  platinum: 1,
+  gold: 2,
+  silver: 3,
+  bronze: 4,
+}
+
 export async function getSessionSummaries(
   userId: string,
   limit = 10
 ): Promise<SessionSummary[]> {
   const supabase = await createServerSupabaseClient()
 
-  // Single query with embedded relation - fixes N+1 problem
+  // Single query with embedded relations - fixes N+1 problem
   // Previously: 1 query for sessions + 2 queries per session = 11+ queries for 5 sessions
-  // Now: 1 query total
+  // Now: 1 query total (sessions + approaches + milestones)
   const { data, error } = await supabase
     .from("sessions")
     .select(`
@@ -481,6 +494,9 @@ export async function getSessionSummaries(
       end_reason,
       approaches (
         outcome
+      ),
+      milestones (
+        milestone_type
       )
     `)
     .eq("user_id", userId)
@@ -494,6 +510,7 @@ export async function getSessionSummaries(
   // Transform the joined data into SessionSummary format
   return (data || []).map((session) => {
     const approaches = session.approaches || []
+    const milestones = session.milestones || []
 
     const outcomes = {
       blowout: 0,
@@ -509,6 +526,19 @@ export async function getSessionSummaries(
       }
     }
 
+    // Transform milestones to achievements with full info, sorted by tier (rarest first)
+    const achievements: SessionAchievement[] = milestones
+      .map((m) => {
+        const info = getMilestoneInfo(m.milestone_type)
+        return {
+          milestone_type: m.milestone_type,
+          emoji: info.emoji,
+          label: info.label,
+          tier: info.tier as SessionAchievement['tier'],
+        }
+      })
+      .sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier])
+
     return {
       id: session.id,
       started_at: session.started_at,
@@ -521,6 +551,7 @@ export async function getSessionSummaries(
       primary_location: session.primary_location,
       end_reason: session.end_reason as SessionSummary['end_reason'],
       outcomes,
+      achievements,
     }
   })
 }
@@ -554,8 +585,8 @@ export async function createApproach(approach: ApproachInsert): Promise<Approach
     }
   }
 
-  // Update user stats
-  await incrementApproachStats(approach.user_id, approach.outcome)
+  // Update user stats (pass sessionId to link milestones to session)
+  await incrementApproachStats(approach.user_id, approach.outcome, approach.session_id)
 
   return data as ApproachRow
 }
@@ -842,13 +873,13 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
     const newCount = (stats.total_field_reports || 0) + 1
     await updateUserTrackingStats(report.user_id, { total_field_reports: newCount })
 
-    // Batch milestone checking
+    // Batch milestone checking (link to session if available)
     const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
     if (newCount === 1) potentialMilestones.push({ type: "first_field_report" })
     if (newCount === 10) potentialMilestones.push({ type: "10_field_reports" })
     if (newCount === 25) potentialMilestones.push({ type: "25_field_reports" })
     if (newCount === 50) potentialMilestones.push({ type: "50_field_reports" })
-    await checkAndAwardMilestones(report.user_id, potentialMilestones)
+    await checkAndAwardMilestones(report.user_id, potentialMilestones, report.session_id)
   }
 
   return data as FieldReportRow
@@ -911,6 +942,41 @@ export async function getDraftFieldReports(userId: string): Promise<FieldReportR
   }
 
   return data as FieldReportRow[]
+}
+
+export async function getFieldReport(reportId: string): Promise<FieldReportRow | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("field_reports")
+    .select("*")
+    .eq("id", reportId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") return null
+    throw new Error(`Failed to get field report: ${error.message}`)
+  }
+
+  return data as FieldReportRow
+}
+
+export async function deleteFieldReport(reportId: string, userId: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error, count } = await supabase
+    .from("field_reports")
+    .delete({ count: "exact" })
+    .eq("id", reportId)
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to delete field report: ${error.message}`)
+  }
+
+  if (count === 0) {
+    throw new Error("Report not found or access denied")
+  }
 }
 
 export async function getMostRecentlyUsedTemplateId(userId: string): Promise<string | null> {
@@ -995,29 +1061,16 @@ export async function removeFavoriteTemplate(userId: string, templateId: string)
 // ============================================
 
 export async function getReviewTemplates(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   userId: string,
   reviewType?: ReviewType
 ): Promise<ReviewTemplateRow[]> {
-  const supabase = await createServerSupabaseClient()
+  // System review templates are served from code (same pattern as field report templates)
+  const systemTemplates = getSystemReviewTemplatesAsRows(reviewType)
 
-  let query = supabase
-    .from("review_templates")
-    .select("*")
-    .or(`is_system.eq.true,user_id.eq.${userId}`)
-
-  if (reviewType) {
-    query = query.eq("review_type", reviewType)
-  }
-
-  const { data, error } = await query
-    .order("is_system", { ascending: false })
-    .order("name", { ascending: true })
-
-  if (error) {
-    throw new Error(`Failed to get review templates: ${error.message}`)
-  }
-
-  return data as ReviewTemplateRow[]
+  // TODO: When user-created review templates are supported, fetch from DB here
+  // For now, just return system templates
+  return systemTemplates
 }
 
 // ============================================
@@ -1189,7 +1242,8 @@ export async function updateUserTrackingStats(
 
 async function incrementApproachStats(
   userId: string,
-  outcome?: ApproachOutcome
+  outcome?: ApproachOutcome,
+  sessionId?: string
 ): Promise<void> {
   const stats = await getOrCreateUserTrackingStats(userId)
 
@@ -1286,8 +1340,8 @@ async function incrementApproachStats(
   if (newStreak === 30) potentialMilestones.push({ type: "30_day_streak" })
   if (newStreak === 100) potentialMilestones.push({ type: "100_day_streak" })
 
-  // Award all in batch
-  await checkAndAwardMilestones(userId, potentialMilestones)
+  // Award all in batch (link to session if available)
+  await checkAndAwardMilestones(userId, potentialMilestones, sessionId)
 }
 
 async function incrementWeeklyReviewCount(userId: string): Promise<void> {
@@ -1381,7 +1435,8 @@ export async function checkAndAwardMilestone(
  */
 export async function checkAndAwardMilestones(
   userId: string,
-  milestones: Array<{ type: MilestoneType; value?: number }>
+  milestones: Array<{ type: MilestoneType; value?: number }>,
+  sessionId?: string
 ): Promise<MilestoneRow[]> {
   if (milestones.length === 0) return []
 
@@ -1410,6 +1465,7 @@ export async function checkAndAwardMilestones(
     user_id: userId,
     milestone_type: m.type,
     value: m.value,
+    session_id: sessionId,
   }))
 
   const { data, error: insertError } = await supabase

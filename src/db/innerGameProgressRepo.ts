@@ -217,3 +217,64 @@ export async function resetProgress(userId: string): Promise<InnerGameProgressRo
 
   return applyDefaults(data as InnerGameProgressRow)
 }
+
+export type SectionName = "values" | "shadow" | "peak_experience" | "hurdles" | "cutting"
+
+/**
+ * Reset a specific section and all dependent sections.
+ * Cascade order: values → shadow → peak_experience → hurdles → cutting
+ *
+ * Note: This only resets the progress table. Caller must also clear related tables:
+ * - values: delete from user_values
+ * - cutting: delete from value_comparisons
+ */
+export async function resetSection(
+  userId: string,
+  section: SectionName
+): Promise<InnerGameProgressRow> {
+  const supabase = await createServerSupabaseClient()
+
+  // Build update object based on section and cascade
+  const updates: InnerGameProgressUpdate = {}
+
+  // Cascade: resetting earlier sections also resets later ones
+  if (section === "values") {
+    updates.current_step = 1 // VALUES step
+    updates.current_substep = 0
+    updates.values_completed = false
+    updates.step1_completed = false // legacy
+  }
+  if (section === "values" || section === "shadow") {
+    updates.shadow_completed = false
+    updates.shadow_response = null
+    updates.shadow_inferred_values = null
+  }
+  if (section === "values" || section === "shadow" || section === "peak_experience") {
+    updates.peak_experience_completed = false
+    updates.peak_experience_response = null
+    updates.peak_experience_inferred_values = null
+  }
+  if (section === "values" || section === "shadow" || section === "peak_experience" || section === "hurdles") {
+    updates.hurdles_completed = false
+    updates.hurdles_response = null
+    updates.hurdles_inferred_values = null
+    updates.step2_completed = false // legacy
+  }
+  // Cutting is always reset (last in chain)
+  updates.cutting_completed = false
+  updates.final_core_values = null
+  updates.aspirational_values = null
+
+  const { data, error } = await supabase
+    .from("inner_game_progress")
+    .update(updates)
+    .eq("user_id", userId)
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to reset section: ${error.message}`)
+  }
+
+  return applyDefaults(data as InnerGameProgressRow)
+}

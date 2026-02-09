@@ -34,6 +34,14 @@ export const KeepItGoingContextSchema = z.object({
   consecutiveHighScores: z.number(),
   averageScore: z.number(),
   totalScore: z.number(),
+  usedResponses: z.record(z.array(z.number())),
+
+  // Realistic response state fields
+  interestLevel: z.number().min(1).max(10),
+  exitRisk: z.number().min(0).max(3),
+  realismNotch: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
+  isEnded: z.boolean(),
+  endReason: z.string().optional(),
 })
 
 export const ChatRequestSchema = z.object({

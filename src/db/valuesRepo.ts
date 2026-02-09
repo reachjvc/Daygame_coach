@@ -73,3 +73,19 @@ export async function upsertUserValues(
     throw new Error(`Failed to save user values: ${error.message}`)
   }
 }
+
+/**
+ * Delete all user values (used when resetting Values section).
+ */
+export async function deleteUserValues(userId: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("user_values")
+    .delete()
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to delete user values: ${error.message}`)
+  }
+}

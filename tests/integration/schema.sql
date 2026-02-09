@@ -343,11 +343,13 @@ CREATE TABLE milestones (
   milestone_type TEXT NOT NULL,
   achieved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   value INTEGER,
+  session_id UUID REFERENCES sessions(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(user_id, milestone_type)
 );
 
 CREATE INDEX idx_milestones_user_id ON milestones(user_id);
+CREATE INDEX idx_milestones_session_id ON milestones(session_id);
 
 -- ============================================
 -- Sticking points table

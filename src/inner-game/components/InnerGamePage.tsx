@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { ChevronLeft, Loader2 } from "lucide-react"
+import { ChevronLeft, Loader2, Heart, Target } from "lucide-react"
 
 import {
   InnerGameStep,
@@ -11,8 +12,10 @@ import {
   type InferredValue,
   type CoreValue,
 } from "../types"
+import { GoalsTab } from "./GoalsTab"
+import { ValuesHub } from "./ValuesHub"
 import { CATEGORIES } from "../config"
-import { getCompletedSteps, getResumeStep, migrateProgress } from "../modules/progressUtils"
+import { getCompletedSteps, migrateProgress } from "../modules/progressUtils"
 import { WelcomeCard } from "./WelcomeCard"
 import { ValuesStepPage } from "./ValuesStep"
 import { ShadowStep } from "./ShadowStep"
@@ -20,6 +23,7 @@ import { PeakExperienceStep } from "./PeakExperienceStep"
 import { HurdlesStep } from "./HurdlesStep"
 import { CuttingStepPage } from "./CuttingStep"
 import { SummaryPage } from "./SummaryPage"
+import type { SectionName } from "../modules/progress"
 
 interface InnerGamePageProps {
   isPreviewMode?: boolean
@@ -33,7 +37,13 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   // Progress state
   const [progress, setProgress] = useState<InnerGameProgress | null>(null)
   const [selectedValues, setSelectedValues] = useState<Set<string>>(new Set())
-  const [showWelcome, setShowWelcome] = useState(true)
+
+  // Hub/Step view mode - show hub by default, step when user clicks into a section
+  const [viewMode, setViewMode] = useState<"hub" | "step">("hub")
+  const [activeSection, setActiveSection] = useState<InnerGameStep | null>(null)
+
+  // Welcome modal - only for first-time users
+  const [showWelcome, setShowWelcome] = useState(false)
 
   // Fetch initial data (skip in preview mode)
   useEffect(() => {
@@ -79,8 +89,9 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
         setProgress(migratedProgress)
         setSelectedValues(new Set(data.selectedValues))
 
-        // Always show welcome card on session start
-        setShowWelcome(true)
+        // Only show welcome card for first-time users (never dismissed)
+        const isFirstTime = !migratedProgress.welcomeDismissed
+        setShowWelcome(isFirstTime)
       } catch (err) {
         console.error("Failed to load progress:", err)
         setError(err instanceof Error ? err.message : "Something went wrong")
@@ -132,27 +143,63 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     }
   }, [selectedValues])
 
-  // Handle welcome dismiss
+  // Handle welcome dismiss - just dismiss and show hub
   const handleWelcomeDismiss = async () => {
     setShowWelcome(false)
     if (!progress) return
 
-    // Treat "welcome dismissed" as true when computing the next step
-    const resumeStep = getResumeStep({ ...progress, welcomeDismissed: true })
+    // Mark welcome as dismissed but stay on hub
+    setProgress(prev => prev ? { ...prev, welcomeDismissed: true } : prev)
 
-    // Optimistically advance client state
-    setProgress(prev =>
-      prev
-        ? { ...prev, welcomeDismissed: true, currentStep: resumeStep }
-        : prev
-    )
+    // Sync to server
+    if (!progress.welcomeDismissed) {
+      await updateProgress({ welcomeDismissed: true })
+    }
+  }
 
-    // Keep server in sync
-    if (!progress.welcomeDismissed || progress.currentStep !== resumeStep) {
-      await updateProgress({
-        welcomeDismissed: true,
-        currentStep: resumeStep,
+  // Handle section selection from hub
+  const handleSelectSection = (step: InnerGameStep) => {
+    setActiveSection(step)
+    setViewMode("step")
+    // Update currentStep so the right component renders
+    if (progress) {
+      setProgress(prev => prev ? { ...prev, currentStep: step } : prev)
+      updateProgress({ currentStep: step })
+    }
+  }
+
+  // Handle back to hub from any step
+  const handleBackToHub = () => {
+    setViewMode("hub")
+    setActiveSection(null)
+  }
+
+  // Handle reset section - calls API and returns to hub
+  const handleResetSection = async (section: SectionName) => {
+    try {
+      const res = await fetch("/api/inner-game/reset-section", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section }),
       })
+
+      if (!res.ok) {
+        throw new Error("Failed to reset section")
+      }
+
+      const data = await res.json()
+      setProgress(data.progress)
+
+      // If resetting values, clear local selected values
+      if (section === "values") {
+        setSelectedValues(new Set())
+      }
+
+      // Return to hub
+      setViewMode("hub")
+      setActiveSection(null)
+    } catch (err) {
+      console.error("Failed to reset section:", err)
     }
   }
 
@@ -272,6 +319,10 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
       const data = await res.json()
       setProgress(migrateProgress(data.progress))
       setShowWelcome(true)
+
+      // Return to hub
+      setViewMode("hub")
+      setActiveSection(null)
     } catch (err) {
       console.error("Failed to restart:", err)
     }
@@ -352,7 +403,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
 
   return (
     <>
-      {/* Welcome modal */}
+      {/* Welcome modal - only show on Values tab */}
       {showWelcome && (
         <WelcomeCard
           progress={progress}
@@ -374,77 +425,111 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
           </Button>
           <h1 className="text-xl font-semibold">Inner Game</h1>
         </div>
-        {progress.currentStep === InnerGameStep.VALUES && (
-          <ValuesStepPage
-            currentSubstep={progress.currentSubstep}
-            selectedValues={selectedValues}
-            onToggleValue={handleToggleValue}
-            onNext={handleValuesNext}
-            onBack={handleValuesBack}
-            onSaveValues={saveValues}
-            completedSteps={completedSteps}
-          />
-        )}
 
-        {progress.currentStep === InnerGameStep.SHADOW && (
-          <ShadowStep
-            initialResponse={progress.shadowResponse}
-            initialInferredValues={progress.shadowInferredValues}
-            completedSteps={completedSteps}
-            onBack={handleBackToValues}
-            onComplete={handleShadowComplete}
-          />
-        )}
+        {/* Tabs: Values and Goals */}
+        <Tabs defaultValue="values" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="values" className="gap-2">
+              <Heart className="h-4 w-4" />
+              Values
+            </TabsTrigger>
+            <TabsTrigger value="goals" className="gap-2">
+              <Target className="h-4 w-4" />
+              Goals
+            </TabsTrigger>
+          </TabsList>
 
-        {progress.currentStep === InnerGameStep.PEAK_EXPERIENCE && (
-          <PeakExperienceStep
-            initialResponse={progress.peakExperienceResponse}
-            initialInferredValues={progress.peakExperienceInferredValues}
-            completedSteps={completedSteps}
-            onBack={handleBackToShadow}
-            onComplete={handlePeakExperienceComplete}
-          />
-        )}
+          {/* Values Tab - Hub or Step View */}
+          <TabsContent value="values" className="space-y-0">
+            {viewMode === "hub" ? (
+              <ValuesHub
+                progress={progress}
+                onSelectSection={handleSelectSection}
+              />
+            ) : (
+              <>
+                {progress.currentStep === InnerGameStep.VALUES && (
+                  <ValuesStepPage
+                    currentSubstep={progress.currentSubstep}
+                    selectedValues={selectedValues}
+                    onToggleValue={handleToggleValue}
+                    onNext={handleValuesNext}
+                    onBack={handleValuesBack}
+                    onSaveValues={saveValues}
+                    completedSteps={completedSteps}
+                    onBackToHub={handleBackToHub}
+                    onStartFresh={() => handleResetSection("values")}
+                  />
+                )}
 
-        {progress.currentStep === InnerGameStep.HURDLES && (
-          <HurdlesStep
-            initialResponse={progress.hurdlesResponse}
-            initialInferredValues={progress.hurdlesInferredValues}
-            completedSteps={completedSteps}
-            onBack={handleBackToPeakExperience}
-            onComplete={handleHurdlesComplete}
-          />
-        )}
+                {progress.currentStep === InnerGameStep.SHADOW && (
+                  <ShadowStep
+                    initialResponse={progress.shadowResponse}
+                    initialInferredValues={progress.shadowInferredValues}
+                    completedSteps={completedSteps}
+                    onBack={handleBackToValues}
+                    onComplete={handleShadowComplete}
+                    onBackToHub={handleBackToHub}
+                    onStartFresh={() => handleResetSection("shadow")}
+                  />
+                )}
 
-        {progress.currentStep === InnerGameStep.CUTTING && (
-          <CuttingStepPage
-            selectedValues={Array.from(selectedValues)}
-            hurdlesInferredValues={progress.hurdlesInferredValues}
-            shadowInferredValues={progress.shadowInferredValues}
-            peakExperienceInferredValues={progress.peakExperienceInferredValues}
-            completedSteps={completedSteps}
-            onBack={handleBackToHurdles}
-            onComplete={handleCuttingComplete}
-          />
-        )}
+                {progress.currentStep === InnerGameStep.PEAK_EXPERIENCE && (
+                  <PeakExperienceStep
+                    initialResponse={progress.peakExperienceResponse}
+                    initialInferredValues={progress.peakExperienceInferredValues}
+                    completedSteps={completedSteps}
+                    onBack={handleBackToShadow}
+                    onComplete={handlePeakExperienceComplete}
+                    onBackToHub={handleBackToHub}
+                    onStartFresh={() => handleResetSection("peak_experience")}
+                  />
+                )}
 
-        {progress.currentStep === InnerGameStep.COMPLETE && progress.finalCoreValues && (
-          <SummaryPage
-            coreValues={progress.finalCoreValues}
-            aspirationalValues={progress.aspirationalValues ?? []}
-            completedSteps={completedSteps}
-            onRestart={handleRestart}
-          />
-        )}
+                {progress.currentStep === InnerGameStep.HURDLES && (
+                  <HurdlesStep
+                    initialResponse={progress.hurdlesResponse}
+                    initialInferredValues={progress.hurdlesInferredValues}
+                    completedSteps={completedSteps}
+                    onBack={handleBackToPeakExperience}
+                    onComplete={handleHurdlesComplete}
+                    onBackToHub={handleBackToHub}
+                    onStartFresh={() => handleResetSection("hurdles")}
+                  />
+                )}
 
-        {/* Fallback for welcome step without modal */}
-        {progress.currentStep === InnerGameStep.WELCOME && !showWelcome && (
-          <div className="text-center py-12">
-            <Button onClick={() => setShowWelcome(true)}>
-              Start Inner Game Journey
-            </Button>
-          </div>
-        )}
+                {progress.currentStep === InnerGameStep.CUTTING && (
+                  <CuttingStepPage
+                    selectedValues={Array.from(selectedValues)}
+                    hurdlesInferredValues={progress.hurdlesInferredValues}
+                    shadowInferredValues={progress.shadowInferredValues}
+                    peakExperienceInferredValues={progress.peakExperienceInferredValues}
+                    completedSteps={completedSteps}
+                    onBack={handleBackToHurdles}
+                    onComplete={handleCuttingComplete}
+                    onBackToHub={handleBackToHub}
+                    onStartFresh={() => handleResetSection("cutting")}
+                  />
+                )}
+
+                {progress.currentStep === InnerGameStep.COMPLETE && progress.finalCoreValues && (
+                  <SummaryPage
+                    coreValues={progress.finalCoreValues}
+                    aspirationalValues={progress.aspirationalValues ?? []}
+                    completedSteps={completedSteps}
+                    onRestart={handleRestart}
+                    onBackToHub={handleBackToHub}
+                  />
+                )}
+              </>
+            )}
+          </TabsContent>
+
+          {/* Goals Tab */}
+          <TabsContent value="goals">
+            <GoalsTab isPreviewMode={isPreviewMode} />
+          </TabsContent>
+        </Tabs>
       </main>
     </>
   )

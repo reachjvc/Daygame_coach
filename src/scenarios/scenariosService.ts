@@ -62,6 +62,8 @@ import {
   generateAIResponse,
   generateCloseResponse,
   evaluateWithAI,
+  generateExitResponse,
+  updateInterestFromRubric,
   type Language,
 } from "@/src/scenarios/keepitgoing"
 
@@ -251,13 +253,23 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   // Handle keep-it-going scenario
   if (scenario_type === "keep-it-going" && keepItGoingContext) {
-    // Use AI to evaluate user's response
-    const aiEval = await evaluateWithAI(
-      request.message,
-      keepItGoingContext.language,
-      keepItGoingContext,
-      userId
-    )
+    // Sticky end: once she's ended the conversation, don't keep spending tokens evaluating/generating.
+    if (keepItGoingContext.isEnded) {
+      const reason = keepItGoingContext.endReason ? ` (${keepItGoingContext.endReason})` : ""
+      const endedText =
+        keepItGoingContext.language === "da"
+          ? `*Hun er allerede gået${reason}.*`
+          : `*She's already gone${reason}.*`
+      return {
+        text: endedText,
+        archetype: archetype.name,
+        evaluation: {
+          score: 0,
+          feedback: keepItGoingContext.language === "da" ? "Samtalen er allerede slut." : "Conversation already ended.",
+        },
+        keepItGoingContext,
+      }
+    }
 
     // Build conversation history for AI response generation (with sliding window)
     const MAX_HISTORY_MESSAGES = 8 // 4 pairs - reduces token usage significantly
@@ -269,17 +281,42 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
         content: msg.content,
       }))
 
+    // Use AI to evaluate user's response (contextual; sees recent conversation window)
+    const aiEval = await evaluateWithAI(
+      request.message,
+      aiConversationHistory,
+      keepItGoingContext.language,
+      keepItGoingContext,
+      userId
+    )
+
+    // Apply rubric-based interest/exitRisk updates
+    const interestUpdate = updateInterestFromRubric(keepItGoingContext, {
+      score: aiEval.score,
+      quality: aiEval.quality,
+      tags: aiEval.tags,
+    })
+
     // Generate response based on quality and phase
     let responseText: string
 
-    if (keepItGoingContext.conversationPhase === "close") {
+    // Check if conversation should end early
+    if (interestUpdate.isEnded) {
+      // Generate exit response - she's leaving
+      responseText = await generateExitResponse(keepItGoingContext, interestUpdate.endReason, userId)
+    } else if (keepItGoingContext.conversationPhase === "close") {
       // Use accumulated average score for close outcome
       const outcome = getCloseOutcome(keepItGoingContext.averageScore)
       responseText = await generateCloseResponse(keepItGoingContext, outcome, request.message, userId)
     } else {
-      // Use AI to generate response based on quality
+      // Use AI to generate response based on quality (with new interest level in context)
+      const contextWithUpdatedInterest = {
+        ...keepItGoingContext,
+        interestLevel: interestUpdate.interestLevel,
+        exitRisk: interestUpdate.exitRisk,
+      }
       responseText = await generateAIResponse({
-        context: keepItGoingContext,
+        context: contextWithUpdatedInterest,
         userMessage: request.message,
         quality: aiEval.quality,
         conversationHistory: aiConversationHistory,
@@ -287,13 +324,22 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
       })
     }
 
-    // Update context with new score
-    const updatedContext = updateContext(
+    // Update context with new score and interest/exitRisk
+    const baseUpdatedContext = updateContext(
       keepItGoingContext,
       request.message,
       aiEval.score,
       undefined
     )
+
+    // Merge interest/exitRisk updates into context
+    const updatedContext = {
+      ...baseUpdatedContext,
+      interestLevel: interestUpdate.interestLevel,
+      exitRisk: interestUpdate.exitRisk,
+      isEnded: interestUpdate.isEnded,
+      endReason: interestUpdate.endReason,
+    }
 
     const milestoneEvaluation =
       updatedContext.turnCount % 5 === 0

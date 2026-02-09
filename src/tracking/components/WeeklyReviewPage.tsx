@@ -17,6 +17,9 @@ import {
   Check,
   X,
   FileText,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
 } from "lucide-react"
 import Link from "next/link"
 import type {
@@ -25,6 +28,7 @@ import type {
   UserTrackingStatsRow,
 } from "@/src/db/trackingTypes"
 import { FieldRenderer } from "./FieldRenderer"
+import { GoalsSummarySection } from "./GoalsSummarySection"
 
 interface WeeklyReviewPageProps {
   userId: string
@@ -40,6 +44,33 @@ interface WeeklyStatsData {
   weekEnd: string
 }
 
+const WEEKLY_REVIEW_PRINCIPLES = [
+  {
+    title: "Data First, Feeling Second",
+    description: "Start with objective data, then reflect. Your remembering self distorts via peak-end rule and negativity bias.",
+  },
+  {
+    title: "Clear → Current → Creative",
+    description: "Brain dump first (clear), review what happened (current), then brainstorm and set intentions (creative).",
+  },
+  {
+    title: "Appreciate Before Analyzing",
+    description: "Counter negativity bias by celebrating wins before examining problems. 'What went well?' comes first.",
+  },
+  {
+    title: "Decide, Don't Do",
+    description: "Weekly review is for deciding what work to do, not doing the work. Keep it strategic.",
+  },
+  {
+    title: "Compare to 4-Week Average",
+    description: "Compare to rolling average, not just last week. Prevents overreaction to single-week anomalies.",
+  },
+  {
+    title: "Track Inputs, Not Just Outcomes",
+    description: "'Did I do what I committed to?' matters more than results. Good process → good outcomes over time.",
+  },
+]
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
 export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const router = useRouter()
@@ -53,6 +84,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const [newCommitment, setNewCommitment] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [showPrinciples, setShowPrinciples] = useState(false)
 
   // Calculate current week boundaries
   const getWeekBoundaries = () => {
@@ -137,13 +169,20 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
     try {
       const { startOfWeek, endOfWeek } = getWeekBoundaries()
 
+      // For system templates, don't send template_id (DB column is UUID)
+      // Store the template slug in fields for reference
+      const isSystemTemplate = selectedTemplate?.id?.startsWith("system-")
+      const fieldsWithTemplate = isSystemTemplate
+        ? { ...formValues, _template_slug: selectedTemplate?.slug }
+        : formValues
+
       const response = await fetch("/api/tracking/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           review_type: "weekly",
-          template_id: selectedTemplate?.id,
-          fields: formValues,
+          template_id: isSystemTemplate ? null : selectedTemplate?.id,
+          fields: fieldsWithTemplate,
           period_start: startOfWeek.toISOString(),
           period_end: endOfWeek.toISOString(),
           previous_commitment: previousCommitment,
@@ -191,6 +230,47 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             Reflect on your week and set intentions for the next one
           </p>
         </div>
+
+        {/* Review Principles */}
+        <Card className="mb-8 overflow-hidden">
+          <button
+            onClick={() => setShowPrinciples(!showPrinciples)}
+            className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
+            data-testid="principles-toggle"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Lightbulb className="size-5 text-amber-500" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold">6 Principles for a Useful Review</h3>
+                <p className="text-sm text-muted-foreground">Research-backed tips</p>
+              </div>
+            </div>
+            {showPrinciples ? (
+              <ChevronUp className="size-5 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="size-5 text-muted-foreground" />
+            )}
+          </button>
+          {showPrinciples && (
+            <div className="px-4 pb-4 border-t">
+              <div className="grid gap-3 mt-4">
+                {WEEKLY_REVIEW_PRINCIPLES.map((principle, idx) => (
+                  <div key={idx} className="flex gap-3">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary text-sm font-medium flex items-center justify-center">
+                      {idx + 1}
+                    </span>
+                    <div>
+                      <h4 className="font-medium text-sm">{principle.title}</h4>
+                      <p className="text-sm text-muted-foreground">{principle.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
 
         {/* Weekly Stats Summary */}
         {weeklyStats && (
@@ -244,6 +324,9 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             </div>
           </Card>
         )}
+
+        {/* Goals Summary */}
+        <GoalsSummarySection />
 
         {/* Previous Commitment */}
         {previousCommitment && (
@@ -343,6 +426,9 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
           </div>
         </Card>
       )}
+
+      {/* Goals summary compact */}
+      <GoalsSummarySection compact />
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }} data-testid="weekly-review-form">
         <Card className="p-6">

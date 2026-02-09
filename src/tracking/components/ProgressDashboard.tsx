@@ -29,7 +29,9 @@ import {
   Pencil,
 } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { QuickAddModal } from "./QuickAddModal"
+import { SessionAchievementStack } from "./SessionAchievementStack"
 import {
   ALL_MILESTONES,
   TIER_INFO,
@@ -45,6 +47,7 @@ import { getSystemTemplateInfo, TEMPLATE_COLORS, type TemplateSlug } from "../da
 import { TEMPLATE_ICONS } from "./templateIcons"
 
 export function ProgressDashboard() {
+  const router = useRouter()
   const { state, deleteSession, deleteFieldReport, refresh } = useTrackingStats()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null)
@@ -592,6 +595,9 @@ export function ProgressDashboard() {
                               🏆
                             </span>
                           )}
+                          {session.achievements.length > 0 && (
+                            <SessionAchievementStack achievements={session.achievements} />
+                          )}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {session.is_active
@@ -779,7 +785,18 @@ export function ProgressDashboard() {
                               toggleReportExpand(report.id)
                             }}
                           >
-                            {isExpanded ? "Close" : "View/Edit"}
+                            {isExpanded ? "Close" : "View"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-muted-foreground hover:text-primary"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              router.push(`/dashboard/tracking/report?edit=${report.id}`)
+                            }}
+                          >
+                            <Pencil className="size-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -802,8 +819,8 @@ export function ProgressDashboard() {
 
                       {/* Expanded content */}
                       {isExpanded && (
-                        <div className="border-t border-border/50 p-4 bg-muted/10">
-                          <div className="space-y-3">
+                        <div className="border-t border-border/50 p-5 bg-gradient-to-b from-muted/20 to-transparent">
+                          <div className="grid gap-4">
                             {Object.entries(report.fields).map(([key, value]) => {
                               // Skip empty values
                               if (value === null || value === undefined || value === "") return null
@@ -816,36 +833,92 @@ export function ProgressDashboard() {
                                 .replace(/^./, (str) => str.toUpperCase())
                                 .trim()
 
+                              // Check if this is a mood/scale field (1-5 or 1-10 number)
+                              const isMoodField = key.toLowerCase().includes("mood")
+                              const isScaleField = typeof value === "number" && value >= 1 && value <= 10
+
                               // Format the value based on type
                               let displayValue: React.ReactNode
                               if (Array.isArray(value)) {
                                 displayValue = (
-                                  <div className="flex flex-wrap gap-1">
+                                  <div className="flex flex-wrap gap-2">
                                     {value.map((item, i) => (
-                                      <Badge key={i} variant="outline" className="text-xs">
+                                      <Badge key={i} variant="secondary" className="text-xs px-2 py-1">
                                         {String(item)}
                                       </Badge>
                                     ))}
                                   </div>
                                 )
                               } else if (typeof value === "boolean") {
-                                displayValue = value ? "Yes" : "No"
+                                displayValue = (
+                                  <Badge variant={value ? "default" : "secondary"}>
+                                    {value ? "Yes" : "No"}
+                                  </Badge>
+                                )
+                              } else if (isMoodField && typeof value === "number") {
+                                const moodEmojis = ["", "😫", "😔", "😐", "🙂", "😄"]
+                                displayValue = (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-2xl">{moodEmojis[value] || "😐"}</span>
+                                    <span className="text-sm text-muted-foreground">{value}/5</span>
+                                  </div>
+                                )
+                              } else if (isScaleField) {
+                                displayValue = (
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-32">
+                                      <div
+                                        className="h-full bg-primary rounded-full"
+                                        style={{ width: `${(value as number) * 10}%` }}
+                                      />
+                                    </div>
+                                    <span className="text-sm font-medium">{value}/10</span>
+                                  </div>
+                                )
+                              } else if (typeof value === "number") {
+                                displayValue = (
+                                  <span className="text-lg font-semibold text-primary">{value}</span>
+                                )
                               } else {
                                 displayValue = (
-                                  <p className="whitespace-pre-wrap text-sm text-foreground/90">{String(value)}</p>
+                                  <p className="whitespace-pre-wrap text-sm text-foreground/90 leading-relaxed">{String(value)}</p>
                                 )
                               }
 
+                              // Use different styling for long text vs short values
+                              const isLongText = typeof value === "string" && value.length > 80
+
                               return (
-                                <div key={key} className="border-b border-border/30 pb-3 last:border-0 last:pb-0">
-                                  <dt className="text-xs font-medium text-muted-foreground mb-1">{label}</dt>
+                                <div
+                                  key={key}
+                                  className={`rounded-lg p-3 bg-card/50 border border-border/30 ${isLongText ? "col-span-full" : ""}`}
+                                >
+                                  <dt className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">{label}</dt>
                                   <dd>{displayValue}</dd>
                                 </div>
                               )
                             })}
                             {Object.keys(report.fields).length === 0 && (
-                              <p className="text-sm text-muted-foreground italic">No fields recorded</p>
+                              <p className="text-sm text-muted-foreground italic text-center py-4">No fields recorded</p>
                             )}
+                          </div>
+                          <div className="mt-5 pt-4 border-t border-border/30 flex gap-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => toggleReportExpand(report.id)}
+                            >
+                              Close
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => router.push(`/dashboard/tracking/report?edit=${report.id}`)}
+                            >
+                              <Pencil className="size-4 mr-2" />
+                              Edit Report
+                            </Button>
                           </div>
                         </div>
                       )}
@@ -882,7 +955,7 @@ export function ProgressDashboard() {
           )}
         </div>
 
-        {/* Weekly Review Status */}
+        {/* Weekly Reviews */}
         <Card className="p-6 md:col-span-2">
           <div className="flex items-center justify-between">
             <div>
@@ -917,6 +990,67 @@ export function ProgressDashboard() {
                   }}
                 />
               </div>
+            </div>
+          )}
+
+          {/* Recent Reviews List */}
+          {state.recentReviews.length > 0 && (
+            <div className="space-y-3 mt-4">
+              {state.recentReviews.slice(0, 3).map((review) => (
+                <div
+                  key={review.id}
+                  className="flex items-center justify-between p-4 rounded-lg bg-muted/30"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Calendar className="size-5 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-medium capitalize">
+                        {review.review_type} Review
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {new Date(review.period_start).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })} - {new Date(review.period_end).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                        {review.is_draft && " • Draft"}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {review.commitment_fulfilled !== null && (
+                      <Badge
+                        variant="secondary"
+                        className={review.commitment_fulfilled
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-orange-500/10 text-orange-500"
+                        }
+                      >
+                        {review.commitment_fulfilled ? "Commitment Met" : "Commitment Missed"}
+                      </Badge>
+                    )}
+                    {review.is_draft && (
+                      <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600">
+                        Draft
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Commitment reminder if there's an active commitment */}
+          {state.recentReviews.length > 0 && state.recentReviews[0].new_commitment && (
+            <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="text-sm font-medium text-primary mb-1">Your Current Commitment</div>
+              <p className="text-sm text-muted-foreground italic">
+                &quot;{state.recentReviews[0].new_commitment}&quot;
+              </p>
             </div>
           )}
         </Card>

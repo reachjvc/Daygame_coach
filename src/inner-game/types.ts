@@ -183,3 +183,19 @@ export type PairComparisonProps = {
   valueB: ValueItem
   onChoose: (chosenId: string) => void
 }
+
+// ============================================================================
+// Hub Navigation Types
+// ============================================================================
+
+export type SectionStatus = "not_started" | "in_progress" | "completed" | "locked"
+
+export type SectionAccessResult = {
+  accessible: boolean
+  reason?: string
+}
+
+export type SectionStatusResult = {
+  status: SectionStatus
+  detail?: string
+}

@@ -13,6 +13,10 @@ export type {
   KeepItGoingContext,
   ResponseQuality,
   CloseOutcome,
+  EvalResult,
+  InterestBucket,
+  BucketProfile,
+  TagEffect,
 } from "./types"
 
 // Generator
@@ -21,6 +25,7 @@ export {
   generateKeepItGoingIntro,
   updateContext,
   getPhase,
+  updateInterestFromRubric,
 } from "./generator"
 
 // AI Chat & Evaluation
@@ -29,7 +34,16 @@ export {
   generateCloseResponse,
   evaluateWithAI,
   getCloseOutcome,
+  generateExitResponse,
 } from "./chat"
+
+// Realistic Profiles
+export {
+  getInterestBucket,
+  getBucketProfile,
+  PROFILES,
+  RUBRIC,
+} from "./realisticProfiles"
 
 // Claude Code Integration
 export { useClaudeCode } from "./claudeCode"

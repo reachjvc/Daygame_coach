@@ -8,6 +8,7 @@ export default function ReportPage() {
   const { userId } = useTrackingAuth()
   const searchParams = useSearchParams()
   const sessionId = searchParams.get("session") || undefined
+  const editReportId = searchParams.get("edit") || undefined
 
-  return <FieldReportPage userId={userId} sessionId={sessionId} />
+  return <FieldReportPage userId={userId} sessionId={sessionId} reportId={editReportId} />
 }

@@ -52,6 +52,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Gauge className="size-5" />,
     insight: "A 30-second log beats a skipped 10-minute analysis.",
     stat: "Consistency increases success by 40%",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p2",
@@ -62,6 +63,7 @@ export const PRINCIPLES: Principle[] = [
     category: "foundation",
     icon: <HeartPulse className="size-5" />,
     insight: "Process the feeling, then find the lesson.",
+    goalCategories: ["daygame"],
   },
   {
     id: "p3",
@@ -73,6 +75,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Scale className="size-5" />,
     insight: "What you celebrate, you repeat.",
     stat: "Positive feedback increases testosterone for next session",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p4",
@@ -84,6 +87,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <CircleHelp className="size-5" />,
     insight: "Every ending is a lesson waiting to be extracted.",
     stat: "80% of insights come from analyzing endings",
+    goalCategories: ["daygame"],
   },
   {
     id: "p5",
@@ -94,6 +98,7 @@ export const PRINCIPLES: Principle[] = [
     category: "foundation",
     icon: <Route className="size-5" />,
     insight: "Insight without action is just entertainment.",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p6",
@@ -104,6 +109,7 @@ export const PRINCIPLES: Principle[] = [
     category: "foundation",
     icon: <SlidersHorizontal className="size-5" />,
     insight: "The right tool for the right moment.",
+    goalCategories: ["daygame"],
   },
   // LEARNING SCIENCE
   {
@@ -116,6 +122,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Orbit className="size-5" />,
     insight: "Reflection without action = half the cycle.",
     stat: "Full cycle completion doubles retention",
+    goalCategories: ["daygame", "fitness", "business"],
   },
   {
     id: "p8",
@@ -127,6 +134,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <GitCompare className="size-5" />,
     insight: "The gap between plan and reality is your teacher.",
     stat: "Used by US Army since 1970s",
+    goalCategories: ["daygame", "fitness", "business"],
   },
   {
     id: "p11",
@@ -137,6 +145,7 @@ export const PRINCIPLES: Principle[] = [
     category: "learning",
     icon: <GraduationCap className="size-5" />,
     insight: "Scaffolding for beginners, freedom for experts.",
+    goalCategories: ["daygame", "fitness"],
   },
   {
     id: "p19",
@@ -148,6 +157,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <MessageCircleQuestion className="size-5" />,
     insight: "Three questions. Maximum learning.",
     stat: "Used by 63% of healthcare professionals",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p20",
@@ -158,6 +168,7 @@ export const PRINCIPLES: Principle[] = [
     category: "learning",
     icon: <Footprints className="size-5" />,
     insight: "The moment before the moment matters most.",
+    goalCategories: ["daygame"],
   },
   {
     id: "p23",
@@ -169,6 +180,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Repeat className="size-5" />,
     insight: "Old reports are future teachers.",
     stat: "200-300% better retention with spaced review",
+    goalCategories: ["daygame", "fitness", "business"],
   },
   // PSYCHOLOGY
   {
@@ -180,6 +192,7 @@ export const PRINCIPLES: Principle[] = [
     category: "psychology",
     icon: <BrainCircuit className="size-5" />,
     insight: "Your brain lies. Check the evidence.",
+    goalCategories: ["daygame"],
   },
   {
     id: "p13",
@@ -191,6 +204,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Users className="size-5" />,
     insight: "Every master was once a disaster.",
     stat: "+32% adherence with identity framing",
+    goalCategories: ["daygame", "fitness"],
   },
   {
     id: "p15",
@@ -202,6 +216,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <ShieldCheck className="size-5" />,
     insight: "You can't learn what you can't admit.",
     stat: "Teams with safety are 2x more effective",
+    goalCategories: ["daygame"],
   },
   {
     id: "p17",
@@ -212,6 +227,7 @@ export const PRINCIPLES: Principle[] = [
     category: "psychology",
     icon: <Timer className="size-5" />,
     insight: "If you're going in circles, stop and act.",
+    goalCategories: ["daygame"],
   },
   {
     id: "p24",
@@ -222,6 +238,7 @@ export const PRINCIPLES: Principle[] = [
     category: "psychology",
     icon: <Drama className="size-5" />,
     insight: "Every surprise is raw material.",
+    goalCategories: ["daygame"],
   },
   {
     id: "p25",
@@ -233,6 +250,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <PenLine className="size-5" />,
     insight: "Write it out to let it go.",
     stat: "200+ studies confirm benefits",
+    goalCategories: ["daygame"],
   },
   // HABITS
   {
@@ -245,6 +263,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Link2 className="size-5" />,
     insight: "Attach new habits to old anchors.",
     stat: "+64% success with habit stacking",
+    goalCategories: ["fitness", "eating", "cardio", "daygame"],
   },
   {
     id: "p12",
@@ -256,6 +275,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <Users className="size-5" />,
     insight: "Become a learner, not just someone who logs.",
     stat: "+32% adherence with identity framing",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   // FEEDBACK & GOALS
   {
@@ -267,6 +287,7 @@ export const PRINCIPLES: Principle[] = [
     category: "feedback",
     icon: <Dices className="size-5" />,
     insight: "Good process, trust the results will follow.",
+    goalCategories: ["daygame", "business"],
   },
   {
     id: "p16",
@@ -278,6 +299,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <ListChecks className="size-5" />,
     insight: "Pre-decide, then execute.",
     stat: "3x success rate on difficult goals",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p18",
@@ -289,6 +311,7 @@ export const PRINCIPLES: Principle[] = [
     icon: <SlidersHorizontal className="size-5" />,
     insight: "The right feedback at the right time.",
     stat: "1/3 of feedback actually harms performance",
+    goalCategories: ["daygame", "fitness"],
   },
   {
     id: "p21",
@@ -299,6 +322,7 @@ export const PRINCIPLES: Principle[] = [
     category: "feedback",
     icon: <Trophy className="size-5" />,
     insight: "Your wins are proof you can do it.",
+    goalCategories: ["daygame", "fitness", "eating", "cardio", "business"],
   },
   {
     id: "p22",
@@ -310,5 +334,6 @@ export const PRINCIPLES: Principle[] = [
     icon: <BookMarked className="size-5" />,
     insight: "Focus on the skill, not the score.",
     stat: "35 years of research, 90% success rate",
+    goalCategories: ["daygame", "fitness", "business"],
   },
 ]

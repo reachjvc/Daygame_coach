@@ -10,7 +10,7 @@
  * - No sync issues between code and database
  */
 
-import type { TemplateField, FieldReportTemplateRow } from "@/src/db/trackingTypes"
+import type { TemplateField, FieldReportTemplateRow, ReviewTemplateRow, ReviewType } from "@/src/db/trackingTypes"
 
 // ============================================
 // Types
@@ -87,6 +87,8 @@ export const SYSTEM_TEMPLATES = {
         label: "Conversation (optional)",
         placeholder: "Me: ...\nHer: ...",
         rows: 6,
+        multiple: true,
+        allowAudio: true,
       },
     ],
     dynamicFields: [],
@@ -145,6 +147,8 @@ export const SYSTEM_TEMPLATES = {
         label: "Conversation (optional)",
         placeholder: "Me: ...\nHer: ...",
         rows: 8,
+        multiple: true,
+        allowAudio: true,
       },
     ],
     dynamicFields: [],
@@ -183,6 +187,8 @@ export const SYSTEM_TEMPLATES = {
         label: "Conversation",
         placeholder: "Me: ...\nHer: ...",
         rows: 8,
+        multiple: true,
+        allowAudio: true,
       },
       {
         id: "key_takeaway",
@@ -351,6 +357,8 @@ export const SYSTEM_TEMPLATES = {
         label: "Conversation (optional)",
         placeholder: "Me: ...\nHer: ...",
         rows: 8,
+        multiple: true,
+        allowAudio: true,
       },
     ],
     dynamicFields: [],
@@ -526,4 +534,377 @@ export const TEMPLATE_TAGLINES: Record<SystemTemplateSlug, string> = {
   standard: "The sweet spot. Learn without overthinking.",
   "deep-dive": "When you got close. Extract every lesson.",
   "cbt-thought-diary": "Challenge automatic thoughts. Break the loop.",
+}
+
+// ============================================
+// Review Templates (Weekly/Monthly/Quarterly)
+// ============================================
+
+export interface SystemReviewTemplateData {
+  name: string
+  description: string
+  icon: string
+  estimatedMinutes: number
+  reviewType: ReviewType
+  staticFields: TemplateField[]
+  dynamicFields: TemplateField[]
+  activeDynamicFields: string[]
+}
+
+export const SYSTEM_REVIEW_TEMPLATES = {
+  "quick-win": {
+    name: "The Quick Win",
+    description: "5 minutes. Celebrate wins, capture one lesson, set your focus.",
+    icon: "zap",
+    estimatedMinutes: 5,
+    reviewType: "weekly" as ReviewType,
+    staticFields: [
+      {
+        id: "wins",
+        type: "textarea",
+        label: "3 wins this week (any area of life)",
+        placeholder: "1. ...\n2. ...\n3. ...",
+        rows: 4,
+      },
+      {
+        id: "lesson",
+        type: "textarea",
+        label: "1 lesson learned",
+        placeholder: "What did this week teach you?",
+        rows: 2,
+      },
+      {
+        id: "next_focus",
+        type: "text",
+        label: "Next week's single focus",
+        placeholder: "One thing to prioritize...",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
+  },
+
+  "operator": {
+    name: "The Operator",
+    description: "10 minutes. Pattern recognition, self-advice, strategic planning.",
+    icon: "target",
+    estimatedMinutes: 10,
+    reviewType: "weekly" as ReviewType,
+    staticFields: [
+      {
+        id: "went_well",
+        type: "textarea",
+        label: "What went well? (life + game)",
+        placeholder: "Wins, progress, good moments...",
+        rows: 3,
+      },
+      {
+        id: "patterns",
+        type: "textarea",
+        label: "What patterns am I noticing?",
+        placeholder: "Recurring themes, habits, tendencies...",
+        rows: 3,
+      },
+      {
+        id: "advice_to_past",
+        type: "textarea",
+        label: "What would I tell last-week-me?",
+        placeholder: "Knowing what you know now...",
+        rows: 2,
+      },
+      {
+        id: "numbers_snapshot",
+        type: "textarea",
+        label: "Numbers snapshot (optional)",
+        placeholder: "Sessions, approaches, outcomes...",
+        rows: 2,
+      },
+      {
+        id: "next_commitment",
+        type: "text",
+        label: "Next week's commitment",
+        placeholder: "Specific, measurable...",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
+  },
+
+  "deep-thinker": {
+    name: "The Deep Thinker",
+    description: "15-20 minutes. Full reflection across all life areas with strategic adjustments.",
+    icon: "brain",
+    estimatedMinutes: 18,
+    reviewType: "weekly" as ReviewType,
+    staticFields: [
+      {
+        id: "wins_all_areas",
+        type: "textarea",
+        label: "Wins across all life areas",
+        placeholder: "Game, career, fitness, relationships, personal growth...",
+        rows: 4,
+      },
+      {
+        id: "lessons_insights",
+        type: "textarea",
+        label: "Lessons & insights",
+        placeholder: "What did you learn or realize?",
+        rows: 3,
+      },
+      {
+        id: "behavior_patterns",
+        type: "textarea",
+        label: "Patterns in behavior/results",
+        placeholder: "What keeps showing up?",
+        rows: 3,
+      },
+      {
+        id: "emotional_state",
+        type: "select",
+        label: "Emotional/mental state check",
+        options: ["Thriving", "Good", "Neutral", "Struggling", "Burned out"],
+      },
+      {
+        id: "gratitude",
+        type: "textarea",
+        label: "Gratitude moment",
+        placeholder: "What are you grateful for this week?",
+        rows: 2,
+      },
+      {
+        id: "strategic_adjustments",
+        type: "textarea",
+        label: "Strategic adjustments",
+        placeholder: "What will you do differently?",
+        rows: 3,
+      },
+      {
+        id: "detailed_commitment",
+        type: "textarea",
+        label: "Detailed commitment",
+        placeholder: "Primary goal for next week...",
+        rows: 2,
+      },
+      {
+        id: "stretch_goal",
+        type: "text",
+        label: "Stretch goal",
+        placeholder: "If everything goes well...",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
+  },
+
+  "scaling-weekly": {
+    name: "Scaling Weekly",
+    description: "10 minutes. Solution-focused scaling questions.",
+    icon: "sliders",
+    estimatedMinutes: 10,
+    reviewType: "weekly" as ReviewType,
+    staticFields: [
+      {
+        id: "scaling",
+        type: "slider",
+        label: "Where are you this week? (1-10)",
+        min: 1,
+        max: 10,
+      },
+      {
+        id: "whats_working",
+        type: "textarea",
+        label: "What's keeping you from being lower?",
+        placeholder: "What's going well...",
+        rows: 2,
+      },
+      {
+        id: "one_point_higher",
+        type: "textarea",
+        label: "What would one point higher look like?",
+        placeholder: "Specific, achievable...",
+        rows: 2,
+      },
+      {
+        id: "best_moment",
+        type: "textarea",
+        label: "Best moment this week",
+        placeholder: "What stood out?",
+        rows: 2,
+      },
+      {
+        id: "blocker",
+        type: "textarea",
+        label: "What's in your way?",
+        placeholder: "Be honest...",
+        rows: 2,
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
+  },
+
+  "six-phase": {
+    name: "Six-Phase Review",
+    description: "20 minutes. Ground, appreciate, examine, process, orient, close.",
+    icon: "clipboard-check",
+    estimatedMinutes: 20,
+    reviewType: "weekly" as ReviewType,
+    staticFields: [
+      {
+        id: "current_state",
+        type: "select",
+        label: "How are you feeling right now?",
+        options: ["Connected & grounded", "Activated / anxious", "Shut down / low energy"],
+      },
+      {
+        id: "glad_moment",
+        type: "textarea",
+        label: "What's one moment from this week you're most glad happened?",
+        placeholder: "Something that mattered...",
+        rows: 2,
+      },
+      {
+        id: "strength_used",
+        type: "text",
+        label: "What strength did you use this week?",
+        placeholder: "e.g., courage, persistence, humor...",
+      },
+      {
+        id: "better_than_expected",
+        type: "textarea",
+        label: "What went better than expected?",
+        placeholder: "A pleasant surprise...",
+        rows: 2,
+      },
+      {
+        id: "scaling",
+        type: "slider",
+        label: "Where are you with your focus area? (1-10)",
+        min: 1,
+        max: 10,
+      },
+      {
+        id: "whats_working",
+        type: "textarea",
+        label: "What's keeping you from being lower?",
+        placeholder: "What's going well...",
+        rows: 2,
+      },
+      {
+        id: "blockers",
+        type: "textarea",
+        label: "What's in your way right now? What are you avoiding?",
+        placeholder: "Be honest with yourself...",
+        rows: 2,
+      },
+      {
+        id: "input_check",
+        type: "select",
+        label: "Did you do the actions you committed to?",
+        options: ["Yes, fully", "Partially", "Not really", "No commitment last week"],
+      },
+      {
+        id: "challenge_lesson",
+        type: "textarea",
+        label: "What challenged you this week, and what did it teach you?",
+        placeholder: "The hard thing and the lesson...",
+        rows: 3,
+      },
+      {
+        id: "benefit_finding",
+        type: "textarea",
+        label: "Is there anything useful you're taking from this? (It's okay if not yet.)",
+        placeholder: "Optional - don't force it",
+        rows: 2,
+      },
+      {
+        id: "next_week_focus",
+        type: "textarea",
+        label: "What's one thing you want to focus on next week?",
+        placeholder: "One clear focus...",
+        rows: 2,
+      },
+      {
+        id: "experiment",
+        type: "text",
+        label: "What small experiment would you like to try?",
+        placeholder: "Something testable...",
+      },
+      {
+        id: "looking_forward",
+        type: "text",
+        label: "What are you looking forward to enjoying next week?",
+        placeholder: "End on something positive...",
+      },
+      {
+        id: "one_sentence",
+        type: "text",
+        label: "This week in one sentence...",
+        placeholder: "Capture the essence",
+      },
+    ],
+    dynamicFields: [],
+    activeDynamicFields: [],
+  },
+} as const satisfies Record<string, SystemReviewTemplateData>
+
+export type SystemReviewTemplateSlug = keyof typeof SYSTEM_REVIEW_TEMPLATES
+
+/**
+ * Get all system review template slugs as an array.
+ */
+export function getSystemReviewTemplateSlugs(): SystemReviewTemplateSlug[] {
+  return Object.keys(SYSTEM_REVIEW_TEMPLATES) as SystemReviewTemplateSlug[]
+}
+
+/**
+ * Check if a slug is a system review template.
+ */
+export function isSystemReviewTemplate(slug: string): slug is SystemReviewTemplateSlug {
+  return slug in SYSTEM_REVIEW_TEMPLATES
+}
+
+/**
+ * Get template info for a system review template.
+ */
+export function getSystemReviewTemplateInfo(
+  slug: string
+): SystemReviewTemplateData | undefined {
+  if (isSystemReviewTemplate(slug)) {
+    return SYSTEM_REVIEW_TEMPLATES[slug]
+  }
+  return undefined
+}
+
+/**
+ * Convert a system review template to ReviewTemplateRow format.
+ */
+export function systemReviewTemplateToRow(slug: SystemReviewTemplateSlug): ReviewTemplateRow {
+  const template = SYSTEM_REVIEW_TEMPLATES[slug]
+  return {
+    id: `system-${slug}`,
+    user_id: null,
+    name: template.name,
+    slug: slug,
+    description: template.description,
+    icon: template.icon,
+    estimated_minutes: template.estimatedMinutes,
+    review_type: template.reviewType,
+    is_system: true,
+    base_template_id: null,
+    static_fields: template.staticFields as TemplateField[],
+    dynamic_fields: template.dynamicFields as TemplateField[],
+    active_dynamic_fields: template.activeDynamicFields as string[],
+    created_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
+  }
+}
+
+/**
+ * Get all system review templates as ReviewTemplateRow format.
+ */
+export function getSystemReviewTemplatesAsRows(reviewType?: ReviewType): ReviewTemplateRow[] {
+  return getSystemReviewTemplateSlugs()
+    .map(systemReviewTemplateToRow)
+    .filter(t => !reviewType || t.review_type === reviewType)
 }

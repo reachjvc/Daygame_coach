@@ -22,10 +22,10 @@ import {
   Heart,
 } from "lucide-react"
 import Link from "next/link"
-import type { FieldReportTemplateRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
+import type { FieldReportTemplateRow, FieldReportRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { SessionSummaryData } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, SESSION_IMPORT_FIELD_IDS } from "../config"
-import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER, type TemplateSlug } from "../data/templates"
+import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER, getSystemTemplateInfo, type TemplateSlug } from "../data/templates"
 import { TEMPLATE_ICONS } from "./templateIcons"
 import { FieldRenderer } from "./FieldRenderer"
 import { SessionImportSection } from "./SessionImportSection"
@@ -38,10 +38,11 @@ import { DatePicker } from "./DatePicker"
 interface FieldReportPageProps {
   userId: string
   sessionId?: string
+  reportId?: string  // When provided, edit mode is enabled
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars -- userId reserved for save functionality
-export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
+export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPageProps) {
   const router = useRouter()
   const [templates, setTemplates] = useState<FieldReportTemplateRow[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<FieldReportTemplateRow | null>(null)
@@ -59,20 +60,33 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   const [reportDate, setReportDate] = useState<Date>(new Date())
   const [postSessionMood, setPostSessionMood] = useState<number | null>(null)
 
+  // Edit mode state
+  const [existingReport, setExistingReport] = useState<FieldReportRow | null>(null)
+  const [isLoadingReport, setIsLoadingReport] = useState(!!reportId)
+  const [templateMatchAttempted, setTemplateMatchAttempted] = useState(false)
+  const [templatesLoaded, setTemplatesLoaded] = useState(false)
+  const isEditMode = !!reportId
+
   // Ref for scrolling to template section when coming from ended session
   const templateSectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     loadTemplates()
-    loadRecentlyUsedTemplate()
-    loadFavoriteTemplates()
-    if (sessionId) {
-      loadSessionData(sessionId)
+    if (reportId) {
+      // Edit mode: load existing report
+      loadExistingReport(reportId)
+    } else {
+      // Create mode: load favorites/recent
+      loadRecentlyUsedTemplate()
+      loadFavoriteTemplates()
+      if (sessionId) {
+        loadSessionData(sessionId)
+      }
     }
     // Replace initial history state so we have a known "home" state to return to
     // This prevents browser back from navigating away entirely when closing modals
     window.history.replaceState({ fieldReportHome: true }, '')
-  }, [sessionId])
+  }, [sessionId, reportId])
 
   // Scroll to template section when coming from ended session
   useEffect(() => {
@@ -111,6 +125,79 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
       console.error("Failed to load favorite templates:", error)
     }
   }
+
+  const loadExistingReport = async (id: string) => {
+    setIsLoadingReport(true)
+    try {
+      const response = await fetch(`/api/tracking/field-report/${id}`)
+      if (!response.ok) {
+        throw new Error("Report not found")
+      }
+
+      const report: FieldReportRow = await response.json()
+      setExistingReport(report)
+
+      // Populate form with existing values
+      setFormValues(report.fields || {})
+      setReportTitle(report.title || "")
+      setReportDate(new Date(report.reported_at))
+
+      // Load post-session mood if stored
+      const storedMood = report.fields?.[SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD]
+      if (typeof storedMood === "number") {
+        setPostSessionMood(storedMood)
+      }
+
+      // Find and select the template used for this report
+      // Wait for templates to load, then match
+      const findTemplate = () => {
+        if (report.system_template_slug) {
+          // System template - find from loaded templates
+          const systemTemplate = templates.find(t => t.slug === report.system_template_slug)
+          if (systemTemplate) {
+            setSelectedTemplate(systemTemplate)
+          }
+        } else if (report.template_id) {
+          // Custom template - find from loaded templates
+          const customTemplate = templates.find(t => t.id === report.template_id)
+          if (customTemplate) {
+            setSelectedTemplate(customTemplate)
+          }
+        }
+      }
+
+      // If templates are already loaded, find immediately
+      // Otherwise, they'll be set when templates load and we'll match in a useEffect
+      findTemplate()
+    } catch (error) {
+      console.error("Failed to load report:", error)
+      setSubmitError("Failed to load report. It may have been deleted.")
+    } finally {
+      setIsLoadingReport(false)
+    }
+  }
+
+  // Match template once templates are loaded (for edit mode)
+  useEffect(() => {
+    if (existingReport && templatesLoaded && !selectedTemplate && !templateMatchAttempted) {
+      setTemplateMatchAttempted(true)
+      if (existingReport.system_template_slug) {
+        const systemTemplate = templates.find(t => t.slug === existingReport.system_template_slug)
+        if (systemTemplate) setSelectedTemplate(systemTemplate)
+      } else if (existingReport.template_id) {
+        const customTemplate = templates.find(t => t.id === existingReport.template_id)
+        if (customTemplate) setSelectedTemplate(customTemplate)
+      }
+    }
+  }, [existingReport, templates, templatesLoaded, selectedTemplate, templateMatchAttempted])
+
+  // Load session data in edit mode if report has a session_id
+  useEffect(() => {
+    if (isEditMode && existingReport?.session_id && !sessionData && !sessionLoading) {
+      setSessionLoading(true)
+      loadSessionData(existingReport.session_id)
+    }
+  }, [existingReport?.session_id, isEditMode, sessionData, sessionLoading])
 
   const toggleFavorite = async (templateId: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent card click
@@ -261,6 +348,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     } catch (error) {
       console.error("Failed to load templates:", error)
     } finally {
+      setTemplatesLoaded(true) // Always set true to unblock UI
       setIsLoading(false)
     }
   }
@@ -301,7 +389,32 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   // Get all fields to render (static + active dynamic)
   // When session data exists, filter out approach count fields since they're shown in Session Context
+  // In edit mode without template, infer fields from saved report data
   const fieldsToRender = useMemo((): TemplateField[] => {
+    // In edit mode without a matched template, infer fields from saved report
+    if (isEditMode && !selectedTemplate && existingReport?.fields) {
+      return Object.keys(existingReport.fields).map((fieldId): TemplateField => {
+        const value = existingReport.fields[fieldId]
+        // Infer field type from the stored value
+        let type: TemplateField["type"] = "text"
+        if (typeof value === "number") type = "number"
+        else if (Array.isArray(value)) type = "tags"
+        else if (typeof value === "string" && value.length > 100) type = "textarea"
+
+        return {
+          id: fieldId,
+          type,
+          label: fieldId
+            .replace(/_/g, " ")
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, str => str.toUpperCase())
+            .trim(),
+          placeholder: "",
+          rows: type === "textarea" ? 4 : undefined,
+        }
+      })
+    }
+
     if (!selectedTemplate) return []
 
     const staticFields = selectedTemplate.static_fields || []
@@ -324,11 +437,13 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     }
 
     return allFields
-  }, [selectedTemplate, sessionData])
+  }, [selectedTemplate, sessionData, isEditMode, existingReport])
 
-  // Pre-fill form values when template is selected
+  // Pre-fill form values when template is selected (CREATE mode only)
+  // In edit mode, we already have values from the existing report
   useEffect(() => {
     if (!selectedTemplate) return
+    if (isEditMode) return // Don't overwrite existing report values
 
     const prefilled: Record<string, unknown> = {}
 
@@ -368,15 +483,21 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
           (field.type === "textarea" || field.type === "text") &&
           sessionData.approachNotes.length > 0
         ) {
-          prefilled[field.id] = sessionData.approachNotes
-            .map(({ approachNumber, note }) => `#${approachNumber}: ${note}`)
-            .join("\n\n")
+          // For multiple textareas, return array; for single, join with newlines
+          if (field.multiple) {
+            prefilled[field.id] = sessionData.approachNotes
+              .map(({ approachNumber, note }) => `#${approachNumber}: ${note}`)
+          } else {
+            prefilled[field.id] = sessionData.approachNotes
+              .map(({ approachNumber, note }) => `#${approachNumber}: ${note}`)
+              .join("\n\n")
+          }
         }
       }
     }
 
     setFormValues(prefilled)
-  }, [selectedTemplate, sessionData, fieldsToRender])
+  }, [selectedTemplate, sessionData, fieldsToRender, isEditMode])
 
   const handleFieldChange = (fieldId: string, value: unknown) => {
     setFormValues(prev => ({ ...prev, [fieldId]: value }))
@@ -411,28 +532,58 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
       ...(postSessionMood !== null && { [SESSION_IMPORT_FIELD_IDS.POST_SESSION_MOOD]: postSessionMood }),
     }
 
-    try {
-      // Determine template type - system templates have synthetic IDs starting with "system-"
-      const isSystemTemplate = selectedTemplate?.id.startsWith("system-")
+    // Extract approach count from form values (check for "approaches" field)
+    // Priority: form value > session data
+    let approachCount: number | undefined = sessionData?.approachCount ?? undefined
+    const approachesFormValue = formValues["approaches"]
+    if (approachesFormValue !== undefined && approachesFormValue !== null && approachesFormValue !== "") {
+      const parsed = typeof approachesFormValue === "number" ? approachesFormValue : Number(approachesFormValue)
+      if (!isNaN(parsed) && parsed >= 0) {
+        approachCount = parsed
+      }
+    }
 
-      const response = await fetch("/api/tracking/field-report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // Send system_template_slug for system templates, template_id (UUID) for custom
-          ...(isSystemTemplate
-            ? { system_template_slug: selectedTemplate?.slug }
-            : { template_id: selectedTemplate?.id }),
-          session_id: sessionId,
-          title: reportTitle || undefined,
-          report_date: reportDate?.toISOString() || undefined,
-          fields: fieldsWithMood,
-          approach_count: sessionData?.approachCount ?? undefined,
-          location: sessionData?.location ?? undefined,
-          tags: sessionData?.tags ?? undefined,
-          is_draft: isDraft,
-        }),
-      })
+    try {
+      let response: Response
+
+      if (isEditMode && reportId) {
+        // Edit mode: PUT to update existing report
+        response = await fetch(`/api/tracking/field-report/${reportId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: reportTitle || undefined,
+            fields: fieldsWithMood,
+            approach_count: approachCount,
+            location: existingReport?.location ?? sessionData?.location ?? undefined,
+            tags: existingReport?.tags ?? sessionData?.tags ?? undefined,
+            is_draft: isDraft,
+          }),
+        })
+      } else {
+        // Create mode: POST new report
+        // Determine template type - system templates have synthetic IDs starting with "system-"
+        const isSystemTemplate = selectedTemplate?.id.startsWith("system-")
+
+        response = await fetch("/api/tracking/field-report", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            // Send system_template_slug for system templates, template_id (UUID) for custom
+            ...(isSystemTemplate
+              ? { system_template_slug: selectedTemplate?.slug }
+              : { template_id: selectedTemplate?.id }),
+            session_id: sessionId,
+            title: reportTitle || undefined,
+            report_date: reportDate?.toISOString() || undefined,
+            fields: fieldsWithMood,
+            approach_count: approachCount,
+            location: sessionData?.location ?? undefined,
+            tags: sessionData?.tags ?? undefined,
+            is_draft: isDraft,
+          }),
+        })
+      }
 
       if (!response.ok) {
         const error = await response.json()
@@ -445,8 +596,12 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
         throw new Error(details || error.error || "Failed to save report")
       }
 
-      // Navigate back to tracking dashboard
-      router.push("/dashboard/tracking")
+      // Navigate back - go back for edit (returns to wherever user came from), to dashboard for create
+      if (isEditMode) {
+        router.back()
+      } else {
+        router.push("/dashboard/tracking")
+      }
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Failed to save report")
     } finally {
@@ -470,7 +625,13 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     return true
   }
 
-  if (isLoading || sessionLoading) {
+  // In edit mode, wait for template matching to be attempted
+  const isWaitingForTemplateMatch = isEditMode &&
+    existingReport &&
+    (existingReport.system_template_slug || existingReport.template_id) &&
+    !templateMatchAttempted
+
+  if (isLoading || sessionLoading || isLoadingReport || isWaitingForTemplateMatch) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="size-8 animate-spin text-primary" />
@@ -478,8 +639,30 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     )
   }
 
-  // Custom report builder view
-  if (showCustomBuilder) {
+  // Error state for edit mode - report failed to load
+  if (isEditMode && submitError && !existingReport) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        <Link
+          href="/dashboard/tracking/history"
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        >
+          <ArrowLeft className="size-4" />
+          Back to History
+        </Link>
+        <Card className="p-6 rounded-2xl border-destructive/50">
+          <div className="text-center">
+            <FileText className="size-12 mx-auto mb-4 text-muted-foreground/30" />
+            <h2 className="text-xl font-semibold mb-2">Failed to Load Report</h2>
+            <p className="text-destructive">{submitError}</p>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
+  // Custom report builder view (not available in edit mode)
+  if (showCustomBuilder && !isEditMode) {
     return (
       <CustomReportBuilder
         sessionData={sessionData}
@@ -492,8 +675,8 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
     )
   }
 
-  // Template selection view
-  if (!selectedTemplate) {
+  // Template selection view (only for create mode, not edit mode)
+  if (!selectedTemplate && !isEditMode) {
     return (
       <div className="max-w-6xl mx-auto px-4 py-8" data-testid="field-report-template-selection">
         <div className="mb-8">
@@ -932,7 +1115,16 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
 
   // Report form view
   const isValid = validateForm()
-  const colors = TEMPLATE_COLORS[selectedTemplate.slug as TemplateSlug] || {
+
+  // Get template info - use existing report's slug in edit mode if no matched template
+  const templateSlug = selectedTemplate?.slug || existingReport?.system_template_slug || "custom"
+  const systemTemplateInfo = existingReport?.system_template_slug
+    ? getSystemTemplateInfo(existingReport.system_template_slug)
+    : undefined
+  const templateName = selectedTemplate?.name || systemTemplateInfo?.name || "Edit Report"
+  const templateDescription = selectedTemplate?.description || systemTemplateInfo?.description || "Update your field report"
+
+  const colors = TEMPLATE_COLORS[templateSlug as TemplateSlug] || {
     bg: "bg-primary/10 text-primary border-primary/20",
     icon: "bg-primary text-primary-foreground",
     gradient: "from-primary/30 via-primary/10 to-accent/20",
@@ -941,26 +1133,37 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8" data-testid="field-report-form">
       {/* Back button */}
-      <button
-        onClick={handleCloseTemplate}
-        className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
-        data-testid="field-report-back"
-      >
-        <ArrowLeft className="size-4" />
-        Choose Different Template
-      </button>
+      {isEditMode ? (
+        <button
+          onClick={() => router.back()}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          data-testid="field-report-back"
+        >
+          <ArrowLeft className="size-4" />
+          Back
+        </button>
+      ) : (
+        <button
+          onClick={handleCloseTemplate}
+          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          data-testid="field-report-back"
+        >
+          <ArrowLeft className="size-4" />
+          Choose Different Template
+        </button>
+      )}
 
       {/* Template header with gradient */}
       <div className={`rounded-2xl overflow-hidden mb-6 border border-border/50`}>
         <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
-              {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[selectedTemplate.slug] || <FileText className="size-6" />}
+              {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[templateSlug] || <FileText className="size-6" />}
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{selectedTemplate.name}</h1>
+              <h1 className="text-2xl font-bold">{templateName}</h1>
               <p className="text-muted-foreground text-sm mt-0.5">
-                {(TEMPLATE_TAGLINES as Record<string, string>)[selectedTemplate.slug] || selectedTemplate.description}
+                {(TEMPLATE_TAGLINES as Record<string, string>)[templateSlug] || templateDescription}
               </p>
             </div>
           </div>
@@ -1054,7 +1257,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin mr-2" />
               ) : null}
-              Save Draft
+              {isEditMode ? "Save as Draft" : "Save Draft"}
             </Button>
             <Button
               type="submit"
@@ -1067,7 +1270,7 @@ export function FieldReportPage({ userId, sessionId }: FieldReportPageProps) {
               ) : (
                 <Check className="size-4 mr-2" />
               )}
-              Submit Report
+              {isEditMode ? "Update Report" : "Submit Report"}
             </Button>
           </div>
         </Card>

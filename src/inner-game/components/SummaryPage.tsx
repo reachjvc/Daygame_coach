@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft, Trophy, Sparkles, RotateCcw } from "lucide-react"
+import { ArrowLeft, Trophy, Sparkles, RotateCcw, LayoutGrid } from "lucide-react"
 import { InnerGameStep, type CoreValue } from "../types"
 import { StepProgress } from "./shared/StepProgress"
 
@@ -11,6 +11,7 @@ type SummaryPageProps = {
   aspirationalValues: { id: string }[]
   completedSteps: InnerGameStep[]
   onRestart: () => void
+  onBackToHub?: () => void
 }
 
 export function SummaryPage({
@@ -18,6 +19,7 @@ export function SummaryPage({
   aspirationalValues,
   completedSteps,
   onRestart,
+  onBackToHub,
 }: SummaryPageProps) {
   const formatValueName = (id: string) => id.replace(/-/g, " ")
 
@@ -144,6 +146,20 @@ export function SummaryPage({
           Start Over
         </Button>
       </div>
+
+      {/* Back to Overview link */}
+      {onBackToHub && (
+        <div className="text-center pt-2">
+          <button
+            type="button"
+            onClick={onBackToHub}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            Back to Overview
+          </button>
+        </div>
+      )}
     </div>
   )
 }

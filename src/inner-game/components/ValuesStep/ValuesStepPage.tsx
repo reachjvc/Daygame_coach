@@ -15,6 +15,8 @@ type ValuesStepPageProps = {
   onBack: () => void | Promise<void>
   onSaveValues: () => Promise<void>
   completedSteps: InnerGameStep[]
+  onBackToHub?: () => void
+  onStartFresh?: () => void
 }
 
 export function ValuesStepPage({
@@ -25,6 +27,8 @@ export function ValuesStepPage({
   onBack,
   onSaveValues,
   completedSteps,
+  onBackToHub,
+  onStartFresh,
 }: ValuesStepPageProps) {
   const [isSaving, setIsSaving] = useState(false)
   const category = CATEGORIES[currentSubstep]
@@ -108,7 +112,21 @@ export function ValuesStepPage({
         backLabel="Previous"
         nextLabel={isLastCategory ? "Complete Values" : "Next"}
         isLoading={isSaving}
+        onBackToHub={onBackToHub}
       />
+
+      {/* Start fresh link - subtle at the bottom */}
+      {onStartFresh && (
+        <div className="text-center pt-4 border-t border-border/50 mt-6">
+          <button
+            type="button"
+            onClick={onStartFresh}
+            className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          >
+            Start fresh
+          </button>
+        </div>
+      )}
     </div>
   )
 }

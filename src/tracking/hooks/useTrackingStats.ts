@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { UserTrackingStatsRow, SessionSummary, MilestoneRow, FieldReportRow } from "@/src/db/trackingTypes"
+import type { UserTrackingStatsRow, SessionSummary, MilestoneRow, FieldReportRow, ReviewRow } from "@/src/db/trackingTypes"
 
 interface TrackingStatsState {
   stats: UserTrackingStatsRow | null
   recentSessions: SessionSummary[]
   milestones: MilestoneRow[]
   recentFieldReports: FieldReportRow[]
+  recentReviews: ReviewRow[]
   isLoading: boolean
   error: string | null
 }
@@ -35,6 +36,7 @@ export function useTrackingStats(): UseTrackingStatsReturn {
       recentSessions: [],
       milestones: [],
       recentFieldReports: [],
+      recentReviews: [],
       isLoading: true,
       error: null,
     }
@@ -47,24 +49,27 @@ export function useTrackingStats(): UseTrackingStatsReturn {
         setState((prev) => ({ ...prev, isLoading: !statsCache, error: null }))
       }
 
-      // Parallel fetch - 4 requests (stats, sessions, milestones, field reports)
-      const [statsRes, sessionsRes, milestonesRes, reportsRes] = await Promise.all([
+      // Parallel fetch - 5 requests (stats, sessions, milestones, field reports, reviews)
+      const [statsRes, sessionsRes, milestonesRes, reportsRes, reviewsRes] = await Promise.all([
         fetch("/api/tracking/stats"),
         fetch("/api/tracking/sessions?limit=5"),
         fetch("/api/tracking/milestones"),
         fetch("/api/tracking/field-report?limit=5"),
+        fetch("/api/tracking/review?limit=5"),
       ])
 
       const stats = statsRes.ok ? await statsRes.json() : null
       const sessions = sessionsRes.ok ? await sessionsRes.json() : []
       const milestones = milestonesRes.ok ? await milestonesRes.json() : []
       const recentFieldReports = reportsRes.ok ? await reportsRes.json() : []
+      const recentReviews = reviewsRes.ok ? await reviewsRes.json() : []
 
       const newState: TrackingStatsState = {
         stats,
         recentSessions: sessions,
         milestones,
         recentFieldReports,
+        recentReviews,
         isLoading: false,
         error: null,
       }

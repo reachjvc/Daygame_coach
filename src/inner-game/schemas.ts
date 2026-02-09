@@ -49,5 +49,10 @@ export const inferValuesSchema = z.object({
   response: z.string().min(10, "Please provide a more detailed response").max(5000),
 })
 
+export const resetSectionSchema = z.object({
+  section: z.enum(["values", "shadow", "peak_experience", "hurdles", "cutting"]),
+})
+
 export type UpdateProgressInput = z.infer<typeof updateProgressSchema>
 export type InferValuesInput = z.infer<typeof inferValuesSchema>
+export type ResetSectionInput = z.infer<typeof resetSectionSchema>

@@ -166,4 +166,18 @@ export const SELECTORS = {
     articleTypes: 'article-types',
     articleTypeCard: (key: string) => `article-type-${key}`,
   },
+
+  customReportBuilder: {
+    modeSelect: 'custom-builder-mode-select',
+    modeTemplateOnly: 'mode-template-only',
+    modeReport: 'mode-report',
+    builderTemplateOnly: 'custom-builder-template-only',
+    builderReport: 'custom-builder-report',
+    templateNameInput: 'template-name-input',
+    fieldOption: (fieldId: string) => `field-option-${fieldId}`,
+    selectedField: (fieldId: string) => `selected-field-${fieldId}`,
+    filledField: (fieldId: string) => `filled-field-${fieldId}`,
+    removeField: (fieldId: string) => `remove-field-${fieldId}`,
+    saveButton: 'save-button',
+  },
 } as const

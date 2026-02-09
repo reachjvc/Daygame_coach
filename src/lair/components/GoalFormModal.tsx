@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import {
   Dialog,
   DialogContent,
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Plus, Minus } from "lucide-react"
+import { Loader2, Plus, Minus, Lightbulb } from "lucide-react"
+import { getRandomPrincipleForGoal } from "@/src/tracking/helpers/goalPrinciples"
 import {
   GOAL_CATEGORIES,
   getCategoryConfig,
@@ -109,6 +110,12 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
   const effectiveCategory = category === "custom" ? customCategory : category
   const categoryConfig = getCategoryConfig(effectiveCategory)
   const suggestions = categoryConfig.suggestions
+
+  // Get a relevant tip for the selected category
+  const tip = useMemo(() => {
+    if (!effectiveCategory) return null
+    return getRandomPrincipleForGoal(effectiveCategory)
+  }, [effectiveCategory])
 
   const handleSuggestionClick = (suggestion: GoalSuggestion) => {
     // Toggle off if clicking same suggestion
@@ -410,6 +417,23 @@ export function GoalFormModal({ open, onOpenChange, goal, onSuccess }: GoalFormM
               })}
             </div>
           </div>
+
+          {/* Tip for this category */}
+          {tip && !isEditing && (
+            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <div className="flex items-start gap-2">
+                <Lightbulb className="size-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+                    {tip.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {tip.insight || tip.description.slice(0, 100) + "..."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Linked Metric (only for daygame + weekly goals) */}
           {effectiveCategory === "daygame" && period === "weekly" && (

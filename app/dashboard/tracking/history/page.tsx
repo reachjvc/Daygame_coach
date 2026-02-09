@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -13,6 +14,7 @@ import {
   ChevronDown,
   ChevronUp,
   Trash2,
+  Pencil,
   Calendar,
   Filter,
 } from "lucide-react"
@@ -161,6 +163,7 @@ interface ReportCardProps {
 }
 
 function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }: ReportCardProps) {
+  const router = useRouter()
   const templateInfo = report.system_template_slug
     ? getSystemTemplateInfo(report.system_template_slug)
     : null
@@ -223,6 +226,17 @@ function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }
                 {templateInfo.name}
               </Badge>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-primary"
+              onClick={(e) => {
+                e.stopPropagation()
+                router.push(`/dashboard/tracking/report?edit=${report.id}`)
+              }}
+            >
+              <Pencil className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
