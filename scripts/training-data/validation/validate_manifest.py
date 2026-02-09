@@ -359,18 +359,30 @@ def main() -> None:
                 })
                 check_counts["warning:stage07_normalization_repairs"] += 1
 
-        # Sanity: Stage 07 output existing despite REJECT verdict is suspicious.
+        # Sanity: Stage 07 output existing despite REJECT verdict is suspicious unless 06c.patch
+        # applied fixes cleanly (in which case 07.content may legitimately proceed).
         if verdict == "REJECT" and s07_path:
-            issues.append({
-                "video_id": vid,
-                "source": src,
-                "severity": "warning",
-                "check": "stage07_present_despite_reject",
-                "message": "Stage 07 output exists but 06b verdict is REJECT (was --skip-verification used?)",
-                "s07": str(s07_path),
-                "verify": str(v_path) if v_path else None,
-            })
-            check_counts["warning:stage07_present_despite_reject"] += 1
+            patched_clean = False
+            if s06c_path:
+                s06c_data = _load_json(s06c_path)
+                pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
+                if isinstance(pm, dict):
+                    fixes = pm.get("fixes_applied_count", 0)
+                    flags = pm.get("flags_not_fixed_count", 0)
+                    if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
+                        patched_clean = True
+
+            if not patched_clean:
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "warning",
+                    "check": "stage07_present_despite_reject",
+                    "message": "Stage 07 output exists but 06b verdict is REJECT (was --skip-verification used?)",
+                    "s07": str(s07_path),
+                    "verify": str(v_path) if v_path else None,
+                })
+                check_counts["warning:stage07_present_despite_reject"] += 1
 
     elapsed = time.time() - start
 
