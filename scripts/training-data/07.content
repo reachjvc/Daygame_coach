@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.4.0"  # v1.4.0: use global SEG_ID refs (fixes compilation conv offsets) + tighten technique/topic precision
+PROMPT_VERSION = "1.4.1"  # v1.4.1: clarify close persistence + avoid claiming number/IG close unless explicit
 PROMPT_USES_GLOBAL_SEG_IDS = True
 PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
