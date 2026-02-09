@@ -528,6 +528,13 @@ def normalize_enrichments(
                             new_desc = re.sub(r"\binstagram close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
                             new_desc = re.sub(r"\big close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
                             new_desc = re.sub(r"\bwith solid plans?\b", "", new_desc, flags=re.IGNORECASE)
+                            # Avoid phrasing that implies a successful close when we couldn't find evidence.
+                            new_desc = re.sub(
+                                r"\bsettles for soft close attempt\b",
+                                "attempts a soft close",
+                                new_desc,
+                                flags=re.IGNORECASE,
+                            )
                             new_desc = re.sub(r"\s{2,}", " ", new_desc).strip()
                             new_desc = re.sub(r"\s+,", ",", new_desc)
                             new_desc = re.sub(r"\s+\.", ".", new_desc)
