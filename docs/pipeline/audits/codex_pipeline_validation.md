@@ -1,7 +1,7 @@
 # Codex Pipeline Validation Plan (Supplement)
 
 **Status:** Draft (in progress; partially implemented on `pipeline-validation-hardening`)
-**Updated:** 2026-02-08
+**Updated:** 2026-02-09
 
 This document is intentionally structured to merge cleanly with `docs/pipeline/audits/claude_pipeline_validation.md`.
 
@@ -15,6 +15,14 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - This document is the long-form spec/checklist and is intended to merge cleanly with Claude’s audit.
 - Implementation work has started on branch `pipeline-validation-hardening` (separate worktree), including canary manifests and validation tooling improvements.
 - For the concrete execution loop and handoff instructions, see: `docs/pipeline/audits/pipeline_validation_runbook.md`.
+
+**Recent implementation notes (2026-02-09):**
+- Stage 07 prompt `v1.4.0` switched infield/compilation transcript references to global segment ids (`[SEG_ID] ...`) and disabled relative-index remapping.
+  This fixed a real failure mode on compilation videos where the first approach starts after commentary (segment id offsets caused phase/tech refs to drift/collapse).
+- Stage 07 normalization now prefers evidence-based re-anchoring and falls back to anchoring on non-coach windows when diarization is wrong or the target is quoting the coach.
+  This reduced semantic judge hallucination flags and improved segment-evidence alignment (at the cost of some “technique_on_non_coach_segment” warnings).
+- Canary (`CANARY.1`) was rerun through Stage 07 with the new prompt. Stage 08 reports warnings (unlisted concepts below threshold) but does not fail.
+- Semantic judge spot-check (`n=5`) on `CANARY.1` yielded mean overall score ~72/100 with 0 hallucinations in the sample; phase scoring remains the weakest dimension and needs rubric calibration.
 
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.
