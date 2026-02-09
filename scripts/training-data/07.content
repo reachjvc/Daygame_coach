@@ -567,6 +567,30 @@ def normalize_enrichments(
                             fixed,
                             flags=re.IGNORECASE,
                         )
+                    # Remove common inferred venue names unless explicitly present in transcript.
+                    # (We prefer being conservative over implying details that aren't in text.)
+                    conv_text_has_starbucks = any(
+                        "starbucks" in ((s.get("text") or "").lower())
+                        for s in (conversations.get(conv_id) or [])
+                        if isinstance(s, dict)
+                    )
+                    if "starbucks" in fixed.lower() and not conv_text_has_starbucks:
+                        before = fixed
+                        fixed = re.sub(r"\bat starbucks\b", "", fixed, flags=re.IGNORECASE)
+                        fixed = re.sub(r"\bstarbucks\b", "", fixed, flags=re.IGNORECASE)
+                        if fixed != before:
+                            repairs.append(f"conv {conv_id}: removed unsupported venue mention from description")
+
+                    # Fix common awkward phrasing produced by our own normalization transforms.
+                    before2 = fixed
+                    fixed = re.sub(
+                        r"\battempts second venue but attempts to extend the date\b",
+                        "then attempts to extend the date to a second venue",
+                        fixed,
+                        flags=re.IGNORECASE,
+                    )
+                    if fixed != before2:
+                        repairs.append(f"conv {conv_id}: normalized description phrasing")
                     fixed = re.sub(r"\s{2,}", " ", fixed).strip()
                     if fixed != desc2:
                         e["description"] = fixed
