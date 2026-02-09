@@ -90,7 +90,7 @@ TECHNIQUE_TAXONOMY = {
     "push_pull": "Giving a compliment then taking it away, or vice versa ('You seem cool... for a tourist')",
     "tease": "Playful mocking or joking at her expense in a fun way",
     "cold_read": "Making an assumption about her personality/life ('You look like a yoga teacher')",
-    "role_play": "Creating imaginary scenarios together ('We'd make terrible dance partners')",
+    "role_play": "Creating imaginary scenarios or playing a character/bit together ('Let's pretend...')",
     "disqualification": "Playfully suggesting you two wouldn't work out",
     "DHV": "Demonstration of higher value through stories or behavior",
     "frame_control": "Maintaining your perspective/reality in the interaction",
@@ -99,8 +99,8 @@ TECHNIQUE_TAXONOMY = {
 
     # Connection (8)
     "qualification": "Asking what makes her special beyond looks ('What's your passion?')",
-    "statement_of_intent": "Clearly expressing romantic/sexual interest",
-    "grounding": "Sharing personal details to build trust and rapport",
+    "statement_of_intent": "Clearly expressing romantic/sexual interest (sincere; not as a joke/role-play/absurdist bit)",
+    "grounding": "Sharing genuine personal details to build trust and rapport (not absurdist jokes)",
     "storytelling": "Using engaging stories to convey personality",
     "vulnerability": "Sharing something genuine/personal to create connection",
     "callback_humor": "Referencing something mentioned earlier in conversation",
@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.4.1"  # v1.4.1: clarify close persistence + avoid claiming number/IG close unless explicit
+PROMPT_VERSION = "1.4.2"  # v1.4.2: reduce joke misclassification; clarify non-dating CTAs are not close
 PROMPT_USES_GLOBAL_SEG_IDS = True
 PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
@@ -1771,6 +1771,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - tease: a playful jab ABOUT HER; not you describing yourself or your history.
    - callback_humor: must reference an earlier joke/theme; a random funny line is not callback_humor.
    - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
+   - statement_of_intent: must be sincere romantic/sexual intent. If it's clearly absurdist comedy or role-play, tag role_play/tease instead (or omit).
    - number_close/instagram_close: only if you actually ask/exchange contact info.
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
@@ -1789,6 +1790,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - "close": Logistics and closing — number, Instagram, instant date, time bridge.
      IMPORTANT: Close begins at the first explicit attempt to exchange contact info, propose moving somewhere now (instant date),
      propose meeting later / time-bridge, or negotiate concrete logistics ("let's go to X", "what are you doing later?").
+     IMPORTANT: Non-dating CTAs like "subscribe to my channel" are NOT a dating close attempt and should NOT start close phase.
      Once close begins, ALL remaining segments are "close" phase — even if rapport/banter continues or the first close attempt doesn't land.
      The close phase often includes continued rapport-building alongside logistics discussion.
      Don't flip back to post_hook just because there's playful banter after he's started closing.
