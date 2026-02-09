@@ -1061,6 +1061,10 @@ Plan:
 5. Sample size discipline:
    - Always report `n` and confidence bounds (at least p50/p90, not only mean).
    - Keep canary samples small (quota control) but run holdout periodically to avoid overfitting.
+6. Claude model selection discipline (quota control):
+   - Use `sonnet` for day-to-day iteration on `CANARY.*` (cheap trend signal).
+   - Re-run with `opus` for sign-off on major prompt/schema changes (or for targeted “problem video” deep dives).
+   - Record the model identifier in stage `metadata` so cost/perf drift is attributable.
 
 ### 9.5.2 Retrieval-First Evaluation (More Direct Than Rubric)
 

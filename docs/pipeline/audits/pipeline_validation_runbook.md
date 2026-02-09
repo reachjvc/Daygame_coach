@@ -65,6 +65,17 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag
 ```
 
+**Claude model strategy (quota control):**
+- Use `--model sonnet` for iteration/canary loops (cheaper).
+- Re-run `CANARY.1` and `HOLDOUT.1` with `--model opus` only for sign-off on major changes (or on specific “problem videos”).
+
+Examples:
+
+```bash
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag --model sonnet
+./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --allow-flag --model opus
+```
+
 ### 1b) Revalidate Stage 07 (no Claude; deterministic)
 
 Use this after changing Stage 07 normalization/validators, to refresh outputs without rerunning the LLM:
@@ -184,7 +195,7 @@ These don’t require human labels, but they catch regressions:
 Pick one (or both):
 1. **Gold labels (best):** a small set of approaches where you agree the correct techniques/topics/phases are known.
 2. **LLM judge (fast):** a rubric-scoring script that grades Stage 07 output against transcript + taxonomy, with caching:
-   - `python3 scripts/training-data/validation/semantic_judge.py --manifest docs/pipeline/batches/CANARY.1.txt --n 5 --seed 1`
+   - `python3 scripts/training-data/validation/semantic_judge.py --manifest docs/pipeline/batches/CANARY.1.txt --n 5 --seed 1 --model sonnet`
 
 Goal: keep semantic evaluation small (canary + holdout), and only expand once it’s stable.
 
