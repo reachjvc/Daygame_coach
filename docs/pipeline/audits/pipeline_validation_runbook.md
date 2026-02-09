@@ -101,6 +101,19 @@ Examples:
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --allow-flag --model opus
 ```
 
+Notes:
+- `06c.patch` defaults to refusing to patch when 06b returns `REJECT`. For iteration/salvage (when 06b suggests high-confidence deterministic fixes), you can opt in:
+
+```bash
+./scripts/training-data/06c.patch --manifest docs/pipeline/batches/HOLDOUT.1.txt --overwrite --allow-reject
+```
+
+- `07.content` blocks `REJECT` by default (even with `--allow-flag`). For debugging/evaluation you can bypass the 06b gate:
+
+```bash
+./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model sonnet
+```
+
 ### 1b) Revalidate Stage 07 (no Claude; deterministic)
 
 Use this after changing Stage 07 normalization/validators, to refresh outputs without rerunning the LLM:
