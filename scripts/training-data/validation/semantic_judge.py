@@ -244,7 +244,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.2"
+    prompt_version: str = "1.2.3"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -312,7 +312,8 @@ PHASE DEFINITIONS (grade using THESE rules; match Stage 07 contract):
 - open: approach + initial opener; coach leads; her responses are acknowledgments.
 - pre_hook: attraction-building; coach is still leading; teasing/cold reads/story.
 - post_hook: she is actively participating (asks questions back, longer responses, initiates topics).
-- close: logistics and closing (number/Instagram, proposing plans, instant date, time-bridge).
+- close: after a close attempt begins: logistics/closing (number/Instagram, proposing plans, instant date, time-bridge),
+  PLUS continued rapport while walking/on the instant date (the label is intentionally sticky).
 Rules:
 - Phases progress forward only: open -> pre_hook -> post_hook -> close (never backwards).
 - What counts as starting "close": the first explicit attempt to (a) exchange contact info, (b) propose moving somewhere now
@@ -328,6 +329,7 @@ SEGMENT REFERENCE TOLERANCE:
 - If a technique/topic is correct but the cited segment id is off-by-1 (or off-by-2) and the evidence is clearly in an adjacent segment, treat it as a MINOR issue and suggest the corrected segment id.
 - If the evidence text is present but the cited segment's speaker_role looks misassigned (diarization error) or the target is clearly quoting the coach, treat it as a MINOR issue (do not mark hallucination for this alone).
 - Only mark hallucination_suspected if the enrichment claims content that is not present anywhere in the transcript excerpt.
+  IMPORTANT: Do NOT set hallucination_suspected solely due to a high-level description mistake (summary drift). Reserve hallucination for substantive claim drift.
 
 SEVERITY + CATEGORIZATION GUIDELINES:
 - Use issue.type that matches the field: technique/topic/phase/summary/other.
