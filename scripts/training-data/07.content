@@ -1499,6 +1499,8 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
    Be conservative: if you are not confident the technique is present, omit it.
+   IMPORTANT: Do not use obviously garbled / low-quality transcript segments as technique evidence. If the line is unclear,
+   either anchor to an adjacent clean segment or omit the technique.
    Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
    Common confusions to avoid:
    - cold_read: must be an inference ABOUT HER ("you seem..."), not your personal backstory.
@@ -1521,8 +1523,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - "post_hook": She's flipped. Actively participating — asking questions back,
      sharing information voluntarily, initiating topics, longer responses.
    - "close": Logistics and closing — number, Instagram, instant date, time bridge.
-     IMPORTANT: Once the coach initiates close logistics (asks for number, mentions Instagram,
-     proposes plans), ALL remaining segments are "close" phase — even if banter/teasing continues.
+     IMPORTANT: Close begins at the first explicit attempt to exchange contact info, propose moving somewhere now (instant date),
+     propose meeting later / time-bridge, or negotiate concrete logistics ("let's go to X", "what are you doing later?").
+     Once close begins, ALL remaining segments are "close" phase — even if rapport/banter continues or the first close attempt doesn't land.
      The close phase often includes continued rapport-building alongside logistics discussion.
      Don't flip back to post_hook just because there's playful banter after he's started closing.
    Rules:

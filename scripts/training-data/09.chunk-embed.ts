@@ -1293,8 +1293,9 @@ async function main() {
     if (args.maskLowQuality) {
       for (const id of asrIndex.lowQualityIds) maskedSegmentIds.add(id)
     }
-    if (maskedSegmentIds.size > 0) {
-      console.log(`   🧹 Masking ${maskedSegmentIds.size} ASR-flagged segment(s) in chunk text`)
+    const asrMaskedCount = maskedSegmentIds.size
+    if (asrMaskedCount > 0) {
+      console.log(`   🧹 Masking ${asrMaskedCount} ASR-flagged segment(s) in chunk text`)
     }
 
     const internalChunks: InternalChunk[] = []
@@ -1307,6 +1308,21 @@ async function main() {
     const fileSegments = allSegments.filter((s) => !s.is_teaser)
     if (teaserCount > 0) {
       console.log(`   ⏭️  Skipping ${teaserCount} teaser segments`)
+    }
+
+    // Speaker role uncertainty is often worse than minor ASR issues for retrieval.
+    // Mask these segments from chunk text by default (still counted for confidence).
+    let speakerMaskedCount = 0
+    for (const seg of fileSegments) {
+      const segId = seg.id
+      const role = (seg.speaker_role ?? "").toLowerCase().trim()
+      if (typeof segId === "number" && PROBLEMATIC_SPEAKER_ROLES.includes(role)) {
+        if (!maskedSegmentIds.has(segId)) speakerMaskedCount++
+        maskedSegmentIds.add(segId)
+      }
+    }
+    if (speakerMaskedCount > 0) {
+      console.log(`   🧹 Masking ${speakerMaskedCount} speaker-uncertain segment(s) in chunk text`)
     }
 
     // Process approach enrichments via phase-based chunking

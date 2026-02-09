@@ -244,7 +244,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.1.0"
+    prompt_version: str = "1.2.0"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -315,13 +315,16 @@ PHASE DEFINITIONS (grade using THESE rules; match Stage 07 contract):
 - close: logistics and closing (number/Instagram, proposing plans, instant date, time-bridge).
 Rules:
 - Phases progress forward only: open -> pre_hook -> post_hook -> close (never backwards).
-- Once "close" begins (coach initiates logistics), ALL remaining turns should stay "close" even if banter continues.
+- What counts as starting "close": the first explicit attempt to (a) exchange contact info, (b) propose moving somewhere now
+  (instant date), (c) propose meeting later / time-bridge, or (d) negotiate concrete logistics ("let's go to X", "what are you doing later?").
+- Once "close" begins, ALL remaining turns should stay "close" even if rapport continues or the first close attempt doesn't land.
 - Not all phases are required (blowout can be open only).
 - If there is no post_hook, hook_point and investment_level should be null.
 
 SEGMENT REFERENCE TOLERANCE:
 - Segment ids are global transcript ids (the numbers in [brackets]).
 - If a technique/topic is correct but the cited segment id is off-by-1 (or off-by-2) and the evidence is clearly in an adjacent segment, treat it as a MINOR issue and suggest the corrected segment id.
+- If the evidence text is present but the cited segment's speaker_role looks misassigned (diarization error) or the target is clearly quoting the coach, treat it as a MINOR issue (do not mark hallucination for this alone).
 - Only mark hallucination_suspected if the enrichment claims content that is not present anywhere in the transcript excerpt.
 
 TASK:
