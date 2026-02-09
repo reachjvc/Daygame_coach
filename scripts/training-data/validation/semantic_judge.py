@@ -473,6 +473,10 @@ def main() -> None:
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Using Claude model: {args.model.strip()}")
 
+    requested_model: Optional[str] = None
+    if isinstance(args.model, str) and args.model.strip():
+        requested_model = args.model.strip()
+
     requests: List[JudgementRequest] = []
     batch_id = args.batch_id
 
@@ -574,28 +578,40 @@ def main() -> None:
         if out_path.exists():
             existing = load_json(out_path)
             if existing and existing.get("request_fingerprint") == request_fingerprint:
-                print(f"{LOG_PREFIX} Cache hit: {out_path.name}")
-                # Backfill request metadata without re-judging.
-                if not args.no_write:
-                    req_meta = existing.get("request")
-                    if not isinstance(req_meta, dict):
-                        existing["request"] = {
-                            "prompt_version": req.prompt_version,
-                            "max_segments": args.max_segments,
-                            "transcript_segment_ids": [
-                                s.get("id") for s in req.transcript_segments if isinstance(s.get("id"), int)
-                            ],
-                        }
-                        out_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
-                judged += 1
-                try:
-                    scores.append(int(existing.get("scores", {}).get("overall_score_0_100", 0)))
-                except Exception:
-                    pass
-                continue
+                # If the caller specifies a model, don't reuse cached results from a different
+                # model (or from an unknown prior run where we didn't record the model).
+                existing_model: Optional[str] = None
+                judge_meta = existing.get("judge")
+                if isinstance(judge_meta, dict):
+                    m = judge_meta.get("model")
+                    if isinstance(m, str) and m.strip():
+                        existing_model = m.strip()
+                if requested_model is not None and existing_model != requested_model:
+                    existing = None  # Treat as cache miss; we'll re-judge below.
+                else:
+                    print(f"{LOG_PREFIX} Cache hit: {out_path.name}")
+                    # Backfill request metadata without re-judging.
+                    if not args.no_write:
+                        req_meta = existing.get("request")
+                        if not isinstance(req_meta, dict):
+                            existing["request"] = {
+                                "prompt_version": req.prompt_version,
+                                "model": requested_model,
+                                "max_segments": args.max_segments,
+                                "transcript_segment_ids": [
+                                    s.get("id") for s in req.transcript_segments if isinstance(s.get("id"), int)
+                                ],
+                            }
+                            out_path.write_text(json.dumps(existing, indent=2, ensure_ascii=False), encoding="utf-8")
+                    judged += 1
+                    try:
+                        scores.append(int(existing.get("scores", {}).get("overall_score_0_100", 0)))
+                    except Exception:
+                        pass
+                    continue
 
         print(f"{LOG_PREFIX} Judging {req.video_id} conv {req.conversation_id} ({len(req.transcript_segments)} segs)...")
-        raw = call_claude(prompt, timeout=args.timeout, model=args.model)
+        raw = call_claude(prompt, timeout=args.timeout, model=requested_model)
         parsed = parse_json_object(raw or "")
         if not parsed:
             print(f"{LOG_PREFIX} WARNING: Could not parse judge JSON (skipping)", file=sys.stderr)
@@ -605,6 +621,7 @@ def main() -> None:
         parsed["request_fingerprint"] = request_fingerprint
         parsed["request"] = {
             "prompt_version": req.prompt_version,
+            "model": requested_model,
             "max_segments": args.max_segments,
             "transcript_segment_ids": [
                 s.get("id") for s in req.transcript_segments if isinstance(s.get("id"), int)
@@ -613,6 +630,7 @@ def main() -> None:
         parsed["judged_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
         parsed["judge"] = {
             "tool": "claude-cli",
+            "model": requested_model,
             "timeout_sec": args.timeout,
             "seed": args.seed,
         }

@@ -2404,6 +2404,12 @@ def process_video_file(
     # Cross-reference validation uses 06c patched data (segments are ground truth)
     stage06_data = data
 
+    # Record the requested Claude model (if explicitly set) for reproducibility.
+    if isinstance(claude_model, str) and claude_model.strip():
+        meta = output.get("metadata")
+        if isinstance(meta, dict):
+            meta["claude_model"] = claude_model.strip()
+
     # Validate output
     validation_results = validate_enrichment_output(output, stage06_data)
     write_validation_results(validation_results, output_path, video_id)
