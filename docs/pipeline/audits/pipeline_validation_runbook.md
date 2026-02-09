@@ -114,6 +114,8 @@ Notes:
 ./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model sonnet
 ```
 
+If a `REJECT` video was patched cleanly by `06c.patch` (fixes applied, `flags_not_fixed_count=0`), Stage 07 will allow it under the same explicit waiver as `FLAG` by passing `--allow-flag`.
+
 ### 1b) Revalidate Stage 07 (no Claude; deterministic)
 
 Use this after changing Stage 07 normalization/validators, to refresh outputs without rerunning the LLM:
