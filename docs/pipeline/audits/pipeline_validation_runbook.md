@@ -1,11 +1,34 @@
 # Pipeline Validation Runbook (Handoff + Iteration Loop)
 
 **Branch:** `pipeline-validation-hardening`  
-**Worktree (current):** `/tmp/daygame-coach-pipeline-validation-hardening`  
+**Worktree (current):** `/tmp/daygame-coach-pipeline-validation-hardening` (temporary location; safe, but `/tmp` can be cleaned)  
 **Canary manifest:** `docs/pipeline/batches/CANARY.1.txt`  
 **Holdout manifest:** `docs/pipeline/batches/HOLDOUT.1.txt`
 
 This runbook exists so another agent can pick up work without any chat history.
+
+## Worktree Location (Why `/tmp`?)
+
+The worktree is just a second checkout of the same git repo, pointed at the same `.git` history.
+Putting it in `/tmp` is convenient for isolation, but it is not ideal for long-lived work because `/tmp` can be wiped (reboot/cleanup).
+
+Best practice for long-running iteration:
+- Keep the branch in git (commit often).
+- Put the worktree in a stable directory (outside the repo root), for example next to the repo.
+
+Move the existing worktree (safe if no processes are running in it):
+
+```bash
+cd /home/jonaswsl/projects/daygame-coach
+git worktree move /tmp/daygame-coach-pipeline-validation-hardening ../daygame-coach-pipeline-validation-hardening
+```
+
+If the `/tmp` folder disappears, you can recreate the worktree from the branch:
+
+```bash
+cd /home/jonaswsl/projects/daygame-coach
+git worktree add ../daygame-coach-pipeline-validation-hardening pipeline-validation-hardening
+```
 
 ## What “Done” Looks Like
 
