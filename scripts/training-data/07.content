@@ -489,6 +489,50 @@ def normalize_enrichments(
         if e.get("type") != "approach":
             continue
 
+        # If the description claims a contact close (number/Instagram) but we can't find any
+        # contact-exchange evidence in the transcript, soften the wording to avoid misleading summaries.
+        if conversations is not None:
+            conv_id = e.get("conversation_id")
+            if isinstance(conv_id, int) and conv_id in conversations:
+                desc = e.get("description")
+                if isinstance(desc, str) and desc.strip():
+                    close_claim_re = re.compile(
+                        r"\b("
+                        r"number close(?:s)?|instagram close(?:s)?|ig close(?:s)?|"
+                        r"got (?:her|his) number|exchanged numbers?"
+                        r")\b",
+                        re.IGNORECASE,
+                    )
+                    if close_claim_re.search(desc):
+                        has_close_technique = any(
+                            isinstance(t, dict)
+                            and t.get("technique") in ("number_close", "instagram_close")
+                            for t in (e.get("techniques_used", []) or [])
+                        )
+                        contact_cue_re = re.compile(
+                            r"\b(number|phone|instagram|\big\b|text|call|whatsapp|snap(?:chat)?|contact)\b",
+                            re.IGNORECASE,
+                        )
+                        conv_has_contact_cue = any(
+                            contact_cue_re.search((s.get("text") or ""))
+                            for s in (conversations.get(conv_id) or [])
+                            if isinstance(s, dict)
+                        )
+                        if not has_close_technique and not conv_has_contact_cue:
+                            new_desc = desc
+                            new_desc = re.sub(r"\bnumber close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
+                            new_desc = re.sub(r"\binstagram close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
+                            new_desc = re.sub(r"\big close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
+                            new_desc = re.sub(r"\bwith solid plans?\b", "", new_desc, flags=re.IGNORECASE)
+                            new_desc = re.sub(r"\s{2,}", " ", new_desc).strip()
+                            new_desc = re.sub(r"\s+,", ",", new_desc)
+                            new_desc = re.sub(r"\s+\.", ".", new_desc)
+                            if new_desc != desc:
+                                e["description"] = new_desc
+                                repairs.append(
+                                    f"conv {conv_id}: softened unsupported contact-close claim in description"
+                                )
+
         # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
         # to a segment (prefer coach/student) within this conversation where the evidence appears.
         #
