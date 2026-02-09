@@ -244,7 +244,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.0"
+    prompt_version: str = "1.2.1"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -317,6 +317,8 @@ Rules:
 - Phases progress forward only: open -> pre_hook -> post_hook -> close (never backwards).
 - What counts as starting "close": the first explicit attempt to (a) exchange contact info, (b) propose moving somewhere now
   (instant date), (c) propose meeting later / time-bridge, or (d) negotiate concrete logistics ("let's go to X", "what are you doing later?").
+- IMPORTANT: For this pipeline, an accepted instant date does NOT create a separate "date" phase. If he proposes an instant date (or other close attempt)
+  and she agrees, that still means "close" has started and remains sticky for the rest of the conversation (even if they keep building rapport on the date).
 - Once "close" begins, ALL remaining turns should stay "close" even if rapport continues or the first close attempt doesn't land.
 - Not all phases are required (blowout can be open only).
 - If there is no post_hook, hook_point and investment_level should be null.
