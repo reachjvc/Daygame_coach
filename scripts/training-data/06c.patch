@@ -537,6 +537,7 @@ def patch_file(
     verification_path: Optional[Path],
     output_path: Path,
     dry_run: bool = False,
+    allow_reject: bool = False,
 ) -> Dict[str, Any]:
     """Patch a single conversations file using its verification report."""
 
@@ -588,10 +589,11 @@ def patch_file(
     print(f"{LOG_PREFIX}   Verification verdict: {verdict}")
     print(f"{LOG_PREFIX}   Verification file: {verification_path}")
 
-    if verdict == "REJECT":
+    if verdict == "REJECT" and not allow_reject:
         raise RuntimeError(
             f"Verification verdict is REJECT for {conversations_path.name}. "
-            "06b should have halted the pipeline before reaching 06c."
+            "By default 06c refuses to patch REJECT outputs. Re-run with --allow-reject if you want to apply "
+            "high-confidence deterministic fixes anyway (useful for iteration / salvage)."
         )
 
     if verdict == "APPROVE":
@@ -599,7 +601,7 @@ def patch_file(
         fixes_applied: List[Dict] = []
         flags_not_fixed: List[str] = []
     else:
-        # FLAG — apply patches
+        # FLAG/REJECT — apply patches
         fixes_applied, flags_not_fixed = apply_patches(patched, verification_data)
 
     # Always recompute conversations[] from segments after patching to keep semantic consistency,
@@ -824,6 +826,11 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
+        "--allow-reject",
+        action="store_true",
+        help="Allow patching when 06b verdict is REJECT (apply high-confidence deterministic fixes anyway)"
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging"
@@ -864,7 +871,13 @@ def _run_input(args) -> None:
             return
 
         verification_path = find_verification_for(input_path, s06_root(), s06b_root())
-        result = patch_file(input_path, verification_path, output_path, dry_run=args.dry_run)
+        result = patch_file(
+            input_path,
+            verification_path,
+            output_path,
+            dry_run=args.dry_run,
+            allow_reject=args.allow_reject,
+        )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, "
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
         return
@@ -897,7 +910,13 @@ def _run_sources(args) -> None:
                 continue
             try:
                 verification_path = find_verification_for(input_file, s06_root(), s06b_root())
-                result = patch_file(input_file, verification_path, output_file, dry_run=args.dry_run)
+                result = patch_file(
+                    input_file,
+                    verification_path,
+                    output_file,
+                    dry_run=args.dry_run,
+                    allow_reject=args.allow_reject,
+                )
                 total_fixes += result.get("fixes", 0)
                 total_files += 1
             except Exception as e:
@@ -974,7 +993,13 @@ def _run_directory_with_files(
 
         try:
             verification_path = find_verification_for(input_file, s06_root(), verify_dir)
-            result = patch_file(input_file, verification_path, output_file, dry_run=args.dry_run)
+            result = patch_file(
+                input_file,
+                verification_path,
+                output_file,
+                dry_run=args.dry_run,
+                allow_reject=args.allow_reject,
+            )
             processed += 1
             consecutive_failures = 0
             total_fixes += result.get("fixes", 0)
