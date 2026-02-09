@@ -591,6 +591,8 @@ def normalize_enrichments(
                     )
                     if fixed != before2:
                         repairs.append(f"conv {conv_id}: normalized description phrasing")
+                    # Clean up artifacts from removals/replacements like "instant date ,".
+                    fixed = re.sub(r"\s+([,.;:!?])", r"\1", fixed)
                     fixed = re.sub(r"\s{2,}", " ", fixed).strip()
                     if fixed != desc2:
                         e["description"] = fixed
