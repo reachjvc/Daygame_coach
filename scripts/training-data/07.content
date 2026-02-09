@@ -118,7 +118,7 @@ TECHNIQUE_TAXONOMY = {
     "instant_date": "Suggesting to continue hanging out right now",
     "bounce": "Moving to a different location together",
     "time_bridge": "Setting up specific future plans",
-    "logistics_check": "Asking about her schedule/availability",
+    "logistics_check": "Asking about her schedule/availability (does not start close by itself)",
 }
 
 # 22 topics across 5 categories
@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.4.2"  # v1.4.2: reduce joke misclassification; clarify non-dating CTAs are not close
+PROMPT_VERSION = "1.4.3"  # v1.4.3: close starts only on explicit invite/contact (not logistics fishing)
 PROMPT_USES_GLOBAL_SEG_IDS = True
 PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
@@ -835,7 +835,6 @@ def normalize_enrichments(
                     "instant_date",
                     "bounce",
                     "time_bridge",
-                    "logistics_check",
                 }
                 close_segs: List[int] = []
                 for t in e.get("techniques_used", []) or []:
@@ -1425,7 +1424,12 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[str]:
+def call_claude(
+    prompt: str,
+    retries: int = 3,
+    timeout: int = 600,
+    model: Optional[str] = None,
+) -> Optional[str]:
     """Call Claude Code CLI with retry logic."""
     claude_bin = find_claude_binary()
     if not claude_bin:
@@ -1435,8 +1439,12 @@ def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[s
 
     for attempt in range(retries):
         try:
+            cmd = [claude_bin]
+            if isinstance(model, str) and model.strip():
+                cmd += ["--model", model.strip()]
+            cmd += ["-p", prompt, "--output-format", "text"]
             result = subprocess.run(
-                [claude_bin, "-p", prompt, "--output-format", "text"],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout
@@ -1773,6 +1781,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
    - statement_of_intent: must be sincere romantic/sexual intent. If it's clearly absurdist comedy or role-play, tag role_play/tease instead (or omit).
    - number_close/instagram_close: only if you actually ask/exchange contact info.
+   - logistics_check: asking about schedule/availability does NOT start close unless it is part of an explicit invite/contact exchange.
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
@@ -1788,8 +1797,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - "post_hook": She's flipped. Actively participating — asking questions back,
      sharing information voluntarily, initiating topics, longer responses.
    - "close": Logistics and closing — number, Instagram, instant date, time bridge.
-     IMPORTANT: Close begins at the first explicit attempt to exchange contact info, propose moving somewhere now (instant date),
-     propose meeting later / time-bridge, or negotiate concrete logistics ("let's go to X", "what are you doing later?").
+     IMPORTANT: Close begins at the first explicit attempt to exchange contact info (number/Instagram/etc)
+     OR an explicit invite to meet/hang out (now or later): "let's grab a drink", "come with me", "let's go to X", "we should meet tomorrow".
+     IMPORTANT: Do NOT start close on "fishing" / info-gathering questions alone (including schedule probes like "what are you doing later?").
      IMPORTANT: Non-dating CTAs like "subscribe to my channel" are NOT a dating close attempt and should NOT start close phase.
      Once close begins, ALL remaining segments are "close" phase — even if rapport/banter continues or the first close attempt doesn't land.
      The close phase often includes continued rapport-building alongside logistics discussion.
@@ -2149,7 +2159,12 @@ def derive_source_from_path(p: Path) -> Optional[str]:
     return p.parent.name or None
 
 
-def process_video_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+def process_video_file(
+    input_path: Path,
+    output_path: Path,
+    dry_run: bool = False,
+    claude_model: Optional[str] = None,
+) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
     print(f"[07.content] Processing: {input_path.name}")
@@ -2204,7 +2219,7 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     print(f"[07.content]   Calling Claude CLI ({video_type} prompt)...")
 
     start_time = time.time()
-    response = call_claude(prompt, timeout=600)
+    response = call_claude(prompt, timeout=600, model=claude_model)
     elapsed = time.time() - start_time
 
     enrichments: List[Dict] = []
@@ -2759,7 +2774,12 @@ def _run_named_source(args) -> None:
         if args.revalidate:
             result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
         else:
-            result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+            result = process_video_file(
+                input_file,
+                output_file,
+                dry_run=args.dry_run,
+                claude_model=args.model,
+            )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
 
@@ -2828,6 +2848,10 @@ def main() -> None:
         action="store_true",
         help="Re-run deterministic normalization + validation on existing Stage 07 outputs (no Claude call)"
     )
+    parser.add_argument(
+        "--model",
+        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+    )
 
     args = parser.parse_args()
 
@@ -2851,6 +2875,8 @@ def main() -> None:
                 print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
             else:
                 print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
+                if isinstance(args.model, str) and args.model.strip():
+                    print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
@@ -2894,7 +2920,12 @@ def main() -> None:
             if args.revalidate:
                 result = revalidate_video_file(input_path, output_path, dry_run=args.dry_run)
             else:
-                result = process_video_file(input_path, output_path, dry_run=args.dry_run)
+                result = process_video_file(
+                    input_path,
+                    output_path,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                )
             print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
 
@@ -2944,7 +2975,12 @@ def main() -> None:
                 if args.revalidate:
                     result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
                 else:
-                    result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+                    result = process_video_file(
+                        input_file,
+                        output_file,
+                        dry_run=args.dry_run,
+                        claude_model=args.model,
+                    )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
@@ -2990,7 +3026,12 @@ def main() -> None:
                 if args.revalidate:
                     result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
                 else:
-                    result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+                    result = process_video_file(
+                        input_file,
+                        output_file,
+                        dry_run=args.dry_run,
+                        claude_model=args.model,
+                    )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
@@ -3067,7 +3108,12 @@ def main() -> None:
             if args.revalidate:
                 result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
             else:
-                result = process_video_file(input_file, output_file, dry_run=args.dry_run)
+                result = process_video_file(
+                    input_file,
+                    output_file,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                )
             total_convs += result["conversations"]
             total_enriched += result["enriched"]
             processed += 1

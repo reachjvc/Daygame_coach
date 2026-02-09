@@ -184,14 +184,18 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, timeout: int = 300) -> Optional[str]:
+def call_claude(prompt: str, timeout: int = 300, model: Optional[str] = None) -> Optional[str]:
     claude_bin = find_claude_binary()
     if not claude_bin:
         print(f"{LOG_PREFIX} Error: Claude CLI not found", file=sys.stderr)
         return None
     try:
+        cmd = [claude_bin]
+        if isinstance(model, str) and model.strip():
+            cmd += ["--model", model.strip()]
+        cmd += ["-p", prompt, "--output-format", "text"]
         result = subprocess.run(
-            [claude_bin, "-p", prompt, "--output-format", "text"],
+            cmd,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -253,7 +257,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.8"
+    prompt_version: str = "1.2.9"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -326,7 +330,8 @@ PHASE DEFINITIONS (grade using THESE rules; match Stage 07 contract):
 Rules:
 - Phases progress forward only: open -> pre_hook -> post_hook -> close (never backwards).
 - What counts as starting "close": the first explicit attempt to (a) exchange contact info, (b) propose moving somewhere now
-  (instant date), (c) propose meeting later / time-bridge, or (d) negotiate concrete logistics ("let's go to X", "what are you doing later?").
+  (instant date), or (c) explicitly invite her to meet/hang out now or later (time-bridge).
+  IMPORTANT: Do NOT start close on "fishing" questions alone (including schedule probes like "what are you doing later?") unless the invite is explicit.
 - IMPORTANT: For this pipeline, an accepted instant date does NOT create a separate "date" phase. If he proposes an instant date (or other close attempt)
   and she agrees, that still means "close" has started and remains sticky for the rest of the conversation (even if they keep building rapport on the date).
 - Once "close" begins, ALL remaining turns should stay "close" even if rapport continues or the first close attempt doesn't land.
@@ -458,12 +463,15 @@ def main() -> None:
     )
     parser.add_argument("--max-segments", type=int, default=200, help="Max transcript segments to include per conversation")
     parser.add_argument("--timeout", type=int, default=300, help="Claude timeout per judgement (seconds)")
+    parser.add_argument("--model", help="Claude model alias or full name (e.g. sonnet, opus)")
     parser.add_argument("--no-write", action="store_true", help="Do not write judgement files")
 
     args = parser.parse_args()
 
     if not args.manifest and not args.input:
         raise SystemExit("Provide --manifest or --input")
+    if isinstance(args.model, str) and args.model.strip():
+        print(f"{LOG_PREFIX} Using Claude model: {args.model.strip()}")
 
     requests: List[JudgementRequest] = []
     batch_id = args.batch_id
@@ -587,7 +595,7 @@ def main() -> None:
                 continue
 
         print(f"{LOG_PREFIX} Judging {req.video_id} conv {req.conversation_id} ({len(req.transcript_segments)} segs)...")
-        raw = call_claude(prompt, timeout=args.timeout)
+        raw = call_claude(prompt, timeout=args.timeout, model=args.model)
         parsed = parse_json_object(raw or "")
         if not parsed:
             print(f"{LOG_PREFIX} WARNING: Could not parse judge JSON (skipping)", file=sys.stderr)
