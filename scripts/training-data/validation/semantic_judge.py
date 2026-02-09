@@ -253,7 +253,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.5"
+    prompt_version: str = "1.2.6"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -338,6 +338,7 @@ STICKY CLOSE CLARIFICATION (most important):
 - Do NOT penalize an enrichment for having playful/attraction content inside "close". That's correct under this contract.
 - Do NOT require post_hook/hook_point/investment_level after close begins. If close starts before any hook, hook_point and investment_level being null is correct.
 - If a close attempt happens early (before any clear hook), it is still correct for the rest of the conversation to remain "close" and for post_hook/hook_point/investment_level to remain null.
+- Even if the target becomes highly engaged *after* close begins, that does NOT create a post_hook phase. It remains "close" (sticky) by design.
 
 SEGMENT REFERENCE TOLERANCE:
 - Segment ids are global transcript ids (the numbers in [brackets]).
