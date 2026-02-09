@@ -17,12 +17,14 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - For the concrete execution loop and handoff instructions, see: `docs/pipeline/audits/pipeline_validation_runbook.md`.
 
 **Recent implementation notes (2026-02-09):**
-- Stage 07 prompt `v1.4.0` switched infield/compilation transcript references to global segment ids (`[SEG_ID] ...`) and disabled relative-index remapping.
+- Stage 07 prompt `v1.4.x` switched infield/compilation transcript references to global segment ids (`[SEG_ID] ...`) and disabled relative-index remapping.
   This fixed a real failure mode on compilation videos where the first approach starts after commentary (segment id offsets caused phase/tech refs to drift/collapse).
-- Stage 07 normalization now prefers evidence-based re-anchoring and falls back to anchoring on non-coach windows when diarization is wrong or the target is quoting the coach.
-  This reduced semantic judge hallucination flags and improved segment-evidence alignment (at the cost of some “technique_on_non_coach_segment” warnings).
-- Canary (`CANARY.1`) was rerun through Stage 07 with the new prompt. Stage 08 reports warnings (unlisted concepts below threshold) but does not fail.
-- Semantic judge spot-check (`n=5`) on `CANARY.1` yielded mean overall score ~72/100 with 0 hallucinations in the sample; phase scoring remains the weakest dimension and needs rubric calibration.
+- Stage 07 prompt `v1.4.2` tightened labeling around “joke intent” (esp. `statement_of_intent`) and clarified that non-dating CTAs (e.g. “subscribe to my channel”) should not start `close`.
+- Stage 07 normalization now:
+  - re-anchors technique evidence by matching quotes back to transcript (with a fallback when diarization is wrong or the target is quoting the coach)
+  - repairs phase drift: close starts at the earliest close-technique segment (sticky), drops CTA-driven “close”, and removes post_hook false-positives on minimal target engagement
+- Canary (`CANARY.1`) was rerun through Stage 07 revalidation; Stage 07/08 remain warning-only (no hard failures) and Barcelona compilation now processes cleanly (Stage 07 passes with transcript-artifact warnings only).
+- Semantic judge prompt is now iterating (`v1.2.8` currently); it’s useful for spotting regressions, but treat phase-related “major” flags as directional until the rubric stabilizes.
 
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.
