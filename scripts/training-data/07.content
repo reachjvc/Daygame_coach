@@ -548,12 +548,25 @@ def normalize_enrichments(
                 # Keep this deterministic: only rewrite exact patterns we create ourselves.
                 desc2 = e.get("description")
                 if isinstance(desc2, str) and desc2.strip():
+                    has_soft_close_technique = any(
+                        isinstance(t, dict) and t.get("technique") == "soft_close"
+                        for t in (e.get("techniques_used", []) or [])
+                    )
+
                     fixed = re.sub(
                         r"\bsettles for (?:a )?soft close attempt\b",
                         "attempts a soft close",
                         desc2,
                         flags=re.IGNORECASE,
                     )
+                    if not has_soft_close_technique:
+                        # If we don't have a soft_close technique recorded, prefer outcome-agnostic wording.
+                        fixed = re.sub(
+                            r"\battempts a soft close\b",
+                            "attempts to extend the date",
+                            fixed,
+                            flags=re.IGNORECASE,
+                        )
                     fixed = re.sub(r"\s{2,}", " ", fixed).strip()
                     if fixed != desc2:
                         e["description"] = fixed
