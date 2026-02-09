@@ -244,7 +244,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.0.0"
+    prompt_version: str = "1.1.0"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -307,6 +307,22 @@ TRANSCRIPT (this conversation only):
 
 PROPOSED ENRICHMENT (from Stage 07):
 {enrichment_json}
+
+PHASE DEFINITIONS (grade using THESE rules; match Stage 07 contract):
+- open: approach + initial opener; coach leads; her responses are acknowledgments.
+- pre_hook: attraction-building; coach is still leading; teasing/cold reads/story.
+- post_hook: she is actively participating (asks questions back, longer responses, initiates topics).
+- close: logistics and closing (number/Instagram, proposing plans, instant date, time-bridge).
+Rules:
+- Phases progress forward only: open -> pre_hook -> post_hook -> close (never backwards).
+- Once "close" begins (coach initiates logistics), ALL remaining turns should stay "close" even if banter continues.
+- Not all phases are required (blowout can be open only).
+- If there is no post_hook, hook_point and investment_level should be null.
+
+SEGMENT REFERENCE TOLERANCE:
+- Segment ids are global transcript ids (the numbers in [brackets]).
+- If a technique/topic is correct but the cited segment id is off-by-1 (or off-by-2) and the evidence is clearly in an adjacent segment, treat it as a MINOR issue and suggest the corrected segment id.
+- Only mark hallucination_suspected if the enrichment claims content that is not present anywhere in the transcript excerpt.
 
 TASK:
 1) Judge whether the enrichment is accurate and useful for retrieval (RAG).
