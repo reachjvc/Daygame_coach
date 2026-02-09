@@ -771,6 +771,158 @@ def normalize_enrichments(
                     e["turn_phases"] = normalized
                     turn_phases = normalized
 
+        # Additional deterministic phase repairs to reduce common drift:
+        # - Ensure close starts at the earliest close-technique segment (sticky close).
+        # - If "close" appears but there are no close techniques and the content is a non-dating CTA
+        #   (e.g. "subscribe to my channel"), downgrade "close" to the prior phase.
+        # - If post_hook exists but target engagement is minimal (no questions, very short replies),
+        #   downgrade post_hook to pre_hook to avoid false hooks on one-word corrections.
+        if conversations is not None:
+            conv_id = e.get("conversation_id")
+            if isinstance(conv_id, int) and conv_id in conversations:
+                phase_rank2 = {p: i for i, p in enumerate(PHASE_ORDER)}
+                tp_map: Dict[int, str] = {}
+                for tp in turn_phases:
+                    if not isinstance(tp, dict):
+                        continue
+                    sid = tp.get("segment")
+                    ph = tp.get("phase")
+                    if isinstance(sid, int) and isinstance(ph, str) and ph in phase_rank2:
+                        tp_map[sid] = ph
+
+                tp_changed = False
+
+                # --- Post-hook false-positive guard (minimal target engagement) ---
+                if "post_hook" in set(tp_map.values()):
+                    conv_segs = [
+                        s for s in (conversations.get(conv_id) or [])
+                        if isinstance(s, dict)
+                    ]
+                    target_texts: List[str] = []
+                    for s in conv_segs:
+                        if (s.get("speaker_role") or "").lower() != "target":
+                            continue
+                        txt = (s.get("text") or "")
+                        if isinstance(txt, str) and txt.strip():
+                            target_texts.append(txt.strip())
+
+                    target_turns = len(target_texts)
+                    max_target_len = max((len(t) for t in target_texts), default=0)
+                    questionish = any(
+                        ("?" in t) or re.match(r"^(what|where|why|how|who|when)\\b", t.strip().lower())
+                        for t in target_texts
+                    )
+
+                    # Extremely conservative: only remove post_hook when there is basically
+                    # no evidence of active participation.
+                    if target_turns <= 2 and max_target_len < 30 and not questionish:
+                        fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
+                        for sid, ph in list(tp_map.items()):
+                            if ph == "post_hook":
+                                tp_map[sid] = fallback
+                                tp_changed = True
+                        if tp_changed:
+                            repairs.append(
+                                f"conv {conv_id}: downgraded post_hook -> {fallback} (minimal target engagement)"
+                            )
+
+                # --- Close start normalization based on close-technique evidence ---
+                CLOSE_TECHS = {
+                    "number_close",
+                    "instagram_close",
+                    "soft_close",
+                    "assumptive_close",
+                    "instant_date",
+                    "bounce",
+                    "time_bridge",
+                    "logistics_check",
+                }
+                close_segs: List[int] = []
+                for t in e.get("techniques_used", []) or []:
+                    if not isinstance(t, dict):
+                        continue
+                    if t.get("technique") not in CLOSE_TECHS:
+                        continue
+                    sid = t.get("segment")
+                    if isinstance(sid, int):
+                        close_segs.append(int(sid))
+                close_start = min(close_segs) if close_segs else None
+
+                if close_start is not None:
+                    # Pick fallback for any close labels *before* close_start.
+                    pre_phases = [
+                        ph for sid, ph in tp_map.items()
+                        if isinstance(sid, int) and sid < close_start and ph != "close"
+                    ]
+                    fallback_close = "pre_hook"
+                    if pre_phases:
+                        fallback_close = max(pre_phases, key=lambda p: phase_rank2.get(p, 0))
+
+                    for sid, ph in list(tp_map.items()):
+                        if sid >= close_start:
+                            if ph != "close":
+                                tp_map[sid] = "close"
+                                tp_changed = True
+                        else:
+                            if ph == "close":
+                                tp_map[sid] = fallback_close
+                                tp_changed = True
+
+                    if tp_changed:
+                        repairs.append(
+                            f"conv {conv_id}: normalized close phase start to seg {close_start} (close technique present)"
+                        )
+                else:
+                    # If the LLM labeled "close" but there's no close technique at all, and we see
+                    # a non-dating CTA (subscribe/channel), downgrade close to prior phase.
+                    if "close" in set(tp_map.values()):
+                        conv_segs = [
+                            s for s in (conversations.get(conv_id) or [])
+                            if isinstance(s, dict)
+                        ]
+                        has_cta = False
+                        for s in conv_segs:
+                            role = (s.get("speaker_role") or "").lower()
+                            if role not in ("coach", "student"):
+                                continue
+                            txt = s.get("text") or ""
+                            if not isinstance(txt, str):
+                                continue
+                            low = txt.lower()
+                            if "subscribe" in low or "channel" in low:
+                                has_cta = True
+                                break
+
+                        if has_cta:
+                            non_close_phases = [p for p in tp_map.values() if p != "close"]
+                            fallback_close = "pre_hook"
+                            if non_close_phases:
+                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
+                            for sid, ph in list(tp_map.items()):
+                                if ph == "close":
+                                    tp_map[sid] = fallback_close
+                                    tp_changed = True
+                            if tp_changed:
+                                repairs.append(
+                                    f"conv {conv_id}: removed close phase (subscribe/channel CTA; no close techniques)"
+                                )
+
+                if tp_changed:
+                    # Rebuild turn_phases list (sorted by segment id) and re-clamp monotonic order.
+                    rebuilt = [{"segment": sid, "phase": tp_map[sid]} for sid in sorted(tp_map.keys())]
+                    current_rank = 0
+                    clamped: List[Dict[str, Any]] = []
+                    for tp in rebuilt:
+                        ph = tp.get("phase")
+                        r = phase_rank2.get(ph, 0)
+                        if r < current_rank:
+                            tp["phase"] = PHASE_ORDER[current_rank]
+                        else:
+                            current_rank = r
+                        clamped.append(tp)
+                    e["turn_phases"] = clamped
+                    turn_phases = clamped
+
         phases_present = {
             tp.get("phase")
             for tp in turn_phases
