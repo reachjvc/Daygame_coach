@@ -509,8 +509,12 @@ def normalize_enrichments(
                             and t.get("technique") in ("number_close", "instagram_close")
                             for t in (e.get("techniques_used", []) or [])
                         )
+                        # Heuristic: detect explicit contact exchange / close logistics cues.
+                        # Avoid overly-broad tokens like "call" (e.g. "call an Uber").
                         contact_cue_re = re.compile(
-                            r"\b(number|phone|instagram|\big\b|text|call|whatsapp|snap(?:chat)?|contact)\b",
+                            r"\b(number|phone|instagram|\big\b|whatsapp|snap(?:chat)?)\b"
+                            r"|\btext me\b"
+                            r"|\bcall me\b",
                             re.IGNORECASE,
                         )
                         conv_has_contact_cue = any(
