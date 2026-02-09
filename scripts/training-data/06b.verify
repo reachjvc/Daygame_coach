@@ -624,6 +624,53 @@ def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
     return normalized
 
 
+def normalize_boundary_issues(raw: Any) -> List[Dict[str, Any]]:
+    """Normalize boundary issues to satisfy verification.schema.json.
+
+    The verifier sometimes uses a different severity scale (e.g. 'critical').
+    We map those into the allowed enum: minor/moderate/major.
+    """
+    if not isinstance(raw, list):
+        return []
+
+    def normalize_severity(v: Any) -> str:
+        if v is None:
+            return "moderate"
+        s = str(v).strip().lower()
+        if s in {"minor", "moderate", "major"}:
+            return s
+        if s in {"critical", "severe", "high"}:
+            return "major"
+        if s in {"medium", "med"}:
+            return "moderate"
+        if s in {"low"}:
+            return "minor"
+        return "moderate"
+
+    normalized: List[Dict[str, Any]] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        cid = item.get("conversation_id")
+        try:
+            cid_int = int(cid)  # allow numeric strings
+        except Exception:
+            continue
+        issue = item.get("issue")
+        if issue is None:
+            issue_str = ""
+        elif isinstance(issue, str):
+            issue_str = issue
+        else:
+            issue_str = str(issue)
+        out = dict(item)
+        out["conversation_id"] = cid_int
+        out["issue"] = issue_str
+        out["severity"] = normalize_severity(item.get("severity"))
+        normalized.append(out)
+    return normalized
+
+
 def normalize_overall_verdict(v: Any) -> str:
     if v is None:
         return "FLAG"
@@ -823,7 +870,7 @@ def verify_file(
     verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
     conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
     misattributions = result.get("misattributions", [])
-    boundary_issues = result.get("boundary_issues", [])
+    boundary_issues = normalize_boundary_issues(result.get("boundary_issues", []))
     collapse_issues = result.get("collapse_issues", [])
     other_flags = result.get("other_flags", [])
 
