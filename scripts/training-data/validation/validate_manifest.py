@@ -169,6 +169,7 @@ def main() -> None:
     blocked_by_gate = 0
     allowed_by_gate = 0
     gate_reject = 0
+    gate_reject_patched_allowed = 0
     gate_flag_blocked = 0
     gate_flag_allowed = 0
 
@@ -298,8 +299,23 @@ def main() -> None:
                 blocked_by_gate += 1
                 gate_flag_blocked += 1
         elif verdict == "REJECT":
-            blocked_by_gate += 1
             gate_reject += 1
+
+            patched_clean = False
+            if s06c_path:
+                s06c_data = _load_json(s06c_path)
+                pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
+                if isinstance(pm, dict):
+                    fixes = pm.get("fixes_applied_count", 0)
+                    flags = pm.get("flags_not_fixed_count", 0)
+                    if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
+                        patched_clean = True
+
+            if patched_clean and args.allow_flag:
+                allowed_by_gate += 1
+                gate_reject_patched_allowed += 1
+            else:
+                blocked_by_gate += 1
         else:
             blocked_by_gate += 1
 
@@ -410,6 +426,7 @@ def main() -> None:
             "allowed": allowed_by_gate,
             "blocked": blocked_by_gate,
             "reject": gate_reject,
+            "reject_patched_allowed": gate_reject_patched_allowed,
             "flag_allowed": gate_flag_allowed,
             "flag_blocked": gate_flag_blocked,
         },
@@ -447,7 +464,8 @@ def main() -> None:
         print(f"{LOG_PREFIX} 06b.verify verdicts: {dict(verdict_counts) or '{}'}")
         print(
             f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate} "
-            f"(REJECT={gate_reject}, FLAG_allowed={gate_flag_allowed}, FLAG_blocked={gate_flag_blocked}, allow_flag={args.allow_flag})"
+            f"(REJECT={gate_reject}, REJECT_patched_allowed={gate_reject_patched_allowed}, "
+            f"FLAG_allowed={gate_flag_allowed}, FLAG_blocked={gate_flag_blocked}, allow_flag={args.allow_flag})"
         )
 
         print(
