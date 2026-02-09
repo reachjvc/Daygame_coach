@@ -58,6 +58,8 @@ type Args = {
   dryRun: boolean
   source: string | null
   manifest: string | null
+  maskTranscriptArtifacts: boolean
+  maskLowQuality: boolean
 }
 
 type SegmentType = "INTERACTION" | "EXPLANATION" | "COMMENTARY" | "UNKNOWN"
@@ -75,6 +77,9 @@ type ChunkMetadata = {
   chunkIndex: number
   totalChunks: number
   conversationId?: number
+  // Interaction-local indices for stitching full conversations at retrieval time.
+  conversationChunkIndex?: number
+  conversationChunkTotal?: number
   phase?: string
   techniques?: string[]
   topics?: string[]
@@ -86,6 +91,16 @@ type ChunkMetadata = {
   confidence?: number
   // Phase confidence from Stage 07 LLM evaluation (0.0-1.0)
   phaseConfidence?: number
+  // Approx timestamps from source segments (seconds).
+  startSec?: number
+  endSec?: number
+  // Transcript quality signals (from Stage 07)
+  asrLowQualitySegmentCount?: number
+  asrTranscriptArtifactCount?: number
+  asrTranscriptArtifactTypes?: string[]
+  // Deterministic heuristic score for retrieval downranking (0.0-1.0).
+  chunkConfidence?: number
+  chunkConfidenceVersion?: number
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
 }
@@ -130,6 +145,9 @@ type InteractionJsonlRow = {
   turns?: Array<{
     speaker?: string
     text?: string
+    // Stage 09 can intentionally omit masked lines from chunk text while still
+    // counting the underlying segment for quality/confidence stats.
+    masked?: boolean
     start?: number
     end?: number
     phase?: string
@@ -180,6 +198,14 @@ type EnrichedFile = {
   metadata?: {
     source_file?: string
   }
+  // Stage 07 transcript quality signals (global segment ids)
+  low_quality_segments?: Array<{ segment?: number; reason?: string }>
+  transcript_artifacts?: Array<{
+    type?: string
+    segment_index?: number
+    artifact_type?: string
+    description?: string
+  }>
   speaker_labels?: SpeakerLabels
   segments?: ContentSegment[]
   enrichments?: ContentEnrichment[]
@@ -191,6 +217,8 @@ type InternalChunk = {
   chunkIndex: number
   totalChunks: number
   conversationId?: number
+  conversationChunkIndex?: number
+  conversationChunkTotal?: number
   phase?: string
   techniques?: string[]
   topics?: string[]
@@ -201,6 +229,13 @@ type InternalChunk = {
   channel?: string
   // Phase confidence from Stage 07 (0.0-1.0)
   phaseConfidence?: number
+  startSec?: number
+  endSec?: number
+  asrLowQualitySegmentCount?: number
+  asrTranscriptArtifactCount?: number
+  asrTranscriptArtifactTypes?: string[]
+  chunkConfidence?: number
+  chunkConfidenceVersion?: number
   // Quality flags
   problematicReason?: string[]
 }
@@ -235,6 +270,10 @@ function parseArgs(argv: string[]): Args {
     dryRun: flags.has("--dry-run"),
     source,
     manifest,
+    // Default: mask transcript_artifacts (usually egregious nonsense / repeated garbage).
+    // Low-quality segment flags are more subjective, so keep them unless explicitly enabled.
+    maskTranscriptArtifacts: !flags.has("--no-mask-transcript-artifacts"),
+    maskLowQuality: flags.has("--mask-low-quality"),
   }
 }
 
@@ -354,6 +393,99 @@ function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
 const PROBLEMATIC_SPEAKER_ROLES = ["collapsed", "mixed/unclear", "unknown"]
 const MIN_SPEAKER_CONFIDENCE = 0.7
 
+type AsrQualityIndex = {
+  lowQualityIds: Set<number>
+  transcriptArtifactIds: Set<number>
+  transcriptArtifactTypesById: Map<number, Set<string>>
+}
+
+function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
+  const lowQualityIds = new Set<number>()
+  const transcriptArtifactIds = new Set<number>()
+  const transcriptArtifactTypesById = new Map<number, Set<string>>()
+
+  for (const lq of file.low_quality_segments ?? []) {
+    const segId = lq?.segment
+    if (typeof segId === "number" && Number.isFinite(segId)) lowQualityIds.add(segId)
+  }
+
+  for (const art of file.transcript_artifacts ?? []) {
+    const segId = art?.segment_index
+    if (typeof segId !== "number" || !Number.isFinite(segId)) continue
+    transcriptArtifactIds.add(segId)
+
+    const t = typeof art?.artifact_type === "string" ? art.artifact_type.trim() : ""
+    if (!t) continue
+    const set = transcriptArtifactTypesById.get(segId) ?? new Set<string>()
+    set.add(t)
+    transcriptArtifactTypesById.set(segId, set)
+  }
+
+  return { lowQualityIds, transcriptArtifactIds, transcriptArtifactTypesById }
+}
+
+function collectAsrStats(
+  segments: ContentSegment[],
+  asr: AsrQualityIndex | null
+): {
+  lowQualityCount: number
+  transcriptArtifactCount: number
+  transcriptArtifactTypes: string[]
+} {
+  if (!asr) return { lowQualityCount: 0, transcriptArtifactCount: 0, transcriptArtifactTypes: [] }
+
+  let lowQualityCount = 0
+  let transcriptArtifactCount = 0
+  const types = new Set<string>()
+
+  for (const seg of segments) {
+    const segId = seg.id
+    if (typeof segId !== "number") continue
+    if (asr.lowQualityIds.has(segId)) lowQualityCount++
+    if (asr.transcriptArtifactIds.has(segId)) {
+      transcriptArtifactCount++
+      const segTypes = asr.transcriptArtifactTypesById.get(segId)
+      if (segTypes) {
+        for (const t of segTypes) types.add(t)
+      }
+    }
+  }
+
+  return {
+    lowQualityCount,
+    transcriptArtifactCount,
+    transcriptArtifactTypes: Array.from(types).sort((a, b) => a.localeCompare(b)),
+  }
+}
+
+const CHUNK_CONFIDENCE_VERSION = 1
+
+function clamp01(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(1, n))
+}
+
+function computeChunkConfidence(chunk: InternalChunk): number {
+  // Heuristic only: this is meant for downranking, not as a hard gate.
+  let conf = 1.0
+
+  if (chunk.type !== "INTERACTION") conf *= 0.9
+
+  if (typeof chunk.phaseConfidence === "number") {
+    const pc = clamp01(chunk.phaseConfidence)
+    conf *= Math.max(0.3, pc)
+  }
+
+  const probs = chunk.problematicReason ?? []
+  if (probs.some((r) => r.startsWith("speaker_role:"))) conf *= 0.85
+  if (probs.some((r) => r.startsWith("low_speaker_conf:"))) conf *= 0.9
+
+  if ((chunk.asrTranscriptArtifactCount ?? 0) > 0) conf *= 0.75
+  if ((chunk.asrLowQualitySegmentCount ?? 0) > 0) conf *= 0.85
+
+  return clamp01(conf)
+}
+
 /**
  * Assess segments for quality problems.
  * Returns array of reason strings if problematic, empty array if clean.
@@ -441,7 +573,8 @@ function chunkInteractionByPhase(
   row: InteractionJsonlRow,
   maxChunkSize: number,
   segments: ContentSegment[],
-  speakerLabels: SpeakerLabels
+  speakerLabels: SpeakerLabels,
+  asrIndex: AsrQualityIndex | null
 ): InternalChunk[] {
   const chunks: InternalChunk[] = []
   const turns = row.turns ?? []
@@ -493,14 +626,6 @@ function chunkInteractionByPhase(
   }
 
   for (const group of phaseGroups) {
-    // Get segments for this phase group
-    const groupSegments = group.turnIndices
-      .map((idx) => segments[idx])
-      .filter((s): s is ContentSegment => s !== undefined)
-
-    // Assess quality for this group's segments
-    const problems = assessSegmentsForProblems(groupSegments, speakerLabels)
-
     let content = ""
     let chunkTurnIndices: number[] = []
 
@@ -509,6 +634,7 @@ function chunkInteractionByPhase(
       const turnIdx = group.turnIndices[i]
       const speaker = mapSpeakerLabel(turn.speaker)
       const text = (turn.text ?? "").trim()
+      const masked = Boolean(turn.masked)
 
       if (text) {
         const line = `${speaker}: ${text}`
@@ -518,6 +644,23 @@ function chunkInteractionByPhase(
             .map((idx) => segments[idx])
             .filter((s): s is ContentSegment => s !== undefined)
           const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
+          const asrStats = collectAsrStats(chunkSegments, asrIndex)
+
+          if (asrStats.lowQualityCount > 0) {
+            chunkProblems.push("asr_low_quality")
+          }
+          if (asrStats.transcriptArtifactTypes.length > 0) {
+            for (const t of asrStats.transcriptArtifactTypes) {
+              chunkProblems.push(`asr_transcript_artifact:${t}`)
+            }
+          }
+
+          const startSec = Math.min(
+            ...chunkSegments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+          )
+          const endSec = Math.max(
+            ...chunkSegments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+          )
 
           chunks.push({
             content: content.trim(),
@@ -528,12 +671,21 @@ function chunkInteractionByPhase(
             phase: group.phase,
             techniques: Array.from(new Set(group.techniques)),
             topics: Array.from(new Set(group.topics)),
-            problematicReason: chunkProblems.length > 0 ? chunkProblems : undefined,
+            startSec: Number.isFinite(startSec) ? startSec : undefined,
+            endSec: Number.isFinite(endSec) ? endSec : undefined,
+            asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+            asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+            asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+            problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
           })
           content = ""
           chunkTurnIndices = []
         }
         content += (content ? "\n" : "") + line
+      }
+
+      if (text || masked) {
+        // Track the segment for stats (even if masked/omitted from text).
         chunkTurnIndices.push(turnIdx)
       }
     }
@@ -544,6 +696,23 @@ function chunkInteractionByPhase(
         .map((idx) => segments[idx])
         .filter((s): s is ContentSegment => s !== undefined)
       const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
+      const asrStats = collectAsrStats(chunkSegments, asrIndex)
+
+      if (asrStats.lowQualityCount > 0) {
+        chunkProblems.push("asr_low_quality")
+      }
+      if (asrStats.transcriptArtifactTypes.length > 0) {
+        for (const t of asrStats.transcriptArtifactTypes) {
+          chunkProblems.push(`asr_transcript_artifact:${t}`)
+        }
+      }
+
+      const startSec = Math.min(
+        ...chunkSegments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+      )
+      const endSec = Math.max(
+        ...chunkSegments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+      )
 
       chunks.push({
         content: content.trim(),
@@ -554,7 +723,12 @@ function chunkInteractionByPhase(
         phase: group.phase,
         techniques: [...new Set(group.techniques)],
         topics: [...new Set(group.topics)],
-        problematicReason: chunkProblems.length > 0 ? chunkProblems : undefined,
+        startSec: Number.isFinite(startSec) ? startSec : undefined,
+        endSec: Number.isFinite(endSec) ? endSec : undefined,
+        asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+        asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+        asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+        problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
       })
     }
   }
@@ -624,12 +798,30 @@ function chunkCommentaryText(
   maxSize: number,
   overlap: number,
   segments: ContentSegment[],
-  speakerLabels: SpeakerLabels
+  speakerLabels: SpeakerLabels,
+  asrIndex: AsrQualityIndex | null
 ): InternalChunk[] {
   if (text.length < 20) return []
 
   // Assess all segments that contributed to this text block
   const problems = assessSegmentsForProblems(segments, speakerLabels)
+  const asrStats = collectAsrStats(segments, asrIndex)
+
+  if (asrStats.lowQualityCount > 0) {
+    problems.push("asr_low_quality")
+  }
+  if (asrStats.transcriptArtifactTypes.length > 0) {
+    for (const t of asrStats.transcriptArtifactTypes) {
+      problems.push(`asr_transcript_artifact:${t}`)
+    }
+  }
+
+  const startSec = Math.min(
+    ...segments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+  )
+  const endSec = Math.max(
+    ...segments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+  )
 
   const parts = splitTextBySize(text, maxSize, overlap)
   return parts.map((content, idx) => ({
@@ -639,7 +831,12 @@ function chunkCommentaryText(
     totalChunks: parts.length,
     techniques,
     topics,
-    problematicReason: problems.length > 0 ? problems : undefined,
+    startSec: Number.isFinite(startSec) ? startSec : undefined,
+    endSec: Number.isFinite(endSec) ? endSec : undefined,
+    asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+    asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+    asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+    problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
   }))
 }
 
@@ -1088,6 +1285,18 @@ async function main() {
       continue
     }
 
+    const asrIndex = buildAsrQualityIndex(parsedFile)
+    const maskedSegmentIds = new Set<number>()
+    if (args.maskTranscriptArtifacts) {
+      for (const id of asrIndex.transcriptArtifactIds) maskedSegmentIds.add(id)
+    }
+    if (args.maskLowQuality) {
+      for (const id of asrIndex.lowQualityIds) maskedSegmentIds.add(id)
+    }
+    if (maskedSegmentIds.size > 0) {
+      console.log(`   🧹 Masking ${maskedSegmentIds.size} ASR-flagged segment(s) in chunk text`)
+    }
+
     const internalChunks: InternalChunk[] = []
 
     const allSegments = parsedFile.segments!
@@ -1131,9 +1340,12 @@ async function main() {
           usedLocalPhaseIndex = true
         }
 
+        const masked = typeof globalSegId === "number" && maskedSegmentIds.has(globalSegId)
+
         return {
           speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
-          text: seg.text ?? "",
+          text: masked ? "" : (seg.text ?? ""),
+          masked,
           start: seg.start,
           end: seg.end,
           phase,
@@ -1159,7 +1371,7 @@ async function main() {
       }
 
       const speakerLabels = parsedFile.speaker_labels ?? {}
-      const phaseChunks = chunkInteractionByPhase(row, chunkSize, convSegments, speakerLabels)
+      const phaseChunks = chunkInteractionByPhase(row, chunkSize, convSegments, speakerLabels, asrIndex)
 
       // Add investmentLevel from enrichment to each chunk
       const investmentLevel = enrichment.investment_level
@@ -1180,6 +1392,10 @@ async function main() {
       }
 
       if (phaseChunks.length > 0) {
+        for (let i = 0; i < phaseChunks.length; i++) {
+          phaseChunks[i].conversationChunkIndex = i + 1
+          phaseChunks[i].conversationChunkTotal = phaseChunks.length
+        }
         internalChunks.push(...phaseChunks)
       }
     }
@@ -1193,10 +1409,12 @@ async function main() {
       const block = commentaryBlocks[blockIdx]
       const text = block
         .map((seg) => {
+          const segId = seg.id
+          if (typeof segId === "number" && maskedSegmentIds.has(segId)) return null
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line) => line.length > 2)
+        .filter((line): line is string => Boolean(line) && line.length > 2)
         .join("\n")
 
       const enrichment = commentaryEnrichments.find((e) => e.block_index === blockIdx + 1)
@@ -1210,7 +1428,8 @@ async function main() {
         chunkSize,
         chunkOverlap,
         block,
-        speakerLabelsForCommentary
+        speakerLabelsForCommentary,
+        asrIndex
       )
       internalChunks.push(...commentaryChunks)
     }
@@ -1227,10 +1446,12 @@ async function main() {
 
       const text = sectionSegs
         .map((seg) => {
+          const segId = seg.id
+          if (typeof segId === "number" && maskedSegmentIds.has(segId)) return null
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line) => line.length > 2)
+        .filter((line): line is string => Boolean(line) && line.length > 2)
         .join("\n")
 
       const techniques = extractTechniqueNames(section.techniques_discussed)
@@ -1243,7 +1464,8 @@ async function main() {
         chunkSize,
         chunkOverlap,
         sectionSegs,
-        speakerLabelsForSections
+        speakerLabelsForSections,
+        asrIndex
       )
       internalChunks.push(...sectionChunks)
     }
@@ -1254,11 +1476,16 @@ async function main() {
     }
 
     // Normalize chunkIndex/totalChunks across the whole video
-    const normalizedChunks = internalChunks.map((c, idx) => ({
-      ...c,
-      chunkIndex: idx,
-      totalChunks: internalChunks.length,
-    }))
+    const normalizedChunks = internalChunks.map((c, idx) => {
+      const chunk: InternalChunk = {
+        ...c,
+        chunkIndex: idx,
+        totalChunks: internalChunks.length,
+      }
+      chunk.chunkConfidence = computeChunkConfidence(chunk)
+      chunk.chunkConfidenceVersion = CHUNK_CONFIDENCE_VERSION
+      return chunk
+    })
 
     // Generate embeddings
     console.log(`   📊 Generating ${normalizedChunks.length} embeddings...`)
@@ -1287,6 +1514,12 @@ async function main() {
       if (chunk.conversationId !== undefined) {
         metadata.conversationId = chunk.conversationId
       }
+      if (chunk.conversationChunkIndex !== undefined) {
+        metadata.conversationChunkIndex = chunk.conversationChunkIndex
+      }
+      if (chunk.conversationChunkTotal !== undefined) {
+        metadata.conversationChunkTotal = chunk.conversationChunkTotal
+      }
       if (chunk.phase) {
         metadata.phase = chunk.phase
       }
@@ -1301,6 +1534,27 @@ async function main() {
       }
       if (chunk.phaseConfidence !== undefined) {
         metadata.phaseConfidence = chunk.phaseConfidence
+      }
+      if (chunk.startSec !== undefined) {
+        metadata.startSec = chunk.startSec
+      }
+      if (chunk.endSec !== undefined) {
+        metadata.endSec = chunk.endSec
+      }
+      if (chunk.asrLowQualitySegmentCount !== undefined) {
+        metadata.asrLowQualitySegmentCount = chunk.asrLowQualitySegmentCount
+      }
+      if (chunk.asrTranscriptArtifactCount !== undefined) {
+        metadata.asrTranscriptArtifactCount = chunk.asrTranscriptArtifactCount
+      }
+      if (chunk.asrTranscriptArtifactTypes && chunk.asrTranscriptArtifactTypes.length > 0) {
+        metadata.asrTranscriptArtifactTypes = chunk.asrTranscriptArtifactTypes
+      }
+      if (chunk.chunkConfidence !== undefined) {
+        metadata.chunkConfidence = chunk.chunkConfidence
+      }
+      if (chunk.chunkConfidenceVersion !== undefined) {
+        metadata.chunkConfidenceVersion = chunk.chunkConfidenceVersion
       }
       if (chunk.problematicReason && chunk.problematicReason.length > 0) {
         metadata.problematicReason = chunk.problematicReason

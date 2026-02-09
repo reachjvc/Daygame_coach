@@ -881,6 +881,46 @@ Deterministic validation to add:
 - embeddings present, correct vector length
 - metadata fields present and consistent with upstream (video type, conversation id)
 
+#### 8.12.1 Chunk Definition (Decision + Experiments)
+
+Chunking is a *product decision* because it defines what retrieval can return. The objective is not just “some relevant text”, but enough adjacent context that a human (or the QA model) can understand what is happening in the interaction.
+
+**Proposed default (current implementation direction):**
+- **Infield / `approach` conversations:** chunk by interaction phase (`open|pre_hook|post_hook|close`). If a phase exceeds size limits, split into multiple chunks (line-boundary) with overlap.
+- **Commentary blocks / talking head sections:** chunk contiguous blocks/sections by size with overlap.
+
+**Context stitching requirement (so we can reconstruct full conversations/phases):**
+- Every interaction chunk must carry linkage metadata sufficient to fetch neighbors:
+  - `videoId`, `conversationId`
+  - `conversationChunkIndex`, `conversationChunkTotal`
+  - `startSec`, `endSec` (approx; derived from segment timestamps)
+- Retrieval-time policy (app-level): when a chunk is selected, optionally pull adjacent chunks from the same conversation (bounded by a budget) to provide continuity.
+
+**Alternatives to evaluate (A/B with retrieval metrics, not vibes):**
+- **Conversation-first chunking:** sequential transcript chunks for the full conversation (with phase labels as metadata, not as chunk boundaries).
+- **Hybrid:** phase chunks for precision + a lightweight conversation-level “index chunk” (deterministic summary or short transcript header) to help recall.
+
+#### 8.12.2 Confidence/Quality Scoring (Downranking, Not Hard Exclusion)
+
+We need a deterministic `chunk_confidence` (0..1) + `quality_flags` in chunk metadata so retrieval can prefer cleaner chunks *without* throwing away rare-but-useful matches.
+
+**Signals to combine (initial pass):**
+- **ASR quality (per-segment):** Stage 07 `low_quality_segments` + `transcript_artifacts` (global segment ids).
+- **Speaker quality (per-segment):** Stage 06 `speaker_labels.*.confidence` + role anomalies (`collapsed`, high `unknown`, etc.).
+- **Semantic labeling quality (per-phase):** Stage 07 `phase_confidence` (already produced per enrichment/phase).
+- **(Optional) Global transcript confidence:** Stage 06c `transcript_confidence.score` (video-level baseline; useful when per-segment flags are sparse).
+
+**How it is used (important):**
+- Retrieval rerank: downweight low-confidence chunks, but keep a “safety valve” so anchored queries can still retrieve the only relevant excerpt.
+- Ingest readiness: treat confidence as `WARNING` unless it is catastrophically low or the “garbage ratio” is high (avoid making Stage 09 a hard gate by default).
+
+#### 8.12.3 ASR Contamination Handling (Avoid Polluting Embeddings)
+
+Policy:
+- Do not embed obvious ASR garbage. If Stage 07 flags a segment as a `transcript_artifact` (especially `nonsense`), exclude it from the chunk text before embedding.
+- Do not silently “fix” the transcript: record what was excluded (counts + types + ids) in chunk metadata and in Stage 09 reports.
+- If ASR issues cluster (e.g., many artifacts in a single conversation), prefer warning + low confidence over aggressive deletion of entire videos.
+
 Config/contract notes (current code reality):
 - Chunk config is inherited from `src/qa/config.ts`:
   - `rag.chunkSize = 1500`

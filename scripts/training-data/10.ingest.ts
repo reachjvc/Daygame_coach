@@ -65,9 +65,21 @@ type ChunkMetadata = {
   chunkIndex: number
   totalChunks: number
   conversationId?: number
+  conversationChunkIndex?: number
+  conversationChunkTotal?: number
   phase?: string
   techniques?: string[]
   topics?: string[]
+  investmentLevel?: string
+  phaseConfidence?: number
+  startSec?: number
+  endSec?: number
+  asrLowQualitySegmentCount?: number
+  asrTranscriptArtifactCount?: number
+  asrTranscriptArtifactTypes?: string[]
+  chunkConfidence?: number
+  chunkConfidenceVersion?: number
+  problematicReason?: string[]
 }
 
 type Chunk = {
@@ -473,6 +485,12 @@ async function main() {
       if (chunk.metadata.conversationId !== undefined) {
         metadata.conversationId = chunk.metadata.conversationId
       }
+      if (chunk.metadata.conversationChunkIndex !== undefined) {
+        metadata.conversationChunkIndex = chunk.metadata.conversationChunkIndex
+      }
+      if (chunk.metadata.conversationChunkTotal !== undefined) {
+        metadata.conversationChunkTotal = chunk.metadata.conversationChunkTotal
+      }
       if (chunk.metadata.phase) {
         metadata.phase = chunk.metadata.phase
       }
@@ -481,6 +499,36 @@ async function main() {
       }
       if (chunk.metadata.topics && chunk.metadata.topics.length > 0) {
         metadata.topics = chunk.metadata.topics
+      }
+      if (chunk.metadata.investmentLevel) {
+        metadata.investmentLevel = chunk.metadata.investmentLevel
+      }
+      if (typeof chunk.metadata.phaseConfidence === "number") {
+        metadata.phaseConfidence = chunk.metadata.phaseConfidence
+      }
+      if (typeof chunk.metadata.startSec === "number") {
+        metadata.startSec = chunk.metadata.startSec
+      }
+      if (typeof chunk.metadata.endSec === "number") {
+        metadata.endSec = chunk.metadata.endSec
+      }
+      if (typeof chunk.metadata.asrLowQualitySegmentCount === "number") {
+        metadata.asrLowQualitySegmentCount = chunk.metadata.asrLowQualitySegmentCount
+      }
+      if (typeof chunk.metadata.asrTranscriptArtifactCount === "number") {
+        metadata.asrTranscriptArtifactCount = chunk.metadata.asrTranscriptArtifactCount
+      }
+      if (chunk.metadata.asrTranscriptArtifactTypes && chunk.metadata.asrTranscriptArtifactTypes.length > 0) {
+        metadata.asrTranscriptArtifactTypes = chunk.metadata.asrTranscriptArtifactTypes
+      }
+      if (typeof chunk.metadata.chunkConfidence === "number") {
+        metadata.chunkConfidence = chunk.metadata.chunkConfidence
+      }
+      if (typeof chunk.metadata.chunkConfidenceVersion === "number") {
+        metadata.chunkConfidenceVersion = chunk.metadata.chunkConfidenceVersion
+      }
+      if (chunk.metadata.problematicReason && chunk.metadata.problematicReason.length > 0) {
+        metadata.problematicReason = chunk.metadata.problematicReason
       }
 
       return {
