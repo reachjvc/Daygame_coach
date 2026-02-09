@@ -409,6 +409,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Semantic judge for Stage 07 approach enrichments")
     parser.add_argument("--manifest", help="Manifest file (docs/pipeline/batches/*.txt)")
     parser.add_argument("--source", help="Only judge one source within the manifest")
+    parser.add_argument("--video-id", help="Only judge one YouTube video id (11 chars)")
+    parser.add_argument("--conversation-id", type=int, help="Only judge one conversation id (within the video)")
     parser.add_argument("--input", help="Single Stage 07 .enriched.json file")
     parser.add_argument("--batch-id", help="Batch id for caching/output directory (defaults to manifest stem)")
     parser.add_argument("--n", type=int, default=5, help="Number of approach conversations to judge")
@@ -471,6 +473,15 @@ def main() -> None:
 
     if not requests:
         raise SystemExit("No approach conversations found to judge")
+
+    # Optional filters (for targeted debugging / regression repro).
+    if args.video_id:
+        requests = [r for r in requests if r.video_id == args.video_id]
+    if args.conversation_id is not None:
+        requests = [r for r in requests if r.conversation_id == args.conversation_id]
+
+    if not requests:
+        raise SystemExit("No approach conversations matched filters")
 
     rnd = random.Random(args.seed)
     n = max(1, min(args.n, len(requests)))

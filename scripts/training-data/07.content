@@ -158,7 +158,7 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.2.3"  # v1.2.3: Allow technique evidence segments to be COACH or STUDENT turns
+PROMPT_VERSION = "1.3.0"  # v1.3.0: tighten technique/topic precision + use global seg_id for phase/tech refs
 PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
 # Failure budget
@@ -1532,16 +1532,26 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 1. TYPE: "approach"
 2. CONVERSATION_ID: The conversation number
 3. DESCRIPTION: Concise 10-20 word summary
-4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote.
+4. TECHNIQUES USED: List up to 8 techniques that are clearly demonstrated. For each, include seg_id and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
+   CRITICAL: The segment id you cite MUST be the global seg_id shown as (seg_id=...) in the transcript lines,
+   NOT the per-conversation [0], [1], ... index.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: The segment index you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
+   IMPORTANT: The seg_id you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
-5. TOPICS: List topics discussed from the TOPIC REFERENCE list only.
+   Be conservative: if you are not confident the technique is present, omit it.
+   Common confusions to avoid:
+   - cold_read: must be an inference ABOUT HER ("you seem..."), not your personal backstory.
+   - tease: a playful jab ABOUT HER; not you describing yourself or your history.
+   - callback_humor: must reference an earlier joke/theme; a random funny line is not callback_humor.
+   - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
+   - number_close/instagram_close: only if you actually ask/exchange contact info.
+5. TOPICS: List up to 6 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-6. TURN PHASES: Label each turn with its interaction phase.
+   Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
+6. TURN PHASES: Label each segment with its interaction phase.
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
      Can be multiple turns if he's stacking assumptions or extending his opening bit.
@@ -1561,7 +1571,8 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - A turn's phase must NEVER go backwards
    - Once close begins, it continues until the end (no regression to earlier phases)
    - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
-   - Use the segment index [0], [1], etc. to identify each turn
+   - Use the global seg_id shown as (seg_id=...) in the transcript lines to identify each segment
+   - Output one entry for EVERY seg_id in this conversation (do not omit segments)
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
    Provide a brief "signal".
    IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
@@ -1636,17 +1647,17 @@ EXAMPLE:
       "type": "approach",
       "description": "Direct opener on tourist, builds attraction with cold reads, number close",
       "techniques_used": [
-        {{"technique": "direct_opener", "segment": 0, "example": "Hey, I saw you and had to say hi"}},
-        {{"technique": "cold_read", "segment": 3, "example": "You look like you do yoga"}}
+        {{"technique": "direct_opener", "segment": 123, "example": "Hey, I saw you and had to say hi"}},
+        {{"technique": "cold_read", "segment": 126, "example": "You look like you do yoga"}}
       ],
       "topics_discussed": ["origin", "career", "travel"],
       "turn_phases": [
-        {{"segment": 0, "phase": "open"}},
-        {{"segment": 1, "phase": "open"}},
-        {{"segment": 2, "phase": "pre_hook"}},
-        {{"segment": 3, "phase": "pre_hook"}},
-        {{"segment": 4, "phase": "post_hook"}},
-        {{"segment": 5, "phase": "close"}}
+        {{"segment": 123, "phase": "open"}},
+        {{"segment": 124, "phase": "open"}},
+        {{"segment": 125, "phase": "pre_hook"}},
+        {{"segment": 126, "phase": "pre_hook"}},
+        {{"segment": 127, "phase": "post_hook"}},
+        {{"segment": 128, "phase": "close"}}
       ],
       "hook_point": {{"signal": "she asked where he's from unprompted"}},
       "investment_level": "medium",
@@ -1662,7 +1673,7 @@ EXAMPLE:
     }}
   ],
   "low_quality_segments": [
-    {{"segment": 7, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
+    {{"segment": 130, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
   ],
   "transcript_artifacts": []
 }}
