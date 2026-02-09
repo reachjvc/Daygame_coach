@@ -158,7 +158,8 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.3.0"  # v1.3.0: tighten technique/topic precision + use global seg_id for phase/tech refs
+PROMPT_VERSION = "1.4.0"  # v1.4.0: use global SEG_ID refs (fixes compilation conv offsets) + tighten technique/topic precision
+PROMPT_USES_GLOBAL_SEG_IDS = True
 PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
 
 # Failure budget
@@ -488,69 +489,20 @@ def normalize_enrichments(
         if e.get("type") != "approach":
             continue
 
-        # If a technique cites a non-approacher segment, try shifting it to the nearest prior approacher
-        # turn (coach/student) in the same conversation. This is a best-effort repair: keep the technique,
-        # but anchor evidence to the approacher's line when possible (better for RAG quoting and downstream
-        # segment-linking).
+        # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
+        # to a segment (prefer coach/student) within this conversation where the evidence appears.
+        #
+        # This handles a common drift pattern: the LLM picks the right quote but assigns
+        # the wrong segment id (often far away in the same conversation).
         if seg_by_id is not None and conversations is not None:
             conv_id = e.get("conversation_id")
             if isinstance(conv_id, int) and conv_id in conversations:
-                conv_segs = [s for s in conversations.get(conv_id, []) if isinstance(s.get("id"), int)]
+                conv_segs = [
+                    s for s in (conversations.get(conv_id) or [])
+                    if isinstance(s, dict) and isinstance(s.get("id"), int)
+                ]
                 conv_segs.sort(key=lambda s: s.get("id", 0))
-                id_to_idx = {int(s["id"]): idx for idx, s in enumerate(conv_segs)}
 
-                for tech in e.get("techniques_used", []) or []:
-                    if not isinstance(tech, dict):
-                        continue
-                    seg_id = tech.get("segment")
-                    if not isinstance(seg_id, int):
-                        continue
-                    seg = seg_by_id.get(seg_id) if seg_by_id else None
-                    role = seg.get("speaker_role") if isinstance(seg, dict) else None
-                    if role in ("coach", "student") or role is None:
-                        continue
-                    start_idx = id_to_idx.get(seg_id)
-                    if start_idx is None:
-                        continue
-
-                    # Walk backwards to find an approacher turn.
-                    new_seg_id: Optional[int] = None
-                    for j in range(start_idx - 1, -1, -1):
-                        cand = conv_segs[j]
-                        cand_id = cand.get("id")
-                        cand_role = cand.get("speaker_role")
-                        if isinstance(cand_id, int) and cand_role in ("coach", "student"):
-                            new_seg_id = cand_id
-                            break
-
-                    if new_seg_id is None:
-                        continue
-
-                    old_seg_id = seg_id
-                    tech["segment"] = new_seg_id
-                    # Prefer anchoring the example to the approacher line we point at.
-                    anchor_text = (seg_by_id.get(new_seg_id, {}).get("text", "") if seg_by_id else "").strip()
-                    if anchor_text:
-                        prev = tech.get("example")
-                        if (
-                            isinstance(prev, str)
-                            and prev.strip()
-                            and prev != anchor_text
-                            and "example_llm" not in tech
-                        ):
-                            tech["example_llm"] = prev
-                        tech["example"] = anchor_text
-
-                    repairs.append(
-                        f"conv {conv_id}: shifted technique '{tech.get('technique', '?')}' "
-                        f"segment {old_seg_id} ({role}) -> {new_seg_id} (approacher)"
-                    )
-
-                # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
-                # to a coach/student segment within this conversation where the evidence appears.
-                #
-                # This handles a common drift pattern: the LLM picks the right quote but assigns
-                # the wrong segment id (often far away in the same conversation).
                 def _norm_text(s: str) -> str:
                     s = (s or "").lower()
                     s = re.sub(r"[^a-z0-9]+", " ", s)
@@ -567,25 +519,34 @@ def normalize_enrichments(
                     if not ev or len(ev) < 8:
                         return None
 
-                    matches: List[int] = []
-                    for w in range(1, max_window + 1):
-                        for start in range(0, max(0, len(conv_segs) - w + 1)):
-                            window = conv_segs[start : start + w]
-                            # Only anchor to coach/student windows to avoid pointing techniques at targets.
-                            if any(seg.get("speaker_role") not in ("coach", "student") for seg in window):
-                                continue
-                            window_text = " ".join((seg.get("text") or "") for seg in window)
-                            norm_window = _norm_text(window_text)
-                            if ev and ev in norm_window:
-                                sid = window[0].get("id")
-                                if isinstance(sid, int):
-                                    matches.append(sid)
-                                continue
-                            # Fuzzy fallback for segment-boundary duplication and minor ASR drift.
-                            if w >= 2 and window_text and fuzzy_evidence_match(example, window_text, threshold=0.8):
-                                sid = window[0].get("id")
-                                if isinstance(sid, int):
-                                    matches.append(sid)
+                    def _collect_matches(*, allow_non_approacher: bool) -> List[int]:
+                        matches: List[int] = []
+                        for w in range(1, max_window + 1):
+                            for start in range(0, max(0, len(conv_segs) - w + 1)):
+                                window = conv_segs[start : start + w]
+                                if not allow_non_approacher:
+                                    # Prefer anchoring to coach/student windows when possible.
+                                    if any(seg.get("speaker_role") not in ("coach", "student") for seg in window):
+                                        continue
+                                window_text = " ".join((seg.get("text") or "") for seg in window)
+                                norm_window = _norm_text(window_text)
+                                if ev and ev in norm_window:
+                                    sid = window[0].get("id")
+                                    if isinstance(sid, int):
+                                        matches.append(sid)
+                                    continue
+                                # Fuzzy fallback for segment-boundary duplication and minor ASR drift.
+                                if w >= 2 and window_text and fuzzy_evidence_match(example, window_text, threshold=0.8):
+                                    sid = window[0].get("id")
+                                    if isinstance(sid, int):
+                                        matches.append(sid)
+                        return matches
+
+                    matches = _collect_matches(allow_non_approacher=False)
+                    if not matches:
+                        # Speaker diarization can be wrong (or the target may be quoting the coach).
+                        # If we can't find coach/student evidence, fall back to anchoring on any window.
+                        matches = _collect_matches(allow_non_approacher=True)
 
                     if not matches:
                         return None
@@ -613,16 +574,15 @@ def normalize_enrichments(
                             f"segment {old_seg_id} -> {new_seg_id} (evidence match)"
                         )
 
-                    # If we could match evidence to a coach/student window, prefer storing the exact
-                    # transcript line for the referenced segment as the example, so evidence is
-                    # segment-aligned (and we preserve the ability to flag hallucinated examples).
+                    # Prefer storing the exact transcript line for the referenced segment as the
+                    # example, so evidence is segment-aligned (and we preserve the ability to flag
+                    # hallucinated examples).
                     effective_seg_id = tech.get("segment")
                     if isinstance(effective_seg_id, int):
                         seg = seg_by_id.get(effective_seg_id) if seg_by_id else None
                         seg_text = (seg.get("text") if isinstance(seg, dict) else "") or ""
-                        seg_role = seg.get("speaker_role") if isinstance(seg, dict) else None
                         seg_text = seg_text.strip()
-                        if seg_text and seg_role in ("coach", "student"):
+                        if seg_text:
                             current_example = tech.get("example")
                             if not isinstance(current_example, str):
                                 current_example = ""
@@ -1293,9 +1253,9 @@ def remap_enrichment_segment_indices(
 ) -> None:
     """Convert relative segment indices in enrichments to global segment IDs.
 
-    The prompt sent to Claude uses relative indices [0], [1], [2]... for each
-    conversation (cleaner for the LLM to read). But the segments in the output
-    JSON use global IDs. This function remaps the enrichment references to match.
+    Legacy: when the prompt uses per-conversation relative indices [0], [1], [2]...
+    for each conversation, but the output JSON expects global segment IDs.
+    For PROMPT_USES_GLOBAL_SEG_IDS prompts this function should not be called.
 
     Modifies enrichments in place.
     """
@@ -1469,7 +1429,7 @@ def build_infield_prompt(
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
             if text:
-                turns.append(f"  [{j}] (seg_id={seg_id}) {speaker.upper()}: {text}")
+                turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
 
         if turns:
             content_items.append({
@@ -1492,7 +1452,7 @@ End: {block['end']:.1f}s
             seg_id = seg.get("id", i)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
-            turns.append(f"  [{i}] (seg_id={seg_id}) {speaker.upper()}: {text}")
+            turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
 
         content_items.append({
             "sort_key": segments[0].get("start", 0),
@@ -1532,26 +1492,25 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 1. TYPE: "approach"
 2. CONVERSATION_ID: The conversation number
 3. DESCRIPTION: Concise 10-20 word summary
-4. TECHNIQUES USED: List up to 8 techniques that are clearly demonstrated. For each, include seg_id and a short exact quote.
+4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
-   CRITICAL: The segment id you cite MUST be the global seg_id shown as (seg_id=...) in the transcript lines,
-   NOT the per-conversation [0], [1], ... index.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: The seg_id you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
+   IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
    Be conservative: if you are not confident the technique is present, omit it.
+   Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
    Common confusions to avoid:
    - cold_read: must be an inference ABOUT HER ("you seem..."), not your personal backstory.
    - tease: a playful jab ABOUT HER; not you describing yourself or your history.
    - callback_humor: must reference an earlier joke/theme; a random funny line is not callback_humor.
    - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
    - number_close/instagram_close: only if you actually ask/exchange contact info.
-5. TOPICS: List up to 6 topics explicitly discussed from the TOPIC REFERENCE list only.
+5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
-6. TURN PHASES: Label each segment with its interaction phase.
+6. TURN PHASES: Label each turn with its interaction phase.
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
      Can be multiple turns if he's stacking assumptions or extending his opening bit.
@@ -1571,8 +1530,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - A turn's phase must NEVER go backwards
    - Once close begins, it continues until the end (no regression to earlier phases)
    - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
-   - Use the global seg_id shown as (seg_id=...) in the transcript lines to identify each segment
-   - Output one entry for EVERY seg_id in this conversation (do not omit segments)
+   - Use the SEG_ID shown in the transcript lines (the number in brackets) to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
    Provide a brief "signal".
    IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
@@ -1611,12 +1569,11 @@ Do NOT flag:
 
 Output a "low_quality_segments" array listing segments with poor transcription:
 {{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must be the global segment id shown as (seg_id=...) in the transcript lines,
-NOT the per-conversation [0], [1], ... turn index.
+IMPORTANT: SEG_ID must be the segment id shown in brackets in the transcript lines.
 
 Also flag specific artifact types with "transcript_artifact" entries:
 {{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is also the global seg_id (despite the name).
+IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
 
 Return empty arrays if transcript quality is good.
 
@@ -1995,8 +1952,9 @@ def process_video_file(input_path: Path, output_path: Path, dry_run: bool = Fals
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
-    # Remap relative segment indices to global IDs
-    remap_enrichment_segment_indices(enrichments, conversations)
+    # Remap segment references only when the prompt uses per-conversation relative indices.
+    if not PROMPT_USES_GLOBAL_SEG_IDS:
+        remap_enrichment_segment_indices(enrichments, conversations)
 
     seg_by_id = {
         s.get("id"): s
