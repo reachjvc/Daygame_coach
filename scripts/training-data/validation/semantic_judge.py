@@ -198,7 +198,16 @@ def call_claude(prompt: str, timeout: int = 300) -> Optional[str]:
         )
         if result.returncode != 0:
             err = (result.stderr or "").strip()
-            print(f"{LOG_PREFIX} Claude CLI error: {err[:200]}", file=sys.stderr)
+            snippet = err
+            if len(snippet) > 2000:
+                snippet = snippet[:2000] + " ... [truncated]"
+            print(f"{LOG_PREFIX} Claude CLI error: {snippet}", file=sys.stderr)
+            if "EACCES" in err and ".claude" in err:
+                print(
+                    f"{LOG_PREFIX} Hint: Claude CLI couldn't write to ~/.claude*. If you're running in a sandboxed "
+                    f"environment, rerun with escalated permissions (or run locally outside the sandbox).",
+                    file=sys.stderr,
+                )
             return None
         return (result.stdout or "").strip()
     except subprocess.TimeoutExpired:
@@ -244,7 +253,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.3"
+    prompt_version: str = "1.2.4"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -323,6 +332,11 @@ Rules:
 - Once "close" begins, ALL remaining turns should stay "close" even if rapport continues or the first close attempt doesn't land.
 - Not all phases are required (blowout can be open only).
 - If there is no post_hook, hook_point and investment_level should be null.
+
+STICKY CLOSE CLARIFICATION (most important):
+- It is EXPECTED that "close" can contain attraction-building banter, role-play, teasing, and rapport after a contact exchange attempt.
+- Do NOT penalize an enrichment for having playful/attraction content inside "close". That's correct under this contract.
+- Do NOT require post_hook/hook_point/investment_level after close begins. If close starts before any hook, hook_point and investment_level being null is correct.
 
 SEGMENT REFERENCE TOLERANCE:
 - Segment ids are global transcript ids (the numbers in [brackets]).
