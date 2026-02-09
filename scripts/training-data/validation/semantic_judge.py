@@ -253,7 +253,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.7"
+    prompt_version: str = "1.2.8"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -341,6 +341,7 @@ STICKY CLOSE CLARIFICATION (most important):
 - Even if the target becomes highly engaged *after* close begins, that does NOT create a post_hook phase. It remains "close" (sticky) by design.
 - If the enrichment correctly tags a close technique (e.g. instagram_close/number_close/instant_date/time_bridge/bounce/logistics_check),
   then it is correct for close to start at that technique's segment and remain sticky. Do not suggest moving close later unless the close technique itself is incorrect.
+- When judging whether post_hook/hook_point/investment_level should exist, only consider evidence BEFORE close begins. Engagement after close begins is still "close" and does not imply a missing post_hook.
 
 EXAMPLE (do not penalize):
 If coach asks \"What's your Instagram?\" at [100], and then at [105]-[130] they keep joking/talking about tattoos, those turns are still phase \"close\".
