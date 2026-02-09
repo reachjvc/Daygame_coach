@@ -2730,7 +2730,9 @@ def should_process_video(
     """Check if video should be processed based on 06b verification status.
 
     Returns (should_process, reason).
-    APPROVE always proceeds. FLAG proceeds only when --allow-flag is set. REJECT is blocked.
+    APPROVE always proceeds. FLAG proceeds only when --allow-flag is set.
+    REJECT is blocked by default, but may be allowed when the Stage 06c patched input includes
+    patch_metadata indicating deterministic fixes were applied and no flags remain (still requires --allow-flag).
     """
     if skip_verification:
         return True, "verification skipped (--skip-verification)"
@@ -2747,6 +2749,20 @@ def should_process_video(
             return True, "FLAG (allowed by --allow-flag)"
         return False, "FLAG verdict - needs manual review before proceeding"
     if verdict == "REJECT":
+        # Salvage path: if 06c.patch applied high-confidence deterministic fixes cleanly, allow
+        # processing under the same explicit waiver used for FLAG.
+        try:
+            stage06c = json.loads(input_path.read_text(encoding="utf-8"))
+            pm = stage06c.get("patch_metadata")
+        except Exception:
+            pm = None
+        if isinstance(pm, dict):
+            fixes = pm.get("fixes_applied_count", 0)
+            flags = pm.get("flags_not_fixed_count", 0)
+            if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
+                if allow_flag:
+                    return True, "REJECT (patched cleanly) (allowed by --allow-flag)"
+                return False, "REJECT (patched cleanly) - rerun with --allow-flag to proceed"
         return False, "REJECT verdict - critical issues found"
 
     return False, f"unknown verdict: {verdict}"
