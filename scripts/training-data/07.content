@@ -544,6 +544,23 @@ def normalize_enrichments(
                                     f"conv {conv_id}: softened unsupported contact-close claim in description"
                                 )
 
+                # If we already softened a claim previously, ensure we don't imply "success" via phrasing.
+                # Keep this deterministic: only rewrite exact patterns we create ourselves.
+                desc2 = e.get("description")
+                if isinstance(desc2, str) and desc2.strip():
+                    fixed = re.sub(
+                        r"\bsettles for (?:a )?soft close attempt\b",
+                        "attempts a soft close",
+                        desc2,
+                        flags=re.IGNORECASE,
+                    )
+                    fixed = re.sub(r"\s{2,}", " ", fixed).strip()
+                    if fixed != desc2:
+                        e["description"] = fixed
+                        repairs.append(
+                            f"conv {conv_id}: normalized soft close attempt phrasing in description"
+                        )
+
         # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
         # to a segment (prefer coach/student) within this conversation where the evidence appears.
         #
