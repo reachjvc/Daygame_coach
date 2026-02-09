@@ -3,6 +3,7 @@
 **Updated:** 30-01-2026 (Danish time)
 
 ## Changelog
+- 09-02-2026 - Component split: ProgressDashboard refactored into 8 sub-components in dashboard/ folder
 - 30-01-2026 - Performance optimization: Fixed N+1 query, removed unused fetch, architecture cleanup
 - 29-01-2026 15:50 - Initial documentation created
 
@@ -66,7 +67,7 @@ src/tracking/
 └── components/
     ├── index.ts               # Component exports
     ├── SessionTrackerPage.tsx # Main tracking UI
-    ├── ProgressDashboard.tsx  # Stats overview (~587 lines)
+    ├── ProgressDashboard.tsx  # Stats overview (~102 lines, composes dashboard/)
     ├── FieldReportPage.tsx    # Field report form
     ├── WeeklyReviewPage.tsx   # Weekly review form
     ├── QuickAddModal.tsx      # Quick approach logging
@@ -74,7 +75,17 @@ src/tracking/
     ├── KeyStatsSection.tsx    # Research stats display
     ├── PrinciplesSection.tsx  # Principles display
     ├── ResearchDomainsSection.tsx # Research domains
-    └── templateIcons.tsx      # Template icons (JSX)
+    ├── templateIcons.tsx      # Template icons (JSX)
+    └── dashboard/             # Dashboard sub-components (split from ProgressDashboard)
+        ├── index.ts           # Barrel exports
+        ├── AchievementsModal.tsx    # Full achievements modal (lazy loaded)
+        ├── DashboardSkeleton.tsx    # Loading skeleton
+        ├── QuickActionsCard.tsx     # Quick actions card
+        ├── QuickStatsGrid.tsx       # Stats cards grid
+        ├── RecentFieldReportsCard.tsx # Recent field reports
+        ├── RecentMilestonesCard.tsx   # Recent achievements
+        ├── RecentSessionsCard.tsx     # Recent sessions
+        └── WeeklyReviewsCard.tsx      # Weekly reviews status
 ```
 
 ---
@@ -329,3 +340,42 @@ Tables are defined in Supabase. Types are in `src/db/trackingTypes.ts`:
 - `review_templates` - System and user templates
 - `user_tracking_stats` - Aggregated user stats
 - `milestones` - Unlocked achievements
+
+---
+
+## Performance Optimizations
+
+### N+1 Query Fix (Jan 2026)
+
+**Problem:** `getSessionSummaries()` made 11+ database queries for 5 sessions (1 for sessions + 2 per session for approaches and milestones).
+
+**Solution:** Single query with Supabase embedded relations:
+```typescript
+.select(`
+  id, started_at, ...,
+  approaches (outcome),
+  milestones (milestone_type)
+`)
+```
+
+**Result:** 11+ queries → 1 query
+
+### Unused Data Fetch Removal
+
+Removed `dailyStats` fetch (30-day daily stats) that was fetched but never displayed.
+
+**Result:** 4 network requests → 3 requests
+
+### Component Code Splitting (Feb 2026)
+
+**Problem:** ProgressDashboard.tsx was 1067 lines with inline data and one large component.
+
+**Solution:**
+1. Extracted milestone data to `data/milestones.ts` (159 lines)
+2. Split into 8 sub-components in `components/dashboard/`
+3. Lazy load `AchievementsModal` with `React.lazy()` (only loads when opened)
+4. Added `DashboardSkeleton` for instant loading state
+
+**Result:**
+- ProgressDashboard: 1067 → 102 lines (90% reduction)
+- AchievementsModal: code-split, only loaded on demand

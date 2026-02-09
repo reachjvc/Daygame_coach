@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Compass, Eye, Flame, Target, Sparkles, Trophy } from "lucide-react"
+import { Check, Compass, Eye, Flame, Target, Sparkles, Trophy, ChevronLeft, ChevronRight } from "lucide-react"
 import { InnerGameStep } from "../../types"
 
 type StepProgressProps = {
@@ -21,6 +21,23 @@ const STEPS = [
 export function StepProgress({ currentStep, completedSteps, onStepClick }: StepProgressProps) {
   const completedSet = new Set(completedSteps)
 
+  // Find current step index and determine navigation
+  const currentIndex = STEPS.findIndex(s => s.step === currentStep)
+  const canGoBack = currentIndex > 0 && onStepClick
+  const canGoForward = currentIndex < STEPS.length - 1 && completedSet.has(STEPS[currentIndex + 1]?.step) && onStepClick
+
+  const handlePrev = () => {
+    if (canGoBack && onStepClick) {
+      onStepClick(STEPS[currentIndex - 1].step)
+    }
+  }
+
+  const handleNext = () => {
+    if (canGoForward && onStepClick) {
+      onStepClick(STEPS[currentIndex + 1].step)
+    }
+  }
+
   return (
     <div className="w-full">
       {/* Progress bar */}
@@ -35,53 +52,90 @@ export function StepProgress({ currentStep, completedSteps, onStepClick }: StepP
         </div>
       </div>
 
-      {/* Step indicators - responsive layout */}
-      <div className="flex justify-between items-start">
-        {STEPS.map(({ step, label, icon: Icon }) => {
-          const isCompleted = completedSet.has(step)
-          const isCurrent = currentStep === step
-          const isClickable = onStepClick && (isCompleted || step <= currentStep + 1)
+      {/* Step indicators with nav arrows */}
+      <div className="flex items-start gap-1">
+        {/* Left arrow */}
+        <button
+          onClick={handlePrev}
+          disabled={!canGoBack}
+          className={`
+            flex-shrink-0 w-6 h-8 sm:h-9 flex items-center justify-center
+            transition-all rounded
+            ${canGoBack
+              ? "text-primary hover:bg-primary/10 cursor-pointer"
+              : "text-muted-foreground/30 cursor-default"
+            }
+          `}
+          aria-label="Previous step"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
 
-          return (
-            <button
-              key={step}
-              onClick={() => isClickable && onStepClick?.(step)}
-              disabled={!isClickable}
-              className={`
-                flex flex-col items-center gap-1.5 transition-all flex-1 max-w-[60px]
-                ${isClickable ? "cursor-pointer" : "cursor-default"}
-                ${isCurrent ? "scale-105" : ""}
-              `}
-            >
-              <div
+        {/* Steps */}
+        <div className="flex justify-between items-start flex-1">
+          {STEPS.map(({ step, label, icon: Icon }) => {
+            const isCompleted = completedSet.has(step)
+            const isCurrent = currentStep === step
+            const isClickable = onStepClick && (isCompleted || step <= currentStep + 1)
+
+            return (
+              <button
+                key={step}
+                onClick={() => isClickable && onStepClick?.(step)}
+                disabled={!isClickable}
                 className={`
-                  w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center
-                  transition-all duration-200
-                  ${isCompleted
-                    ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
-                    : isCurrent
-                    ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    : "bg-muted text-muted-foreground"
-                  }
+                  flex flex-col items-center gap-1.5 transition-all flex-1 max-w-[60px]
+                  ${isClickable ? "cursor-pointer" : "cursor-default"}
+                  ${isCurrent ? "scale-105" : ""}
                 `}
               >
-                {isCompleted ? (
-                  <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                ) : (
-                  <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                )}
-              </div>
-              <span
-                className={`
-                  text-[9px] sm:text-[10px] text-center leading-tight font-medium
-                  ${isCurrent ? "text-primary" : isCompleted ? "text-muted-foreground" : "text-muted-foreground/70"}
-                `}
-              >
-                {label}
-              </span>
-            </button>
-          )
-        })}
+                <div
+                  className={`
+                    w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center
+                    transition-all duration-200
+                    ${isCompleted
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                      : isCurrent
+                      ? "bg-primary/20 text-primary ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      : "bg-muted text-muted-foreground"
+                    }
+                  `}
+                >
+                  {isCompleted ? (
+                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  ) : (
+                    <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  )}
+                </div>
+                <span
+                  className={`
+                    text-[9px] sm:text-[10px] text-center leading-tight font-medium
+                    ${isCurrent ? "text-primary" : isCompleted ? "text-muted-foreground" : "text-muted-foreground/70"}
+                  `}
+                >
+                  {label}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Right arrow */}
+        <button
+          onClick={handleNext}
+          disabled={!canGoForward}
+          className={`
+            flex-shrink-0 w-6 h-8 sm:h-9 flex items-center justify-center
+            transition-all rounded
+            ${canGoForward
+              ? "text-primary hover:bg-primary/10 cursor-pointer"
+              : "text-muted-foreground/30 cursor-default"
+            }
+          `}
+          aria-label="Next step"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
     </div>
   )

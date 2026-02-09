@@ -1,32 +1,38 @@
 import { z } from "zod"
 import { InnerGameStep } from "./types"
 
+const inferredValueSchema = z.object({
+  id: z.string(),
+  reason: z.string(),
+})
+
 export const updateProgressSchema = z.object({
   currentStep: z.nativeEnum(InnerGameStep).optional(),
-  currentSubstep: z.number().int().min(0).max(9).optional(),
+  currentSubstep: z.number().int().min(0).max(10).optional(),
   welcomeDismissed: z.boolean().optional(),
+  // Step completion flags
+  valuesCompleted: z.boolean().optional(),
+  shadowCompleted: z.boolean().optional(),
+  peakExperienceCompleted: z.boolean().optional(),
+  hurdlesCompleted: z.boolean().optional(),
+  cuttingCompleted: z.boolean().optional(),
+  // Legacy step flags (deprecated)
   step1Completed: z.boolean().optional(),
   step2Completed: z.boolean().optional(),
   step3Completed: z.boolean().optional(),
-  cuttingCompleted: z.boolean().optional(),
+  // Shadow step data
+  shadowResponse: z.string().optional(),
+  shadowInferredValues: z.array(inferredValueSchema).optional(),
+  // Peak experience step data
+  peakExperienceResponse: z.string().optional(),
+  peakExperienceInferredValues: z.array(inferredValueSchema).optional(),
+  // Hurdles step data
   hurdlesResponse: z.string().optional(),
-  hurdlesInferredValues: z
-    .array(
-      z.object({
-        id: z.string(),
-        reason: z.string(),
-      })
-    )
-    .optional(),
+  hurdlesInferredValues: z.array(inferredValueSchema).optional(),
+  // Legacy deathbed fields (deprecated)
   deathbedResponse: z.string().optional(),
-  deathbedInferredValues: z
-    .array(
-      z.object({
-        id: z.string(),
-        reason: z.string(),
-      })
-    )
-    .optional(),
+  deathbedInferredValues: z.array(inferredValueSchema).optional(),
+  // Final results
   finalCoreValues: z
     .array(
       z.object({

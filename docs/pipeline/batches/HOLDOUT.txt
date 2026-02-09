@@ -1,0 +1,25 @@
+# Holdout videos for validation (10 videos)
+# These are processed AFTER training, for holdout validation only
+# Source: data/woman-responses/holdout.json
+
+daily_evolution | Daygame Infield - Savagely Switching Sets [KuiM4A2P5fA]
+daily_evolution | Daygame Infield Breakdown Part 1 - Two Set [+Infield] [0BHi7uLjuuc]
+daily_evolution | Daygame Infield Breakdown Part 2 - Two Set [+Infield] [6W6wRfzDN9w]
+daily_evolution | Daygame Infield Breakdown [ Grocery Game Opener Masterclass ] [WbMjgv4XcwE]
+daily_evolution | Daygame Infield Breakdown [MF3GUEB03-o]
+daily_evolution | Daygame Infield Breakdown ｜ Hot Blonde Grocery Store Pickup! [1FHmVCWuPhU]
+daily_evolution | Daygame Infield Coaching + Student Daygame Infield [yjfSA5SpqCY]
+daily_evolution | Daygame Infield Compilation 2023 [wrxnZi--o9g]
+daily_evolution | Daygame Infield Epic Grocery Store Pickup Hot Blonde! [ZQoGfv-wH4k]
+daily_evolution | Daygame Infield From Earth's #1 Dating Coach [-ymOG7QMrBA]
+
+# VALIDATION RESULTS (2026-02-09)
+# Status: PASS
+# Total turns extracted: 68
+# Exit turns: 2
+# No major metric mismatches vs training set
+#
+# Distribution: Cold=7%, Guarded=59%, Curious=34%, Interested=0%
+# (Training: Cold=6%, Guarded=42%, Curious=42%, Interested=11%)
+#
+# Note: 0% interested turns expected - breakdown videos have shorter clips

@@ -281,8 +281,8 @@ describe("qaRequestSchema", () => {
       const input = {
         question: "Test question",
         generation: {
-          provider: "claude",
-          model: "claude-3-5-haiku",
+          provider: "ollama",
+          model: "llama3.3:70b",
           maxOutputTokens: 1000,
           temperature: 0.7,
         },
@@ -310,8 +310,8 @@ describe("qaRequestSchema", () => {
     })
 
     test("should accept all valid provider values", () => {
-      // Arrange
-      const providers = ["ollama", "claude"] as const
+      // Arrange - only ollama is supported (claude disabled to save API costs)
+      const providers = ["ollama"] as const
 
       for (const provider of providers) {
         // Act
@@ -466,8 +466,8 @@ describe("qaRequestSchema", () => {
           maxChunkChars: 5000,
         },
         generation: {
-          provider: "claude" as const,
-          model: "claude-3-5-haiku",
+          provider: "ollama" as const,
+          model: "llama3.3:70b",
           maxOutputTokens: 2000,
           temperature: 0.7,
         },

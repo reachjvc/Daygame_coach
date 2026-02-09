@@ -198,15 +198,31 @@ async function callOllama(systemPrompt: string, userPrompt: string): Promise<str
  */
 function parseValuesResponse(content: string): InferredValue[] {
   try {
-    // Try to extract JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/)
+    // Strip markdown code blocks if present (```json ... ``` or ``` ... ```)
+    let cleanContent = content
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/g, "")
+      .trim()
+
+    // Try to extract JSON object from the response
+    // Use non-greedy matching to get the first complete JSON object
+    const jsonMatch = cleanContent.match(/\{[^{}]*"values"\s*:\s*\[[\s\S]*?\]\s*\}/)
     if (!jsonMatch) {
-      throw new Error("No JSON found in response")
+      // Fallback: try to find any JSON object
+      const fallbackMatch = cleanContent.match(/\{[\s\S]*\}/)
+      if (!fallbackMatch) {
+        console.error("No JSON found in LLM response:", content)
+        throw new Error("No JSON found in response")
+      }
+      cleanContent = fallbackMatch[0]
+    } else {
+      cleanContent = jsonMatch[0]
     }
 
-    const parsed = JSON.parse(jsonMatch[0])
+    const parsed = JSON.parse(cleanContent)
 
     if (!Array.isArray(parsed.values)) {
+      console.error("Missing values array in response:", parsed)
       throw new Error("Invalid response format: missing values array")
     }
 
@@ -217,19 +233,33 @@ function parseValuesResponse(content: string): InferredValue[] {
       )
     )
 
-    return parsed.values
+    const validValues = parsed.values
       .filter((v: { id?: string; reason?: string }) => {
-        if (!v.id || !v.reason) return false
+        if (!v.id || !v.reason) {
+          console.warn("Skipping value without id or reason:", v)
+          return false
+        }
         const normalizedId = v.id.toLowerCase().replace(/\s+/g, "-")
-        return allValueIds.has(normalizedId)
+        if (!allValueIds.has(normalizedId)) {
+          console.warn(`Value "${v.id}" not found in master list, skipping`)
+          return false
+        }
+        return true
       })
       .map((v: { id: string; reason: string }) => ({
         id: v.id.toLowerCase().replace(/\s+/g, "-"),
         reason: v.reason,
       }))
       .slice(0, 5) // Max 5 values
+
+    if (validValues.length === 0) {
+      console.error("No valid values found after filtering. Raw values:", parsed.values)
+      throw new Error("No valid values found in AI response")
+    }
+
+    return validValues
   } catch (error) {
-    console.error("Failed to parse LLM response:", error, content)
+    console.error("Failed to parse LLM response:", error, "Raw content:", content)
     throw new ValueInferenceError(
       "Failed to parse values from AI response",
       "PARSE_ERROR"

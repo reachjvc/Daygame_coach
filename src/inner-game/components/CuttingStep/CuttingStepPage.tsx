@@ -7,7 +7,7 @@ import { NavigationButtons } from "../shared/NavigationButtons"
 import { StepProgress } from "../shared/StepProgress"
 import { PairComparison } from "./PairComparison"
 import { AspirationalCheck } from "./AspirationalCheck"
-import { GripVertical } from "lucide-react"
+import { GripVertical, LayoutGrid } from "lucide-react"
 
 type CuttingStepPageProps = {
   selectedValues: string[]
@@ -19,6 +19,7 @@ type CuttingStepPageProps = {
   onComplete: (coreValues: CoreValue[], aspirationalValues: { id: string }[]) => void
   onBackToHub?: () => void
   onStartFresh?: () => void
+  onStepClick?: (step: InnerGameStep) => void
 }
 
 type Phase = "aspirational" | "pairwise" | "ranking"
@@ -33,6 +34,7 @@ export function CuttingStepPage({
   onComplete,
   onBackToHub,
   onStartFresh,
+  onStepClick,
 }: CuttingStepPageProps) {
   // Merge all values from all sources
   const allValues = useMemo(() => {
@@ -178,6 +180,7 @@ export function CuttingStepPage({
       <StepProgress
         currentStep={InnerGameStep.CUTTING}
         completedSteps={completedSteps}
+        onStepClick={onStepClick}
       />
 
       {phase === "aspirational" && (
@@ -200,6 +203,20 @@ export function CuttingStepPage({
             questionNumber={aspirationalIndex + 1}
             totalQuestions={allValues.length}
           />
+
+          {/* Back to Overview link */}
+          {onBackToHub && (
+            <div className="text-center pt-4">
+              <button
+                type="button"
+                onClick={onBackToHub}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Back to Overview
+              </button>
+            </div>
+          )}
         </>
       )}
 
@@ -227,6 +244,20 @@ export function CuttingStepPage({
             questionNumber={pairIndex + 1}
             totalQuestions={pairs.length}
           />
+
+          {/* Back to Overview link */}
+          {onBackToHub && (
+            <div className="text-center pt-4">
+              <button
+                type="button"
+                onClick={onBackToHub}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                Back to Overview
+              </button>
+            </div>
+          )}
         </>
       )}
 

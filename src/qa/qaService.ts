@@ -128,7 +128,7 @@ export function createNoContextResponse(provider: string, startTime: number): QA
     },
     meta: {
       provider,
-      model: getDefaultModel(provider as "ollama" | "claude"),
+      model: getDefaultModel(provider as "ollama"),
       latencyMs: Date.now() - startTime,
       tokensUsed: 0,
     },

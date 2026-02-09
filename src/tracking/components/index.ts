@@ -15,3 +15,6 @@ export { ResearchDomainsSection } from "./ResearchDomainsSection"
 
 // UI config (JSX containing data)
 export { TEMPLATE_ICONS } from "./templateIcons"
+
+// Dashboard sub-components
+export * from "./dashboard"

@@ -3,6 +3,7 @@ import { requirePremium } from "@/src/db/server"
 import { getUserValueIds } from "@/src/db/valuesRepo"
 import { getUserProgress, updateUserProgress } from "@/src/inner-game/modules/progress"
 import { updateProgressSchema } from "@/src/inner-game/schemas"
+import { CATEGORIES } from "@/src/inner-game/config"
 
 export async function GET() {
   try {
@@ -17,7 +18,7 @@ export async function GET() {
     return NextResponse.json({
       progress,
       selectedValues,
-      totalCategories: 10,
+      totalCategories: CATEGORIES.length,
       completedCategories: progress.currentSubstep,
     })
   } catch (error) {

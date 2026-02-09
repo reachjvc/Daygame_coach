@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
     const reviewData: ReviewInsert = {
       user_id: user.id,
       review_type,
-      template_id,
+      template_id: template_id ?? undefined,
       fields,
       period_start,
       period_end,
-      previous_commitment,
-      commitment_fulfilled,
-      new_commitment,
+      previous_commitment: previous_commitment ?? undefined,
+      commitment_fulfilled: commitment_fulfilled ?? undefined,
+      new_commitment: new_commitment ?? undefined,
       is_draft,
     }
 

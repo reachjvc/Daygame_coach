@@ -17,6 +17,7 @@ type ValuesStepPageProps = {
   completedSteps: InnerGameStep[]
   onBackToHub?: () => void
   onStartFresh?: () => void
+  onStepClick?: (step: InnerGameStep) => void
 }
 
 export function ValuesStepPage({
@@ -29,6 +30,7 @@ export function ValuesStepPage({
   completedSteps,
   onBackToHub,
   onStartFresh,
+  onStepClick,
 }: ValuesStepPageProps) {
   const [isSaving, setIsSaving] = useState(false)
   const category = CATEGORIES[currentSubstep]
@@ -68,6 +70,7 @@ export function ValuesStepPage({
       <StepProgress
         currentStep={InnerGameStep.VALUES}
         completedSteps={completedSteps}
+        onStepClick={onStepClick}
       />
 
       {/* Compact category indicator */}

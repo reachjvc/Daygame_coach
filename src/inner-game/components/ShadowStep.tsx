@@ -16,6 +16,7 @@ type ShadowStepProps = {
   onComplete: (response: string, inferredValues: InferredValue[]) => void
   onBackToHub?: () => void
   onStartFresh?: () => void
+  onStepClick?: (step: InnerGameStep) => void
 }
 
 const JUNG_QUOTE = "Everything that irritates us about others can lead us to an understanding of ourselves."
@@ -29,6 +30,7 @@ export function ShadowStep({
   onComplete,
   onBackToHub,
   onStartFresh,
+  onStepClick,
 }: ShadowStepProps) {
   const {
     response,
@@ -59,6 +61,7 @@ export function ShadowStep({
       <StepProgress
         currentStep={InnerGameStep.SHADOW}
         completedSteps={completedSteps}
+        onStepClick={onStepClick}
       />
 
       {!showResults ? (
@@ -72,6 +75,9 @@ export function ShadowStep({
               What genuinely pisses you off about other men in the dating world?
               Think about behaviors, attitudes, or approaches that make you cringe,
               frustrated, or even angry when you see them.
+            </p>
+            <p className="text-muted-foreground/70 text-sm italic leading-relaxed">
+              Feel free to expand beyond dating—people in your work, social life, or anywhere else who trigger strong reactions can reveal just as much.
             </p>
           </div>
 

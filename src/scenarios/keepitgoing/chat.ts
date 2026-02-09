@@ -75,34 +75,76 @@ const QUALITY_INSTRUCTIONS: Record<Language, Record<ResponseQuality, string>> = 
 
 const EVAL_SYSTEM_PROMPT = `You are an expert dating coach evaluating a man's conversational response during a street approach.
 
-SCORING CRITERIA (1-10):
-- Statements/observations > questions (7-8 points)
-- Cold reads ("you seem like...", "I bet you...") = excellent (8-9 points)
-- Threading (referencing what she just said) = good (7-8 points)
-- Playful teases = good (7-8 points)
-- Digging deeper after her response = good (7 points)
-- Interview questions ("what do you do?", "where are you from?") = bad (3-4 points)
-- Try-hard/overly smooth lines = bad (2-3 points)
-- Too long/rambling = penalty (-1)
-- Short, punchy, playful = bonus (+1)
-- Sexual too soon (before she's warm) = very bad (1-2 points)
-- Creepy/uncomfortable = very bad (1 point)
+SCORING CRITERIA (1-10) - DATA-GROUNDED FROM 367 REAL TURNS:
 
-TAGS (pick 0-2 that apply):
-- threading: references or builds on her previous statement
-- cold_read: makes an assumption about her personality/vibe
-- tease: playful push-pull that makes her laugh
+WHAT ACTUALLY WORKS (scores 7-9):
+- Playful teases (avg 6.2 interest in data) = best move (7-9 points)
+  Example: "You look confused. Are you okay? Are you processing?" → she stops and engages
+  Example: "Okay, but then what, I mean what if I'm a better cook than you?" → playful banter
+- Threading on what she just said = good (7-8 points)
+  Example: After she mentions yoga, "Hot yoga or what do you do?" → she elaborates
+- Logistics when rapport is built = good (7-8 points)
+  Example: "Why don't we hang out just for a little bit, get a water or something?" → she agrees
+
+NEUTRAL (scores 5-6):
+- Cold reads (avg 5.3 in data) = NOT as effective as theory suggests (5-6 points)
+  Example: "You look like you just came from yoga" → often just gets "Yeah."
+  Example: "You seem soft and chill" → "Thank you. I'm leaving here now."
+- Interview questions (avg 5.4 in data) = about average, not terrible (4-6 points)
+  Example: "What do you do?" → she answers but doesn't invest
+  Example: "Are you from Toronto?" → minimal response
+- Plain statements without hooks = baseline (5 points)
+
+WHAT DOESN'T WORK (scores 1-4):
+- Try-hard/overly smooth = cringe (2-3 points)
+- Sexual too soon (before curiosity/interest) = kills it (1-2 points)
+  Example: "Please have sex with me..." → "Oh, no, no, I can't do this"
+- Creepy/uncomfortable = instant exit (1 point)
+- Ignoring her soft exit ("I have to go") = bad (2 points)
+
+SCORING ADJUSTMENTS:
+- Short, punchy, playful = +1
+- Too long/rambling = -1
+- Actually makes her laugh = +1
+- She asks a question back = sign his line worked
+
+REAL EXAMPLES FROM DATA:
+
+Score 2-3 (Cold response):
+- Him: "What did you buy there?" → Her: "No, I don't." [minimal, dismissive]
+- Him: "I'll grab your number" → Her: "I don't want to give out my number" [deflect]
+- Him: "Where are you from?" → Her: "I have to go" [exit]
+
+Score 4-5 (Guarded):
+- Him: "Are you from Toronto?" → Her: "No, I'm from Windsor." [answers but flat]
+- Him: "You look Russian" → Her: "Okay, cool. You look Russian, that's why." [minimal]
+- Him: "How's your day going?" → Her: "Yeah." [one word]
+
+Score 6-7 (Curious, engaged):
+- Him: "What if I'm a better cook than you?" → Her: "I'm just gonna settle for subpar food..." [playful]
+- Him: "He's probably just confused" → Her: "Yes. Okay, come on." [invites him along]
+- Him: "Do you know where the trash bags are?" → Her: "Let's try over here. Maybe." [plays along]
+
+Score 8-9 (Interested, investing):
+- Him: "I think you're too young for me" → Her: "I have daddy issues so it's not a problem" [qualifies]
+- Him: "We're taking a shower at my place later" → Her: "A hundred percent." [fully invested]
+- Him: [building rapport] → Her: "You could take my number, if that's what you were asking" [offers]
+
+TAGS (pick 0-2):
+- threading: references her previous statement
+- cold_read: assumption about her personality (note: less effective than expected)
+- tease: playful push-pull
 - interview_question: logical question without play
-- too_long: overly wordy, more than 2 sentences
-- try_hard: needy, seeking validation, over-complimenting
-- sexual_too_soon: sexual comment when she's not warm yet
-- creepy: uncomfortable, invasive, or violating boundaries
+- too_long: more than 2 sentences
+- try_hard: needy, over-complimenting
+- sexual_too_soon: sexual when she's not warm
+- creepy: uncomfortable, invasive
 - ignored_soft_exit: she said "I have to go" but he kept pressing
 
 RESPONSE FORMAT (JSON only, no markdown):
 {"score":7,"feedback":"Short feedback in same language as input","quality":"positive","tags":["threading"]}
 
-quality must be one of: "positive", "neutral", "deflect", "skeptical"
+quality mapping:
 - positive: score >= 7
 - neutral: score 5-6
 - deflect: score 3-4
@@ -197,19 +239,17 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Check if he threads on 
     model: anthropic(model),
     system: EVAL_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
-    maxTokens: 150,
+    maxOutputTokens: 150,
     temperature: 0.3,
   })
 
   // DEBUG: Log response metadata including actual model
-  const actualModel = result.response?.modelId || result.modelId || "unknown"
+  const actualModel = (result.response as { modelId?: string })?.modelId || "unknown"
   console.log("[evaluateWithAI] Response:", {
     requestedModel: model,
     actualModel,
-    promptTokens: result.usage.promptTokens,
-    completionTokens: result.usage.completionTokens,
-    cacheCreation: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
-    cacheRead: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+    usage: result.usage,
+    providerMetadata: result.providerMetadata,
   })
 
   // Log AI usage (with error handling to prevent crashes)
@@ -222,10 +262,10 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Check if he threads on 
       model,
       operation: "evaluate",
       usage: {
-        inputTokens: result.usage.promptTokens,
-        outputTokens: result.usage.completionTokens,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
+        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - startTime,
       systemPrompt: EVAL_SYSTEM_PROMPT,
@@ -415,7 +455,7 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
     model: anthropic(model),
     system: systemPrompt,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    maxTokens: 100,
+    maxOutputTokens: 100,
     temperature: 0.8,
   })
 
@@ -431,10 +471,10 @@ export async function generateAIResponse(options: GenerateResponseOptions): Prom
       model,
       operation: "generate_response",
       usage: {
-        inputTokens: result.usage.promptTokens,
-        outputTokens: result.usage.completionTokens,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
+        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - startTime,
       systemPrompt,
@@ -472,7 +512,7 @@ Rewrite your response to comply. Output only the corrected response (no quotes).
     model: anthropic(model),
     system: retrySystemPrompt,
     messages: messages.map((m) => ({ role: m.role, content: m.content })),
-    maxTokens: 100,
+    maxOutputTokens: 100,
     temperature: 0.3,
   })
 
@@ -485,10 +525,10 @@ Rewrite your response to comply. Output only the corrected response (no quotes).
       model,
       operation: "generate_response_retry",
       usage: {
-        inputTokens: retryResult.usage.promptTokens,
-        outputTokens: retryResult.usage.completionTokens,
-        cacheCreationTokens: retryResult.providerMetadata?.anthropic?.cacheCreationInputTokens,
-        cacheReadTokens: retryResult.providerMetadata?.anthropic?.cacheReadInputTokens,
+        inputTokens: retryResult.usage.inputTokens ?? 0,
+        outputTokens: retryResult.usage.outputTokens ?? 0,
+        cacheCreationTokens: retryResult.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
+        cacheReadTokens: retryResult.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - retryStartTime,
       systemPrompt: retrySystemPrompt,
@@ -567,25 +607,52 @@ function getBucketConstraints(bucket: InterestBucket, profile: ReturnType<typeof
 - Stil ALDRIG spørgsmål tilbage
 - Du kan ignorere, afvise, eller forlade
 - Vær kort og uimponeret
-- Du er IKKE her for at være sød`
+- Du er IKKE her for at være sød
+
+EKSEMPLER FRA VIRKELIGE INTERAKTIONER:
+- "Nej."
+- "Jeg har en kæreste."
+- "Jeg skal videre." *går*
+- "Jeg taler ikke engelsk."
+- "Det var hyggeligt at møde dig." *går*`
       case "guarded":
         return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
 - Hold det kort (${profile.wordCount.min}-${profile.wordCount.max} ord)
 - Stil sjældent spørgsmål tilbage
 - Vær høflig men distanceret
-- Giv ham en chance, men invester ikke endnu`
+- Giv ham en chance, men invester ikke endnu
+
+EKSEMPLER FRA VIRKELIGE INTERAKTIONER:
+- "Ja."
+- "Okay, fedt."
+- "Nej, jeg er fra Windsor."
+- "Det ved jeg ikke."
+- "Ja, men jeg skal gå nu, så det var hyggeligt at møde dig."`
       case "curious":
         return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
 - Du må gerne svare lidt længere (${profile.wordCount.min}-${profile.wordCount.max} ord)
 - Du kan stille et spørgsmål tilbage sommetider
 - Vær engageret og måske lidt legesyg
-- Men du er IKKE forelsket endnu`
+- Men du er IKKE forelsket endnu
+
+EKSEMPLER FRA VIRKELIGE INTERAKTIONER:
+- "Hvor studerer du? Ah, du går på Ryerson."
+- "Det var så sjovt, det var hysterisk."
+- "Ja, okay, kom med."
+- "Ej, jeg kan godt lide dig, jeg synes du er sød, jeg nyder at snakke..."`
       case "interested":
         return `VIGTIGE REGLER FOR DIN NUVÆRENDE INTERESSE:
 - Du kan svare lidt længere (${profile.wordCount.min}-${profile.wordCount.max} ord)
 - Du må gerne stille spørgsmål og investere
 - Vær varm og legesyg, måske flirtende
-- Stadig realistisk - ikke overkompenserende`
+- Stadig realistisk - ikke overkompenserende
+
+EKSEMPLER FRA VIRKELIGE INTERAKTIONER:
+- "Ja, jeg er klar!"
+- "Du kunne tage mit nummer, hvis det var det du spurgte om..."
+- "Jeg har daddy issues så det er ikke et problem."
+- "Ja, nej, du er virkelig sød."
+- "Hundrede procent."`
     }
   } else {
     switch (bucket) {
@@ -595,25 +662,57 @@ function getBucketConstraints(bucket: InterestBucket, profile: ReturnType<typeof
 - NEVER ask questions back
 - You can ignore, dismiss, or leave
 - Be short and unimpressed
-- You are NOT here to be nice`
+- You are NOT here to be nice
+
+REAL EXAMPLES FROM DATA:
+- "No."
+- "I have a boyfriend."
+- "I have to go." *walks away*
+- "I don't speak English."
+- "It was nice to meet you." *leaves*
+- "I don't want to give out my number."`
       case "guarded":
         return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
 - Keep it short (${profile.wordCount.min}-${profile.wordCount.max} words)
 - Rarely ask questions back
 - Be polite but distant
-- Give him a chance, but don't invest yet`
+- Give him a chance, but don't invest yet
+
+REAL EXAMPLES FROM DATA:
+- "Yeah."
+- "Okay, cool."
+- "No, I'm from Windsor."
+- "I don't know."
+- "Yeah, but I'm going to go now, so it was nice to meet you."
+- "I'm glad you liked it."`
       case "curious":
         return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
 - You can respond a bit longer (${profile.wordCount.min}-${profile.wordCount.max} words)
 - You can ask a question back sometimes
 - Be engaged and maybe a bit playful
-- But you're NOT in love yet`
+- But you're NOT in love yet
+
+REAL EXAMPLES FROM DATA:
+- "Where are you studying? Oh, you're from Ryerson."
+- "And it was so funny, it was hilarious."
+- "Yes. Okay, come on."
+- "No, I mean, I like you, I think you're cute, I enjoy talking..."
+- "I know you're so warm and welcoming."
+- "I'm just gonna settle for subpar food and then..."`
       case "interested":
         return `IMPORTANT RULES FOR YOUR CURRENT INTEREST:
 - You can respond longer (${profile.wordCount.min}-${profile.wordCount.max} words)
 - You can ask questions and invest
 - Be warm and playful, maybe flirty
-- Still realistic - not overcompensating`
+- Still realistic - not overcompensating
+
+REAL EXAMPLES FROM DATA:
+- "Yeah, I'm done." [agrees to instant date]
+- "You could take my number, if that's what you were asking..."
+- "I have daddy issues so it's not a problem." [qualifies herself]
+- "Yeah, no, you're really sweet."
+- "A hundred percent." [agrees to come back with him]
+- "Did you give off fuckboy vibes though?" [playful testing]`
     }
   }
 }
@@ -678,7 +777,7 @@ ${outcomeInstructions[language][outcome]}`
     model: anthropic(model),
     system: systemPrompt,
     messages: [{ role: "user", content: userCloseMessage }],
-    maxTokens: 100,
+    maxOutputTokens: 100,
     temperature: 0.8,
   })
 
@@ -692,10 +791,10 @@ ${outcomeInstructions[language][outcome]}`
       model,
       operation: "generate_close",
       usage: {
-        inputTokens: result.usage.promptTokens,
-        outputTokens: result.usage.completionTokens,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
+        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - startTime,
       systemPrompt,
@@ -777,7 +876,7 @@ ${exitInstructions[language]}`
     model: anthropic(model),
     system: systemPrompt,
     messages: [{ role: "user", content: "Generate exit response" }],
-    maxTokens: 50,
+    maxOutputTokens: 50,
     temperature: 0.8,
   })
 
@@ -790,10 +889,10 @@ ${exitInstructions[language]}`
       model,
       operation: "generate_exit",
       usage: {
-        inputTokens: result.usage.promptTokens,
-        outputTokens: result.usage.completionTokens,
-        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens,
-        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
+        cacheCreationTokens: result.providerMetadata?.anthropic?.cacheCreationInputTokens as number | undefined,
+        cacheReadTokens: result.providerMetadata?.anthropic?.cacheReadInputTokens as number | undefined,
       },
       responseTimeMs: Date.now() - startTime,
       systemPrompt,

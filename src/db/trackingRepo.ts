@@ -471,6 +471,72 @@ const TIER_ORDER: Record<SessionAchievement['tier'], number> = {
   bronze: 4,
 }
 
+// Raw session data type from Supabase embedded relations query
+export type RawSessionWithRelations = {
+  id: string
+  started_at: string
+  ended_at: string | null
+  is_active: boolean
+  duration_minutes: number | null
+  goal: number | null
+  goal_met: boolean
+  primary_location: string | null
+  end_reason: string | null
+  approaches: Array<{ outcome: string | null }> | null
+  milestones: Array<{ milestone_type: string }> | null
+}
+
+/**
+ * Transform raw session data into SessionSummary format.
+ * Pure function extracted for unit testing.
+ */
+export function transformSessionToSummary(session: RawSessionWithRelations): SessionSummary {
+  const approaches = session.approaches || []
+  const milestones = session.milestones || []
+
+  const outcomes = {
+    blowout: 0,
+    short: 0,
+    good: 0,
+    number: 0,
+    instadate: 0,
+  }
+
+  for (const approach of approaches) {
+    if (approach.outcome && approach.outcome in outcomes) {
+      outcomes[approach.outcome as keyof typeof outcomes]++
+    }
+  }
+
+  // Transform milestones to achievements with full info, sorted by tier (rarest first)
+  const achievements: SessionAchievement[] = milestones
+    .map((m) => {
+      const info = getMilestoneInfo(m.milestone_type)
+      return {
+        milestone_type: m.milestone_type,
+        emoji: info.emoji,
+        label: info.label,
+        tier: info.tier as SessionAchievement['tier'],
+      }
+    })
+    .sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier])
+
+  return {
+    id: session.id,
+    started_at: session.started_at,
+    ended_at: session.ended_at,
+    is_active: session.is_active,
+    total_approaches: approaches.length,
+    duration_minutes: session.duration_minutes,
+    goal: session.goal,
+    goal_met: session.goal_met,
+    primary_location: session.primary_location,
+    end_reason: session.end_reason as SessionSummary['end_reason'],
+    outcomes,
+    achievements,
+  }
+}
+
 export async function getSessionSummaries(
   userId: string,
   limit = 10
@@ -507,53 +573,8 @@ export async function getSessionSummaries(
     throw new Error(`Failed to get session summaries: ${error.message}`)
   }
 
-  // Transform the joined data into SessionSummary format
-  return (data || []).map((session) => {
-    const approaches = session.approaches || []
-    const milestones = session.milestones || []
-
-    const outcomes = {
-      blowout: 0,
-      short: 0,
-      good: 0,
-      number: 0,
-      instadate: 0,
-    }
-
-    for (const approach of approaches) {
-      if (approach.outcome && approach.outcome in outcomes) {
-        outcomes[approach.outcome as keyof typeof outcomes]++
-      }
-    }
-
-    // Transform milestones to achievements with full info, sorted by tier (rarest first)
-    const achievements: SessionAchievement[] = milestones
-      .map((m) => {
-        const info = getMilestoneInfo(m.milestone_type)
-        return {
-          milestone_type: m.milestone_type,
-          emoji: info.emoji,
-          label: info.label,
-          tier: info.tier as SessionAchievement['tier'],
-        }
-      })
-      .sort((a, b) => TIER_ORDER[a.tier] - TIER_ORDER[b.tier])
-
-    return {
-      id: session.id,
-      started_at: session.started_at,
-      ended_at: session.ended_at,
-      is_active: session.is_active,
-      total_approaches: approaches.length,
-      duration_minutes: session.duration_minutes,
-      goal: session.goal,
-      goal_met: session.goal_met,
-      primary_location: session.primary_location,
-      end_reason: session.end_reason as SessionSummary['end_reason'],
-      outcomes,
-      achievements,
-    }
-  })
+  // Transform using extracted helper function (unit tested)
+  return (data || []).map(transformSessionToSummary)
 }
 
 // ============================================

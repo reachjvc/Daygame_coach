@@ -12,6 +12,7 @@ type SummaryPageProps = {
   completedSteps: InnerGameStep[]
   onRestart: () => void
   onBackToHub?: () => void
+  onStepClick?: (step: InnerGameStep) => void
 }
 
 export function SummaryPage({
@@ -20,6 +21,7 @@ export function SummaryPage({
   completedSteps,
   onRestart,
   onBackToHub,
+  onStepClick,
 }: SummaryPageProps) {
   const formatValueName = (id: string) => id.replace(/-/g, " ")
 
@@ -29,6 +31,7 @@ export function SummaryPage({
       <StepProgress
         currentStep={InnerGameStep.COMPLETE}
         completedSteps={completedSteps}
+        onStepClick={onStepClick}
       />
 
       {/* Celebration header */}

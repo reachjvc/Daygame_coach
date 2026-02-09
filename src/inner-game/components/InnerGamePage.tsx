@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { ChevronLeft, Loader2, Heart, Target } from "lucide-react"
+import { X, Loader2, Heart, Target } from "lucide-react"
 
 import {
   InnerGameStep,
@@ -348,6 +348,14 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     await updateProgress({ currentStep: InnerGameStep.HURDLES })
   }
 
+  // Handle clicking a step in the progress indicator
+  const handleStepClick = async (step: InnerGameStep) => {
+    // Only allow navigating to completed steps or current step
+    if (completedSteps.includes(step) || step === progress?.currentStep) {
+      await updateProgress({ currentStep: step })
+    }
+  }
+
   // Loading state
   if (loading) {
     return (
@@ -364,14 +372,14 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
   if (!isPreviewMode && (error || !progress)) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold">Inner Game</h1>
           <Button asChild variant="ghost" size="sm">
             <Link href="/dashboard">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
+              <X className="mr-1 h-4 w-4" />
+              Exit
             </Link>
           </Button>
-          <h1 className="text-xl font-semibold">Inner Game</h1>
         </div>
         <p className="text-destructive">{error || "Failed to load"}</p>
       </div>
@@ -415,15 +423,15 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
 
       {/* Main content */}
       <main className="max-w-2xl mx-auto px-4 py-8" data-testid="inner-game-page">
-        {/* Page header with back button */}
-        <div className="flex items-center gap-4 mb-6">
+        {/* Page header with exit button */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl font-semibold">Inner Game</h1>
           <Button asChild variant="ghost" size="sm">
             <Link href="/dashboard">
-              <ChevronLeft className="mr-1 h-4 w-4" />
-              Back
+              <X className="mr-1 h-4 w-4" />
+              Exit
             </Link>
           </Button>
-          <h1 className="text-xl font-semibold">Inner Game</h1>
         </div>
 
         {/* Tabs: Values and Goals */}
@@ -459,6 +467,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     completedSteps={completedSteps}
                     onBackToHub={handleBackToHub}
                     onStartFresh={() => handleResetSection("values")}
+                    onStepClick={handleStepClick}
                   />
                 )}
 
@@ -471,6 +480,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     onComplete={handleShadowComplete}
                     onBackToHub={handleBackToHub}
                     onStartFresh={() => handleResetSection("shadow")}
+                    onStepClick={handleStepClick}
                   />
                 )}
 
@@ -483,6 +493,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     onComplete={handlePeakExperienceComplete}
                     onBackToHub={handleBackToHub}
                     onStartFresh={() => handleResetSection("peak_experience")}
+                    onStepClick={handleStepClick}
                   />
                 )}
 
@@ -495,6 +506,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     onComplete={handleHurdlesComplete}
                     onBackToHub={handleBackToHub}
                     onStartFresh={() => handleResetSection("hurdles")}
+                    onStepClick={handleStepClick}
                   />
                 )}
 
@@ -509,6 +521,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     onComplete={handleCuttingComplete}
                     onBackToHub={handleBackToHub}
                     onStartFresh={() => handleResetSection("cutting")}
+                    onStepClick={handleStepClick}
                   />
                 )}
 
@@ -519,6 +532,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
                     completedSteps={completedSteps}
                     onRestart={handleRestart}
                     onBackToHub={handleBackToHub}
+                    onStepClick={handleStepClick}
                   />
                 )}
               </>

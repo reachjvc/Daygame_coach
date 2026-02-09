@@ -1,8 +1,78 @@
 # Plan: Realistic Conversation Logic (MVP) from 224 Transcribed Videos (Diarized Subset)
 
-**Status:** Phase 5 COMPLETE - Release Gate Passed ✅
+**Status:** Phase 7 IN PROGRESS - Diagnostic Viewer
 **Created:** 2026-02-07
 **Updated:** 2026-02-09
+
+**Completed:** Phases 0-6 (logic, holdout validation, LLM grounding)
+**Current:** Phase 7.1-7.2 complete (versioned prompts, calibration viewer UI)
+
+## Phase 7 Results (in progress 2026-02-09) - Diagnostic Viewer + Versioned Prompts
+
+### Purpose
+Calibrate the evaluator against known-successful conversations. If evaluator scores a coach's line < 7, that's a "blind spot" (the line worked in reality).
+
+### Completed Steps:
+- ✅ Step 7.1: Create versioned prompts folder (`data/woman-responses/prompts/prompt_0/`)
+- ✅ Step 7.2: Extract EVAL_SYSTEM_PROMPT and getBucketConstraints to markdown files
+- ✅ Step 7.3: Create calibration viewer UI at `/dev/calibration`
+- ✅ Step 7.4: Create API routes for diagnostic listing/loading
+
+### Files Created:
+- `data/woman-responses/prompts/prompt_0/EVAL_SYSTEM_PROMPT.md` - Evaluation prompt
+- `data/woman-responses/prompts/prompt_0/BUCKET_CONSTRAINTS.md` - Bucket rules
+- `data/woman-responses/prompts/prompt_0/README.md` - Version notes
+- `app/dev/calibration/page.tsx` - Viewer page
+- `app/dev/calibration/_components/*.tsx` - UI components (DiagnosticSelector, TurnViewer, HistoryPanel, EvaluationPanel)
+- `app/api/dev/calibration/list/route.ts` - List diagnostics API
+- `app/api/dev/calibration/get/route.ts` - Get diagnostic API
+
+### Pending Steps:
+- ⏳ Step 7.5: Run diagnostic on first video (ask Claude Code: "Run diagnostic on VIDEO_ID with prompt_0")
+- ⏳ Step 7.6: Analyze blind spots, iterate on prompts
+
+### Workflow:
+1. User asks Claude Code: "Run diagnostic on VIDEO_ID with prompt_0"
+2. Claude Code reads extraction + prompts, evaluates each turn
+3. Claude Code writes diagnostic JSON to `data/woman-responses/diagnostics/`
+4. User views results at `/dev/calibration`
+
+---
+
+## Phase 6 Results (completed 2026-02-09) - LLM Grounding
+- **examples.json built** from 367 turns (30 high-confidence videos)
+- **All 774 unit tests pass** after prompt updates
+
+### Key Data Insights (Step 6.1.2):
+Move effectiveness from 367 real turns:
+- **Teases: 6.2 avg** (n=83) - most effective
+- **Logistics: 6.1 avg** (n=61) - also effective
+- **Cold reads: 5.3 avg** (n=47) - NOT as effective as theory claims
+- **Interview questions: 5.4 avg** (n=125) - not as bad as theory claims
+- **Statements: 5.3 avg** (n=146) - neutral baseline
+
+**Insight:** The data challenges conventional "game theory" - cold reads are overrated, interview questions are not as bad as claimed.
+
+### Files Created/Modified:
+- `scripts/build-llm-examples.ts` - Builds examples.json from extractions
+- `data/woman-responses/final/examples.json` - 367 turns, 60 curated examples
+- `src/scenarios/keepitgoing/chat.ts` - EVAL_SYSTEM_PROMPT + getBucketConstraints updated with data-grounded examples
+- `scripts/test-llm-grounding.ts` - Test harness for LLM grounding (Step 6.3.1)
+
+### Completed Steps:
+- ✅ Step 6.1.1: Extract scored examples per bucket → examples.json
+- ✅ Step 6.1.2: Analyze what data says is good vs bad
+- ✅ Step 6.2.1: Update EVAL_SYSTEM_PROMPT with real examples
+- ✅ Step 6.2.2: Update getBucketConstraints with verbatim examples
+- ✅ Step 6.2.3: Add data-derived "what works" guidance
+- ✅ Step 6.3.1: Create test harness script
+
+### Pending Steps:
+- ⏳ Step 6.3.3-6.3.5: Run tests via Claude Code, iterate
+
+### Next Phase:
+- **Phase 7: Meta-Loop Calibration** - Diagnose evaluator failures against known-successful conversations, let AI self-diagnose blind spots, extract emergent principles
+- First test video: `xv8gaNtHbSg`
 
 ## Phase 5 Results (completed 2026-02-09) - Release Gate
 - **All 10 verification tests passed** (`scripts/verify-realistic-responses.ts`)
@@ -28,6 +98,30 @@
 
 ### Files Created:
 - `scripts/verify-realistic-responses.ts` - Automated Phase 5 verification
+
+### Holdout Validation (completed 2026-02-09)
+- **10 holdout videos extracted** - 68 turns total
+- **No major mismatches detected** between holdout and training metrics
+
+| Bucket | Set | Count | WordMean | QBack | Deflect |
+|--------|-----|-------|----------|-------|---------|
+| Cold (1-3) | Holdout | 5 | 7.8 | 0% | 60% |
+| Cold (1-3) | Training | 20 | 7.5 | 0% | 70% |
+| Guarded (4-5) | Holdout | 40 | 7.2 | 5% | 17% |
+| Guarded (4-5) | Training | 140 | 7.5 | 16% | 8% |
+| Curious (6-7) | Holdout | 23 | 7.9 | 26% | 0% |
+| Curious (6-7) | Training | 140 | 9.9 | 17% | 1% |
+| Interested (8-10) | Holdout | 0 | - | - | - |
+| Interested (8-10) | Training | 36 | 12.3 | 22% | 0% |
+
+**Distribution:**
+- Holdout: Cold=7%, Guarded=59%, Curious=34%, Interested=0%
+- Training: Cold=6%, Guarded=42%, Curious=42%, Interested=11%
+
+**Notes:**
+- Holdout has 0% interested turns (expected - breakdown videos with shorter clips)
+- Word counts and deflect rates match expectations by bucket
+- Exit turns: Holdout=2, Training=8
 
 ## Phase 4 Results (completed 2026-02-09)
 - **All 7 verification items passed:**
@@ -922,6 +1016,812 @@ Pass conditions:
 3. Holdout:
    - Extract holdout videos only at the end
    - Check that holdout metrics are similar (no major mismatch)
+
+---
+
+# Phase 6: Ground LLM in Extracted Data (POST-MVP)
+
+## Problem Statement
+The profiles/rubric are derived from real infield data (ground truth). But the LLM has its own assumptions about "good game" that may not match reality. Current prompts use abstract rules rather than concrete examples from the data.
+
+**Symptoms:**
+- LLM might score mediocre lines too high (sycophancy)
+- LLM might not recognize interview patterns as problematic
+- LLM might generate responses that are "too nice" even within bucket constraints
+- LLM's concept of "threading" or "cold read" might differ from what actually works
+
+**Root cause:** The evaluation and generation prompts don't include real examples from the extracted data.
+
+## Phase 6.1: Build Example Bank from Extractions
+
+### Step 6.1.1: Extract scored examples per bucket
+From the 35 extracted videos (25 training + 10 holdout), collect:
+
+**For evaluation grounding:**
+- 5-10 examples of `his_move` that led to `her_interest` 1-3 (cold responses)
+- 5-10 examples of `his_move` that led to `her_interest` 4-5 (guarded responses)
+- 5-10 examples of `his_move` that led to `her_interest` 6-7 (curious responses)
+- 5-10 examples of `his_move` that led to `her_interest` 8-10 (interested responses)
+
+**For tag grounding:**
+- 5+ examples of actual `interview_question` moves (with context + her response)
+- 5+ examples of actual `threading` moves
+- 5+ examples of actual `cold_read` moves
+- 5+ examples of `deflect` / `test` / `exit` responses
+
+**For response grounding:**
+- 5-10 actual `her` responses per bucket (verbatim from data)
+
+Artifact: `data/woman-responses/final/examples.json`
+```json
+{
+  "evaluation_examples": {
+    "cold": [
+      { "him": "Where are you from?", "her": "I have to go.", "her_interest": 2, "his_move": ["interview_question"], "her_move": ["exit"], "context": "..." }
+    ],
+    "guarded": [...],
+    "curious": [...],
+    "interested": [...]
+  },
+  "tag_examples": {
+    "interview_question": [
+      { "him": "What do you do?", "her": "I work.", "result": "deflect, interest dropped" }
+    ],
+    "threading": [...],
+    "cold_read": [...]
+  },
+  "response_examples": {
+    "cold": ["I have to go.", "Okay.", "Not interested."],
+    "guarded": ["Yeah.", "I don't know.", "Maybe."],
+    "curious": ["Oh really? Where?", "That's funny.", "What do you mean?"],
+    "interested": ["You should come!", "I'd like that.", "Tell me more."]
+  }
+}
+```
+
+### Step 6.1.2: Identify what the data says is "good" vs "bad"
+Key insight: The data shows what ACTUALLY works, not what coaching theory says.
+
+Analyze:
+- What `his_move` types correlate with interest increases? (This becomes "good")
+- What `his_move` types correlate with interest decreases? (This becomes "bad")
+- What's the actual effect of interview questions in the data?
+- What's the actual effect of threading/cold reads?
+
+This may confirm or challenge the current RUBRIC scoring. If the data shows interview questions sometimes work, the rubric should reflect that nuance.
+
+## Phase 6.2: Update Prompts with Data-Grounded Examples
+
+### Step 6.2.1: Update EVAL_SYSTEM_PROMPT
+Current prompt has abstract rules like:
+```
+- Interview questions ("what do you do?", "where are you from?") = bad (3-4 points)
+```
+
+Replace with data-grounded examples:
+```
+SCORING EXAMPLES FROM REAL INTERACTIONS:
+
+Score 2-3 (Cold response, she wants to leave):
+- Him: "Where are you from?" → Her: "I have to go." [interview_question → exit]
+- Him: "What do you do?" → Her: "Okay." [interview_question → minimal]
+
+Score 4-5 (Guarded, not invested):
+- Him: "You seem like you're from somewhere warm" → Her: "Yeah." [cold_read but weak]
+- Him: "So what brings you here?" → Her: "Just shopping." [interview]
+
+Score 6-7 (Curious, engaged):
+- Him: "You look like you just came from yoga" → Her: "Ha, how did you know?" [cold_read, she engages]
+- Him: "That's a very specific coffee order" → Her: "I'm very particular." [observation, she elaborates]
+
+Score 8-9 (Interested, investing):
+- Him: "You should try the place on 5th" → Her: "Take me there!" [she invests]
+- Him: "I bet you're the fun one in your friend group" → Her: "Oh 100%, my friends are boring." [cold_read, she qualifies]
+```
+
+### Step 6.2.2: Update response generation prompts
+Current `getBucketConstraints()` has abstract rules. Add real examples:
+
+```
+COLD BUCKET - Real examples from data:
+- "I have to go." *walks away*
+- "Okay."
+- "I'm busy."
+- "Not interested."
+Notice: No questions back. Very short. Can leave.
+
+GUARDED BUCKET - Real examples from data:
+- "Yeah, I guess."
+- "I don't know."
+- "Maybe."
+- "I'm from here."
+Notice: Polite but not investing. Vague answers.
+```
+
+### Step 6.2.3: Add context about what works
+The prompt should tell the LLM what the DATA shows works, not generic dating advice:
+
+```
+WHAT THE DATA SHOWS ACTUALLY WORKS:
+- Observations about her (not questions) → she engages more
+- Threading on what she just said → interest increases
+- Playful assumptions → she corrects or confirms (engagement)
+- Asking "where are you from" early → usually deflect/minimal response
+
+WHAT THE DATA SHOWS DOESN'T WORK:
+- Interview questions in first 3 turns → usually guarded/cold
+- Complimenting looks directly → often skeptical
+- Logical questions without play → flat responses
+```
+
+## Phase 6.3: Test LLM Behavior with Claude Code
+
+### Step 6.3.1: Create test harness script
+File: `scripts/test-llm-grounding.ts`
+
+Uses Claude Code (not API) to run test cases and validate behavior.
+
+Test categories:
+1. **Evaluation accuracy** - Given (him, her, context), does LLM score match data's `her_interest`?
+2. **Tag accuracy** - Does LLM correctly identify `interview_question`, `threading`, etc.?
+3. **Response realism** - Given bucket + constraints, does response match data distribution?
+
+### Step 6.3.2: Build test cases from extractions
+For each extracted turn, create a test case:
+```typescript
+interface EvalTestCase {
+  input: {
+    him: string
+    her_last: string  // context
+    situation: string
+    turn: number
+  }
+  expected: {
+    score_range: [number, number]  // e.g., [3, 5] for guarded
+    tags_should_include?: string[]
+    tags_should_not_include?: string[]
+  }
+  source: string  // video_id + turn number
+}
+```
+
+### Step 6.3.3: Run test harness via Claude Code
+```bash
+USE_CLAUDE_CODE=true npx ts-node scripts/test-llm-grounding.ts
+```
+
+For each test case:
+1. Call `evaluateWithAI()` with the input
+2. Check if score is in expected range
+3. Check if tags match expectations
+4. Log failures for analysis
+
+### Step 6.3.4: Run response generation tests
+For each bucket, generate 10 responses and check:
+- Word count within bucket range
+- No questions in cold bucket
+- Tone matches bucket (cold = dismissive, curious = engaged)
+- Responses feel similar to data examples (subjective, logged for review)
+
+### Step 6.3.5: Analyze failures and iterate
+- If LLM scores too high → add more "bad" examples to prompt
+- If LLM misses tags → add more tag examples
+- If responses too warm → strengthen bucket constraints
+- If responses feel different from data → add more verbatim examples
+
+## Phase 6.4: Validation Metrics
+
+### Evaluation accuracy target
+- 80%+ of test cases should have score within ±1 of expected
+- 90%+ of interview questions should be tagged as `interview_question`
+- 90%+ of threading should be tagged as `threading`
+
+### Response generation target
+- 100% responses within word count limits (enforced by validation)
+- 0% questions in cold bucket (enforced)
+- Subjective: responses should "feel" like data examples (human review)
+
+## Phase 6.5: Deliverables
+
+1. `data/woman-responses/final/examples.json` - Curated examples from extractions
+2. Updated `EVAL_SYSTEM_PROMPT` in `chat.ts` - Data-grounded scoring
+3. Updated `getBucketConstraints()` in `chat.ts` - Real response examples
+4. `scripts/test-llm-grounding.ts` - Test harness for Claude Code
+5. Test results log - Shows accuracy before/after grounding
+
+---
+
+# Phase 7: Meta-Loop Calibration (Principle Discovery)
+
+**Status:** NOT STARTED
+**Prerequisite:** Phase 6 complete
+
+---
+
+### IMPORTANT: What This Phase Tests (READ THIS FIRST)
+
+We test whether our evaluator recognizes good game when it sees it.
+
+**Ground truth:** Coach's lines ARE good lines. These are professionals uploading their successful interactions. If our evaluator scores a coach's line below 7, the evaluator is miscalibrated - not the coach.
+
+**Diagnostic method:**
+1. Take real video transcript (coach + woman)
+2. For each turn N, feed Claude the exact history (turns 1 to N-1) as it happened
+3. Claude evaluates coach's line at turn N as if coach = user
+4. If score < 7, that's a blind spot to diagnose
+
+**What we're testing:**
+- Does Claude recognize good moves turn-by-turn?
+- Which turns does Claude score low? (blind spots)
+- What patterns/contexts does Claude fail to understand?
+
+**What we're NOT testing:**
+- "Did the conversation succeed overall?" (irrelevant - all videos are successes)
+- "What was the outcome?" (no outcome field needed - selection bias means all videos succeeded)
+
+---
+
+## Problem Statement
+
+The current approach extracts surface-level patterns (tags, word counts, score averages) but loses the deeper "why". The system applies rules mechanically without understanding principles. This leads to:
+
+- Scoring authentic self-disclosure as "try_hard"
+- Missing context that makes a line work or not
+- Evaluations that feel robotic/unfair in specific cases
+- An inability to distinguish intent/energy from surface behavior
+
+**Root cause:** We prescribed patterns (cold reads avg 5.3, interview questions avg 5.4) instead of letting principles emerge from the data. The AI applies these as rigid rules rather than flexible understanding.
+
+**Key insight:** Our video dataset is selection-biased toward success (coaches upload interactions they're proud of). We can use this: if our evaluator would kill a conversation that actually succeeded, we're miscalibrated.
+
+---
+
+## Phase 7.0: Prerequisites
+
+### Step 7.0.1: Prepare test video
+
+**First test video:** `xv8gaNtHbSg` (https://www.youtube.com/watch?v=xv8gaNtHbSg)
+
+**Status:** NOT in downloads or transcripts. Must be downloaded and processed.
+
+For each test video:
+
+1. **Check availability:**
+   ```bash
+   find data/01.download -name "*VIDEO_ID*"
+   find data/02.transcribe -name "*VIDEO_ID*"
+   find data/04.diarize -name "*VIDEO_ID*"
+   ```
+
+2. **If not downloaded:** Use yt-dlp
+   ```bash
+   yt-dlp -x --audio-format m4a -o "data/01.download/phase7_test/%(title)s [%(id)s]/%(title)s [%(id)s].audio.%(ext)s" "https://www.youtube.com/watch?v=VIDEO_ID"
+   ```
+
+3. **Transcribe:** Run through Whisper (existing pipeline)
+   ```bash
+   # Use existing transcription script or:
+   whisper "path/to/audio.m4a" --model large-v3 --output_format json --output_dir "data/02.transcribe/phase7_test/"
+   ```
+
+4. **Diarize:** Run through diarization pipeline (speaker separation)
+   - Use existing pyannote or similar pipeline
+   - Output to `data/04.diarize/phase7_test/`
+
+### Step 7.0.2: Extract conversation
+
+Use Phase 1-2 extraction process (Prompt A + Prompt B):
+
+1. Map speakers using Prompt A (from Phase 1.2)
+2. Extract him/her turns using Prompt B (from Phase 1.3)
+3. Save to `data/woman-responses/extractions/VIDEO_ID.json`
+
+### Step 7.0.3: Create diagnostic script
+
+Create `scripts/test-phase7-diagnostic.ts`:
+
+```typescript
+#!/usr/bin/env npx tsx
+/**
+ * Phase 7 Diagnostic Script
+ *
+ * Runs a full conversation through the evaluator turn-by-turn,
+ * tracking interest/exitRisk trajectory and detecting divergence points.
+ */
+
+import * as fs from "fs"
+import * as path from "path"
+
+process.env.USE_CLAUDE_CODE = "true"
+
+interface Turn {
+  turn: number
+  him: string
+  her: string
+  his_move?: string[]
+  her_move?: string[]
+  her_interest?: number
+}
+
+interface Extraction {
+  video_id: string
+  source_path: string
+  video_type: string
+  speaker_roles: Record<string, string>
+  turns: Turn[]
+  extraction_notes?: string
+  confidence: string
+  // No outcome field needed - all videos are coach successes by selection bias.
+  // We test: does evaluator recognize good moves turn-by-turn?
+}
+
+interface TrajectoryPoint {
+  turn: number
+  him: string
+  her: string
+  score: number
+  tags: string[]
+  quality: string
+  feedback: string
+  interest_before: number
+  interest_after: number
+  exitRisk_before: number
+  exitRisk_after: number
+  would_end: boolean
+  end_reason?: string
+}
+
+interface DiagnosticResult {
+  video_id: string
+  prompt_version: string
+  total_turns: number
+  system_would_end_at: number | null
+  final_interest: number
+  final_exitRisk: number
+  trajectory: TrajectoryPoint[]
+  divergence_points: Array<{
+    turn: number
+    reason: string
+    actual: string
+    score: number
+    tags: string[]
+  }>
+  // No outcome field - all videos are coach successes by definition.
+}
+
+async function runDiagnostic(videoId: string, promptVersion: string): Promise<DiagnosticResult> {
+  // Import dynamically after env vars set
+  const { evaluateWithAI } = await import("../src/scenarios/keepitgoing/chat")
+  const { updateInterestFromRubric } = await import("../src/scenarios/keepitgoing/generator")
+  const { RUBRIC } = await import("../src/scenarios/keepitgoing/realisticProfiles")
+
+  // Load extraction
+  const extractionPath = path.join(process.cwd(), `data/woman-responses/extractions/${videoId}.json`)
+  if (!fs.existsSync(extractionPath)) {
+    throw new Error(`Extraction not found: ${extractionPath}`)
+  }
+  const extraction: Extraction = JSON.parse(fs.readFileSync(extractionPath, "utf-8"))
+
+  // Create initial context
+  let context = {
+    situation: {
+      id: videoId,
+      location: { en: "Street", da: "Gade" },  // Generic - video-specific would be better
+      setup: { en: extraction.extraction_notes || "Infield interaction", da: "Infield interaktion" },
+      yourOpener: { en: extraction.turns[0]?.him || "Hey", da: extraction.turns[0]?.him || "Hey" },
+      herFirstResponse: { en: extraction.turns[0]?.her || "", da: extraction.turns[0]?.her || "" },
+    },
+    language: "en" as const,
+    interestLevel: RUBRIC.interest.start,  // 4
+    exitRisk: RUBRIC.exitRisk.start,       // 0
+    realismNotch: 0 as const,
+    isEnded: false,
+    endReason: undefined as string | undefined,
+    turnCount: 0,
+    conversationPhase: "hook" as const,
+    consecutiveHighScores: 0,
+    averageScore: 0,
+    totalScore: 0,
+    usedResponses: { positive: [], neutral: [], deflect: [], skeptical: [] },
+  }
+
+  const trajectory: TrajectoryPoint[] = []
+  const divergencePoints: DiagnosticResult["divergence_points"] = []
+  const history: Array<{ role: "user" | "assistant"; content: string }> = []
+
+  // Skip first turn (it's the opener, already in context)
+  const turnsToProcess = extraction.turns.slice(1)
+
+  for (const turn of turnsToProcess) {
+    const interestBefore = context.interestLevel
+    const exitRiskBefore = context.exitRisk
+
+    // Evaluate his line
+    const evalResult = await evaluateWithAI(
+      turn.him,
+      history,
+      "en",
+      context,
+      "phase7-test"
+    )
+
+    // Apply rubric
+    const update = updateInterestFromRubric(context, evalResult)
+
+    // Record trajectory point
+    trajectory.push({
+      turn: turn.turn,
+      him: turn.him,
+      her: turn.her,
+      score: evalResult.score,
+      tags: evalResult.tags,
+      quality: evalResult.quality,
+      feedback: evalResult.feedback,
+      interest_before: interestBefore,
+      interest_after: update.interestLevel,
+      exitRisk_before: exitRiskBefore,
+      exitRisk_after: update.exitRisk,
+      would_end: update.isEnded,
+      end_reason: update.endReason,
+    })
+
+    // Check for divergence (system would end but conversation actually continued)
+    if (update.isEnded && !context.isEnded) {
+      divergencePoints.push({
+        turn: turn.turn,
+        reason: update.endReason || "unknown",
+        actual: "conversation continued and succeeded",
+        score: evalResult.score,
+        tags: evalResult.tags,
+      })
+    }
+
+    // Update context for next turn (DON'T stop on isEnded - keep evaluating)
+    context = {
+      ...context,
+      interestLevel: update.interestLevel,
+      exitRisk: update.exitRisk,
+      isEnded: update.isEnded,
+      endReason: update.endReason,
+      turnCount: turn.turn,
+    }
+
+    // Add to history for next evaluation
+    history.push({ role: "user", content: turn.him })
+    history.push({ role: "assistant", content: turn.her })
+  }
+
+  return {
+    video_id: videoId,
+    prompt_version: promptVersion,
+    total_turns: extraction.turns.length,
+    system_would_end_at: divergencePoints.length > 0 ? divergencePoints[0].turn : null,
+    final_interest: context.interestLevel,
+    final_exitRisk: context.exitRisk,
+    trajectory,
+    divergence_points: divergencePoints,
+  }
+}
+
+async function main() {
+  const videoId = process.argv[2]
+  const promptVersion = process.argv[3] || "prompt_0"
+
+  if (!videoId) {
+    console.error("Usage: npx tsx scripts/test-phase7-diagnostic.ts VIDEO_ID [PROMPT_VERSION]")
+    process.exit(1)
+  }
+
+  console.log(`\n=== Phase 7 Diagnostic ===`)
+  console.log(`Video: ${videoId}`)
+  console.log(`Prompt version: ${promptVersion}\n`)
+
+  try {
+    const result = await runDiagnostic(videoId, promptVersion)
+
+    // Print summary (all videos are coach successes - we test turn-by-turn recognition)
+    console.log(`Total turns: ${result.total_turns}`)
+    console.log(`System would end at: ${result.system_would_end_at || "never (good!)"}`)
+    console.log(`Final interest: ${result.final_interest}`)
+    console.log(`Final exitRisk: ${result.final_exitRisk}`)
+    console.log(`Divergence points: ${result.divergence_points.length}`)
+
+    if (result.divergence_points.length > 0) {
+      console.log("\n--- DIVERGENCE POINTS ---")
+      for (const dp of result.divergence_points) {
+        console.log(`Turn ${dp.turn}: score=${dp.score}, tags=[${dp.tags.join(", ")}]`)
+        console.log(`  Reason: ${dp.reason}`)
+        console.log(`  Reality: ${dp.actual}`)
+      }
+    }
+
+    // Save result
+    const outputDir = path.join(process.cwd(), "data/woman-responses/diagnostics")
+    fs.mkdirSync(outputDir, { recursive: true })
+    const outputPath = path.join(outputDir, `${videoId}_${promptVersion}_diagnostic.json`)
+    fs.writeFileSync(outputPath, JSON.stringify(result, null, 2))
+    console.log(`\nSaved to: ${outputPath}`)
+
+  } catch (error) {
+    console.error("Error:", error)
+    process.exit(1)
+  }
+}
+
+main()
+```
+
+### Step 7.0.4: Verify script works
+
+Before using on new videos, test against an already-extracted video:
+```bash
+npx tsx scripts/test-phase7-diagnostic.ts d8H9RlGpS0g prompt_0
+```
+
+---
+
+## Phase 7.1: Diagnostic - Test Against Known-Successful Conversations
+
+### Step 7.1.1: Select test videos
+
+Pick 5-10 videos that:
+- Haven't been used in training extractions (check `data/woman-responses/extractions/`)
+- Show clearly successful outcomes (number close, date, etc.)
+- Represent different styles/contexts
+
+**Test video queue:**
+1. `xv8gaNtHbSg` (https://www.youtube.com/watch?v=xv8gaNtHbSg) - first test
+2. (add more as identified)
+
+### Step 7.1.2: Run diagnostic
+
+For each test video:
+```bash
+npx tsx scripts/test-phase7-diagnostic.ts VIDEO_ID prompt_0
+```
+
+Review output:
+- Does the system prematurely end conversations that succeeded?
+- Which turns trigger false exits?
+- What tags are being misapplied?
+
+### Step 7.1.3: Document divergence
+
+For each video with divergence points, create summary in `data/woman-responses/diagnostics/divergence_summary.md`:
+
+```markdown
+## VIDEO_ID (prompt_0)
+
+**Total turns:** 12
+**System would end at:** Turn 4
+**Conversation continued:** Yes (coach is good - we're testing if evaluator recognizes it)
+
+### Divergence at Turn 4:
+- **Him:** "I'm actually really into philosophy..."
+- **Her:** "Oh cool, what kind?"
+- **Our score:** 4/10 (should be 7+)
+- **Our tags:** [try_hard]
+- **Our reason:** exitRisk >= 3
+
+**Blind spot:** Evaluator scored authentic self-disclosure as try_hard. She was actually curious (asked follow-up). Coach's line was good; evaluator failed to recognize it.
+```
+
+---
+
+## Phase 7.2: Meta-Loop - Let AI Diagnose Its Own Failures
+
+### Step 7.2.0: Setup
+
+**Method:** Interactive Claude Code session
+**Model:** Claude Opus (better reasoning than Haiku which did the evaluation)
+
+### Step 7.2.1: Run diagnosis session
+
+For each divergence point:
+
+1. Open Claude Code in project directory
+2. Provide context:
+
+```
+I'm testing our conversation evaluator against a real coach interaction.
+
+CONTEXT: This is a professional coach's infield video. The coach is good at this.
+If our evaluator scores the coach's line below 7, the evaluator is wrong.
+
+DIAGNOSTIC RESULT:
+Video: VIDEO_ID
+Total turns: 12
+System would have ended at: turn 4 (but conversation continued successfully)
+
+DIVERGENCE AT TURN 4:
+Him: "..."
+Her: "..."
+Our score: 4/10 (should be 7+ since coach is skilled)
+Our tags: [try_hard]
+Our quality: deflect
+This triggered: exitRisk >= 3
+
+FULL CONVERSATION:
+Turn 1: Him: "..." / Her: "..."
+Turn 2: Him: "..." / Her: "..."
+...
+Turn 12: Him: "Can I get your number?" / Her: "Sure!" *gives number*
+
+QUESTION: The coach's line at turn 4 was good (we know because the interaction succeeded).
+What did our evaluator miss? What principle or context explains why turn 4 actually
+worked, even though it looked like [try_hard] on the surface?
+
+Be specific. Don't say "too harsh." Identify what the evaluator misunderstood.
+```
+
+3. Record response verbatim in `data/woman-responses/diagnostics/insights/insight_N.md`
+
+### Step 7.2.2: Insight format
+
+Each insight file follows this format:
+
+```markdown
+# Insight N
+
+**Date:** YYYY-MM-DD
+**Video:** VIDEO_ID
+**Turn:** X
+**Prompt version tested:** prompt_N
+
+## Divergence
+- Score: X/10
+- Tags: [...]
+- Would have ended because: ...
+
+## AI Diagnosis
+[Paste full response here]
+
+## Key principle identified
+[One-sentence summary of the principle]
+
+## Proposed prompt change
+[Specific text to add/modify, with location]
+```
+
+### Step 7.2.3: Cluster insights
+
+After 5+ insights, review `data/woman-responses/diagnostics/insights/` and cluster by theme:
+
+| Theme | Count | Insight IDs |
+|-------|-------|-------------|
+| Self-disclosure ≠ try_hard | 3 | 1, 4, 7 |
+| Context of her response matters | 2 | 2, 5 |
+| ... | ... | ... |
+
+Document in `data/woman-responses/diagnostics/insight_clusters.md`
+
+---
+
+## Phase 7.3: Iterative Prompt Improvement
+
+### Step 7.3.0: Prompt versioning
+
+**Critical rule:** Never modify existing prompts. Create new versions.
+
+Directory structure:
+```
+data/woman-responses/prompts/
+├── prompt_0/                    # Original (current production)
+│   ├── EVAL_SYSTEM_PROMPT.md
+│   └── BUCKET_CONSTRAINTS.md
+├── prompt_1/                    # First iteration
+│   ├── EVAL_SYSTEM_PROMPT.md
+│   ├── BUCKET_CONSTRAINTS.md
+│   └── changelog.md             # What changed from prompt_0
+├── prompt_2/
+│   └── ...
+```
+
+### Step 7.3.1: Create new prompt version
+
+After collecting 3-5 related insights:
+
+1. Copy previous prompt version to new folder
+2. Apply changes based on insights (use AI's own words, not abstractions)
+3. Document changes in `changelog.md`:
+
+```markdown
+# prompt_1 changelog
+
+**Based on insights:** 1, 4, 7
+**Theme:** Self-disclosure misclassified as try_hard
+
+## Changes to EVAL_SYSTEM_PROMPT
+
+Added to scoring criteria:
+> IMPORTANT: Self-disclosure (sharing genuine interests, background, or reasoning)
+> is NOT try_hard. Try_hard is performative status-seeking. Authentic sharing
+> builds connection. Example: "I'm really into philosophy" is self-disclosure;
+> "I read Nietzsche, Kant, and Heidegger" is try_hard.
+
+## Changes to BUCKET_CONSTRAINTS
+
+None.
+```
+
+### Step 7.3.2: Update code to use new prompt
+
+In `src/scenarios/keepitgoing/chat.ts`, the prompts should be loadable by version:
+
+```typescript
+// For testing, load prompt by version
+const promptVersion = process.env.PROMPT_VERSION || "prompt_0"
+const EVAL_SYSTEM_PROMPT = loadPrompt(promptVersion, "EVAL_SYSTEM_PROMPT")
+```
+
+Or simpler: just update the hardcoded prompts and track via git commits.
+
+### Step 7.3.3: Re-run diagnostics
+
+After creating prompt_N:
+```bash
+# Run same videos with new prompt version
+npx tsx scripts/test-phase7-diagnostic.ts VIDEO_ID prompt_1
+```
+
+Compare results:
+- Did divergence points decrease?
+- Did we introduce new problems (false positives)?
+
+### Step 7.3.4: Track progress
+
+Maintain `data/woman-responses/diagnostics/iteration_log.md`:
+
+```markdown
+# Iteration Log
+
+## prompt_0 (baseline)
+- Videos tested: 5
+- Total divergence points: 12
+- Premature exits: 4/5 videos
+
+## prompt_1 (self-disclosure fix)
+- Videos tested: 5
+- Total divergence points: 7 (-5)
+- Premature exits: 2/5 videos (-2)
+- Notes: Fixed self-disclosure, but now missing some actual try_hard
+
+## prompt_2 (try_hard clarification)
+- Videos tested: 5
+- Total divergence points: 4 (-3)
+- Premature exits: 1/5 videos (-1)
+- Notes: Better balance
+```
+
+---
+
+## Phase 7.4: Validation
+
+### Success criteria
+
+1. **Divergence reduction:** 80%+ of test video turns don't trigger premature exit
+2. **No regression:** False positive rate (letting actually bad lines pass) doesn't increase significantly
+3. **Principled feel:** Evaluations feel like they understand context, not just pattern-matching
+4. **Emergent principles:** At least 3-5 principles emerged from data (documented in insights)
+
+### Final artifacts
+
+1. `data/woman-responses/diagnostics/*.json` - Per-video diagnostic results
+2. `data/woman-responses/diagnostics/insights/insight_*.md` - Individual AI diagnoses
+3. `data/woman-responses/diagnostics/insight_clusters.md` - Clustered themes
+4. `data/woman-responses/diagnostics/iteration_log.md` - Progress tracking
+5. `data/woman-responses/prompts/prompt_N/` - Final prompt version
+6. Updated `chat.ts` with production prompt (after validation)
+
+---
+
+## Notes
+
+- This phase is inherently iterative. Budget for 3-5 rounds of diagnose → update → retest.
+- The goal is NOT to make the AI "nicer" or pass everything. It's to make it understand context and intent, not just surface patterns.
+- If a line genuinely sucks but the conversation succeeded anyway (she was already interested, he recovered later, etc.), that's useful data too - the AI should learn that one bad turn doesn't always kill a conversation.
+- Use Opus for diagnosis sessions (smarter reasoning), but keep Haiku for production evaluation (cost).
+- Track prompt versions via git AND the `prompts/` folder structure - belt and suspenders.
 
 ---
 

@@ -16,6 +16,7 @@ type HurdlesStepProps = {
   onComplete: (response: string, inferredValues: InferredValue[]) => void
   onBackToHub?: () => void
   onStartFresh?: () => void
+  onStepClick?: (step: InnerGameStep) => void
 }
 
 const STOIC_QUOTE = "The obstacle is the way."
@@ -29,6 +30,7 @@ export function HurdlesStep({
   onComplete,
   onBackToHub,
   onStartFresh,
+  onStepClick,
 }: HurdlesStepProps) {
   const {
     response,
@@ -59,6 +61,7 @@ export function HurdlesStep({
       <StepProgress
         currentStep={InnerGameStep.HURDLES}
         completedSteps={completedSteps}
+        onStepClick={onStepClick}
       />
 
       {!showResults ? (

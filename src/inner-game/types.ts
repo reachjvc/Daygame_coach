@@ -52,7 +52,7 @@ export type CoreValue = {
 
 export type InnerGameProgress = {
   currentStep: InnerGameStep
-  currentSubstep: number  // For values step: which category (0-9)
+  currentSubstep: number  // For values step: which category (0-10)
   welcomeDismissed: boolean
   valuesCompleted: boolean        // Step 1: Values selection
   shadowCompleted: boolean        // Step 2: Shadow prompt

@@ -18,7 +18,7 @@ export const qaRequestSchema = z.object({
     .optional(),
   generation: z
     .object({
-      provider: z.enum(["ollama", "claude"]).optional(),
+      provider: z.enum(["ollama"]).optional(), // Claude disabled to save API costs
       model: z.string().optional(),
       maxOutputTokens: z
         .number()

@@ -60,9 +60,9 @@ describe("updateProgressSchema", () => {
   })
 
   describe("currentSubstep field", () => {
-    test("should accept valid substep values 0-9", () => {
-      // Arrange
-      for (let i = 0; i <= 9; i++) {
+    test("should accept valid substep values 0-10", () => {
+      // Arrange - 11 categories (indices 0-10)
+      for (let i = 0; i <= 10; i++) {
         // Act
         const result = updateProgressSchema.safeParse({ currentSubstep: i })
 
@@ -82,15 +82,26 @@ describe("updateProgressSchema", () => {
       expect(result.success).toBe(false)
     })
 
-    test("should reject substep above 9", () => {
-      // Arrange
-      const input = { currentSubstep: 10 }
+    test("should reject substep above 10", () => {
+      // Arrange - 11 categories (0-10), so 11 should be invalid
+      const input = { currentSubstep: 11 }
 
       // Act
       const result = updateProgressSchema.safeParse(input)
 
       // Assert
       expect(result.success).toBe(false)
+    })
+
+    test("should accept substep 10 (11th category)", () => {
+      // Arrange - 11 categories exist, index 10 is valid
+      const input = { currentSubstep: 10 }
+
+      // Act
+      const result = updateProgressSchema.safeParse(input)
+
+      // Assert
+      expect(result.success).toBe(true)
     })
 
     test("should reject non-integer substep", () => {

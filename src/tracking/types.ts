@@ -11,7 +11,7 @@ import type {
 // Re-export database types that UI needs
 export type { SessionRow, ApproachRow, ApproachOutcome, SetType, UserTrackingStatsRow, SessionSummary }
 
-// Re-export config-derived types (constants are in config.tsx)
+// Re-export config-derived types (constants are in config.ts)
 export type { ApproachTagCategory, ApproachTag } from "./config"
 
 // ============================================
