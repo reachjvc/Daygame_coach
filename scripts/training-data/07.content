@@ -1492,6 +1492,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 1. TYPE: "approach"
 2. CONVERSATION_ID: The conversation number
 3. DESCRIPTION: Concise 10-20 word summary
+   IMPORTANT: Do not claim a number/Instagram close happened unless it is explicitly shown in the transcript.
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.

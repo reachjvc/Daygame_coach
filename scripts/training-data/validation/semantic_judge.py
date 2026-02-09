@@ -244,7 +244,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.1"
+    prompt_version: str = "1.2.2"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -328,6 +328,11 @@ SEGMENT REFERENCE TOLERANCE:
 - If a technique/topic is correct but the cited segment id is off-by-1 (or off-by-2) and the evidence is clearly in an adjacent segment, treat it as a MINOR issue and suggest the corrected segment id.
 - If the evidence text is present but the cited segment's speaker_role looks misassigned (diarization error) or the target is clearly quoting the coach, treat it as a MINOR issue (do not mark hallucination for this alone).
 - Only mark hallucination_suspected if the enrichment claims content that is not present anywhere in the transcript excerpt.
+
+SEVERITY + CATEGORIZATION GUIDELINES:
+- Use issue.type that matches the field: technique/topic/phase/summary/other.
+- Mark an issue as MAJOR only if it materially harms retrieval usefulness or is clearly wrong (wrong technique, wrong topic, invalid phase order, missing hook/investment when post_hook is present, etc).
+- Description-level inaccuracies (e.g., mentioning a number close when none is shown) are usually MINOR unless the description is fundamentally misleading.
 
 TASK:
 1) Judge whether the enrichment is accurate and useful for retrieval (RAG).
