@@ -50,6 +50,27 @@ export type CoreValue = {
   rank: number
 }
 
+// ============================================================================
+// Value Source Tracking (for prioritization flow)
+// ============================================================================
+
+/**
+ * Where a value originated from in the inner game flow.
+ * Used to show context during prioritization and set smart defaults.
+ */
+export type ValueSource = "picked" | "shadow" | "peak_experience" | "hurdles"
+
+/**
+ * A value with its source information for the prioritization UI.
+ */
+export type ValueWithSource = {
+  id: string
+  displayName: string
+  source: ValueSource
+  /** For inferred values, the reason why it was suggested */
+  reason?: string
+}
+
 export type InnerGameProgress = {
   currentStep: InnerGameStep
   currentSubstep: number  // For values step: which category (0-10)
@@ -68,6 +89,8 @@ export type InnerGameProgress = {
   // Hurdles step data (reframed - also used by premium model)
   hurdlesResponse: string | null
   hurdlesInferredValues: InferredValue[] | null
+  // Prioritization flow data
+  essentialSelection: string[] | null  // Values marked as essential (before elimination)
   // Final results
   finalCoreValues: CoreValue[] | null
   aspirationalValues: { id: string }[] | null
@@ -119,6 +142,7 @@ export type UpdateProgressRequest = {
   peakExperienceInferredValues?: InferredValue[]
   hurdlesResponse?: string
   hurdlesInferredValues?: InferredValue[]
+  essentialSelection?: string[]
   finalCoreValues?: CoreValue[]
   aspirationalValues?: { id: string }[]
 }

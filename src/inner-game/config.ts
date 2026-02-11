@@ -256,3 +256,30 @@ export const CUTTING_CONFIG = {
   maxValuesForPairwise: 20,
   minValuesForCutting: 8,
 }
+
+// ============================================================================
+// Value Source Configuration (for prioritization flow)
+// ============================================================================
+
+export const VALUE_SOURCE_CONFIG = {
+  picked: {
+    label: "Picked",
+    color: "#10B981", // green-500
+    description: "You selected this value",
+  },
+  shadow: {
+    label: "Shadow",
+    color: "#8B5CF6", // violet-500
+    description: "Inferred from what frustrates you",
+  },
+  peak_experience: {
+    label: "Peak",
+    color: "#F59E0B", // amber-500
+    description: "Present when you were at your best",
+  },
+  hurdles: {
+    label: "Hurdles",
+    color: "#EF4444", // red-500
+    description: "Would help you overcome challenges",
+  },
+} as const

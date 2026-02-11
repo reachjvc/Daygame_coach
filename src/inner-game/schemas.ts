@@ -32,6 +32,8 @@ export const updateProgressSchema = z.object({
   // Legacy deathbed fields (deprecated)
   deathbedResponse: z.string().optional(),
   deathbedInferredValues: z.array(inferredValueSchema).optional(),
+  // Prioritization flow data
+  essentialSelection: z.array(z.string()).optional(),
   // Final results
   finalCoreValues: z
     .array(

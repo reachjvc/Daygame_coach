@@ -1,13 +1,17 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { GripVertical, LayoutGrid } from "lucide-react"
+
 import { InnerGameStep, type CoreValue, type InferredValue } from "../../types"
 import { CUTTING_CONFIG } from "../../config"
+import { buildValuesWithSource, getAspirationalDefault } from "../../modules/valueCutting"
 import { NavigationButtons } from "../shared/NavigationButtons"
 import { StepProgress } from "../shared/StepProgress"
-import { PairComparison } from "./PairComparison"
+import { SelectEssentialsPhase } from "./SelectEssentialsPhase"
+import { EliminatePhase } from "./EliminatePhase"
 import { AspirationalCheck } from "./AspirationalCheck"
-import { GripVertical, LayoutGrid } from "lucide-react"
+import type { PrioritizationPhase } from "./types"
 
 type CuttingStepPageProps = {
   selectedValues: string[]
@@ -22,8 +26,6 @@ type CuttingStepPageProps = {
   onStepClick?: (step: InnerGameStep) => void
 }
 
-type Phase = "aspirational" | "pairwise" | "ranking"
-
 export function CuttingStepPage({
   selectedValues,
   hurdlesInferredValues,
@@ -36,113 +38,129 @@ export function CuttingStepPage({
   onStartFresh,
   onStepClick,
 }: CuttingStepPageProps) {
-  // Merge all values from all sources
-  const allValues = useMemo(() => {
-    const merged = new Set<string>()
-    selectedValues.forEach(v => merged.add(v))
-    hurdlesInferredValues?.forEach(v => merged.add(v.id))
-    shadowInferredValues?.forEach(v => merged.add(v.id))
-    peakExperienceInferredValues?.forEach(v => merged.add(v.id))
-    return Array.from(merged)
-  }, [selectedValues, hurdlesInferredValues, shadowInferredValues, peakExperienceInferredValues])
+  // Build the merged list of all values with their sources
+  const allValuesWithSource = useMemo(() => {
+    return buildValuesWithSource(
+      selectedValues,
+      shadowInferredValues,
+      peakExperienceInferredValues,
+      hurdlesInferredValues
+    )
+  }, [selectedValues, shadowInferredValues, peakExperienceInferredValues, hurdlesInferredValues])
+
+  // Debug: log total values to help diagnose the bug
+  console.log("[CuttingStepPage] Total values:", allValuesWithSource.length)
+  console.log("[CuttingStepPage] Selected values from props:", selectedValues.length)
+  console.log("[CuttingStepPage] Shadow inferred:", shadowInferredValues?.length ?? 0)
+  console.log("[CuttingStepPage] Peak inferred:", peakExperienceInferredValues?.length ?? 0)
+  console.log("[CuttingStepPage] Hurdles inferred:", hurdlesInferredValues?.length ?? 0)
 
   // Phase state
-  const [phase, setPhase] = useState<Phase>(
-    allValues.length > CUTTING_CONFIG.minValuesForCutting ? "aspirational" : "ranking"
-  )
+  const [phase, setPhase] = useState<PrioritizationPhase>("select_essentials")
 
-  // Aspirational phase state
+  // Phase 1: Select Essentials
+  const [selectedEssentials, setSelectedEssentials] = useState<Set<string>>(new Set())
+
+  // Phase 2: Eliminate
+  const [eliminatedIds, setEliminatedIds] = useState<string[]>([])
+
+  // Phase 3: Aspirational Check
   const [aspirationalIndex, setAspirationalIndex] = useState(0)
   const [aspirationalIds, setAspirationalIds] = useState<Set<string>>(new Set())
 
-  // Pairwise phase state
-  const [pairIndex, setPairIndex] = useState(0)
-  const [scores, setScores] = useState<Map<string, number>>(new Map())
-
-  // Ranking phase state
+  // Phase 4: Final Ranking
   const [rankedValues, setRankedValues] = useState<string[]>([])
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
-  // Get current values for pairwise (excluding aspirational)
-  const currentValues = useMemo(() => {
-    return allValues.filter(v => !aspirationalIds.has(v))
-  }, [allValues, aspirationalIds])
+  // Get the current core values (after selection and elimination)
+  const coreValueIds = useMemo(() => {
+    const essentials = Array.from(selectedEssentials)
+    return essentials.filter(id => !eliminatedIds.includes(id))
+  }, [selectedEssentials, eliminatedIds])
 
-  // Generate pairs for pairwise comparison
-  const pairs = useMemo(() => {
-    const result: Array<[string, string]> = []
-    const shuffled = [...currentValues].sort(() => Math.random() - 0.5)
-    for (let i = 0; i < shuffled.length - 1; i += 2) {
-      result.push([shuffled[i], shuffled[i + 1]])
+  // Get the values with source for the current core values
+  const coreValuesWithSource = useMemo(() => {
+    return allValuesWithSource.filter(v => coreValueIds.includes(v.id))
+  }, [allValuesWithSource, coreValueIds])
+
+  // Handle Phase 1: Toggle essential selection
+  const handleToggleEssential = (id: string) => {
+    setSelectedEssentials(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
+
+  // Handle Phase 1: Continue from selection
+  const handleSelectionContinue = () => {
+    const count = selectedEssentials.size
+    if (count === 0) return
+
+    if (count > CUTTING_CONFIG.targetCoreValues) {
+      // Need to eliminate some
+      setPhase("eliminate")
+    } else {
+      // Go straight to aspirational check
+      setRankedValues(Array.from(selectedEssentials))
+      setPhase("aspirational")
     }
-    return result
-  }, [currentValues])
+  }
 
-  // Handle aspirational choice
+  // Handle Phase 2: Remove a value
+  const handleRemove = (id: string) => {
+    setEliminatedIds(prev => [...prev, id])
+
+    // Check if we've reached target
+    const remainingCount = selectedEssentials.size - eliminatedIds.length - 1
+    if (remainingCount <= CUTTING_CONFIG.targetCoreValues) {
+      // Auto-continue when target reached
+      const finalIds = Array.from(selectedEssentials).filter(
+        vId => !eliminatedIds.includes(vId) && vId !== id
+      )
+      setRankedValues(finalIds)
+      setPhase("aspirational")
+    }
+  }
+
+  // Handle Phase 2: Undo last removal
+  const handleUndoRemove = () => {
+    setEliminatedIds(prev => prev.slice(0, -1))
+  }
+
+  // Handle Phase 2: Continue from elimination
+  const handleEliminateContinue = () => {
+    const remainingCount = selectedEssentials.size - eliminatedIds.length
+    if (remainingCount > CUTTING_CONFIG.targetCoreValues) return
+
+    const finalIds = Array.from(selectedEssentials).filter(
+      id => !eliminatedIds.includes(id)
+    )
+    setRankedValues(finalIds)
+    setPhase("aspirational")
+  }
+
+  // Handle Phase 3: Aspirational choice
   const handleAspirationalChoice = (isAspirational: boolean) => {
-    const valueId = allValues[aspirationalIndex]
+    const valueId = rankedValues[aspirationalIndex]
     if (isAspirational) {
       setAspirationalIds(prev => new Set([...prev, valueId]))
     }
 
     const nextIndex = aspirationalIndex + 1
-    if (nextIndex >= allValues.length) {
-      // Done with aspirational, move to next phase
-      const remaining = allValues.filter(v => !aspirationalIds.has(v) && v !== valueId || (!isAspirational && v === valueId))
-      if (remaining.length > CUTTING_CONFIG.targetCoreValues) {
-        setPhase("pairwise")
-      } else {
-        setRankedValues(remaining.slice(0, CUTTING_CONFIG.targetCoreValues))
-        setPhase("ranking")
-      }
+    if (nextIndex >= rankedValues.length) {
+      // Done with aspirational, move to ranking
+      setPhase("ranking")
     } else {
       setAspirationalIndex(nextIndex)
     }
   }
 
-  // Handle pairwise choice
-  const handlePairwiseChoice = async (chosenId: string) => {
-    // Update scores
-    setScores(prev => {
-      const newScores = new Map(prev)
-      newScores.set(chosenId, (newScores.get(chosenId) ?? 0) + 1)
-      return newScores
-    })
-
-    // Save comparison to API
-    const pair = pairs[pairIndex]
-    try {
-      await fetch("/api/inner-game/comparisons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          valueAId: pair[0],
-          valueBId: pair[1],
-          chosenValueId: chosenId,
-          comparisonType: "pairwise",
-          roundNumber: 1,
-        }),
-      })
-    } catch (err) {
-      console.error("Failed to save comparison:", err)
-    }
-
-    const nextIndex = pairIndex + 1
-    if (nextIndex >= pairs.length) {
-      // Done with pairwise, calculate top values and move to ranking
-      const sortedValues = [...currentValues].sort((a, b) => {
-        const scoreA = scores.get(a) ?? 0
-        const scoreB = scores.get(b) ?? 0
-        return scoreB - scoreA
-      })
-      setRankedValues(sortedValues.slice(0, CUTTING_CONFIG.targetCoreValues))
-      setPhase("ranking")
-    } else {
-      setPairIndex(nextIndex)
-    }
-  }
-
-  // Handle drag and drop for ranking
+  // Handle Phase 4: Drag and drop ranking
   const handleDragStart = (index: number) => {
     setDraggedIndex(index)
   }
@@ -174,6 +192,11 @@ export function CuttingStepPage({
 
   const formatValueName = (id: string) => id.replace(/-/g, " ")
 
+  // Get essential values with source for elimination phase
+  const essentialValuesWithSource = useMemo(() => {
+    return allValuesWithSource.filter(v => selectedEssentials.has(v.id))
+  }, [allValuesWithSource, selectedEssentials])
+
   return (
     <div className="space-y-6">
       {/* Step progress */}
@@ -183,26 +206,64 @@ export function CuttingStepPage({
         onStepClick={onStepClick}
       />
 
-      {phase === "aspirational" && (
+      {/* Phase 1: Select Essentials */}
+      {phase === "select_essentials" && (
+        <SelectEssentialsPhase
+          values={allValuesWithSource}
+          selectedIds={selectedEssentials}
+          onToggle={handleToggleEssential}
+          onContinue={handleSelectionContinue}
+          onBackToHub={onBackToHub}
+        />
+      )}
+
+      {/* Phase 2: Eliminate to 7 */}
+      {phase === "eliminate" && (
+        <EliminatePhase
+          values={essentialValuesWithSource}
+          onRemove={handleRemove}
+          onUndo={handleUndoRemove}
+          onContinue={handleEliminateContinue}
+          removedIds={eliminatedIds}
+          targetCount={CUTTING_CONFIG.targetCoreValues}
+          onBackToHub={onBackToHub}
+        />
+      )}
+
+      {/* Phase 3: Aspirational Check */}
+      {phase === "aspirational" && aspirationalIndex < rankedValues.length && (
         <>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-foreground">
               Current vs. Aspirational
             </h2>
             <p className="text-muted-foreground">
-              Let's separate the values you currently embody from those you aspire to develop.
+              For each value, tell us if you already embody it or if you're developing it.
             </p>
           </div>
 
-          <AspirationalCheck
-            value={{
-              id: allValues[aspirationalIndex],
-              displayName: formatValueName(allValues[aspirationalIndex]),
-            }}
-            onChoose={handleAspirationalChoice}
-            questionNumber={aspirationalIndex + 1}
-            totalQuestions={allValues.length}
-          />
+          {(() => {
+            const currentValue = coreValuesWithSource.find(
+              v => v.id === rankedValues[aspirationalIndex]
+            )
+            if (!currentValue) return null
+
+            const smartDefault = getAspirationalDefault(currentValue.source)
+
+            return (
+              <AspirationalCheck
+                value={{
+                  id: currentValue.id,
+                  displayName: currentValue.displayName,
+                }}
+                source={currentValue.source}
+                defaultValue={smartDefault}
+                onChoose={handleAspirationalChoice}
+                questionNumber={aspirationalIndex + 1}
+                totalQuestions={rankedValues.length}
+              />
+            )
+          })()}
 
           {/* Back to Overview link */}
           {onBackToHub && (
@@ -220,47 +281,7 @@ export function CuttingStepPage({
         </>
       )}
 
-      {phase === "pairwise" && pairs.length > 0 && pairIndex < pairs.length && (
-        <>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">
-              Prioritize Your Values
-            </h2>
-            <p className="text-muted-foreground">
-              Now let's find which values matter most to you.
-            </p>
-          </div>
-
-          <PairComparison
-            valueA={{
-              id: pairs[pairIndex][0],
-              displayName: formatValueName(pairs[pairIndex][0]),
-            }}
-            valueB={{
-              id: pairs[pairIndex][1],
-              displayName: formatValueName(pairs[pairIndex][1]),
-            }}
-            onChoose={handlePairwiseChoice}
-            questionNumber={pairIndex + 1}
-            totalQuestions={pairs.length}
-          />
-
-          {/* Back to Overview link */}
-          {onBackToHub && (
-            <div className="text-center pt-4">
-              <button
-                type="button"
-                onClick={onBackToHub}
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                Back to Overview
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
+      {/* Phase 4: Final Ranking */}
       {phase === "ranking" && (
         <>
           <div className="space-y-2">
@@ -290,31 +311,23 @@ export function CuttingStepPage({
                 <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium text-primary">
                   {index + 1}
                 </span>
-                <span className="text-foreground font-medium capitalize">
+                <span className="text-foreground font-medium capitalize flex-1">
                   {formatValueName(valueId)}
                 </span>
+                {aspirationalIds.has(valueId) && (
+                  <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs">
+                    Aspiring
+                  </span>
+                )}
               </div>
             ))}
           </div>
 
-          {aspirationalIds.size > 0 && (
-            <div className="mt-6 space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                Aspirational Values
-              </h3>
+          {aspirationalIds.size > 0 && aspirationalIds.size < rankedValues.length && (
+            <div className="mt-4 p-3 rounded-lg bg-muted/30 border border-border/50">
               <p className="text-sm text-muted-foreground">
-                These are values you're working towards:
+                <span className="font-medium text-foreground">{aspirationalIds.size}</span> of your core values are aspirational—things you're actively developing. That's great for growth!
               </p>
-              <div className="flex flex-wrap gap-2">
-                {Array.from(aspirationalIds).map(id => (
-                  <span
-                    key={id}
-                    className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 text-sm capitalize"
-                  >
-                    {formatValueName(id)}
-                  </span>
-                ))}
-              </div>
             </div>
           )}
 

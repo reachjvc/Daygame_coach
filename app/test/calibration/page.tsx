@@ -16,7 +16,7 @@ export default function CalibrationPage() {
   useEffect(() => {
     async function loadDiagnostics() {
       try {
-        const res = await fetch("/api/dev/calibration/list")
+        const res = await fetch("/api/test/calibration/list")
         if (!res.ok) throw new Error("Failed to load diagnostics")
         const data = await res.json()
         setDiagnostics(data.files || [])
@@ -38,7 +38,7 @@ export default function CalibrationPage() {
 
     async function loadDiagnosticData() {
       try {
-        const res = await fetch(`/api/dev/calibration/get?file=${encodeURIComponent(selectedDiagnostic)}`)
+        const res = await fetch(`/api/test/calibration/get?file=${encodeURIComponent(selectedDiagnostic)}`)
         if (!res.ok) throw new Error("Failed to load diagnostic")
         const data = await res.json()
         setDiagnosticData(data)

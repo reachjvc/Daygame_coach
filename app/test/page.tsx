@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -58,6 +58,12 @@ const testPages = [
     href: "/test/custom-report-builder",
     description: "Build your own field report with custom fields",
     icon: PenTool,
+  },
+  {
+    name: "Evaluator Calibration",
+    href: "/test/calibration",
+    description: "View evaluator diagnostics and identify blind spots",
+    icon: Target,
   },
 ]
 

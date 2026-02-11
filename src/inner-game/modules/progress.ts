@@ -37,6 +37,7 @@ function rowToProgress(row: InnerGameProgressRow): InnerGameProgress {
     peakExperienceInferredValues: row.peak_experience_inferred_values,
     hurdlesResponse: row.hurdles_response,
     hurdlesInferredValues: row.hurdles_inferred_values,
+    essentialSelection: row.essential_selection,
     finalCoreValues: row.final_core_values,
     aspirationalValues: row.aspirational_values,
     // Legacy fields for backward compatibility
@@ -80,6 +81,7 @@ export async function updateUserProgress(
   if (updates.peakExperienceInferredValues !== undefined) dbUpdates.peak_experience_inferred_values = updates.peakExperienceInferredValues
   if (updates.hurdlesResponse !== undefined) dbUpdates.hurdles_response = updates.hurdlesResponse
   if (updates.hurdlesInferredValues !== undefined) dbUpdates.hurdles_inferred_values = updates.hurdlesInferredValues
+  if (updates.essentialSelection !== undefined) dbUpdates.essential_selection = updates.essentialSelection
   if (updates.finalCoreValues !== undefined) dbUpdates.final_core_values = updates.finalCoreValues
   if (updates.aspirationalValues !== undefined) dbUpdates.aspirational_values = updates.aspirationalValues
 
