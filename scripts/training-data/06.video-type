@@ -57,8 +57,8 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # ---------------------------
 
 SCHEMA_VERSION = "3.4.0"
-PIPELINE_VERSION = "06.video-type-v3.4.1"  # v3.4.1: Add --model passthrough + record model metadata
-PROMPT_VERSION = "3.4.0"
+PIPELINE_VERSION = "06.video-type-v3.5.0"  # v3.5.0: tighten video-type and boundary prompt rules
+PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
 
@@ -345,6 +345,23 @@ VIDEO TYPES:
    - Multiple approaches with breakdowns between
    - "As you saw..." followed by explanation
 
+VIDEO TYPE DECISION RULES (apply in order):
+1. Count DISTINCT approaches to different targets:
+   - 0 approaches => talking_head OR podcast
+   - 1 approach => infield (even with intro/outro commentary)
+   - 2+ approaches => compilation
+2. For 0-approach videos, use speaker dominance:
+   - One speaker >80% of segments => talking_head
+   - Balanced multi-speaker discussion => podcast
+3. Intro/outro commentary alone does NOT make a video "compilation".
+   - One long approach + short setup/debrief should still be "infield".
+
+CANONICAL EXAMPLES:
+- "7 Minute Pull" (one extended interaction + intro/outro) => infield
+- "10 approaches in one video" => compilation
+- "single-speaker theory breakdown" => talking_head
+- "balanced host/guest discussion" => podcast
+
 SPEAKER ROLES:
 
 1. "coach" - The person teaching/demonstrating
@@ -407,13 +424,20 @@ CONVERSATION BOUNDARY RULES:
 - When uncertain: default to commentary (safer)
 - conversation_id must be sequential (1, 2, 3...)
 - Segments with same conversation_id must be contiguous
+- A valid conversation must usually be >=10 seconds and include BOTH approacher (coach/student) and target turns.
+- Coach/student-only fragments or ultra-short snippets (<10s, typically 2-3 segments) should default to commentary (conversation_id: 0), unless there is clear multi-turn target participation.
 
 CRITICAL RULES:
 1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the APPROACHER (coach OR student), NEVER the target
+   - If a speaker opens with "Hey, excuse me, hi", do NOT label that speaker as target.
 2. The person giving SHORT RESPONSES to questions is typically the target
 3. If unsure about a speaker, mark as "unknown" with low confidence - DO NOT GUESS
 4. Consider speech patterns across ALL segments, not just one or two
-5. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH approacher patterns (coach/student: opens conversations, leads) AND target patterns (short responses), this indicates pyannote merged multiple speakers into one ID.
+5. In coaching videos with participants:
+   - Student/participant running the approach = "student" (never target)
+   - Main instructor analysis = "coach" (or "voiceover" if post-production narration)
+   - Do not mislabel students as targets simply because they are not the main instructor
+6. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH approacher patterns (coach/student: opens conversations, leads) AND target patterns (short responses), this indicates pyannote merged multiple speakers into one ID.
    When you detect this:
    a) In speaker_labels: Set that speaker's role to "collapsed" with confidence 0.3 and reasoning starting with "mixed_diarization_error: " followed by a brief description
    b) In segments: For EACH segment from the collapsed speaker, add a "speaker_role_override" field:
@@ -422,8 +446,8 @@ CRITICAL RULES:
       - "target" if the segment is a short response to a question, gives personal info when asked, or reacts to the coach
       - "unknown" if you genuinely cannot determine from context
    c) Only add speaker_role_override to segments from collapsed speakers. Omit it for all other segments.
-6. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
-7. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
+7. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
+8. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
 
 TRANSCRIPT QUALITY ASSESSMENT:
 
