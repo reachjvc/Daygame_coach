@@ -23,6 +23,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Environment:
@@ -58,6 +59,8 @@ type Args = {
   source: string | null
   manifest: string | null
   skipTaxonomyGate: boolean
+  skipReadinessGate: boolean
+  readinessSummary: string | null
   allowUnstableSourceKey: boolean
 }
 
@@ -119,6 +122,7 @@ function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
   let manifest: string | null = null
+  let readinessSummary: string | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -134,6 +138,12 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--manifest=")) {
       manifest = arg.split("=", 2)[1]
     }
+    if (arg === "--readiness-summary" && argv[i + 1]) {
+      readinessSummary = argv[++i]
+    }
+    if (arg.startsWith("--readiness-summary=")) {
+      readinessSummary = arg.split("=", 2)[1]
+    }
   }
 
   return {
@@ -143,6 +153,8 @@ function parseArgs(argv: string[]): Args {
     source,
     manifest,
     skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
+    skipReadinessGate: flags.has("--skip-readiness-gate"),
+    readinessSummary,
     allowUnstableSourceKey: flags.has("--allow-unstable-source-key"),
   }
 }
@@ -435,6 +447,131 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object"
 }
 
+function defaultStageReportsDir(manifestPath: string, source: string | null): string {
+  const stem = path.basename(manifestPath, path.extname(manifestPath))
+  const suffix = source ? `.${source}` : ""
+  const label = safeReportName(`${stem}${suffix}`)
+  return path.join(process.cwd(), "data", "validation", "stage_reports", label)
+}
+
+function resolveReadinessSummaryPath(
+  manifestPath: string,
+  source: string | null,
+  overridePath: string | null
+): string {
+  if (overridePath && overridePath.trim()) {
+    return path.isAbsolute(overridePath) ? overridePath : path.join(process.cwd(), overridePath)
+  }
+  return path.join(defaultStageReportsDir(manifestPath, source), "readiness-summary.json")
+}
+
+function checkReadinessGate(
+  manifestPath: string,
+  expectedVideoIds: Set<string>,
+  source: string | null,
+  readinessSummaryOverride: string | null
+): void {
+  if (expectedVideoIds.size <= 0) {
+    return
+  }
+
+  const summaryPath = resolveReadinessSummaryPath(manifestPath, source, readinessSummaryOverride)
+  const sourceArg = source ? ` --source ${source}` : ""
+  const stageReportsDir = defaultStageReportsDir(manifestPath, source)
+
+  if (!fs.existsSync(summaryPath)) {
+    console.error(`❌ Missing readiness summary: ${summaryPath}`)
+    console.error(`   Run: python3 scripts/training-data/validation/validate_manifest.py --manifest ${manifestPath}${sourceArg} --emit-stage-reports`)
+    console.error(
+      `   Then: python3 scripts/training-data/validation/validate_stage_report.py --dir ${stageReportsDir} --manifest ${manifestPath}${sourceArg} --emit-readiness-summary`
+    )
+    process.exit(1)
+  }
+
+  let data: unknown
+  try {
+    data = JSON.parse(fs.readFileSync(summaryPath, "utf-8"))
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`❌ Could not read readiness summary: ${summaryPath} (${msg})`)
+    process.exit(1)
+  }
+
+  if (!isObject(data) || !Array.isArray((data as any).videos)) {
+    console.error(`❌ Readiness summary has invalid shape (missing videos[]): ${summaryPath}`)
+    process.exit(1)
+  }
+
+  const byVideo = new Map<string, { status: string; readyForIngest: boolean; reason: string }>()
+  for (const item of (data as any).videos as unknown[]) {
+    if (!isObject(item)) {
+      console.error(`❌ Readiness summary contains non-object video entry: ${summaryPath}`)
+      process.exit(1)
+    }
+    const rawVid = item.video_id
+    if (!isValidVideoId(rawVid)) {
+      console.error(`❌ Readiness summary contains invalid video_id=${String(rawVid)} (${summaryPath})`)
+      process.exit(1)
+    }
+    if (byVideo.has(rawVid)) {
+      console.error(`❌ Readiness summary contains duplicate video_id=${rawVid} (${summaryPath})`)
+      process.exit(1)
+    }
+    const status = String(item.status || "")
+    if (status !== "READY" && status !== "REVIEW" && status !== "BLOCKED") {
+      console.error(`❌ Readiness summary contains invalid status='${status}' for video_id=${rawVid} (${summaryPath})`)
+      process.exit(1)
+    }
+    const readyRaw = item.ready_for_ingest
+    const readyForIngest = typeof readyRaw === "boolean" ? readyRaw : status !== "BLOCKED"
+    const reason = typeof item.reason_code === "string" ? item.reason_code : ""
+    byVideo.set(rawVid, { status, readyForIngest, reason })
+  }
+
+  const missing: string[] = []
+  const blocked: string[] = []
+  let reviewCount = 0
+
+  for (const vid of Array.from(expectedVideoIds).sort((a, b) => a.localeCompare(b))) {
+    const item = byVideo.get(vid)
+    if (!item) {
+      missing.push(vid)
+      continue
+    }
+    if (item.status === "REVIEW") {
+      reviewCount += 1
+    }
+    if (item.status === "BLOCKED" || item.readyForIngest === false) {
+      const reasonSuffix = item.reason ? `:${item.reason}` : ""
+      blocked.push(`${vid}${reasonSuffix}`)
+    }
+  }
+
+  if (missing.length > 0) {
+    const sample = missing.slice(0, 8).join(", ")
+    const suffix = missing.length > 8 ? ", ..." : ""
+    console.error(
+      `❌ Readiness summary manifest coverage mismatch: ${missing.length} missing video(s) `
+      + `(e.g. ${sample}${suffix}).`
+    )
+    process.exit(1)
+  }
+
+  if (blocked.length > 0) {
+    const sample = blocked.slice(0, 8).join(", ")
+    const suffix = blocked.length > 8 ? ", ..." : ""
+    console.error(
+      `❌ Readiness gate blocked ingest: ${blocked.length} video(s) are BLOCKED `
+      + `(e.g. ${sample}${suffix}).`
+    )
+    process.exit(1)
+  }
+
+  if (reviewCount > 0) {
+    console.warn(`⚠️  Readiness gate: ${reviewCount} video(s) are REVIEW (ingest allowed).`)
+  }
+}
+
 function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
   const stem = path.basename(manifestPath, path.extname(manifestPath))
   const expectedSource = `manifest:${path.basename(manifestPath)}`
@@ -620,8 +757,22 @@ async function main() {
       }
     }
 
+    const expectedVideoIds = new Set<string>()
+    if (args.source) {
+      for (const vid of manifestAllowList.get(args.source) ?? []) {
+        expectedVideoIds.add(vid)
+      }
+    } else {
+      for (const ids of manifestAllowList.values()) {
+        for (const vid of ids) expectedVideoIds.add(vid)
+      }
+    }
+
     if (!args.skipTaxonomyGate) {
       checkTaxonomyGate(args.manifest, expectedManifestVideos)
+    }
+    if (!args.skipReadinessGate) {
+      checkReadinessGate(args.manifest, expectedVideoIds, args.source, args.readinessSummary)
     }
   }
 

@@ -217,7 +217,12 @@ Note: when running with `--manifest`, Stage 10 requires a valid Stage 08 manifes
 - the report indicates unreadable Stage 07 outputs or incomplete manifest coverage
 - the report manifest scope size does not match the ingest manifest scope (or `--source` subset)
 - the report status is `FAIL`
+Stage 10 also requires a readiness summary at `data/validation/stage_reports/<manifest>/readiness-summary.json` (or `<manifest>.<source>/` for `--source` runs) and will refuse ingest if:
+- the summary is missing/invalid
+- the summary does not cover the ingest manifest scope
+- any ingest-scope video is `BLOCKED` (REVIEW remains ingest-allowed)
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
+Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).
 For legacy artifacts only, override with `--allow-unstable-source-key`.
 Stage 10 now performs chunk preflight validation (non-empty content, consistent numeric embedding length, stable chunk indices/total counts, required metadata fields) and refuses manifest ingest if chunk payloads are invalid.
