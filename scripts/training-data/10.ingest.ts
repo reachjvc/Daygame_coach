@@ -763,6 +763,15 @@ function checkSemanticGate(
     cmdArgs.push("--semantic-fail-on-stale")
   }
 
+  const policyParts: string[] = []
+  if (semanticMinFresh !== null) policyParts.push(`min_fresh=${semanticMinFresh}`)
+  if (semanticMinMeanOverall !== null) policyParts.push(`min_mean_overall=${semanticMinMeanOverall}`)
+  if (semanticMaxMajorErrorRate !== null) policyParts.push(`max_major_error_rate=${semanticMaxMajorErrorRate}`)
+  if (semanticMaxHallucinationRate !== null) policyParts.push(`max_hallucination_rate=${semanticMaxHallucinationRate}`)
+  if (semanticFailOnStale) policyParts.push("fail_on_stale=true")
+  const policyLabel = policyParts.length > 0 ? policyParts.join(", ") : "none"
+  console.log(`Semantic gate policy (batch_id=${batchId}): ${policyLabel}`)
+
   const result = spawnSync("python3", cmdArgs, { encoding: "utf-8" })
   if (result.error) {
     console.error(`❌ Failed to execute semantic gate: ${result.error.message}`)
