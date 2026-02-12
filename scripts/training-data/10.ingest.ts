@@ -23,6 +23,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -57,6 +58,7 @@ type Args = {
   source: string | null
   manifest: string | null
   skipTaxonomyGate: boolean
+  allowUnstableSourceKey: boolean
 }
 
 type ChunkMetadata = {
@@ -141,6 +143,75 @@ function parseArgs(argv: string[]): Args {
     source,
     manifest,
     skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
+    allowUnstableSourceKey: flags.has("--allow-unstable-source-key"),
+  }
+}
+
+function isValidVideoId(raw: unknown): raw is string {
+  return typeof raw === "string" && /^[A-Za-z0-9_-]{11}$/.test(raw.trim())
+}
+
+function isStableSourceKey(raw: unknown): raw is string {
+  if (typeof raw !== "string") return false
+  const trimmed = raw.trim()
+  if (!trimmed) return false
+  // Expected: "<channel>/<video_id>.txt" (channel may include nested dirs, but basename must be video id).
+  return /[\\/][A-Za-z0-9_-]{11}\.txt$/.test(trimmed)
+}
+
+function deriveSourceKey(
+  chunksData: ChunksFile,
+  filePath: string,
+  allowUnstableSourceKey: boolean
+): { sourceKey: string; stable: boolean; reason?: string } {
+  if (typeof chunksData.sourceKey === "string" && chunksData.sourceKey.trim()) {
+    const explicit = chunksData.sourceKey.trim()
+    if (isStableSourceKey(explicit)) {
+      return { sourceKey: explicit, stable: true }
+    }
+    const channel = typeof chunksData.channel === "string" ? chunksData.channel.trim() : ""
+    const videoId = typeof chunksData.videoId === "string" ? chunksData.videoId.trim() : ""
+    if (channel && isValidVideoId(videoId)) {
+      return { sourceKey: path.join(channel, `${videoId}.txt`), stable: true }
+    }
+    if (allowUnstableSourceKey) {
+      return { sourceKey: explicit, stable: false, reason: "invalid_source_key" }
+    }
+    return { sourceKey: "", stable: false, reason: "invalid_source_key" }
+  }
+
+  if (typeof chunksData.channel === "string" && chunksData.channel.trim()) {
+    const channel = chunksData.channel.trim()
+    const videoId = typeof chunksData.videoId === "string" ? chunksData.videoId.trim() : ""
+    if (isValidVideoId(videoId)) {
+      return { sourceKey: path.join(channel, `${videoId}.txt`), stable: true }
+    }
+    if (allowUnstableSourceKey) {
+      return {
+        sourceKey: path.join(channel, `${chunksData.videoTitle}.txt`),
+        stable: false,
+        reason: "missing_video_id",
+      }
+    }
+    return {
+      sourceKey: "",
+      stable: false,
+      reason: "missing_video_id",
+    }
+  }
+
+  if (allowUnstableSourceKey) {
+    return {
+      sourceKey: path.basename(filePath, ".chunks.json"),
+      stable: false,
+      reason: "missing_channel",
+    }
+  }
+
+  return {
+    sourceKey: "",
+    stable: false,
+    reason: "missing_channel",
   }
 }
 
@@ -377,6 +448,7 @@ async function main() {
     fileHash: string
   }> = []
   let unchanged = 0
+  let skippedUnstableSourceKey = 0
 
   for (const filePath of chunkFiles) {
     const rawContent = await fsp.readFile(filePath, "utf-8")
@@ -395,22 +467,31 @@ async function main() {
       continue
     }
 
-    let sourceKey = ""
-    if (typeof chunksData.sourceKey === "string" && chunksData.sourceKey.trim()) {
-      sourceKey = chunksData.sourceKey.trim()
-    } else if (typeof chunksData.channel === "string" && chunksData.channel.trim()) {
-      const videoId = typeof chunksData.videoId === "string" ? chunksData.videoId.trim() : ""
-      if (/^[A-Za-z0-9_-]{11}$/.test(videoId)) {
-        sourceKey = path.join(chunksData.channel, `${videoId}.txt`)
-      } else {
-        // Backwards compatibility for older Stage 09 artifacts.
-        console.warn(
-          `Warning: Missing videoId for ${filePath}; falling back to channel/title-based sourceKey (unstable).`
-        )
-        sourceKey = path.join(chunksData.channel, `${chunksData.videoTitle}.txt`)
-      }
-    } else {
-      sourceKey = path.basename(filePath, ".chunks.json")
+    const derived = deriveSourceKey(chunksData, filePath, args.allowUnstableSourceKey)
+    if (!derived.stable && !args.allowUnstableSourceKey) {
+      skippedUnstableSourceKey++
+      const reasonText = derived.reason === "missing_video_id"
+        ? "missing valid videoId"
+        : derived.reason === "invalid_source_key"
+        ? "invalid sourceKey (expected <channel>/<video_id>.txt)"
+        : "missing channel/sourceKey"
+      console.warn(`Warning: Skipping ${filePath}; ${reasonText} (would create unstable sourceKey).`)
+      continue
+    }
+    if (!derived.stable && args.allowUnstableSourceKey) {
+      const fallbackText = derived.reason === "missing_video_id"
+        ? "falling back to channel/title sourceKey"
+        : derived.reason === "invalid_source_key"
+        ? "keeping provided unstable sourceKey"
+        : "falling back to filename-based sourceKey"
+      console.warn(`Warning: ${filePath}; ${fallbackText} (unstable).`)
+    }
+
+    const sourceKey = derived.sourceKey.trim()
+    if (!sourceKey) {
+      skippedUnstableSourceKey++
+      console.warn(`Warning: Skipping ${filePath}; could not derive sourceKey.`)
+      continue
     }
 
     const prev = state.sources[sourceKey]
@@ -432,9 +513,21 @@ async function main() {
   if (missingFromManifest > 0) {
     console.log(`Missing:      ${missingFromManifest} manifest chunk file(s) not found`)
   }
+  if (skippedUnstableSourceKey > 0) {
+    console.log(`Skipped:      ${skippedUnstableSourceKey} unstable sourceKey file(s)`)
+  }
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
   console.log(`State file:   ${statePath}`)
+
+  if (skippedUnstableSourceKey > 0 && args.manifest && !args.allowUnstableSourceKey) {
+    console.error("")
+    console.error(
+      "❌ Refusing manifest ingest: one or more files had unstable source keys. " +
+      "Re-run Stage 09, or use --allow-unstable-source-key for legacy artifacts."
+    )
+    process.exit(1)
+  }
 
   if (args.verifyOnly || args.dryRun) {
     console.log("")

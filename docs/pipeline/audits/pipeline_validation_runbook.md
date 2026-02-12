@@ -192,6 +192,8 @@ but it still performs DB writes and should be treated as “production-impacting
 
 Note: when running with `--manifest`, Stage 10 will refuse to ingest if the corresponding Stage 08 report is `FAIL`
 unless you pass `--skip-taxonomy-gate`.
+It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).
+For legacy artifacts only, override with `--allow-unstable-source-key`.
 
 ### 8) Retrieval smoke test (end-to-end)
 
