@@ -257,7 +257,7 @@ Stage 10 also requires a readiness summary at `data/validation/stage_reports/<ma
 - the summary scope metadata (when present) does not match ingest manifest/source
 - any ingest-scope video is not ingest-ready (`BLOCKED` or `ready_for_ingest=false`; default policy keeps REVIEW ingest-allowed)
 To enforce READY-only ingest, generate readiness summaries with `--block-review-ingest`.
-Stage 10 can optionally run a semantic-quality gate (via `batch_report.py`) for the same manifest scope when `--semantic-*` flags are provided.
+Stage 10 can optionally run a semantic-quality gate for the same manifest scope when `--semantic-*` flags are provided (native gate logic aligned with `batch_report.py`).
 Example:
 `node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
 Shortcut:

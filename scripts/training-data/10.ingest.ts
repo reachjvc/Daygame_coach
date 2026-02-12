@@ -37,7 +37,6 @@ import fs from "fs"
 import fsp from "fs/promises"
 import path from "path"
 import crypto from "crypto"
-import { spawnSync } from "child_process"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -465,6 +464,130 @@ async function listChunkFiles(rootDir: string): Promise<string[]> {
 // ---------------------------------------------------------------------------
 
 const MANIFEST_VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+const SEMANTIC_JUDGE_DEFAULT_PROMPT_VERSION = "1.2.9"
+const SEMANTIC_JUDGE_DEFAULT_MAX_SEGMENTS = 200
+
+type SemanticRequestEntry = {
+  videoId: string
+  source: string
+  conversationId: number
+  enrichment: Record<string, unknown>
+  transcriptSegments: number[]
+}
+
+function extractVideoIdFromPathHint(filePath: string): string | null {
+  const bracket = filePath.match(MANIFEST_VIDEO_ID_RE)
+  if (bracket && isValidVideoId(bracket[1])) {
+    return bracket[1]
+  }
+  const base = path.basename(filePath)
+  const first = base.split(".", 1)[0]
+  if (isValidVideoId(first)) {
+    return first
+  }
+  const anyId = base.match(/([A-Za-z0-9_-]{11})/)
+  if (anyId && isValidVideoId(anyId[1])) {
+    return anyId[1]
+  }
+  return null
+}
+
+function inferSourceFromStage07Path(filePath: string): string | null {
+  const parts = filePath.split(path.sep)
+  const idx = parts.indexOf("07.content")
+  if (idx >= 0 && idx + 1 < parts.length) {
+    const src = parts[idx + 1]
+    if (src && src !== "07.content") {
+      return src
+    }
+  }
+  return null
+}
+
+function listFilesRecursiveSync(rootDir: string, suffix: string): string[] {
+  const out: string[] = []
+
+  const walk = (dir: string): void => {
+    let dirents: fs.Dirent[]
+    try {
+      dirents = fs.readdirSync(dir, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const dirent of dirents) {
+      const full = path.join(dir, dirent.name)
+      if (dirent.isDirectory()) {
+        walk(full)
+      } else if (dirent.isFile() && full.endsWith(suffix)) {
+        out.push(full)
+      }
+    }
+  }
+
+  if (fs.existsSync(rootDir)) {
+    walk(rootDir)
+  }
+  return out.sort((a, b) => a.localeCompare(b))
+}
+
+function pickBestCandidate(candidates: string[], preferredSource: string | null): string {
+  const rank = (p: string): [number, number, number, string] => {
+    const inferredSource = inferSourceFromStage07Path(p)
+    const sourceBonus = preferredSource && inferredSource === preferredSource ? 1 : 0
+    const depth = p.split(path.sep).length
+    let mtime = 0
+    try {
+      mtime = fs.statSync(p).mtimeMs
+    } catch {
+      mtime = 0
+    }
+    return [sourceBonus, depth, mtime, p]
+  }
+
+  return [...candidates].sort((a, b) => {
+    const ra = rank(a)
+    const rb = rank(b)
+    if (ra[0] !== rb[0]) return rb[0] - ra[0]
+    if (ra[1] !== rb[1]) return rb[1] - ra[1]
+    if (ra[2] !== rb[2]) return rb[2] - ra[2]
+    return rb[3].localeCompare(ra[3])
+  })[0]
+}
+
+function pythonStyleJsonDumps(value: unknown): string {
+  if (value === null) {
+    return "null"
+  }
+  if (typeof value === "string") {
+    return JSON.stringify(value)
+  }
+  if (typeof value === "number") {
+    if (Number.isNaN(value)) return "NaN"
+    if (value === Infinity) return "Infinity"
+    if (value === -Infinity) return "-Infinity"
+    return String(value)
+  }
+  if (typeof value === "boolean") {
+    return value ? "true" : "false"
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => pythonStyleJsonDumps(v)).join(", ")}]`
+  }
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>
+    const parts: string[] = []
+    for (const key of Object.keys(obj).sort((a, b) => a.localeCompare(b))) {
+      parts.push(`${JSON.stringify(key)}: ${pythonStyleJsonDumps(obj[key])}`)
+    }
+    return `{${parts.join(", ")}}`
+  }
+  return "null"
+}
+
+function stableHash(value: unknown): string {
+  const payload = pythonStyleJsonDumps(value)
+  return crypto.createHash("sha256").update(payload, "utf8").digest("hex")
+}
 
 function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
   const abs = path.isAbsolute(manifestPath)
@@ -487,6 +610,143 @@ function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
     out.set(source, set)
   }
 
+  return out
+}
+
+function loadStage07EnrichedForSemanticGate(
+  expectedVideoIds: Set<string>,
+  source: string | null,
+  preferredSourceByVideo: Map<string, string>
+): Array<Record<string, unknown>> {
+  const root = source
+    ? path.join(process.cwd(), "data", "07.content", source)
+    : path.join(process.cwd(), "data", "07.content")
+  if (!fs.existsSync(root)) {
+    return []
+  }
+
+  const byVideo = new Map<string, string[]>()
+  for (const filePath of listFilesRecursiveSync(root, ".enriched.json")) {
+    const vid = extractVideoIdFromPathHint(filePath)
+    if (!vid || !expectedVideoIds.has(vid)) {
+      continue
+    }
+    const arr = byVideo.get(vid) ?? []
+    arr.push(filePath)
+    byVideo.set(vid, arr)
+  }
+
+  const out: Array<Record<string, unknown>> = []
+  for (const vid of Array.from(byVideo.keys()).sort((a, b) => a.localeCompare(b))) {
+    const candidates = byVideo.get(vid) ?? []
+    if (candidates.length <= 0) {
+      continue
+    }
+    const preferredSource = source ?? preferredSourceByVideo.get(vid) ?? null
+    const best = pickBestCandidate(candidates, preferredSource)
+    try {
+      const parsed = JSON.parse(fs.readFileSync(best, "utf-8"))
+      if (!isObject(parsed)) {
+        continue
+      }
+      const rec = parsed as Record<string, unknown>
+      rec._source_file = best
+      out.push(rec)
+    } catch {
+      // Ignore unreadable files here; Stage 08/manifest gates already enforce this upstream.
+    }
+  }
+  return out
+}
+
+function buildSemanticRequestIndex(
+  enrichedFiles: Array<Record<string, unknown>>
+): Map<string, SemanticRequestEntry> {
+  const out = new Map<string, SemanticRequestEntry>()
+
+  for (const ef of enrichedFiles) {
+    const rawVid = ef.video_id
+    let videoId: string | null = typeof rawVid === "string" && isValidVideoId(rawVid) ? rawVid : null
+    const sourcePath = typeof ef._source_file === "string" ? ef._source_file : null
+    if (!videoId && sourcePath) {
+      videoId = extractVideoIdFromPathHint(sourcePath)
+    }
+    if (!videoId) {
+      continue
+    }
+
+    let source = typeof ef.source === "string" ? ef.source : ""
+    if (!source && sourcePath) {
+      source = inferSourceFromStage07Path(sourcePath) ?? ""
+    }
+
+    const convSegIds = new Map<number, number[]>()
+    const segments = Array.isArray(ef.segments) ? ef.segments : []
+    for (const rawSeg of segments) {
+      if (!isObject(rawSeg)) {
+        continue
+      }
+      const cid = rawSeg.conversation_id
+      const sid = rawSeg.id
+      if (!Number.isInteger(cid) || cid <= 0 || !Number.isInteger(sid)) {
+        continue
+      }
+      const arr = convSegIds.get(cid) ?? []
+      arr.push(sid)
+      convSegIds.set(cid, arr)
+    }
+
+    const enrichments = Array.isArray(ef.enrichments) ? ef.enrichments : []
+    for (const rawEnrichment of enrichments) {
+      if (!isObject(rawEnrichment)) {
+        continue
+      }
+      if (rawEnrichment.type !== "approach") {
+        continue
+      }
+      const cid = rawEnrichment.conversation_id
+      if (!Number.isInteger(cid) || cid <= 0) {
+        continue
+      }
+      const transcriptSegments = [...(convSegIds.get(cid) ?? [])].sort((a, b) => a - b)
+      const key = `${videoId}:${cid}`
+      out.set(key, {
+        videoId,
+        source,
+        conversationId: cid,
+        enrichment: rawEnrichment as Record<string, unknown>,
+        transcriptSegments,
+      })
+    }
+  }
+
+  return out
+}
+
+function loadSemanticJudgementsForGate(
+  batchId: string,
+  expectedVideoIds: Set<string>
+): Array<Record<string, unknown>> {
+  const root = path.join(process.cwd(), "data", "validation_judgements", batchId)
+  if (!fs.existsSync(root)) {
+    return []
+  }
+  const out: Array<Record<string, unknown>> = []
+  for (const filePath of listFilesRecursiveSync(root, ".judge.json")) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+      if (!isObject(parsed)) {
+        continue
+      }
+      const vid = parsed.video_id
+      if (typeof vid !== "string" || !expectedVideoIds.has(vid)) {
+        continue
+      }
+      out.push(parsed as Record<string, unknown>)
+    } catch {
+      continue
+    }
+  }
   return out
 }
 
@@ -718,6 +978,8 @@ function checkReadinessGate(
 function checkSemanticGate(
   manifestPath: string,
   source: string | null,
+  expectedVideoIds: Set<string>,
+  preferredSourceByVideo: Map<string, string>,
   {
     batchId,
     semanticMinFresh,
@@ -734,35 +996,6 @@ function checkSemanticGate(
     semanticFailOnStale: boolean
   }
 ): void {
-  const reportScript = path.join(process.cwd(), "scripts", "training-data", "validation", "batch_report.py")
-  if (!fs.existsSync(reportScript)) {
-    console.error(`❌ Missing semantic gate script: ${reportScript}`)
-    process.exit(1)
-  }
-
-  const cmdArgs: string[] = [reportScript]
-  if (source) {
-    cmdArgs.push("--source", source)
-  } else {
-    cmdArgs.push("--all")
-  }
-  cmdArgs.push("--manifest", manifestPath, "--batch-id", batchId, "--no-write")
-  if (semanticMinFresh !== null) {
-    cmdArgs.push("--semantic-min-fresh", String(semanticMinFresh))
-  }
-  if (semanticMinMeanOverall !== null) {
-    cmdArgs.push("--semantic-min-mean-overall", String(semanticMinMeanOverall))
-  }
-  if (semanticMaxMajorErrorRate !== null) {
-    cmdArgs.push("--semantic-max-major-error-rate", String(semanticMaxMajorErrorRate))
-  }
-  if (semanticMaxHallucinationRate !== null) {
-    cmdArgs.push("--semantic-max-hallucination-rate", String(semanticMaxHallucinationRate))
-  }
-  if (semanticFailOnStale) {
-    cmdArgs.push("--semantic-fail-on-stale")
-  }
-
   const policyParts: string[] = []
   if (semanticMinFresh !== null) policyParts.push(`min_fresh=${semanticMinFresh}`)
   if (semanticMinMeanOverall !== null) policyParts.push(`min_mean_overall=${semanticMinMeanOverall}`)
@@ -772,27 +1005,135 @@ function checkSemanticGate(
   const policyLabel = policyParts.length > 0 ? policyParts.join(", ") : "none"
   console.log(`Semantic gate policy (batch_id=${batchId}): ${policyLabel}`)
 
-  const result = spawnSync("python3", cmdArgs, { encoding: "utf-8" })
-  if (result.error) {
-    console.error(`❌ Failed to execute semantic gate: ${result.error.message}`)
+  const enrichedFiles = loadStage07EnrichedForSemanticGate(expectedVideoIds, source, preferredSourceByVideo)
+  const requestIndex = buildSemanticRequestIndex(enrichedFiles)
+  if (requestIndex.size <= 0) {
+    console.error("❌ Semantic gate requested but no Stage 07 enriched data found for this manifest scope.")
+    console.error("   Run Stage 07 before ingest, then rerun semantic_judge.py and this ingest command.")
     process.exit(1)
   }
-  if ((result.status ?? 1) !== 0) {
+
+  const judgements = loadSemanticJudgementsForGate(batchId, expectedVideoIds)
+  if (judgements.length <= 0) {
+    console.error(`❌ Semantic gate requested but no semantic judgements found for batch_id=${batchId}.`)
+    console.error(
+      `   Run: python3 scripts/training-data/validation/semantic_judge.py --manifest ${manifestPath}`
+      + (source ? ` --source ${source}` : "")
+      + ` --batch-id ${batchId}`
+    )
+    process.exit(1)
+  }
+
+  let freshCount = 0
+  let staleCount = 0
+  let staleMissingOrDeleted = 0
+  let staleFingerprintMismatch = 0
+  let majorErrors = 0
+  let hallucinations = 0
+  const overallScores: number[] = []
+
+  for (const judgement of judgements) {
+    const vid = judgement.video_id
+    const cid = judgement.conversation_id
+    if (typeof vid !== "string" || !Number.isInteger(cid)) {
+      staleCount += 1
+      staleMissingOrDeleted += 1
+      continue
+    }
+
+    const req = requestIndex.get(`${vid}:${cid}`)
+    if (!req) {
+      staleCount += 1
+      staleMissingOrDeleted += 1
+      continue
+    }
+
+    const reqMeta = isObject(judgement.request) ? judgement.request : {}
+    const promptVersion = typeof reqMeta.prompt_version === "string" && reqMeta.prompt_version
+      ? reqMeta.prompt_version
+      : SEMANTIC_JUDGE_DEFAULT_PROMPT_VERSION
+    const maxSegments = Number.isInteger(reqMeta.max_segments) && reqMeta.max_segments > 0
+      ? reqMeta.max_segments
+      : SEMANTIC_JUDGE_DEFAULT_MAX_SEGMENTS
+
+    const expectedFingerprint = stableHash({
+      video_id: req.videoId,
+      source: req.source,
+      conversation_id: req.conversationId,
+      enrichment: req.enrichment,
+      transcript_segments: req.transcriptSegments,
+      prompt_version: promptVersion,
+      max_segments: maxSegments,
+    })
+    if (judgement.request_fingerprint !== expectedFingerprint) {
+      staleCount += 1
+      staleFingerprintMismatch += 1
+      continue
+    }
+
+    freshCount += 1
+
+    const scores = isObject(judgement.scores) ? judgement.scores : {}
+    const overall = scores.overall_score_0_100
+    if (typeof overall === "number" && Number.isFinite(overall)) {
+      overallScores.push(overall)
+    } else if (typeof overall === "string") {
+      const parsed = Number(overall)
+      if (Number.isFinite(parsed)) {
+        overallScores.push(parsed)
+      }
+    }
+
+    const flags = isObject(judgement.flags) ? judgement.flags : {}
+    if (flags.major_errors === true) {
+      majorErrors += 1
+    }
+    if (flags.hallucination_suspected === true) {
+      hallucinations += 1
+    }
+  }
+
+  const meanOverall = overallScores.length > 0
+    ? overallScores.reduce((a, b) => a + b, 0) / overallScores.length
+    : 0
+  const majorErrorRate = majorErrors / Math.max(freshCount, 1)
+  const hallucinationRate = hallucinations / Math.max(freshCount, 1)
+
+  const failures: string[] = []
+  if (semanticFailOnStale && staleCount > 0) {
+    failures.push(`stale judgements present: stale=${staleCount}`)
+  }
+  if (semanticMinFresh !== null && freshCount < semanticMinFresh) {
+    failures.push(`fresh judgements below threshold: fresh=${freshCount} < min=${semanticMinFresh}`)
+  }
+  if (semanticMinMeanOverall !== null && meanOverall < semanticMinMeanOverall) {
+    failures.push(`mean overall score below threshold: mean=${meanOverall.toFixed(1)} < min=${semanticMinMeanOverall.toFixed(1)}`)
+  }
+  if (semanticMaxMajorErrorRate !== null && majorErrorRate > semanticMaxMajorErrorRate) {
+    failures.push(`major error rate above threshold: rate=${majorErrorRate.toFixed(3)} > max=${semanticMaxMajorErrorRate.toFixed(3)}`)
+  }
+  if (semanticMaxHallucinationRate !== null && hallucinationRate > semanticMaxHallucinationRate) {
+    failures.push(`hallucination rate above threshold: rate=${hallucinationRate.toFixed(3)} > max=${semanticMaxHallucinationRate.toFixed(3)}`)
+  }
+
+  if (failures.length > 0) {
     console.error(
       `❌ Semantic gate blocked ingest (batch_id=${batchId}). `
-      + `Run semantic_judge.py for this manifest scope and re-run validate.`
+      + `fresh=${freshCount}, stale=${staleCount} (missing/deleted=${staleMissingOrDeleted}, fingerprint_mismatch=${staleFingerprintMismatch}), `
+      + `mean=${meanOverall.toFixed(1)}, major_error_rate=${majorErrorRate.toFixed(3)}, hallucination_rate=${hallucinationRate.toFixed(3)}`
     )
-    const stderr = (result.stderr || "").trim()
-    const stdout = (result.stdout || "").trim()
-    if (stderr) {
-      console.error(stderr)
+    for (const failure of failures) {
+      console.error(`   - ${failure}`)
     }
-    if (stdout) {
-      console.error(stdout)
-    }
+    console.error("   Run semantic_judge.py for this manifest scope and retry.")
     process.exit(1)
   }
-  console.log(`✅ Semantic gate passed (batch_id=${batchId}).`)
+
+  console.log(
+    `✅ Semantic gate passed (batch_id=${batchId}): `
+    + `fresh=${freshCount}, stale=${staleCount}, mean=${meanOverall.toFixed(1)}, `
+    + `major_error_rate=${majorErrorRate.toFixed(3)}, hallucination_rate=${hallucinationRate.toFixed(3)}`
+  )
 }
 
 function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
@@ -1031,13 +1372,20 @@ async function main() {
     }
 
     const expectedVideoIds = new Set<string>()
+    const expectedSourceByVideo = new Map<string, string>()
     if (args.source) {
       for (const vid of manifestAllowList.get(args.source) ?? []) {
         expectedVideoIds.add(vid)
+        expectedSourceByVideo.set(vid, args.source)
       }
     } else {
-      for (const ids of manifestAllowList.values()) {
-        for (const vid of ids) expectedVideoIds.add(vid)
+      for (const [src, ids] of manifestAllowList.entries()) {
+        for (const vid of ids) {
+          expectedVideoIds.add(vid)
+          if (!expectedSourceByVideo.has(vid)) {
+            expectedSourceByVideo.set(vid, src)
+          }
+        }
       }
     }
 
@@ -1051,7 +1399,7 @@ async function main() {
       const semanticBatchId = (args.semanticBatchId && args.semanticBatchId.trim())
         ? args.semanticBatchId.trim()
         : defaultSemanticBatchId(args.manifest)
-      checkSemanticGate(args.manifest, args.source, {
+      checkSemanticGate(args.manifest, args.source, expectedVideoIds, expectedSourceByVideo, {
         batchId: semanticBatchId,
         semanticMinFresh: args.semanticMinFresh,
         semanticMinMeanOverall: args.semanticMinMeanOverall,
