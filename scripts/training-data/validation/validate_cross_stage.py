@@ -432,6 +432,24 @@ def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str
     return pairs
 
 
+def _count_stage_artifacts(source: Optional[str]) -> Tuple[int, int]:
+    """Return (#stage06_or_06c_files, #stage07_files) for source/all scans."""
+    s06c_root = repo_root() / "data" / "06c.patched"
+    s06_root = repo_root() / "data" / "06.video-type"
+    s07_root = repo_root() / "data" / "07.content"
+
+    s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
+    s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
+    s07_files = sorted(s07_root.rglob("*.enriched.json")) if s07_root.exists() else []
+
+    if source:
+        s06c_files = [p for p in s06c_files if source in p.parts]
+        s06_files = [p for p in s06_files if source in p.parts]
+        s07_files = [p for p in s07_files if source in p.parts]
+
+    return (len(s06c_files) + len(s06_files), len(s07_files))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06/06c and 07")
     parser.add_argument("--s06", help="Stage 06 or 06c output file (conversations.json)")
@@ -617,8 +635,19 @@ def main() -> None:
         pairs = find_video_pairs(args.source if args.source else None)
 
         if not pairs:
-            print(f"{LOG_PREFIX} No matching Stage 06/07 file pairs found")
-            sys.exit(0)
+            source_label = args.source if args.source else "all sources"
+            s06_count, s07_count = _count_stage_artifacts(args.source if args.source else None)
+            if s06_count == 0 and s07_count == 0:
+                print(f"{LOG_PREFIX} No Stage 06/07 artifacts found for {source_label}")
+                sys.exit(0)
+            print(
+                f"{LOG_PREFIX} ERROR: No matching Stage 06/07 file pairs found for {source_label} "
+                f"(stage06+06c files={s06_count}, stage07 files={s07_count})"
+            )
+            print(
+                f"{LOG_PREFIX}        This usually indicates layout/source mismatch or missing video_id metadata."
+            )
+            sys.exit(1)
 
         if not args.json:
             print(f"{LOG_PREFIX} Found {len(pairs)} video pairs to validate")
