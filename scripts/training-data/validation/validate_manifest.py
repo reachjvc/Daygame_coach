@@ -31,6 +31,8 @@ import validate_cross_stage
 LOG_PREFIX = "[manifest-validate]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
+_VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 
 
 def repo_root() -> Path:
@@ -113,11 +115,42 @@ def _validate_chunks_payload(chunks_path: Path) -> List[str]:
         return ["unreadable_json"]
 
     errs: List[str] = []
+    source_key = data.get("sourceKey")
+    video_id = data.get("videoId")
+    channel = data.get("channel")
+
+    if not isinstance(source_key, str) or not source_key.strip():
+        errs.append("missing_sourceKey")
+    elif not _STABLE_SOURCE_KEY_RE.fullmatch(source_key.strip()):
+        errs.append("invalid_sourceKey_format")
+
+    if not isinstance(video_id, str) or not _VIDEO_ID_RE.fullmatch(video_id.strip()):
+        errs.append("missing_or_invalid_videoId")
+    if not isinstance(channel, str) or not channel.strip():
+        errs.append("missing_channel")
+
+    if (
+        isinstance(source_key, str)
+        and source_key.strip()
+        and isinstance(video_id, str)
+        and _VIDEO_ID_RE.fullmatch(video_id.strip())
+        and isinstance(channel, str)
+        and channel.strip()
+    ):
+        normalized_key = source_key.strip().replace("\\", "/")
+        expected_key = f"{channel.strip()}/{video_id.strip()}.txt"
+        if normalized_key != expected_key:
+            errs.append("sourceKey_channel_video_mismatch")
+
     chunks = data.get("chunks")
     if not isinstance(chunks, list) or not chunks:
         return ["chunks_missing_or_empty"]
 
     emb_dim: Optional[int] = None
+    expected_chunk_count = len(chunks)
+    seen_chunk_indices: Set[int] = set()
+    declared_total_chunks: Optional[int] = None
+
     for i, chunk in enumerate(chunks):
         if not isinstance(chunk, dict):
             errs.append(f"chunk[{i}]_not_object")
@@ -146,10 +179,53 @@ def _validate_chunks_payload(chunks_path: Path) -> List[str]:
             continue
         if not isinstance(md.get("segmentType"), str) or not str(md.get("segmentType", "")).strip():
             errs.append(f"chunk[{i}]_missing_segmentType")
-        if not isinstance(md.get("chunkIndex"), int):
+        chunk_index = md.get("chunkIndex")
+        total_chunks = md.get("totalChunks")
+        if not isinstance(chunk_index, int):
             errs.append(f"chunk[{i}]_missing_chunkIndex")
-        if not isinstance(md.get("totalChunks"), int):
+        elif chunk_index < 0:
+            errs.append(f"chunk[{i}]_invalid_chunkIndex")
+        if not isinstance(total_chunks, int):
             errs.append(f"chunk[{i}]_missing_totalChunks")
+        elif total_chunks <= 0:
+            errs.append(f"chunk[{i}]_invalid_totalChunks")
+
+        if isinstance(total_chunks, int) and total_chunks > 0:
+            if declared_total_chunks is None:
+                declared_total_chunks = total_chunks
+            elif total_chunks != declared_total_chunks:
+                errs.append(f"chunk[{i}]_totalChunks_inconsistent")
+
+        if (
+            isinstance(chunk_index, int)
+            and chunk_index >= 0
+            and isinstance(total_chunks, int)
+            and total_chunks > 0
+            and chunk_index >= total_chunks
+        ):
+            errs.append(f"chunk[{i}]_chunkIndex_out_of_bounds_totalChunks")
+
+        if isinstance(chunk_index, int) and chunk_index >= 0:
+            if chunk_index >= expected_chunk_count:
+                errs.append(f"chunk[{i}]_chunkIndex_out_of_bounds_chunkCount")
+            elif chunk_index in seen_chunk_indices:
+                errs.append(f"chunk[{i}]_duplicate_chunkIndex")
+            else:
+                seen_chunk_indices.add(chunk_index)
+
+    if declared_total_chunks is not None and declared_total_chunks != expected_chunk_count:
+        errs.append("totalChunks_not_equal_chunk_count")
+
+    if expected_chunk_count > 0:
+        missing_indices: List[int] = []
+        for idx in range(expected_chunk_count):
+            if idx not in seen_chunk_indices:
+                missing_indices.append(idx)
+                if len(missing_indices) >= 5:
+                    break
+        if missing_indices:
+            suffix = ",..." if expected_chunk_count - len(seen_chunk_indices) > len(missing_indices) else ""
+            errs.append(f"missing_chunkIndex_values:{','.join(str(i) for i in missing_indices)}{suffix}")
 
     # Keep output concise for large files.
     if len(errs) > 12:

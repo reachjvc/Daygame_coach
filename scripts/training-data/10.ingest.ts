@@ -248,6 +248,10 @@ function validateChunksFileForIngest(chunksData: ChunksFile, filePath: string): 
   }
 
   let embeddingDim: number | null = null
+  const expectedChunkCount = chunksData.chunks.length
+  const seenChunkIndices = new Set<number>()
+  let declaredTotalChunks: number | null = null
+
   for (let i = 0; i < chunksData.chunks.length; i++) {
     const chunk = chunksData.chunks[i] as any
     if (!chunk || typeof chunk !== "object") {
@@ -284,11 +288,57 @@ function validateChunksFileForIngest(chunksData: ChunksFile, filePath: string): 
     if (typeof chunk.metadata.segmentType !== "string" || !chunk.metadata.segmentType.trim()) {
       errors.push(`chunk[${i}] missing metadata.segmentType`)
     }
-    if (typeof chunk.metadata.chunkIndex !== "number" || !Number.isFinite(chunk.metadata.chunkIndex)) {
+    if (!Number.isInteger(chunk.metadata.chunkIndex) || chunk.metadata.chunkIndex < 0) {
       errors.push(`chunk[${i}] missing/invalid metadata.chunkIndex`)
     }
-    if (typeof chunk.metadata.totalChunks !== "number" || !Number.isFinite(chunk.metadata.totalChunks)) {
+    if (!Number.isInteger(chunk.metadata.totalChunks) || chunk.metadata.totalChunks <= 0) {
       errors.push(`chunk[${i}] missing/invalid metadata.totalChunks`)
+    }
+
+    const chunkIndex = chunk.metadata.chunkIndex
+    const totalChunks = chunk.metadata.totalChunks
+    if (Number.isInteger(totalChunks) && totalChunks > 0) {
+      if (declaredTotalChunks === null) {
+        declaredTotalChunks = totalChunks
+      } else if (totalChunks !== declaredTotalChunks) {
+        errors.push(`chunk[${i}] metadata.totalChunks ${totalChunks} != expected ${declaredTotalChunks}`)
+      }
+    }
+
+    if (Number.isInteger(chunkIndex) && chunkIndex >= 0 && Number.isInteger(totalChunks) && totalChunks > 0) {
+      if (chunkIndex >= totalChunks) {
+        errors.push(`chunk[${i}] metadata.chunkIndex ${chunkIndex} out of bounds for totalChunks=${totalChunks}`)
+      }
+    }
+
+    if (Number.isInteger(chunkIndex) && chunkIndex >= 0) {
+      if (chunkIndex >= expectedChunkCount) {
+        errors.push(`chunk[${i}] metadata.chunkIndex ${chunkIndex} out of bounds for chunk_count=${expectedChunkCount}`)
+      } else if (seenChunkIndices.has(chunkIndex)) {
+        errors.push(`chunk[${i}] duplicate metadata.chunkIndex=${chunkIndex}`)
+      } else {
+        seenChunkIndices.add(chunkIndex)
+      }
+    }
+  }
+
+  if (declaredTotalChunks !== null && declaredTotalChunks !== expectedChunkCount) {
+    errors.push(
+      `metadata.totalChunks ${declaredTotalChunks} does not match actual chunk count ${expectedChunkCount}`
+    )
+  }
+
+  if (expectedChunkCount > 0) {
+    const missingIndices: number[] = []
+    for (let i = 0; i < expectedChunkCount; i++) {
+      if (!seenChunkIndices.has(i)) {
+        missingIndices.push(i)
+        if (missingIndices.length >= 5) break
+      }
+    }
+    if (missingIndices.length > 0) {
+      const suffix = expectedChunkCount - seenChunkIndices.size > missingIndices.length ? ", ..." : ""
+      errors.push(`missing metadata.chunkIndex values: ${missingIndices.join(", ")}${suffix}`)
     }
   }
 

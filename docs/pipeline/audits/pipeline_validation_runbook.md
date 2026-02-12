@@ -142,6 +142,7 @@ python3 scripts/training-data/validation/validate_manifest.py \
 ```
 
 To also require Stage 09 chunk artifacts/payload integrity in the same harness run, add `--check-stage09-chunks`.
+That check now enforces stable `sourceKey`/`videoId`/`channel` alignment plus `chunkIndex`/`totalChunks` consistency and continuity.
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 
@@ -196,11 +197,13 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts \
 Only run a real ingest when you explicitly want to update Supabase. Stage 10 is idempotent with `sourceKey`,
 but it still performs DB writes and should be treated as “production-impacting”.
 
-Note: when running with `--manifest`, Stage 10 will refuse to ingest if the corresponding Stage 08 report is `FAIL`
-unless you pass `--skip-taxonomy-gate`.
+Note: when running with `--manifest`, Stage 10 requires a valid Stage 08 manifest-scoped report and will refuse ingest if:
+- the report is malformed or has an unexpected scope/source label
+- the report status is `FAIL`
+Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).
 For legacy artifacts only, override with `--allow-unstable-source-key`.
-Stage 10 now performs chunk preflight validation (non-empty content, consistent numeric embedding length, required metadata fields) and refuses manifest ingest if chunk payloads are invalid.
+Stage 10 now performs chunk preflight validation (non-empty content, consistent numeric embedding length, stable chunk indices/total counts, required metadata fields) and refuses manifest ingest if chunk payloads are invalid.
 
 ### 8) Retrieval smoke test (end-to-end)
 

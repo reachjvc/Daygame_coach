@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from collections import Counter, defaultdict
@@ -31,6 +32,7 @@ LOG_PREFIX = "[validate-chunks]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 
 
 def repo_root() -> Path:
@@ -123,13 +125,23 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
     if not isinstance(chunks, list):
         issues.append(Issue("error", vid, src, "missing_chunks", "Top-level 'chunks' is missing or not a list", str(path)))
         return src, vid, issues, {}
+    if not chunks:
+        issues.append(Issue("error", vid, src, "empty_chunks", "Top-level 'chunks' is empty", str(path)))
+        return src, vid, issues, {}
 
     # Stable key fields (required for idempotent ingest in new pipeline)
     source_key = data.get("sourceKey")
     if not (isinstance(source_key, str) and source_key.strip()):
         issues.append(Issue("error", vid, src, "missing_sourceKey", "Missing top-level sourceKey (stable ingest key)", str(path)))
+    elif not _STABLE_SOURCE_KEY_RE.fullmatch(source_key.strip()):
+        issues.append(Issue("error", vid, src, "invalid_sourceKey_format", "sourceKey is not in <channel>/<video_id>.txt format", str(path)))
     if not _is_valid_video_id(data.get("videoId")):
         issues.append(Issue("error", vid, src, "missing_videoId", "Missing/invalid top-level videoId (YouTube id)", str(path)))
+    if isinstance(source_key, str) and source_key.strip() and _is_valid_video_id(data.get("videoId")) and channel:
+        normalized_key = source_key.strip().replace("\\", "/")
+        expected_key = f"{channel}/{str(data.get('videoId')).strip()}.txt"
+        if normalized_key != expected_key:
+            issues.append(Issue("error", vid, src, "sourceKey_channel_video_mismatch", "sourceKey does not match channel/videoId", str(path)))
 
     # Embedding dimension consistency
     embed_dims: Counter = Counter()
@@ -137,6 +149,11 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
     content_empty = 0
     bad_metadata = 0
     bad_index = 0
+    bad_total = 0
+    duplicate_index = 0
+    expected_chunk_count = len(chunks)
+    seen_chunk_indices: Set[int] = set()
+    declared_total_chunks: Optional[int] = None
 
     for i, chunk in enumerate(chunks):
         if not isinstance(chunk, dict):
@@ -148,7 +165,11 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
             content_empty += 1
 
         emb = chunk.get("embedding")
-        if not isinstance(emb, list) or not emb or not all(isinstance(x, (int, float)) for x in emb):
+        if (
+            not isinstance(emb, list)
+            or not emb
+            or not all(isinstance(x, (int, float)) and math.isfinite(float(x)) for x in emb)
+        ):
             missing_embeddings += 1
         else:
             embed_dims[len(emb)] += 1
@@ -167,11 +188,25 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
         # Index sanity (optional but useful)
         idx = meta.get("chunkIndex")
         total = meta.get("totalChunks")
-        if isinstance(idx, int) and isinstance(total, int) and total > 0:
-            if idx < 0 or idx >= total:
-                bad_index += 1
+        if not isinstance(total, int) or total <= 0:
+            bad_total += 1
         else:
+            if declared_total_chunks is None:
+                declared_total_chunks = total
+            elif total != declared_total_chunks:
+                bad_total += 1
+
+        if not isinstance(idx, int) or idx < 0:
             bad_index += 1
+        else:
+            if isinstance(total, int) and total > 0 and idx >= total:
+                bad_index += 1
+            if idx >= expected_chunk_count:
+                bad_index += 1
+            elif idx in seen_chunk_indices:
+                duplicate_index += 1
+            else:
+                seen_chunk_indices.add(idx)
 
     if content_empty:
         issues.append(Issue("warning", vid, src, "empty_content", f"{content_empty} chunk(s) have empty content", str(path)))
@@ -180,16 +215,46 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
     if bad_metadata:
         issues.append(Issue("error", vid, src, "missing_metadata", f"{bad_metadata} chunk(s) missing/invalid metadata", str(path)))
     if bad_index:
-        issues.append(Issue("warning", vid, src, "bad_chunk_index", f"{bad_index} chunk(s) have invalid chunkIndex/totalChunks", str(path)))
+        issues.append(Issue("error", vid, src, "bad_chunk_index", f"{bad_index} chunk(s) have invalid chunkIndex", str(path)))
+    if bad_total:
+        issues.append(Issue("error", vid, src, "bad_total_chunks", f"{bad_total} chunk(s) have invalid/inconsistent totalChunks", str(path)))
+    if duplicate_index:
+        issues.append(Issue("error", vid, src, "duplicate_chunk_index", f"{duplicate_index} duplicate chunkIndex value(s)", str(path)))
 
     if len(embed_dims) > 1:
         issues.append(Issue("error", vid, src, "inconsistent_embedding_dims", f"Embedding dims vary: {dict(embed_dims)}", str(path)))
+
+    if declared_total_chunks is not None and declared_total_chunks != expected_chunk_count:
+        issues.append(Issue(
+            "error",
+            vid,
+            src,
+            "total_chunks_mismatch",
+            f"metadata.totalChunks={declared_total_chunks} does not match chunk count={expected_chunk_count}",
+            str(path),
+        ))
+
+    if expected_chunk_count > 0:
+        missing_indices = [i for i in range(expected_chunk_count) if i not in seen_chunk_indices]
+        if missing_indices:
+            preview = ",".join(str(i) for i in missing_indices[:5])
+            suffix = ",..." if len(missing_indices) > 5 else ""
+            issues.append(Issue(
+                "error",
+                vid,
+                src,
+                "missing_chunk_indices",
+                f"Missing chunkIndex values: {preview}{suffix}",
+                str(path),
+            ))
 
     stats = {
         "chunks": len(chunks),
         "embedding_dims": dict(embed_dims),
         "missing_embeddings": missing_embeddings,
         "bad_metadata": bad_metadata,
+        "bad_chunk_index": bad_index,
+        "bad_total_chunks": bad_total,
     }
     return src, vid, issues, stats
 
@@ -301,4 +366,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

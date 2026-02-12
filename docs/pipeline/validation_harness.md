@@ -33,6 +33,11 @@ python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pi
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 ```
 
+With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract integrity:
+- stable `sourceKey`/`videoId`/`channel` alignment
+- finite + consistent embedding dimensions
+- `chunkIndex`/`totalChunks` bounds, dedupe, and continuity checks
+
 Cross-stage checks can also be run directly:
 
 ```bash
