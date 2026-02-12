@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   Lightbulb,
+  Trophy,
+  AlertTriangle,
 } from "lucide-react"
 import Link from "next/link"
 import type {
@@ -27,6 +29,7 @@ import type {
   TemplateField,
   UserTrackingStatsRow,
 } from "@/src/db/trackingTypes"
+import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { FieldRenderer } from "./FieldRenderer"
 import { GoalsSummarySection } from "./GoalsSummarySection"
 
@@ -85,6 +88,8 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showPrinciples, setShowPrinciples] = useState(false)
+  const [completedGoals, setCompletedGoals] = useState<GoalWithProgress[]>([])
+  const [approachingMilestones, setApproachingMilestones] = useState<GoalWithProgress[]>([])
 
   // Calculate current week boundaries
   const getWeekBoundaries = () => {
@@ -107,10 +112,11 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
   const loadData = async () => {
     try {
-      const [templatesRes, statsRes, commitmentRes] = await Promise.all([
+      const [templatesRes, statsRes, commitmentRes, goalsRes] = await Promise.all([
         fetch("/api/tracking/templates/review?type=weekly"),
         fetch("/api/tracking/stats"),
         fetch("/api/tracking/review/commitment"),
+        fetch("/api/goals"),
       ])
 
       if (templatesRes.ok) {
@@ -137,6 +143,30 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
       if (commitmentRes.ok) {
         const data = await commitmentRes.json()
         setPreviousCommitment(data.commitment)
+      }
+
+      // Process goals for celebration + approaching milestones
+      if (goalsRes.ok) {
+        const goalsData = await goalsRes.json()
+        const allGoals: GoalWithProgress[] = Array.isArray(goalsData) ? goalsData : []
+        const activeGoals = allGoals.filter((g) => g.is_active && !g.is_archived)
+
+        // Goals completed this week
+        setCompletedGoals(activeGoals.filter((g) => g.is_complete))
+
+        // Milestone goals approaching deadline (within 30 days)
+        setApproachingMilestones(
+          activeGoals
+            .filter(
+              (g) =>
+                g.goal_type === "milestone" &&
+                !g.is_complete &&
+                g.days_remaining !== null &&
+                g.days_remaining > 0 &&
+                g.days_remaining <= 30
+            )
+            .sort((a, b) => (a.days_remaining ?? 0) - (b.days_remaining ?? 0))
+        )
       }
     } catch (error) {
       console.error("Failed to load data:", error)
@@ -325,8 +355,57 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
           </Card>
         )}
 
-        {/* Goals Summary */}
-        <GoalsSummarySection />
+        {/* Goals Summary — enhanced with life areas, milestones, grouping */}
+        <GoalsSummarySection groupByLifeArea showMilestones />
+
+        {/* Celebration Section for Completed Goals */}
+        {completedGoals.length > 0 && (
+          <Card className="p-6 mb-8 border-green-500/30 bg-green-500/5">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <Trophy className="size-5 text-green-500" />
+              Goals Completed This Week
+            </h3>
+            <div className="space-y-2">
+              {completedGoals.map((goal) => (
+                <div key={goal.id} className="flex items-center gap-2 text-sm">
+                  <Check className="size-4 text-green-500 flex-shrink-0" />
+                  <span className="font-medium">{goal.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {goal.current_value}/{goal.target_value}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm text-green-600 dark:text-green-400 mt-3 font-medium">
+              {completedGoals.length === 1
+                ? "Great work hitting this goal!"
+                : `Amazing — ${completedGoals.length} goals crushed!`}
+            </p>
+          </Card>
+        )}
+
+        {/* Approaching Milestones Warning */}
+        {approachingMilestones.length > 0 && (
+          <Card className="p-6 mb-8 border-amber-500/30 bg-amber-500/5">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <AlertTriangle className="size-5 text-amber-500" />
+              Milestones Approaching Deadline
+            </h3>
+            <div className="space-y-2">
+              {approachingMilestones.map((goal) => (
+                <div key={goal.id} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="size-4 text-amber-500 flex-shrink-0" />
+                    <span className="font-medium">{goal.title}</span>
+                  </div>
+                  <Badge variant="outline" className="text-xs border-amber-500/50 text-amber-600">
+                    {goal.days_remaining}d left • {goal.progress_percentage}%
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Previous Commitment */}
         {previousCommitment && (

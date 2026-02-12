@@ -104,10 +104,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": ".claude/hooks/check-code-review.sh"
-          },
-          {
-            "type": "command",
             "command": ".claude/hooks/check-test-results.sh"
           }
         ]

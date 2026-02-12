@@ -948,15 +948,21 @@ export async function getUserFieldReports(
   return data as FieldReportRow[]
 }
 
-export async function getDraftFieldReports(userId: string): Promise<FieldReportRow[]> {
+export async function getDraftFieldReports(userId: string, limit?: number): Promise<FieldReportRow[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("field_reports")
     .select("*")
     .eq("user_id", userId)
     .eq("is_draft", true)
     .order("updated_at", { ascending: false })
+
+  if (limit !== undefined) {
+    query = query.limit(limit)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Failed to get draft reports: ${error.message}`)
@@ -1503,14 +1509,20 @@ export async function checkAndAwardMilestones(
   return (data || []) as MilestoneRow[]
 }
 
-export async function getUserMilestones(userId: string): Promise<MilestoneRow[]> {
+export async function getUserMilestones(userId: string, limit?: number): Promise<MilestoneRow[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("milestones")
     .select("*")
     .eq("user_id", userId)
     .order("achieved_at", { ascending: false })
+
+  if (limit !== undefined) {
+    query = query.limit(limit)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Failed to get milestones: ${error.message}`)

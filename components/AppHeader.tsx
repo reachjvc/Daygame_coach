@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { MobileNav, type MobileNavItem } from "@/components/MobileNav"
 
-type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "lair" | "other"
+type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "lair" | "goals" | "other"
 
 interface AppHeaderProps {
   /** Current page identifier - used to hide redundant navigation links */
@@ -39,6 +39,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   const showDashboard = currentPage !== "dashboard"
   const showLair = currentPage !== "lair"
+  const showGoals = currentPage !== "goals" && hasPurchased
   const showAskCoach = currentPage !== "qa" && hasPurchased
   const showArticles = currentPage !== "articles"
   const showSettings = currentPage !== "settings" && isLoggedIn
@@ -67,6 +68,17 @@ export function AppHeader({
         variant: "ghost",
         className: "text-foreground hover:text-primary",
         testId: "header-lair-link",
+      })
+    }
+    if (showGoals) {
+      navItems.push({
+        type: "link",
+        href: "/dashboard/goals",
+        label: "Goals",
+        icon: <Target className="size-4 mr-2" />,
+        variant: "ghost",
+        className: "text-foreground hover:text-primary",
+        testId: "header-goals-link",
       })
     }
     if (showAskCoach) {

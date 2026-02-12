@@ -10,6 +10,7 @@ import type {
   UserGoalInsert,
   UserGoalUpdate,
   GoalWithProgress,
+  GoalTreeNode,
   LinkedMetric,
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
@@ -58,6 +59,30 @@ export async function getGoalsByCategory(
 
   if (error) {
     throw new Error(`Failed to get goals by category: ${error.message}`)
+  }
+
+  return (data as UserGoalRow[]).map(computeGoalProgress)
+}
+
+/**
+ * Get goals filtered by life area
+ */
+export async function getGoalsByLifeArea(
+  userId: string,
+  lifeArea: string
+): Promise<GoalWithProgress[]> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("user_goals")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("life_area", lifeArea)
+    .eq("is_archived", false)
+    .order("position", { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to get goals by life area: ${error.message}`)
   }
 
   return (data as UserGoalRow[]).map(computeGoalProgress)
@@ -114,18 +139,26 @@ export async function createGoal(
 
   const nextPosition = maxPosData ? maxPosData.position + 1 : 0
 
+  const lifeArea = goal.life_area ?? goal.category
+  const category = goal.category ?? goal.life_area ?? "custom"
+
   const { data, error } = await supabase
     .from("user_goals")
     .insert({
       user_id: userId,
       title: goal.title,
-      category: goal.category,
+      category,
       tracking_type: goal.tracking_type ?? "counter",
       period: goal.period ?? "weekly",
       target_value: goal.target_value,
       custom_end_date: goal.custom_end_date ?? null,
       linked_metric: goal.linked_metric ?? null,
       position: goal.position ?? nextPosition,
+      life_area: lifeArea,
+      parent_goal_id: goal.parent_goal_id ?? null,
+      target_date: goal.target_date ?? null,
+      description: goal.description ?? null,
+      goal_type: goal.goal_type ?? "recurring",
     })
     .select()
     .single()
@@ -151,9 +184,15 @@ export async function updateGoal(
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
+  // Keep category in sync with life_area for backward compat
+  const updateData = { ...update }
+  if (updateData.life_area && !updateData.category) {
+    updateData.category = updateData.life_area
+  }
+
   const { data, error } = await supabase
     .from("user_goals")
-    .update(update)
+    .update(updateData)
     .eq("id", goalId)
     .eq("user_id", userId)
     .select()
@@ -426,6 +465,89 @@ export async function reorderGoals(
       throw new Error(`Failed to reorder goals: ${error.message}`)
     }
   }
+}
+
+// ============================================
+// Tree / Hierarchy Queries
+// ============================================
+
+/**
+ * Build a goal tree from flat rows. O(n) algorithm.
+ */
+function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
+  const nodeMap = new Map<string, GoalTreeNode>()
+  const roots: GoalTreeNode[] = []
+
+  // Create nodes
+  for (const goal of goals) {
+    nodeMap.set(goal.id, { ...goal, children: [] })
+  }
+
+  // Link parents → children
+  for (const goal of goals) {
+    const node = nodeMap.get(goal.id)!
+    if (goal.parent_goal_id && nodeMap.has(goal.parent_goal_id)) {
+      nodeMap.get(goal.parent_goal_id)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  return roots
+}
+
+/**
+ * Get full goal tree for a user (all active goals as hierarchy)
+ */
+export async function getGoalTree(userId: string): Promise<GoalTreeNode[]> {
+  const goals = await getUserGoals(userId)
+  return buildTree(goals)
+}
+
+/**
+ * Get direct children of a goal
+ */
+export async function getChildGoals(
+  userId: string,
+  parentGoalId: string
+): Promise<GoalWithProgress[]> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("user_goals")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("parent_goal_id", parentGoalId)
+    .eq("is_archived", false)
+    .order("position", { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to get child goals: ${error.message}`)
+  }
+
+  return (data as UserGoalRow[]).map(computeGoalProgress)
+}
+
+/**
+ * Get ancestor chain from root to the given goal (inclusive)
+ */
+export async function getGoalAncestors(
+  userId: string,
+  goalId: string
+): Promise<GoalWithProgress[]> {
+  // Fetch all goals for user and walk up the tree
+  const allGoals = await getUserGoals(userId)
+  const goalMap = new Map(allGoals.map((g) => [g.id, g]))
+
+  const ancestors: GoalWithProgress[] = []
+  let current = goalMap.get(goalId)
+
+  while (current) {
+    ancestors.unshift(current)
+    current = current.parent_goal_id ? goalMap.get(current.parent_goal_id) : undefined
+  }
+
+  return ancestors
 }
 
 // ============================================

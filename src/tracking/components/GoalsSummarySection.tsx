@@ -1,19 +1,56 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Target, CheckCircle2, Circle, Flame } from "lucide-react"
+import {
+  Loader2,
+  Target,
+  CheckCircle2,
+  Circle,
+  Flame,
+  Calendar,
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react"
 import { getCategoryConfig } from "@/src/lair/data/goalCategories"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 
 interface GoalsSummarySectionProps {
   compact?: boolean
+  /** Show milestone goals approaching deadline */
+  showMilestones?: boolean
+  /** Show goals grouped by life area */
+  groupByLifeArea?: boolean
+  /** Previous week completion count for comparison */
+  previousWeekCompleted?: number
 }
 
-export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProps) {
+/**
+ * Get life area display config. Uses goalCategories as fallback
+ * until lifeAreas.ts is available from M2.
+ */
+function getLifeAreaDisplay(lifeArea: string) {
+  const config = getCategoryConfig(lifeArea)
+  return {
+    name: config.name,
+    hex: config.hex,
+    color: config.color,
+    bgColor: config.bgColor,
+    progressColor: config.progressColor,
+  }
+}
+
+export function GoalsSummarySection({
+  compact = false,
+  showMilestones = false,
+  groupByLifeArea = false,
+  previousWeekCompleted,
+}: GoalsSummarySectionProps) {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [loading, setLoading] = useState(true)
+  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     async function fetchGoals() {
@@ -21,9 +58,10 @@ export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProp
         const res = await fetch("/api/goals")
         if (res.ok) {
           const data = await res.json()
-          // Filter to active, non-archived goals
-          const activeGoals = (data.goals || []).filter(
-            (g: GoalWithProgress) => g.is_active && !g.is_archived
+          // API returns plain array — fix for previous data.goals bug
+          const allGoals: GoalWithProgress[] = Array.isArray(data) ? data : []
+          const activeGoals = allGoals.filter(
+            (g) => g.is_active && !g.is_archived
           )
           setGoals(activeGoals)
         }
@@ -35,6 +73,47 @@ export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProp
     }
     fetchGoals()
   }, [])
+
+  // Group goals by life area (daygame first)
+  const goalsByArea = useMemo(() => {
+    if (!groupByLifeArea) return null
+    const groups: Record<string, GoalWithProgress[]> = {}
+    for (const goal of goals) {
+      const area = goal.life_area || goal.category || "other"
+      if (!groups[area]) groups[area] = []
+      groups[area].push(goal)
+    }
+    // Sort: daygame first, then alphabetical
+    const sorted = Object.entries(groups).sort(([a], [b]) => {
+      if (a === "daygame") return -1
+      if (b === "daygame") return 1
+      return a.localeCompare(b)
+    })
+    return sorted
+  }, [goals, groupByLifeArea])
+
+  // Separate recurring vs milestone goals
+  const { recurringGoals, milestoneGoals } = useMemo(() => {
+    const recurring = goals.filter((g) => g.goal_type !== "milestone")
+    const milestones = goals.filter((g) => g.goal_type === "milestone")
+    return { recurringGoals: recurring, milestoneGoals: milestones }
+  }, [goals])
+
+  // Milestone goals approaching deadline (within 30 days)
+  const approachingMilestones = useMemo(() => {
+    return milestoneGoals
+      .filter((g) => g.days_remaining !== null && g.days_remaining > 0 && g.days_remaining <= 30 && !g.is_complete)
+      .sort((a, b) => (a.days_remaining ?? 0) - (b.days_remaining ?? 0))
+  }, [milestoneGoals])
+
+  const toggleArea = (area: string) => {
+    setExpandedAreas((prev) => {
+      const next = new Set(prev)
+      if (next.has(area)) next.delete(area)
+      else next.add(area)
+      return next
+    })
+  }
 
   if (loading) {
     return (
@@ -78,6 +157,81 @@ export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProp
     )
   }
 
+  // Render a single goal row
+  const renderGoalRow = (goal: GoalWithProgress) => {
+    const areaDisplay = getLifeAreaDisplay(goal.life_area || goal.category)
+    // Find parent context
+    const parent = goal.parent_goal_id
+      ? goals.find((g) => g.id === goal.parent_goal_id)
+      : null
+
+    return (
+      <div
+        key={goal.id}
+        className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+      >
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          {goal.is_complete ? (
+            <CheckCircle2 className="size-5 text-green-500 flex-shrink-0" />
+          ) : (
+            <Circle className="size-5 text-muted-foreground flex-shrink-0" />
+          )}
+          <div className="min-w-0 flex-1">
+            <span className="font-medium text-sm truncate block">
+              {goal.title}
+            </span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
+              {!groupByLifeArea && (
+                <Badge
+                  variant="outline"
+                  className="text-[10px] px-1.5 py-0"
+                  style={{ borderColor: areaDisplay.hex, color: areaDisplay.hex }}
+                >
+                  {areaDisplay.name}
+                </Badge>
+              )}
+              <span>{goal.current_value}/{goal.target_value}</span>
+              {parent && (
+                <span className="text-muted-foreground/70">
+                  <ArrowRight className="size-2.5 inline" /> {parent.title} ({parent.progress_percentage}%)
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          {goal.current_streak > 0 && (
+            <span className="flex items-center gap-0.5 text-xs text-orange-500">
+              <Flame className="size-3" />
+              {goal.current_streak}
+            </span>
+          )}
+          {/* Progress bar (mini) */}
+          <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden hidden sm:block">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${goal.progress_percentage}%`,
+                backgroundColor: areaDisplay.hex,
+              }}
+            />
+          </div>
+          <Badge
+            variant={goal.is_complete ? "default" : "outline"}
+            className="text-xs"
+            style={{
+              backgroundColor: goal.is_complete ? "#22c55e" : undefined,
+              borderColor: goal.is_complete ? "transparent" : areaDisplay.hex,
+              color: goal.is_complete ? "white" : areaDisplay.hex,
+            }}
+          >
+            {goal.progress_percentage}%
+          </Badge>
+        </div>
+      </div>
+    )
+  }
+
   // Full version for template selection view
   return (
     <Card className="p-6 mb-8" data-testid="goals-summary-section">
@@ -96,6 +250,17 @@ export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProp
             {completedCount}/{totalCount}
           </div>
           <div className="text-xs text-muted-foreground">completed</div>
+          {previousWeekCompleted !== undefined && (
+            <div className="text-xs mt-0.5">
+              {completedCount > previousWeekCompleted ? (
+                <span className="text-green-600">+{completedCount - previousWeekCompleted} vs last week</span>
+              ) : completedCount < previousWeekCompleted ? (
+                <span className="text-orange-500">{completedCount - previousWeekCompleted} vs last week</span>
+              ) : (
+                <span className="text-muted-foreground">Same as last week</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -107,53 +272,89 @@ export function GoalsSummarySection({ compact = false }: GoalsSummarySectionProp
         />
       </div>
 
-      {/* Goal list */}
-      <div className="space-y-2">
-        {goals.map((goal) => {
-          const config = getCategoryConfig(goal.category)
-          return (
-            <div
-              key={goal.id}
-              className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-            >
-              <div className="flex items-center gap-3">
-                {goal.is_complete ? (
-                  <CheckCircle2 className="size-5 text-green-500 flex-shrink-0" />
-                ) : (
-                  <Circle className="size-5 text-muted-foreground flex-shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <span className="font-medium text-sm truncate block">
-                    {goal.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground capitalize">
-                    {config.name} • {goal.current_value}/{goal.target_value}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {goal.current_streak > 0 && (
-                  <span className="flex items-center gap-0.5 text-xs text-orange-500">
-                    <Flame className="size-3" />
-                    {goal.current_streak}
-                  </span>
-                )}
-                <Badge
-                  variant={goal.is_complete ? "default" : "outline"}
-                  className="text-xs"
-                  style={{
-                    backgroundColor: goal.is_complete ? "#22c55e" : undefined,
-                    borderColor: goal.is_complete ? "transparent" : config.hex,
-                    color: goal.is_complete ? "white" : config.hex,
-                  }}
+      {/* Goal list - grouped or flat */}
+      {goalsByArea ? (
+        <div className="space-y-4">
+          {goalsByArea.map(([area, areaGoals]) => {
+            const display = getLifeAreaDisplay(area)
+            const areaCompleted = areaGoals.filter((g) => g.is_complete).length
+            const isExpanded = expandedAreas.has(area) || goalsByArea.length <= 3
+
+            return (
+              <div key={area}>
+                <button
+                  onClick={() => toggleArea(area)}
+                  className="flex items-center justify-between w-full py-1.5 text-left"
                 >
-                  {goal.progress_percentage}%
-                </Badge>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full"
+                      style={{ backgroundColor: display.hex }}
+                    />
+                    <span className="font-medium text-sm">{display.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {areaCompleted}/{areaGoals.length}
+                    </span>
+                  </div>
+                  {goalsByArea.length > 3 && (
+                    isExpanded ? (
+                      <ChevronUp className="size-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="size-4 text-muted-foreground" />
+                    )
+                  )}
+                </button>
+                {isExpanded && (
+                  <div className="space-y-2 mt-1">
+                    {areaGoals.map(renderGoalRow)}
+                  </div>
+                )}
               </div>
-            </div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {recurringGoals.map(renderGoalRow)}
+        </div>
+      )}
+
+      {/* Milestone goals section */}
+      {showMilestones && approachingMilestones.length > 0 && (
+        <div className="mt-4 pt-4 border-t">
+          <h3 className="font-medium text-sm flex items-center gap-2 mb-3">
+            <Calendar className="size-4 text-primary" />
+            Milestones Approaching
+          </h3>
+          <div className="space-y-2">
+            {approachingMilestones.map((goal) => {
+              const display = getLifeAreaDisplay(goal.life_area || goal.category)
+              return (
+                <div
+                  key={goal.id}
+                  className="flex items-center justify-between p-3 rounded-lg border border-amber-500/20 bg-amber-500/5"
+                >
+                  <div className="min-w-0">
+                    <span className="font-medium text-sm truncate block">
+                      {goal.title}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {goal.progress_percentage}% complete
+                    </span>
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="text-xs flex-shrink-0"
+                    style={{ borderColor: display.hex, color: display.hex }}
+                  >
+                    {goal.days_remaining}d left
+                  </Badge>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Summary message */}
       <div className="mt-4 pt-4 border-t text-center text-sm text-muted-foreground">

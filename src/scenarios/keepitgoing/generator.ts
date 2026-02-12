@@ -164,6 +164,11 @@ export function updateInterestFromRubric(
   // 3. Apply quality → exitRisk mapping
   exitRiskDelta += getQualityExitRiskDelta(quality)
 
+  // 3b. exitRisk decay: non-negative interactions naturally ease tension
+  if (quality !== "deflect" && quality !== "skeptical") {
+    exitRiskDelta -= 1
+  }
+
   // 4. Apply realism notch bias (harder notch = more exit risk)
   exitRiskDelta += realismNotch
 

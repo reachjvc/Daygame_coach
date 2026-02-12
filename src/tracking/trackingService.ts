@@ -229,8 +229,8 @@ export async function getUserFieldReports(
   return repoGetUserFieldReports(userId, limit, offset)
 }
 
-export async function getDraftFieldReports(userId: string): Promise<FieldReportRow[]> {
-  return repoGetDraftFieldReports(userId)
+export async function getDraftFieldReports(userId: string, limit?: number): Promise<FieldReportRow[]> {
+  return repoGetDraftFieldReports(userId, limit)
 }
 
 export async function getFieldReportTemplates(
@@ -473,8 +473,8 @@ export async function getApproachesPerHour(
 // Milestones
 // ============================================
 
-export async function getUserMilestones(userId: string): Promise<MilestoneRow[]> {
-  const milestones = await repoGetUserMilestones(userId)
+export async function getUserMilestones(userId: string, limit?: number): Promise<MilestoneRow[]> {
+  const milestones = await repoGetUserMilestones(userId, limit)
   return milestones.filter(m => m.milestone_type in ALL_MILESTONES)
 }
 

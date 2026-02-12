@@ -53,7 +53,7 @@ export function useTrackingStats(): UseTrackingStatsReturn {
       const [statsRes, sessionsRes, milestonesRes, reportsRes, reviewsRes] = await Promise.all([
         fetch("/api/tracking/stats"),
         fetch("/api/tracking/sessions?limit=5"),
-        fetch("/api/tracking/milestones"),
+        fetch("/api/tracking/milestones?limit=20"),
         fetch("/api/tracking/field-report?limit=5"),
         fetch("/api/tracking/review?limit=5"),
       ])

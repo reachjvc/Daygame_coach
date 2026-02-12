@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Plus, RotateCcw, Flame, ChevronDown, ChevronUp, Target, TrendingUp, Zap, GripVertical, Star } from "lucide-react"
+import { Plus, RotateCcw, Flame, ChevronDown, ChevronUp, Target, TrendingUp, Zap, GripVertical, Star, Layers, ArrowRight } from "lucide-react"
 import {
   DndContext,
   pointerWithin,
@@ -19,6 +19,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
@@ -92,7 +93,7 @@ function FeaturedMission({
   onIncrement: () => void
   onReset: () => void
 }) {
-  const config = getCategoryConfig(goal.category)
+  const config = getCategoryConfig(goal.life_area || goal.category)
   const Icon = config.icon
   const streakInfo = getStreakTier(goal.current_streak)
 
@@ -105,9 +106,18 @@ function FeaturedMission({
       />
 
       <div className="relative flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <span className="text-xs font-medium uppercase tracking-wider text-primary">
             Primary Mission
+          </span>
+          <span
+            className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+            style={{
+              backgroundColor: `${config.hex}20`,
+              color: config.hex
+            }}
+          >
+            {config.name}
           </span>
           {streakInfo && (
             <span
@@ -179,7 +189,7 @@ function GoalRow({
   onIncrement: () => void
   onReset: () => void
 }) {
-  const config = getCategoryConfig(goal.category)
+  const config = getCategoryConfig(goal.life_area || goal.category)
   const Icon = config.icon
 
   return (
@@ -239,12 +249,14 @@ function SortableGoalRow({
   onReset,
   onSetPrimary,
   isPrimary,
+  childCount,
 }: {
   goal: GoalWithProgress
   onIncrement: () => void
   onReset: () => void
   onSetPrimary: () => void
   isPrimary?: boolean
+  childCount?: number
 }) {
   const {
     attributes,
@@ -260,7 +272,7 @@ function SortableGoalRow({
     transition,
   }
 
-  const config = getCategoryConfig(goal.category)
+  const config = getCategoryConfig(goal.life_area || goal.category)
   const Icon = config.icon
 
   return (
@@ -289,6 +301,17 @@ function SortableGoalRow({
       <span className="text-sm font-medium truncate flex-1 min-w-0">
         {goal.title}
       </span>
+
+      {/* Child count badge */}
+      {childCount !== undefined && childCount > 0 && (
+        <span
+          className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0"
+          style={{ backgroundColor: `${config.hex}15`, color: config.hex }}
+        >
+          <Layers className="w-2.5 h-2.5" />
+          {childCount}
+        </span>
+      )}
 
       {!isPrimary && (
         <Button
@@ -343,16 +366,16 @@ function StatsPanel({ goals }: { goals: GoalWithProgress[] }) {
   const totalGoals = goals.length
   const completedToday = goals.filter(g => g.is_complete).length
   const totalStreaks = goals.reduce((sum, g) => sum + g.current_streak, 0)
-  const bestStreak = Math.max(...goals.map(g => g.current_streak), 0)
   const avgProgress = totalGoals > 0
     ? Math.round(goals.reduce((sum, g) => sum + g.progress_percentage, 0) / totalGoals)
     : 0
+  const lifeAreasActive = new Set(goals.map(g => g.life_area || g.category)).size
 
   const stats = [
     { label: "Complete", value: `${completedToday}/${totalGoals}`, icon: Target, color: "#22c55e" },
     { label: "Avg Progress", value: `${avgProgress}%`, icon: TrendingUp, color: "#3b82f6" },
     { label: "Total Streaks", value: totalStreaks, icon: Flame, color: "#f97316" },
-    { label: "Best Streak", value: bestStreak, icon: Zap, color: "#eab308" },
+    { label: "Life Areas", value: lifeAreasActive, icon: Layers, color: "#8b5cf6" },
   ]
 
   return (
@@ -385,6 +408,7 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [showAddModal, setShowAddModal] = useState(false)
   const [showAllGoals, setShowAllGoals] = useState(false)
+  const [filterDaygame, setFilterDaygame] = useState(false)
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -520,12 +544,85 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
     )
   }
 
-  const [featuredGoal, ...otherGoals] = goals
-  const visibleGoals = showAllGoals ? goals : goals.slice(0, 5)
-  const hiddenCount = goals.length - 5
+  // Compute child counts for each goal
+  const childCounts = new Map<string, number>()
+  for (const goal of goals) {
+    if (goal.parent_goal_id) {
+      childCounts.set(goal.parent_goal_id, (childCounts.get(goal.parent_goal_id) || 0) + 1)
+    }
+  }
+
+  // Apply filter
+  const displayGoals = filterDaygame
+    ? goals.filter((g) => (g.life_area || g.category) === "daygame")
+    : goals
+
+  const [featuredGoal, ...otherGoals] = displayGoals
+  const visibleGoals = showAllGoals ? displayGoals : displayGoals.slice(0, 5)
+  const hiddenCount = displayGoals.length - 5
+
+  if (displayGoals.length === 0 && filterDaygame) {
+    // No daygame goals but filter active — show hint
+    return (
+      <>
+        <div className="flex items-center gap-2 mb-3">
+          <button
+            onClick={() => setFilterDaygame(false)}
+            className="px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+          >
+            All Areas
+          </button>
+          <button
+            className="px-2 py-1 rounded text-xs font-medium bg-orange-500/20 text-orange-500"
+          >
+            Daygame
+          </button>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-sm text-muted-foreground">No daygame goals yet.</p>
+          <Button variant="outline" size="sm" className="mt-2" onClick={() => setShowAddModal(true)}>
+            <Plus className="w-3 h-3 mr-1" />
+            Create Daygame Goal
+          </Button>
+        </div>
+        <GoalFormModal open={showAddModal} onOpenChange={setShowAddModal} onSuccess={fetchGoals} />
+      </>
+    )
+  }
+
+  if (!featuredGoal) return null
 
   return (
     <>
+      {/* Quick filter + View All link */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFilterDaygame(false)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              !filterDaygame ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            All Areas
+          </button>
+          <button
+            onClick={() => setFilterDaygame(true)}
+            className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+              filterDaygame ? "bg-orange-500/20 text-orange-500" : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            Daygame
+          </button>
+        </div>
+        <Link
+          href="/dashboard/goals"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
+          View All Goals
+          <ArrowRight className="w-3 h-3" />
+        </Link>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Subslot 1: Featured Mission */}
         <FeaturedMission
@@ -553,7 +650,7 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
             onDragEnd={handleReorder}
           >
             <SortableContext
-              items={goals.map(g => g.id)}
+              items={displayGoals.map(g => g.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-1">
@@ -565,6 +662,7 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
                     onReset={() => handleReset(goal.id)}
                     onSetPrimary={() => handleSetPrimary(goal.id)}
                     isPrimary={index === 0}
+                    childCount={childCounts.get(goal.id)}
                   />
                 ))}
 

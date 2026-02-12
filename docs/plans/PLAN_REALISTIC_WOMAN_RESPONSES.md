@@ -1,11 +1,11 @@
 # Plan: Realistic Conversation Logic (MVP) from 224 Transcribed Videos (Diarized Subset)
 
-**Status:** Phase 7 IN PROGRESS - Diagnostic Viewer
+**Status:** Phase 7 IN PROGRESS - Evaluator Rebuild Steps 1-4 Complete
 **Created:** 2026-02-07
-**Updated:** 2026-02-09
+**Updated:** 2026-02-12
 
 **Completed:** Phases 0-6 (logic, holdout validation, LLM grounding)
-**Current:** Phase 7.1-7.2 complete (versioned prompts, calibration viewer UI)
+**Current:** Evaluator rebuild Steps 1-4 done. Fundamental finding: evaluator cannot predict momentum-driven rises. Step 5 (rubric fixes) pending.
 
 ## Phase 7 Results (in progress 2026-02-09) - Diagnostic Viewer + Versioned Prompts
 
@@ -15,21 +15,65 @@ Calibrate the evaluator against known-successful conversations. If evaluator sco
 ### Completed Steps:
 - ✅ Step 7.1: Create versioned prompts folder (`data/woman-responses/prompts/prompt_0/`)
 - ✅ Step 7.2: Extract EVAL_SYSTEM_PROMPT and getBucketConstraints to markdown files
-- ✅ Step 7.3: Create calibration viewer UI at `/dev/calibration`
+- ✅ Step 7.3: Create calibration viewer UI at `/test/calibration` (note: lives under /test/, not /dev/)
 - ✅ Step 7.4: Create API routes for diagnostic listing/loading
+- ✅ Step 7.5: First diagnostic run on `e2dLEB-AwmA` with `prompt_0` (2026-02-12)
 
 ### Files Created:
 - `data/woman-responses/prompts/prompt_0/EVAL_SYSTEM_PROMPT.md` - Evaluation prompt
 - `data/woman-responses/prompts/prompt_0/BUCKET_CONSTRAINTS.md` - Bucket rules
 - `data/woman-responses/prompts/prompt_0/README.md` - Version notes
-- `app/dev/calibration/page.tsx` - Viewer page
-- `app/dev/calibration/_components/*.tsx` - UI components (DiagnosticSelector, TurnViewer, HistoryPanel, EvaluationPanel)
-- `app/api/dev/calibration/list/route.ts` - List diagnostics API
-- `app/api/dev/calibration/get/route.ts` - Get diagnostic API
+- `app/test/calibration/page.tsx` - Viewer page
+- `app/test/calibration/_components/*.tsx` - UI components (DiagnosticSelector, TurnViewer, HistoryPanel, EvaluationPanel)
+- `app/api/test/calibration/list/route.ts` - List diagnostics API
+- `app/api/test/calibration/get/route.ts` - Get diagnostic API
+- `scripts/run-diagnostic.ts` - Diagnostic runner script
+- `data/woman-responses/diagnostics/e2dLEB-AwmA_prompt_0.json` - First diagnostic output
 
-### Pending Steps:
-- ⏳ Step 7.5: Run diagnostic on first video (ask Claude Code: "Run diagnostic on VIDEO_ID with prompt_0")
-- ⏳ Step 7.6: Analyze blind spots, iterate on prompts
+### Step 7.5 Results (2026-02-12):
+- **Video**: `e2dLEB-AwmA` — 30-turn infield, cold approach to number close
+- **Pass rate**: 7/30 scored 7+ (23%)
+- **Blind spots**: 19/30 turns
+- **Holdout note**: All 10 holdout videos had 0 turns (educational content). Used training video instead.
+
+#### Key Blind Spot Patterns:
+1. **Turn 1 cascade**: Opener scored 4 (too long/rambling), tanked interest to 1, exitRisk to 3 → system "ended" at turn 1. Reality: 30-turn successful interaction.
+2. **Interview questions over-punished**: Many turns tagged `interview_question` scored 3-5 when woman actually warmed up. Evaluator treats every question as boring when context shows they kept conversation flowing.
+3. **Interest recovery impossible**: Once interest drops to 1, pacing caps prevent recovery. The rubric state model diverges completely from reality after a single low score.
+4. **System would have ended 9 times**: Turns 1-3, 5-10, 28, 30 all hit exitRisk=3. Real conversation was a smooth number close.
+5. **Good evaluations exist**: Turns 12 (tease, 7), 15 (time constraint, 7), 18 (push-pull, 8), 19 (threading, 7), 23 (qualifying, 7), 25 (Instagram tease, 7), 29 (number close, 7).
+
+#### Bug Fixed:
+- `evaluateWithAI()` budget check now skipped in Claude Code mode (no API cost, no Supabase context needed)
+
+### Step 7.6 Results: Evaluator Rebuild (2026-02-12)
+
+See `docs/plans/PLAN_EVALUATOR_REBUILD.md` for full plan. Steps 1-4 completed.
+
+**prompt_1** (76 few-shot examples, no temperature context):
+- DPieYj7nji0.clean: 4/23 (17%), 3 blind spots, 3 false positives, MAE 1.00
+- e2dLEB-AwmA: 6/30 (20%) — but ALL 6 were false 7s. 0/9 real interest rises identified.
+
+**prompt_2** (temperature-based defaults, temperature labels on examples):
+- DPieYj7nji0.clean: 4/23 (17%), 3 blind spots, 3 false positives, MAE 1.00
+- e2dLEB-AwmA: 1/30 (3%), 9 blind spots, 3 false positives, MAE 1.33
+
+**Fundamental finding**: Evaluator reliably scores 3 (momentum killers), 5 (neutral cool), 6 (neutral warm), 7+ (technique-driven rises like cold reads, good storytelling). It CANNOT predict momentum-driven interest rises — ordinary lines that work because conversation has built momentum. For e2dLEB-AwmA, 0/9 expected 7+ turns were correctly identified across ALL prompt versions.
+
+**Naming conventions**:
+- `prompt_N/` = different prompt versions (prompt content changes)
+- `v` suffix on diagnostics = script/runner changes (same prompt, different runner logic)
+- Diagnostic files: `{video_id}_{prompt_version}.json` or `{video_id}_v{N}_{prompt_version}.json`
+
+**Known gap**: `chat.ts` line 80 hardcodes `prompt_1` path. Diagnostic `prompt_version` arg only affects output naming, not which prompt is loaded. To test prompt_2, must change chat.ts.
+
+### Next: Step 5 — Rubric Fixes (pending)
+
+Fix the rubric to work with the evaluator's reliable scoring range instead of trying to make evaluator detect momentum:
+- exitRisk decay when quality isn't deflect/skeptical
+- Neuter double-punishment tags (question, too_long, cold_read)
+- Score 5-6 = +1 interest delta (neutral = conversation continues = momentum)
+- Raise end thresholds (exitRisk max 3→4, end rule interest ≤3 → ≤2)
 
 ### Workflow:
 1. User asks Claude Code: "Run diagnostic on VIDEO_ID with prompt_0"

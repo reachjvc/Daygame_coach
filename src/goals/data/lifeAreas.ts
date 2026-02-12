@@ -1,0 +1,211 @@
+/**
+ * Life area definitions with icons, colors, and goal suggestions
+ */
+
+import {
+  MessageCircle,
+  Heart,
+  Dumbbell,
+  Briefcase,
+  Users,
+  Sprout,
+  DollarSign,
+  Brain,
+  GraduationCap,
+  Star,
+} from "lucide-react"
+import type { LifeAreaConfig } from "../types"
+
+export const LIFE_AREAS: LifeAreaConfig[] = [
+  {
+    id: "daygame",
+    name: "Daygame",
+    icon: MessageCircle,
+    hex: "#f97316",
+    color: "text-orange-500",
+    bgColor: "bg-orange-500/10",
+    borderColor: "border-orange-500/30",
+    progressColor: "bg-orange-500",
+    sortOrder: 0,
+    suggestions: [
+      { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly", linkedMetric: "approaches_weekly", featured: true },
+      { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly", linkedMetric: "sessions_weekly", featured: true },
+      { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly", linkedMetric: "numbers_weekly" },
+      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly", linkedMetric: "instadates_weekly" },
+      { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
+    ],
+  },
+  {
+    id: "dating",
+    name: "Dating & Relationships",
+    icon: Heart,
+    hex: "#ec4899",
+    color: "text-pink-500",
+    bgColor: "bg-pink-500/10",
+    borderColor: "border-pink-500/30",
+    progressColor: "bg-pink-500",
+    sortOrder: 1,
+    suggestions: [
+      { title: "Go on 2 dates per month", defaultTarget: 2, defaultPeriod: "monthly" },
+      { title: "Practice conversation skills daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Plan 1 creative date per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Message 3 leads per week", defaultTarget: 3, defaultPeriod: "weekly" },
+    ],
+  },
+  {
+    id: "health_fitness",
+    name: "Health & Fitness",
+    icon: Dumbbell,
+    hex: "#22c55e",
+    color: "text-green-500",
+    bgColor: "bg-green-500/10",
+    borderColor: "border-green-500/30",
+    progressColor: "bg-green-500",
+    sortOrder: 2,
+    suggestions: [
+      { title: "Go to gym 4x per week", defaultTarget: 4, defaultPeriod: "weekly", featured: true },
+      { title: "Eat 150g protein daily", defaultTarget: 150, defaultPeriod: "daily" },
+      { title: "Hit 10,000 steps daily", defaultTarget: 10000, defaultPeriod: "daily" },
+      { title: "Drink 3L water daily", defaultTarget: 3, defaultPeriod: "daily" },
+      { title: "Sleep 8 hours nightly", defaultTarget: 8, defaultPeriod: "daily" },
+      { title: "Run 5km 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
+    ],
+  },
+  {
+    id: "career_business",
+    name: "Career & Business",
+    icon: Briefcase,
+    hex: "#a855f7",
+    color: "text-purple-500",
+    bgColor: "bg-purple-500/10",
+    borderColor: "border-purple-500/30",
+    progressColor: "bg-purple-500",
+    sortOrder: 3,
+    suggestions: [
+      { title: "Deep work 4 hours daily", defaultTarget: 4, defaultPeriod: "daily", featured: true },
+      { title: "No social media before noon", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Complete 3 high-value tasks", defaultTarget: 3, defaultPeriod: "daily" },
+      { title: "Read 30 mins daily", defaultTarget: 30, defaultPeriod: "daily" },
+      { title: "Write 500 words daily", defaultTarget: 500, defaultPeriod: "daily" },
+    ],
+  },
+  {
+    id: "social",
+    name: "Social Life",
+    icon: Users,
+    hex: "#3b82f6",
+    color: "text-blue-500",
+    bgColor: "bg-blue-500/10",
+    borderColor: "border-blue-500/30",
+    progressColor: "bg-blue-500",
+    sortOrder: 4,
+    suggestions: [
+      { title: "Attend 1 social event per week", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "Call a friend 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Host 1 dinner per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Join a new group or club", defaultTarget: 1, defaultPeriod: "monthly" },
+    ],
+  },
+  {
+    id: "personal_growth",
+    name: "Personal Growth",
+    icon: Sprout,
+    hex: "#eab308",
+    color: "text-yellow-500",
+    bgColor: "bg-yellow-500/10",
+    borderColor: "border-yellow-500/30",
+    progressColor: "bg-yellow-500",
+    sortOrder: 5,
+    suggestions: [
+      { title: "Meditate 10 mins daily", defaultTarget: 10, defaultPeriod: "daily" },
+      { title: "Journal every morning", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Read 1 book per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Practice gratitude daily", defaultTarget: 1, defaultPeriod: "daily" },
+    ],
+  },
+  {
+    id: "finances",
+    name: "Finances",
+    icon: DollarSign,
+    hex: "#10b981",
+    color: "text-emerald-500",
+    bgColor: "bg-emerald-500/10",
+    borderColor: "border-emerald-500/30",
+    progressColor: "bg-emerald-500",
+    sortOrder: 6,
+    suggestions: [
+      { title: "Save $500 per month", defaultTarget: 500, defaultPeriod: "monthly" },
+      { title: "Track expenses daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Review budget weekly", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "No impulse purchases for 30 days", defaultTarget: 30, defaultPeriod: "monthly" },
+    ],
+  },
+  {
+    id: "mindfulness",
+    name: "Mindfulness & Spirituality",
+    icon: Brain,
+    hex: "#6366f1",
+    color: "text-indigo-500",
+    bgColor: "bg-indigo-500/10",
+    borderColor: "border-indigo-500/30",
+    progressColor: "bg-indigo-500",
+    sortOrder: 7,
+    suggestions: [
+      { title: "Meditate 20 mins daily", defaultTarget: 20, defaultPeriod: "daily" },
+      { title: "Digital detox 1 hour before bed", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Practice breathwork 3x weekly", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Attend 1 yoga class per week", defaultTarget: 1, defaultPeriod: "weekly" },
+    ],
+  },
+  {
+    id: "education",
+    name: "Education & Skills",
+    icon: GraduationCap,
+    hex: "#06b6d4",
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10",
+    borderColor: "border-cyan-500/30",
+    progressColor: "bg-cyan-500",
+    sortOrder: 8,
+    suggestions: [
+      { title: "Study 1 hour daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Complete 1 online course per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Practice new skill 30 mins daily", defaultTarget: 30, defaultPeriod: "daily" },
+      { title: "Read 20 pages daily", defaultTarget: 20, defaultPeriod: "daily" },
+    ],
+  },
+  {
+    id: "custom",
+    name: "Custom",
+    icon: Star,
+    hex: "#9ca3af",
+    color: "text-gray-400",
+    bgColor: "bg-gray-500/10",
+    borderColor: "border-gray-500/30",
+    progressColor: "bg-gray-400",
+    sortOrder: 99,
+    suggestions: [],
+  },
+]
+
+/**
+ * Map for O(1) life area lookup
+ */
+export const LIFE_AREA_MAP: Record<string, LifeAreaConfig> =
+  Object.fromEntries(LIFE_AREAS.map((a) => [a.id, a]))
+
+/**
+ * Get life area config, returning custom defaults for unknown areas
+ */
+export function getLifeAreaConfig(id: string): LifeAreaConfig {
+  const config = LIFE_AREA_MAP[id]
+  if (config) return config
+
+  // Unknown area — return custom defaults with the given id
+  const customConfig = LIFE_AREA_MAP["custom"]
+  return {
+    ...customConfig,
+    id,
+    name: id.charAt(0).toUpperCase() + id.slice(1).replace(/_/g, " "),
+  }
+}

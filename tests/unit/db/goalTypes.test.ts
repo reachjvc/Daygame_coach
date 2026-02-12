@@ -22,8 +22,15 @@ function createGoalRow(overrides: Partial<UserGoalRow> = {}): UserGoalRow {
     best_streak: 0,
     is_active: true,
     is_archived: false,
+    linked_metric: null,
+    position: 0,
     created_at: "2026-02-01T00:00:00Z",
     updated_at: "2026-02-01T00:00:00Z",
+    life_area: "health_fitness",
+    parent_goal_id: null,
+    target_date: null,
+    description: null,
+    goal_type: "recurring",
     ...overrides,
   }
 }
@@ -155,15 +162,43 @@ describe("computeGoalProgress", () => {
       vi.useRealTimers()
     })
 
-    test("should return null when no custom_end_date", () => {
+    test("should return null when no custom_end_date or target_date", () => {
       // Arrange
-      const goal = createGoalRow({ custom_end_date: null })
+      const goal = createGoalRow({ custom_end_date: null, target_date: null })
 
       // Act
       const result = computeGoalProgress(goal)
 
       // Assert
       expect(result.days_remaining).toBeNull()
+    })
+
+    test("should use target_date when both target_date and custom_end_date are set", () => {
+      // Arrange - target_date takes precedence
+      const goal = createGoalRow({
+        target_date: "2026-02-14",
+        custom_end_date: "2026-02-21",
+      })
+
+      // Act
+      const result = computeGoalProgress(goal)
+
+      // Assert - should use target_date (7 days), not custom_end_date (14 days)
+      expect(result.days_remaining).toBe(7)
+    })
+
+    test("should fall back to custom_end_date when no target_date", () => {
+      // Arrange
+      const goal = createGoalRow({
+        target_date: null,
+        custom_end_date: "2026-02-14",
+      })
+
+      // Act
+      const result = computeGoalProgress(goal)
+
+      // Assert
+      expect(result.days_remaining).toBe(7)
     })
 
     test("should return positive number for future date", () => {

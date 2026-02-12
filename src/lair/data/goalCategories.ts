@@ -1,15 +1,12 @@
 /**
- * Goal category definitions with colors, icons, and suggestions
+ * Goal category definitions — adapter layer
+ *
+ * Delegates to src/goals/data/lifeAreas.ts for the actual data.
+ * Re-exports with the old interface so existing imports keep working.
  */
 
-import {
-  Dumbbell,
-  Utensils,
-  Heart,
-  MessageCircle,
-  Briefcase,
-  type LucideIcon,
-} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import { LIFE_AREAS, LIFE_AREA_MAP, getLifeAreaConfig } from "@/src/goals/data/lifeAreas"
 import type { GoalPeriod, LinkedMetric } from "@/src/db/goalTypes"
 
 export interface GoalSuggestion {
@@ -17,7 +14,6 @@ export interface GoalSuggestion {
   defaultTarget: number
   defaultPeriod: GoalPeriod
   linkedMetric?: LinkedMetric
-  /** If true, this is a "featured" template shown prominently */
   featured?: boolean
 }
 
@@ -25,133 +21,66 @@ export interface GoalCategoryConfig {
   id: string
   name: string
   icon: LucideIcon
-  /** Hex color value for dynamic styling */
   hex: string
-  color: string // Tailwind text color class
-  bgColor: string // Tailwind background color class
-  borderColor: string // Tailwind border color class
-  progressColor: string // Tailwind color for progress bar
+  color: string
+  bgColor: string
+  borderColor: string
+  progressColor: string
   suggestions: GoalSuggestion[]
 }
 
-export const GOAL_CATEGORIES: GoalCategoryConfig[] = [
-  {
-    id: "fitness",
-    name: "Fitness",
-    icon: Dumbbell,
-    hex: "#3b82f6",
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/30",
-    progressColor: "bg-blue-500",
-    suggestions: [
-      { title: "Go to gym 4x per week", defaultTarget: 4, defaultPeriod: "weekly" },
-      { title: "Do 100 pushups daily", defaultTarget: 100, defaultPeriod: "daily" },
-      { title: "Hit 10,000 steps daily", defaultTarget: 10000, defaultPeriod: "daily" },
-      { title: "Complete 3 strength sessions", defaultTarget: 3, defaultPeriod: "weekly" },
-      { title: "Stretch for 15 mins daily", defaultTarget: 15, defaultPeriod: "daily" },
-    ],
-  },
-  {
-    id: "eating",
-    name: "Eating",
-    icon: Utensils,
-    hex: "#22c55e",
-    color: "text-green-500",
-    bgColor: "bg-green-500/10",
-    borderColor: "border-green-500/30",
-    progressColor: "bg-green-500",
-    suggestions: [
-      { title: "Eat 150g protein daily", defaultTarget: 150, defaultPeriod: "daily" },
-      { title: "No alcohol 5 days/week", defaultTarget: 5, defaultPeriod: "weekly" },
-      { title: "Meal prep on Sunday", defaultTarget: 1, defaultPeriod: "weekly" },
-      { title: "Drink 3L water daily", defaultTarget: 3, defaultPeriod: "daily" },
-      { title: "No sugar after 6pm", defaultTarget: 1, defaultPeriod: "daily" },
-    ],
-  },
-  {
-    id: "cardio",
-    name: "Cardio",
-    icon: Heart,
-    hex: "#ef4444",
-    color: "text-red-500",
-    bgColor: "bg-red-500/10",
-    borderColor: "border-red-500/30",
-    progressColor: "bg-red-500",
-    suggestions: [
-      { title: "Run 5km 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
-      { title: "20 mins cardio daily", defaultTarget: 20, defaultPeriod: "daily" },
-      { title: "10,000 steps on off days", defaultTarget: 10000, defaultPeriod: "daily" },
-      { title: "Cycle to work", defaultTarget: 5, defaultPeriod: "weekly" },
-      { title: "Swimming 2x per week", defaultTarget: 2, defaultPeriod: "weekly" },
-    ],
-  },
-  {
-    id: "daygame",
-    name: "Daygame",
-    icon: MessageCircle,
-    hex: "#f97316",
-    color: "text-orange-500",
-    bgColor: "bg-orange-500/10",
-    borderColor: "border-orange-500/30",
-    progressColor: "bg-orange-500",
-    suggestions: [
-      { title: "10 approaches per week", defaultTarget: 10, defaultPeriod: "weekly", linkedMetric: "approaches_weekly", featured: true },
-      { title: "3 sessions per week", defaultTarget: 3, defaultPeriod: "weekly", linkedMetric: "sessions_weekly", featured: true },
-      { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly", linkedMetric: "numbers_weekly" },
-      { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly", linkedMetric: "instadates_weekly" },
-      { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
-    ],
-  },
-  {
-    id: "business",
-    name: "Business",
-    icon: Briefcase,
-    hex: "#a855f7",
-    color: "text-purple-500",
-    bgColor: "bg-purple-500/10",
-    borderColor: "border-purple-500/30",
-    progressColor: "bg-purple-500",
-    suggestions: [
-      { title: "Deep work 4 hours daily", defaultTarget: 4, defaultPeriod: "daily" },
-      { title: "No social media before noon", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Read 30 mins daily", defaultTarget: 30, defaultPeriod: "daily" },
-      { title: "Write 500 words daily", defaultTarget: 500, defaultPeriod: "daily" },
-      { title: "Complete 3 high-value tasks", defaultTarget: 3, defaultPeriod: "daily" },
-    ],
-  },
-]
+/**
+ * GOAL_CATEGORIES maps to LIFE_AREAS for backward compat.
+ * New code should use LIFE_AREAS directly.
+ */
+export const GOAL_CATEGORIES: GoalCategoryConfig[] = LIFE_AREAS.map((area) => ({
+  id: area.id,
+  name: area.name,
+  icon: area.icon,
+  hex: area.hex,
+  color: area.color,
+  bgColor: area.bgColor,
+  borderColor: area.borderColor,
+  progressColor: area.progressColor,
+  suggestions: area.suggestions,
+}))
 
 /**
- * Map for O(1) category lookup
+ * Map for O(1) category lookup — delegates to LIFE_AREA_MAP
  */
 export const GOAL_CATEGORY_MAP: Record<string, GoalCategoryConfig> =
   Object.fromEntries(GOAL_CATEGORIES.map((c) => [c.id, c]))
 
 /**
- * Default category config for custom categories
+ * Default category config for unknown categories
  */
-export const DEFAULT_CATEGORY_CONFIG: Omit<GoalCategoryConfig, "id" | "name"> = {
-  icon: Briefcase,
-  hex: "#9ca3af",
-  color: "text-gray-400",
-  bgColor: "bg-gray-500/10",
-  borderColor: "border-gray-500/30",
-  progressColor: "bg-gray-400",
-  suggestions: [] as GoalSuggestion[],
-}
+export const DEFAULT_CATEGORY_CONFIG: Omit<GoalCategoryConfig, "id" | "name"> = (() => {
+  const custom = getLifeAreaConfig("custom")
+  return {
+    icon: custom.icon,
+    hex: custom.hex,
+    color: custom.color,
+    bgColor: custom.bgColor,
+    borderColor: custom.borderColor,
+    progressColor: custom.progressColor,
+    suggestions: custom.suggestions,
+  }
+})()
 
 /**
- * Get category config, returning defaults for custom categories
+ * Get category config — delegates to getLifeAreaConfig
  */
 export function getCategoryConfig(categoryId: string): GoalCategoryConfig {
-  const config = GOAL_CATEGORY_MAP[categoryId]
-  if (config) return config
-
-  // Custom category - return defaults with the custom name
+  const config = getLifeAreaConfig(categoryId)
   return {
-    id: categoryId,
-    name: categoryId.charAt(0).toUpperCase() + categoryId.slice(1),
-    ...DEFAULT_CATEGORY_CONFIG,
+    id: config.id,
+    name: config.name,
+    icon: config.icon,
+    hex: config.hex,
+    color: config.color,
+    bgColor: config.bgColor,
+    borderColor: config.borderColor,
+    progressColor: config.progressColor,
+    suggestions: config.suggestions,
   }
 }

@@ -1,8 +1,8 @@
 # Tracking Slice Architecture Audit & Remediation Plan
 
-**Status:** IN PROGRESS (Phase 1 Complete)
+**Status:** IN PROGRESS (Phase 2 Complete)
 **Created:** 2026-02-09
-**Last Updated:** 2026-02-09 (Phase 1 - E2E tests for CustomReportBuilder)
+**Last Updated:** 2026-02-12 (Phase 2 - Pagination for milestones + draft reports)
 
 ## Reference Documents
 
@@ -169,22 +169,22 @@ Promise.all([
 
 ---
 
-## Phase 2: Performance Fixes
+## Phase 2: Performance Fixes ✅
 
 ### Tasks
 
-- [ ] Paginate milestones endpoint
-  - File: `app/api/tracking/milestones/route.ts`
-  - Add: `?limit=50` default, `?offset=0`
-  - Dashboard shows recent 20, "View All" loads more
+- [x] Paginate milestones endpoint
+  - `trackingRepo.getUserMilestones()` accepts optional `limit`
+  - `trackingService.getUserMilestones()` passes `limit` through
+  - `/api/tracking/milestones` accepts `?limit=N` query param
+  - `useTrackingStats` now fetches `?limit=20` (was unbounded)
 
-- [ ] Paginate draft reports
-  - File: `src/db/trackingRepo.ts` - `getDraftFieldReports()`
-  - Add: optional `limit` parameter
+- [x] Paginate draft reports
+  - `trackingRepo.getDraftFieldReports()` accepts optional `limit`
+  - `trackingService.getDraftFieldReports()` passes `limit` through
+  - `/api/tracking/field-report?drafts=true` now respects existing `limit` param for drafts too
 
-- [ ] Smooth filter transitions in history
-  - File: `src/tracking/hooks/useFieldReports.ts`
-  - Change: Don't clear list on filter change - fetch then replace
+- [~] Smooth filter transitions in history — DEFERRED (low impact, current behavior works correctly)
 
 ---
 

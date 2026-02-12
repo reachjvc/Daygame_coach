@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get("offset") || "0", 10)
 
     if (drafts) {
-      const reports = await getDraftFieldReports(user.id)
+      const reports = await getDraftFieldReports(user.id, limit)
       return NextResponse.json(reports)
     }
 

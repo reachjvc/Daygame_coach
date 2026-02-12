@@ -3,7 +3,8 @@
  */
 
 export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
-export type GoalPeriod = "daily" | "weekly" | "monthly" | "custom"
+export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
+export type GoalType = "recurring" | "milestone"
 
 /**
  * Metrics that can be linked to goals for auto-sync with tracking data
@@ -37,6 +38,11 @@ export interface UserGoalRow {
   position: number
   created_at: string
   updated_at: string
+  life_area: string
+  parent_goal_id: string | null
+  target_date: string | null
+  description: string | null
+  goal_type: GoalType
 }
 
 /**
@@ -51,6 +57,11 @@ export interface UserGoalInsert {
   custom_end_date?: string
   linked_metric?: LinkedMetric
   position?: number
+  life_area?: string
+  parent_goal_id?: string
+  target_date?: string
+  description?: string
+  goal_type?: GoalType
 }
 
 /**
@@ -67,6 +78,11 @@ export interface UserGoalUpdate {
   is_archived?: boolean
   linked_metric?: LinkedMetric
   position?: number
+  life_area?: string
+  parent_goal_id?: string | null
+  target_date?: string | null
+  description?: string | null
+  goal_type?: GoalType
 }
 
 /**
@@ -76,6 +92,13 @@ export interface GoalWithProgress extends UserGoalRow {
   progress_percentage: number
   is_complete: boolean
   days_remaining: number | null
+}
+
+/**
+ * Hierarchical goal node for tree views
+ */
+export interface GoalTreeNode extends GoalWithProgress {
+  children: GoalTreeNode[]
 }
 
 /**
@@ -90,8 +113,9 @@ export function computeGoalProgress(goal: UserGoalRow): GoalWithProgress {
   const is_complete = goal.current_value >= goal.target_value
 
   let days_remaining: number | null = null
-  if (goal.custom_end_date) {
-    const endDate = new Date(goal.custom_end_date)
+  const dateStr = goal.target_date ?? goal.custom_end_date
+  if (dateStr) {
+    const endDate = new Date(dateStr)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     endDate.setHours(0, 0, 0, 0)

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -64,6 +64,12 @@ const testPages = [
     href: "/test/calibration",
     description: "View evaluator diagnostics and identify blind spots",
     icon: Target,
+  },
+  {
+    name: "Goals Views",
+    href: "/test/goals-views",
+    description: "Compare 4 goal view layouts: Dashboard, Tree, Kanban, List",
+    icon: LayoutGrid,
   },
 ]
 

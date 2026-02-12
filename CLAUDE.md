@@ -13,10 +13,9 @@ If you enter planmode and give user a summary, keep it conscise. Sacrifice gramm
 |---|-------|--------|
 | 1 | Did I write/modify code? | Run `npm test` first |
 | 2 | Did tests fail? | Report ALL failures, check `.test-known-failures.json` (Rule 10) |
-| 3 | Did I make major code changes? | Run `code-review` subagent (see below) |
-| 4 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
-| 5 | Did I run a pipeline stage? | Set status to PENDING, NEVER auto-PASS (Rule 9) |
-| 6 | Warn user EVERY TIME if there's security risks. Do not make changes with high risk without verifying that this is correct |
+| 3 | Am I touching auth, RLS, payments, or permissions? | Follow Security Rules below |
+| 4 | Did I run a pipeline stage? | Set status to PENDING, NEVER auto-PASS (Rule 9) |
+| 5 | Warn user EVERY TIME if there's security risks. Do not make changes with high risk without verifying that this is correct |
 
 if in doubt, ask user if documents should be updated or not.
 
@@ -92,16 +91,6 @@ When writing RLS policies, verify:
 
 ---
 
-### 8. Code Review Subagent (AUTOMATED via Stop Hook)
-
-After any medium or major code changes, invoke the code review subagent, BEFORE returning to user
-
-**How to invoke:** Use the Task tool with:
-```
-subagent_type: "general-purpose"
-prompt: "Code review for recent changes. 1) Read docs/testing_behavior.md. 2) Run git diff to find changed files. 3) For each changed file: identify new exports, functions, components, types, and config. 4) Check tests/unit/ and tests/e2e/ for corresponding test coverage. 5) Run npm test to verify existing tests pass. 6) Report: what's tested, what's NOT tested (be specific: function names, edge cases, integration points), code quality notes. Do NOT implement tests - only identify gaps."
-```
-
 ### 9. Pipeline Stage Verification (NEVER Auto-Pass)
 
 **CRITICAL: Claude must NEVER mark a pipeline stage as PASS without explicit user approval.**
@@ -133,6 +122,110 @@ When fixing errors (type errors, lint errors, build failures):
 4. Ship broken code that silently loses functionality
 ```
 if unsure, verify with the user.
+
+### 12. Plan Implementation Completeness (NEVER Skip Plan Items)
+
+**CRITICAL: When implementing from a plan doc, every single item must be tracked and delivered.**
+
+**Before writing any code:**
+1. Read the plan doc line by line
+2. Create a TaskList with one task per deliverable (every route, component, function, milestone, etc.)
+3. Do NOT start coding until the full TaskList exists
+
+**During implementation:**
+- Mark each task in_progress before starting, completed only after code + test
+- If a subagent/team is used, each agent must reference the TaskList and only mark tasks they fully completed
+- Never summarize "done" with open tasks remaining
+
+**After implementation (mandatory audit — CANNOT be skipped):**
+
+"Files exist + tests pass" is NOT verification. That catches regressions, not missing features.
+
+1. Re-read the plan doc line by line
+2. For EVERY acceptance test step: trace the code path and confirm it works
+   - "Side-by-side mode on desktop" → grep for it, read the component, confirm it renders
+   - "Toast shows X" → find the toast call in the code
+   - "Clicking X does Y" → find the onClick handler, confirm it calls Y
+3. For EVERY deliverable list item: `Read` the actual file and confirm the feature exists in the code (not just that the file exists)
+4. Report any gaps to the user BEFORE saying "done"
+5. If anything is missing, list it explicitly — never say "mostly complete"
+
+**Agent team builds have extra failure modes:**
+- Agents self-report "done" without building everything → Lead MUST verify by reading code, not trusting reports
+- Lead checks file existence via Glob → proves nothing about contents. Use `Read` + `Grep` to verify features
+- "827 tests pass" → means old tests pass, says nothing about new functionality. Check if new unit tests were added for new pure functions (services, helpers)
+- Plan says "X feature" but no agent was explicitly told to build it → it won't exist. Cross-reference every plan item against what was in each agent's prompt
+
+**Applies to:** All plan docs in `docs/plans/`, all multi-phase features, all agent team work.
+
+### 13. Plan Writing for Agent Execution (CRITICAL for /build-with-agent-team)
+
+**Plans are agent instructions, not product specs.** A plan that reads well to a human PM will fail when given to Claude agents. Every plan in `docs/plans/` must follow these rules:
+
+#### Milestones = working app states, not architecture layers
+
+```
+WRONG (organized by layer):
+  Phase 1: Data model (types, repo, migrations)
+  Phase 2: API routes
+  Phase 3: UI components
+  → Agent builds all backend, half-builds UI, declares victory
+
+RIGHT (organized by user capability):
+  Milestone 1: "User can create a goal with life area"
+  Milestone 2: "User can see goal hierarchy tree"
+  Milestone 3: "GoalsTab becomes portal to hub"
+  → Each milestone is a testable, working app state
+```
+
+#### Every deliverable needs an acceptance test
+
+```
+WRONG:
+  - GoalsHubPage: Header with "New Goal" button and view switcher
+
+RIGHT:
+  - GoalsHubPage: "New Goal" button opens GoalFormModal, user fills form,
+    submits, goal appears in list.
+    VERIFY: click New Goal → fill form → submit → goal visible in list
+```
+
+#### Destructive changes must be flagged and gated
+
+Any item that removes or rewrites existing working functionality:
+
+```
+DESTRUCTIVE: Rewrites GoalsTab — removes existing goal creation UI
+DEPENDS ON: Milestone 1 verified (GoalsHubPage goal creation works)
+SAFE BECAUSE: Goal creation moved to GoalsHubPage
+DO NOT START until dependency is confirmed working
+```
+
+**Rule: Never remove working functionality until its replacement is verified working.**
+
+#### Agent team coordination
+
+When a plan targets `/build-with-agent-team`:
+- Specify which files each agent owns (no two agents edit the same file)
+- Mark ordering constraints explicitly ("Agent B must not start until Agent A's milestone is verified")
+- Flag shared dependencies ("both agents need life_areas table — Agent A creates migration, Agent B waits")
+
+#### Plan template
+
+Every plan should use this structure per milestone:
+
+```
+MILESTONE N: "[User-facing capability in plain English]"
+  DEPENDS ON: Milestone X verified
+  DESTRUCTIVE: yes/no (if yes, explain what gets removed and why it's safe)
+  FILES TO CREATE: [list]
+  FILES TO MODIFY: [list]
+  FILES TO NOT TOUCH: [list — prevents premature refactoring]
+  ACCEPTANCE TEST: [exact click path or API call to verify]
+  DONE WHEN: [concrete observable outcome]
+```
+
+---
 
 ## Architecture (Enforced by tests/unit/architecture.test.ts)
 

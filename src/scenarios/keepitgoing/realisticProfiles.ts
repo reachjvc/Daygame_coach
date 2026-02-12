@@ -94,7 +94,7 @@ export const PROFILES = {
 export const RUBRIC = {
   version: 1,
   interest: { start: 4, min: 1, max: 10 },
-  exitRisk: { start: 0, min: 0, max: 3 },
+  exitRisk: { start: 0, min: 0, max: 4 },
   pacing: {
     noInterestedBeforeTurn: 4,
     maxInterestBeforeTurn: [
@@ -105,7 +105,7 @@ export const RUBRIC = {
   scoreToInterestDelta: [
     { minScore: 9, maxScore: 10, delta: 2 },
     { minScore: 7, maxScore: 8, delta: 1 },
-    { minScore: 5, maxScore: 6, delta: 0 },
+    { minScore: 5, maxScore: 6, delta: 1 },
     { minScore: 3, maxScore: 4, delta: -1 },
     { minScore: 1, maxScore: 2, delta: -2 },
   ],
@@ -116,7 +116,7 @@ export const RUBRIC = {
       description: "References or builds on her previous statement",
     },
     cold_read: {
-      interestDelta: 1,
+      interestDelta: 0,
       exitRiskDelta: 0,
       description: "Makes an assumption about her personality/vibe",
     },
@@ -125,13 +125,13 @@ export const RUBRIC = {
       exitRiskDelta: 0,
       description: "Playful push-pull that makes her laugh or react",
     },
-    interview_question: {
-      interestDelta: -1,
-      exitRiskDelta: 1,
+    question: {
+      interestDelta: 0,
+      exitRiskDelta: 0,
       description: "Logical question without play (where from, what do you do)",
     },
     too_long: {
-      interestDelta: -1,
+      interestDelta: 0,
       exitRiskDelta: 1,
       description: "Overly wordy, more than 2 sentences, or monologuing",
     },
@@ -158,7 +158,7 @@ export const RUBRIC = {
   },
   endRules: [
     {
-      when: "exitRisk >= 3",
+      when: "exitRisk >= 4",
       endConversation: true,
       reason: "she is done / uncomfortable",
     },
@@ -168,7 +168,7 @@ export const RUBRIC = {
       reason: "low interest + annoyance",
     },
     {
-      when: "interestLevel <= 3 && turn >= 3 && quality == 'deflect'",
+      when: "interestLevel <= 2 && turn >= 5 && quality == 'deflect'",
       endConversation: true,
       reason: "cold and not warming up",
     },
@@ -251,8 +251,8 @@ export function checkEndRules(
   turnCount: number,
   quality: string
 ): { isEnded: boolean; endReason?: string } {
-  // Rule 1: exitRisk >= 3
-  if (exitRisk >= 3) {
+  // Rule 1: exitRisk >= 4
+  if (exitRisk >= 4) {
     return { isEnded: true, endReason: "she is done / uncomfortable" }
   }
 
@@ -261,8 +261,8 @@ export function checkEndRules(
     return { isEnded: true, endReason: "low interest + annoyance" }
   }
 
-  // Rule 3: cold and not warming up after turn 3
-  if (interestLevel <= 3 && turnCount >= 3 && quality === "deflect") {
+  // Rule 3: cold and not warming up after turn 5
+  if (interestLevel <= 2 && turnCount >= 5 && quality === "deflect") {
     return { isEnded: true, endReason: "cold and not warming up" }
   }
 

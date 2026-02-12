@@ -20,9 +20,11 @@ import {
   Star,
   X,
   Heart,
+  Target,
 } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, FieldReportRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
+import type { GoalWithProgress } from "@/src/db/goalTypes"
 import type { SessionSummaryData } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, SESSION_IMPORT_FIELD_IDS } from "../config"
 import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER, getSystemTemplateInfo, type TemplateSlug } from "../data/templates"
@@ -59,6 +61,10 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
   const [reportTitle, setReportTitle] = useState("")
   const [reportDate, setReportDate] = useState<Date>(new Date())
   const [postSessionMood, setPostSessionMood] = useState<number | null>(null)
+
+  // Goal auto-increment state
+  const [goalsUpdateMessage, setGoalsUpdateMessage] = useState<string | null>(null)
+  const [affectedGoals, setAffectedGoals] = useState<GoalWithProgress[]>([])
 
   // Edit mode state
   const [existingReport, setExistingReport] = useState<FieldReportRow | null>(null)
@@ -596,6 +602,11 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
         throw new Error(details || error.error || "Failed to save report")
       }
 
+      // Auto-increment daygame goals on new report save (not edit, not draft)
+      if (!isEditMode && !isDraft && approachCount && approachCount > 0) {
+        await incrementDaygameGoals(approachCount)
+      }
+
       // Navigate back - go back for edit (returns to wherever user came from), to dashboard for create
       if (isEditMode) {
         router.back()
@@ -624,6 +635,86 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     }
     return true
   }
+
+  // Fetch daygame goals that would be affected by approach count
+  const fetchAffectedGoals = async (approachCount: number) => {
+    if (approachCount <= 0) {
+      setAffectedGoals([])
+      return
+    }
+    try {
+      const res = await fetch("/api/goals?life_area=daygame")
+      if (res.ok) {
+        const data = await res.json()
+        const goals: GoalWithProgress[] = Array.isArray(data) ? data : []
+        const matching = goals.filter(
+          (g) =>
+            g.is_active &&
+            !g.is_archived &&
+            g.linked_metric === "approaches_weekly" &&
+            g.goal_type === "recurring"
+        )
+        setAffectedGoals(matching)
+      }
+    } catch {
+      // Non-critical — silently ignore
+    }
+  }
+
+  // Auto-increment daygame goals after successful save
+  const incrementDaygameGoals = async (approachCount: number) => {
+    if (approachCount <= 0) return
+    try {
+      const res = await fetch("/api/goals?life_area=daygame")
+      if (!res.ok) return
+      const data = await res.json()
+      const goals: GoalWithProgress[] = Array.isArray(data) ? data : []
+      const matching = goals.filter(
+        (g) =>
+          g.is_active &&
+          !g.is_archived &&
+          g.linked_metric === "approaches_weekly" &&
+          g.goal_type === "recurring"
+      )
+      if (matching.length === 0) return
+
+      let updatedCount = 0
+      for (const goal of matching) {
+        try {
+          const incrementRes = await fetch(`/api/goals/${goal.id}/increment`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ amount: approachCount }),
+          })
+          if (incrementRes.ok) updatedCount++
+        } catch {
+          // Continue with other goals if one fails
+        }
+      }
+
+      if (updatedCount > 0) {
+        setGoalsUpdateMessage(
+          `Updated ${updatedCount} daygame goal${updatedCount > 1 ? "s" : ""} with ${approachCount} approach${approachCount > 1 ? "es" : ""}`
+        )
+      }
+    } catch {
+      // Non-critical — don't block navigation
+    }
+  }
+
+  // Fetch affected goals when approach count changes
+  useEffect(() => {
+    if (isEditMode) return // Don't preview in edit mode
+    const count = sessionData?.approachCount ?? 0
+    // Also check form "approaches" field
+    const formApproaches = formValues["approaches"]
+    const approachCount = formApproaches
+      ? (typeof formApproaches === "number" ? formApproaches : Number(formApproaches))
+      : count
+    if (!isNaN(approachCount) && approachCount > 0) {
+      fetchAffectedGoals(approachCount)
+    }
+  }, [sessionData?.approachCount, formValues["approaches"], isEditMode])
 
   // In edit mode, wait for template matching to be attempted
   const isWaitingForTemplateMatch = isEditMode &&
@@ -1238,6 +1329,38 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
               />
             ))}
           </div>
+
+          {/* Goals Affected Preview */}
+          {!isEditMode && affectedGoals.length > 0 && (
+            <div className="mt-6 p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="size-4 text-orange-500" />
+                <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                  Goals Affected
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-2">
+                Submitting will auto-update these daygame goals:
+              </p>
+              <div className="space-y-1">
+                {affectedGoals.map((goal) => (
+                  <div key={goal.id} className="flex items-center justify-between text-sm">
+                    <span className="truncate">{goal.title}</span>
+                    <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                      {goal.current_value}/{goal.target_value}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Goals Update Confirmation */}
+          {goalsUpdateMessage && (
+            <div className="mt-4 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-sm">
+              {goalsUpdateMessage}
+            </div>
+          )}
 
           {submitError && (
             <div className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-sm">
