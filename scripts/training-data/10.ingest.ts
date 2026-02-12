@@ -129,6 +129,41 @@ type ChunksFile = {
 // CLI
 // ---------------------------------------------------------------------------
 
+function printUsage(): void {
+  console.log(`Usage:
+  node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts [options]
+
+Core:
+  --manifest <path>         Restrict ingest to manifest scope
+  --source <name>           Restrict ingest to one source
+  --dry-run                 Validate and print without DB writes
+  --verify                  Verify-only mode
+  --full, --force           Force re-ingest even when state appears unchanged
+
+Gates:
+  --skip-taxonomy-gate      Skip Stage 08 taxonomy gate (manifest mode)
+  --skip-readiness-gate     Skip readiness summary gate (manifest mode)
+  --readiness-summary <p>   Override readiness summary path
+
+Semantic Gate:
+  --quality-gate                 Strict semantic policy preset
+  --semantic-batch-id <id>       Read judgements from data/validation_judgements/<id>/
+  --semantic-min-fresh <n>       Require at least n fresh judgements
+  --semantic-min-mean-overall <n>
+                                 Require mean overall score >= n (0..100)
+  --semantic-max-major-error-rate <n>
+                                 Require major_error_rate <= n (0..1)
+  --semantic-max-hallucination-rate <n>
+                                 Require hallucination_rate <= n (0..1)
+  --semantic-fail-on-stale       Fail when stale judgements are present
+  --semantic-report-out <path>   Write semantic gate report to this path
+
+Other:
+  --allow-unstable-source-key    Allow legacy/unstable source keys (manifest mode)
+  -h, --help                     Show this help
+`)
+}
+
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
@@ -1347,7 +1382,12 @@ async function saveState(statePath: string, state: IngestStateV1): Promise<void>
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2))
+  const rawArgs = process.argv.slice(2)
+  if (rawArgs.includes("-h") || rawArgs.includes("--help")) {
+    printUsage()
+    return
+  }
+  const args = parseArgs(rawArgs)
 
   if (args.qualityGate) {
     if (!args.manifest) {
