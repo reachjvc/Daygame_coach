@@ -115,6 +115,61 @@ def _load_verdict(verification_path: Path) -> Optional[str]:
     return verdict if isinstance(verdict, str) and verdict else None
 
 
+def _load_waiver_rules(waiver_path: Path) -> Set[Tuple[str, str]]:
+    """
+    Load waiver rules as (video_id, check) tuples.
+
+    Supported JSON formats:
+      {"waivers":[{"video_id":"abc123...", "check":"some_check"}, ...]}
+      [{"video_id":"abc123...", "check":"some_check"}, ...]
+
+    Wildcards:
+      video_id="*" or check="*"
+    """
+    try:
+        data = json.loads(waiver_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise ValueError(f"Could not read waiver file: {exc}") from exc
+
+    items: List[Any]
+    if isinstance(data, dict):
+        waivers = data.get("waivers")
+        if not isinstance(waivers, list):
+            raise ValueError("Waiver file object must contain a 'waivers' list")
+        items = waivers
+    elif isinstance(data, list):
+        items = data
+    else:
+        raise ValueError("Waiver file must be a JSON object or list")
+
+    rules: Set[Tuple[str, str]] = set()
+    for idx, item in enumerate(items):
+        if not isinstance(item, dict):
+            raise ValueError(f"Waiver at index {idx} is not an object")
+        vid = item.get("video_id")
+        chk = item.get("check")
+        if not isinstance(vid, str) or not vid.strip():
+            raise ValueError(f"Waiver at index {idx} missing non-empty 'video_id'")
+        if not isinstance(chk, str) or not chk.strip():
+            raise ValueError(f"Waiver at index {idx} missing non-empty 'check'")
+        rules.add((vid.strip(), chk.strip()))
+
+    return rules
+
+
+def _is_waived(issue: Dict[str, Any], rules: Set[Tuple[str, str]]) -> bool:
+    if not rules:
+        return False
+    vid = str(issue.get("video_id", "")).strip() or "*"
+    chk = str(issue.get("check", "")).strip() or "*"
+    return (
+        (vid, chk) in rules
+        or ("*", chk) in rules
+        or (vid, "*") in rules
+        or ("*", "*") in rules
+    )
+
+
 def _validate_chunks_payload(chunks_path: Path) -> List[str]:
     data = _load_json(chunks_path)
     if not isinstance(data, dict):
@@ -259,6 +314,10 @@ def main() -> None:
         action="store_true",
         help="Also require a valid Stage 08 manifest report (and fail on FAIL status)",
     )
+    parser.add_argument(
+        "--waiver-file",
+        help="Optional JSON file with issue waivers ({\"waivers\":[{\"video_id\":\"...\",\"check\":\"...\"}]})",
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -271,6 +330,21 @@ def main() -> None:
     if not manifest_path.exists():
         print(f"{LOG_PREFIX} ERROR: Manifest file not found: {manifest_path}", file=sys.stderr)
         sys.exit(2)
+
+    waiver_rules: Set[Tuple[str, str]] = set()
+    waiver_file_path: Optional[Path] = None
+    if args.waiver_file:
+        waiver_file_path = Path(args.waiver_file)
+        if not waiver_file_path.is_absolute():
+            waiver_file_path = repo_root() / waiver_file_path
+        if not waiver_file_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Waiver file not found: {waiver_file_path}", file=sys.stderr)
+            sys.exit(2)
+        try:
+            waiver_rules = _load_waiver_rules(waiver_file_path)
+        except ValueError as exc:
+            print(f"{LOG_PREFIX} ERROR: Invalid waiver file {waiver_file_path}: {exc}", file=sys.stderr)
+            sys.exit(2)
 
     entries = _load_manifest_entries(manifest_path, source=args.source)
     if not entries:
@@ -775,6 +849,26 @@ def main() -> None:
                 })
                 check_counts["warning:stage07_present_despite_reject"] += 1
 
+    waivers_applied = 0
+    if waiver_rules:
+        for issue in issues:
+            sev = issue.get("severity")
+            if sev not in {"error", "warning"}:
+                continue
+            if _is_waived(issue, waiver_rules):
+                issue["waived"] = True
+                issue["original_severity"] = sev
+                issue["severity"] = "info"
+                waivers_applied += 1
+
+    # Recompute check counts after waiver application to keep summary/gates consistent.
+    check_counts = Counter()
+    for issue in issues:
+        sev = issue.get("severity")
+        chk = issue.get("check", "unknown")
+        if sev in {"error", "warning"}:
+            check_counts[f"{sev}:{chk}"] += 1
+
     elapsed = time.time() - start
 
     errors = sum(1 for i in issues if i.get("severity") == "error")
@@ -844,6 +938,12 @@ def main() -> None:
             if args.check_stage08_report
             else None
         ),
+        "waivers": {
+            "enabled": bool(waiver_rules),
+            "file": str(waiver_file_path) if waiver_file_path else None,
+            "rules": len(waiver_rules),
+            "applied": waivers_applied,
+        },
         "issues_summary": {
             "errors": errors,
             "warnings": warnings,
@@ -887,6 +987,11 @@ def main() -> None:
             print(
                 f"{LOG_PREFIX} Stage 08 report check: enabled "
                 f"(status={stage08_status or 'unknown'}, report={str(stage08_report_path) if stage08_report_path else 'n/a'})"
+            )
+        if waiver_rules:
+            print(
+                f"{LOG_PREFIX} Waivers: enabled "
+                f"(rules={len(waiver_rules)}, applied={waivers_applied}, file={waiver_file_path})"
             )
 
         print(

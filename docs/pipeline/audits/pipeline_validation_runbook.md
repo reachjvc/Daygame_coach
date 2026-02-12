@@ -146,6 +146,7 @@ That check now enforces stable `sourceKey`/`videoId`/`channel` alignment plus `c
 To also enforce Stage 08 report integrity in the same harness run, add `--check-stage08-report`.
 If you run via `sub-batch-pipeline`, use:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep`
+Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgrade explicit known checks (video/check scoped) to `info`.
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 

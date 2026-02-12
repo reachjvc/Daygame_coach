@@ -34,6 +34,7 @@ python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pi
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --waiver-file docs/pipeline/waivers/P001.1.json
 ```
 
 With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract integrity:
@@ -43,6 +44,7 @@ With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract
 
 With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed, mismatched, or `FAIL`.
 The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete manifest coverage as blocking.
+`--waiver-file` can downgrade specific known issues (by `video_id` + `check`) to `info` while preserving audit visibility.
 
 Cross-stage checks can also be run directly:
 
