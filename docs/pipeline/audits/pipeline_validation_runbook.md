@@ -149,6 +149,7 @@ If you run via `sub-batch-pipeline`, use:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep`
 (`--validate-deep` now expands to `--check-stage05-audio --check-stage08-report --check-stage09-chunks`.)
 Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgrade explicit known checks (video/check scoped) to `info`.
+If a waiver includes `expires_at` and that timestamp is in the past, it is ignored automatically.
 The same waiver file can be passed through the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep --waiver-file docs/pipeline/waivers/CANARY.1.json`
 If `docs/pipeline/waivers/CANARY.1.json` exists, `sub-batch-pipeline CANARY.1 --validate` auto-detects and applies it.

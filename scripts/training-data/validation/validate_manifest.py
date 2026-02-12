@@ -23,7 +23,8 @@ import re
 import sys
 import time
 from collections import Counter, defaultdict
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, DefaultDict, Dict, Iterable, List, Optional, Set, Tuple
 
@@ -36,6 +37,15 @@ _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+@dataclass(frozen=True)
+class WaiverRule:
+    video_id: str
+    check: str
+    note: Optional[str]
+    expires_at: Optional[str]
+    expires_ts: Optional[float]
 
 
 def repo_root() -> Path:
@@ -117,9 +127,25 @@ def _load_verdict(verification_path: Path) -> Optional[str]:
     return verdict if isinstance(verdict, str) and verdict else None
 
 
-def _load_waiver_rules(waiver_path: Path) -> Set[Tuple[str, str]]:
+def _parse_waiver_expires_at(expires_at: str, idx: int) -> float:
+    raw = expires_at.strip()
+    if not raw:
+        raise ValueError(f"Waiver at index {idx} has empty 'expires_at'")
+    normalized = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    try:
+        dt = datetime.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValueError(
+            f"Waiver at index {idx} has invalid 'expires_at'={expires_at!r}; expected ISO-8601 timestamp"
+        ) from exc
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.timestamp()
+
+
+def _load_waiver_rules(waiver_path: Path) -> Tuple[List[WaiverRule], List[WaiverRule]]:
     """
-    Load waiver rules as (video_id, check) tuples.
+    Load waiver rules split into (active_rules, expired_rules).
 
     Supported JSON formats:
       {"waivers":[{"video_id":"abc123...", "check":"some_check"}, ...]}
@@ -144,7 +170,10 @@ def _load_waiver_rules(waiver_path: Path) -> Set[Tuple[str, str]]:
     else:
         raise ValueError("Waiver file must be a JSON object or list")
 
-    rules: Set[Tuple[str, str]] = set()
+    now_ts = time.time()
+    active_rules: List[WaiverRule] = []
+    expired_rules: List[WaiverRule] = []
+    seen_rules: Set[Tuple[str, str, Optional[str], Optional[str]]] = set()
     for idx, item in enumerate(items):
         if not isinstance(item, dict):
             raise ValueError(f"Waiver at index {idx} is not an object")
@@ -164,25 +193,51 @@ def _load_waiver_rules(waiver_path: Path) -> Set[Tuple[str, str]]:
         note = item.get("note")
         if note is not None and not isinstance(note, str):
             raise ValueError(f"Waiver at index {idx} has invalid 'note'; expected string when present")
-        expires_at = item.get("expires_at")
-        if expires_at is not None and not isinstance(expires_at, str):
+        expires_at_raw = item.get("expires_at")
+        if expires_at_raw is not None and not isinstance(expires_at_raw, str):
             raise ValueError(f"Waiver at index {idx} has invalid 'expires_at'; expected string when present")
-        rules.add((vid.strip(), chk.strip()))
+        expires_ts: Optional[float] = None
+        expires_at: Optional[str] = None
+        if isinstance(expires_at_raw, str):
+            expires_at = expires_at_raw.strip()
+            expires_ts = _parse_waiver_expires_at(expires_at, idx)
 
-    return rules
+        key = (vid.strip(), chk.strip(), note.strip() if isinstance(note, str) else None, expires_at)
+        if key in seen_rules:
+            continue
+        seen_rules.add(key)
+
+        rule = WaiverRule(
+            video_id=vid.strip(),
+            check=chk.strip(),
+            note=note.strip() if isinstance(note, str) and note.strip() else None,
+            expires_at=expires_at,
+            expires_ts=expires_ts,
+        )
+        if expires_ts is not None and now_ts > expires_ts:
+            expired_rules.append(rule)
+        else:
+            active_rules.append(rule)
+
+    return active_rules, expired_rules
 
 
-def _is_waived(issue: Dict[str, Any], rules: Set[Tuple[str, str]]) -> bool:
+def _find_matching_waiver(issue: Dict[str, Any], rules: List[WaiverRule]) -> Optional[WaiverRule]:
     if not rules:
-        return False
+        return None
     vid = str(issue.get("video_id", "")).strip() or "*"
     chk = str(issue.get("check", "")).strip() or "*"
-    return (
-        (vid, chk) in rules
-        or ("*", chk) in rules
-        or (vid, "*") in rules
-        or ("*", "*") in rules
-    )
+    best: Optional[Tuple[int, int, WaiverRule]] = None
+    for idx, rule in enumerate(rules):
+        vid_match = rule.video_id == "*" or rule.video_id == vid
+        chk_match = rule.check == "*" or rule.check == chk
+        if not (vid_match and chk_match):
+            continue
+        specificity = (1 if rule.video_id != "*" else 0) + (1 if rule.check != "*" else 0)
+        candidate = (specificity, -idx, rule)
+        if best is None or candidate > best:
+            best = candidate
+    return best[2] if best else None
 
 
 def _validate_chunks_payload(chunks_path: Path) -> List[str]:
@@ -547,7 +602,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--waiver-file",
-        help="Optional JSON file with issue waivers ({\"waivers\":[{\"video_id\":\"...\",\"check\":\"...\"}]})",
+        help=(
+            "Optional JSON file with issue waivers "
+            "({\"waivers\":[{\"video_id\":\"...\",\"check\":\"...\",\"expires_at\":\"...\"}]}); "
+            "expired waivers are ignored"
+        ),
     )
     parser.add_argument(
         "--emit-stage-reports",
@@ -571,7 +630,8 @@ def main() -> None:
         print(f"{LOG_PREFIX} ERROR: Manifest file not found: {manifest_path}", file=sys.stderr)
         sys.exit(2)
 
-    waiver_rules: Set[Tuple[str, str]] = set()
+    waiver_rules: List[WaiverRule] = []
+    waiver_rules_expired: List[WaiverRule] = []
     waiver_file_path: Optional[Path] = None
     if args.waiver_file:
         waiver_file_path = Path(args.waiver_file)
@@ -581,7 +641,7 @@ def main() -> None:
             print(f"{LOG_PREFIX} ERROR: Waiver file not found: {waiver_file_path}", file=sys.stderr)
             sys.exit(2)
         try:
-            waiver_rules = _load_waiver_rules(waiver_file_path)
+            waiver_rules, waiver_rules_expired = _load_waiver_rules(waiver_file_path)
         except ValueError as exc:
             print(f"{LOG_PREFIX} ERROR: Invalid waiver file {waiver_file_path}: {exc}", file=sys.stderr)
             sys.exit(2)
@@ -1149,10 +1209,17 @@ def main() -> None:
             sev = issue.get("severity")
             if sev not in {"error", "warning"}:
                 continue
-            if _is_waived(issue, waiver_rules):
+            match = _find_matching_waiver(issue, waiver_rules)
+            if match is not None:
                 issue["waived"] = True
                 issue["original_severity"] = sev
                 issue["severity"] = "info"
+                issue["waiver"] = {
+                    "video_id": match.video_id,
+                    "check": match.check,
+                    "note": match.note,
+                    "expires_at": match.expires_at,
+                }
                 waivers_applied += 1
 
     # Recompute check counts after waiver application to keep summary/gates consistent.
@@ -1293,9 +1360,11 @@ def main() -> None:
             "emitted": stage_reports_emitted,
         },
         "waivers": {
-            "enabled": bool(waiver_rules),
+            "enabled": bool(waiver_rules or waiver_rules_expired),
             "file": str(waiver_file_path) if waiver_file_path else None,
-            "rules": len(waiver_rules),
+            "rules": len(waiver_rules) + len(waiver_rules_expired),
+            "active_rules": len(waiver_rules),
+            "expired_rules": len(waiver_rules_expired),
             "applied": waivers_applied,
         },
         "issues_summary": {
@@ -1353,10 +1422,12 @@ def main() -> None:
                 f"{LOG_PREFIX} Stage reports: enabled "
                 f"(emitted={stage_reports_emitted}, dir={stage_reports_dir})"
             )
-        if waiver_rules:
+        if waiver_rules or waiver_rules_expired:
             print(
                 f"{LOG_PREFIX} Waivers: enabled "
-                f"(rules={len(waiver_rules)}, applied={waivers_applied}, file={waiver_file_path})"
+                f"(rules={len(waiver_rules) + len(waiver_rules_expired)}, "
+                f"active={len(waiver_rules)}, expired={len(waiver_rules_expired)}, "
+                f"applied={waivers_applied}, file={waiver_file_path})"
             )
 
         print(

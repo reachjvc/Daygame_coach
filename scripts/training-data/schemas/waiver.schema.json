@@ -28,6 +28,7 @@
         },
         "expires_at": {
           "type": "string",
+          "format": "date-time",
           "description": "Optional ISO timestamp for waiver expiry."
         }
       },

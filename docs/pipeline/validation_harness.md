@@ -53,6 +53,7 @@ The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete m
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
 Stage 10 now also requires a manifest-scoped readiness summary (`data/validation/stage_reports/<manifest>/readiness-summary.json`) and blocks ingest when any scope video is `BLOCKED`.
 `--waiver-file` can downgrade specific known issues (by `video_id` + `check`) to `info` while preserving audit visibility.
+Waivers with `expires_at` in the past are ignored automatically (and reported as expired).
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
 `--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
 
