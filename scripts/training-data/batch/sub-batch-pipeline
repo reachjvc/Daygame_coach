@@ -87,6 +87,7 @@ SUB_BATCH_ID=""
 BATCH_ID=""
 VALIDATE_STAGE08_REPORT=false
 VALIDATE_STAGE09_CHUNKS=false
+VALIDATE_WAIVER_FILE=""
 
 usage() {
   cat <<'EOF'
@@ -107,6 +108,7 @@ Options:
   --check-stage08-report   With --validate, require Stage 08 manifest report integrity
   --check-stage09-chunks   With --validate, require Stage 09 chunk payload integrity
   --validate-deep          Shortcut: --check-stage08-report + --check-stage09-chunks
+  --waiver-file <path>     With --validate, apply manifest-validator waivers file
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -632,6 +634,9 @@ validate_sub_batch() {
   if [[ "$VALIDATE_STAGE09_CHUNKS" == true ]]; then
     validate_args+=(--check-stage09-chunks)
   fi
+  if [[ -n "$VALIDATE_WAIVER_FILE" ]]; then
+    validate_args+=(--waiver-file "$VALIDATE_WAIVER_FILE")
+  fi
 
   echo ""
   echo "=== Validations: $sub_id ==="
@@ -689,6 +694,15 @@ while [[ $# -gt 0 ]]; do
     --validate-deep)
       VALIDATE_STAGE08_REPORT=true
       VALIDATE_STAGE09_CHUNKS=true
+      shift
+      ;;
+    --waiver-file)
+      [[ $# -lt 2 ]] && error "--waiver-file requires a path"
+      VALIDATE_WAIVER_FILE="$2"
+      shift 2
+      ;;
+    --waiver-file=*)
+      VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
       shift
       ;;
     --stage)

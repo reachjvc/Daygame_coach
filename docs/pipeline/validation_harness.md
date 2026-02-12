@@ -9,6 +9,7 @@ Run validations + a manifest-filtered batch report:
 ```bash
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
