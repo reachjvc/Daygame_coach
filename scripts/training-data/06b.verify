@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.7"  # v1.7: Add --model passthrough + record model metadata
+PIPELINE_VERSION = "06b.verify-v1.8"  # v1.8: normalize low-confidence/invalid fix suggestions
 
 DEBUG_MODE = False
 
@@ -673,8 +673,129 @@ def normalize_boundary_issues(raw: Any) -> List[Dict[str, Any]]:
         out["conversation_id"] = cid_int
         out["issue"] = issue_str
         out["severity"] = normalize_severity(item.get("severity"))
+        conf = item.get("confidence")
+        try:
+            conf_f = max(0.0, min(1.0, float(conf)))
+            out["confidence"] = conf_f
+            # Keep issue but drop concrete fix when confidence is below patch-safe threshold.
+            if conf_f < 0.70:
+                out["suggested_fix"] = None
+        except Exception:
+            pass
         normalized.append(out)
     return normalized
+
+
+def normalize_misattributions(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]]:
+    if not isinstance(raw, list):
+        return [], []
+
+    allowed_roles = {"coach", "student", "target", "other", "voiceover"}
+    out: List[Dict[str, Any]] = []
+    dropped: List[str] = []
+
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        seg_id = item.get("segment_id")
+        try:
+            seg_id_int = int(seg_id)
+        except Exception:
+            dropped.append("Dropped misattribution without valid segment_id")
+            continue
+
+        suggested_raw = item.get("suggested_role")
+        suggested = str(suggested_raw).strip().lower() if suggested_raw is not None else ""
+        if suggested not in allowed_roles:
+            dropped.append(
+                f"Dropped misattribution seg {seg_id_int}: invalid suggested_role '{suggested_raw}'"
+            )
+            continue
+
+        conf_raw = item.get("confidence")
+        conf_val: Optional[float] = None
+        try:
+            conf_val = max(0.0, min(1.0, float(conf_raw)))
+        except Exception:
+            pass
+        if conf_val is not None and conf_val < 0.70:
+            dropped.append(
+                f"Dropped low-confidence misattribution seg {seg_id_int} (confidence={conf_val:.2f})"
+            )
+            continue
+
+        current_role = item.get("current_role")
+        evidence = item.get("evidence")
+        out_item: Dict[str, Any] = {
+            "segment_id": seg_id_int,
+            "current_role": str(current_role) if current_role is not None else "unknown",
+            "suggested_role": suggested,
+            "evidence": str(evidence) if evidence is not None else "",
+        }
+        if conf_val is not None:
+            out_item["confidence"] = conf_val
+        out.append(out_item)
+
+    return out, dropped
+
+
+def normalize_collapse_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]]:
+    if not isinstance(raw, list):
+        return [], []
+
+    allowed_overrides = {"coach", "student", "target", "other"}
+    out: List[Dict[str, Any]] = []
+    dropped: List[str] = []
+
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        speaker_id = item.get("speaker_id")
+        seg_id = item.get("segment_id")
+        suggested_raw = item.get("suggested_override")
+
+        if not isinstance(speaker_id, str) or not speaker_id.strip():
+            dropped.append("Dropped collapse issue without valid speaker_id")
+            continue
+        try:
+            seg_id_int = int(seg_id)
+        except Exception:
+            dropped.append(f"Dropped collapse issue for {speaker_id}: invalid segment_id")
+            continue
+
+        suggested = str(suggested_raw).strip().lower() if suggested_raw is not None else ""
+        if suggested not in allowed_overrides:
+            dropped.append(
+                f"Dropped collapse issue seg {seg_id_int}: invalid suggested_override '{suggested_raw}'"
+            )
+            continue
+
+        conf_raw = item.get("confidence")
+        conf_val: Optional[float] = None
+        try:
+            conf_val = max(0.0, min(1.0, float(conf_raw)))
+        except Exception:
+            pass
+        if conf_val is not None and conf_val < 0.70:
+            dropped.append(
+                f"Dropped low-confidence collapse issue seg {seg_id_int} (confidence={conf_val:.2f})"
+            )
+            continue
+
+        current_override = item.get("current_override")
+        evidence = item.get("evidence")
+        out_item: Dict[str, Any] = {
+            "speaker_id": speaker_id.strip(),
+            "segment_id": seg_id_int,
+            "current_override": None if current_override is None else str(current_override),
+            "suggested_override": suggested,
+            "evidence": str(evidence) if evidence is not None else "",
+        }
+        if conf_val is not None:
+            out_item["confidence"] = conf_val
+        out.append(out_item)
+
+    return out, dropped
 
 
 def normalize_overall_verdict(v: Any) -> str:
@@ -875,10 +996,13 @@ def verify_file(
     # Build verification output
     verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
     conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
-    misattributions = result.get("misattributions", [])
+    misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
     boundary_issues = normalize_boundary_issues(result.get("boundary_issues", []))
-    collapse_issues = result.get("collapse_issues", [])
-    other_flags = result.get("other_flags", [])
+    collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
+    other_flags_raw = result.get("other_flags", [])
+    other_flags = other_flags_raw if isinstance(other_flags_raw, list) else []
+    for note in dropped_misattributions + dropped_collapse:
+        other_flags.append(note)
 
     total_issues = (
         len(misattributions)
