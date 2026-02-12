@@ -141,6 +141,8 @@ python3 scripts/training-data/validation/validate_manifest.py \
   --allow-flag
 ```
 
+To also require Stage 09 chunk artifacts/payload integrity in the same harness run, add `--check-stage09-chunks`.
+
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 
 ```bash

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 import time
@@ -106,6 +107,56 @@ def _load_verdict(verification_path: Path) -> Optional[str]:
     return verdict if isinstance(verdict, str) and verdict else None
 
 
+def _validate_chunks_payload(chunks_path: Path) -> List[str]:
+    data = _load_json(chunks_path)
+    if not isinstance(data, dict):
+        return ["unreadable_json"]
+
+    errs: List[str] = []
+    chunks = data.get("chunks")
+    if not isinstance(chunks, list) or not chunks:
+        return ["chunks_missing_or_empty"]
+
+    emb_dim: Optional[int] = None
+    for i, chunk in enumerate(chunks):
+        if not isinstance(chunk, dict):
+            errs.append(f"chunk[{i}]_not_object")
+            continue
+
+        content = chunk.get("content")
+        if not isinstance(content, str) or not content.strip():
+            errs.append(f"chunk[{i}]_empty_content")
+
+        emb = chunk.get("embedding")
+        if not isinstance(emb, list) or not emb:
+            errs.append(f"chunk[{i}]_missing_embedding")
+        else:
+            for j, val in enumerate(emb):
+                if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                    errs.append(f"chunk[{i}]_embedding[{j}]_not_finite")
+                    break
+            if emb_dim is None:
+                emb_dim = len(emb)
+            elif len(emb) != emb_dim:
+                errs.append(f"chunk[{i}]_embedding_dim_mismatch")
+
+        md = chunk.get("metadata")
+        if not isinstance(md, dict):
+            errs.append(f"chunk[{i}]_missing_metadata")
+            continue
+        if not isinstance(md.get("segmentType"), str) or not str(md.get("segmentType", "")).strip():
+            errs.append(f"chunk[{i}]_missing_segmentType")
+        if not isinstance(md.get("chunkIndex"), int):
+            errs.append(f"chunk[{i}]_missing_chunkIndex")
+        if not isinstance(md.get("totalChunks"), int):
+            errs.append(f"chunk[{i}]_missing_totalChunks")
+
+    # Keep output concise for large files.
+    if len(errs) > 12:
+        return errs[:12] + [f"... {len(errs) - 12} more"]
+    return errs
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Manifest validation harness (06b/06c/07 cross-stage)")
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
@@ -115,6 +166,11 @@ def main() -> None:
         "--skip-stage01-presence",
         action="store_true",
         help="Do not fail when Stage 01 .wav artifacts are missing (useful for archived/migrated datasets)",
+    )
+    parser.add_argument(
+        "--check-stage09-chunks",
+        action="store_true",
+        help="Also require Stage 09 chunk artifacts and validate basic chunk payload integrity",
     )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
@@ -144,6 +200,7 @@ def main() -> None:
     s06c_root = data_root / "06c.patched"
     s07_root = data_root / "07.content"
     s06b_root = data_root / "06b.verify"
+    s09_root = data_root / "09.chunks"
 
     idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
@@ -151,18 +208,22 @@ def main() -> None:
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
     idx_s07_val = _index_paths_by_video_id(s07_root, "*.validation.json", manifest_ids)
     idx_s06b = _index_paths_by_video_id(s06b_root, "*.verification.json", manifest_ids)
+    idx_s09 = _index_paths_by_video_id(s09_root, "*.chunks.json", manifest_ids) if args.check_stage09_chunks else {}
 
     verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
     missing_s01: List[str] = []
     missing_s06c: List[str] = []
     missing_s07: List[str] = []
+    missing_s09: List[str] = []
 
     issues: List[Dict[str, Any]] = []
     check_counts: Counter = Counter()
     validated_pairs = 0
     cross_stage_errors = 0
     cross_stage_warnings = 0
+    stage09_checked_files = 0
+    stage09_invalid_files = 0
 
     # Stage 07 quality signals (from per-file validation + normalization metadata)
     stage07_val_errors = 0
@@ -190,17 +251,44 @@ def main() -> None:
         s07_candidates = idx_s07.get(vid) or []
         s07v_candidates = idx_s07_val.get(vid) or []
         v_candidates = idx_s06b.get(vid) or []
+        s09_candidates = idx_s09.get(vid) or []
 
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
         s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
         v_path = _pick_best_candidate(v_candidates, src) if v_candidates else None
+        s09_path = _pick_best_candidate(s09_candidates, src) if s09_candidates else None
 
         if not s06c_path:
             missing_s06c.append(vid)
         if not s07_path:
             missing_s07.append(vid)
+        if args.check_stage09_chunks and not s09_path:
+            missing_s09.append(vid)
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "missing_stage09_chunks",
+                "message": "No Stage 09 chunks artifact found for this video_id",
+                "manifest_folder": folder_text,
+            })
+            check_counts["error:missing_stage09_chunks"] += 1
+        elif args.check_stage09_chunks and s09_path:
+            stage09_checked_files += 1
+            s09_errs = _validate_chunks_payload(s09_path)
+            if s09_errs:
+                stage09_invalid_files += 1
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "error",
+                    "check": "stage09_chunks_invalid",
+                    "message": f"Stage 09 chunk payload invalid: {s09_errs}",
+                    "s09": str(s09_path),
+                })
+                check_counts["error:stage09_chunks_invalid"] += 1
 
         # Stage 01 download integrity: at least one .wav exists for this video id (raw16k/clean16k/legacy).
         if not s01_candidates:
@@ -417,7 +505,12 @@ def main() -> None:
 
     # In text mode, compute a simple pass/fail heuristic that matches how we'd use this in CI.
     # "Complete" here means: for manifest videos, 06c + 07 + 06b verification exist.
-    complete = (len(missing_verify) == 0 and len(missing_s06c) == 0 and len(missing_s07) == 0)
+    complete = (
+        len(missing_verify) == 0
+        and len(missing_s06c) == 0
+        and len(missing_s07) == 0
+        and (not args.check_stage09_chunks or len(missing_s09) == 0)
+    )
     passed = complete and errors == 0 and (warnings == 0 if args.strict else True)
 
     report = {
@@ -430,8 +523,10 @@ def main() -> None:
             "missing_06b_verify": len(missing_verify),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
+            **({"missing_09_chunks": len(missing_s09)} if args.check_stage09_chunks else {}),
         },
         "stage01_presence_required": not bool(args.skip_stage01_presence),
+        "stage09_chunks_required": bool(args.check_stage09_chunks),
         "verification_verdicts": dict(verdict_counts),
         "verification_gate": {
             "allow_flag": bool(args.allow_flag),
@@ -454,6 +549,14 @@ def main() -> None:
             "errors": cross_stage_errors,
             "warnings": cross_stage_warnings,
         },
+        "stage09_validation": (
+            {
+                "checked_files": stage09_checked_files,
+                "invalid_files": stage09_invalid_files,
+            }
+            if args.check_stage09_chunks
+            else None
+        ),
         "issues_summary": {
             "errors": errors,
             "warnings": warnings,
@@ -484,9 +587,15 @@ def main() -> None:
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
             f"missing 06b.verify={len(missing_verify)}, "
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
+            + (f", missing 09.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )
         if args.skip_stage01_presence:
             print(f"{LOG_PREFIX} Stage 01 presence check: optional (--skip-stage01-presence)")
+        if args.check_stage09_chunks:
+            print(
+                f"{LOG_PREFIX} Stage 09 chunk check: enabled "
+                f"(checked={stage09_checked_files}, invalid={stage09_invalid_files})"
+            )
 
         print(
             f"{LOG_PREFIX} Cross-stage: validated_pairs={validated_pairs}, "
