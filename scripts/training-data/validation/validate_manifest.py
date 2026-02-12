@@ -659,6 +659,12 @@ def _default_stage_reports_dir(manifest_path: Path, source_filter: Optional[str]
     return repo_root() / "data" / "validation" / "stage_reports" / name
 
 
+def _default_quarantine_path(manifest_path: Path, source_filter: Optional[str]) -> Path:
+    suffix = f".{source_filter}" if source_filter else ""
+    name = _safe_report_name(f"{manifest_path.stem}{suffix}")
+    return repo_root() / "data" / "validation" / "quarantine" / f"{name}.json"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Manifest validation harness (06b/06c/07 cross-stage)")
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
@@ -715,12 +721,28 @@ def main() -> None:
         "--stage-reports-dir",
         help="Directory for --emit-stage-reports output (defaults to data/validation/stage_reports/<manifest>)",
     )
+    parser.add_argument(
+        "--emit-quarantine",
+        action="store_true",
+        help="Write quarantine video list derived from current issues (post-waiver)",
+    )
+    parser.add_argument(
+        "--quarantine-out",
+        help="Output file for --emit-quarantine (defaults to data/validation/quarantine/<manifest>[.<source>].json)",
+    )
+    parser.add_argument(
+        "--quarantine-level",
+        choices=["error", "warning"],
+        default="error",
+        help="Severity threshold for quarantine entries: error or warning (default: error)",
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
 
     args = parser.parse_args()
     stage07_gate_policy = "allow_flag" if args.allow_flag else args.stage07_gate_policy
+    emit_quarantine = bool(args.emit_quarantine or args.quarantine_out)
 
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -813,6 +835,8 @@ def main() -> None:
     video_artifacts: Dict[str, Dict[str, Optional[str]]] = {}
     stage_reports_emitted = 0
     stage_reports_dir: Optional[Path] = None
+    quarantine_out_path: Optional[Path] = None
+    quarantined_videos: List[str] = []
 
     start = time.time()
     started_at_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start))
@@ -823,6 +847,13 @@ def main() -> None:
                 stage_reports_dir = repo_root() / stage_reports_dir
         else:
             stage_reports_dir = _default_stage_reports_dir(manifest_path, args.source)
+    if emit_quarantine:
+        if args.quarantine_out:
+            quarantine_out_path = Path(args.quarantine_out)
+            if not quarantine_out_path.is_absolute():
+                quarantine_out_path = repo_root() / quarantine_out_path
+        else:
+            quarantine_out_path = _default_quarantine_path(manifest_path, args.source)
 
     if args.check_stage08_report:
         stage08_checked = True
@@ -1449,6 +1480,65 @@ def main() -> None:
         if sev in {"error", "warning"}:
             check_counts[f"{sev}:{chk}"] += 1
 
+    quarantine_severities = {"error"} if args.quarantine_level == "error" else {"error", "warning"}
+    quarantine_items: Dict[str, Dict[str, Any]] = {}
+    if emit_quarantine:
+        for issue in issues:
+            sev = str(issue.get("severity", "")).strip().lower()
+            if sev not in quarantine_severities:
+                continue
+            vid = str(issue.get("video_id", "")).strip()
+            if not vid or vid == "*" or vid not in manifest_ids:
+                continue
+            item = quarantine_items.setdefault(
+                vid,
+                {
+                    "video_id": vid,
+                    "source": source_by_vid.get(vid),
+                    "checks": set(),
+                    "reasons": [],
+                },
+            )
+            item["checks"].add(str(issue.get("check", "unknown")))
+            msg = str(issue.get("message", "")).strip()
+            item["reasons"].append({
+                "severity": sev,
+                "check": str(issue.get("check", "unknown")),
+                "message": msg[:300],
+            })
+
+        for item in quarantine_items.values():
+            item["checks"] = sorted(item["checks"])
+            seen_reason_keys: Set[Tuple[str, str]] = set()
+            deduped: List[Dict[str, str]] = []
+            for r in item["reasons"]:
+                key = (r.get("severity", ""), r.get("check", ""))
+                if key in seen_reason_keys:
+                    continue
+                seen_reason_keys.add(key)
+                deduped.append(r)
+            item["reasons"] = deduped
+
+        quarantined_videos = sorted(quarantine_items.keys())
+        if quarantine_out_path is not None:
+            try:
+                quarantine_out_path.parent.mkdir(parents=True, exist_ok=True)
+                quarantine_payload = {
+                    "version": 1,
+                    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    "manifest": str(manifest_path),
+                    "source_filter": args.source or None,
+                    "quarantine_level": args.quarantine_level,
+                    "video_count": len(manifest_ids),
+                    "quarantined_video_count": len(quarantined_videos),
+                    "quarantined_video_ids": quarantined_videos,
+                    "videos": [quarantine_items[vid] for vid in quarantined_videos],
+                }
+                quarantine_out_path.write_text(json.dumps(quarantine_payload, indent=2) + "\n", encoding="utf-8")
+            except Exception as exc:
+                print(f"{LOG_PREFIX} ERROR: Could not emit quarantine file {quarantine_out_path}: {exc}", file=sys.stderr)
+                sys.exit(2)
+
     if args.emit_stage_reports and stage_reports_dir is not None:
         try:
             stage_reports_dir.mkdir(parents=True, exist_ok=True)
@@ -1585,6 +1675,12 @@ def main() -> None:
             "dir": str(stage_reports_dir) if stage_reports_dir else None,
             "emitted": stage_reports_emitted,
         },
+        "quarantine": {
+            "enabled": emit_quarantine,
+            "level": args.quarantine_level,
+            "out": str(quarantine_out_path) if quarantine_out_path else None,
+            "videos": len(quarantined_videos),
+        },
         "waivers": {
             "enabled": bool(waiver_rules or waiver_rules_expired),
             "file": str(waiver_file_path) if waiver_file_path else None,
@@ -1652,6 +1748,11 @@ def main() -> None:
             print(
                 f"{LOG_PREFIX} Stage reports: enabled "
                 f"(emitted={stage_reports_emitted}, dir={stage_reports_dir})"
+            )
+        if emit_quarantine:
+            print(
+                f"{LOG_PREFIX} Quarantine: enabled "
+                f"(level={args.quarantine_level}, videos={len(quarantined_videos)}, out={quarantine_out_path})"
             )
         if waiver_rules or waiver_rules_expired:
             print(

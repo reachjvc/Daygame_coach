@@ -87,6 +87,8 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ./scripts/training-data/06b.verify --manifest docs/pipeline/batches/CANARY.1.txt
 ./scripts/training-data/06c.patch  --manifest docs/pipeline/batches/CANARY.1.txt
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag
+# Optional: skip known-bad videos from a quarantine file
+# ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag --quarantine-file data/validation/quarantine/CANARY.1.json
 ```
 
 Note: Stage 06b now drops low-confidence (<0.70) misattribution/collapse auto-fix suggestions from structured fix arrays and records those drops in `other_flags`.
@@ -163,11 +165,18 @@ If `docs/pipeline/waivers/CANARY.1.json` exists, `sub-batch-pipeline CANARY.1 --
 Optional stage-report emission:
 `python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --emit-stage-reports`
 This writes per-video reports to `data/validation/stage_reports/CANARY.1/`.
+Optional quarantine emission:
+`python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --emit-quarantine`
+This writes `data/validation/quarantine/CANARY.1.json` (or `.../<manifest>.<source>.json` with `--source`).
 Validate emitted reports with:
 `python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary`
 The same can be triggered from the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports`
 (`sub-batch-pipeline` now runs this contract+coverage check automatically and writes `readiness-summary.json` under the stage-reports directory.)
+Or emit quarantine from orchestrator:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
+Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --stage 07`
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 

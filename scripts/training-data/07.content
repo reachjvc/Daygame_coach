@@ -168,6 +168,7 @@ MAX_FAILURE_RATE = 0.20
 
 # Phase progression order (must go forward only)
 PHASE_ORDER = ["open", "pre_hook", "post_hook", "close"]
+VIDEO_ID_BRACKET_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 
 
 # ---------------------------
@@ -2658,6 +2659,68 @@ def extract_video_stem(input_path: Path) -> str:
     return stem
 
 
+def extract_video_id_from_path(input_path: Path) -> Optional[str]:
+    for token in (input_path.name, input_path.parent.name, extract_video_stem(input_path)):
+        m = VIDEO_ID_BRACKET_RE.search(token)
+        if m:
+            return m.group(1)
+    return None
+
+
+def load_quarantine_video_ids(quarantine_file: Path) -> Set[str]:
+    """Load quarantine video IDs from JSON file.
+
+    Supported formats:
+      {"quarantined_video_ids":["id1", ...]}
+      {"video_ids":["id1", ...]}
+      {"videos":[{"video_id":"id1"}, "id2", ...]}
+      ["id1", "id2", ...]
+    """
+    try:
+        raw = json.loads(quarantine_file.read_text(encoding="utf-8"))
+    except Exception as e:
+        raise RuntimeError(f"Could not read quarantine file {quarantine_file}: {e}") from e
+
+    ids: Set[str] = set()
+
+    def add_id(value: Any) -> None:
+        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", value.strip()):
+            ids.add(value.strip())
+
+    if isinstance(raw, list):
+        for item in raw:
+            add_id(item)
+        return ids
+
+    if not isinstance(raw, dict):
+        return ids
+
+    for key in ("quarantined_video_ids", "video_ids"):
+        arr = raw.get(key)
+        if isinstance(arr, list):
+            for item in arr:
+                add_id(item)
+
+    videos = raw.get("videos")
+    if isinstance(videos, list):
+        for item in videos:
+            if isinstance(item, dict):
+                add_id(item.get("video_id"))
+            else:
+                add_id(item)
+
+    return ids
+
+
+def get_quarantine_block_reason(input_path: Path, quarantine_ids: Set[str]) -> Optional[str]:
+    if not quarantine_ids:
+        return None
+    vid = extract_video_id_from_path(input_path)
+    if vid and vid in quarantine_ids:
+        return f"quarantined video_id={vid}"
+    return None
+
+
 def _find_verification_for_input(
     input_path: Path,
     source: str,
@@ -2801,7 +2864,7 @@ def find_input_files(in_dir: Path) -> List[Path]:
     return sorted(in_dir.rglob("*.conversations.json"))
 
 
-def _run_named_source(args) -> None:
+def _run_named_source(args, verification_gate_policy: str, quarantine_ids: Set[str]) -> None:
     """Run for a named source (from pipeline: ./07.content source_name url)."""
     name = args.name
     in_dir = input_root() / name
@@ -2821,13 +2884,20 @@ def _run_named_source(args) -> None:
     total_convs = 0
     total_enriched = 0
     skipped_verification = 0
+    skipped_quarantine = 0
 
     for input_file in files:
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
+            continue
+
         # Verification gate
         should_process, reason = should_process_video(
             input_file, name, verification_root(),
             skip_verification=args.skip_verification or args.revalidate,
-            gate_policy=("allow_flag" if args.allow_flag else args.verification_gate_policy),
+            gate_policy=verification_gate_policy,
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -2851,6 +2921,8 @@ def _run_named_source(args) -> None:
 
     if skipped_verification > 0:
         print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
+    if skipped_quarantine > 0:
+        print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
     print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations")
 
 
@@ -2905,6 +2977,10 @@ def main() -> None:
         help="Skip 06b verification gate (process all files regardless of verdict)"
     )
     parser.add_argument(
+        "--quarantine-file",
+        help="Optional JSON file listing quarantined video IDs to skip",
+    )
+    parser.add_argument(
         "--verification-gate-policy",
         choices=["approve_only", "allow_flag"],
         default="approve_only",
@@ -2931,6 +3007,15 @@ def main() -> None:
 
     args = parser.parse_args()
     verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
+    quarantine_ids: Set[str] = set()
+    if args.quarantine_file:
+        quarantine_path = Path(args.quarantine_file)
+        if not quarantine_path.is_absolute():
+            quarantine_path = repo_root() / quarantine_path
+        if not quarantine_path.exists():
+            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
+        quarantine_ids = load_quarantine_video_ids(quarantine_path)
+        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(quarantine_ids)} video ids)")
 
     # Only require Claude CLI when we will actually call it.
     if not args.revalidate and not args.dry_run:
@@ -2978,6 +3063,11 @@ def main() -> None:
             source_name = input_path.parent.name
             out_dir = Path(args.output) if args.output else output_root()
             output_path = compute_output_path(input_path, out_dir)
+
+            quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
+            if quarantine_reason:
+                print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
+                return
 
             # Verification gate
             should_process, reason = should_process_video(
@@ -3037,7 +3127,14 @@ def main() -> None:
 
             print(f"[07.content] Manifest: {src_name} ({len(files)} videos)")
             skipped_verification = 0
+            skipped_quarantine = 0
             for input_file in files:
+                quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+                if quarantine_reason:
+                    print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+                    skipped_quarantine += 1
+                    continue
+
                 # Verification gate
                 should_process, reason = should_process_video(
                     input_file, src_name, verify_root,
@@ -3066,6 +3163,8 @@ def main() -> None:
 
             if skipped_verification > 0:
                 print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
+            if skipped_quarantine > 0:
+                print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
         print(f"\n[07.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
         return
@@ -3088,7 +3187,14 @@ def main() -> None:
             files = find_input_files(src_in_dir)
 
             skipped_verification = 0
+            skipped_quarantine = 0
             for input_file in files:
+                quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+                if quarantine_reason:
+                    print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+                    skipped_quarantine += 1
+                    continue
+
                 # Verification gate
                 should_process, reason = should_process_video(
                     input_file, src_name, verify_root,
@@ -3117,11 +3223,13 @@ def main() -> None:
 
             if skipped_verification > 0:
                 print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
+            if skipped_quarantine > 0:
+                print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     elif args.name:
-        _run_named_source(args)
+        _run_named_source(args, verification_gate_policy, quarantine_ids)
         return
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
@@ -3152,6 +3260,7 @@ def main() -> None:
     consecutive_failures = 0
     validation_failed = 0
     skipped_verification = 0
+    skipped_quarantine = 0
 
     for input_file in files:
         file_key = str(input_file.relative_to(in_dir))
@@ -3159,6 +3268,12 @@ def main() -> None:
         # Skip if already completed
         if not args.revalidate and file_key in state.completed_files and not args.overwrite:
             skipped += 1
+            continue
+
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
             continue
 
         # Verification gate
@@ -3233,6 +3348,7 @@ def main() -> None:
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed:           {processed}")
     print(f"  Skipped (existing):  {skipped}")
+    print(f"  Skipped (quarantine): {skipped_quarantine}")
     print(f"  Blocked (verify):    {skipped_verification}")
     print(f"  Failed (exception):  {failed}")
     print(f"  Failed (validation): {validation_failed}")

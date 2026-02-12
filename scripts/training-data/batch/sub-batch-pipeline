@@ -40,6 +40,7 @@ cd "$REPO_ROOT"
 
 BATCHES_DIR="$REPO_ROOT/docs/pipeline/batches"
 WAIVERS_DIR="$REPO_ROOT/docs/pipeline/waivers"
+QUARANTINE_DIR="$REPO_ROOT/data/validation/quarantine"
 DATA_DIR="$REPO_ROOT/data"
 VIEWS_DIR="$REPO_ROOT/batch-views"
 
@@ -96,6 +97,11 @@ VALIDATE_EMIT_STAGE_REPORTS=false
 VALIDATE_STAGE_REPORTS_DIR=""
 VALIDATE_SOURCE=""
 VALIDATE_STAGE07_GATE_POLICY="approve_only"
+VALIDATE_EMIT_QUARANTINE=false
+VALIDATE_QUARANTINE_OUT=""
+VALIDATE_QUARANTINE_LEVEL="error"
+RUN_QUARANTINE_FILE=""
+RUN_VERIFICATION_GATE_POLICY="approve_only"
 
 usage() {
   cat <<'EOF'
@@ -122,9 +128,16 @@ Options:
   --stage07-gate-policy <p>
                            With --validate, gate policy: approve_only (default) or allow_flag
   --allow-flag             Alias for --stage07-gate-policy allow_flag
+  --verification-gate-policy <p>
+                           With --stage 07, gate policy for 07.content: approve_only (default) or allow_flag
+  --quarantine-file <path> With --stage 07, skip quarantined videos from JSON file
+                           Default auto-detect: data/validation/quarantine/<subbatch>.json
   --source <name>          With --validate, only validate one source from the manifest
   --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
   --stage-reports-dir <p>  Output directory for --emit-stage-reports
+  --emit-quarantine        With --validate, write quarantine list from issues
+  --quarantine-out <p>     Output path for --emit-quarantine
+  --quarantine-level <p>   With --validate, quarantine threshold: error (default) or warning
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -374,13 +387,31 @@ run_stage() {
   fi
 
   local stage_dir="${STAGE_DIRS[$stage]}"
+  local -a stage_args=(--manifest "$manifest")
 
   echo ""
   echo "=== Running Stage $stage for $sub_id ==="
   echo ""
 
+  if [[ "$stage" == "07" ]]; then
+    stage_args+=(--verification-gate-policy "$RUN_VERIFICATION_GATE_POLICY")
+    local quarantine_file="$RUN_QUARANTINE_FILE"
+    if [[ -z "$quarantine_file" ]]; then
+      local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
+      if [[ -f "$auto_quarantine" ]]; then
+        quarantine_file="$auto_quarantine"
+      fi
+    fi
+    if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
+      stage_args+=(--quarantine-file "$quarantine_file")
+      echo "Using quarantine file: $quarantine_file"
+    elif [[ -n "$quarantine_file" ]]; then
+      echo "WARNING: Quarantine file not found, ignoring: $quarantine_file"
+    fi
+  fi
+
   if [[ "$DRY_RUN" == true ]]; then
-    echo "[DRY RUN] Would run: $script --manifest $manifest"
+    echo "[DRY RUN] Would run: $script ${stage_args[*]}"
     return 0
   fi
 
@@ -407,7 +438,7 @@ PYEOF
   fi
 
   # Run the stage
-  if "$script" --manifest "$manifest"; then
+  if "$script" "${stage_args[@]}"; then
     echo ""
     echo "Stage $stage: COMPLETE"
 
@@ -648,6 +679,7 @@ validate_sub_batch() {
   local stage_reports_dir=""
   local waiver_file="$VALIDATE_WAIVER_FILE"
   validate_args+=(--stage07-gate-policy "$VALIDATE_STAGE07_GATE_POLICY")
+  validate_args+=(--quarantine-level "$VALIDATE_QUARANTINE_LEVEL")
 
   if [[ -n "$VALIDATE_SOURCE" ]]; then
     validate_args+=(--source "$VALIDATE_SOURCE")
@@ -696,10 +728,19 @@ validate_sub_batch() {
   if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
     validate_args+=(--stage-reports-dir "$VALIDATE_STAGE_REPORTS_DIR")
   fi
+  if [[ "$VALIDATE_EMIT_QUARANTINE" == true ]]; then
+    validate_args+=(--emit-quarantine)
+  fi
+  if [[ -n "$VALIDATE_QUARANTINE_OUT" ]]; then
+    validate_args+=(--quarantine-out "$VALIDATE_QUARANTINE_OUT")
+  fi
 
   echo ""
   echo "=== Validations: $sub_id ==="
   echo "Stage07 gate policy: $VALIDATE_STAGE07_GATE_POLICY"
+  if [[ "$VALIDATE_EMIT_QUARANTINE" == true || -n "$VALIDATE_QUARANTINE_OUT" ]]; then
+    echo "Quarantine: level=$VALIDATE_QUARANTINE_LEVEL out=${VALIDATE_QUARANTINE_OUT:-<default>}"
+  fi
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
@@ -794,8 +835,31 @@ while [[ $# -gt 0 ]]; do
         || error "--stage07-gate-policy must be one of: approve_only, allow_flag"
       shift
       ;;
+    --verification-gate-policy)
+      [[ $# -lt 2 ]] && error "--verification-gate-policy requires a value"
+      RUN_VERIFICATION_GATE_POLICY="$2"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag"
+      shift 2
+      ;;
+    --verification-gate-policy=*)
+      RUN_VERIFICATION_GATE_POLICY="${1#--verification-gate-policy=}"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag"
+      shift
+      ;;
+    --quarantine-file)
+      [[ $# -lt 2 ]] && error "--quarantine-file requires a path"
+      RUN_QUARANTINE_FILE="$2"
+      shift 2
+      ;;
+    --quarantine-file=*)
+      RUN_QUARANTINE_FILE="${1#--quarantine-file=}"
+      shift
+      ;;
     --allow-flag)
       VALIDATE_STAGE07_GATE_POLICY="allow_flag"
+      RUN_VERIFICATION_GATE_POLICY="allow_flag"
       shift
       ;;
     --source)
@@ -811,6 +875,10 @@ while [[ $# -gt 0 ]]; do
       VALIDATE_EMIT_STAGE_REPORTS=true
       shift
       ;;
+    --emit-quarantine)
+      VALIDATE_EMIT_QUARANTINE=true
+      shift
+      ;;
     --stage-reports-dir)
       [[ $# -lt 2 ]] && error "--stage-reports-dir requires a path"
       VALIDATE_STAGE_REPORTS_DIR="$2"
@@ -818,6 +886,28 @@ while [[ $# -gt 0 ]]; do
       ;;
     --stage-reports-dir=*)
       VALIDATE_STAGE_REPORTS_DIR="${1#--stage-reports-dir=}"
+      shift
+      ;;
+    --quarantine-out)
+      [[ $# -lt 2 ]] && error "--quarantine-out requires a path"
+      VALIDATE_QUARANTINE_OUT="$2"
+      shift 2
+      ;;
+    --quarantine-out=*)
+      VALIDATE_QUARANTINE_OUT="${1#--quarantine-out=}"
+      shift
+      ;;
+    --quarantine-level)
+      [[ $# -lt 2 ]] && error "--quarantine-level requires a value"
+      VALIDATE_QUARANTINE_LEVEL="$2"
+      [[ "$VALIDATE_QUARANTINE_LEVEL" == "error" || "$VALIDATE_QUARANTINE_LEVEL" == "warning" ]] \
+        || error "--quarantine-level must be one of: error, warning"
+      shift 2
+      ;;
+    --quarantine-level=*)
+      VALIDATE_QUARANTINE_LEVEL="${1#--quarantine-level=}"
+      [[ "$VALIDATE_QUARANTINE_LEVEL" == "error" || "$VALIDATE_QUARANTINE_LEVEL" == "warning" ]] \
+        || error "--quarantine-level must be one of: error, warning"
       shift
       ;;
     --stage)
