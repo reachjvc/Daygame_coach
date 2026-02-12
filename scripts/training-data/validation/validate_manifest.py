@@ -450,6 +450,73 @@ def main() -> None:
                         "stage08_report": str(stage08_report_path),
                     })
                     check_counts["error:invalid_stage08_report_files_processed"] += 1
+                files_unreadable = details.get("files_unreadable") if isinstance(details, dict) else None
+                if not isinstance(files_unreadable, int) or files_unreadable < 0:
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_files_unreadable",
+                        "message": f"Stage 08 report has invalid details.files_unreadable={files_unreadable!r}",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_files_unreadable"] += 1
+                elif files_unreadable > 0:
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "stage08_unreadable_enriched_files",
+                        "message": f"Stage 08 report indicates {files_unreadable} unreadable Stage 07 enriched file(s)",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:stage08_unreadable_enriched_files"] += 1
+
+                manifest_cov = details.get("manifest_coverage") if isinstance(details, dict) else None
+                if not isinstance(manifest_cov, dict):
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_manifest_coverage",
+                        "message": "Stage 08 report missing details.manifest_coverage",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_manifest_coverage"] += 1
+                else:
+                    missing_videos = manifest_cov.get("missing_videos")
+                    matched_video_ids = manifest_cov.get("matched_video_ids")
+                    if not isinstance(missing_videos, int) or missing_videos < 0:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_missing_videos",
+                            "message": f"Stage 08 report has invalid manifest_coverage.missing_videos={missing_videos!r}",
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_missing_videos"] += 1
+                    elif missing_videos > 0:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "stage08_manifest_coverage_incomplete",
+                            "message": f"Stage 08 report indicates incomplete manifest coverage (missing_videos={missing_videos})",
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:stage08_manifest_coverage_incomplete"] += 1
+
+                    if not isinstance(matched_video_ids, int) or matched_video_ids <= 0:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_matched_video_ids",
+                            "message": f"Stage 08 report has invalid manifest_coverage.matched_video_ids={matched_video_ids!r}",
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_matched_video_ids"] += 1
 
     for vid in sorted(manifest_ids):
         src = source_by_vid.get(vid, "")

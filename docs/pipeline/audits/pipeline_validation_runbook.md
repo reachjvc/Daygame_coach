@@ -202,6 +202,7 @@ but it still performs DB writes and should be treated as “production-impacting
 
 Note: when running with `--manifest`, Stage 10 requires a valid Stage 08 manifest-scoped report and will refuse ingest if:
 - the report is malformed or has an unexpected scope/source label
+- the report indicates unreadable Stage 07 outputs or incomplete manifest coverage
 - the report status is `FAIL`
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).

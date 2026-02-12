@@ -495,6 +495,39 @@ function checkTaxonomyGate(manifestPath: string): void {
     console.error(`❌ Stage 08 report has invalid details.files_processed=${String(filesProcessed)} (${reportPath})`)
     process.exit(1)
   }
+  const filesUnreadable = isObject(details) ? details.files_unreadable : undefined
+  if (typeof filesUnreadable !== "number" || !Number.isFinite(filesUnreadable) || filesUnreadable < 0) {
+    console.error(`❌ Stage 08 report has invalid details.files_unreadable=${String(filesUnreadable)} (${reportPath})`)
+    process.exit(1)
+  }
+  if (filesUnreadable > 0) {
+    console.error(`❌ Stage 08 report indicates unreadable enriched files (${filesUnreadable}); refusing ingest.`)
+    process.exit(1)
+  }
+
+  const manifestCoverage = isObject(details) ? details.manifest_coverage : undefined
+  if (!isObject(manifestCoverage)) {
+    console.error(`❌ Stage 08 report missing details.manifest_coverage (${reportPath})`)
+    process.exit(1)
+  }
+  const matchedVideoIds = manifestCoverage.matched_video_ids
+  const missingVideos = manifestCoverage.missing_videos
+  if (
+    typeof matchedVideoIds !== "number"
+    || !Number.isFinite(matchedVideoIds)
+    || matchedVideoIds <= 0
+    || typeof missingVideos !== "number"
+    || !Number.isFinite(missingVideos)
+    || missingVideos < 0
+  ) {
+    console.error(`❌ Stage 08 report has invalid manifest coverage fields (${reportPath})`)
+    process.exit(1)
+  }
+  if (missingVideos > 0) {
+    console.error(`❌ Stage 08 report indicates incomplete manifest coverage (missing_videos=${missingVideos}).`)
+    console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+    process.exit(1)
+  }
 
   if (status === "FAIL") {
     console.error(`❌ Stage 08 taxonomy gate FAIL (${reportPath})`)
