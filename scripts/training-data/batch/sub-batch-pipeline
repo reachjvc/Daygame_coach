@@ -104,6 +104,11 @@ VALIDATE_QUARANTINE_LEVEL="error"
 VALIDATE_READINESS_BLOCK_REVIEW=false
 VALIDATE_READINESS_MAX_WARNING_CHECKS=""
 VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
+VALIDATE_SEMANTIC_MIN_FRESH=""
+VALIDATE_SEMANTIC_MIN_MEAN_OVERALL=""
+VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE=""
+VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE=""
+VALIDATE_SEMANTIC_FAIL_ON_STALE=false
 RUN_QUARANTINE_FILE=""
 RUN_VERIFICATION_GATE_POLICY="approve_only"
 
@@ -146,6 +151,15 @@ Options:
   --max-warning-checks <n> With --validate+--emit-stage-reports, BLOCKED when warnings exceed n
   --block-warning-check <c>
                            With --validate+--emit-stage-reports, escalate this warning check to BLOCKED (repeatable)
+  --semantic-min-fresh <n>
+                           With --validate, semantic gate requires at least n fresh semantic judgements
+  --semantic-min-mean-overall <n>
+                           With --validate, semantic gate requires mean overall score >= n (0..100)
+  --semantic-max-major-error-rate <n>
+                           With --validate, semantic gate requires major_error_rate <= n (0..1)
+  --semantic-max-hallucination-rate <n>
+                           With --validate, semantic gate requires hallucination_rate <= n (0..1)
+  --semantic-fail-on-stale With --validate, semantic gate fails if stale semantic judgements exist
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -776,6 +790,25 @@ validate_sub_batch() {
     fi
     echo "$readiness_policy_msg"
   fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" || -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" || -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" || -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" || "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    local semantic_policy_msg="Semantic gate:"
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+      semantic_policy_msg="$semantic_policy_msg min_fresh=$VALIDATE_SEMANTIC_MIN_FRESH"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+      semantic_policy_msg="$semantic_policy_msg min_mean_overall=$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+      semantic_policy_msg="$semantic_policy_msg max_major_error_rate=$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+      semantic_policy_msg="$semantic_policy_msg max_hallucination_rate=$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE"
+    fi
+    if [[ "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+      semantic_policy_msg="$semantic_policy_msg fail_on_stale=true"
+    fi
+    echo "$semantic_policy_msg"
+  fi
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
@@ -799,6 +832,22 @@ validate_sub_batch() {
       --manifest "$manifest" \
       "${stage_report_check_args[@]}" \
       --emit-readiness-summary || rc=$?
+  fi
+
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+    batch_report_args+=(--semantic-min-fresh "$VALIDATE_SEMANTIC_MIN_FRESH")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+    batch_report_args+=(--semantic-min-mean-overall "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+    batch_report_args+=(--semantic-max-major-error-rate "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+    batch_report_args+=(--semantic-max-hallucination-rate "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE")
+  fi
+  if [[ "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    batch_report_args+=(--semantic-fail-on-stale)
   fi
 
   echo ""
@@ -986,6 +1035,62 @@ while [[ $# -gt 0 ]]; do
       VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$local_check")
       shift
       ;;
+    --semantic-min-fresh)
+      [[ $# -lt 2 ]] && error "--semantic-min-fresh requires a value"
+      VALIDATE_SEMANTIC_MIN_FRESH="$2"
+      [[ "$VALIDATE_SEMANTIC_MIN_FRESH" =~ ^[0-9]+$ ]] \
+        || error "--semantic-min-fresh must be an integer >= 0"
+      shift 2
+      ;;
+    --semantic-min-fresh=*)
+      VALIDATE_SEMANTIC_MIN_FRESH="${1#--semantic-min-fresh=}"
+      [[ "$VALIDATE_SEMANTIC_MIN_FRESH" =~ ^[0-9]+$ ]] \
+        || error "--semantic-min-fresh must be an integer >= 0"
+      shift
+      ;;
+    --semantic-min-mean-overall)
+      [[ $# -lt 2 ]] && error "--semantic-min-mean-overall requires a value"
+      VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="$2"
+      [[ "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-min-mean-overall must be numeric"
+      shift 2
+      ;;
+    --semantic-min-mean-overall=*)
+      VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="${1#--semantic-min-mean-overall=}"
+      [[ "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-min-mean-overall must be numeric"
+      shift
+      ;;
+    --semantic-max-major-error-rate)
+      [[ $# -lt 2 ]] && error "--semantic-max-major-error-rate requires a value"
+      VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="$2"
+      [[ "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-major-error-rate must be numeric"
+      shift 2
+      ;;
+    --semantic-max-major-error-rate=*)
+      VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="${1#--semantic-max-major-error-rate=}"
+      [[ "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-major-error-rate must be numeric"
+      shift
+      ;;
+    --semantic-max-hallucination-rate)
+      [[ $# -lt 2 ]] && error "--semantic-max-hallucination-rate requires a value"
+      VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="$2"
+      [[ "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-hallucination-rate must be numeric"
+      shift 2
+      ;;
+    --semantic-max-hallucination-rate=*)
+      VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="${1#--semantic-max-hallucination-rate=}"
+      [[ "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-hallucination-rate must be numeric"
+      shift
+      ;;
+    --semantic-fail-on-stale)
+      VALIDATE_SEMANTIC_FAIL_ON_STALE=true
+      shift
+      ;;
     --stage)
       MODE="run_stage"
       STAGE="$2"
@@ -1025,6 +1130,9 @@ fi
 if [[ "$MODE" != "validate" ]]; then
   if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
     error "Readiness policy flags require --validate mode"
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" || -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" || -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" || -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" || "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    error "Semantic gate flags require --validate mode"
   fi
 fi
 

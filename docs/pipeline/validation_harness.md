@@ -19,6 +19,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-review-ingest
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
@@ -28,6 +29,7 @@ Readiness policy can be hardened during this step:
 - `--block-review-ingest` makes ingest READY-only
 - `--block-warning-check <name>` escalates matching warning checks to BLOCKED
 - `--max-warning-checks <n>` enforces a warning budget per video
+Semantic quality can also be gated in `--validate` via `--semantic-*` thresholds (evaluated during the batch-report step, requires semantic_judge outputs).
 
 ## Typical Test Loop (LLM + Validate)
 
@@ -80,6 +82,7 @@ Waivers with `expires_at` in the past are ignored automatically (and reported as
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
 `--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
 In `sub-batch-pipeline`, readiness policy flags (`--block-review-ingest`, `--block-warning-check`, `--max-warning-checks`) require `--validate --emit-stage-reports`.
+In `sub-batch-pipeline`, semantic gate flags (`--semantic-min-fresh`, `--semantic-min-mean-overall`, `--semantic-max-major-error-rate`, `--semantic-max-hallucination-rate`, `--semantic-fail-on-stale`) require `--validate`.
 
 Stage-report contract tooling:
 

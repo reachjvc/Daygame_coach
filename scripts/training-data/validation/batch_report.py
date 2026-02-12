@@ -781,6 +781,129 @@ def compare_with_prior_batches(
     return drift_flags
 
 
+def _to_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _to_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def evaluate_semantic_gate(
+    stats: Dict[str, Any],
+    *,
+    min_fresh: Optional[int],
+    min_mean_overall: Optional[float],
+    max_major_error_rate: Optional[float],
+    max_hallucination_rate: Optional[float],
+    fail_on_stale: bool,
+) -> Dict[str, Any]:
+    enabled = fail_on_stale or any(
+        v is not None
+        for v in (min_fresh, min_mean_overall, max_major_error_rate, max_hallucination_rate)
+    )
+
+    thresholds = {
+        "min_fresh_judgements": min_fresh,
+        "min_mean_overall_score_0_100": min_mean_overall,
+        "max_major_error_rate": max_major_error_rate,
+        "max_hallucination_rate": max_hallucination_rate,
+        "fail_on_stale": fail_on_stale,
+    }
+
+    if not enabled:
+        return {
+            "enabled": False,
+            "passed": True,
+            "thresholds": thresholds,
+            "observed": {},
+            "failures": [],
+        }
+
+    sem = stats.get("semantic_judge", {})
+    if not isinstance(sem, dict):
+        sem = {}
+
+    total = _to_int(sem.get("total_judgements"), 0)
+    fresh = _to_int(sem.get("fresh_judgements"), total)
+    stale = _to_int(sem.get("stale_judgements"), max(total - fresh, 0))
+    mean_overall = _to_float(sem.get("mean_overall_score_0_100"), 0.0)
+    major_error_rate = _to_float(sem.get("major_error_rate"), 0.0)
+    hallucination_rate = _to_float(sem.get("hallucination_rate"), 0.0)
+
+    observed = {
+        "total_judgements": total,
+        "fresh_judgements": fresh,
+        "stale_judgements": stale,
+        "mean_overall_score_0_100": mean_overall,
+        "major_error_rate": major_error_rate,
+        "hallucination_rate": hallucination_rate,
+    }
+
+    failures: List[Dict[str, Any]] = []
+    if total <= 0:
+        failures.append({
+            "check": "missing_semantic_judgements",
+            "message": "No semantic judge outputs were found for this batch scope",
+        })
+    else:
+        if fail_on_stale and stale > 0:
+            failures.append({
+                "check": "stale_judgements_present",
+                "expected": {"stale_judgements": 0},
+                "observed": {"stale_judgements": stale},
+                "message": f"Found stale semantic judgements: stale={stale}",
+            })
+        if min_fresh is not None and fresh < min_fresh:
+            failures.append({
+                "check": "fresh_judgements_below_threshold",
+                "expected": {"fresh_judgements_gte": min_fresh},
+                "observed": {"fresh_judgements": fresh},
+                "message": f"Fresh semantic judgements below threshold: fresh={fresh} < min={min_fresh}",
+            })
+        if min_mean_overall is not None and mean_overall < min_mean_overall:
+            failures.append({
+                "check": "mean_overall_below_threshold",
+                "expected": {"mean_overall_score_0_100_gte": min_mean_overall},
+                "observed": {"mean_overall_score_0_100": mean_overall},
+                "message": (
+                    f"Mean semantic score below threshold: mean={mean_overall:.1f} < min={min_mean_overall:.1f}"
+                ),
+            })
+        if max_major_error_rate is not None and major_error_rate > max_major_error_rate:
+            failures.append({
+                "check": "major_error_rate_above_threshold",
+                "expected": {"major_error_rate_lte": max_major_error_rate},
+                "observed": {"major_error_rate": major_error_rate},
+                "message": (
+                    f"Major error rate above threshold: rate={major_error_rate:.3f} > max={max_major_error_rate:.3f}"
+                ),
+            })
+        if max_hallucination_rate is not None and hallucination_rate > max_hallucination_rate:
+            failures.append({
+                "check": "hallucination_rate_above_threshold",
+                "expected": {"hallucination_rate_lte": max_hallucination_rate},
+                "observed": {"hallucination_rate": hallucination_rate},
+                "message": (
+                    f"Hallucination rate above threshold: rate={hallucination_rate:.3f} > max={max_hallucination_rate:.3f}"
+                ),
+            })
+
+    return {
+        "enabled": True,
+        "passed": len(failures) == 0,
+        "thresholds": thresholds,
+        "observed": observed,
+        "failures": failures,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Batch statistics report and drift detection")
     parser.add_argument("--source", help="Report for a specific source")
@@ -794,8 +917,46 @@ def main() -> None:
         action="store_true",
         help="Do not write report file to data/batch_reports (stdout only)",
     )
+    parser.add_argument(
+        "--semantic-min-fresh",
+        type=int,
+        help="Optional semantic gate: require at least this many fresh semantic judgements",
+    )
+    parser.add_argument(
+        "--semantic-min-mean-overall",
+        type=float,
+        help="Optional semantic gate: require mean overall semantic score >= this value (0..100)",
+    )
+    parser.add_argument(
+        "--semantic-max-major-error-rate",
+        type=float,
+        help="Optional semantic gate: require major_error_rate <= this value (0..1)",
+    )
+    parser.add_argument(
+        "--semantic-max-hallucination-rate",
+        type=float,
+        help="Optional semantic gate: require hallucination_rate <= this value (0..1)",
+    )
+    parser.add_argument(
+        "--semantic-fail-on-stale",
+        action="store_true",
+        help="Optional semantic gate: fail when stale semantic judgements are present",
+    )
 
     args = parser.parse_args()
+
+    if args.semantic_min_fresh is not None and args.semantic_min_fresh < 0:
+        print(f"{LOG_PREFIX} ERROR: --semantic-min-fresh must be >= 0", file=sys.stderr)
+        sys.exit(2)
+    if args.semantic_min_mean_overall is not None and not (0.0 <= args.semantic_min_mean_overall <= 100.0):
+        print(f"{LOG_PREFIX} ERROR: --semantic-min-mean-overall must be in [0, 100]", file=sys.stderr)
+        sys.exit(2)
+    if args.semantic_max_major_error_rate is not None and not (0.0 <= args.semantic_max_major_error_rate <= 1.0):
+        print(f"{LOG_PREFIX} ERROR: --semantic-max-major-error-rate must be in [0, 1]", file=sys.stderr)
+        sys.exit(2)
+    if args.semantic_max_hallucination_rate is not None and not (0.0 <= args.semantic_max_hallucination_rate <= 1.0):
+        print(f"{LOG_PREFIX} ERROR: --semantic-max-hallucination-rate must be in [0, 1]", file=sys.stderr)
+        sys.exit(2)
 
     if not args.source and not args.all:
         parser.print_help()
@@ -829,7 +990,16 @@ def main() -> None:
 
     if not conversations_files and not enriched_files:
         print(f"{LOG_PREFIX} No data found to report on")
-        sys.exit(0)
+        semantic_gate_requested = args.semantic_fail_on_stale or any(
+            v is not None
+            for v in (
+                args.semantic_min_fresh,
+                args.semantic_min_mean_overall,
+                args.semantic_max_major_error_rate,
+                args.semantic_max_hallucination_rate,
+            )
+        )
+        sys.exit(1 if semantic_gate_requested else 0)
 
     semantic_judgements = load_semantic_judgements(args.batch_id, manifest_ids if manifest_ids else None)
 
@@ -856,6 +1026,16 @@ def main() -> None:
     }
     if drift_flags:
         report["drift_detection"] = drift_flags
+    semantic_gate = evaluate_semantic_gate(
+        stats,
+        min_fresh=args.semantic_min_fresh,
+        min_mean_overall=args.semantic_min_mean_overall,
+        max_major_error_rate=args.semantic_max_major_error_rate,
+        max_hallucination_rate=args.semantic_max_hallucination_rate,
+        fail_on_stale=args.semantic_fail_on_stale,
+    )
+    if semantic_gate.get("enabled"):
+        report["semantic_gate"] = semantic_gate
 
     # Save report
     if not args.no_write:
@@ -952,6 +1132,15 @@ def main() -> None:
                 dims = sem.get('mean_dimension_scores_0_5', {})
                 if dims:
                     print(f"  Mean dimension scores:   {dims}")
+
+        if semantic_gate.get("enabled"):
+            gate_status = "PASS" if semantic_gate.get("passed") else "FAIL"
+            print(f"\nSemantic Gate: {gate_status}")
+            for failure in semantic_gate.get("failures", []):
+                print(f"  [{failure.get('check')}] {failure.get('message')}")
+
+    if semantic_gate.get("enabled") and not semantic_gate.get("passed"):
+        sys.exit(1)
 
 
 if __name__ == "__main__":

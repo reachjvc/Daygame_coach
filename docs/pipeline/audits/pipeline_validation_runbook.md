@@ -181,6 +181,8 @@ The same can be triggered from the orchestrator:
 With orchestrator readiness policy controls:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-review-ingest`
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3`
+Optional semantic-quality gate in the same `--validate` run (requires semantic_judge outputs):
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
 Or emit quarantine from orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
 Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:
@@ -197,6 +199,8 @@ python3 scripts/training-data/validation/batch_report.py \
 ```
 
 Note: if `data/validation_judgements/<batch_id>/` exists (from `semantic_judge.py`), the batch report will include a semantic-score summary.
+You can enforce semantic thresholds directly in `batch_report.py` (non-zero exit on gate failure), e.g.:
+`python3 scripts/training-data/validation/batch_report.py --all --manifest docs/pipeline/batches/CANARY.1.txt --batch-id CANARY.1 --no-write --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
 
 ### 4) Taxonomy Gate (Stage 08; deterministic)
 
