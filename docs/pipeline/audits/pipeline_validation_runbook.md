@@ -88,6 +88,8 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag
 ```
 
+Note: Stage 06b now drops low-confidence (<0.70) misattribution/collapse auto-fix suggestions from structured fix arrays and records those drops in `other_flags`.
+
 **Claude model strategy (quota control):**
 - Use `--model sonnet` for iteration/canary loops (cheaper).
 - Re-run `CANARY.1` and `HOLDOUT.1` with `--model opus` only for sign-off on major changes (or on specific “problem videos”).
