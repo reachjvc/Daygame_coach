@@ -502,6 +502,54 @@ function checkReadinessGate(
     process.exit(1)
   }
 
+  const summaryScope = isObject((data as any).scope) ? ((data as any).scope as Record<string, unknown>) : null
+  if (summaryScope) {
+    const scopeManifest = typeof summaryScope.manifest === "string" ? summaryScope.manifest.trim() : ""
+    if (scopeManifest) {
+      const expectedManifestBase = path.basename(manifestPath)
+      const scopeManifestBase = path.basename(scopeManifest)
+      if (scopeManifestBase !== expectedManifestBase) {
+        console.error(
+          `❌ Readiness summary scope mismatch: expected manifest '${expectedManifestBase}', got '${scopeManifestBase}' (${summaryPath})`
+        )
+        process.exit(1)
+      }
+    }
+
+    const scopeSourceRaw = summaryScope.source_filter
+    const scopeSource = typeof scopeSourceRaw === "string" ? scopeSourceRaw.trim() : ""
+    if (typeof scopeSourceRaw !== "undefined" && scopeSourceRaw !== null && typeof scopeSourceRaw !== "string") {
+      console.error(`❌ Readiness summary scope.source_filter must be string or null (${summaryPath})`)
+      process.exit(1)
+    }
+    if (source && scopeSource && scopeSource !== source) {
+      console.error(
+        `❌ Readiness summary source mismatch: expected source '${source}', got '${scopeSource}' (${summaryPath})`
+      )
+      process.exit(1)
+    }
+    if (!source && scopeSource) {
+      console.error(
+        `❌ Readiness summary is source-scoped ('${scopeSource}') but ingest is manifest-wide (${summaryPath})`
+      )
+      process.exit(1)
+    }
+
+    const scopeVideoCount = summaryScope.video_count
+    if (typeof scopeVideoCount !== "undefined" && scopeVideoCount !== null) {
+      if (!Number.isInteger(scopeVideoCount) || scopeVideoCount < 0) {
+        console.error(`❌ Readiness summary scope.video_count must be integer >= 0 (${summaryPath})`)
+        process.exit(1)
+      }
+      if (scopeVideoCount > 0 && scopeVideoCount !== expectedVideoIds.size) {
+        console.error(
+          `❌ Readiness summary scope.video_count mismatch: expected ${expectedVideoIds.size}, got ${scopeVideoCount} (${summaryPath})`
+        )
+        process.exit(1)
+      }
+    }
+  }
+
   const byVideo = new Map<string, { status: string; readyForIngest: boolean; reason: string }>()
   for (const item of (data as any).videos as unknown[]) {
     if (!isObject(item)) {

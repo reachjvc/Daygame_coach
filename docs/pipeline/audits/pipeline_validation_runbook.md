@@ -226,6 +226,7 @@ Note: when running with `--manifest`, Stage 10 requires a valid Stage 08 manifes
 Stage 10 also requires a readiness summary at `data/validation/stage_reports/<manifest>/readiness-summary.json` (or `<manifest>.<source>/` for `--source` runs) and will refuse ingest if:
 - the summary is missing/invalid
 - the summary does not cover the ingest manifest scope
+- the summary scope metadata (when present) does not match ingest manifest/source
 - any ingest-scope video is `BLOCKED` (REVIEW remains ingest-allowed)
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.

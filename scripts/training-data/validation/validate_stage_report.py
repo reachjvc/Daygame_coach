@@ -258,6 +258,9 @@ def _compute_readiness(
     *,
     report_records: List[ReportRecord],
     unreadable_by_vid: Dict[str, int],
+    report_dir: Optional[Path],
+    manifest_path: Optional[Path],
+    source_filter: Optional[str],
     manifest_ids: Optional[Set[str]],
     missing_manifest_ids: Set[str],
 ) -> Dict[str, Any]:
@@ -373,6 +376,12 @@ def _compute_readiness(
 
     return {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "scope": {
+            "manifest": str(manifest_path) if manifest_path else None,
+            "source_filter": source_filter or None,
+            "report_dir": str(report_dir) if report_dir else None,
+            "video_count": len(candidate_ids),
+        },
         "policy": {
             "ready": "all reports valid and PASS with no error/warning checks",
             "review": "reports valid with WARN/warning checks but no FAIL/error checks",
@@ -476,6 +485,9 @@ def main() -> None:
     readiness_summary = _compute_readiness(
         report_records=report_records,
         unreadable_by_vid=dict(unreadable_by_vid),
+        report_dir=Path(args.dir) if args.dir else None,
+        manifest_path=manifest_path,
+        source_filter=args.source,
         manifest_ids=manifest_ids,
         missing_manifest_ids=missing_manifest_ids,
     )
