@@ -25,6 +25,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Environment:
@@ -58,6 +59,7 @@ type Args = {
   force: boolean
   dryRun: boolean
   verifyOnly: boolean
+  qualityGate: boolean
   source: string | null
   manifest: string | null
   skipTaxonomyGate: boolean
@@ -193,6 +195,7 @@ function parseArgs(argv: string[]): Args {
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     verifyOnly: flags.has("--verify"),
+    qualityGate: flags.has("--quality-gate"),
     source,
     manifest,
     skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
@@ -931,6 +934,26 @@ async function saveState(statePath: string, state: IngestStateV1): Promise<void>
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+
+  if (args.qualityGate) {
+    if (!args.manifest) {
+      console.error("❌ --quality-gate requires --manifest")
+      process.exit(1)
+    }
+    if (args.semanticMinFresh === null) {
+      args.semanticMinFresh = 5
+    }
+    if (args.semanticMinMeanOverall === null) {
+      args.semanticMinMeanOverall = 75
+    }
+    if (args.semanticMaxMajorErrorRate === null) {
+      args.semanticMaxMajorErrorRate = 0.2
+    }
+    if (args.semanticMaxHallucinationRate === null) {
+      args.semanticMaxHallucinationRate = 0.1
+    }
+    args.semanticFailOnStale = true
+  }
 
   if (args.semanticMinFresh !== null && (!Number.isInteger(args.semanticMinFresh) || args.semanticMinFresh < 0)) {
     console.error("❌ --semantic-min-fresh must be an integer >= 0")

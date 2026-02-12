@@ -96,6 +96,7 @@ Stage 10 semantic gate example:
 
 ```bash
 node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P001.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P001.1.txt --dry-run --quality-gate
 ```
 
 Stage-report contract tooling:
