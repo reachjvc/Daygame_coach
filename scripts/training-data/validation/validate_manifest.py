@@ -309,6 +309,137 @@ def _validate_chunks_payload(chunks_path: Path) -> List[str]:
     return errs
 
 
+def _validate_audio_features_payload(audio_features_path: Path) -> List[str]:
+    data = _load_json(audio_features_path)
+    if not isinstance(data, dict):
+        return ["unreadable_json"]
+
+    errs: List[str] = []
+
+    for key in ("source_audio", "audio_sha256", "source_timestamps"):
+        val = data.get(key)
+        if not isinstance(val, str) or not val.strip():
+            errs.append(f"missing_{key}")
+
+    total_duration = data.get("total_duration_sec")
+    if not isinstance(total_duration, (int, float)) or not math.isfinite(float(total_duration)) or float(total_duration) <= 0:
+        errs.append("invalid_total_duration_sec")
+
+    processing = data.get("processing")
+    if not isinstance(processing, dict):
+        errs.append("missing_processing")
+    else:
+        sample_rate = processing.get("sample_rate")
+        if not isinstance(sample_rate, int) or sample_rate <= 0:
+            errs.append("invalid_processing_sample_rate")
+        extractor = processing.get("feature_extractor")
+        if not isinstance(extractor, str) or not extractor.strip():
+            errs.append("missing_processing_feature_extractor")
+        pitch_range = processing.get("pitch_range_hz")
+        if (
+            not isinstance(pitch_range, list)
+            or len(pitch_range) != 2
+            or any(not isinstance(v, (int, float)) or not math.isfinite(float(v)) for v in pitch_range)
+        ):
+            errs.append("invalid_processing_pitch_range_hz")
+        pitch_method = processing.get("pitch_method")
+        if pitch_method not in {"pyin", "yin"}:
+            errs.append("invalid_processing_pitch_method")
+
+    segments = data.get("segments")
+    if not isinstance(segments, list) or not segments:
+        errs.append("segments_missing_or_empty")
+        return errs
+
+    for i, seg in enumerate(segments):
+        if not isinstance(seg, dict):
+            errs.append(f"segment[{i}]_not_object")
+            continue
+
+        start = seg.get("start")
+        end = seg.get("end")
+        dur = seg.get("duration_sec")
+        text = seg.get("text")
+        if not isinstance(start, (int, float)) or not math.isfinite(float(start)):
+            errs.append(f"segment[{i}]_invalid_start")
+        if not isinstance(end, (int, float)) or not math.isfinite(float(end)):
+            errs.append(f"segment[{i}]_invalid_end")
+        if not isinstance(dur, (int, float)) or not math.isfinite(float(dur)) or float(dur) <= 0:
+            errs.append(f"segment[{i}]_invalid_duration")
+        if (
+            isinstance(start, (int, float))
+            and isinstance(end, (int, float))
+            and math.isfinite(float(start))
+            and math.isfinite(float(end))
+            and float(end) < float(start)
+        ):
+            errs.append(f"segment[{i}]_end_before_start")
+        if not isinstance(text, str) or not text.strip():
+            errs.append(f"segment[{i}]_empty_text")
+
+        features = seg.get("features")
+        if not isinstance(features, dict):
+            errs.append(f"segment[{i}]_missing_features")
+            continue
+
+        pitch = features.get("pitch")
+        energy = features.get("energy")
+        tempo = features.get("tempo")
+        spectral = features.get("spectral")
+        quality = features.get("quality")
+
+        if not isinstance(pitch, dict):
+            errs.append(f"segment[{i}]_missing_pitch")
+        else:
+            for key in ("mean_hz", "std_hz", "range_hz", "direction"):
+                val = pitch.get(key)
+                if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                    errs.append(f"segment[{i}]_invalid_pitch_{key}")
+
+        if not isinstance(energy, dict):
+            errs.append(f"segment[{i}]_missing_energy")
+        else:
+            val = energy.get("dynamics_db")
+            if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                errs.append(f"segment[{i}]_invalid_energy_dynamics_db")
+
+        if not isinstance(tempo, dict):
+            errs.append(f"segment[{i}]_missing_tempo")
+        else:
+            val = tempo.get("syllable_rate")
+            if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                errs.append(f"segment[{i}]_invalid_tempo_syllable_rate")
+
+        if not isinstance(spectral, dict):
+            errs.append(f"segment[{i}]_missing_spectral")
+        else:
+            val = spectral.get("brightness_hz")
+            if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
+                errs.append(f"segment[{i}]_invalid_spectral_brightness_hz")
+
+        if not isinstance(quality, dict):
+            errs.append(f"segment[{i}]_missing_quality")
+        else:
+            low_energy = quality.get("low_energy")
+            speech_ratio = quality.get("speech_activity_ratio")
+            if not isinstance(low_energy, bool):
+                errs.append(f"segment[{i}]_invalid_quality_low_energy")
+            if (
+                not isinstance(speech_ratio, (int, float))
+                or not math.isfinite(float(speech_ratio))
+                or float(speech_ratio) < 0
+                or float(speech_ratio) > 1
+            ):
+                errs.append(f"segment[{i}]_invalid_quality_speech_activity_ratio")
+
+        if len(errs) >= 20:
+            break
+
+    if len(errs) > 12:
+        return [*errs[:12], f"... ({len(errs) - 12} more issue(s))"]
+    return errs
+
+
 def _issue_to_stage_check(issue: Dict[str, Any]) -> Dict[str, str]:
     sev_raw = str(issue.get("severity", "info")).strip().lower()
     sev = sev_raw if sev_raw in {"error", "warning", "info"} else "info"
@@ -400,6 +531,11 @@ def main() -> None:
         help="Do not fail when Stage 01 .wav artifacts are missing (useful for archived/migrated datasets)",
     )
     parser.add_argument(
+        "--check-stage05-audio",
+        action="store_true",
+        help="Also require Stage 05 audio_features artifacts and validate basic payload integrity",
+    )
+    parser.add_argument(
         "--check-stage09-chunks",
         action="store_true",
         help="Also require Stage 09 chunk artifacts and validate basic chunk payload integrity",
@@ -461,6 +597,7 @@ def main() -> None:
 
     data_root = repo_root() / "data"
     s01_root = data_root / "01.download"
+    s05_root = data_root / "05.audio-features"
     s06_root = data_root / "06.video-type"
     s06c_root = data_root / "06c.patched"
     s07_root = data_root / "07.content"
@@ -468,6 +605,7 @@ def main() -> None:
     s09_root = data_root / "09.chunks"
 
     idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)
+    idx_s05 = _index_paths_by_video_id(s05_root, "*.audio_features.json", manifest_ids) if args.check_stage05_audio else {}
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
     idx_s06c = _index_paths_by_video_id(s06c_root, "*.conversations.json", manifest_ids)
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
@@ -478,6 +616,7 @@ def main() -> None:
     verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
     missing_s01: List[str] = []
+    missing_s05: List[str] = []
     missing_s06c: List[str] = []
     missing_s07: List[str] = []
     missing_s09: List[str] = []
@@ -489,6 +628,8 @@ def main() -> None:
     cross_stage_warnings = 0
     stage09_checked_files = 0
     stage09_invalid_files = 0
+    stage05_checked_files = 0
+    stage05_invalid_files = 0
     stage08_checked = False
     stage08_status: Optional[str] = None
     stage08_report_path: Optional[Path] = None
@@ -712,6 +853,7 @@ def main() -> None:
         folder_text = folder_by_vid.get(vid, "")
 
         s01_candidates = idx_s01_wav.get(vid) or []
+        s05_candidates = idx_s05.get(vid) or []
         s06c_candidates = idx_s06c.get(vid) or []
         s06_candidates = idx_s06.get(vid) or []
         s07_candidates = idx_s07.get(vid) or []
@@ -720,6 +862,7 @@ def main() -> None:
         s09_candidates = idx_s09.get(vid) or []
 
         s01_path = _pick_best_candidate(s01_candidates, src) if s01_candidates else None
+        s05_path = _pick_best_candidate(s05_candidates, src) if s05_candidates else None
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
@@ -728,6 +871,7 @@ def main() -> None:
         s09_path = _pick_best_candidate(s09_candidates, src) if s09_candidates else None
         video_artifacts[vid] = {
             "s01": str(s01_path) if s01_path else None,
+            "s05": str(s05_path) if s05_path else None,
             "s06": str(s06_path) if s06_path else None,
             "s06c": str(s06c_path) if s06c_path else None,
             "s07": str(s07_path) if s07_path else None,
@@ -740,6 +884,31 @@ def main() -> None:
             missing_s06c.append(vid)
         if not s07_path:
             missing_s07.append(vid)
+        if args.check_stage05_audio and not s05_path:
+            missing_s05.append(vid)
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "missing_stage05_audio",
+                "message": "No Stage 05 audio_features artifact found for this video_id",
+                "manifest_folder": folder_text,
+            })
+            check_counts["error:missing_stage05_audio"] += 1
+        elif args.check_stage05_audio and s05_path:
+            stage05_checked_files += 1
+            s05_errs = _validate_audio_features_payload(s05_path)
+            if s05_errs:
+                stage05_invalid_files += 1
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "error",
+                    "check": "stage05_audio_invalid",
+                    "message": f"Stage 05 audio_features payload invalid: {s05_errs}",
+                    "s05": str(s05_path),
+                })
+                check_counts["error:stage05_audio_invalid"] += 1
         if args.check_stage09_chunks and not s09_path:
             missing_s09.append(vid)
             issues.append({
@@ -1015,7 +1184,7 @@ def main() -> None:
                         artifact_paths.add(p)
 
                 for issue in raw_issues:
-                    for key in ("s01", "s06", "s06c", "s07", "s07_validation", "verify", "s09", "stage08_report"):
+                    for key in ("s01", "s05", "s06", "s06c", "s07", "s07_validation", "verify", "s09", "stage08_report"):
                         p = issue.get(key)
                         if isinstance(p, str) and p.strip():
                             artifact_paths.add(p)
@@ -1047,6 +1216,7 @@ def main() -> None:
     # "Complete" here means: for manifest videos, 06c + 07 + 06b verification exist.
     complete = (
         len(missing_verify) == 0
+        and (not args.check_stage05_audio or len(missing_s05) == 0)
         and len(missing_s06c) == 0
         and len(missing_s07) == 0
         and (not args.check_stage09_chunks or len(missing_s09) == 0)
@@ -1061,12 +1231,14 @@ def main() -> None:
         "artifact_presence": {
             "missing_01_download": len(missing_s01),
             "missing_06b_verify": len(missing_verify),
+            **({"missing_05_audio_features": len(missing_s05)} if args.check_stage05_audio else {}),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
             **({"missing_09_chunks": len(missing_s09)} if args.check_stage09_chunks else {}),
         },
         "stage01_presence_required": not bool(args.skip_stage01_presence),
         "stage08_report_required": bool(args.check_stage08_report),
+        "stage05_audio_required": bool(args.check_stage05_audio),
         "stage09_chunks_required": bool(args.check_stage09_chunks),
         "verification_verdicts": dict(verdict_counts),
         "verification_gate": {
@@ -1096,6 +1268,14 @@ def main() -> None:
                 "invalid_files": stage09_invalid_files,
             }
             if args.check_stage09_chunks
+            else None
+        ),
+        "stage05_validation": (
+            {
+                "checked_files": stage05_checked_files,
+                "invalid_files": stage05_invalid_files,
+            }
+            if args.check_stage05_audio
             else None
         ),
         "stage08_validation": (
@@ -1148,8 +1328,14 @@ def main() -> None:
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
             f"missing 06b.verify={len(missing_verify)}, "
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
+            + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
             + (f", missing 09.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )
+        if args.check_stage05_audio:
+            print(
+                f"{LOG_PREFIX} Stage 05 audio_features check: enabled "
+                f"(checked={stage05_checked_files}, invalid={stage05_invalid_files})"
+            )
         if args.skip_stage01_presence:
             print(f"{LOG_PREFIX} Stage 01 presence check: optional (--skip-stage01-presence)")
         if args.check_stage09_chunks:

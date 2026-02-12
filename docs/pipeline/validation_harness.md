@@ -9,12 +9,13 @@ Run validations + a manifest-filtered batch report:
 ```bash
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --check-stage05-audio
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
-`--validate-deep` enables both Stage 08 report integrity and Stage 09 chunk payload checks.
+`--validate-deep` enables Stage 05 audio_features, Stage 08 report, and Stage 09 chunk payload checks.
 With `--emit-stage-reports`, the orchestrator now also validates emitted stage-report contract coverage for the manifest and writes a readiness summary.
 
 ## Typical Test Loop (LLM + Validate)
@@ -35,6 +36,7 @@ The manifest validator can be run directly:
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage05-audio
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --waiver-file docs/pipeline/waivers/P001.1.json
