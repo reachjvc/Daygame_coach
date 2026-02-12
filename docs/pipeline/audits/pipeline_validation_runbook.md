@@ -195,6 +195,7 @@ Note: when running with `--manifest`, Stage 10 will refuse to ingest if the corr
 unless you pass `--skip-taxonomy-gate`.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).
 For legacy artifacts only, override with `--allow-unstable-source-key`.
+Stage 10 now performs chunk preflight validation (non-empty content, consistent numeric embedding length, required metadata fields) and refuses manifest ingest if chunk payloads are invalid.
 
 ### 8) Retrieval smoke test (end-to-end)
 

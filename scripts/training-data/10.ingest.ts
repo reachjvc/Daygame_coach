@@ -215,6 +215,91 @@ function deriveSourceKey(
   }
 }
 
+function validateChunksFileForIngest(chunksData: ChunksFile, filePath: string): string[] {
+  const errors: string[] = []
+
+  if (!chunksData || typeof chunksData !== "object") {
+    return ["chunks file root must be a JSON object"]
+  }
+  if (chunksData.version !== 1) {
+    errors.push(`unsupported version=${String((chunksData as any).version)}`)
+  }
+  if (typeof chunksData.embeddingModel !== "string" || !chunksData.embeddingModel.trim()) {
+    errors.push("missing embeddingModel")
+  }
+  if (typeof chunksData.chunkSize !== "number" || !Number.isFinite(chunksData.chunkSize) || chunksData.chunkSize <= 0) {
+    errors.push(`invalid chunkSize=${String(chunksData.chunkSize)}`)
+  }
+  if (typeof chunksData.chunkOverlap !== "number" || !Number.isFinite(chunksData.chunkOverlap) || chunksData.chunkOverlap < 0) {
+    errors.push(`invalid chunkOverlap=${String(chunksData.chunkOverlap)}`)
+  }
+  if (typeof chunksData.channel !== "string" || !chunksData.channel.trim()) {
+    errors.push("missing channel")
+  }
+  if (typeof chunksData.videoType !== "string" || !chunksData.videoType.trim()) {
+    errors.push("missing videoType")
+  }
+  if (typeof chunksData.videoTitle !== "string" || !chunksData.videoTitle.trim()) {
+    errors.push("missing videoTitle")
+  }
+  if (!Array.isArray(chunksData.chunks) || chunksData.chunks.length === 0) {
+    errors.push("chunks must be a non-empty array")
+    return errors
+  }
+
+  let embeddingDim: number | null = null
+  for (let i = 0; i < chunksData.chunks.length; i++) {
+    const chunk = chunksData.chunks[i] as any
+    if (!chunk || typeof chunk !== "object") {
+      errors.push(`chunk[${i}] must be an object`)
+      continue
+    }
+    if (typeof chunk.content !== "string" || !chunk.content.trim()) {
+      errors.push(`chunk[${i}] has empty content`)
+    }
+
+    if (!Array.isArray(chunk.embedding) || chunk.embedding.length === 0) {
+      errors.push(`chunk[${i}] has missing/empty embedding`)
+    } else {
+      for (let j = 0; j < chunk.embedding.length; j++) {
+        const val = chunk.embedding[j]
+        if (typeof val !== "number" || !Number.isFinite(val)) {
+          errors.push(`chunk[${i}] embedding[${j}] is not a finite number`)
+          break
+        }
+      }
+      if (embeddingDim === null) {
+        embeddingDim = chunk.embedding.length
+      } else if (chunk.embedding.length !== embeddingDim) {
+        errors.push(
+          `chunk[${i}] embedding length ${chunk.embedding.length} != expected ${embeddingDim}`
+        )
+      }
+    }
+
+    if (!chunk.metadata || typeof chunk.metadata !== "object") {
+      errors.push(`chunk[${i}] missing metadata`)
+      continue
+    }
+    if (typeof chunk.metadata.segmentType !== "string" || !chunk.metadata.segmentType.trim()) {
+      errors.push(`chunk[${i}] missing metadata.segmentType`)
+    }
+    if (typeof chunk.metadata.chunkIndex !== "number" || !Number.isFinite(chunk.metadata.chunkIndex)) {
+      errors.push(`chunk[${i}] missing/invalid metadata.chunkIndex`)
+    }
+    if (typeof chunk.metadata.totalChunks !== "number" || !Number.isFinite(chunk.metadata.totalChunks)) {
+      errors.push(`chunk[${i}] missing/invalid metadata.totalChunks`)
+    }
+  }
+
+  // Keep logs readable when a file is badly malformed.
+  if (errors.length > 12) {
+    return [...errors.slice(0, 12), `... (${errors.length - 12} more issue(s)) in ${filePath}`]
+  }
+
+  return errors
+}
+
 // ---------------------------------------------------------------------------
 // Utilities
 // ---------------------------------------------------------------------------
@@ -449,6 +534,7 @@ async function main() {
   }> = []
   let unchanged = 0
   let skippedUnstableSourceKey = 0
+  let invalidChunkFiles = 0
 
   for (const filePath of chunkFiles) {
     const rawContent = await fsp.readFile(filePath, "utf-8")
@@ -459,11 +545,23 @@ async function main() {
       chunksData = JSON.parse(rawContent)
     } catch {
       console.warn(`Warning: Could not parse ${filePath}, skipping`)
+      invalidChunkFiles++
       continue
     }
 
     if (chunksData.version !== 1 || !Array.isArray(chunksData.chunks)) {
       console.warn(`Warning: Invalid chunks file format ${filePath}, skipping`)
+      invalidChunkFiles++
+      continue
+    }
+
+    const validationErrors = validateChunksFileForIngest(chunksData, filePath)
+    if (validationErrors.length > 0) {
+      invalidChunkFiles++
+      console.warn(`Warning: Invalid chunk payload ${filePath}, skipping`)
+      for (const err of validationErrors) {
+        console.warn(`  - ${err}`)
+      }
       continue
     }
 
@@ -516,9 +614,20 @@ async function main() {
   if (skippedUnstableSourceKey > 0) {
     console.log(`Skipped:      ${skippedUnstableSourceKey} unstable sourceKey file(s)`)
   }
+  if (invalidChunkFiles > 0) {
+    console.log(`Skipped:      ${invalidChunkFiles} invalid chunk file(s)`)
+  }
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
   console.log(`State file:   ${statePath}`)
+
+  if (invalidChunkFiles > 0 && args.manifest) {
+    console.error("")
+    console.error(
+      "❌ Refusing manifest ingest: one or more chunk files failed Stage 10 preflight validation."
+    )
+    process.exit(1)
+  }
 
   if (skippedUnstableSourceKey > 0 && args.manifest && !args.allowUnstableSourceKey) {
     console.error("")
