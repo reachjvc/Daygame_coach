@@ -97,6 +97,7 @@ VALIDATE_EMIT_STAGE_REPORTS=false
 VALIDATE_STAGE_REPORTS_DIR=""
 VALIDATE_SOURCE=""
 VALIDATE_STAGE07_GATE_POLICY="approve_only"
+VALIDATE_QUARANTINE_FILE=""
 VALIDATE_EMIT_QUARANTINE=false
 VALIDATE_QUARANTINE_OUT=""
 VALIDATE_QUARANTINE_LEVEL="error"
@@ -130,8 +131,8 @@ Options:
   --allow-flag             Alias for --stage07-gate-policy allow_flag
   --verification-gate-policy <p>
                            With --stage 07, gate policy for 07.content: approve_only (default) or allow_flag
-  --quarantine-file <path> With --stage 07, skip quarantined videos from JSON file
-                           Default auto-detect: data/validation/quarantine/<subbatch>.json
+  --quarantine-file <path> With --stage 07, skip quarantined videos; with --validate, treat listed videos as quarantined
+                           Default auto-detect: data/validation/quarantine/<subbatch>.json (for both modes)
   --source <name>          With --validate, only validate one source from the manifest
   --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
   --stage-reports-dir <p>  Output directory for --emit-stage-reports
@@ -678,6 +679,7 @@ validate_sub_batch() {
   local -a stage_report_check_args=()
   local stage_reports_dir=""
   local waiver_file="$VALIDATE_WAIVER_FILE"
+  local quarantine_file="$VALIDATE_QUARANTINE_FILE"
   validate_args+=(--stage07-gate-policy "$VALIDATE_STAGE07_GATE_POLICY")
   validate_args+=(--quarantine-level "$VALIDATE_QUARANTINE_LEVEL")
 
@@ -696,6 +698,13 @@ validate_sub_batch() {
       echo "Using auto-detected waiver file: $waiver_file"
     fi
   fi
+  if [[ -z "$quarantine_file" ]]; then
+    local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
+    if [[ -f "$auto_quarantine" ]]; then
+      quarantine_file="$auto_quarantine"
+      echo "Using auto-detected quarantine file: $quarantine_file"
+    fi
+  fi
 
   if [[ "$VALIDATE_STAGE08_REPORT" == true ]]; then
     validate_args+=(--check-stage08-report)
@@ -708,6 +717,9 @@ validate_sub_batch() {
   fi
   if [[ -n "$waiver_file" ]]; then
     validate_args+=(--waiver-file "$waiver_file")
+  fi
+  if [[ -n "$quarantine_file" ]]; then
+    validate_args+=(--quarantine-file "$quarantine_file")
   fi
   if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
     validate_args+=(--emit-stage-reports)
@@ -738,6 +750,9 @@ validate_sub_batch() {
   echo ""
   echo "=== Validations: $sub_id ==="
   echo "Stage07 gate policy: $VALIDATE_STAGE07_GATE_POLICY"
+  if [[ -n "$quarantine_file" ]]; then
+    echo "Quarantine input file: $quarantine_file"
+  fi
   if [[ "$VALIDATE_EMIT_QUARANTINE" == true || -n "$VALIDATE_QUARANTINE_OUT" ]]; then
     echo "Quarantine: level=$VALIDATE_QUARANTINE_LEVEL out=${VALIDATE_QUARANTINE_OUT:-<default>}"
   fi
@@ -851,10 +866,12 @@ while [[ $# -gt 0 ]]; do
     --quarantine-file)
       [[ $# -lt 2 ]] && error "--quarantine-file requires a path"
       RUN_QUARANTINE_FILE="$2"
+      VALIDATE_QUARANTINE_FILE="$2"
       shift 2
       ;;
     --quarantine-file=*)
       RUN_QUARANTINE_FILE="${1#--quarantine-file=}"
+      VALIDATE_QUARANTINE_FILE="${1#--quarantine-file=}"
       shift
       ;;
     --allow-flag)

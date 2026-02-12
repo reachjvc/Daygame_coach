@@ -324,6 +324,53 @@ def _find_matching_waiver(issue: Dict[str, Any], rules: List[WaiverRule]) -> Opt
     return best[2] if best else None
 
 
+def _load_quarantine_video_ids(quarantine_path: Path) -> Set[str]:
+    """Load quarantine video IDs from JSON file.
+
+    Supported formats:
+      {"quarantined_video_ids":["id1", ...]}
+      {"video_ids":["id1", ...]}
+      {"videos":[{"video_id":"id1"}, "id2", ...]}
+      ["id1", "id2", ...]
+    """
+    try:
+        raw = json.loads(quarantine_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        raise ValueError(f"Could not read quarantine file: {exc}") from exc
+
+    out: Set[str] = set()
+
+    def add_id(value: Any) -> None:
+        if isinstance(value, str):
+            v = value.strip()
+            if _VIDEO_ID_RE.fullmatch(v):
+                out.add(v)
+
+    if isinstance(raw, list):
+        for item in raw:
+            add_id(item)
+        return out
+
+    if not isinstance(raw, dict):
+        return out
+
+    for key in ("quarantined_video_ids", "video_ids"):
+        arr = raw.get(key)
+        if isinstance(arr, list):
+            for item in arr:
+                add_id(item)
+
+    videos = raw.get("videos")
+    if isinstance(videos, list):
+        for item in videos:
+            if isinstance(item, dict):
+                add_id(item.get("video_id"))
+            else:
+                add_id(item)
+
+    return out
+
+
 def _validate_chunks_payload(chunks_path: Path) -> List[str]:
     data = _load_json(chunks_path)
     if not isinstance(data, dict):
@@ -722,6 +769,10 @@ def main() -> None:
         help="Directory for --emit-stage-reports output (defaults to data/validation/stage_reports/<manifest>)",
     )
     parser.add_argument(
+        "--quarantine-file",
+        help="Optional JSON file of quarantined video IDs; matching videos are downgraded to info in this validation run",
+    )
+    parser.add_argument(
         "--emit-quarantine",
         action="store_true",
         help="Write quarantine video list derived from current issues (post-waiver)",
@@ -765,6 +816,21 @@ def main() -> None:
             waiver_rules, waiver_rules_expired = _load_waiver_rules(waiver_file_path)
         except ValueError as exc:
             print(f"{LOG_PREFIX} ERROR: Invalid waiver file {waiver_file_path}: {exc}", file=sys.stderr)
+            sys.exit(2)
+
+    quarantine_file_path: Optional[Path] = None
+    quarantine_video_ids: Set[str] = set()
+    if args.quarantine_file:
+        quarantine_file_path = Path(args.quarantine_file)
+        if not quarantine_file_path.is_absolute():
+            quarantine_file_path = repo_root() / quarantine_file_path
+        if not quarantine_file_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Quarantine file not found: {quarantine_file_path}", file=sys.stderr)
+            sys.exit(2)
+        try:
+            quarantine_video_ids = _load_quarantine_video_ids(quarantine_file_path)
+        except ValueError as exc:
+            print(f"{LOG_PREFIX} ERROR: Invalid quarantine file {quarantine_file_path}: {exc}", file=sys.stderr)
             sys.exit(2)
 
     entries = _load_manifest_entries(manifest_path, source=args.source)
@@ -1472,6 +1538,23 @@ def main() -> None:
                 }
                 waivers_applied += 1
 
+    quarantine_applied = 0
+    if quarantine_video_ids:
+        for issue in issues:
+            sev = issue.get("severity")
+            if sev not in {"error", "warning"}:
+                continue
+            vid = str(issue.get("video_id", "")).strip()
+            if vid in quarantine_video_ids:
+                issue["quarantined"] = True
+                issue["original_severity"] = sev
+                issue["severity"] = "info"
+                issue["quarantine"] = {
+                    "video_id": vid,
+                    "file": str(quarantine_file_path) if quarantine_file_path else None,
+                }
+                quarantine_applied += 1
+
     # Recompute check counts after waiver application to keep summary/gates consistent.
     check_counts = Counter()
     for issue in issues:
@@ -1590,12 +1673,19 @@ def main() -> None:
 
     # In text mode, compute a simple pass/fail heuristic that matches how we'd use this in CI.
     # "Complete" here means: for manifest videos, 06c + 07 + 06b verification exist.
+    effective_manifest_ids = {vid for vid in manifest_ids if vid not in quarantine_video_ids}
+    missing_verify_effective = sum(1 for vid in missing_verify if vid in effective_manifest_ids)
+    missing_s05_effective = sum(1 for vid in missing_s05 if vid in effective_manifest_ids)
+    missing_s06c_effective = sum(1 for vid in missing_s06c if vid in effective_manifest_ids)
+    missing_s07_effective = sum(1 for vid in missing_s07 if vid in effective_manifest_ids)
+    missing_s09_effective = sum(1 for vid in missing_s09 if vid in effective_manifest_ids)
+
     complete = (
-        len(missing_verify) == 0
-        and (not args.check_stage05_audio or len(missing_s05) == 0)
-        and len(missing_s06c) == 0
-        and len(missing_s07) == 0
-        and (not args.check_stage09_chunks or len(missing_s09) == 0)
+        missing_verify_effective == 0
+        and (not args.check_stage05_audio or missing_s05_effective == 0)
+        and missing_s06c_effective == 0
+        and missing_s07_effective == 0
+        and (not args.check_stage09_chunks or missing_s09_effective == 0)
     )
     passed = complete and errors == 0 and (warnings == 0 if args.strict else True)
 
@@ -1604,6 +1694,7 @@ def main() -> None:
         "manifest": str(manifest_path),
         "source_filter": args.source or None,
         "video_count": len(manifest_ids),
+        "effective_video_count": len(effective_manifest_ids),
         "artifact_presence": {
             "missing_01_download": len(missing_s01),
             "missing_06b_verify": len(missing_verify),
@@ -1680,6 +1771,9 @@ def main() -> None:
             "level": args.quarantine_level,
             "out": str(quarantine_out_path) if quarantine_out_path else None,
             "videos": len(quarantined_videos),
+            "input_file": str(quarantine_file_path) if quarantine_file_path else None,
+            "input_video_ids": len(quarantine_video_ids),
+            "applied": quarantine_applied,
         },
         "waivers": {
             "enabled": bool(waiver_rules or waiver_rules_expired),
@@ -1705,6 +1799,12 @@ def main() -> None:
     else:
         print(f"{LOG_PREFIX} Manifest: {manifest_path}")
         print(f"{LOG_PREFIX} Videos: {len(manifest_ids)}")
+        if quarantine_video_ids:
+            print(
+                f"{LOG_PREFIX} Quarantine input: {len(quarantine_video_ids)} video(s) "
+                f"(effective gate scope={len(effective_manifest_ids)})"
+                + (f", file={quarantine_file_path}" if quarantine_file_path else "")
+            )
         if args.source:
             print(f"{LOG_PREFIX} Source filter: {args.source}")
 
@@ -1752,7 +1852,18 @@ def main() -> None:
         if emit_quarantine:
             print(
                 f"{LOG_PREFIX} Quarantine: enabled "
-                f"(level={args.quarantine_level}, videos={len(quarantined_videos)}, out={quarantine_out_path})"
+                f"(level={args.quarantine_level}, videos={len(quarantined_videos)}, out={quarantine_out_path}"
+                + (
+                    f", input_video_ids={len(quarantine_video_ids)}, applied_issues={quarantine_applied}"
+                    if quarantine_video_ids
+                    else ""
+                )
+                + ")"
+            )
+        if quarantine_video_ids and not emit_quarantine:
+            print(
+                f"{LOG_PREFIX} Quarantine input applied: "
+                f"(video_ids={len(quarantine_video_ids)}, applied_issues={quarantine_applied}, file={quarantine_file_path})"
             )
         if waiver_rules or waiver_rules_expired:
             print(

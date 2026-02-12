@@ -168,6 +168,8 @@ This writes per-video reports to `data/validation/stage_reports/CANARY.1/`.
 Optional quarantine emission:
 `python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --emit-quarantine`
 This writes `data/validation/quarantine/CANARY.1.json` (or `.../<manifest>.<source>.json` with `--source`).
+To apply an existing quarantine list during validation:
+`python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --quarantine-file data/validation/quarantine/CANARY.1.json`
 Validate emitted reports with:
 `python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary`
 The same can be triggered from the orchestrator:
