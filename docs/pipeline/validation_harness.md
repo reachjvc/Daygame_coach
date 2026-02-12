@@ -11,6 +11,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --check-stage05-audio
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --source coach_kyle_how_to_approach_a_girl
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
 ```
@@ -37,6 +38,7 @@ The manifest validator can be run directly:
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --source coach_kyle_how_to_approach_a_girl
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage05-audio
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
