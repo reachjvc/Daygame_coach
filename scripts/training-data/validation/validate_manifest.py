@@ -119,12 +119,44 @@ def _load_json(path: Path) -> Optional[Dict[str, Any]]:
         return None
 
 
-def _load_verdict(verification_path: Path) -> Optional[str]:
+def _validate_verification_payload(
+    verification_path: Path,
+    expected_video_id: str,
+) -> Tuple[Optional[str], List[str]]:
     data = _load_json(verification_path)
-    if not data:
-        return None
-    verdict = data.get("verdict")
-    return verdict if isinstance(verdict, str) and verdict else None
+    if not isinstance(data, dict):
+        return None, ["unreadable_json"]
+
+    errs: List[str] = []
+    verdict_raw = data.get("verdict")
+    verdict: Optional[str] = None
+    if not isinstance(verdict_raw, str) or not verdict_raw.strip():
+        errs.append("missing_verdict")
+    else:
+        verdict = verdict_raw.strip().upper()
+        if verdict not in {"APPROVE", "FLAG", "REJECT"}:
+            errs.append(f"invalid_verdict={verdict_raw!r}")
+            verdict = None
+
+    video_id = data.get("video_id")
+    if video_id is not None:
+        if not isinstance(video_id, str) or not _VIDEO_ID_RE.fullmatch(video_id.strip()):
+            errs.append("invalid_video_id")
+        elif video_id.strip() != expected_video_id:
+            errs.append("video_id_mismatch_manifest")
+
+    confidence = data.get("confidence")
+    if confidence is not None:
+        if not isinstance(confidence, (int, float)) or not math.isfinite(float(confidence)):
+            errs.append("invalid_confidence")
+        elif float(confidence) < 0 or float(confidence) > 1:
+            errs.append("confidence_out_of_range")
+
+    flags = data.get("flags")
+    if flags is not None and not isinstance(flags, list):
+        errs.append("invalid_flags_not_array")
+
+    return verdict, errs
 
 
 def _parse_waiver_expires_at(expires_at: str, idx: int) -> float:
@@ -675,6 +707,7 @@ def main() -> None:
 
     verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
+    invalid_verify: List[str] = []
     missing_s01: List[str] = []
     missing_s05: List[str] = []
     missing_s06c: List[str] = []
@@ -686,6 +719,8 @@ def main() -> None:
     validated_pairs = 0
     cross_stage_errors = 0
     cross_stage_warnings = 0
+    stage06b_checked_files = 0
+    stage06b_invalid_files = 0
     stage09_checked_files = 0
     stage09_invalid_files = 0
     stage05_checked_files = 0
@@ -1087,7 +1122,20 @@ def main() -> None:
         if not v_path:
             missing_verify.append(vid)
         else:
-            verdict = _load_verdict(v_path)
+            stage06b_checked_files += 1
+            verdict, v_errs = _validate_verification_payload(v_path, vid)
+            if v_errs:
+                stage06b_invalid_files += 1
+                invalid_verify.append(vid)
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "error",
+                    "check": "stage06b_verification_invalid",
+                    "message": f"Stage 06b verification payload invalid: {v_errs}",
+                    "verify": str(v_path),
+                })
+                check_counts["error:stage06b_verification_invalid"] += 1
             if verdict:
                 verdict_counts[verdict] += 1
 
@@ -1298,6 +1346,7 @@ def main() -> None:
         "artifact_presence": {
             "missing_01_download": len(missing_s01),
             "missing_06b_verify": len(missing_verify),
+            "invalid_06b_verify": len(invalid_verify),
             **({"missing_05_audio_features": len(missing_s05)} if args.check_stage05_audio else {}),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
@@ -1308,6 +1357,10 @@ def main() -> None:
         "stage05_audio_required": bool(args.check_stage05_audio),
         "stage09_chunks_required": bool(args.check_stage09_chunks),
         "verification_verdicts": dict(verdict_counts),
+        "stage06b_validation": {
+            "checked_files": stage06b_checked_files,
+            "invalid_files": stage06b_invalid_files,
+        },
         "verification_gate": {
             "allow_flag": bool(args.allow_flag),
             "allowed": allowed_by_gate,
@@ -1395,10 +1448,14 @@ def main() -> None:
 
         print(
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
-            f"missing 06b.verify={len(missing_verify)}, "
+            f"missing 06b.verify={len(missing_verify)}, invalid 06b.verify={len(invalid_verify)}, "
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
             + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
             + (f", missing 09.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
+        )
+        print(
+            f"{LOG_PREFIX} Stage 06b verification check: "
+            f"checked={stage06b_checked_files}, invalid={stage06b_invalid_files}"
         )
         if args.check_stage05_audio:
             print(

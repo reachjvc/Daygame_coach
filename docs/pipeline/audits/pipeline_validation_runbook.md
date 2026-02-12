@@ -131,6 +131,7 @@ Use this after changing Stage 07 normalization/validators, to refresh outputs wi
 
 This includes:
 - artifact presence checks (06b/06c/07)
+- Stage 06b verification payload contract sanity checks
 - cross-stage consistency (06/06c vs 07)
 - Stage 07 per-file validation summary (warnings/errors) and partial-write detection
 - Optional Stage 01 artifact integrity check (`--skip-stage01-presence` when validating archived outputs that no longer retain Stage 01 `.wav` files)

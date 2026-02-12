@@ -1,6 +1,7 @@
 # Pipeline Validation Harness (Branch Work)
 
 This repo has a small validation harness to sanity-check pipeline artifacts for a batch/sub-batch manifest (e.g. `docs/pipeline/batches/P001.1.txt`).
+Stage 06b verification payload shape is checked by default (verdict/ID/confidence contract sanity).
 
 ## One Command (Recommended)
 
