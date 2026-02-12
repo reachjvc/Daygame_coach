@@ -502,6 +502,26 @@ function checkReadinessGate(
     process.exit(1)
   }
 
+  let allowIngestStatuses: Set<string> | null = null
+  const policy = isObject((data as any).policy) ? ((data as any).policy as Record<string, unknown>) : null
+  if (policy && typeof policy.allow_ingest_statuses !== "undefined" && policy.allow_ingest_statuses !== null) {
+    if (!Array.isArray(policy.allow_ingest_statuses)) {
+      console.error(`❌ Readiness summary policy.allow_ingest_statuses must be an array (${summaryPath})`)
+      process.exit(1)
+    }
+    const parsed = new Set<string>()
+    for (const raw of policy.allow_ingest_statuses as unknown[]) {
+      if (raw !== "READY" && raw !== "REVIEW" && raw !== "BLOCKED") {
+        console.error(
+          `❌ Readiness summary policy.allow_ingest_statuses contains invalid value='${String(raw)}' (${summaryPath})`
+        )
+        process.exit(1)
+      }
+      parsed.add(raw)
+    }
+    allowIngestStatuses = parsed
+  }
+
   const summaryScope = isObject((data as any).scope) ? ((data as any).scope as Record<string, unknown>) : null
   if (summaryScope) {
     const scopeManifest = typeof summaryScope.manifest === "string" ? summaryScope.manifest.trim() : ""
@@ -571,13 +591,16 @@ function checkReadinessGate(
       process.exit(1)
     }
     const readyRaw = item.ready_for_ingest
-    const readyForIngest = typeof readyRaw === "boolean" ? readyRaw : status !== "BLOCKED"
+    const readyForIngest = typeof readyRaw === "boolean"
+      ? readyRaw
+      : (allowIngestStatuses ? allowIngestStatuses.has(status) : status !== "BLOCKED")
     const reason = typeof item.reason_code === "string" ? item.reason_code : ""
     byVideo.set(rawVid, { status, readyForIngest, reason })
   }
 
   const missing: string[] = []
   const blocked: string[] = []
+  const blockedByStatus: Record<"READY" | "REVIEW" | "BLOCKED", number> = { READY: 0, REVIEW: 0, BLOCKED: 0 }
   let reviewCount = 0
 
   for (const vid of Array.from(expectedVideoIds).sort((a, b) => a.localeCompare(b))) {
@@ -590,8 +613,9 @@ function checkReadinessGate(
       reviewCount += 1
     }
     if (item.status === "BLOCKED" || item.readyForIngest === false) {
+      blockedByStatus[item.status] += 1
       const reasonSuffix = item.reason ? `:${item.reason}` : ""
-      blocked.push(`${vid}${reasonSuffix}`)
+      blocked.push(`${vid}:${item.status}${reasonSuffix}`)
     }
   }
 
@@ -608,14 +632,19 @@ function checkReadinessGate(
   if (blocked.length > 0) {
     const sample = blocked.slice(0, 8).join(", ")
     const suffix = blocked.length > 8 ? ", ..." : ""
+    const policyLabel = allowIngestStatuses
+      ? `[${Array.from(allowIngestStatuses).sort((a, b) => a.localeCompare(b)).join(", ")}]`
+      : "[READY, REVIEW] (default)"
+    const breakdown = `READY=${blockedByStatus.READY}, REVIEW=${blockedByStatus.REVIEW}, BLOCKED=${blockedByStatus.BLOCKED}`
     console.error(
-      `❌ Readiness gate blocked ingest: ${blocked.length} video(s) are BLOCKED `
-      + `(e.g. ${sample}${suffix}).`
+      `❌ Readiness gate blocked ingest: ${blocked.length} video(s) are not ingest-ready `
+      + `under allow_ingest_statuses=${policyLabel} (${breakdown}; e.g. ${sample}${suffix}).`
     )
     process.exit(1)
   }
 
-  if (reviewCount > 0) {
+  const reviewAllowed = allowIngestStatuses ? allowIngestStatuses.has("REVIEW") : true
+  if (reviewCount > 0 && reviewAllowed) {
     console.warn(`⚠️  Readiness gate: ${reviewCount} video(s) are REVIEW (ingest allowed).`)
   }
 }

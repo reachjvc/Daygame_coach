@@ -248,7 +248,7 @@ Stage 10 also requires a readiness summary at `data/validation/stage_reports/<ma
 - the summary is missing/invalid
 - the summary does not cover the ingest manifest scope
 - the summary scope metadata (when present) does not match ingest manifest/source
-- any ingest-scope video is `BLOCKED` (REVIEW remains ingest-allowed)
+- any ingest-scope video is not ingest-ready (`BLOCKED` or `ready_for_ingest=false`; default policy keeps REVIEW ingest-allowed)
 To enforce READY-only ingest, generate readiness summaries with `--block-review-ingest`.
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.

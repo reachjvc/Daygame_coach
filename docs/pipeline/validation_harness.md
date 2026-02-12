@@ -70,7 +70,7 @@ With `--check-stage08-report`, the harness requires a valid manifest-scoped Stag
 When `--source` is also set, the expected Stage 08 report path is source-scoped (`<manifest>.<source>.report.json`) and scope metadata is validated.
 The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete manifest coverage as blocking.
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
-Stage 10 now also requires a manifest-scoped readiness summary (`data/validation/stage_reports/<manifest>/readiness-summary.json`) and blocks ingest when any scope video is `BLOCKED`.
+Stage 10 now also requires a manifest-scoped readiness summary (`data/validation/stage_reports/<manifest>/readiness-summary.json`) and blocks ingest when any scope video is not ingest-ready (`status=BLOCKED` or `ready_for_ingest=false` under policy).
 When readiness `scope` metadata is present, Stage 10 also verifies manifest/source scope alignment.
 Stage 07 gate policy is explicit via `--stage07-gate-policy` (`approve_only` default, `allow_flag` alternative); validator policy violations are reported as errors.
 `--emit-quarantine` writes `data/validation/quarantine/<manifest>[.<source>].json` (post-waiver) and can be consumed by Stage 07 via `--quarantine-file`.
