@@ -638,10 +638,16 @@ def parse_json_response(response: str) -> Optional[Dict]:
         print(f"{LOG_PREFIX} JSON parse error: {e}")
         print(f"{LOG_PREFIX} Response preview: {response[:500]}...")
 
-    # Save failed response for debugging
-    debug_path = Path(__file__).parent / "debug_failed_response.txt"
-    debug_path.write_text(response)
-    print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
+    # Save failed response for debugging under data/ (avoid polluting scripts/ worktree).
+    try:
+        ts = time.strftime("%Y%m%dT%H%M%SZ")
+        debug_dir = repo_root() / "data" / "06.video-type" / "debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        debug_path = debug_dir / f"claude_parse_failed_{ts}_{int(time.time() * 1000)}.txt"
+        debug_path.write_text(response, encoding="utf-8")
+        print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
+    except Exception as e:
+        print(f"{LOG_PREFIX} DEBUG: Failed to save debug response: {e}")
 
     return None
 
