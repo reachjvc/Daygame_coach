@@ -15,6 +15,7 @@ Run validations + a manifest-filtered batch report:
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
 `--validate-deep` enables both Stage 08 report integrity and Stage 09 chunk payload checks.
+With `--emit-stage-reports`, the orchestrator now also validates emitted stage-report contract coverage for the manifest and writes a readiness summary.
 
 ## Typical Test Loop (LLM + Validate)
 
@@ -57,6 +58,7 @@ Stage-report contract tooling:
 ```bash
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1
 python3 scripts/training-data/validation/validate_stage_report.py --file data/validation/stage_reports/P001.1/abc123XYZ99.manifest-validation.report.json
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary
 ```
 
 Contract files:

@@ -154,9 +154,10 @@ Optional stage-report emission:
 `python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --emit-stage-reports`
 This writes per-video reports to `data/validation/stage_reports/CANARY.1/`.
 Validate emitted reports with:
-`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1`
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary`
 The same can be triggered from the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports`
+(`sub-batch-pipeline` now runs this contract+coverage check automatically and writes `readiness-summary.json` under the stage-reports directory.)
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 

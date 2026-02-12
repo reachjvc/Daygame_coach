@@ -24,6 +24,7 @@
 #      ./sub-batch-pipeline P001.1 --validate --validate-deep
 #      ./sub-batch-pipeline P001.1 --validate --check-stage08-report --check-stage09-chunks
 #      ./sub-batch-pipeline P001.1 --validate --emit-stage-reports
+#      # (also validates emitted stage reports + writes readiness summary)
 #
 #   F) Mark sub-batch as approved:
 #      ./sub-batch-pipeline P001.1 --approve
@@ -114,7 +115,7 @@ Options:
   --validate-deep          Shortcut: --check-stage08-report + --check-stage09-chunks
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
                            Default auto-detect: docs/pipeline/waivers/<subbatch>.json
-  --emit-stage-reports     With --validate, emit per-video stage reports
+  --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
   --stage-reports-dir <p>  Output directory for --emit-stage-reports
 
 View structure:
@@ -634,6 +635,7 @@ validate_sub_batch() {
 
   local rc=0
   local -a validate_args=(--manifest "$manifest")
+  local stage_reports_dir=""
   local waiver_file="$VALIDATE_WAIVER_FILE"
 
   if [[ -z "$waiver_file" ]]; then
@@ -655,6 +657,15 @@ validate_sub_batch() {
   fi
   if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
     validate_args+=(--emit-stage-reports)
+    if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
+      if [[ "$VALIDATE_STAGE_REPORTS_DIR" = /* ]]; then
+        stage_reports_dir="$VALIDATE_STAGE_REPORTS_DIR"
+      else
+        stage_reports_dir="$REPO_ROOT/$VALIDATE_STAGE_REPORTS_DIR"
+      fi
+    else
+      stage_reports_dir="$REPO_ROOT/data/validation/stage_reports/$sub_id"
+    fi
   fi
   if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
     validate_args+=(--stage-reports-dir "$VALIDATE_STAGE_REPORTS_DIR")
@@ -665,6 +676,16 @@ validate_sub_batch() {
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
+
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    echo ""
+    echo "=== Stage Report Contract Validation ==="
+    echo ""
+    python3 "$REPO_ROOT/scripts/training-data/validation/validate_stage_report.py" \
+      --dir "$stage_reports_dir" \
+      --manifest "$manifest" \
+      --emit-readiness-summary || rc=$?
+  fi
 
   echo ""
   echo "=== Batch Report (manifest-filtered) ==="

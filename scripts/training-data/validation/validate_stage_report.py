@@ -16,12 +16,15 @@ import argparse
 import json
 import re
 import sys
+import time
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 
 LOG_PREFIX = "[validate-stage-report]"
 VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 
 TOP_REQUIRED: Set[str] = {
     "stage",
@@ -63,6 +66,13 @@ class Issue:
         }
 
 
+@dataclass
+class ReportRecord:
+    path: Path
+    data: Dict[str, Any]
+    valid: bool
+
+
 def _iter_files(root: Path, glob_pattern: str) -> Iterable[Path]:
     if not root.exists():
         return []
@@ -75,6 +85,42 @@ def _load_json(path: Path) -> Optional[Dict[str, Any]]:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
+
+def _load_manifest_ids(manifest_path: Path, source: Optional[str]) -> Set[str]:
+    ids: Set[str] = set()
+    for raw in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        src = parts[0].strip()
+        if source and src != source:
+            continue
+        folder = parts[1].strip()
+        m = _BRACKET_ID_RE.search(folder)
+        if m:
+            ids.add(m.group(1))
+    return ids
+
+
+def _video_id_from_filename_hint(path: Path) -> Optional[str]:
+    first = path.name.split(".", 1)[0]
+    if VIDEO_ID_RE.fullmatch(first):
+        return first
+    m = re.search(r"([A-Za-z0-9_-]{11})", path.name)
+    if m and VIDEO_ID_RE.fullmatch(m.group(1)):
+        return m.group(1)
+    return None
+
+
+def _video_id_from_report(record: ReportRecord) -> Optional[str]:
+    vid = record.data.get("video_id")
+    if isinstance(vid, str) and VIDEO_ID_RE.fullmatch(vid.strip()):
+        return vid.strip()
+    return _video_id_from_filename_hint(record.path)
 
 
 def _validate_artifact(item: Any, *, path: str, loc: str, issues: List[Issue]) -> None:
@@ -208,11 +254,157 @@ def validate_stage_report(data: Dict[str, Any], path: Path) -> List[Issue]:
     return issues
 
 
+def _compute_readiness(
+    *,
+    report_records: List[ReportRecord],
+    unreadable_by_vid: Dict[str, int],
+    manifest_ids: Optional[Set[str]],
+    missing_manifest_ids: Set[str],
+) -> Dict[str, Any]:
+    reports_by_vid: Dict[str, List[ReportRecord]] = defaultdict(list)
+    for rec in report_records:
+        vid = _video_id_from_report(rec)
+        if not vid:
+            continue
+        reports_by_vid[vid].append(rec)
+
+    candidate_ids: List[str]
+    if manifest_ids is not None:
+        candidate_ids = sorted(manifest_ids)
+    else:
+        candidate_ids = sorted(set(reports_by_vid.keys()) | set(unreadable_by_vid.keys()))
+
+    by_status: Counter[str] = Counter()
+    allow_ingest = 0
+    videos: List[Dict[str, Any]] = []
+
+    for vid in candidate_ids:
+        recs = reports_by_vid.get(vid, [])
+        unreadable = unreadable_by_vid.get(vid, 0)
+        invalid_reports = unreadable + sum(1 for r in recs if not r.valid)
+
+        fail_reports = 0
+        warn_reports = 0
+        pass_reports = 0
+        error_checks = 0
+        warning_checks = 0
+        info_checks = 0
+        reasons: List[str] = []
+        report_paths: List[str] = []
+        sources: Set[str] = set()
+
+        for rec in recs:
+            report_paths.append(str(rec.path))
+            status = rec.data.get("status")
+            if status == "FAIL":
+                fail_reports += 1
+            elif status == "WARN":
+                warn_reports += 1
+            elif status == "PASS":
+                pass_reports += 1
+
+            source = rec.data.get("source")
+            if isinstance(source, str) and source.strip():
+                sources.add(source.strip())
+
+            reason_code = rec.data.get("reason_code")
+            if isinstance(reason_code, str) and reason_code.strip():
+                reasons.append(reason_code.strip())
+
+            checks = rec.data.get("checks")
+            if not isinstance(checks, list):
+                continue
+            for item in checks:
+                if not isinstance(item, dict):
+                    continue
+                sev = item.get("severity")
+                chk = item.get("check")
+                if isinstance(chk, str) and chk.strip():
+                    reasons.append(chk.strip())
+                if sev == "error":
+                    error_checks += 1
+                elif sev == "warning":
+                    warning_checks += 1
+                elif sev == "info":
+                    info_checks += 1
+
+        if vid in missing_manifest_ids:
+            status = "BLOCKED"
+            reason_code = "missing_stage_report"
+        elif invalid_reports > 0:
+            status = "BLOCKED"
+            reason_code = "invalid_stage_report"
+        elif fail_reports > 0 or error_checks > 0:
+            status = "BLOCKED"
+            reason_code = next((r for r in reasons if r), "report_fail")
+        elif warn_reports > 0 or warning_checks > 0:
+            status = "REVIEW"
+            reason_code = next((r for r in reasons if r), "warnings_present")
+        else:
+            status = "READY"
+            reason_code = "ok"
+
+        ready_for_ingest = status in {"READY", "REVIEW"}
+        if ready_for_ingest:
+            allow_ingest += 1
+        by_status[status] += 1
+
+        videos.append({
+            "video_id": vid,
+            "status": status,
+            "ready_for_ingest": ready_for_ingest,
+            "reason_code": reason_code,
+            "report_counts": {
+                "total": len(recs) + unreadable,
+                "pass": pass_reports,
+                "warn": warn_reports,
+                "fail": fail_reports,
+                "invalid": invalid_reports,
+                "unreadable": unreadable,
+            },
+            "check_counts": {
+                "errors": error_checks,
+                "warnings": warning_checks,
+                "info": info_checks,
+            },
+            "sources": sorted(sources),
+            "reports": sorted(report_paths),
+        })
+
+    return {
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "policy": {
+            "ready": "all reports valid and PASS with no error/warning checks",
+            "review": "reports valid with WARN/warning checks but no FAIL/error checks",
+            "blocked": "missing report coverage, invalid report, FAIL status, or error checks",
+            "allow_ingest_statuses": ["READY", "REVIEW"],
+        },
+        "summary": {
+            "videos": len(videos),
+            "by_status": dict(by_status),
+            "allow_ingest": allow_ingest,
+            "blocked": by_status.get("BLOCKED", 0),
+        },
+        "videos": videos,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate stage report files (deterministic, no external deps).")
     parser.add_argument("--file", action="append", help="Path to a stage report JSON file (repeatable)")
     parser.add_argument("--dir", help="Directory to scan recursively for report files")
     parser.add_argument("--glob", default="*.report.json", help="Glob pattern for --dir scan (default: *.report.json)")
+    parser.add_argument("--manifest", help="Optional manifest file to enforce stage-report coverage")
+    parser.add_argument("--source", help="Optional source filter applied to --manifest")
+    parser.add_argument(
+        "--emit-readiness-summary",
+        action="store_true",
+        help="Emit deterministic per-video readiness summary (READY/REVIEW/BLOCKED)",
+    )
+    parser.add_argument(
+        "--readiness-summary-out",
+        help="Output path for --emit-readiness-summary (default: <dir>/readiness-summary.json or ./readiness-summary.json)",
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--show", type=int, default=40, help="Max issue lines in text mode")
     args = parser.parse_args()
@@ -232,15 +424,71 @@ def main() -> None:
     issues: List[Issue] = []
     validated = 0
     unreadable = 0
+    report_records: List[ReportRecord] = []
+    unreadable_by_vid: Counter[str] = Counter()
 
     for p in files:
         data = _load_json(p)
         if data is None:
             unreadable += 1
             issues.append(Issue("error", str(p), "unreadable_json", "Could not read JSON object"))
+            vid_hint = _video_id_from_filename_hint(p)
+            if vid_hint:
+                unreadable_by_vid[vid_hint] += 1
             continue
         validated += 1
-        issues.extend(validate_stage_report(data, p))
+        local_issues = validate_stage_report(data, p)
+        issues.extend(local_issues)
+        has_error = any(i.severity == "error" for i in local_issues)
+        report_records.append(ReportRecord(path=p, data=data, valid=not has_error))
+
+    manifest_ids: Optional[Set[str]] = None
+    manifest_path: Optional[Path] = None
+    missing_manifest_ids: Set[str] = set()
+    manifest_covered_ids: Set[str] = set()
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Manifest not found: {manifest_path}", file=sys.stderr)
+            sys.exit(2)
+        try:
+            manifest_ids = _load_manifest_ids(manifest_path, args.source)
+        except Exception as exc:
+            print(f"{LOG_PREFIX} ERROR: Could not parse manifest {manifest_path}: {exc}", file=sys.stderr)
+            sys.exit(2)
+
+        for rec in report_records:
+            vid = _video_id_from_report(rec)
+            if vid:
+                manifest_covered_ids.add(vid)
+        manifest_covered_ids.update(unreadable_by_vid.keys())
+        missing_manifest_ids = set(manifest_ids) - manifest_covered_ids
+        for vid in sorted(missing_manifest_ids):
+            issues.append(
+                Issue(
+                    "error",
+                    str(manifest_path),
+                    "missing_stage_report",
+                    f"No stage report found for manifest video_id={vid}",
+                )
+            )
+
+    readiness_summary = _compute_readiness(
+        report_records=report_records,
+        unreadable_by_vid=dict(unreadable_by_vid),
+        manifest_ids=manifest_ids,
+        missing_manifest_ids=missing_manifest_ids,
+    )
+    readiness_out: Optional[Path] = None
+    if args.emit_readiness_summary:
+        if args.readiness_summary_out:
+            readiness_out = Path(args.readiness_summary_out)
+        elif args.dir:
+            readiness_out = Path(args.dir) / "readiness-summary.json"
+        else:
+            readiness_out = Path("readiness-summary.json")
+        readiness_out.parent.mkdir(parents=True, exist_ok=True)
+        readiness_out.write_text(json.dumps(readiness_summary, indent=2) + "\n", encoding="utf-8")
 
     errors = sum(1 for i in issues if i.severity == "error")
     warnings = sum(1 for i in issues if i.severity == "warning")
@@ -250,6 +498,18 @@ def main() -> None:
         "unreadable_files": unreadable,
         "issues_summary": {"errors": errors, "warnings": warnings},
         "issues": [i.to_dict() for i in issues],
+        "manifest": (
+            {
+                "path": str(manifest_path) if manifest_path else None,
+                "scope_size": len(manifest_ids or set()),
+                "covered_videos": len((manifest_ids or set()) & manifest_covered_ids),
+                "missing_videos": sorted(missing_manifest_ids),
+            }
+            if manifest_ids is not None
+            else None
+        ),
+        "readiness_summary": readiness_summary,
+        "readiness_summary_out": str(readiness_out) if readiness_out else None,
         "passed": errors == 0,
     }
 
@@ -258,6 +518,19 @@ def main() -> None:
     else:
         print(f"{LOG_PREFIX} Files validated: {validated}")
         print(f"{LOG_PREFIX} Unreadable files: {unreadable}")
+        if manifest_ids is not None:
+            print(
+                f"{LOG_PREFIX} Manifest coverage: scope={len(manifest_ids)}, "
+                f"covered={len((manifest_ids or set()) & manifest_covered_ids)}, "
+                f"missing={len(missing_manifest_ids)}"
+            )
+        print(
+            f"{LOG_PREFIX} Readiness: READY={readiness_summary['summary']['by_status'].get('READY', 0)}, "
+            f"REVIEW={readiness_summary['summary']['by_status'].get('REVIEW', 0)}, "
+            f"BLOCKED={readiness_summary['summary']['by_status'].get('BLOCKED', 0)}"
+        )
+        if readiness_out:
+            print(f"{LOG_PREFIX} Readiness summary written: {readiness_out}")
         print(f"{LOG_PREFIX} Issues: errors={errors}, warnings={warnings}")
         print(f"{LOG_PREFIX} Result: {'PASS' if errors == 0 else 'FAIL'}")
         if issues:
