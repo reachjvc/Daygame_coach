@@ -44,9 +44,11 @@ _VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 
 
-def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
-    """Load docs/pipeline/batches/*.txt manifest and return the set of video ids."""
-    ids: Set[str] = set()
+def _load_manifest_entries(
+    manifest_path: Path, source: Optional[str] = None
+) -> List[Tuple[str, str, str]]:
+    """Load docs/pipeline/batches/*.txt manifest as (source, video_id, folder_text)."""
+    entries: List[Tuple[str, str, str]] = []
     for raw in manifest_path.read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -60,8 +62,13 @@ def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set
         folder = parts[1].strip()
         m = _BRACKET_ID_RE.search(folder)
         if m:
-            ids.add(m.group(1))
-    return ids
+            entries.append((src, m.group(1), folder))
+    return entries
+
+
+def _load_manifest_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
+    """Backward-compatible helper for callers that only need video ids."""
+    return {vid for _, vid, _ in _load_manifest_entries(manifest_path, source=source)}
 
 
 @dataclass
@@ -365,6 +372,24 @@ def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]
     return sorted(candidates, key=rank, reverse=True)[0]
 
 
+def _path_has_source(path_obj: Path, source: str) -> bool:
+    return source in path_obj.parts
+
+
+def _layout_mode(stage_root: Path, path_obj: Path) -> str:
+    """Classify file layout relative to stage root."""
+    try:
+        rel = path_obj.relative_to(stage_root)
+    except Exception:
+        return "unknown"
+    parts = rel.parts
+    if len(parts) <= 1:
+        return "root-flat"
+    if len(parts) == 2:
+        return "source-flat"
+    return "source-video"
+
+
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
     """Find matching Stage 06/07 output file pairs."""
     s06c_root = repo_root() / "data" / "06c.patched"
@@ -446,24 +471,141 @@ def main() -> None:
             print(f"{LOG_PREFIX} ERROR: Manifest file not found: {manifest_path}", file=sys.stderr)
             sys.exit(1)
 
-        manifest_ids = _load_manifest_ids(manifest_path, source=args.source)
-        if not manifest_ids:
+        manifest_entries = _load_manifest_entries(manifest_path, source=args.source)
+        if not manifest_entries:
             print(f"{LOG_PREFIX} No video ids found in manifest: {manifest_path}")
             sys.exit(0)
 
-        pairs = find_video_pairs(None)
-        pairs = [p for p in pairs if p[2] in manifest_ids]
+        s06c_root = repo_root() / "data" / "06c.patched"
+        s06_root = repo_root() / "data" / "06.video-type"
+        s07_root = repo_root() / "data" / "07.content"
 
-        missing = sorted(manifest_ids - {vid for _, _, vid in pairs})
-        if missing:
-            # Missing pairs aren't necessarily an error (stage outputs may not exist yet), but they are actionable.
-            print(f"{LOG_PREFIX} WARN  Missing stage 06/07 pairs for {len(missing)} manifest video(s)")
+        s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
+        s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
+        s07_files = sorted(s07_root.rglob("*.enriched.json")) if s07_root.exists() else []
+
+        s06c_by_vid = _index_by_video_id(s06c_files)
+        s06_by_vid = _index_by_video_id(s06_files)
+        s07_by_vid = _index_by_video_id(s07_files)
+
+        pairs: List[Tuple[Path, Path, str]] = []
+        pair_keys: Set[Tuple[str, str, str]] = set()
+        coverage_results: List[ValidationResult] = []
+
+        for src, vid, folder_text in sorted(manifest_entries, key=lambda x: (x[0], x[1], x[2])):
+            s07_candidates_all = s07_by_vid.get(vid, [])
+            s07_candidates_src = [p for p in s07_candidates_all if _path_has_source(p, src)]
+
+            # Stage 06 selection follows normal pipeline preference:
+            # prefer 06c.patched if present, then fall back to 06.video-type.
+            s06c_candidates_all = s06c_by_vid.get(vid, [])
+            s06_candidates_all = s06_by_vid.get(vid, [])
+            s06c_candidates_src = [p for p in s06c_candidates_all if _path_has_source(p, src)]
+            s06_candidates_src = [p for p in s06_candidates_all if _path_has_source(p, src)]
+
+            # Pick Stage 07 candidate (source-specific first; then best global fallback).
+            s07_path: Optional[Path] = None
+            if s07_candidates_src:
+                s07_path = _pick_best_candidate(s07_candidates_src, preferred_source=src)
+            elif s07_candidates_all:
+                s07_path = _pick_best_candidate(s07_candidates_all, preferred_source=src)
+
+            # Pick Stage 06 candidate (patched-first).
+            s06_path: Optional[Path] = None
+            if s06c_candidates_src:
+                s06_path = _pick_best_candidate(s06c_candidates_src, preferred_source=src)
+            elif s06c_candidates_all:
+                s06_path = _pick_best_candidate(s06c_candidates_all, preferred_source=src)
+            elif s06_candidates_src:
+                s06_path = _pick_best_candidate(s06_candidates_src, preferred_source=src)
+            elif s06_candidates_all:
+                s06_path = _pick_best_candidate(s06_candidates_all, preferred_source=src)
+
+            # Coverage diagnostics: Stage 07
+            if not s07_candidates_all:
+                coverage_results.append(ValidationResult(
+                    "error",
+                    "manifest_missing_stage07_output",
+                    f"Manifest entry source='{src}' folder='{folder_text}' has no Stage 07 enriched output for video_id '{vid}'",
+                    vid,
+                ))
+            elif not s07_candidates_src:
+                s07_layouts = sorted({_layout_mode(s07_root, p) for p in s07_candidates_all})
+                has_non_root = any(mode not in ("root-flat", "unknown") for mode in s07_layouts)
+                if has_non_root:
+                    coverage_results.append(ValidationResult(
+                        "error",
+                        "manifest_stage07_source_mismatch",
+                        f"Stage 07 output exists for video_id '{vid}' but not under source '{src}' "
+                        f"(layouts={s07_layouts}; example={s07_candidates_all[0]})",
+                        vid,
+                    ))
+                else:
+                    coverage_results.append(ValidationResult(
+                        "warning",
+                        "manifest_stage07_source_ambiguous_root_flat",
+                        f"Stage 07 output for video_id '{vid}' is root-flat/ambiguous for source '{src}' "
+                        f"(layouts={s07_layouts}; example={s07_candidates_all[0]})",
+                        vid,
+                    ))
+
+            # Coverage diagnostics: Stage 06 (06c preferred; 06 fallback)
+            if not s06c_candidates_all and not s06_candidates_all:
+                coverage_results.append(ValidationResult(
+                    "error",
+                    "manifest_missing_stage06_output",
+                    f"Manifest entry source='{src}' folder='{folder_text}' has no Stage 06/06c conversations output for video_id '{vid}'",
+                    vid,
+                ))
+            elif not s06c_candidates_src and not s06_candidates_src:
+                s06_layouts = sorted(
+                    {f"06c:{_layout_mode(s06c_root, p)}" for p in s06c_candidates_all}
+                    | {f"06:{_layout_mode(s06_root, p)}" for p in s06_candidates_all}
+                )
+                has_non_root = any(
+                    not mode.endswith("root-flat") and not mode.endswith("unknown")
+                    for mode in s06_layouts
+                )
+                example = s06c_candidates_all[0] if s06c_candidates_all else s06_candidates_all[0]
+                if has_non_root:
+                    coverage_results.append(ValidationResult(
+                        "error",
+                        "manifest_stage06_source_mismatch",
+                        f"Stage 06/06c output exists for video_id '{vid}' but not under source '{src}' "
+                        f"(layouts={s06_layouts}; example={example})",
+                        vid,
+                    ))
+                else:
+                    coverage_results.append(ValidationResult(
+                        "warning",
+                        "manifest_stage06_source_ambiguous_root_flat",
+                        f"Stage 06/06c output for video_id '{vid}' is root-flat/ambiguous for source '{src}' "
+                        f"(layouts={s06_layouts}; example={example})",
+                        vid,
+                    ))
+
+            if s06_path and s07_path:
+                key = (str(s06_path), str(s07_path), vid)
+                if key not in pair_keys:
+                    pair_keys.add(key)
+                    pairs.append((s06_path, s07_path, vid))
 
         if not pairs:
-            print(f"{LOG_PREFIX} No matching Stage 06/07 file pairs found for manifest videos")
-            sys.exit(0)
+            coverage_results.append(ValidationResult(
+                "error",
+                "manifest_no_pairs_resolved",
+                "No matching Stage 06/07 pairs could be resolved for manifest entries",
+                "",
+            ))
 
-        print(f"{LOG_PREFIX} Found {len(pairs)}/{len(manifest_ids)} manifest video pair(s) to validate")
+        all_results.extend(coverage_results)
+
+        if not args.json:
+            print(f"{LOG_PREFIX} Found {len(pairs)}/{len(manifest_entries)} manifest entry pair(s) to validate")
+            if coverage_results:
+                cov_errors = sum(1 for r in coverage_results if r.severity == "error")
+                cov_warnings = sum(1 for r in coverage_results if r.severity == "warning")
+                print(f"{LOG_PREFIX} Manifest coverage diagnostics: {cov_errors} error(s), {cov_warnings} warning(s)")
 
         for s06_path, s07_path, video_id in pairs:
             s06_data = json.loads(s06_path.read_text())
@@ -478,7 +620,8 @@ def main() -> None:
             print(f"{LOG_PREFIX} No matching Stage 06/07 file pairs found")
             sys.exit(0)
 
-        print(f"{LOG_PREFIX} Found {len(pairs)} video pairs to validate")
+        if not args.json:
+            print(f"{LOG_PREFIX} Found {len(pairs)} video pairs to validate")
 
         for s06_path, s07_path, video_id in pairs:
             s06_data = json.loads(s06_path.read_text())
