@@ -164,6 +164,61 @@ Other:
 `)
 }
 
+function validateKnownArgs(argv: string[]): void {
+  const flags = new Set([
+    "--dry-run",
+    "--verify",
+    "--full",
+    "--force",
+    "--skip-taxonomy-gate",
+    "--skip-readiness-gate",
+    "--quality-gate",
+    "--semantic-fail-on-stale",
+    "--allow-unstable-source-key",
+    "-h",
+    "--help",
+  ])
+  const valueOpts = new Set([
+    "--source",
+    "--manifest",
+    "--readiness-summary",
+    "--semantic-batch-id",
+    "--semantic-report-out",
+    "--semantic-min-fresh",
+    "--semantic-min-mean-overall",
+    "--semantic-max-major-error-rate",
+    "--semantic-max-hallucination-rate",
+  ])
+
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i]
+    if (!arg.startsWith("-")) {
+      console.error(`❌ Unexpected argument: ${arg}`)
+      process.exit(1)
+    }
+    if (flags.has(arg)) {
+      continue
+    }
+    if (valueOpts.has(arg)) {
+      if (i + 1 >= argv.length) {
+        console.error(`❌ Missing value for option: ${arg}`)
+        process.exit(1)
+      }
+      i += 1
+      continue
+    }
+    const eq = arg.indexOf("=")
+    if (eq > 0) {
+      const key = arg.slice(0, eq)
+      if (valueOpts.has(key)) {
+        continue
+      }
+    }
+    console.error(`❌ Unknown option: ${arg}`)
+    process.exit(1)
+  }
+}
+
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
@@ -1387,6 +1442,7 @@ async function main() {
     printUsage()
     return
   }
+  validateKnownArgs(rawArgs)
   const args = parseArgs(rawArgs)
 
   if (args.qualityGate) {
