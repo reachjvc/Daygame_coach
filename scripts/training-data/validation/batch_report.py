@@ -989,7 +989,6 @@ def main() -> None:
         validation_files = _filter_by_manifest(validation_files, manifest_ids)
 
     if not conversations_files and not enriched_files:
-        print(f"{LOG_PREFIX} No data found to report on")
         semantic_gate_requested = args.semantic_fail_on_stale or any(
             v is not None
             for v in (
@@ -999,7 +998,18 @@ def main() -> None:
                 args.semantic_max_hallucination_rate,
             )
         )
-        sys.exit(1 if semantic_gate_requested else 0)
+        if semantic_gate_requested:
+            print(
+                f"{LOG_PREFIX} ERROR: Semantic gate requested but no Stage 06/07 data found for the selected scope",
+                file=sys.stderr,
+            )
+            print(
+                f"{LOG_PREFIX} Hint: run Stage 06/07 (and semantic_judge.py) for this manifest/source before gating",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print(f"{LOG_PREFIX} No data found to report on")
+        sys.exit(0)
 
     semantic_judgements = load_semantic_judgements(args.batch_id, manifest_ids if manifest_ids else None)
 
