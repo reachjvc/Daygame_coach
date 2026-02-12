@@ -435,7 +435,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object"
 }
 
-function checkTaxonomyGate(manifestPath: string): void {
+function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
   const stem = path.basename(manifestPath, path.extname(manifestPath))
   const expectedSource = `manifest:${path.basename(manifestPath)}`
   const reportPath = path.join(
@@ -510,17 +510,28 @@ function checkTaxonomyGate(manifestPath: string): void {
     console.error(`❌ Stage 08 report missing details.manifest_coverage (${reportPath})`)
     process.exit(1)
   }
+  const manifestVideos = manifestCoverage.manifest_videos
   const matchedVideoIds = manifestCoverage.matched_video_ids
   const missingVideos = manifestCoverage.missing_videos
   if (
-    typeof matchedVideoIds !== "number"
+    typeof manifestVideos !== "number"
+    || !Number.isFinite(manifestVideos)
+    || manifestVideos <= 0
+    || typeof expectedManifestVideos !== "number"
+    || !Number.isFinite(expectedManifestVideos)
+    || expectedManifestVideos <= 0
+    || manifestVideos !== expectedManifestVideos
+    || typeof matchedVideoIds !== "number"
     || !Number.isFinite(matchedVideoIds)
     || matchedVideoIds <= 0
     || typeof missingVideos !== "number"
     || !Number.isFinite(missingVideos)
     || missingVideos < 0
   ) {
-    console.error(`❌ Stage 08 report has invalid manifest coverage fields (${reportPath})`)
+    console.error(
+      `❌ Stage 08 report manifest coverage mismatch `
+      + `(report_manifest_videos=${String(manifestVideos)}, expected_manifest_videos=${String(expectedManifestVideos)}).`
+    )
     process.exit(1)
   }
   if (missingVideos > 0) {
@@ -580,11 +591,8 @@ async function main() {
 
   const state = await loadState(statePath)
 
-  if (args.manifest && !args.skipTaxonomyGate) {
-    checkTaxonomyGate(args.manifest)
-  }
-
   let manifestAllowList: Map<string, Set<string>> | null = null
+  let expectedManifestVideos = 0
   if (args.manifest) {
     try {
       manifestAllowList = loadManifestAllowList(args.manifest)
@@ -596,6 +604,24 @@ async function main() {
     if (manifestAllowList.size === 0) {
       console.error(`❌ Manifest had no valid entries: ${args.manifest}`)
       process.exit(1)
+    }
+
+    if (args.source) {
+      expectedManifestVideos = manifestAllowList.get(args.source)?.size ?? 0
+      if (expectedManifestVideos <= 0) {
+        console.error(`❌ Manifest has no entries for source '${args.source}'`)
+        process.exit(1)
+      }
+    } else {
+      for (const ids of manifestAllowList.values()) expectedManifestVideos += ids.size
+      if (expectedManifestVideos <= 0) {
+        console.error(`❌ Manifest had no valid video IDs: ${args.manifest}`)
+        process.exit(1)
+      }
+    }
+
+    if (!args.skipTaxonomyGate) {
+      checkTaxonomyGate(args.manifest, expectedManifestVideos)
     }
   }
 

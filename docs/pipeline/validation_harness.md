@@ -45,6 +45,7 @@ With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract
 
 With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed, mismatched, or `FAIL`.
 The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete manifest coverage as blocking.
+Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
 `--waiver-file` can downgrade specific known issues (by `video_id` + `check`) to `info` while preserving audit visibility.
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
 
