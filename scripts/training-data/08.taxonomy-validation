@@ -82,15 +82,24 @@ def extract_video_id(name: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
-def load_manifest_video_ids(manifest_path: Path) -> Set[str]:
-    """Load manifest and return set of video IDs."""
+def load_manifest_video_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
+    """Load manifest and return set of video IDs (optionally source-filtered)."""
     video_ids = set()
     with open(manifest_path) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-            vid_id = extract_video_id(line)
+
+            parts = line.split("|", 1)
+            folder_text = line
+            if len(parts) == 2:
+                src = parts[0].strip()
+                folder_text = parts[1].strip()
+                if source and src != source:
+                    continue
+
+            vid_id = extract_video_id(folder_text)
             if vid_id:
                 video_ids.add(vid_id)
     return video_ids
@@ -492,7 +501,7 @@ def main() -> int:
         if not manifest_path.exists():
             print(f"[08.taxonomy-validation] Error: Manifest not found: {manifest_path}", file=sys.stderr)
             return 1
-        manifest_video_ids = load_manifest_video_ids(manifest_path)
+        manifest_video_ids = load_manifest_video_ids(manifest_path, source=args.source)
         if not manifest_video_ids:
             print(f"[08.taxonomy-validation] Error: No valid video IDs found in manifest: {manifest_path}", file=sys.stderr)
             return 1
