@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.8"  # v1.8: normalize low-confidence/invalid fix suggestions
+PIPELINE_VERSION = "06b.verify-v1.9"  # v1.9: tighten 06b→06c contract normalization + schema strictness
 
 DEBUG_MODE = False
 
@@ -72,6 +72,14 @@ LOG_PREFIX = "[06b.verify]"
 # Contract enforcement: verification reports must match verification.schema.json.
 SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "verification.schema.json"
 _CACHED_SCHEMA: Optional[Dict[str, Any]] = None
+
+ALLOWED_VIDEO_TYPES = {"infield", "compilation", "talking_head", "podcast"}
+ALLOWED_MISATTRIBUTION_ROLES = {"coach", "student", "target", "other", "voiceover"}
+ALLOWED_COLLAPSE_OVERRIDES = {"coach", "student", "target", "other"}
+ALLOWED_BOUNDARY_FIXES = {"merge_with_next", "merge_with_previous", "reclassify_as_commentary"}
+_SPLIT_FIX_RE = re.compile(r"split(?:[_\s-]*at)?(?:[_\s-]*segment)?[_\s-]*(\d+)", re.IGNORECASE)
+_YES_VALUES = {"1", "true", "yes", "y", "agree", "agrees", "ok", "pass"}
+_NO_VALUES = {"0", "false", "no", "n", "disagree", "disagrees", "flag", "issue", "reject"}
 
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
@@ -594,6 +602,88 @@ def convert_analysis_to_json(
     return None
 
 
+def _clamp_confidence(raw: Any, default: float = 0.0) -> float:
+    try:
+        return max(0.0, min(1.0, float(raw)))
+    except Exception:
+        return default
+
+
+def _normalize_bool(raw: Any, default: bool = True) -> bool:
+    if isinstance(raw, bool):
+        return raw
+    if isinstance(raw, (int, float)):
+        return bool(raw)
+    if isinstance(raw, str):
+        s = raw.strip().lower()
+        if s in _YES_VALUES:
+            return True
+        if s in _NO_VALUES:
+            return False
+    return default
+
+
+def _normalize_video_type(raw: Any) -> Optional[str]:
+    if raw is None:
+        return None
+    s = str(raw).strip().lower()
+    return s if s in ALLOWED_VIDEO_TYPES else None
+
+
+def _normalize_boundary_fix(raw: Any) -> Optional[str]:
+    if raw is None:
+        return None
+    s = str(raw).strip().lower()
+    if not s:
+        return None
+    if s in ALLOWED_BOUNDARY_FIXES:
+        return s
+    if re.fullmatch(r"split_at_segment_\d+", s):
+        return s
+    m = _SPLIT_FIX_RE.search(s)
+    if m:
+        return f"split_at_segment_{m.group(1)}"
+    return None
+
+
+def _normalize_current_override(raw: Any) -> Optional[str]:
+    if raw is None:
+        return None
+    s = str(raw).strip().lower()
+    if not s or s in {"none", "null", "n/a", "na"}:
+        return None
+    return s if s in ALLOWED_COLLAPSE_OVERRIDES else None
+
+
+def normalize_video_type_check(raw: Any) -> Dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {
+            "agrees": True,
+            "suggested_type": None,
+            "confidence": 1.0,
+            "reasoning": "No video_type_check provided by verifier.",
+        }
+
+    agrees = _normalize_bool(raw.get("agrees"), default=True)
+    suggested_type = _normalize_video_type(raw.get("suggested_type"))
+    confidence = _clamp_confidence(raw.get("confidence"), default=(1.0 if agrees else 0.0))
+    reasoning = raw.get("reasoning")
+    reasoning_str = str(reasoning).strip() if reasoning is not None else ""
+    if not reasoning_str:
+        reasoning_str = "No reasoning provided."
+
+    # When the verifier agrees, force suggested_type null to avoid accidental type drift.
+    if agrees:
+        suggested_type = None
+
+    return {
+        "agrees": agrees,
+        "suggested_type": suggested_type,
+        "confidence": confidence,
+        "reasoning": reasoning_str,
+    }
+
+
 def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
     """Best-effort normalization to satisfy verification.schema.json without hiding real issues."""
     if not isinstance(raw, list):
@@ -622,22 +712,24 @@ def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
         except Exception:
             continue
 
-        out = dict(item)
-        out["conversation_id"] = cid_int
-        out["verdict"] = normalize_verdict(item.get("verdict"))
-        normalized.append(out)
+        notes = item.get("notes")
+        normalized.append({
+            "conversation_id": cid_int,
+            "verdict": normalize_verdict(item.get("verdict")),
+            "notes": "" if notes is None else str(notes),
+        })
 
     return normalized
 
 
-def normalize_boundary_issues(raw: Any) -> List[Dict[str, Any]]:
+def normalize_boundary_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]]:
     """Normalize boundary issues to satisfy verification.schema.json.
 
     The verifier sometimes uses a different severity scale (e.g. 'critical').
     We map those into the allowed enum: minor/moderate/major.
     """
     if not isinstance(raw, list):
-        return []
+        return [], []
 
     def normalize_severity(v: Any) -> str:
         if v is None:
@@ -654,6 +746,7 @@ def normalize_boundary_issues(raw: Any) -> List[Dict[str, Any]]:
         return "moderate"
 
     normalized: List[Dict[str, Any]] = []
+    dropped: List[str] = []
     for item in raw:
         if not isinstance(item, dict):
             continue
@@ -669,28 +762,31 @@ def normalize_boundary_issues(raw: Any) -> List[Dict[str, Any]]:
             issue_str = issue
         else:
             issue_str = str(issue)
-        out = dict(item)
-        out["conversation_id"] = cid_int
-        out["issue"] = issue_str
-        out["severity"] = normalize_severity(item.get("severity"))
-        conf = item.get("confidence")
-        try:
-            conf_f = max(0.0, min(1.0, float(conf)))
-            out["confidence"] = conf_f
-            # Keep issue but drop concrete fix when confidence is below patch-safe threshold.
-            if conf_f < 0.70:
-                out["suggested_fix"] = None
-        except Exception:
-            pass
-        normalized.append(out)
-    return normalized
+        conf_f = _clamp_confidence(item.get("confidence"), default=0.0)
+        suggested_fix = _normalize_boundary_fix(item.get("suggested_fix"))
+        if item.get("suggested_fix") is not None and suggested_fix is None:
+            dropped.append(
+                f"Dropped invalid boundary suggested_fix for conv {cid_int}: {item.get('suggested_fix')!r}"
+            )
+        # Keep issue but drop concrete fix when confidence is below patch-safe threshold.
+        if conf_f < 0.70:
+            suggested_fix = None
+
+        normalized.append({
+            "conversation_id": cid_int,
+            "issue": issue_str,
+            "severity": normalize_severity(item.get("severity")),
+            "suggested_fix": suggested_fix,
+            "confidence": conf_f,
+        })
+    return normalized, dropped
 
 
 def normalize_misattributions(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]]:
     if not isinstance(raw, list):
         return [], []
 
-    allowed_roles = {"coach", "student", "target", "other", "voiceover"}
+    allowed_roles = ALLOWED_MISATTRIBUTION_ROLES
     out: List[Dict[str, Any]] = []
     dropped: List[str] = []
 
@@ -712,28 +808,25 @@ def normalize_misattributions(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
             )
             continue
 
-        conf_raw = item.get("confidence")
-        conf_val: Optional[float] = None
-        try:
-            conf_val = max(0.0, min(1.0, float(conf_raw)))
-        except Exception:
-            pass
-        if conf_val is not None and conf_val < 0.70:
+        conf_val = _clamp_confidence(item.get("confidence"), default=0.0)
+        if conf_val < 0.70:
             dropped.append(
                 f"Dropped low-confidence misattribution seg {seg_id_int} (confidence={conf_val:.2f})"
             )
             continue
 
         current_role = item.get("current_role")
+        current_role_norm = str(current_role).strip().lower() if current_role is not None else "unknown"
+        if current_role_norm not in (allowed_roles | {"unknown"}):
+            current_role_norm = "unknown"
         evidence = item.get("evidence")
         out_item: Dict[str, Any] = {
             "segment_id": seg_id_int,
-            "current_role": str(current_role) if current_role is not None else "unknown",
+            "current_role": current_role_norm,
             "suggested_role": suggested,
             "evidence": str(evidence) if evidence is not None else "",
+            "confidence": conf_val,
         }
-        if conf_val is not None:
-            out_item["confidence"] = conf_val
         out.append(out_item)
 
     return out, dropped
@@ -743,7 +836,7 @@ def normalize_collapse_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
     if not isinstance(raw, list):
         return [], []
 
-    allowed_overrides = {"coach", "student", "target", "other"}
+    allowed_overrides = ALLOWED_COLLAPSE_OVERRIDES
     out: List[Dict[str, Any]] = []
     dropped: List[str] = []
 
@@ -770,29 +863,23 @@ def normalize_collapse_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
             )
             continue
 
-        conf_raw = item.get("confidence")
-        conf_val: Optional[float] = None
-        try:
-            conf_val = max(0.0, min(1.0, float(conf_raw)))
-        except Exception:
-            pass
-        if conf_val is not None and conf_val < 0.70:
+        conf_val = _clamp_confidence(item.get("confidence"), default=0.0)
+        if conf_val < 0.70:
             dropped.append(
                 f"Dropped low-confidence collapse issue seg {seg_id_int} (confidence={conf_val:.2f})"
             )
             continue
 
-        current_override = item.get("current_override")
+        current_override = _normalize_current_override(item.get("current_override"))
         evidence = item.get("evidence")
         out_item: Dict[str, Any] = {
             "speaker_id": speaker_id.strip(),
             "segment_id": seg_id_int,
-            "current_override": None if current_override is None else str(current_override),
+            "current_override": current_override,
             "suggested_override": suggested,
             "evidence": str(evidence) if evidence is not None else "",
+            "confidence": conf_val,
         }
-        if conf_val is not None:
-            out_item["confidence"] = conf_val
         out.append(out_item)
 
     return out, dropped
@@ -995,13 +1082,14 @@ def verify_file(
 
     # Build verification output
     verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
+    video_type_check = normalize_video_type_check(result.get("video_type_check", {}))
     conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
     misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
-    boundary_issues = normalize_boundary_issues(result.get("boundary_issues", []))
+    boundary_issues, dropped_boundary = normalize_boundary_issues(result.get("boundary_issues", []))
     collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
     other_flags_raw = result.get("other_flags", [])
-    other_flags = other_flags_raw if isinstance(other_flags_raw, list) else []
-    for note in dropped_misattributions + dropped_collapse:
+    other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
+    for note in dropped_misattributions + dropped_collapse + dropped_boundary:
         other_flags.append(note)
 
     total_issues = (
@@ -1017,13 +1105,13 @@ def verify_file(
         "verified_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "pipeline_version": PIPELINE_VERSION,
         "verdict": verdict,
-        "video_type_check": result.get("video_type_check", {}),
+        "video_type_check": video_type_check,
         "conversation_verdicts": conversation_verdicts,
         "misattributions": misattributions,
         "boundary_issues": boundary_issues,
         "collapse_issues": collapse_issues,
         "other_flags": other_flags,
-        "summary": result.get("summary", ""),
+        "summary": str(result.get("summary", "")),
         "metadata": {
             "input_file": str(input_path),
             "processing_time_sec": elapsed,
