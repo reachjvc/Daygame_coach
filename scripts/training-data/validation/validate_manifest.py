@@ -37,6 +37,7 @@ _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+_STAGE07_GATE_POLICIES = {"approve_only", "allow_flag"}
 
 
 @dataclass(frozen=True)
@@ -64,6 +65,57 @@ def _video_id_for_file(p: Path) -> Optional[str]:
 def _safe_report_name(raw: str) -> str:
     cleaned = _SAFE_NAME_RE.sub("_", (raw or "").strip()).strip("_")
     return cleaned or "report"
+
+
+def _stage08_report_stem(manifest_stem: str, source_filter: Optional[str]) -> str:
+    suffix = f".{source_filter}" if source_filter else ""
+    return _safe_report_name(f"{manifest_stem}{suffix}")
+
+
+def _stage08_expected_source_label(manifest_name: str, source_filter: Optional[str]) -> str:
+    if source_filter:
+        return f"manifest:{manifest_name}|source:{source_filter}"
+    return f"manifest:{manifest_name}"
+
+
+def _is_stage06c_patched_clean(s06c_path: Optional[Path]) -> bool:
+    if not s06c_path:
+        return False
+    s06c_data = _load_json(s06c_path)
+    pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
+    if not isinstance(pm, dict):
+        return False
+    fixes = pm.get("fixes_applied_count", 0)
+    flags = pm.get("flags_not_fixed_count", 0)
+    return isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0
+
+
+def _stage07_gate_decision(
+    verdict: Optional[str],
+    s06c_path: Optional[Path],
+    policy: str,
+) -> Tuple[bool, str]:
+    if policy not in _STAGE07_GATE_POLICIES:
+        return False, f"invalid_gate_policy={policy}"
+
+    if verdict == "APPROVE":
+        return True, "APPROVE"
+
+    if verdict == "FLAG":
+        if policy == "allow_flag":
+            return True, "FLAG (allowed by gate policy)"
+        return False, "FLAG (blocked by gate policy)"
+
+    if verdict == "REJECT":
+        if _is_stage06c_patched_clean(s06c_path):
+            if policy == "allow_flag":
+                return True, "REJECT (patched cleanly) (allowed by gate policy)"
+            return False, "REJECT (patched cleanly) (blocked by gate policy)"
+        return False, "REJECT (critical issues)"
+
+    if verdict is None:
+        return False, "missing_verdict"
+    return False, f"unknown_verdict={verdict}"
 
 
 def _load_manifest_entries(manifest_path: Path, source: Optional[str] = None) -> List[Tuple[str, str, str]]:
@@ -611,7 +663,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Manifest validation harness (06b/06c/07 cross-stage)")
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
     parser.add_argument("--source", help="Only validate one source within the manifest")
-    parser.add_argument("--allow-flag", action="store_true", help="Treat 06b FLAG verdicts as allowed (matches 07.content --allow-flag)")
+    parser.add_argument(
+        "--stage07-gate-policy",
+        choices=sorted(_STAGE07_GATE_POLICIES),
+        default="approve_only",
+        help=(
+            "Stage 07 verification gate policy: "
+            "approve_only=only APPROVE can proceed, "
+            "allow_flag=allow FLAG and REJECT patched-clean outputs"
+        ),
+    )
+    parser.add_argument(
+        "--allow-flag",
+        action="store_true",
+        help="Deprecated alias for --stage07-gate-policy allow_flag",
+    )
     parser.add_argument(
         "--skip-stage01-presence",
         action="store_true",
@@ -654,6 +720,7 @@ def main() -> None:
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
 
     args = parser.parse_args()
+    stage07_gate_policy = "allow_flag" if args.allow_flag else args.stage07_gate_policy
 
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -742,6 +809,7 @@ def main() -> None:
     gate_reject_patched_allowed = 0
     gate_flag_blocked = 0
     gate_flag_allowed = 0
+    gate_policy_violations = 0
     video_artifacts: Dict[str, Dict[str, Optional[str]]] = {}
     stage_reports_emitted = 0
     stage_reports_dir: Optional[Path] = None
@@ -758,17 +826,42 @@ def main() -> None:
 
     if args.check_stage08_report:
         stage08_checked = True
-        report_stem = _safe_report_name(manifest_path.stem)
+        report_stem = _stage08_report_stem(manifest_path.stem, args.source)
         stage08_report_path = data_root / "08.taxonomy-validation" / f"{report_stem}.report.json"
-        expected_source = f"manifest:{manifest_path.name}"
+        expected_source = _stage08_expected_source_label(manifest_path.name, args.source)
+        legacy_source = _stage08_expected_source_label(manifest_path.name, None)
+        legacy_stage08_report_path: Optional[Path] = None
+
+        if args.source:
+            legacy_report_stem = _stage08_report_stem(manifest_path.stem, None)
+            legacy_stage08_report_path = data_root / "08.taxonomy-validation" / f"{legacy_report_stem}.report.json"
+            if (not stage08_report_path.exists()) and legacy_stage08_report_path.exists():
+                stage08_report_path = legacy_stage08_report_path
+                issues.append({
+                    "video_id": "*",
+                    "source": args.source or "all",
+                    "severity": "warning",
+                    "check": "stage08_report_legacy_name",
+                    "message": (
+                        "Using legacy Stage 08 report path without source suffix; "
+                        f"re-run Stage 08 to write source-scoped report: {legacy_stage08_report_path.name}"
+                    ),
+                    "stage08_report": str(stage08_report_path),
+                })
+                check_counts["warning:stage08_report_legacy_name"] += 1
 
         if not stage08_report_path.exists():
+            extra = (
+                f" (legacy candidate: {legacy_stage08_report_path})"
+                if legacy_stage08_report_path is not None
+                else ""
+            )
             issues.append({
                 "video_id": "*",
                 "source": args.source or "all",
                 "severity": "error",
                 "check": "missing_stage08_report",
-                "message": f"Missing Stage 08 report for manifest: {stage08_report_path}",
+                "message": f"Missing Stage 08 report for manifest scope: {stage08_report_path}{extra}",
             })
             check_counts["error:missing_stage08_report"] += 1
         else:
@@ -795,19 +888,116 @@ def main() -> None:
                     })
                     check_counts["error:invalid_stage08_report_stage"] += 1
 
-                if report_data.get("source") != expected_source:
+                source_label = report_data.get("source")
+                if source_label != expected_source:
+                    if args.source and source_label == legacy_source:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "warning",
+                            "check": "stage08_report_legacy_scope",
+                            "message": (
+                                f"Stage 08 report source uses legacy scope {legacy_source!r}; "
+                                f"expected {expected_source!r}"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["warning:stage08_report_legacy_scope"] += 1
+                    else:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_scope",
+                            "message": (
+                                f"Stage 08 report source mismatch: expected {expected_source!r}, "
+                                f"found {source_label!r}"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_scope"] += 1
+
+                scope = report_data.get("scope")
+                if scope is None:
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "warning",
+                        "check": "missing_stage08_report_scope",
+                        "message": "Stage 08 report missing scope metadata; cannot fully verify manifest/source scope",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["warning:missing_stage08_report_scope"] += 1
+                elif not isinstance(scope, dict):
                     issues.append({
                         "video_id": "*",
                         "source": args.source or "all",
                         "severity": "error",
-                        "check": "invalid_stage08_report_scope",
-                        "message": (
-                            f"Stage 08 report source mismatch: expected {expected_source!r}, "
-                            f"found {report_data.get('source')!r}"
-                        ),
+                        "check": "invalid_stage08_report_scope_object",
+                        "message": "Stage 08 report scope is not a JSON object",
                         "stage08_report": str(stage08_report_path),
                     })
-                    check_counts["error:invalid_stage08_report_scope"] += 1
+                    check_counts["error:invalid_stage08_report_scope_object"] += 1
+                else:
+                    scope_manifest = scope.get("manifest")
+                    if scope_manifest not in {None, manifest_path.name}:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_scope_manifest",
+                            "message": (
+                                f"Stage 08 report scope.manifest mismatch: expected {manifest_path.name!r}, "
+                                f"found {scope_manifest!r}"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_scope_manifest"] += 1
+
+                    expected_scope_source = args.source or None
+                    scope_source = scope.get("source_filter")
+                    if scope_source != expected_scope_source:
+                        if args.source and scope_source in {None, ""}:
+                            issues.append({
+                                "video_id": "*",
+                                "source": args.source or "all",
+                                "severity": "warning",
+                                "check": "stage08_report_scope_legacy_source",
+                                "message": (
+                                    "Stage 08 report scope missing source_filter for source-scoped validation; "
+                                    "re-run Stage 08 for explicit source scope metadata"
+                                ),
+                                "stage08_report": str(stage08_report_path),
+                            })
+                            check_counts["warning:stage08_report_scope_legacy_source"] += 1
+                        else:
+                            issues.append({
+                                "video_id": "*",
+                                "source": args.source or "all",
+                                "severity": "error",
+                                "check": "invalid_stage08_report_scope_source",
+                                "message": (
+                                    f"Stage 08 report scope.source_filter mismatch: expected {expected_scope_source!r}, "
+                                    f"found {scope_source!r}"
+                                ),
+                                "stage08_report": str(stage08_report_path),
+                            })
+                            check_counts["error:invalid_stage08_report_scope_source"] += 1
+
+                    scope_manifest_videos = scope.get("manifest_videos")
+                    if isinstance(scope_manifest_videos, int) and scope_manifest_videos != len(manifest_ids):
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_scope_video_count",
+                            "message": (
+                                f"Stage 08 report scope.manifest_videos mismatch: expected {len(manifest_ids)}, "
+                                f"found {scope_manifest_videos}"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_scope_video_count"] += 1
 
                 validation = report_data.get("validation")
                 if not isinstance(validation, dict):
@@ -1139,11 +1329,12 @@ def main() -> None:
             if verdict:
                 verdict_counts[verdict] += 1
 
-        # Gate accounting (mirrors 07.content logic)
+        # Gate accounting (mirrors 07.content logic via explicit policy)
+        gate_allowed, gate_reason = _stage07_gate_decision(verdict, s06c_path, stage07_gate_policy)
         if verdict == "APPROVE":
             allowed_by_gate += 1
         elif verdict == "FLAG":
-            if args.allow_flag:
+            if gate_allowed:
                 allowed_by_gate += 1
                 gate_flag_allowed += 1
             else:
@@ -1151,18 +1342,7 @@ def main() -> None:
                 gate_flag_blocked += 1
         elif verdict == "REJECT":
             gate_reject += 1
-
-            patched_clean = False
-            if s06c_path:
-                s06c_data = _load_json(s06c_path)
-                pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
-                if isinstance(pm, dict):
-                    fixes = pm.get("fixes_applied_count", 0)
-                    flags = pm.get("flags_not_fixed_count", 0)
-                    if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
-                        patched_clean = True
-
-            if patched_clean and args.allow_flag:
+            if gate_allowed:
                 allowed_by_gate += 1
                 gate_reject_patched_allowed += 1
             else:
@@ -1226,30 +1406,21 @@ def main() -> None:
                 })
                 check_counts["warning:stage07_normalization_repairs"] += 1
 
-        # Sanity: Stage 07 output existing despite REJECT verdict is suspicious unless 06c.patch
-        # applied fixes cleanly (in which case 07.content may legitimately proceed).
-        if verdict == "REJECT" and s07_path:
-            patched_clean = False
-            if s06c_path:
-                s06c_data = _load_json(s06c_path)
-                pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
-                if isinstance(pm, dict):
-                    fixes = pm.get("fixes_applied_count", 0)
-                    flags = pm.get("flags_not_fixed_count", 0)
-                    if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
-                        patched_clean = True
-
-            if not patched_clean:
-                issues.append({
-                    "video_id": vid,
-                    "source": src,
-                    "severity": "warning",
-                    "check": "stage07_present_despite_reject",
-                    "message": "Stage 07 output exists but 06b verdict is REJECT (was --skip-verification used?)",
-                    "s07": str(s07_path),
-                    "verify": str(v_path) if v_path else None,
-                })
-                check_counts["warning:stage07_present_despite_reject"] += 1
+        if s07_path and not gate_allowed:
+            gate_policy_violations += 1
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "stage07_gate_policy_violation",
+                "message": (
+                    "Stage 07 output exists but verification gate blocks this verdict "
+                    f"(policy={stage07_gate_policy}, verdict={verdict!r}, reason={gate_reason})"
+                ),
+                "s07": str(s07_path),
+                "verify": str(v_path) if v_path else None,
+            })
+            check_counts["error:stage07_gate_policy_violation"] += 1
 
     waivers_applied = 0
     if waiver_rules:
@@ -1362,13 +1533,15 @@ def main() -> None:
             "invalid_files": stage06b_invalid_files,
         },
         "verification_gate": {
-            "allow_flag": bool(args.allow_flag),
+            "policy": stage07_gate_policy,
+            "allow_flag": stage07_gate_policy == "allow_flag",
             "allowed": allowed_by_gate,
             "blocked": blocked_by_gate,
             "reject": gate_reject,
             "reject_patched_allowed": gate_reject_patched_allowed,
             "flag_allowed": gate_flag_allowed,
             "flag_blocked": gate_flag_blocked,
+            "policy_violations": gate_policy_violations,
         },
         "stage07_validation": {
             "errors": stage07_val_errors,
@@ -1443,7 +1616,8 @@ def main() -> None:
         print(
             f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate} "
             f"(REJECT={gate_reject}, REJECT_patched_allowed={gate_reject_patched_allowed}, "
-            f"FLAG_allowed={gate_flag_allowed}, FLAG_blocked={gate_flag_blocked}, allow_flag={args.allow_flag})"
+            f"FLAG_allowed={gate_flag_allowed}, FLAG_blocked={gate_flag_blocked}, "
+            f"policy={stage07_gate_policy}, policy_violations={gate_policy_violations})"
         )
 
         print(

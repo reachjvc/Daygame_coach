@@ -139,16 +139,19 @@ This includes:
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py \
   --manifest docs/pipeline/batches/CANARY.1.txt \
-  --allow-flag
+  --stage07-gate-policy allow_flag
 ```
 
 To also require Stage 05 audio_features artifacts/payload integrity in the same harness run, add `--check-stage05-audio`.
 To also require Stage 09 chunk artifacts/payload integrity in the same harness run, add `--check-stage09-chunks`.
 That check now enforces stable `sourceKey`/`videoId`/`channel` alignment plus `chunkIndex`/`totalChunks` consistency and continuity.
 To also enforce Stage 08 report integrity in the same harness run, add `--check-stage08-report`.
+When `--source` is also set, Stage 08 report names are source-scoped (`<manifest>.<source>.report.json`) and scope metadata is validated.
 If you run via `sub-batch-pipeline`, use:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep`
 (`--validate-deep` now expands to `--check-stage05-audio --check-stage08-report --check-stage09-chunks`.)
+To use permissive Stage 07 gating in validation (`FLAG` and patched-clean `REJECT` allowed), add:
+`--stage07-gate-policy allow_flag` (or `--allow-flag` alias in the orchestrator).
 To scope validation to a single source within the manifest:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --source <source_name>`
 Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgrade explicit known checks (video/check scoped) to `info`.

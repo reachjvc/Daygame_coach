@@ -95,6 +95,7 @@ VALIDATE_WAIVER_FILE=""
 VALIDATE_EMIT_STAGE_REPORTS=false
 VALIDATE_STAGE_REPORTS_DIR=""
 VALIDATE_SOURCE=""
+VALIDATE_STAGE07_GATE_POLICY="approve_only"
 
 usage() {
   cat <<'EOF'
@@ -118,6 +119,9 @@ Options:
   --validate-deep          Shortcut: --check-stage05-audio + --check-stage08-report + --check-stage09-chunks
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
                            Default auto-detect: docs/pipeline/waivers/<subbatch>.json
+  --stage07-gate-policy <p>
+                           With --validate, gate policy: approve_only (default) or allow_flag
+  --allow-flag             Alias for --stage07-gate-policy allow_flag
   --source <name>          With --validate, only validate one source from the manifest
   --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
   --stage-reports-dir <p>  Output directory for --emit-stage-reports
@@ -643,6 +647,7 @@ validate_sub_batch() {
   local -a stage_report_check_args=()
   local stage_reports_dir=""
   local waiver_file="$VALIDATE_WAIVER_FILE"
+  validate_args+=(--stage07-gate-policy "$VALIDATE_STAGE07_GATE_POLICY")
 
   if [[ -n "$VALIDATE_SOURCE" ]]; then
     validate_args+=(--source "$VALIDATE_SOURCE")
@@ -694,6 +699,7 @@ validate_sub_batch() {
 
   echo ""
   echo "=== Validations: $sub_id ==="
+  echo "Stage07 gate policy: $VALIDATE_STAGE07_GATE_POLICY"
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
@@ -773,6 +779,23 @@ while [[ $# -gt 0 ]]; do
       ;;
     --waiver-file=*)
       VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
+      shift
+      ;;
+    --stage07-gate-policy)
+      [[ $# -lt 2 ]] && error "--stage07-gate-policy requires a value"
+      VALIDATE_STAGE07_GATE_POLICY="$2"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag"
+      shift 2
+      ;;
+    --stage07-gate-policy=*)
+      VALIDATE_STAGE07_GATE_POLICY="${1#--stage07-gate-policy=}"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag"
+      shift
+      ;;
+    --allow-flag)
+      VALIDATE_STAGE07_GATE_POLICY="allow_flag"
       shift
       ;;
     --source)

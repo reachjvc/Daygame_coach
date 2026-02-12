@@ -14,6 +14,8 @@ Reads:
 Writes:
   - Validation report:
       data/08.taxonomy-validation/<label>.report.json
+    - For `--manifest` + `--source`, report name is source-scoped:
+      data/08.taxonomy-validation/<manifest_stem>.<source>.report.json
 
 Exit codes:
   0 - PASS/WARNING: Non-blocking taxonomy outcome
@@ -402,6 +404,7 @@ def save_report(
     output_dir: Path,
     label: str,
     report_name: str,
+    scope: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Save validation report to JSON file."""
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -412,6 +415,7 @@ def save_report(
         "stage": "08.taxonomy-validation",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": label,
+        "scope": scope or {},
         "validation": validation,
         "details": report,
     }
@@ -492,6 +496,7 @@ def main() -> int:
     manifest_video_ids: Optional[Set[str]] = None
     matched_manifest_video_ids: Set[str] = set()
     manifest_missing_video_ids: List[str] = []
+    manifest_path: Optional[Path] = None
 
     # Filter by manifest if provided
     if args.manifest:
@@ -507,8 +512,12 @@ def main() -> int:
             return 1
         files, matched_manifest_video_ids = filter_files_by_manifest(files, manifest_video_ids)
         manifest_missing_video_ids = sorted(manifest_video_ids - matched_manifest_video_ids)
-        label = f"manifest:{manifest_path.name}"
-        report_name = manifest_path.stem
+        if args.source:
+            label = f"manifest:{manifest_path.name}|source:{args.source}"
+            report_name = f"{manifest_path.stem}.{args.source}"
+        else:
+            label = f"manifest:{manifest_path.name}"
+            report_name = manifest_path.stem
     elif args.source:
         label = f"source:{args.source}"
         report_name = args.source
@@ -545,9 +554,18 @@ def main() -> int:
         strict=args.strict,
         manifest_missing_videos=len(manifest_missing_video_ids),
     )
+    scope = {
+        "manifest": manifest_path.name if manifest_path else None,
+        "source_filter": args.source or None,
+        "file_count": len(files),
+        "manifest_videos": len(manifest_video_ids) if manifest_video_ids is not None else None,
+        "manifest_matched_videos": len(matched_manifest_video_ids) if manifest_video_ids is not None else None,
+        "manifest_missing_videos": len(manifest_missing_video_ids) if manifest_video_ids is not None else None,
+    }
 
     if args.json:
         output_data = {
+            "scope": scope,
             "validation": validation,
             "details": report,
         }
@@ -557,7 +575,7 @@ def main() -> int:
 
     # Save report file
     if not args.no_report:
-        report_path = save_report(report, validation, output_dir, label, report_name)
+        report_path = save_report(report, validation, output_dir, label, report_name, scope=scope)
         print(f"[08.taxonomy-validation] Report saved: {report_path}")
 
     # Return exit code based on status

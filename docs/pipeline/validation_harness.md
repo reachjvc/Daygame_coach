@@ -12,6 +12,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --check-stage05-audio
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --source coach_kyle_how_to_approach_a_girl
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --stage07-gate-policy allow_flag
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
 ```
@@ -39,6 +40,7 @@ The manifest validator can be run directly:
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --source coach_kyle_how_to_approach_a_girl
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --stage07-gate-policy allow_flag
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage05-audio
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
@@ -52,10 +54,12 @@ With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract
 - `chunkIndex`/`totalChunks` bounds, dedupe, and continuity checks
 
 With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed, mismatched, or `FAIL`.
+When `--source` is also set, the expected Stage 08 report path is source-scoped (`<manifest>.<source>.report.json`) and scope metadata is validated.
 The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete manifest coverage as blocking.
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
 Stage 10 now also requires a manifest-scoped readiness summary (`data/validation/stage_reports/<manifest>/readiness-summary.json`) and blocks ingest when any scope video is `BLOCKED`.
 When readiness `scope` metadata is present, Stage 10 also verifies manifest/source scope alignment.
+Stage 07 gate policy is explicit via `--stage07-gate-policy` (`approve_only` default, `allow_flag` alternative); validator policy violations are reported as errors.
 `--waiver-file` can downgrade specific known issues (by `video_id` + `check`) to `info` while preserving audit visibility.
 Waivers with `expires_at` in the past are ignored automatically (and reported as expired).
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
