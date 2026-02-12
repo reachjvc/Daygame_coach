@@ -461,6 +461,7 @@ def main() -> int:
         label = f"manifest:{manifest_path.name}"
         report_name = manifest_path.stem
     elif args.source:
+        label = f"source:{args.source}"
         report_name = args.source
     else:
         label = str(data_root)

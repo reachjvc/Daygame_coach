@@ -381,8 +381,13 @@ function safeReportName(raw: string): string {
   return cleaned || "report"
 }
 
+function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object"
+}
+
 function checkTaxonomyGate(manifestPath: string): void {
   const stem = path.basename(manifestPath, path.extname(manifestPath))
+  const expectedSource = `manifest:${path.basename(manifestPath)}`
   const reportPath = path.join(
     process.cwd(),
     "data",
@@ -405,8 +410,41 @@ function checkTaxonomyGate(manifestPath: string): void {
     process.exit(1)
   }
 
-  const status = (data as any)?.validation?.status
-  const reason = (data as any)?.validation?.reason
+  if (!isObject(data)) {
+    console.error(`❌ Stage 08 report has invalid root shape: ${reportPath}`)
+    process.exit(1)
+  }
+
+  if (data.stage !== "08.taxonomy-validation") {
+    console.error(`❌ Stage 08 report has unexpected stage=${String(data.stage)} (${reportPath})`)
+    process.exit(1)
+  }
+
+  if (data.source !== expectedSource) {
+    console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${String(data.source)}'`)
+    console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+    process.exit(1)
+  }
+
+  const validation = data.validation
+  if (!isObject(validation)) {
+    console.error(`❌ Stage 08 report missing validation object (${reportPath})`)
+    process.exit(1)
+  }
+
+  const status = validation.status
+  const reason = validation.reason
+  if (status !== "PASS" && status !== "WARNING" && status !== "FAIL") {
+    console.error(`❌ Stage 08 report has invalid validation.status=${String(status)} (${reportPath})`)
+    process.exit(1)
+  }
+
+  const details = data.details
+  const filesProcessed = isObject(details) ? details.files_processed : undefined
+  if (typeof filesProcessed !== "number" || !Number.isFinite(filesProcessed) || filesProcessed <= 0) {
+    console.error(`❌ Stage 08 report has invalid details.files_processed=${String(filesProcessed)} (${reportPath})`)
+    process.exit(1)
+  }
 
   if (status === "FAIL") {
     console.error(`❌ Stage 08 taxonomy gate FAIL (${reportPath})`)
@@ -417,8 +455,6 @@ function checkTaxonomyGate(manifestPath: string): void {
   if (status === "WARNING") {
     console.warn(`⚠️  Stage 08 taxonomy gate WARNING (${reportPath})`)
     if (typeof reason === "string" && reason.trim()) console.warn(`   Reason: ${reason.trim()}`)
-  } else if (status !== "PASS") {
-    console.warn(`⚠️  Stage 08 taxonomy gate status is unknown (${String(status)}). Proceeding anyway.`)
   }
 }
 
