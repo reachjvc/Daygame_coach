@@ -31,12 +31,15 @@ The manifest validator can be run directly:
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
 ```
 
 With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract integrity:
 - stable `sourceKey`/`videoId`/`channel` alignment
 - finite + consistent embedding dimensions
 - `chunkIndex`/`totalChunks` bounds, dedupe, and continuity checks
+
+With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed, mismatched, or `FAIL`.
 
 Cross-stage checks can also be run directly:
 

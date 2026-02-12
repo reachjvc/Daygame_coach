@@ -33,6 +33,7 @@ LOG_PREFIX = "[manifest-validate]"
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
+_SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 
 def repo_root() -> Path:
@@ -46,6 +47,11 @@ def _extract_video_id_from_text(text: str) -> Optional[str]:
 
 def _video_id_for_file(p: Path) -> Optional[str]:
     return _extract_video_id_from_text(str(p)) or validate_cross_stage._extract_video_id_from_json(p)  # type: ignore[attr-defined]
+
+
+def _safe_report_name(raw: str) -> str:
+    cleaned = _SAFE_NAME_RE.sub("_", (raw or "").strip()).strip("_")
+    return cleaned or "report"
 
 
 def _load_manifest_entries(manifest_path: Path, source: Optional[str] = None) -> List[Tuple[str, str, str]]:
@@ -248,6 +254,11 @@ def main() -> None:
         action="store_true",
         help="Also require Stage 09 chunk artifacts and validate basic chunk payload integrity",
     )
+    parser.add_argument(
+        "--check-stage08-report",
+        action="store_true",
+        help="Also require a valid Stage 08 manifest report (and fail on FAIL status)",
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -300,6 +311,9 @@ def main() -> None:
     cross_stage_warnings = 0
     stage09_checked_files = 0
     stage09_invalid_files = 0
+    stage08_checked = False
+    stage08_status: Optional[str] = None
+    stage08_report_path: Optional[Path] = None
 
     # Stage 07 quality signals (from per-file validation + normalization metadata)
     stage07_val_errors = 0
@@ -316,6 +330,126 @@ def main() -> None:
     gate_flag_allowed = 0
 
     start = time.time()
+
+    if args.check_stage08_report:
+        stage08_checked = True
+        report_stem = _safe_report_name(manifest_path.stem)
+        stage08_report_path = data_root / "08.taxonomy-validation" / f"{report_stem}.report.json"
+        expected_source = f"manifest:{manifest_path.name}"
+
+        if not stage08_report_path.exists():
+            issues.append({
+                "video_id": "*",
+                "source": args.source or "all",
+                "severity": "error",
+                "check": "missing_stage08_report",
+                "message": f"Missing Stage 08 report for manifest: {stage08_report_path}",
+            })
+            check_counts["error:missing_stage08_report"] += 1
+        else:
+            report_data = _load_json(stage08_report_path)
+            if not isinstance(report_data, dict):
+                issues.append({
+                    "video_id": "*",
+                    "source": args.source or "all",
+                    "severity": "error",
+                    "check": "invalid_stage08_report",
+                    "message": "Stage 08 report is unreadable or not a JSON object",
+                    "stage08_report": str(stage08_report_path),
+                })
+                check_counts["error:invalid_stage08_report"] += 1
+            else:
+                if report_data.get("stage") != "08.taxonomy-validation":
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_stage",
+                        "message": f"Stage 08 report has unexpected stage={report_data.get('stage')!r}",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_stage"] += 1
+
+                if report_data.get("source") != expected_source:
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_scope",
+                        "message": (
+                            f"Stage 08 report source mismatch: expected {expected_source!r}, "
+                            f"found {report_data.get('source')!r}"
+                        ),
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_scope"] += 1
+
+                validation = report_data.get("validation")
+                if not isinstance(validation, dict):
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_validation",
+                        "message": "Stage 08 report missing validation object",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_validation"] += 1
+                else:
+                    status = validation.get("status")
+                    stage08_status = status if isinstance(status, str) else None
+                    reason = validation.get("reason")
+                    reason_text = reason.strip() if isinstance(reason, str) else ""
+
+                    if status not in {"PASS", "WARNING", "FAIL"}:
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_status",
+                            "message": f"Stage 08 report has invalid validation.status={status!r}",
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_status"] += 1
+                    elif status == "FAIL":
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "stage08_validation_fail",
+                            "message": (
+                                f"Stage 08 report status is FAIL"
+                                + (f": {reason_text}" if reason_text else "")
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:stage08_validation_fail"] += 1
+                    elif status == "WARNING":
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "warning",
+                            "check": "stage08_validation_warning",
+                            "message": (
+                                f"Stage 08 report status is WARNING"
+                                + (f": {reason_text}" if reason_text else "")
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["warning:stage08_validation_warning"] += 1
+
+                details = report_data.get("details")
+                files_processed = details.get("files_processed") if isinstance(details, dict) else None
+                if not isinstance(files_processed, int) or files_processed <= 0:
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_files_processed",
+                        "message": f"Stage 08 report has invalid details.files_processed={files_processed!r}",
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_files_processed"] += 1
 
     for vid in sorted(manifest_ids):
         src = source_by_vid.get(vid, "")
@@ -602,6 +736,7 @@ def main() -> None:
             **({"missing_09_chunks": len(missing_s09)} if args.check_stage09_chunks else {}),
         },
         "stage01_presence_required": not bool(args.skip_stage01_presence),
+        "stage08_report_required": bool(args.check_stage08_report),
         "stage09_chunks_required": bool(args.check_stage09_chunks),
         "verification_verdicts": dict(verdict_counts),
         "verification_gate": {
@@ -631,6 +766,15 @@ def main() -> None:
                 "invalid_files": stage09_invalid_files,
             }
             if args.check_stage09_chunks
+            else None
+        ),
+        "stage08_validation": (
+            {
+                "checked": stage08_checked,
+                "status": stage08_status,
+                "report": str(stage08_report_path) if stage08_report_path else None,
+            }
+            if args.check_stage08_report
             else None
         ),
         "issues_summary": {
@@ -671,6 +815,11 @@ def main() -> None:
             print(
                 f"{LOG_PREFIX} Stage 09 chunk check: enabled "
                 f"(checked={stage09_checked_files}, invalid={stage09_invalid_files})"
+            )
+        if args.check_stage08_report:
+            print(
+                f"{LOG_PREFIX} Stage 08 report check: enabled "
+                f"(status={stage08_status or 'unknown'}, report={str(stage08_report_path) if stage08_report_path else 'n/a'})"
             )
 
         print(
