@@ -86,7 +86,7 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ```bash
 ./scripts/training-data/06b.verify --manifest docs/pipeline/batches/CANARY.1.txt
 ./scripts/training-data/06c.patch  --manifest docs/pipeline/batches/CANARY.1.txt
-./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag
 ```
 
 Note: Stage 06b now drops low-confidence (<0.70) misattribution/collapse auto-fix suggestions from structured fix arrays and records those drops in `other_flags`.
@@ -100,8 +100,8 @@ Examples:
 ```bash
 ./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
 ./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
-./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --allow-flag --model sonnet
-./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --allow-flag --model opus
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag --model sonnet
+./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --verification-gate-policy allow_flag --model opus
 ```
 
 Notes:
@@ -111,13 +111,13 @@ Notes:
 ./scripts/training-data/06c.patch --manifest docs/pipeline/batches/HOLDOUT.1.txt --overwrite --allow-reject
 ```
 
-- `07.content` blocks `REJECT` by default (even with `--allow-flag`). For debugging/evaluation you can bypass the 06b gate:
+- `07.content` blocks `REJECT` by default (unless `--verification-gate-policy allow_flag` and patch-clean salvage applies). For debugging/evaluation you can bypass the 06b gate:
 
 ```bash
 ./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model sonnet
 ```
 
-If a `REJECT` video was patched cleanly by `06c.patch` (fixes applied, `flags_not_fixed_count=0`), Stage 07 will allow it under the same explicit waiver as `FLAG` by passing `--allow-flag`.
+If a `REJECT` video was patched cleanly by `06c.patch` (fixes applied, `flags_not_fixed_count=0`), Stage 07 will allow it under the same explicit waiver as `FLAG` by passing `--verification-gate-policy allow_flag` (or the legacy alias `--allow-flag`).
 
 ### 1b) Revalidate Stage 07 (no Claude; deterministic)
 

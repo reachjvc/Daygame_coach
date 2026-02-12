@@ -2725,15 +2725,18 @@ def should_process_video(
     source: str,
     verify_root: Path,
     skip_verification: bool = False,
-    allow_flag: bool = False,
+    gate_policy: str = "approve_only",
 ) -> Tuple[bool, str]:
     """Check if video should be processed based on 06b verification status.
 
     Returns (should_process, reason).
-    APPROVE always proceeds. FLAG proceeds only when --allow-flag is set.
+    APPROVE always proceeds. FLAG proceeds when gate_policy=allow_flag.
     REJECT is blocked by default, but may be allowed when the Stage 06c patched input includes
-    patch_metadata indicating deterministic fixes were applied and no flags remain (still requires --allow-flag).
+    patch_metadata indicating deterministic fixes were applied and no flags remain (still requires gate_policy=allow_flag).
     """
+    if gate_policy not in {"approve_only", "allow_flag"}:
+        return False, f"invalid verification gate policy: {gate_policy}"
+
     if skip_verification:
         return True, "verification skipped (--skip-verification)"
 
@@ -2745,8 +2748,8 @@ def should_process_video(
     if verdict == "APPROVE":
         return True, "APPROVE"
     if verdict == "FLAG":
-        if allow_flag:
-            return True, "FLAG (allowed by --allow-flag)"
+        if gate_policy == "allow_flag":
+            return True, "FLAG (allowed by gate policy)"
         return False, "FLAG verdict - needs manual review before proceeding"
     if verdict == "REJECT":
         # Salvage path: if 06c.patch applied high-confidence deterministic fixes cleanly, allow
@@ -2760,9 +2763,9 @@ def should_process_video(
             fixes = pm.get("fixes_applied_count", 0)
             flags = pm.get("flags_not_fixed_count", 0)
             if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
-                if allow_flag:
-                    return True, "REJECT (patched cleanly) (allowed by --allow-flag)"
-                return False, "REJECT (patched cleanly) - rerun with --allow-flag to proceed"
+                if gate_policy == "allow_flag":
+                    return True, "REJECT (patched cleanly) (allowed by gate policy)"
+                return False, "REJECT (patched cleanly) - rerun with --verification-gate-policy allow_flag"
         return False, "REJECT verdict - critical issues found"
 
     return False, f"unknown verdict: {verdict}"
@@ -2824,7 +2827,7 @@ def _run_named_source(args) -> None:
         should_process, reason = should_process_video(
             input_file, name, verification_root(),
             skip_verification=args.skip_verification or args.revalidate,
-            allow_flag=args.allow_flag,
+            gate_policy=("allow_flag" if args.allow_flag else args.verification_gate_policy),
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -2902,9 +2905,19 @@ def main() -> None:
         help="Skip 06b verification gate (process all files regardless of verdict)"
     )
     parser.add_argument(
+        "--verification-gate-policy",
+        choices=["approve_only", "allow_flag"],
+        default="approve_only",
+        help=(
+            "Verification gate policy: "
+            "approve_only=only APPROVE proceeds, "
+            "allow_flag=allow FLAG and patched-clean REJECT"
+        ),
+    )
+    parser.add_argument(
         "--allow-flag",
         action="store_true",
-        help="Allow FLAG verdicts to proceed (still blocks REJECT)"
+        help="Deprecated alias for --verification-gate-policy allow_flag"
     )
     parser.add_argument(
         "--revalidate",
@@ -2917,6 +2930,7 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
 
     # Only require Claude CLI when we will actually call it.
     if not args.revalidate and not args.dry_run:
@@ -2969,11 +2983,14 @@ def main() -> None:
             should_process, reason = should_process_video(
                 input_path, source_name, verify_root,
                 skip_verification=args.skip_verification or args.revalidate,
-                allow_flag=args.allow_flag,
+                gate_policy=verification_gate_policy,
             )
             if not should_process:
                 print(f"{LOG_PREFIX} BLOCKED: {input_path.name} - {reason}")
-                print(f"{LOG_PREFIX} Use --skip-verification to override (or --allow-flag for FLAG)")
+                print(
+                    f"{LOG_PREFIX} Use --skip-verification to override "
+                    f"(or --verification-gate-policy allow_flag)"
+                )
                 return
 
             if not args.revalidate and output_path.exists() and not args.overwrite:
@@ -3025,7 +3042,7 @@ def main() -> None:
                 should_process, reason = should_process_video(
                     input_file, src_name, verify_root,
                     skip_verification=args.skip_verification or args.revalidate,
-                    allow_flag=args.allow_flag,
+                    gate_policy=verification_gate_policy,
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -3076,7 +3093,7 @@ def main() -> None:
                 should_process, reason = should_process_video(
                     input_file, src_name, verify_root,
                     skip_verification=args.skip_verification or args.revalidate,
-                    allow_flag=args.allow_flag,
+                    gate_policy=verification_gate_policy,
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -3148,7 +3165,7 @@ def main() -> None:
         should_process, reason = should_process_video(
             input_file, source_name, verify_root,
             skip_verification=args.skip_verification or args.revalidate,
-            allow_flag=args.allow_flag,
+            gate_policy=verification_gate_policy,
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
