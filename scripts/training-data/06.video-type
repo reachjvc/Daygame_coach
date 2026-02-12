@@ -57,7 +57,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # ---------------------------
 
 SCHEMA_VERSION = "3.4.0"
-PIPELINE_VERSION = "06.video-type-v3.5.0"  # v3.5.0: tighten video-type and boundary prompt rules
+PIPELINE_VERSION = "06.video-type-v3.5.1"  # v3.5.1: add deterministic fragment/opener validation checks
 PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
@@ -262,6 +262,62 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
         results.append(ValidationResult(
             "warning", "conversation_ids_not_sequential",
             f"Conversation IDs are not sequential 1..N: {conv_ids}"
+        ))
+
+    # --- 8. Fragment conversation sanity ---
+    # Catch common false splits: very short coach-only/student-only fragments.
+    if video_type in ("infield", "compilation"):
+        for conv_id, seg_ids in conv_segment_ids.items():
+            conv_segs = [s for s in output_segments if s.get("conversation_id") == conv_id]
+            if not conv_segs:
+                continue
+            c_start = min(float(s.get("start", 0.0)) for s in conv_segs)
+            c_end = max(float(s.get("end", 0.0)) for s in conv_segs)
+            c_dur = max(0.0, c_end - c_start)
+            c_roles = {str(s.get("speaker_role", "unknown")) for s in conv_segs}
+            has_target = "target" in c_roles
+            has_approacher = ("coach" in c_roles) or ("student" in c_roles)
+
+            if c_dur < 10.0 and (not has_target or not has_approacher):
+                results.append(ValidationResult(
+                    "warning", "fragment_conversation_suspect",
+                    f"Conversation {conv_id} is short ({c_dur:.1f}s) with roles={sorted(c_roles)}; "
+                    f"likely commentary/fragment split error"
+                ))
+
+    # --- 9. Opener attribution sanity ---
+    # If opener-like text is tagged as target, role assignment is likely inverted.
+    opener_re = re.compile(
+        r"\\b(excuse me|hey\\b|hi\\b|hello\\b|quick question|i just saw you|you looked really)\\b",
+        re.IGNORECASE,
+    )
+    for seg in output_segments:
+        if seg.get("conversation_id", 0) <= 0:
+            continue
+        if seg.get("segment_type") != "approach":
+            continue
+        text = str(seg.get("text", "") or "")
+        if not text:
+            continue
+        if opener_re.search(text) and seg.get("speaker_role") == "target":
+            sid = seg.get("id", "?")
+            cid = seg.get("conversation_id", "?")
+            snippet = text.strip().replace("\n", " ")[:80]
+            results.append(ValidationResult(
+                "warning", "opener_labeled_as_target",
+                f"Segment {sid} in conversation {cid} looks like an opener but speaker_role=target: '{snippet}'"
+            ))
+
+    # --- 10. Video type sanity vs conversation count ---
+    if video_type == "compilation" and len(conversations) <= 1:
+        results.append(ValidationResult(
+            "warning", "compilation_with_single_conversation",
+            f"Video labeled compilation but only {len(conversations)} conversation(s); possible infield"
+        ))
+    if video_type == "infield" and len(conversations) >= 2:
+        results.append(ValidationResult(
+            "warning", "infield_with_multiple_conversations",
+            f"Video labeled infield with {len(conversations)} conversations; verify not a compilation"
         ))
 
     return results
