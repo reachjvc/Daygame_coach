@@ -40,3 +40,4 @@ python3 scripts/training-data/validation/validate_cross_stage.py --manifest docs
 ```
 
 In manifest mode, `validate_cross_stage.py` now emits explicit coverage errors/warnings per manifest entry (missing Stage 06/06c, missing Stage 07, source mismatch, root-flat ambiguity) instead of only reporting generic missing pairs.
+In `--source`/`--all` mode, it now exits non-zero when stage artifacts exist but no pairs can be resolved (layout/source mismatch or missing `video_id` metadata).
