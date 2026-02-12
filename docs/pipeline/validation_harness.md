@@ -10,6 +10,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
@@ -36,6 +37,7 @@ python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pi
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage09-chunks
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --check-stage08-report
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --waiver-file docs/pipeline/waivers/P001.1.json
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --emit-stage-reports
 ```
 
 With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract integrity:
@@ -48,6 +50,18 @@ The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete m
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
 `--waiver-file` can downgrade specific known issues (by `video_id` + `check`) to `info` while preserving audit visibility.
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
+`--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
+
+Stage-report contract tooling:
+
+```bash
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1
+python3 scripts/training-data/validation/validate_stage_report.py --file data/validation/stage_reports/P001.1/abc123XYZ99.manifest-validation.report.json
+```
+
+Contract files:
+- `scripts/training-data/schemas/stage_report.schema.json`
+- `scripts/training-data/schemas/waiver.schema.json`
 
 Cross-stage checks can also be run directly:
 

@@ -23,6 +23,7 @@
 #      ./sub-batch-pipeline P001.1 --validate
 #      ./sub-batch-pipeline P001.1 --validate --validate-deep
 #      ./sub-batch-pipeline P001.1 --validate --check-stage08-report --check-stage09-chunks
+#      ./sub-batch-pipeline P001.1 --validate --emit-stage-reports
 #
 #   F) Mark sub-batch as approved:
 #      ./sub-batch-pipeline P001.1 --approve
@@ -89,6 +90,8 @@ BATCH_ID=""
 VALIDATE_STAGE08_REPORT=false
 VALIDATE_STAGE09_CHUNKS=false
 VALIDATE_WAIVER_FILE=""
+VALIDATE_EMIT_STAGE_REPORTS=false
+VALIDATE_STAGE_REPORTS_DIR=""
 
 usage() {
   cat <<'EOF'
@@ -111,6 +114,8 @@ Options:
   --validate-deep          Shortcut: --check-stage08-report + --check-stage09-chunks
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
                            Default auto-detect: docs/pipeline/waivers/<subbatch>.json
+  --emit-stage-reports     With --validate, emit per-video stage reports
+  --stage-reports-dir <p>  Output directory for --emit-stage-reports
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -648,6 +653,12 @@ validate_sub_batch() {
   if [[ -n "$waiver_file" ]]; then
     validate_args+=(--waiver-file "$waiver_file")
   fi
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    validate_args+=(--emit-stage-reports)
+  fi
+  if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
+    validate_args+=(--stage-reports-dir "$VALIDATE_STAGE_REPORTS_DIR")
+  fi
 
   echo ""
   echo "=== Validations: $sub_id ==="
@@ -714,6 +725,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     --waiver-file=*)
       VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
+      shift
+      ;;
+    --emit-stage-reports)
+      VALIDATE_EMIT_STAGE_REPORTS=true
+      shift
+      ;;
+    --stage-reports-dir)
+      [[ $# -lt 2 ]] && error "--stage-reports-dir requires a path"
+      VALIDATE_STAGE_REPORTS_DIR="$2"
+      shift 2
+      ;;
+    --stage-reports-dir=*)
+      VALIDATE_STAGE_REPORTS_DIR="${1#--stage-reports-dir=}"
       shift
       ;;
     --stage)

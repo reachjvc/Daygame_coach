@@ -150,6 +150,13 @@ Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgra
 The same waiver file can be passed through the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep --waiver-file docs/pipeline/waivers/CANARY.1.json`
 If `docs/pipeline/waivers/CANARY.1.json` exists, `sub-batch-pipeline CANARY.1 --validate` auto-detects and applies it.
+Optional stage-report emission:
+`python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --emit-stage-reports`
+This writes per-video reports to `data/validation/stage_reports/CANARY.1/`.
+Validate emitted reports with:
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1`
+The same can be triggered from the orchestrator:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports`
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 

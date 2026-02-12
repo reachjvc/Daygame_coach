@@ -10,7 +10,8 @@ Given a batch/sub-batch manifest (docs/pipeline/batches/*.txt), this script:
   - Runs cross-stage validation (06/06c vs 07) for all available pairs
 
 This is intended to be the "one command" sanity check after running LLM stages.
-It does not call the LLM and does not modify pipeline artifacts.
+It does not call the LLM. By default it is read-only; optional stage-report emission
+(`--emit-stage-reports`) writes validation report artifacts.
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ LOG_PREFIX = "[manifest-validate]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
@@ -146,12 +148,25 @@ def _load_waiver_rules(waiver_path: Path) -> Set[Tuple[str, str]]:
     for idx, item in enumerate(items):
         if not isinstance(item, dict):
             raise ValueError(f"Waiver at index {idx} is not an object")
+        unknown = sorted(set(item.keys()) - {"video_id", "check", "note", "expires_at"})
+        if unknown:
+            raise ValueError(f"Waiver at index {idx} has unknown keys: {unknown}")
         vid = item.get("video_id")
         chk = item.get("check")
         if not isinstance(vid, str) or not vid.strip():
             raise ValueError(f"Waiver at index {idx} missing non-empty 'video_id'")
+        if not _WAIVER_VIDEO_OR_WILDCARD_RE.fullmatch(vid.strip()):
+            raise ValueError(
+                f"Waiver at index {idx} has invalid 'video_id'={vid!r}; expected '*' or 11-char video id"
+            )
         if not isinstance(chk, str) or not chk.strip():
             raise ValueError(f"Waiver at index {idx} missing non-empty 'check'")
+        note = item.get("note")
+        if note is not None and not isinstance(note, str):
+            raise ValueError(f"Waiver at index {idx} has invalid 'note'; expected string when present")
+        expires_at = item.get("expires_at")
+        if expires_at is not None and not isinstance(expires_at, str):
+            raise ValueError(f"Waiver at index {idx} has invalid 'expires_at'; expected string when present")
         rules.add((vid.strip(), chk.strip()))
 
     return rules
@@ -294,6 +309,86 @@ def _validate_chunks_payload(chunks_path: Path) -> List[str]:
     return errs
 
 
+def _issue_to_stage_check(issue: Dict[str, Any]) -> Dict[str, str]:
+    sev_raw = str(issue.get("severity", "info")).strip().lower()
+    sev = sev_raw if sev_raw in {"error", "warning", "info"} else "info"
+    check = str(issue.get("check", "unknown")).strip() or "unknown"
+    message = str(issue.get("message", "")).strip() or "(no message)"
+    return {
+        "severity": sev,
+        "check": check,
+        "message": message,
+    }
+
+
+def _build_video_stage_report(
+    *,
+    video_id: str,
+    source: str,
+    stem: str,
+    manifest_path: Path,
+    raw_issues: List[Dict[str, Any]],
+    artifact_paths: Set[str],
+    started_at: str,
+    finished_at: str,
+    elapsed_sec: float,
+) -> Dict[str, Any]:
+    checks = [_issue_to_stage_check(i) for i in raw_issues]
+    errors = sum(1 for c in checks if c["severity"] == "error")
+    warnings = sum(1 for c in checks if c["severity"] == "warning")
+    infos = sum(1 for c in checks if c["severity"] == "info")
+    waived = sum(1 for i in raw_issues if bool(i.get("waived")))
+
+    if errors > 0:
+        status = "FAIL"
+        reason_code = next((c["check"] for c in checks if c["severity"] == "error"), "unknown_error")
+    elif warnings > 0:
+        status = "WARN"
+        reason_code = next((c["check"] for c in checks if c["severity"] == "warning"), "unknown_warning")
+    else:
+        status = "PASS"
+        reason_code = "ok"
+
+    report = {
+        "stage": "manifest-validation",
+        "status": status,
+        "reason_code": reason_code,
+        "video_id": video_id,
+        "source": source,
+        "stem": stem,
+        "batch_id": manifest_path.stem,
+        "manifest_path": str(manifest_path),
+        "inputs": [{"path": str(manifest_path)}],
+        "outputs": [{"path": p} for p in sorted(artifact_paths)],
+        "checks": checks,
+        "metrics": {
+            "errors": errors,
+            "warnings": warnings,
+            "info": infos,
+            "waived": waived,
+        },
+        "timestamps": {
+            "started_at": started_at,
+            "finished_at": finished_at,
+            "elapsed_sec": round(max(elapsed_sec, 0.0), 3),
+        },
+        "versions": {
+            "pipeline_version": "manifest-validation-v1",
+            "prompt_version": None,
+            "model": None,
+            "schema_version": "1.0.0",
+            "git_sha": None,
+        },
+    }
+    return report
+
+
+def _default_stage_reports_dir(manifest_path: Path, source_filter: Optional[str]) -> Path:
+    suffix = f".{source_filter}" if source_filter else ""
+    name = _safe_report_name(f"{manifest_path.stem}{suffix}")
+    return repo_root() / "data" / "validation" / "stage_reports" / name
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Manifest validation harness (06b/06c/07 cross-stage)")
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
@@ -317,6 +412,15 @@ def main() -> None:
     parser.add_argument(
         "--waiver-file",
         help="Optional JSON file with issue waivers ({\"waivers\":[{\"video_id\":\"...\",\"check\":\"...\"}]})",
+    )
+    parser.add_argument(
+        "--emit-stage-reports",
+        action="store_true",
+        help="Write per-video stage reports under data/validation/stage_reports/",
+    )
+    parser.add_argument(
+        "--stage-reports-dir",
+        help="Directory for --emit-stage-reports output (defaults to data/validation/stage_reports/<manifest>)",
     )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
@@ -402,8 +506,19 @@ def main() -> None:
     gate_reject_patched_allowed = 0
     gate_flag_blocked = 0
     gate_flag_allowed = 0
+    video_artifacts: Dict[str, Dict[str, Optional[str]]] = {}
+    stage_reports_emitted = 0
+    stage_reports_dir: Optional[Path] = None
 
     start = time.time()
+    started_at_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start))
+    if args.emit_stage_reports:
+        if args.stage_reports_dir:
+            stage_reports_dir = Path(args.stage_reports_dir)
+            if not stage_reports_dir.is_absolute():
+                stage_reports_dir = repo_root() / stage_reports_dir
+        else:
+            stage_reports_dir = _default_stage_reports_dir(manifest_path, args.source)
 
     if args.check_stage08_report:
         stage08_checked = True
@@ -604,12 +719,22 @@ def main() -> None:
         v_candidates = idx_s06b.get(vid) or []
         s09_candidates = idx_s09.get(vid) or []
 
+        s01_path = _pick_best_candidate(s01_candidates, src) if s01_candidates else None
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
         s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
         v_path = _pick_best_candidate(v_candidates, src) if v_candidates else None
         s09_path = _pick_best_candidate(s09_candidates, src) if s09_candidates else None
+        video_artifacts[vid] = {
+            "s01": str(s01_path) if s01_path else None,
+            "s06": str(s06_path) if s06_path else None,
+            "s06c": str(s06c_path) if s06c_path else None,
+            "s07": str(s07_path) if s07_path else None,
+            "s07_validation": str(s07v_path) if s07v_path else None,
+            "verify": str(v_path) if v_path else None,
+            "s09": str(s09_path) if s09_path else None,
+        }
 
         if not s06c_path:
             missing_s06c.append(vid)
@@ -869,6 +994,50 @@ def main() -> None:
         if sev in {"error", "warning"}:
             check_counts[f"{sev}:{chk}"] += 1
 
+    if args.emit_stage_reports and stage_reports_dir is not None:
+        try:
+            stage_reports_dir.mkdir(parents=True, exist_ok=True)
+            issues_by_vid: DefaultDict[str, List[Dict[str, Any]]] = defaultdict(list)
+            global_issues: List[Dict[str, Any]] = []
+            for issue in issues:
+                vid = str(issue.get("video_id", "")).strip()
+                if vid == "*":
+                    global_issues.append(issue)
+                elif vid in manifest_ids:
+                    issues_by_vid[vid].append(issue)
+
+            for vid in sorted(manifest_ids):
+                raw_issues = list(global_issues) + list(issues_by_vid.get(vid, []))
+                artifact_paths: Set[str] = set()
+
+                for p in (video_artifacts.get(vid) or {}).values():
+                    if isinstance(p, str) and p.strip():
+                        artifact_paths.add(p)
+
+                for issue in raw_issues:
+                    for key in ("s01", "s06", "s06c", "s07", "s07_validation", "verify", "s09", "stage08_report"):
+                        p = issue.get(key)
+                        if isinstance(p, str) and p.strip():
+                            artifact_paths.add(p)
+
+                report_obj = _build_video_stage_report(
+                    video_id=vid,
+                    source=source_by_vid.get(vid, ""),
+                    stem=folder_by_vid.get(vid, vid),
+                    manifest_path=manifest_path,
+                    raw_issues=raw_issues,
+                    artifact_paths=artifact_paths,
+                    started_at=started_at_iso,
+                    finished_at=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                    elapsed_sec=time.time() - start,
+                )
+                out_path = stage_reports_dir / f"{vid}.manifest-validation.report.json"
+                out_path.write_text(json.dumps(report_obj, indent=2) + "\n", encoding="utf-8")
+                stage_reports_emitted += 1
+        except Exception as exc:
+            print(f"{LOG_PREFIX} ERROR: Could not emit stage reports to {stage_reports_dir}: {exc}", file=sys.stderr)
+            sys.exit(2)
+
     elapsed = time.time() - start
 
     errors = sum(1 for i in issues if i.get("severity") == "error")
@@ -938,6 +1107,11 @@ def main() -> None:
             if args.check_stage08_report
             else None
         ),
+        "stage_reports": {
+            "enabled": bool(args.emit_stage_reports),
+            "dir": str(stage_reports_dir) if stage_reports_dir else None,
+            "emitted": stage_reports_emitted,
+        },
         "waivers": {
             "enabled": bool(waiver_rules),
             "file": str(waiver_file_path) if waiver_file_path else None,
@@ -987,6 +1161,11 @@ def main() -> None:
             print(
                 f"{LOG_PREFIX} Stage 08 report check: enabled "
                 f"(status={stage08_status or 'unknown'}, report={str(stage08_report_path) if stage08_report_path else 'n/a'})"
+            )
+        if args.emit_stage_reports:
+            print(
+                f"{LOG_PREFIX} Stage reports: enabled "
+                f"(emitted={stage_reports_emitted}, dir={stage_reports_dir})"
             )
         if waiver_rules:
             print(
