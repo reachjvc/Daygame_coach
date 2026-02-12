@@ -74,6 +74,7 @@ The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete m
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
 Stage 10 now also requires a manifest-scoped readiness summary (`data/validation/stage_reports/<manifest>/readiness-summary.json`) and blocks ingest when any scope video is not ingest-ready (`status=BLOCKED` or `ready_for_ingest=false` under policy).
 When readiness `scope` metadata is present, Stage 10 also verifies manifest/source scope alignment.
+Stage 10 can optionally enforce semantic-judge thresholds via `--semantic-*` flags (it executes `validation/batch_report.py` gate checks for the ingest manifest scope).
 Stage 07 gate policy is explicit via `--stage07-gate-policy` (`approve_only` default, `allow_flag` alternative); validator policy violations are reported as errors.
 `--emit-quarantine` writes `data/validation/quarantine/<manifest>[.<source>].json` (post-waiver) and can be consumed by Stage 07 via `--quarantine-file`.
 `--quarantine-file` applies an existing quarantine list during validation (downgrades matching video issues to `info` and removes them from completeness gates).
@@ -83,6 +84,12 @@ When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waiv
 `--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
 In `sub-batch-pipeline`, readiness policy flags (`--block-review-ingest`, `--block-warning-check`, `--max-warning-checks`) require `--validate --emit-stage-reports`.
 In `sub-batch-pipeline`, semantic gate flags (`--semantic-min-fresh`, `--semantic-min-mean-overall`, `--semantic-max-major-error-rate`, `--semantic-max-hallucination-rate`, `--semantic-fail-on-stale`) require `--validate`.
+
+Stage 10 semantic gate example:
+
+```bash
+node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P001.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+```
 
 Stage-report contract tooling:
 

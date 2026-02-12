@@ -24,6 +24,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Environment:
@@ -35,6 +36,7 @@ import fs from "fs"
 import fsp from "fs/promises"
 import path from "path"
 import crypto from "crypto"
+import { spawnSync } from "child_process"
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,6 +63,12 @@ type Args = {
   skipTaxonomyGate: boolean
   skipReadinessGate: boolean
   readinessSummary: string | null
+  semanticBatchId: string | null
+  semanticMinFresh: number | null
+  semanticMinMeanOverall: number | null
+  semanticMaxMajorErrorRate: number | null
+  semanticMaxHallucinationRate: number | null
+  semanticFailOnStale: boolean
   allowUnstableSourceKey: boolean
 }
 
@@ -123,6 +131,11 @@ function parseArgs(argv: string[]): Args {
   let source: string | null = null
   let manifest: string | null = null
   let readinessSummary: string | null = null
+  let semanticBatchId: string | null = null
+  let semanticMinFresh: number | null = null
+  let semanticMinMeanOverall: number | null = null
+  let semanticMaxMajorErrorRate: number | null = null
+  let semanticMaxHallucinationRate: number | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -144,6 +157,36 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--readiness-summary=")) {
       readinessSummary = arg.split("=", 2)[1]
     }
+    if (arg === "--semantic-batch-id" && argv[i + 1]) {
+      semanticBatchId = argv[++i]
+    }
+    if (arg.startsWith("--semantic-batch-id=")) {
+      semanticBatchId = arg.split("=", 2)[1]
+    }
+    if (arg === "--semantic-min-fresh" && argv[i + 1]) {
+      semanticMinFresh = Number(argv[++i])
+    }
+    if (arg.startsWith("--semantic-min-fresh=")) {
+      semanticMinFresh = Number(arg.split("=", 2)[1])
+    }
+    if (arg === "--semantic-min-mean-overall" && argv[i + 1]) {
+      semanticMinMeanOverall = Number(argv[++i])
+    }
+    if (arg.startsWith("--semantic-min-mean-overall=")) {
+      semanticMinMeanOverall = Number(arg.split("=", 2)[1])
+    }
+    if (arg === "--semantic-max-major-error-rate" && argv[i + 1]) {
+      semanticMaxMajorErrorRate = Number(argv[++i])
+    }
+    if (arg.startsWith("--semantic-max-major-error-rate=")) {
+      semanticMaxMajorErrorRate = Number(arg.split("=", 2)[1])
+    }
+    if (arg === "--semantic-max-hallucination-rate" && argv[i + 1]) {
+      semanticMaxHallucinationRate = Number(argv[++i])
+    }
+    if (arg.startsWith("--semantic-max-hallucination-rate=")) {
+      semanticMaxHallucinationRate = Number(arg.split("=", 2)[1])
+    }
   }
 
   return {
@@ -155,6 +198,12 @@ function parseArgs(argv: string[]): Args {
     skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
     skipReadinessGate: flags.has("--skip-readiness-gate"),
     readinessSummary,
+    semanticBatchId,
+    semanticMinFresh,
+    semanticMinMeanOverall,
+    semanticMaxMajorErrorRate,
+    semanticMaxHallucinationRate,
+    semanticFailOnStale: flags.has("--semantic-fail-on-stale"),
     allowUnstableSourceKey: flags.has("--allow-unstable-source-key"),
   }
 }
@@ -465,6 +514,20 @@ function resolveReadinessSummaryPath(
   return path.join(defaultStageReportsDir(manifestPath, source), "readiness-summary.json")
 }
 
+function defaultSemanticBatchId(manifestPath: string): string {
+  return path.basename(manifestPath, path.extname(manifestPath))
+}
+
+function semanticGateRequested(args: Args): boolean {
+  return (
+    args.semanticMinFresh !== null
+    || args.semanticMinMeanOverall !== null
+    || args.semanticMaxMajorErrorRate !== null
+    || args.semanticMaxHallucinationRate !== null
+    || args.semanticFailOnStale
+  )
+}
+
 function checkReadinessGate(
   manifestPath: string,
   expectedVideoIds: Set<string>,
@@ -649,6 +712,77 @@ function checkReadinessGate(
   }
 }
 
+function checkSemanticGate(
+  manifestPath: string,
+  source: string | null,
+  {
+    batchId,
+    semanticMinFresh,
+    semanticMinMeanOverall,
+    semanticMaxMajorErrorRate,
+    semanticMaxHallucinationRate,
+    semanticFailOnStale,
+  }: {
+    batchId: string
+    semanticMinFresh: number | null
+    semanticMinMeanOverall: number | null
+    semanticMaxMajorErrorRate: number | null
+    semanticMaxHallucinationRate: number | null
+    semanticFailOnStale: boolean
+  }
+): void {
+  const reportScript = path.join(process.cwd(), "scripts", "training-data", "validation", "batch_report.py")
+  if (!fs.existsSync(reportScript)) {
+    console.error(`❌ Missing semantic gate script: ${reportScript}`)
+    process.exit(1)
+  }
+
+  const cmdArgs: string[] = [reportScript]
+  if (source) {
+    cmdArgs.push("--source", source)
+  } else {
+    cmdArgs.push("--all")
+  }
+  cmdArgs.push("--manifest", manifestPath, "--batch-id", batchId, "--no-write")
+  if (semanticMinFresh !== null) {
+    cmdArgs.push("--semantic-min-fresh", String(semanticMinFresh))
+  }
+  if (semanticMinMeanOverall !== null) {
+    cmdArgs.push("--semantic-min-mean-overall", String(semanticMinMeanOverall))
+  }
+  if (semanticMaxMajorErrorRate !== null) {
+    cmdArgs.push("--semantic-max-major-error-rate", String(semanticMaxMajorErrorRate))
+  }
+  if (semanticMaxHallucinationRate !== null) {
+    cmdArgs.push("--semantic-max-hallucination-rate", String(semanticMaxHallucinationRate))
+  }
+  if (semanticFailOnStale) {
+    cmdArgs.push("--semantic-fail-on-stale")
+  }
+
+  const result = spawnSync("python3", cmdArgs, { encoding: "utf-8" })
+  if (result.error) {
+    console.error(`❌ Failed to execute semantic gate: ${result.error.message}`)
+    process.exit(1)
+  }
+  if ((result.status ?? 1) !== 0) {
+    console.error(
+      `❌ Semantic gate blocked ingest (batch_id=${batchId}). `
+      + `Run semantic_judge.py for this manifest scope and re-run validate.`
+    )
+    const stderr = (result.stderr || "").trim()
+    const stdout = (result.stdout || "").trim()
+    if (stderr) {
+      console.error(stderr)
+    }
+    if (stdout) {
+      console.error(stdout)
+    }
+    process.exit(1)
+  }
+  console.log(`✅ Semantic gate passed (batch_id=${batchId}).`)
+}
+
 function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
   const stem = path.basename(manifestPath, path.extname(manifestPath))
   const expectedSource = `manifest:${path.basename(manifestPath)}`
@@ -798,6 +932,36 @@ async function saveState(statePath: string, state: IngestStateV1): Promise<void>
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
+  if (args.semanticMinFresh !== null && (!Number.isInteger(args.semanticMinFresh) || args.semanticMinFresh < 0)) {
+    console.error("❌ --semantic-min-fresh must be an integer >= 0")
+    process.exit(1)
+  }
+  if (
+    args.semanticMinMeanOverall !== null
+    && (!Number.isFinite(args.semanticMinMeanOverall) || args.semanticMinMeanOverall < 0 || args.semanticMinMeanOverall > 100)
+  ) {
+    console.error("❌ --semantic-min-mean-overall must be in [0, 100]")
+    process.exit(1)
+  }
+  if (
+    args.semanticMaxMajorErrorRate !== null
+    && (!Number.isFinite(args.semanticMaxMajorErrorRate) || args.semanticMaxMajorErrorRate < 0 || args.semanticMaxMajorErrorRate > 1)
+  ) {
+    console.error("❌ --semantic-max-major-error-rate must be in [0, 1]")
+    process.exit(1)
+  }
+  if (
+    args.semanticMaxHallucinationRate !== null
+    && (!Number.isFinite(args.semanticMaxHallucinationRate) || args.semanticMaxHallucinationRate < 0 || args.semanticMaxHallucinationRate > 1)
+  ) {
+    console.error("❌ --semantic-max-hallucination-rate must be in [0, 1]")
+    process.exit(1)
+  }
+  if (semanticGateRequested(args) && !args.manifest) {
+    console.error("❌ Semantic gate options require --manifest")
+    process.exit(1)
+  }
+
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
   const chunksDir = path.join(process.cwd(), "data", "09.chunks")
@@ -850,6 +1014,19 @@ async function main() {
     }
     if (!args.skipReadinessGate) {
       checkReadinessGate(args.manifest, expectedVideoIds, args.source, args.readinessSummary)
+    }
+    if (semanticGateRequested(args)) {
+      const semanticBatchId = (args.semanticBatchId && args.semanticBatchId.trim())
+        ? args.semanticBatchId.trim()
+        : defaultSemanticBatchId(args.manifest)
+      checkSemanticGate(args.manifest, args.source, {
+        batchId: semanticBatchId,
+        semanticMinFresh: args.semanticMinFresh,
+        semanticMinMeanOverall: args.semanticMinMeanOverall,
+        semanticMaxMajorErrorRate: args.semanticMaxMajorErrorRate,
+        semanticMaxHallucinationRate: args.semanticMaxHallucinationRate,
+        semanticFailOnStale: args.semanticFailOnStale,
+      })
     }
   }
 
