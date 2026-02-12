@@ -183,6 +183,9 @@ With orchestrator readiness policy controls:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3`
 Optional semantic-quality gate in the same `--validate` run (requires semantic_judge outputs):
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
+Strict one-flag profile:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --quality-gate`
+(`--quality-gate` expands to deep checks + stage reports + READY-only readiness + warning policy + semantic defaults.)
 Or emit quarantine from orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
 Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:

@@ -92,6 +92,7 @@ BATCH_ID=""
 VALIDATE_STAGE08_REPORT=false
 VALIDATE_STAGE09_CHUNKS=false
 VALIDATE_STAGE05_AUDIO=false
+VALIDATE_QUALITY_GATE=false
 VALIDATE_WAIVER_FILE=""
 VALIDATE_EMIT_STAGE_REPORTS=false
 VALIDATE_STAGE_REPORTS_DIR=""
@@ -132,6 +133,7 @@ Options:
   --check-stage09-chunks   With --validate, require Stage 09 chunk payload integrity
   --check-stage05-audio    With --validate, require Stage 05 audio_features payload integrity
   --validate-deep          Shortcut: --check-stage05-audio + --check-stage08-report + --check-stage09-chunks
+  --quality-gate           With --validate, apply strict quality gate defaults (deep checks + readiness + semantic)
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
                            Default auto-detect: docs/pipeline/waivers/<subbatch>.json
   --stage07-gate-policy <p>
@@ -777,6 +779,9 @@ validate_sub_batch() {
   if [[ "$VALIDATE_EMIT_QUARANTINE" == true || -n "$VALIDATE_QUARANTINE_OUT" ]]; then
     echo "Quarantine: level=$VALIDATE_QUARANTINE_LEVEL out=${VALIDATE_QUARANTINE_OUT:-<default>}"
   fi
+  if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
+    echo "Quality gate profile: strict"
+  fi
   if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
     local readiness_policy_msg="Readiness policy: allow REVIEW ingest"
     if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
@@ -905,6 +910,10 @@ while [[ $# -gt 0 ]]; do
       VALIDATE_STAGE05_AUDIO=true
       VALIDATE_STAGE08_REPORT=true
       VALIDATE_STAGE09_CHUNKS=true
+      shift
+      ;;
+    --quality-gate)
+      VALIDATE_QUALITY_GATE=true
       shift
       ;;
     --waiver-file)
@@ -1125,6 +1134,37 @@ fi
 if [[ -z "$SUB_BATCH_ID" ]]; then
   usage
   exit 1
+fi
+
+if [[ "$VALIDATE_QUALITY_GATE" == true && "$MODE" != "validate" ]]; then
+  error "--quality-gate requires --validate mode"
+fi
+
+if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
+  VALIDATE_STAGE05_AUDIO=true
+  VALIDATE_STAGE08_REPORT=true
+  VALIDATE_STAGE09_CHUNKS=true
+  VALIDATE_EMIT_STAGE_REPORTS=true
+  VALIDATE_READINESS_BLOCK_REVIEW=true
+  if [[ -z "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+    VALIDATE_READINESS_MAX_WARNING_CHECKS="3"
+  fi
+  if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -eq 0 ]]; then
+    VALIDATE_READINESS_BLOCK_WARNING_CHECKS=("transcript_artifact")
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+    VALIDATE_SEMANTIC_MIN_FRESH="5"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+    VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="75"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+    VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="0.20"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+    VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="0.10"
+  fi
+  VALIDATE_SEMANTIC_FAIL_ON_STALE=true
 fi
 
 if [[ "$MODE" != "validate" ]]; then

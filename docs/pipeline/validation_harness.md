@@ -20,6 +20,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-review-ingest
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quality-gate
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
@@ -30,6 +31,12 @@ Readiness policy can be hardened during this step:
 - `--block-warning-check <name>` escalates matching warning checks to BLOCKED
 - `--max-warning-checks <n>` enforces a warning budget per video
 Semantic quality can also be gated in `--validate` via `--semantic-*` thresholds (evaluated during the batch-report step, requires semantic_judge outputs).
+`--quality-gate` is a strict shortcut in `sub-batch-pipeline --validate` that applies:
+- deep checks (`--validate-deep`)
+- stage-report emission
+- READY-only readiness (`--block-review-ingest`)
+- warning policy defaults (`--max-warning-checks 3`, `--block-warning-check transcript_artifact`)
+- semantic defaults (`--semantic-min-fresh 5`, `--semantic-min-mean-overall 75`, `--semantic-max-major-error-rate 0.20`, `--semantic-max-hallucination-rate 0.10`, `--semantic-fail-on-stale`)
 
 ## Typical Test Loop (LLM + Validate)
 
