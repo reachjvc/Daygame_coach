@@ -64,7 +64,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.4"  # v1.4: Allow "student" role in patch suggestions
+PIPELINE_VERSION = "06c.patch-v1.5"  # v1.5: validate 06b verification schema before patching
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -79,6 +79,8 @@ MIN_BOUNDARY_CONFIDENCE = 0.90  # Higher threshold - structural changes
 
 SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
 _CACHED_SCHEMA: Optional[Dict[str, Any]] = None
+VERIFICATION_SCHEMA_PATH = Path(__file__).parent / "schemas" / "verification.schema.json"
+_CACHED_VERIFICATION_SCHEMA: Optional[Dict[str, Any]] = None
 
 
 # ---------------------------
@@ -136,6 +138,32 @@ def _validate_conversations_schema(conversations_data: Dict[str, Any]) -> None:
     except jsonschema.ValidationError as e:
         path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
         raise RuntimeError(f"Patched conversations schema invalid at {path}: {e.message[:200]}")
+
+
+def _load_verification_schema() -> Optional[Dict[str, Any]]:
+    if not VERIFICATION_SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: Verification schema not found at {VERIFICATION_SCHEMA_PATH}")
+        return None
+    return json.loads(VERIFICATION_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _get_verification_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_VERIFICATION_SCHEMA
+    if _CACHED_VERIFICATION_SCHEMA is None:
+        _CACHED_VERIFICATION_SCHEMA = _load_verification_schema()
+    return _CACHED_VERIFICATION_SCHEMA
+
+
+def _validate_verification_schema(verification_data: Dict[str, Any]) -> None:
+    """Validate 06b verification report against verification.schema.json. Raises on failure."""
+    schema = _get_verification_schema()
+    if not schema:
+        return
+    try:
+        jsonschema.validate(instance=verification_data, schema=schema)
+    except jsonschema.ValidationError as e:
+        path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+        raise RuntimeError(f"Verification schema invalid at {path}: {e.message[:200]}")
 
 
 def _recompute_conversations_summary(
@@ -538,6 +566,7 @@ def patch_file(
     output_path: Path,
     dry_run: bool = False,
     allow_reject: bool = False,
+    allow_invalid_verification: bool = False,
 ) -> Dict[str, Any]:
     """Patch a single conversations file using its verification report."""
 
@@ -584,6 +613,18 @@ def patch_file(
     # Load verification report
     with verification_path.open("r", encoding="utf-8") as f:
         verification_data = json.load(f)
+    verification_schema_valid = True
+    try:
+        _validate_verification_schema(verification_data)
+    except RuntimeError as e:
+        verification_schema_valid = False
+        if not allow_invalid_verification:
+            raise RuntimeError(
+                f"Verification report schema invalid for {conversations_path.name}: {e}. "
+                "Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+            )
+        print(f"{LOG_PREFIX}   WARNING: {e}")
+        print(f"{LOG_PREFIX}   WARNING: Continuing due to --allow-invalid-verification")
 
     verdict = verification_data.get("verdict", "FLAG")
     print(f"{LOG_PREFIX}   Verification verdict: {verdict}")
@@ -616,6 +657,7 @@ def patch_file(
         "pipeline_version": PIPELINE_VERSION,
         "verification_verdict": verdict,
         "verification_file": str(verification_path),
+        "verification_schema_valid": verification_schema_valid,
         "fixes_applied": fixes_applied,
         "fixes_applied_count": len(fixes_applied),
         "flags_not_fixed": flags_not_fixed,
@@ -831,6 +873,11 @@ def main() -> None:
         help="Allow patching when 06b verdict is REJECT (apply high-confidence deterministic fixes anyway)"
     )
     parser.add_argument(
+        "--allow-invalid-verification",
+        action="store_true",
+        help="Allow patching with schema-invalid 06b verification reports (legacy fallback; unsafe)",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging"
@@ -877,6 +924,7 @@ def _run_input(args) -> None:
             output_path,
             dry_run=args.dry_run,
             allow_reject=args.allow_reject,
+            allow_invalid_verification=args.allow_invalid_verification,
         )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, "
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
@@ -916,6 +964,7 @@ def _run_sources(args) -> None:
                     output_file,
                     dry_run=args.dry_run,
                     allow_reject=args.allow_reject,
+                    allow_invalid_verification=args.allow_invalid_verification,
                 )
                 total_fixes += result.get("fixes", 0)
                 total_files += 1
@@ -999,6 +1048,7 @@ def _run_directory_with_files(
                 output_file,
                 dry_run=args.dry_run,
                 allow_reject=args.allow_reject,
+                allow_invalid_verification=args.allow_invalid_verification,
             )
             processed += 1
             consecutive_failures = 0
