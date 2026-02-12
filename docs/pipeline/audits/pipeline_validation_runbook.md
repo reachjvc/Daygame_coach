@@ -130,6 +130,7 @@ This includes:
 - artifact presence checks (06b/06c/07)
 - cross-stage consistency (06/06c vs 07)
 - Stage 07 per-file validation summary (warnings/errors) and partial-write detection
+- Optional Stage 01 artifact integrity check (`--skip-stage01-presence` when validating archived outputs that no longer retain Stage 01 `.wav` files)
 
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py \

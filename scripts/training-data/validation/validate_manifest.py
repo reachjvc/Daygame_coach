@@ -111,6 +111,11 @@ def main() -> None:
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
     parser.add_argument("--source", help="Only validate one source within the manifest")
     parser.add_argument("--allow-flag", action="store_true", help="Treat 06b FLAG verdicts as allowed (matches 07.content --allow-flag)")
+    parser.add_argument(
+        "--skip-stage01-presence",
+        action="store_true",
+        help="Do not fail when Stage 01 .wav artifacts are missing (useful for archived/migrated datasets)",
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -200,15 +205,20 @@ def main() -> None:
         # Stage 01 download integrity: at least one .wav exists for this video id (raw16k/clean16k/legacy).
         if not s01_candidates:
             missing_s01.append(vid)
+            sev = "warning" if args.skip_stage01_presence else "error"
+            msg = (
+                "No Stage 01 .wav found for this video_id "
+                "(download incomplete/mis-filed or Stage 01 artifacts are not retained)"
+            )
             issues.append({
                 "video_id": vid,
                 "source": src,
-                "severity": "error",
+                "severity": sev,
                 "check": "missing_stage01_audio",
-                "message": "No Stage 01 .wav found for this video_id (download incomplete or mis-filed)",
+                "message": msg,
                 "manifest_folder": folder_text,
             })
-            check_counts["error:missing_stage01_audio"] += 1
+            check_counts[f"{sev}:missing_stage01_audio"] += 1
 
         # Stage 07 per-file validation handling
         if s07_path and not s07v_path:
@@ -416,10 +426,12 @@ def main() -> None:
         "source_filter": args.source or None,
         "video_count": len(manifest_ids),
         "artifact_presence": {
+            "missing_01_download": len(missing_s01),
             "missing_06b_verify": len(missing_verify),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
         },
+        "stage01_presence_required": not bool(args.skip_stage01_presence),
         "verification_verdicts": dict(verdict_counts),
         "verification_gate": {
             "allow_flag": bool(args.allow_flag),
@@ -473,6 +485,8 @@ def main() -> None:
             f"missing 06b.verify={len(missing_verify)}, "
             f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
         )
+        if args.skip_stage01_presence:
+            print(f"{LOG_PREFIX} Stage 01 presence check: optional (--skip-stage01-presence)")
 
         print(
             f"{LOG_PREFIX} Cross-stage: validated_pairs={validated_pairs}, "
