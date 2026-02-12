@@ -172,9 +172,15 @@ To apply an existing quarantine list during validation:
 `python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --quarantine-file data/validation/quarantine/CANARY.1.json`
 Validate emitted reports with:
 `python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary`
+Optional readiness hardening during summary generation:
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --block-review-ingest`
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --block-warning-check transcript_artifact --max-warning-checks 3`
 The same can be triggered from the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports`
 (`sub-batch-pipeline` now runs this contract+coverage check automatically and writes `readiness-summary.json` under the stage-reports directory.)
+With orchestrator readiness policy controls:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-review-ingest`
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3`
 Or emit quarantine from orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
 Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:
@@ -243,6 +249,7 @@ Stage 10 also requires a readiness summary at `data/validation/stage_reports/<ma
 - the summary does not cover the ingest manifest scope
 - the summary scope metadata (when present) does not match ingest manifest/source
 - any ingest-scope video is `BLOCKED` (REVIEW remains ingest-allowed)
+To enforce READY-only ingest, generate readiness summaries with `--block-review-ingest`.
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).

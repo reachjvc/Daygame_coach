@@ -263,6 +263,9 @@ def _compute_readiness(
     source_filter: Optional[str],
     manifest_ids: Optional[Set[str]],
     missing_manifest_ids: Set[str],
+    block_warning_checks: Set[str],
+    max_warning_checks: Optional[int],
+    allow_review_ingest: bool,
 ) -> Dict[str, Any]:
     reports_by_vid: Dict[str, List[ReportRecord]] = defaultdict(list)
     for rec in report_records:
@@ -280,6 +283,7 @@ def _compute_readiness(
     by_status: Counter[str] = Counter()
     allow_ingest = 0
     videos: List[Dict[str, Any]] = []
+    allow_ingest_statuses = {"READY", "REVIEW"} if allow_review_ingest else {"READY"}
 
     for vid in candidate_ids:
         recs = reports_by_vid.get(vid, [])
@@ -295,6 +299,7 @@ def _compute_readiness(
         reasons: List[str] = []
         report_paths: List[str] = []
         sources: Set[str] = set()
+        warning_check_counts: Counter[str] = Counter()
 
         for rec in recs:
             report_paths.append(str(rec.path))
@@ -328,6 +333,8 @@ def _compute_readiness(
                     error_checks += 1
                 elif sev == "warning":
                     warning_checks += 1
+                    if isinstance(chk, str) and chk.strip():
+                        warning_check_counts[chk.strip()] += 1
                 elif sev == "info":
                     info_checks += 1
 
@@ -347,7 +354,17 @@ def _compute_readiness(
             status = "READY"
             reason_code = "ok"
 
-        ready_for_ingest = status in {"READY", "REVIEW"}
+        # Optional policy hardening: escalate selected warning patterns into BLOCKED.
+        if status != "BLOCKED":
+            blocked_warning_hit = next((chk for chk in sorted(block_warning_checks) if warning_check_counts.get(chk, 0) > 0), None)
+            if blocked_warning_hit:
+                status = "BLOCKED"
+                reason_code = f"policy_block_warning_check:{blocked_warning_hit}"
+            elif max_warning_checks is not None and warning_checks > max_warning_checks:
+                status = "BLOCKED"
+                reason_code = "policy_warning_budget_exceeded"
+
+        ready_for_ingest = status in allow_ingest_statuses
         if ready_for_ingest:
             allow_ingest += 1
         by_status[status] += 1
@@ -369,6 +386,7 @@ def _compute_readiness(
                 "errors": error_checks,
                 "warnings": warning_checks,
                 "info": info_checks,
+                "warning_types": dict(warning_check_counts),
             },
             "sources": sorted(sources),
             "reports": sorted(report_paths),
@@ -386,7 +404,9 @@ def _compute_readiness(
             "ready": "all reports valid and PASS with no error/warning checks",
             "review": "reports valid with WARN/warning checks but no FAIL/error checks",
             "blocked": "missing report coverage, invalid report, FAIL status, or error checks",
-            "allow_ingest_statuses": ["READY", "REVIEW"],
+            "allow_ingest_statuses": sorted(allow_ingest_statuses),
+            "block_warning_checks": sorted(block_warning_checks),
+            "max_warning_checks": max_warning_checks,
         },
         "summary": {
             "videos": len(videos),
@@ -414,9 +434,30 @@ def main() -> None:
         "--readiness-summary-out",
         help="Output path for --emit-readiness-summary (default: <dir>/readiness-summary.json or ./readiness-summary.json)",
     )
+    parser.add_argument(
+        "--block-warning-check",
+        action="append",
+        default=[],
+        help="Warning check name to escalate from REVIEW to BLOCKED (repeatable)",
+    )
+    parser.add_argument(
+        "--max-warning-checks",
+        type=int,
+        help="Escalate to BLOCKED when a video has more than this many warning checks",
+    )
+    parser.add_argument(
+        "--block-review-ingest",
+        action="store_true",
+        help="Treat REVIEW videos as not ready_for_ingest (READY-only ingest policy)",
+    )
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--show", type=int, default=40, help="Max issue lines in text mode")
     args = parser.parse_args()
+
+    if args.max_warning_checks is not None and args.max_warning_checks < 0:
+        print(f"{LOG_PREFIX} ERROR: --max-warning-checks must be >= 0", file=sys.stderr)
+        sys.exit(2)
+    block_warning_checks = {str(c).strip() for c in (args.block_warning_check or []) if str(c).strip()}
 
     files: List[Path] = []
     if args.file:
@@ -490,6 +531,9 @@ def main() -> None:
         source_filter=args.source,
         manifest_ids=manifest_ids,
         missing_manifest_ids=missing_manifest_ids,
+        block_warning_checks=block_warning_checks,
+        max_warning_checks=args.max_warning_checks,
+        allow_review_ingest=not args.block_review_ingest,
     )
     readiness_out: Optional[Path] = None
     if args.emit_readiness_summary:

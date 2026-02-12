@@ -17,11 +17,17 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quarantine-file data/validation/quarantine/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-review-ingest
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
 `--validate-deep` enables Stage 05 audio_features, Stage 08 report, and Stage 09 chunk payload checks.
 With `--emit-stage-reports`, the orchestrator now also validates emitted stage-report contract coverage for the manifest and writes a readiness summary.
+Readiness policy can be hardened during this step:
+- `--block-review-ingest` makes ingest READY-only
+- `--block-warning-check <name>` escalates matching warning checks to BLOCKED
+- `--max-warning-checks <n>` enforces a warning budget per video
 
 ## Typical Test Loop (LLM + Validate)
 
@@ -73,6 +79,7 @@ Stage 07 gate policy is explicit via `--stage07-gate-policy` (`approve_only` def
 Waivers with `expires_at` in the past are ignored automatically (and reported as expired).
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
 `--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
+In `sub-batch-pipeline`, readiness policy flags (`--block-review-ingest`, `--block-warning-check`, `--max-warning-checks`) require `--validate --emit-stage-reports`.
 
 Stage-report contract tooling:
 
@@ -80,6 +87,8 @@ Stage-report contract tooling:
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1
 python3 scripts/training-data/validation/validate_stage_report.py --file data/validation/stage_reports/P001.1/abc123XYZ99.manifest-validation.report.json
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --block-review-ingest
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --block-warning-check transcript_artifact --max-warning-checks 3
 ```
 
 Contract files:

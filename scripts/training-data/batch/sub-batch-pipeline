@@ -101,6 +101,9 @@ VALIDATE_QUARANTINE_FILE=""
 VALIDATE_EMIT_QUARANTINE=false
 VALIDATE_QUARANTINE_OUT=""
 VALIDATE_QUARANTINE_LEVEL="error"
+VALIDATE_READINESS_BLOCK_REVIEW=false
+VALIDATE_READINESS_MAX_WARNING_CHECKS=""
+VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
 RUN_QUARANTINE_FILE=""
 RUN_VERIFICATION_GATE_POLICY="approve_only"
 
@@ -139,6 +142,10 @@ Options:
   --emit-quarantine        With --validate, write quarantine list from issues
   --quarantine-out <p>     Output path for --emit-quarantine
   --quarantine-level <p>   With --validate, quarantine threshold: error (default) or warning
+  --block-review-ingest    With --validate+--emit-stage-reports, readiness treats REVIEW as not ingest-ready
+  --max-warning-checks <n> With --validate+--emit-stage-reports, BLOCKED when warnings exceed n
+  --block-warning-check <c>
+                           With --validate+--emit-stage-reports, escalate this warning check to BLOCKED (repeatable)
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -756,11 +763,34 @@ validate_sub_batch() {
   if [[ "$VALIDATE_EMIT_QUARANTINE" == true || -n "$VALIDATE_QUARANTINE_OUT" ]]; then
     echo "Quarantine: level=$VALIDATE_QUARANTINE_LEVEL out=${VALIDATE_QUARANTINE_OUT:-<default>}"
   fi
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    local readiness_policy_msg="Readiness policy: allow REVIEW ingest"
+    if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
+      readiness_policy_msg="Readiness policy: READY-only ingest"
+    fi
+    if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+      readiness_policy_msg="$readiness_policy_msg, max_warning_checks=$VALIDATE_READINESS_MAX_WARNING_CHECKS"
+    fi
+    if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+      readiness_policy_msg="$readiness_policy_msg, block_warning_checks=${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[*]}"
+    fi
+    echo "$readiness_policy_msg"
+  fi
   echo ""
 
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
 
   if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
+      stage_report_check_args+=(--block-review-ingest)
+    fi
+    if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+      stage_report_check_args+=(--max-warning-checks "$VALIDATE_READINESS_MAX_WARNING_CHECKS")
+    fi
+    for chk in "${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]}"; do
+      stage_report_check_args+=(--block-warning-check "$chk")
+    done
+
     echo ""
     echo "=== Stage Report Contract Validation ==="
     echo ""
@@ -927,6 +957,35 @@ while [[ $# -gt 0 ]]; do
         || error "--quarantine-level must be one of: error, warning"
       shift
       ;;
+    --block-review-ingest)
+      VALIDATE_READINESS_BLOCK_REVIEW=true
+      shift
+      ;;
+    --max-warning-checks)
+      [[ $# -lt 2 ]] && error "--max-warning-checks requires a value"
+      VALIDATE_READINESS_MAX_WARNING_CHECKS="$2"
+      [[ "$VALIDATE_READINESS_MAX_WARNING_CHECKS" =~ ^[0-9]+$ ]] \
+        || error "--max-warning-checks must be an integer >= 0"
+      shift 2
+      ;;
+    --max-warning-checks=*)
+      VALIDATE_READINESS_MAX_WARNING_CHECKS="${1#--max-warning-checks=}"
+      [[ "$VALIDATE_READINESS_MAX_WARNING_CHECKS" =~ ^[0-9]+$ ]] \
+        || error "--max-warning-checks must be an integer >= 0"
+      shift
+      ;;
+    --block-warning-check)
+      [[ $# -lt 2 ]] && error "--block-warning-check requires a value"
+      [[ -n "${2//[[:space:]]/}" ]] || error "--block-warning-check requires a non-empty value"
+      VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$2")
+      shift 2
+      ;;
+    --block-warning-check=*)
+      local_check="${1#--block-warning-check=}"
+      [[ -n "${local_check//[[:space:]]/}" ]] || error "--block-warning-check requires a non-empty value"
+      VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$local_check")
+      shift
+      ;;
     --stage)
       MODE="run_stage"
       STAGE="$2"
@@ -961,6 +1020,18 @@ fi
 if [[ -z "$SUB_BATCH_ID" ]]; then
   usage
   exit 1
+fi
+
+if [[ "$MODE" != "validate" ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+    error "Readiness policy flags require --validate mode"
+  fi
+fi
+
+if [[ "$MODE" == "validate" && "$VALIDATE_EMIT_STAGE_REPORTS" != true ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+    error "Readiness policy flags require --emit-stage-reports"
+  fi
 fi
 
 # Determine if this is a batch ID or sub-batch ID
