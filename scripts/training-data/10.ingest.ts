@@ -25,6 +25,7 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
@@ -65,6 +66,7 @@ type Args = {
   skipReadinessGate: boolean
   readinessSummary: string | null
   semanticBatchId: string | null
+  semanticReportOut: string | null
   semanticMinFresh: number | null
   semanticMinMeanOverall: number | null
   semanticMaxMajorErrorRate: number | null
@@ -133,6 +135,7 @@ function parseArgs(argv: string[]): Args {
   let manifest: string | null = null
   let readinessSummary: string | null = null
   let semanticBatchId: string | null = null
+  let semanticReportOut: string | null = null
   let semanticMinFresh: number | null = null
   let semanticMinMeanOverall: number | null = null
   let semanticMaxMajorErrorRate: number | null = null
@@ -163,6 +166,12 @@ function parseArgs(argv: string[]): Args {
     }
     if (arg.startsWith("--semantic-batch-id=")) {
       semanticBatchId = arg.split("=", 2)[1]
+    }
+    if (arg === "--semantic-report-out" && argv[i + 1]) {
+      semanticReportOut = argv[++i]
+    }
+    if (arg.startsWith("--semantic-report-out=")) {
+      semanticReportOut = arg.split("=", 2)[1]
     }
     if (arg === "--semantic-min-fresh" && argv[i + 1]) {
       semanticMinFresh = Number(argv[++i])
@@ -201,6 +210,7 @@ function parseArgs(argv: string[]): Args {
     skipReadinessGate: flags.has("--skip-readiness-gate"),
     readinessSummary,
     semanticBatchId,
+    semanticReportOut,
     semanticMinFresh,
     semanticMinMeanOverall,
     semanticMaxMajorErrorRate,
@@ -781,6 +791,21 @@ function defaultSemanticBatchId(manifestPath: string): string {
   return path.basename(manifestPath, path.extname(manifestPath))
 }
 
+function resolveSemanticGateReportPath(
+  manifestPath: string,
+  source: string | null,
+  batchId: string,
+  overridePath: string | null
+): string {
+  if (overridePath && overridePath.trim()) {
+    return path.isAbsolute(overridePath) ? overridePath : path.join(process.cwd(), overridePath)
+  }
+  const stem = path.basename(manifestPath, path.extname(manifestPath))
+  const suffix = source ? `.${source}` : ""
+  const label = safeReportName(`${stem}${suffix}.${batchId}`)
+  return path.join(process.cwd(), "data", "validation", "semantic_gate", `${label}.report.json`)
+}
+
 function semanticGateRequested(args: Args): boolean {
   return (
     args.semanticMinFresh !== null
@@ -982,6 +1007,7 @@ function checkSemanticGate(
   preferredSourceByVideo: Map<string, string>,
   {
     batchId,
+    semanticReportOut,
     semanticMinFresh,
     semanticMinMeanOverall,
     semanticMaxMajorErrorRate,
@@ -989,6 +1015,7 @@ function checkSemanticGate(
     semanticFailOnStale,
   }: {
     batchId: string
+    semanticReportOut: string | null
     semanticMinFresh: number | null
     semanticMinMeanOverall: number | null
     semanticMaxMajorErrorRate: number | null
@@ -1116,12 +1143,48 @@ function checkSemanticGate(
     failures.push(`hallucination rate above threshold: rate=${hallucinationRate.toFixed(3)} > max=${semanticMaxHallucinationRate.toFixed(3)}`)
   }
 
+  const reportPath = resolveSemanticGateReportPath(manifestPath, source, batchId, semanticReportOut)
+  const report = {
+    stage: "10.ingest-semantic-gate",
+    generated_at: new Date().toISOString(),
+    manifest_path: manifestPath,
+    source_filter: source,
+    batch_id: batchId,
+    policy: {
+      min_fresh_judgements: semanticMinFresh,
+      min_mean_overall_score_0_100: semanticMinMeanOverall,
+      max_major_error_rate: semanticMaxMajorErrorRate,
+      max_hallucination_rate: semanticMaxHallucinationRate,
+      fail_on_stale: semanticFailOnStale,
+    },
+    observed: {
+      total_judgements: judgements.length,
+      fresh_judgements: freshCount,
+      stale_judgements: staleCount,
+      stale_missing_or_deleted: staleMissingOrDeleted,
+      stale_fingerprint_mismatch: staleFingerprintMismatch,
+      mean_overall_score_0_100: meanOverall,
+      major_error_rate: majorErrorRate,
+      hallucination_rate: hallucinationRate,
+    },
+    failures,
+    passed: failures.length === 0,
+  }
+  try {
+    fs.mkdirSync(path.dirname(reportPath), { recursive: true })
+    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + "\n", "utf-8")
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.warn(`⚠️  Could not write semantic gate report: ${reportPath} (${msg})`)
+  }
+
   if (failures.length > 0) {
     console.error(
       `❌ Semantic gate blocked ingest (batch_id=${batchId}). `
       + `fresh=${freshCount}, stale=${staleCount} (missing/deleted=${staleMissingOrDeleted}, fingerprint_mismatch=${staleFingerprintMismatch}), `
       + `mean=${meanOverall.toFixed(1)}, major_error_rate=${majorErrorRate.toFixed(3)}, hallucination_rate=${hallucinationRate.toFixed(3)}`
     )
+    console.error(`   Report: ${reportPath}`)
     for (const failure of failures) {
       console.error(`   - ${failure}`)
     }
@@ -1134,6 +1197,7 @@ function checkSemanticGate(
     + `fresh=${freshCount}, stale=${staleCount}, mean=${meanOverall.toFixed(1)}, `
     + `major_error_rate=${majorErrorRate.toFixed(3)}, hallucination_rate=${hallucinationRate.toFixed(3)}`
   )
+  console.log(`Semantic gate report: ${reportPath}`)
 }
 
 function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
@@ -1401,6 +1465,7 @@ async function main() {
         : defaultSemanticBatchId(args.manifest)
       checkSemanticGate(args.manifest, args.source, expectedVideoIds, expectedSourceByVideo, {
         batchId: semanticBatchId,
+        semanticReportOut: args.semanticReportOut,
         semanticMinFresh: args.semanticMinFresh,
         semanticMinMeanOverall: args.semanticMinMeanOverall,
         semanticMaxMajorErrorRate: args.semanticMaxMajorErrorRate,

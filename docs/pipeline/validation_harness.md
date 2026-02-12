@@ -99,6 +99,7 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest
 node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P001.1.txt --dry-run --quality-gate
 ```
 If semantic judgements are stored under a different batch label, override lookup via `--semantic-batch-id <id>`.
+Semantic gate writes an audit report by default to `data/validation/semantic_gate/<manifest>[.<source>].<batch_id>.report.json` (override with `--semantic-report-out <path>`).
 
 Stage-report contract tooling:
 

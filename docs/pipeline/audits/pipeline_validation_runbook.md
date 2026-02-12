@@ -263,6 +263,7 @@ Example:
 Shortcut:
 `node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --quality-gate`
 If semantic judgements use a different directory label than the manifest stem, pass `--semantic-batch-id <id>`.
+Stage 10 writes a semantic gate report to `data/validation/semantic_gate/<manifest>[.<source>].<batch_id>.report.json` by default (override with `--semantic-report-out <path>`).
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).
