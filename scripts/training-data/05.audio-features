@@ -68,6 +68,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
+import jsonschema
 
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
@@ -128,6 +129,38 @@ class Config:
     min_embed_window_sec: float = 1.2
     embed_pad_sec: float = 0.25
     store_embedding_vectors: bool = False
+
+
+# -------------------------
+# Schema validation
+# -------------------------
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "audio_features.schema.json"
+_CACHED_SCHEMA: Optional[Dict[str, Any]] = None
+
+
+def load_schema() -> Dict[str, Any]:
+    if not SCHEMA_PATH.exists():
+        raise FileNotFoundError(f"[audio-features] Missing schema: {SCHEMA_PATH}")
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def get_schema() -> Dict[str, Any]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = load_schema()
+    return _CACHED_SCHEMA
+
+
+def validate_audio_features_output(out: Dict[str, Any], out_path: Path) -> None:
+    schema = get_schema()
+    try:
+        jsonschema.validate(instance=out, schema=schema)
+    except jsonschema.ValidationError as e:
+        loc = "/".join(str(p) for p in e.absolute_path) or "<root>"
+        raise ValueError(
+            f"[audio-features] Schema validation failed for {out_path}: {loc}: {e.message}"
+        ) from e
 
 
 # -------------------------
@@ -408,6 +441,32 @@ def compute_energy_features(y: np.ndarray, sr: int) -> Dict[str, float]:
     return {"dynamics_db": dynamics_db}
 
 
+def compute_quality_features(y: np.ndarray, sr: int) -> Dict[str, Any]:
+    """
+    Derive lightweight quality signals for downstream gating.
+
+    - low_energy: True when segment energy/speech activity suggests weak signal
+    - speech_activity_ratio: Fraction of frames above adaptive RMS threshold (0..1)
+    """
+    if librosa is None or y.size == 0:
+        return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+    try:
+        rms = librosa.feature.rms(y=y)[0]
+        rms = np.asarray(rms, dtype=np.float32)
+        if rms.size == 0:
+            return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+        mean_rms = float(np.mean(rms))
+        # Adaptive threshold: conservative gate above very low-energy floor.
+        thr = max(float(np.percentile(rms, 20)) * 0.5, 1e-6)
+        speech_ratio = float(np.mean(rms > thr))
+        low_energy = bool(mean_rms < 0.005 or speech_ratio < 0.30)
+        return {"low_energy": low_energy, "speech_activity_ratio": float(np.clip(speech_ratio, 0.0, 1.0))}
+    except Exception:
+        return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+
 def compute_tempo_features(y: np.ndarray, sr: int, duration_sec: float) -> Dict[str, float]:
     """
     Extract tempo features from audio segment.
@@ -558,6 +617,7 @@ def build_audio_features(
         energy = compute_energy_features(y_feat, cfg.sample_rate)
         tempo = compute_tempo_features(y_feat, cfg.sample_rate, dur)
         spectral = compute_spectral_features(y_feat, cfg.sample_rate)
+        quality = compute_quality_features(y_feat, cfg.sample_rate)
 
         # Speaker embedding (clustering done in 06.segment-enrich)
         emb = try_embed_segment(encoder, y_orig, sr_orig, start, end, cfg)
@@ -586,6 +646,7 @@ def build_audio_features(
                     "energy": energy,
                     "tempo": tempo,
                     "spectral": spectral,
+                    "quality": quality,
                     "speaker_embedding": speaker_embedding_obj,
                 },
                 "audio_clip": {
@@ -617,6 +678,8 @@ def build_audio_features(
         "total_duration_sec": r3(total_duration),
         "segments": segments_out,
     }
+
+    validate_audio_features_output(out, out_path)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
