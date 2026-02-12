@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.9"  # v1.9: tighten 06b→06c contract normalization + schema strictness
+PIPELINE_VERSION = "06b.verify-v2.0"  # v2.0: retry+repair schema-invalid verifier JSON before failing
 
 DEBUG_MODE = False
 
@@ -84,6 +84,7 @@ _NO_VALUES = {"0", "false", "no", "n", "disagree", "disagrees", "flag", "issue",
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
+MAX_SCHEMA_REPAIR_ATTEMPTS = 2
 
 
 def _load_schema() -> Optional[Dict[str, Any]]:
@@ -423,6 +424,30 @@ Rules:
 Output the JSON now:
 """
 
+SCHEMA_REPAIR_PROMPT = """You are repairing a JSON payload for a strict verification schema.
+
+The current payload failed schema validation with this error:
+{schema_error}
+
+Repair the payload below so it matches the required verification contract.
+Keep the same semantic intent and evidence where possible.
+
+Current payload:
+```json
+{candidate_json}
+```
+
+Rules:
+- Output ONLY a single JSON object (no markdown, no prose).
+- Keep top-level keys: verdict, video_type_check, conversation_verdicts, misattributions, boundary_issues, collapse_issues, other_flags, summary.
+- Top-level verdict must be APPROVE|FLAG|REJECT.
+- conversation_verdicts[].verdict must be OK|FLAG|ISSUE.
+- Ensure confidence fields are numeric in [0,1].
+- Use enum-safe values for suggested roles/types/overrides/fixes.
+- Use null (not strings like "none") where nullable fields are intended.
+- Use arrays for list fields, even when empty.
+"""
+
 
 # ---------------------------
 # State Management
@@ -598,6 +623,41 @@ def convert_analysis_to_json(
         print(f"{LOG_PREFIX}   JSON conversion timed out")
     except Exception as e:
         print(f"{LOG_PREFIX}   JSON conversion error: {e}")
+
+    return None
+
+
+def repair_json_to_schema(
+    candidate: Dict[str, Any],
+    schema_error: str,
+    timeout: int = 180,
+    model: Optional[str] = None,
+) -> Optional[Dict[str, Any]]:
+    """Ask the LLM to minimally repair a parsed JSON payload to satisfy schema."""
+    if not isinstance(candidate, dict):
+        return None
+
+    print(f"{LOG_PREFIX}   Attempting schema repair fallback...")
+    candidate_json = json.dumps(candidate, indent=2, ensure_ascii=False)
+    if len(candidate_json) > 45000:
+        candidate_json = candidate_json[:45000] + "\n/* truncated */"
+
+    prompt = SCHEMA_REPAIR_PROMPT.format(
+        schema_error=schema_error[:400],
+        candidate_json=candidate_json,
+    )
+
+    try:
+        raw = call_claude(prompt, retries=1, timeout=timeout, model=model)
+        repaired = parse_json_response(raw or "")
+        if isinstance(repaired, dict) and "verdict" in repaired:
+            print(f"{LOG_PREFIX}   Schema repair fallback produced candidate JSON")
+            return repaired
+        print(f"{LOG_PREFIX}   Schema repair fallback returned invalid JSON")
+    except subprocess.TimeoutExpired:
+        print(f"{LOG_PREFIX}   Schema repair fallback timed out")
+    except Exception as e:
+        print(f"{LOG_PREFIX}   Schema repair fallback error: {e}")
 
     return None
 
@@ -1078,19 +1138,94 @@ def verify_file(
     if not result or "verdict" not in result:
         raise RuntimeError(f"Verification LLM failed after {max_retries} retries and conversion fallback")
 
-    elapsed = time.time() - start_time
+    schema_repair_attempts = 0
+    output: Dict[str, Any] = {}
+    verdict = "FLAG"
+    misattributions: List[Dict[str, Any]] = []
+    boundary_issues: List[Dict[str, Any]] = []
+    collapse_issues: List[Dict[str, Any]] = []
+    other_flags: List[str] = []
+    conversation_verdicts: List[Dict[str, Any]] = []
 
-    # Build verification output
-    verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
-    video_type_check = normalize_video_type_check(result.get("video_type_check", {}))
-    conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
-    misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
-    boundary_issues, dropped_boundary = normalize_boundary_issues(result.get("boundary_issues", []))
-    collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
-    other_flags_raw = result.get("other_flags", [])
-    other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
-    for note in dropped_misattributions + dropped_collapse + dropped_boundary:
-        other_flags.append(note)
+    while True:
+        elapsed = time.time() - start_time
+
+        # Build verification output from the most recent candidate result.
+        verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
+        video_type_check = normalize_video_type_check(result.get("video_type_check", {}))
+        conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
+        misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
+        boundary_issues, dropped_boundary = normalize_boundary_issues(result.get("boundary_issues", []))
+        collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
+        other_flags_raw = result.get("other_flags", [])
+        other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
+        for note in dropped_misattributions + dropped_collapse + dropped_boundary:
+            other_flags.append(note)
+
+        metadata: Dict[str, Any] = {
+            "input_file": str(input_path),
+            "processing_time_sec": elapsed,
+            "llm_calls": llm_calls,
+            "model": "claude-cli",
+            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
+        }
+        notes: List[str] = []
+        if used_conversion_fallback:
+            notes.append("Used JSON conversion fallback")
+        if schema_repair_attempts:
+            notes.append(f"Used schema repair fallback ({schema_repair_attempts} attempt(s))")
+            metadata["schema_repair_attempts"] = schema_repair_attempts
+        if notes:
+            metadata["note"] = "; ".join(notes)
+
+        output = {
+            "video_id": video_id,
+            "verified_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "pipeline_version": PIPELINE_VERSION,
+            "verdict": verdict,
+            "video_type_check": video_type_check,
+            "conversation_verdicts": conversation_verdicts,
+            "misattributions": misattributions,
+            "boundary_issues": boundary_issues,
+            "collapse_issues": collapse_issues,
+            "other_flags": other_flags,
+            "summary": str(result.get("summary", "")),
+            "metadata": metadata,
+        }
+
+        try:
+            _validate_verification_schema(output)
+            break
+        except RuntimeError as e:
+            if schema_repair_attempts >= MAX_SCHEMA_REPAIR_ATTEMPTS:
+                raise RuntimeError(
+                    f"{e} (after {schema_repair_attempts} schema repair attempt(s))"
+                ) from e
+
+            schema_repair_attempts += 1
+            print(
+                f"{LOG_PREFIX}   WARNING: Normalized output failed schema validation "
+                f"(attempt {schema_repair_attempts}/{MAX_SCHEMA_REPAIR_ATTEMPTS}): {e}"
+            )
+
+            llm_calls += 1
+            repaired = repair_json_to_schema(result, str(e), model=claude_model)
+            if repaired and "verdict" in repaired:
+                result = repaired
+                continue
+
+            if raw_response and len(raw_response) > 100:
+                print(f"{LOG_PREFIX}   WARNING: Schema repair failed, retrying analysis-to-JSON conversion...")
+                llm_calls += 1
+                converted = convert_analysis_to_json(raw_response, model=claude_model)
+                if converted and "verdict" in converted:
+                    used_conversion_fallback = True
+                    result = converted
+                    continue
+
+            raise RuntimeError(
+                f"Could not repair schema-invalid verification output: {e}"
+            ) from e
 
     total_issues = (
         len(misattributions)
@@ -1099,30 +1234,6 @@ def verify_file(
         + len(collapse_issues)
         + len(other_flags)
     )
-
-    output = {
-        "video_id": video_id,
-        "verified_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "pipeline_version": PIPELINE_VERSION,
-        "verdict": verdict,
-        "video_type_check": video_type_check,
-        "conversation_verdicts": conversation_verdicts,
-        "misattributions": misattributions,
-        "boundary_issues": boundary_issues,
-        "collapse_issues": collapse_issues,
-        "other_flags": other_flags,
-        "summary": str(result.get("summary", "")),
-        "metadata": {
-            "input_file": str(input_path),
-            "processing_time_sec": elapsed,
-            "llm_calls": llm_calls,
-            "model": "claude-cli",
-            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
-            **({"note": "Used JSON conversion fallback"} if used_conversion_fallback else {}),
-        },
-    }
-
-    _validate_verification_schema(output)
 
     # Write output
     output_path.parent.mkdir(parents=True, exist_ok=True)

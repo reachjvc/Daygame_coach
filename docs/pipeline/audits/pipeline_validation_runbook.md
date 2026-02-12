@@ -90,6 +90,7 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ```
 
 Note: Stage 06b now drops low-confidence (<0.70) misattribution/collapse auto-fix suggestions from structured fix arrays and records those drops in `other_flags`.
+If 06b returns parseable-but-schema-invalid JSON, it now performs bounded schema-repair retries before failing the video.
 
 **Claude model strategy (quota control):**
 - Use `--model sonnet` for iteration/canary loops (cheaper).
