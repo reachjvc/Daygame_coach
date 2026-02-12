@@ -37,6 +37,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 cd "$REPO_ROOT"
 
 BATCHES_DIR="$REPO_ROOT/docs/pipeline/batches"
+WAIVERS_DIR="$REPO_ROOT/docs/pipeline/waivers"
 DATA_DIR="$REPO_ROOT/data"
 VIEWS_DIR="$REPO_ROOT/batch-views"
 
@@ -109,6 +110,7 @@ Options:
   --check-stage09-chunks   With --validate, require Stage 09 chunk payload integrity
   --validate-deep          Shortcut: --check-stage08-report + --check-stage09-chunks
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
+                           Default auto-detect: docs/pipeline/waivers/<subbatch>.json
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -627,6 +629,15 @@ validate_sub_batch() {
 
   local rc=0
   local -a validate_args=(--manifest "$manifest")
+  local waiver_file="$VALIDATE_WAIVER_FILE"
+
+  if [[ -z "$waiver_file" ]]; then
+    local auto_waiver="$WAIVERS_DIR/${sub_id}.json"
+    if [[ -f "$auto_waiver" ]]; then
+      waiver_file="$auto_waiver"
+      echo "Using auto-detected waiver file: $waiver_file"
+    fi
+  fi
 
   if [[ "$VALIDATE_STAGE08_REPORT" == true ]]; then
     validate_args+=(--check-stage08-report)
@@ -634,8 +645,8 @@ validate_sub_batch() {
   if [[ "$VALIDATE_STAGE09_CHUNKS" == true ]]; then
     validate_args+=(--check-stage09-chunks)
   fi
-  if [[ -n "$VALIDATE_WAIVER_FILE" ]]; then
-    validate_args+=(--waiver-file "$VALIDATE_WAIVER_FILE")
+  if [[ -n "$waiver_file" ]]; then
+    validate_args+=(--waiver-file "$waiver_file")
   fi
 
   echo ""

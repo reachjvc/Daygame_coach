@@ -149,6 +149,7 @@ If you run via `sub-batch-pipeline`, use:
 Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgrade explicit known checks (video/check scoped) to `info`.
 The same waiver file can be passed through the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep --waiver-file docs/pipeline/waivers/CANARY.1.json`
+If `docs/pipeline/waivers/CANARY.1.json` exists, `sub-batch-pipeline CANARY.1 --validate` auto-detects and applies it.
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 
