@@ -21,6 +21,7 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quality-gate
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quality-gate --check-stage10
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
@@ -37,6 +38,7 @@ Semantic quality can also be gated in `--validate` via `--semantic-*` thresholds
 - READY-only readiness (`--block-review-ingest`)
 - warning policy defaults (`--max-warning-checks 3`, `--block-warning-check transcript_artifact`)
 - semantic defaults (`--semantic-min-fresh 5`, `--semantic-min-mean-overall 75`, `--semantic-max-major-error-rate 0.20`, `--semantic-max-hallucination-rate 0.10`, `--semantic-fail-on-stale`)
+`--check-stage10` adds a Stage 10 dry-run gate check at the end of validation (no DB writes) to verify ingest gates before production ingest.
 
 ## Typical Test Loop (LLM + Validate)
 

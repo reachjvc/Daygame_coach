@@ -186,6 +186,8 @@ Optional semantic-quality gate in the same `--validate` run (requires semantic_j
 Strict one-flag profile:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --quality-gate`
 (`--quality-gate` expands to deep checks + stage reports + READY-only readiness + warning policy + semantic defaults.)
+To also run Stage 10 ingest gates in dry-run mode (no DB writes) at the end of validation:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --quality-gate --check-stage10`
 Or emit quarantine from orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
 Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:
