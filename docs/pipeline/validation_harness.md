@@ -8,9 +8,11 @@ Run validations + a manifest-filtered batch report:
 
 ```bash
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --validate-deep
 ```
 
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
+`--validate-deep` enables both Stage 08 report integrity and Stage 09 chunk payload checks.
 
 ## Typical Test Loop (LLM + Validate)
 

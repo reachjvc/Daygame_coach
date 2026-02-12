@@ -21,6 +21,8 @@
 #
 #   E) Run validations for a sub-batch manifest:
 #      ./sub-batch-pipeline P001.1 --validate
+#      ./sub-batch-pipeline P001.1 --validate --validate-deep
+#      ./sub-batch-pipeline P001.1 --validate --check-stage08-report --check-stage09-chunks
 #
 #   F) Mark sub-batch as approved:
 #      ./sub-batch-pipeline P001.1 --approve
@@ -83,6 +85,8 @@ DRY_RUN=false
 STAGE=""
 SUB_BATCH_ID=""
 BATCH_ID=""
+VALIDATE_STAGE08_REPORT=false
+VALIDATE_STAGE09_CHUNKS=false
 
 usage() {
   cat <<'EOF'
@@ -93,11 +97,16 @@ Usage:
   ./sub-batch-pipeline P001.1 --stage 06b        Run stage 06b only
   ./sub-batch-pipeline P001.1 --view             Create symlink view in batch-views/P001/P001.1/
   ./sub-batch-pipeline P001.1 --validate         Run cross-stage validators for this sub-batch
+  ./sub-batch-pipeline P001.1 --validate --validate-deep
+                                                  Validate + require Stage 08 report and Stage 09 chunks checks
   ./sub-batch-pipeline P001.1 --approve          Mark as approved
   ./sub-batch-pipeline P001 --status             Batch-level status
 
 Options:
-  --dry-run    Preview without running
+  --dry-run                Preview without running
+  --check-stage08-report   With --validate, require Stage 08 manifest report integrity
+  --check-stage09-chunks   With --validate, require Stage 09 chunk payload integrity
+  --validate-deep          Shortcut: --check-stage08-report + --check-stage09-chunks
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -615,12 +624,20 @@ validate_sub_batch() {
   fi
 
   local rc=0
+  local -a validate_args=(--manifest "$manifest")
+
+  if [[ "$VALIDATE_STAGE08_REPORT" == true ]]; then
+    validate_args+=(--check-stage08-report)
+  fi
+  if [[ "$VALIDATE_STAGE09_CHUNKS" == true ]]; then
+    validate_args+=(--check-stage09-chunks)
+  fi
 
   echo ""
   echo "=== Validations: $sub_id ==="
   echo ""
 
-  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" --manifest "$manifest" || rc=$?
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
 
   echo ""
   echo "=== Batch Report (manifest-filtered) ==="
@@ -659,6 +676,19 @@ while [[ $# -gt 0 ]]; do
       ;;
     --validate)
       MODE="validate"
+      shift
+      ;;
+    --check-stage08-report)
+      VALIDATE_STAGE08_REPORT=true
+      shift
+      ;;
+    --check-stage09-chunks)
+      VALIDATE_STAGE09_CHUNKS=true
+      shift
+      ;;
+    --validate-deep)
+      VALIDATE_STAGE08_REPORT=true
+      VALIDATE_STAGE09_CHUNKS=true
       shift
       ;;
     --stage)

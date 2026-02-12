@@ -144,6 +144,8 @@ python3 scripts/training-data/validation/validate_manifest.py \
 To also require Stage 09 chunk artifacts/payload integrity in the same harness run, add `--check-stage09-chunks`.
 That check now enforces stable `sourceKey`/`videoId`/`channel` alignment plus `chunkIndex`/`totalChunks` consistency and continuity.
 To also enforce Stage 08 report integrity in the same harness run, add `--check-stage08-report`.
+If you run via `sub-batch-pipeline`, use:
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --validate-deep`
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 
