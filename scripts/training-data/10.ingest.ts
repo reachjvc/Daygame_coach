@@ -204,6 +204,11 @@ function validateKnownArgs(argv: string[]): void {
         console.error(`❌ Missing value for option: ${arg}`)
         process.exit(1)
       }
+      const next = argv[i + 1]
+      if (next.trim().length === 0 || next.startsWith("-")) {
+        console.error(`❌ Missing value for option: ${arg}`)
+        process.exit(1)
+      }
       i += 1
       continue
     }
@@ -211,6 +216,11 @@ function validateKnownArgs(argv: string[]): void {
     if (eq > 0) {
       const key = arg.slice(0, eq)
       if (valueOpts.has(key)) {
+        const value = arg.slice(eq + 1)
+        if (value.trim().length === 0) {
+          console.error(`❌ Missing value for option: ${key}`)
+          process.exit(1)
+        }
         continue
       }
     }
