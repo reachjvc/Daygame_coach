@@ -64,7 +64,7 @@ export interface LifeAreaConfig {
 /**
  * View modes for the Goals Hub
  */
-export type GoalViewMode = "dashboard" | "tree" | "kanban" | "list"
+export type GoalViewMode = "standard" | "time-horizon"
 
 /**
  * Filter state for goals list/views

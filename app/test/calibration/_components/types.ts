@@ -3,6 +3,8 @@ export interface TurnEvaluation {
   tags: string[]
   quality: "positive" | "neutral" | "deflect" | "skeptical"
   feedback: string
+  trajectory_score?: number
+  trajectory_signals?: string
 }
 
 export interface TurnState {
@@ -31,6 +33,8 @@ export interface DiagnosticSummary {
   false_positive_count?: number
   mean_absolute_error?: number
   pass_rate: number
+  trajectory_mae?: number
+  trajectory_turns?: number
 }
 
 export interface DiagnosticData {

@@ -8,36 +8,6 @@ import {
 } from "@/src/tracking/data/templates"
 import { getMilestoneInfo, type MilestoneTier } from "@/src/tracking/data/milestones"
 
-// Helper to get ISO week string (e.g., "2026-W04")
-export function getISOWeekString(date: Date): string {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  // Set to nearest Thursday: current date + 4 - current day number
-  d.setDate(d.getDate() + 4 - (d.getDay() || 7))
-  const yearStart = new Date(d.getFullYear(), 0, 1)
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
-  return `${d.getFullYear()}-W${weekNo.toString().padStart(2, '0')}`
-}
-
-// Helper to check if two ISO weeks are consecutive
-export function areWeeksConsecutive(week1: string, week2: string): boolean {
-  if (!week1 || !week2) return false
-  const [year1, w1] = week1.split('-W').map(Number)
-  const [year2, w2] = week2.split('-W').map(Number)
-
-  // Same year, consecutive weeks
-  if (year1 === year2 && w2 === w1 + 1) return true
-  // Year boundary: last week of year1 to first week of year2
-  if (year2 === year1 + 1 && w1 >= 52 && w2 === 1) return true
-
-  return false
-}
-
-// Helper to check if a week qualifies as "active" (2+ sessions OR 5+ approaches)
-export function isWeekActive(sessions: number, approaches: number): boolean {
-  return sessions >= 2 || approaches >= 5
-}
-
 import type {
   SessionRow,
   SessionInsert,
@@ -48,7 +18,6 @@ import type {
   ApproachRow,
   ApproachInsert,
   ApproachUpdate,
-  ApproachOutcome,
   FieldReportTemplateRow,
   FieldReportTemplateInsert,
   FieldReportTemplateUpdate,
@@ -169,41 +138,6 @@ export async function updateSession(
   return data as SessionRow
 }
 
-export async function endSession(sessionId: string): Promise<SessionRow> {
-  // Get session with approaches to calculate summary
-  const session = await getSessionWithApproaches(sessionId)
-  if (!session) {
-    throw new Error("Session not found")
-  }
-
-  const endedAt = new Date()
-  const startedAt = new Date(session.started_at)
-  const durationMinutes = Math.round((endedAt.getTime() - startedAt.getTime()) / 60000)
-
-  const totalApproaches = session.approaches.length
-  const goalMet = session.goal ? totalApproaches >= session.goal : false
-
-  const updatedSession = await updateSession(sessionId, {
-    ended_at: endedAt.toISOString(),
-    is_active: false,
-    duration_minutes: durationMinutes,
-    total_approaches: totalApproaches,
-    goal_met: goalMet,
-    end_reason: 'completed',
-  })
-
-  // Update session-related stats and milestones
-  await updateSessionStats(session.user_id, sessionId, {
-    approachCount: totalApproaches,
-    goalMet,
-    durationMinutes,
-    startHour: startedAt.getHours(),
-    location: session.primary_location,
-  })
-
-  return updatedSession
-}
-
 /**
  * Abandon a session - used when user starts a new session while this one is still active.
  * Unlike endSession, this does NOT update stats or milestones since the session was not
@@ -253,127 +187,6 @@ export async function reactivateSession(sessionId: string): Promise<SessionWithA
   }
 
   return reactivated
-}
-
-// Called when a session ends to update stats and check milestones
-async function updateSessionStats(
-  userId: string,
-  sessionId: string,
-  sessionInfo: {
-    approachCount: number
-    goalMet: boolean
-    durationMinutes: number
-    startHour: number
-    location: string | null
-  }
-): Promise<void> {
-  const stats = await getOrCreateUserTrackingStats(userId)
-  const currentWeek = getISOWeekString(new Date())
-
-  // Track weekly sessions
-  let weeklySessions = stats.current_week_sessions || 0
-  if (stats.current_week === currentWeek) {
-    weeklySessions++
-  } else {
-    // New week started, reset counter
-    weeklySessions = 1
-  }
-
-  // Update unique locations
-  let uniqueLocations = stats.unique_locations || []
-  if (sessionInfo.location && !uniqueLocations.includes(sessionInfo.location)) {
-    uniqueLocations = [...uniqueLocations, sessionInfo.location]
-  }
-
-  const newSessionCount = stats.total_sessions + 1
-
-  await updateUserTrackingStats(userId, {
-    total_sessions: newSessionCount,
-    current_week: currentWeek,
-    current_week_sessions: weeklySessions,
-    unique_locations: uniqueLocations,
-  })
-
-  // Check and update weekly streak based on new criteria
-  await checkAndUpdateWeeklyStreak(userId, currentWeek)
-
-  // Collect all potential milestones and check in batch (2 queries instead of 2*N)
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-
-  // Session count milestones
-  if (newSessionCount === 1) potentialMilestones.push({ type: "first_session" })
-  if (newSessionCount === 3) potentialMilestones.push({ type: "3_sessions" })
-  if (newSessionCount === 5) potentialMilestones.push({ type: "5_sessions" })
-  if (newSessionCount === 10) potentialMilestones.push({ type: "10_sessions" })
-  if (newSessionCount === 25) potentialMilestones.push({ type: "25_sessions" })
-  if (newSessionCount === 50) potentialMilestones.push({ type: "50_sessions" })
-  if (newSessionCount === 100) potentialMilestones.push({ type: "100_sessions" })
-
-  // Session quality milestones
-  if (sessionInfo.approachCount >= 5) potentialMilestones.push({ type: "first_5_approach_session" })
-  if (sessionInfo.approachCount >= 10) potentialMilestones.push({ type: "first_10_approach_session" })
-  if (sessionInfo.goalMet) potentialMilestones.push({ type: "first_goal_hit" })
-  if (sessionInfo.durationMinutes >= 120) potentialMilestones.push({ type: "marathon" })
-
-  // Time-based milestones
-  const dayOfWeek = new Date().getDay()
-  if (dayOfWeek === 0 || dayOfWeek === 6) potentialMilestones.push({ type: "weekend_warrior" })
-
-  // Variety milestones
-  if (uniqueLocations.length >= 5) potentialMilestones.push({ type: "globetrotter" })
-
-  // Award all in batch (with sessionId to link achievements to this session)
-  await checkAndAwardMilestones(userId, potentialMilestones, sessionId)
-}
-
-// Check if current week is "active" and update weekly streak accordingly
-// A week is active if: 2+ sessions OR 5+ approaches
-async function checkAndUpdateWeeklyStreak(
-  userId: string,
-  currentWeek: string
-): Promise<void> {
-  const stats = await getUserTrackingStats(userId)
-  if (!stats) return
-
-  const weeklySessions = stats.current_week_sessions || 0
-  const weeklyApproaches = stats.current_week_approaches || 0
-  const lastActiveWeek = stats.last_active_week
-
-  // Check if this week qualifies as active
-  if (!isWeekActive(weeklySessions, weeklyApproaches)) {
-    return // Week not yet active, no streak update
-  }
-
-  // Week is active - check if we already counted it
-  if (lastActiveWeek === currentWeek) {
-    return // Already counted this week
-  }
-
-  // Calculate new streak
-  let newWeekStreak: number
-  if (lastActiveWeek && areWeeksConsecutive(lastActiveWeek, currentWeek)) {
-    // Consecutive active week
-    newWeekStreak = (stats.current_week_streak || 0) + 1
-  } else {
-    // First active week or gap in streak
-    newWeekStreak = 1
-  }
-
-  await updateUserTrackingStats(userId, {
-    current_week_streak: newWeekStreak,
-    longest_week_streak: Math.max(stats.longest_week_streak || 0, newWeekStreak),
-    last_active_week: currentWeek,
-  })
-
-  // Check weekly streak milestones in batch
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-  if (newWeekStreak === 2) potentialMilestones.push({ type: "2_week_streak" })
-  if (newWeekStreak === 4) potentialMilestones.push({ type: "4_week_streak" })
-  if (newWeekStreak === 8) potentialMilestones.push({ type: "8_week_streak" })
-  if (newWeekStreak === 12) potentialMilestones.push({ type: "12_week_streak" })
-  if (newWeekStreak === 26) potentialMilestones.push({ type: "26_week_streak" })
-  if (newWeekStreak === 52) potentialMilestones.push({ type: "52_week_streak" })
-  await checkAndAwardMilestones(userId, potentialMilestones)
 }
 
 export async function getSessionWithApproaches(
@@ -605,9 +418,6 @@ export async function createApproach(approach: ApproachInsert): Promise<Approach
       await updateSession(approach.session_id, { total_approaches: count })
     }
   }
-
-  // Update user stats (pass sessionId to link milestones to session)
-  await incrementApproachStats(approach.user_id, approach.outcome, approach.session_id)
 
   return data as ApproachRow
 }
@@ -888,21 +698,6 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
     throw new Error(`Failed to create field report: ${error.message}`)
   }
 
-  // Update field report count and check milestones
-  if (!report.is_draft) {
-    const stats = await getOrCreateUserTrackingStats(report.user_id)
-    const newCount = (stats.total_field_reports || 0) + 1
-    await updateUserTrackingStats(report.user_id, { total_field_reports: newCount })
-
-    // Batch milestone checking (link to session if available)
-    const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-    if (newCount === 1) potentialMilestones.push({ type: "first_field_report" })
-    if (newCount === 10) potentialMilestones.push({ type: "10_field_reports" })
-    if (newCount === 25) potentialMilestones.push({ type: "25_field_reports" })
-    if (newCount === 50) potentialMilestones.push({ type: "50_field_reports" })
-    await checkAndAwardMilestones(report.user_id, potentialMilestones, report.session_id)
-  }
-
   return data as FieldReportRow
 }
 
@@ -1117,12 +912,6 @@ export async function createReview(review: ReviewInsert): Promise<ReviewRow> {
     throw new Error(`Failed to create review: ${error.message}`)
   }
 
-  // Update stats and check unlocks
-  if (review.review_type === "weekly" && !review.is_draft) {
-    await incrementWeeklyReviewCount(review.user_id)
-    await checkAndAwardMilestone(review.user_id, "first_weekly_review")
-  }
-
   return data as ReviewRow
 }
 
@@ -1267,133 +1056,12 @@ export async function updateUserTrackingStats(
   return data as UserTrackingStatsRow
 }
 
-async function incrementApproachStats(
-  userId: string,
-  outcome?: ApproachOutcome,
-  sessionId?: string
-): Promise<void> {
-  const stats = await getOrCreateUserTrackingStats(userId)
-
-  const today = new Date().toISOString().split("T")[0]
-  const currentWeek = getISOWeekString(new Date())
-  const lastDate = stats.last_approach_date
-
-  // Calculate daily streak (legacy, but still track it)
-  let newStreak = stats.current_streak
-  if (lastDate !== today) {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const yesterdayStr = yesterday.toISOString().split("T")[0]
-
-    if (lastDate === yesterdayStr) {
-      newStreak = stats.current_streak + 1
-    } else if (lastDate !== today) {
-      newStreak = 1
-    }
-  }
-
-  // Track weekly approaches
-  let weeklyApproaches = stats.current_week_approaches || 0
-  if (stats.current_week === currentWeek) {
-    weeklyApproaches++
-  } else {
-    // New week started, reset counter
-    weeklyApproaches = 1
-  }
-
-  const updates: UserTrackingStatsUpdate = {
-    total_approaches: stats.total_approaches + 1,
-    last_approach_date: today,
-    current_streak: newStreak,
-    longest_streak: Math.max(stats.longest_streak, newStreak),
-    current_week: currentWeek,
-    current_week_approaches: weeklyApproaches,
-  }
-
-  let newNumbers = stats.total_numbers
-  let newInstadates = stats.total_instadates
-
-  if (outcome === "number") {
-    newNumbers = stats.total_numbers + 1
-    updates.total_numbers = newNumbers
-  } else if (outcome === "instadate") {
-    newInstadates = stats.total_instadates + 1
-    updates.total_instadates = newInstadates
-  }
-
-  await updateUserTrackingStats(userId, updates)
-
-  // Check if this approach makes the week "active" (5+ approaches)
-  // and update weekly streak if needed
-  await checkAndUpdateWeeklyStreak(userId, currentWeek)
-
-  // Collect all potential milestones and check in batch (2 queries instead of 2*N)
-  const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
-  const newTotal = stats.total_approaches + 1
-
-  // Approach count milestones
-  if (newTotal === 1) potentialMilestones.push({ type: "first_approach" })
-  if (newTotal === 5) potentialMilestones.push({ type: "5_approaches" })
-  if (newTotal === 10) potentialMilestones.push({ type: "10_approaches" })
-  if (newTotal === 25) potentialMilestones.push({ type: "25_approaches" })
-  if (newTotal === 50) potentialMilestones.push({ type: "50_approaches" })
-  if (newTotal === 100) potentialMilestones.push({ type: "100_approaches" })
-  if (newTotal === 250) potentialMilestones.push({ type: "250_approaches" })
-  if (newTotal === 500) potentialMilestones.push({ type: "500_approaches" })
-  if (newTotal === 1000) potentialMilestones.push({ type: "1000_approaches" })
-
-  // Number milestones
-  if (outcome === "number") {
-    if (newNumbers === 1) potentialMilestones.push({ type: "first_number" })
-    if (newNumbers === 2) potentialMilestones.push({ type: "2_numbers" })
-    if (newNumbers === 5) potentialMilestones.push({ type: "5_numbers" })
-    if (newNumbers === 10) potentialMilestones.push({ type: "10_numbers" })
-    if (newNumbers === 25) potentialMilestones.push({ type: "25_numbers" })
-    if (newNumbers === 50) potentialMilestones.push({ type: "50_numbers" })
-    if (newNumbers === 100) potentialMilestones.push({ type: "100_numbers" })
-  }
-
-  // Instadate milestones
-  if (outcome === "instadate") {
-    if (newInstadates === 1) potentialMilestones.push({ type: "first_instadate" })
-    if (newInstadates === 2) potentialMilestones.push({ type: "2_instadates" })
-    if (newInstadates === 5) potentialMilestones.push({ type: "5_instadates" })
-    if (newInstadates === 10) potentialMilestones.push({ type: "10_instadates" })
-    if (newInstadates === 25) potentialMilestones.push({ type: "25_instadates" })
-  }
-
-  // Legacy daily streak milestones
-  if (newStreak === 7) potentialMilestones.push({ type: "7_day_streak" })
-  if (newStreak === 30) potentialMilestones.push({ type: "30_day_streak" })
-  if (newStreak === 100) potentialMilestones.push({ type: "100_day_streak" })
-
-  // Award all in batch (link to session if available)
-  await checkAndAwardMilestones(userId, potentialMilestones, sessionId)
-}
-
-async function incrementWeeklyReviewCount(userId: string): Promise<void> {
-  const stats = await getOrCreateUserTrackingStats(userId)
-
-  const newCount = stats.weekly_reviews_completed + 1
-
-  const updates: UserTrackingStatsUpdate = {
-    weekly_reviews_completed: newCount,
-    current_weekly_streak: stats.current_weekly_streak + 1,
-  }
-
-  // Unlock monthly after 4 weekly reviews
-  if (newCount >= 4 && !stats.monthly_review_unlocked) {
-    updates.monthly_review_unlocked = true
-    await checkAndAwardMilestone(userId, "monthly_unlocked")
-  }
-
-  await updateUserTrackingStats(userId, updates)
-}
-
-export async function incrementMonthlyReviewCount(userId: string): Promise<void> {
+/**
+ * Count the number of submitted monthly reviews for a user (CRUD query).
+ */
+export async function countMonthlyReviews(userId: string): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
-  // Count monthly reviews
   const { count } = await supabase
     .from("reviews")
     .select("*", { count: "exact", head: true })
@@ -1401,14 +1069,7 @@ export async function incrementMonthlyReviewCount(userId: string): Promise<void>
     .eq("review_type", "monthly")
     .eq("is_draft", false)
 
-  // Unlock quarterly after 3 monthly reviews
-  if (count !== null && count >= 3) {
-    const stats = await getOrCreateUserTrackingStats(userId)
-    if (!stats.quarterly_review_unlocked) {
-      await updateUserTrackingStats(userId, { quarterly_review_unlocked: true })
-      await checkAndAwardMilestone(userId, "quarterly_unlocked")
-    }
-  }
+  return count ?? 0
 }
 
 // ============================================

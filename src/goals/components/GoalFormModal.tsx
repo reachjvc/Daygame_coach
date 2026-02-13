@@ -131,12 +131,13 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   const areaConfig = getLifeAreaConfig(effectiveLifeArea || "custom")
   const suggestions = areaConfig.suggestions
 
-  // Filter parent goals by life area for dropdown
+  // Filter parent goals by life area for dropdown, excluding self to prevent cycles
   const filteredParentGoals = useMemo(() => {
     if (!parentGoals.length) return []
-    if (!effectiveLifeArea) return parentGoals
-    return parentGoals.filter((g) => g.life_area === effectiveLifeArea || !effectiveLifeArea)
-  }, [parentGoals, effectiveLifeArea])
+    const eligible = goal ? parentGoals.filter((g) => g.id !== goal.id) : parentGoals
+    if (!effectiveLifeArea) return eligible
+    return eligible.filter((g) => g.life_area === effectiveLifeArea || !effectiveLifeArea)
+  }, [parentGoals, effectiveLifeArea, goal])
 
   // Auto-suggest life area when parent is selected
   useEffect(() => {
@@ -400,6 +401,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value)
+                if (error) setError(null)
                 if (selectedSuggestion && e.target.value !== selectedSuggestion) {
                   setSelectedSuggestion(null)
                 }

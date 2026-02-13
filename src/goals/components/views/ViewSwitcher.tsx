@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { LayoutGrid, GitBranch, Columns3, List } from "lucide-react"
+import { LayoutGrid, Clock } from "lucide-react"
 import type { GoalViewMode } from "../../types"
 
 interface ViewSwitcherProps {
@@ -10,10 +10,8 @@ interface ViewSwitcherProps {
 }
 
 const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof LayoutGrid; label: string }[] = [
-  { mode: "dashboard", icon: LayoutGrid, label: "Dashboard" },
-  { mode: "tree", icon: GitBranch, label: "Tree" },
-  { mode: "kanban", icon: Columns3, label: "Kanban" },
-  { mode: "list", icon: List, label: "List" },
+  { mode: "standard", icon: LayoutGrid, label: "Standard" },
+  { mode: "time-horizon", icon: Clock, label: "Time Horizon" },
 ]
 
 export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
@@ -25,14 +23,15 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
           <Button
             key={mode}
             variant="ghost"
-            size="icon-sm"
-            className={`transition-colors ${
+            size="sm"
+            className={`gap-1.5 h-8 px-3 transition-colors ${
               isActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : ""
             }`}
             onClick={() => onViewChange(mode)}
             title={label}
           >
             <Icon className="size-4" />
+            <span className="text-xs hidden sm:inline">{label}</span>
           </Button>
         )
       })}

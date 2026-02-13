@@ -337,6 +337,7 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
       ...baseUpdatedContext,
       interestLevel: interestUpdate.interestLevel,
       exitRisk: interestUpdate.exitRisk,
+      neutralStreak: interestUpdate.neutralStreak,
       isEnded: interestUpdate.isEnded,
       endReason: interestUpdate.endReason,
     }

@@ -3,7 +3,7 @@ import {
   getISOWeekString,
   areWeeksConsecutive,
   isWeekActive,
-} from "@/src/db/trackingRepo"
+} from "@/src/tracking/trackingService"
 
 // ============================================================================
 // getISOWeekString

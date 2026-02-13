@@ -50,6 +50,8 @@ interface TurnEvaluation {
   tags: string[]
   quality: "positive" | "neutral" | "deflect" | "skeptical"
   feedback: string
+  trajectory_score?: number
+  trajectory_signals?: string
 }
 
 interface TurnState {
@@ -78,6 +80,10 @@ interface DiagnosticSummary {
   false_positive_count: number
   mean_absolute_error: number
   pass_rate: number
+  /** Mean absolute error of trajectory_score vs ground truth interest (prompt_3+) */
+  trajectory_mae?: number
+  /** How many turns had trajectory_score (prompt_3+) */
+  trajectory_turns?: number
 }
 
 interface DiagnosticData {
@@ -155,6 +161,7 @@ async function main() {
   // Initialize state (matches production defaults)
   let interestLevel = RUBRIC.interest.start // 4
   let exitRisk = RUBRIC.exitRisk.start // 0
+  let neutralStreak = 0
   let isEnded = false
   let endReason: string | undefined
 
@@ -217,6 +224,7 @@ async function main() {
       interestLevel: contextInterestLevel,
       exitRisk: contextExitRisk,
       realismNotch: 0 as const,
+      neutralStreak,
       isEnded,
       endReason,
     }
@@ -231,10 +239,16 @@ async function main() {
       const evalResult = await evaluateWithAI(turn.him, conversationHistory, "en", context, "diagnostic")
 
       console.log(`  Score: ${evalResult.score} (${evalResult.quality}) tags=[${evalResult.tags.join(",")}]`)
+      if (evalResult.trajectoryScore !== undefined) {
+        console.log(`  Trajectory: ${evalResult.trajectoryScore} — ${evalResult.trajectorySignals || "no signals"}`)
+      }
       console.log(`  Feedback: ${evalResult.feedback}`)
 
       // Update state using production rubric logic
       const update = updateInterestFromRubric(context, evalResult)
+
+      // Always carry neutralStreak forward (needed for momentum bonus)
+      neutralStreak = update.neutralStreak
 
       // In ground-truth mode, still run rubric for comparison but use real interest for next turn
       if (!groundTruth) {
@@ -293,6 +307,8 @@ async function main() {
           tags: evalResult.tags,
           quality: evalResult.quality,
           feedback: evalResult.feedback,
+          trajectory_score: evalResult.trajectoryScore,
+          trajectory_signals: evalResult.trajectorySignals,
         },
         state_before: stateBefore,
         state_after: stateAfter,
@@ -336,6 +352,14 @@ async function main() {
   )
   const meanAbsError = totalCoachTurns > 0 ? totalAbsError / totalCoachTurns : 0
 
+  // Trajectory accuracy (prompt_3+): how close is trajectory_score to ground truth interest?
+  const trajectoryTurns = diagnosticTurns.filter((t) => typeof t.evaluation.trajectory_score === "number")
+  const trajectoryAbsError = trajectoryTurns.reduce(
+    (sum, t) => sum + Math.abs(t.evaluation.trajectory_score! - (t.ground_truth_interest ?? 0)),
+    0
+  )
+  const trajectoryMae = trajectoryTurns.length > 0 ? trajectoryAbsError / trajectoryTurns.length : undefined
+
   const diagnosticData: DiagnosticData = {
     video_id: videoId,
     prompt_version: promptVersion,
@@ -348,6 +372,8 @@ async function main() {
       false_positive_count: falsePositiveCount,
       mean_absolute_error: Math.round(meanAbsError * 100) / 100,
       pass_rate: totalCoachTurns > 0 ? turnsScored7Plus / totalCoachTurns : 0,
+      trajectory_mae: trajectoryMae !== undefined ? Math.round(trajectoryMae * 100) / 100 : undefined,
+      trajectory_turns: trajectoryTurns.length > 0 ? trajectoryTurns.length : undefined,
     },
     turns: diagnosticTurns,
   }
@@ -376,7 +402,10 @@ async function main() {
   )
   console.log(`Blind spots (missed rise): ${blindSpotCount}`)
   console.log(`False positives (missed drop): ${falsePositiveCount}`)
-  console.log(`Mean absolute error: ${meanAbsError.toFixed(2)}`)
+  console.log(`Mean absolute error (line_score): ${meanAbsError.toFixed(2)}`)
+  if (trajectoryMae !== undefined) {
+    console.log(`Trajectory MAE (vs ground truth): ${trajectoryMae.toFixed(2)} (${trajectoryTurns.length} turns with trajectory)`)
+  }
   console.log(`\nOutput: ${outputPath}`)
   console.log(`View at: /test/calibration`)
 }

@@ -9,10 +9,8 @@ import { GoalFormModal } from "./GoalFormModal"
 import { LifeAreaFilter } from "./LifeAreaFilter"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { DashboardView } from "./views/DashboardView"
-import { TreeView } from "./views/TreeView"
-import { KanbanView } from "./views/KanbanView"
-import { ListView } from "./views/ListView"
-import { buildGoalTree, flattenTree, filterGoals } from "../goalsService"
+import { TimeHorizonView } from "./views/TimeHorizonView"
+import { flattenTree, filterGoals } from "../goalsService"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import { DEFAULT_FILTER_STATE } from "../config"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, GoalFilterState } from "../types"
@@ -26,9 +24,15 @@ export function GoalsHubContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [viewMode, setViewMode] = useState<GoalViewMode>(
-    (searchParams.get("view") as GoalViewMode) || "dashboard"
-  )
+  const [viewMode, setViewMode] = useState<GoalViewMode>(() => {
+    const fromUrl = searchParams.get("view") as GoalViewMode
+    if (fromUrl === "standard" || fromUrl === "time-horizon") return fromUrl
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("goals-view-mode") as GoalViewMode
+      if (stored === "standard" || stored === "time-horizon") return stored
+    }
+    return "standard"
+  })
   const [filters, setFilters] = useState<GoalFilterState>(DEFAULT_FILTER_STATE)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
@@ -65,6 +69,7 @@ export function GoalsHubContent() {
 
   const handleViewChange = (mode: GoalViewMode) => {
     setViewMode(mode)
+    localStorage.setItem("goals-view-mode", mode)
   }
 
   const handleFilterChange = (update: Partial<GoalFilterState>) => {
@@ -174,7 +179,7 @@ export function GoalsHubContent() {
       />
 
       {/* Active View */}
-      {viewMode === "dashboard" && (
+      {viewMode === "standard" && (
         <DashboardView
           goals={filteredGoals}
           allGoals={goals}
@@ -187,34 +192,11 @@ export function GoalsHubContent() {
         />
       )}
 
-      {viewMode === "tree" && (
-        <TreeView
-          tree={buildGoalTree(filteredGoals)}
-          allGoals={goals}
-          onIncrement={handleIncrement}
-          onReset={handleReset}
-          onEdit={handleEdit}
-          onCreateGoal={handleCreateGoal}
-          filterAreaName={filterAreaName}
-        />
-      )}
-
-      {viewMode === "kanban" && (
-        <KanbanView
+      {viewMode === "time-horizon" && (
+        <TimeHorizonView
           goals={filteredGoals}
           allGoals={goals}
-          onIncrement={handleIncrement}
-          onReset={handleReset}
-          onEdit={handleEdit}
-          onCreateGoal={handleCreateGoal}
-          filterAreaName={filterAreaName}
-        />
-      )}
-
-      {viewMode === "list" && (
-        <ListView
-          goals={filteredGoals}
-          allGoals={goals}
+          tree={tree}
           onIncrement={handleIncrement}
           onReset={handleReset}
           onEdit={handleEdit}

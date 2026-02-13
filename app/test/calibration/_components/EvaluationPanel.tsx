@@ -41,13 +41,36 @@ export function EvaluationPanel({ turn }: EvaluationPanelProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Score */}
-        <div>
-          <span className="text-sm text-muted-foreground">Score:</span>
-          <span className={`ml-2 text-3xl font-bold ${getScoreColor(turn.evaluation.score)}`}>
-            {turn.evaluation.score}
-          </span>
-          <span className="text-muted-foreground">/10</span>
+        {/* Scores */}
+        <div className="flex items-end gap-6">
+          <div>
+            <span className="text-sm text-muted-foreground">Line Score:</span>
+            <span className={`ml-2 text-3xl font-bold ${getScoreColor(turn.evaluation.score)}`}>
+              {turn.evaluation.score}
+            </span>
+            <span className="text-muted-foreground">/10</span>
+          </div>
+          {typeof turn.evaluation.trajectory_score === "number" && (
+            <div>
+              <span className="text-sm text-muted-foreground">Trajectory:</span>
+              <span className={`ml-2 text-3xl font-bold ${getScoreColor(turn.evaluation.trajectory_score)}`}>
+                {turn.evaluation.trajectory_score}
+              </span>
+              <span className="text-muted-foreground">/10</span>
+              {typeof turn.ground_truth_interest === "number" && (
+                <span className="ml-2 text-sm text-muted-foreground">
+                  (GT: {turn.ground_truth_interest})
+                </span>
+              )}
+            </div>
+          )}
+          {typeof turn.ground_truth_interest === "number" && typeof turn.evaluation.trajectory_score !== "number" && (
+            <div>
+              <span className="text-sm text-muted-foreground">Ground Truth:</span>
+              <span className="ml-2 text-lg font-semibold">{turn.ground_truth_interest}</span>
+              <span className="text-muted-foreground">/10</span>
+            </div>
+          )}
         </div>
 
         {/* Quality */}
@@ -77,6 +100,14 @@ export function EvaluationPanel({ turn }: EvaluationPanelProps) {
           <span className="text-sm text-muted-foreground">Feedback:</span>
           <p className="mt-1 text-sm">{turn.evaluation.feedback}</p>
         </div>
+
+        {/* Trajectory Signals */}
+        {turn.evaluation.trajectory_signals && (
+          <div>
+            <span className="text-sm text-muted-foreground">Trajectory Signals:</span>
+            <p className="mt-1 text-sm italic">{turn.evaluation.trajectory_signals}</p>
+          </div>
+        )}
 
         {/* State Changes */}
         <div className="pt-2 border-t">

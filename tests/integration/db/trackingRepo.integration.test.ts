@@ -24,12 +24,12 @@ import {
   createTestUserStats,
 } from "../setup"
 
-// Import pure helper functions from trackingRepo
+// Import pure helper functions (now in service layer)
 import {
   getISOWeekString,
   areWeeksConsecutive,
   isWeekActive,
-} from "../../../src/db/trackingRepo"
+} from "../../../src/tracking/trackingService"
 
 describe("trackingRepo Integration Tests", () => {
   beforeEach(async () => {

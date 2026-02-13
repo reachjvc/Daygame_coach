@@ -8,10 +8,8 @@ import type { GoalViewMode } from "./types"
  * View mode labels and icons for the ViewSwitcher
  */
 export const VIEW_MODE_CONFIG: Record<GoalViewMode, { label: string; description: string }> = {
-  dashboard: { label: "Dashboard", description: "Life area cards with progress overview" },
-  tree: { label: "Tree", description: "Hierarchical goal tree view" },
-  kanban: { label: "Kanban", description: "Time horizon columns" },
-  list: { label: "List", description: "Sortable table view" },
+  standard: { label: "Standard", description: "Life area cards with progress overview" },
+  "time-horizon": { label: "Time Horizon", description: "Goals grouped by time horizon with expandable chains" },
 }
 
 /**
@@ -19,6 +17,7 @@ export const VIEW_MODE_CONFIG: Record<GoalViewMode, { label: string; description
  */
 export const TIME_HORIZONS = [
   "Life",
+  "Multi-Year",
   "This Year",
   "This Quarter",
   "This Month",

@@ -6,6 +6,7 @@ import type { GoalWithProgress, GoalTreeNode, GoalFilterState } from "./types"
 
 /**
  * Build a hierarchical goal tree from a flat array. O(n) algorithm.
+ * Detects cycles and self-references — orphaned nodes become roots.
  */
 export function buildGoalTree(goals: GoalWithProgress[]): GoalTreeNode[] {
   const nodeMap = new Map<string, GoalTreeNode>()
@@ -15,10 +16,34 @@ export function buildGoalTree(goals: GoalWithProgress[]): GoalTreeNode[] {
     nodeMap.set(goal.id, { ...goal, children: [] })
   }
 
+  // Detect cycles: walk parent chain, if we revisit a node it's a cycle
+  const safeParent = new Map<string, string | null>()
+  for (const goal of goals) {
+    if (!goal.parent_goal_id || !nodeMap.has(goal.parent_goal_id)) {
+      safeParent.set(goal.id, null)
+      continue
+    }
+    if (goal.parent_goal_id === goal.id) {
+      safeParent.set(goal.id, null)
+      continue
+    }
+    const visited = new Set<string>([goal.id])
+    let ancestor = goal.parent_goal_id
+    let hasCycle = false
+    while (ancestor && nodeMap.has(ancestor)) {
+      if (visited.has(ancestor)) { hasCycle = true; break }
+      visited.add(ancestor)
+      const ancestorGoal = goals.find((g) => g.id === ancestor)
+      ancestor = ancestorGoal?.parent_goal_id ?? null
+    }
+    safeParent.set(goal.id, hasCycle ? null : goal.parent_goal_id)
+  }
+
   for (const goal of goals) {
     const node = nodeMap.get(goal.id)!
-    if (goal.parent_goal_id && nodeMap.has(goal.parent_goal_id)) {
-      nodeMap.get(goal.parent_goal_id)!.children.push(node)
+    const parentId = safeParent.get(goal.id)
+    if (parentId && nodeMap.has(parentId)) {
+      nodeMap.get(parentId)!.children.push(node)
     } else {
       roots.push(node)
     }
@@ -128,7 +153,7 @@ export function deriveTimeHorizon(goal: GoalWithProgress): string {
     const targetYear = target.getFullYear()
 
     if (targetYear - thisYear > 5) return "Life"
-    if (targetYear > thisYear) return "This Year"
+    if (targetYear > thisYear) return "Multi-Year"
 
     const thisQuarter = Math.floor(now.getMonth() / 3)
     const targetQuarter = Math.floor(target.getMonth() / 3)

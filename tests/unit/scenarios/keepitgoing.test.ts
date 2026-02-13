@@ -300,9 +300,9 @@ describe("Rubric Integration: no death spiral on neutral scores", () => {
       context = { ...context, ...result, turnCount: context.turnCount + 1 }
     }
 
-    // score 5 → delta +1 each turn, so 4 + 3 = 7 (capped at 6 for turn ≤2, 7 for turn ≤4)
-    // Turn 1: 4+1=5, capped at 6 → 5; Turn 2: 5+1=6, capped at 6 → 6; Turn 3: 6+1=7, capped at 7 → 7
-    expect(context.interestLevel).toBeGreaterThanOrEqual(6)
+    // score 5 → +1 each turn, momentum bonus on turn 3 (streak=3) → extra +1
+    // Turn 1: 4+1=5 (cap 6); Turn 2: 5+1=6 (cap 6); Turn 3: 6+1+1=8 (cap 7) → 7
+    expect(context.interestLevel).toBe(7)
     expect(context.isEnded).toBe(false)
     expect(context.exitRisk).toBe(0) // exitRisk should stay at 0 (decay keeps it floored)
   })
@@ -317,5 +317,90 @@ describe("Rubric Integration: no death spiral on neutral scores", () => {
     // score 5 → +1 interest, question tag → 0/0, neutral quality → 0 exitRisk, decay → -1 exitRisk
     expect(result.interestLevel).toBe(5) // 4 + 1 = 5
     expect(result.exitRisk).toBe(0) // 0 + 0 + (-1) = -1, clamped to 0
+  })
+})
+
+describe("Momentum Bonus (neutral streak)", () => {
+  it("no bonus on first 2 consecutive neutral turns", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    // Skip past pacing caps: set turnCount high and interest at 6
+    context = { ...context, turnCount: 6, interestLevel: 6 }
+
+    // Turn 1: streak 0→1, no bonus
+    const r1 = updateInterestFromRubric(context, { score: 5, quality: "neutral", tags: [] })
+    expect(r1.neutralStreak).toBe(1)
+    expect(r1.interestLevel).toBe(7) // 6 + 1 base
+
+    // Turn 2: streak 1→2, no bonus
+    context = { ...context, ...r1, turnCount: 7 }
+    const r2 = updateInterestFromRubric(context, { score: 5, quality: "neutral", tags: [] })
+    expect(r2.neutralStreak).toBe(2)
+    expect(r2.interestLevel).toBe(8) // 7 + 1 base
+  })
+
+  it("gives +1 bonus on 3rd consecutive neutral turn", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 6, interestLevel: 6, neutralStreak: 2 }
+
+    const result = updateInterestFromRubric(context, { score: 5, quality: "neutral", tags: [] })
+    expect(result.neutralStreak).toBe(3)
+    // 6 + 1 (base) + 1 (momentum) = 8
+    expect(result.interestLevel).toBe(8)
+  })
+
+  it("streak resets on score ≤ 4", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 6, interestLevel: 6, neutralStreak: 2 }
+
+    const result = updateInterestFromRubric(context, { score: 4, quality: "neutral", tags: [] })
+    expect(result.neutralStreak).toBe(0)
+  })
+
+  it("momentum bonus only applies to score 5-6 (not 7+)", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 6, interestLevel: 6, neutralStreak: 2 }
+
+    // Score 7 → streak continues but no momentum bonus (already good)
+    const result = updateInterestFromRubric(context, { score: 7, quality: "positive", tags: [] })
+    expect(result.neutralStreak).toBe(3)
+    // 6 + 1 (base, score 7-8 delta) = 7, no extra momentum
+    expect(result.interestLevel).toBe(7)
+  })
+})
+
+describe("Phase-aware floor (invest/close)", () => {
+  it("score 3-4 in invest phase gives delta 0 instead of -1", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 14, conversationPhase: "invest", interestLevel: 7 }
+
+    const result = updateInterestFromRubric(context, { score: 3, quality: "deflect", tags: [] })
+    // Without phase floor: 7 + (-1) = 6. With floor: delta clamped to 0 → 7
+    expect(result.interestLevel).toBe(7)
+  })
+
+  it("score 3-4 in close phase gives delta 0 instead of -1", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 20, conversationPhase: "close", interestLevel: 8 }
+
+    const result = updateInterestFromRubric(context, { score: 4, quality: "neutral", tags: [] })
+    expect(result.interestLevel).toBe(8)
+  })
+
+  it("score 3-4 in hook phase still drops interest (no floor)", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 2, conversationPhase: "hook", interestLevel: 5 }
+
+    const result = updateInterestFromRubric(context, { score: 3, quality: "deflect", tags: [] })
+    // No floor: 5 + (-1) = 4
+    expect(result.interestLevel).toBe(4)
+  })
+
+  it("score 1-2 still drops interest even in invest phase", () => {
+    let context = generateKeepItGoingScenario("test-seed", "en")
+    context = { ...context, turnCount: 14, conversationPhase: "invest", interestLevel: 7 }
+
+    const result = updateInterestFromRubric(context, { score: 2, quality: "skeptical", tags: [] })
+    // score 1-2 → delta -2, floor only applies to score 3-4
+    expect(result.interestLevel).toBe(5)
   })
 })

@@ -46,6 +46,8 @@ export interface KeepItGoingContext {
   exitRisk: number
   /** Difficulty notch: -1 = easier, 0 = realistic, 1 = harder */
   realismNotch: -1 | 0 | 1
+  /** Consecutive turns scoring 5+ (for momentum bonus) */
+  neutralStreak: number
   /** Whether the conversation has ended (she left) */
   isEnded: boolean
   /** Reason the conversation ended, if applicable */
@@ -69,6 +71,10 @@ export interface EvalResult {
   feedback: string
   quality: ResponseQuality
   tags: string[]
+  /** trajectory_score from prompt_3+: her current interest level based on full conversation */
+  trajectoryScore?: number
+  /** trajectory_signals from prompt_3+: explanation of trajectory assessment */
+  trajectorySignals?: string
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

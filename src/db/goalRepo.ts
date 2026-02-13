@@ -473,6 +473,7 @@ export async function reorderGoals(
 
 /**
  * Build a goal tree from flat rows. O(n) algorithm.
+ * Detects cycles and self-references — orphaned nodes become roots.
  */
 function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
   const nodeMap = new Map<string, GoalTreeNode>()
@@ -483,11 +484,37 @@ function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
     nodeMap.set(goal.id, { ...goal, children: [] })
   }
 
-  // Link parents → children
+  // Detect cycles: walk parent chain, if we revisit a node it's a cycle
+  const safeParent = new Map<string, string | null>()
+  for (const goal of goals) {
+    if (!goal.parent_goal_id || !nodeMap.has(goal.parent_goal_id)) {
+      safeParent.set(goal.id, null)
+      continue
+    }
+    // Self-reference check
+    if (goal.parent_goal_id === goal.id) {
+      safeParent.set(goal.id, null)
+      continue
+    }
+    // Walk up the parent chain to detect cycles
+    const visited = new Set<string>([goal.id])
+    let ancestor = goal.parent_goal_id
+    let hasCycle = false
+    while (ancestor && nodeMap.has(ancestor)) {
+      if (visited.has(ancestor)) { hasCycle = true; break }
+      visited.add(ancestor)
+      const ancestorGoal = goals.find((g) => g.id === ancestor)
+      ancestor = ancestorGoal?.parent_goal_id ?? null
+    }
+    safeParent.set(goal.id, hasCycle ? null : goal.parent_goal_id)
+  }
+
+  // Link parents → children using cycle-safe parent references
   for (const goal of goals) {
     const node = nodeMap.get(goal.id)!
-    if (goal.parent_goal_id && nodeMap.has(goal.parent_goal_id)) {
-      nodeMap.get(goal.parent_goal_id)!.children.push(node)
+    const parentId = safeParent.get(goal.id)
+    if (parentId && nodeMap.has(parentId)) {
+      nodeMap.get(parentId)!.children.push(node)
     } else {
       roots.push(node)
     }

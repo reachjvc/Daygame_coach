@@ -7,9 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Columns2, Loader2, Target } from "lucide-react"
 import { ViewSwitcher } from "@/src/goals/components/views/ViewSwitcher"
 import { DashboardView } from "@/src/goals/components/views/DashboardView"
-import { TreeView } from "@/src/goals/components/views/TreeView"
-import { KanbanView } from "@/src/goals/components/views/KanbanView"
-import { ListView } from "@/src/goals/components/views/ListView"
+import { TimeHorizonView } from "@/src/goals/components/views/TimeHorizonView"
 import { buildGoalTree } from "@/src/goals/goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode } from "@/src/goals/types"
 
@@ -100,20 +98,16 @@ function RenderView({
   onEdit: (goal: GoalWithProgress) => void
 }) {
   switch (mode) {
-    case "dashboard":
+    case "standard":
       return <DashboardView goals={goals} allGoals={goals} tree={tree} onIncrement={onIncrement} onReset={onReset} onEdit={onEdit} />
-    case "tree":
-      return <TreeView tree={tree} allGoals={goals} onIncrement={onIncrement} onReset={onReset} onEdit={onEdit} />
-    case "kanban":
-      return <KanbanView goals={goals} allGoals={goals} onIncrement={onIncrement} onReset={onReset} onEdit={onEdit} />
-    case "list":
-      return <ListView goals={goals} allGoals={goals} onIncrement={onIncrement} onReset={onReset} onEdit={onEdit} />
+    case "time-horizon":
+      return <TimeHorizonView goals={goals} allGoals={goals} tree={tree} onIncrement={onIncrement} onReset={onReset} onEdit={onEdit} />
   }
 }
 
 export default function GoalsViewsTestPage() {
-  const [viewMode, setViewMode] = useState<GoalViewMode>("dashboard")
-  const [rightViewMode, setRightViewMode] = useState<GoalViewMode>("tree")
+  const [viewMode, setViewMode] = useState<GoalViewMode>("standard")
+  const [rightViewMode, setRightViewMode] = useState<GoalViewMode>("time-horizon")
   const [sideBySide, setSideBySide] = useState(false)
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [tree, setTree] = useState<GoalTreeNode[]>([])
@@ -184,7 +178,7 @@ export default function GoalsViewsTestPage() {
             <h1 className="text-3xl font-bold">Goals Views Comparison</h1>
           </div>
           <p className="text-muted-foreground">
-            Compare all 4 goal view layouts side by side.
+            Compare Standard and Time Horizon views side by side.
           </p>
         </div>
 

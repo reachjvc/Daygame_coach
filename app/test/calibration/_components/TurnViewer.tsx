@@ -37,9 +37,16 @@ export function TurnViewer({ data }: TurnViewerProps) {
           </div>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            {data.summary.turns_scored_7_plus} of {data.summary.total_coach_turns} turns scored 7+
-          </p>
+          <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+            <span>{data.summary.turns_scored_7_plus} of {data.summary.total_coach_turns} turns scored 7+</span>
+            {data.mode && <span>Mode: {data.mode}</span>}
+            {typeof data.summary.mean_absolute_error === "number" && (
+              <span>Line MAE: {data.summary.mean_absolute_error}</span>
+            )}
+            {typeof data.summary.trajectory_mae === "number" && (
+              <span>Trajectory MAE: {data.summary.trajectory_mae} ({data.summary.trajectory_turns} turns)</span>
+            )}
+          </div>
         </CardContent>
       </Card>
 

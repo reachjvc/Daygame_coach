@@ -155,12 +155,14 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
   // Use Claude Code if enabled (no tracking for local CLI)
   if (useClaudeCode()) {
     const fullPrompt = `${EVAL_SYSTEM_PROMPT}\n\n${userPrompt}`
-    const parsed = queryClaudeCodeJSON<EvalResult>(fullPrompt)
+    const parsed = queryClaudeCodeJSON<EvalResult & { line_score?: number; trajectory_score?: number; trajectory_signals?: string }>(fullPrompt)
     return {
-      score: Math.max(1, Math.min(10, parsed.score)),
+      score: Math.max(1, Math.min(10, parsed.line_score ?? parsed.score)),
       feedback: parsed.feedback,
       quality: parsed.quality,
       tags: parsed.tags || [],
+      trajectoryScore: typeof parsed.trajectory_score === "number" ? Math.max(1, Math.min(10, parsed.trajectory_score)) : undefined,
+      trajectorySignals: parsed.trajectory_signals || undefined,
     }
   }
 
@@ -183,7 +185,7 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
     model: anthropic(model),
     system: EVAL_SYSTEM_PROMPT,
     messages: [{ role: "user", content: userPrompt }],
-    maxOutputTokens: 150,
+    maxOutputTokens: 250,
     temperature: 0.3,
   })
 
@@ -232,10 +234,12 @@ Evaluate in ${language === "da" ? "Danish" : "English"}. Score based on likely e
 
   const parsed = JSON.parse(result.text.trim())
   return {
-    score: Math.max(1, Math.min(10, parsed.score)),
+    score: Math.max(1, Math.min(10, parsed.line_score ?? parsed.score)),
     feedback: parsed.feedback,
     quality: parsed.quality as ResponseQuality,
     tags: parsed.tags || [],
+    trajectoryScore: typeof parsed.trajectory_score === "number" ? Math.max(1, Math.min(10, parsed.trajectory_score)) : undefined,
+    trajectorySignals: parsed.trajectory_signals || undefined,
   }
 }
 

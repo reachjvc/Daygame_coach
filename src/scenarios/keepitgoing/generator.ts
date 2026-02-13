@@ -61,6 +61,7 @@ export function generateKeepItGoingScenario(
     interestLevel: RUBRIC.interest.start,
     exitRisk: RUBRIC.exitRisk.start,
     realismNotch: 0,
+    neutralStreak: 0,
     isEnded: false,
     endReason: undefined,
   }
@@ -124,11 +125,14 @@ interface EvalResultForRubric {
   score: number
   quality: string
   tags: string[]
+  /** trajectory_score from prompt_3+: model's direct interest assessment */
+  trajectoryScore?: number
 }
 
 interface InterestUpdate {
   interestLevel: number
   exitRisk: number
+  neutralStreak: number
   isEnded: boolean
   endReason?: string
 }
@@ -141,14 +145,14 @@ export function updateInterestFromRubric(
   context: KeepItGoingContext,
   evalResult: EvalResultForRubric
 ): InterestUpdate {
-  const { score, quality, tags } = evalResult
-  const { interestLevel, exitRisk, realismNotch, turnCount } = context
+  const { score, quality, tags, trajectoryScore } = evalResult
+  const { interestLevel, exitRisk, realismNotch, turnCount, conversationPhase, neutralStreak } = context
 
-  // 1. Base delta from score
-  let interestDelta = getScoreDelta(score)
+  let newInterestLevel: number
   let exitRiskDelta = 0
 
-  // 2. Apply per-tag deltas
+  // ── Exit risk calculation (shared between both modes) ──
+  // Apply per-tag exit risk deltas
   const appliedTags = (tags || [])
     .filter((t) => typeof t === "string")
     .filter((t) => Boolean(getTagEffect(t)))
@@ -156,39 +160,72 @@ export function updateInterestFromRubric(
   for (const tag of appliedTags) {
     const effect = getTagEffect(tag)
     if (effect) {
-      interestDelta += effect.interestDelta
       exitRiskDelta += effect.exitRiskDelta
     }
   }
 
-  // 3. Apply quality → exitRisk mapping
+  // Quality → exitRisk mapping
   exitRiskDelta += getQualityExitRiskDelta(quality)
 
-  // 3b. exitRisk decay: non-negative interactions naturally ease tension
+  // exitRisk decay: non-negative interactions naturally ease tension
   if (quality !== "deflect" && quality !== "skeptical") {
     exitRiskDelta -= 1
   }
 
-  // 4. Apply realism notch bias (harder notch = more exit risk)
+  // Realism notch bias
   exitRiskDelta += realismNotch
 
-  // 5. Calculate new values
-  let newInterestLevel = interestLevel + interestDelta
-  let newExitRisk = exitRisk + exitRiskDelta
+  // ── Interest calculation ──
+  if (typeof trajectoryScore === "number") {
+    // ── Trajectory-grounded mode (prompt_3+) ──
+    // trajectory_score IS the model's interest assessment based on full conversation.
+    // line_score (score) provides a small directional nudge:
+    //   9-10: +1 (outstanding), 7-8: +1 (good), 5-6: 0 (maintains), 3-4: -1 (bad), 1-2: -2 (terrible)
+    const lineDelta = score >= 9 ? 1 : score >= 7 ? 1 : score >= 5 ? 0 : score >= 3 ? -1 : -2
+    newInterestLevel = trajectoryScore + lineDelta
+  } else {
+    // ── Legacy delta mode (prompt_0-2, backward compatible) ──
+    let interestDelta = getScoreDelta(score)
 
-  // 6. Apply pacing caps (can't warm too fast early)
+    // Apply per-tag interest deltas (only in legacy mode)
+    for (const tag of appliedTags) {
+      const effect = getTagEffect(tag)
+      if (effect) {
+        interestDelta += effect.interestDelta
+      }
+    }
+
+    // Phase-aware floor: in invest/close, score 3-4 can't drop interest
+    if ((conversationPhase === "invest" || conversationPhase === "close") && score >= 3 && score <= 4) {
+      interestDelta = Math.max(interestDelta, 0)
+    }
+
+    // Consecutive neutral momentum bonus: 3+ turns of score 5+ → extra +1
+    const newNeutralStreakLegacy = score >= 5 ? (neutralStreak || 0) + 1 : 0
+    if (newNeutralStreakLegacy >= 3 && score >= 5 && score <= 6) {
+      interestDelta += 1
+    }
+
+    newInterestLevel = interestLevel + interestDelta
+  }
+
+  // Neutral streak tracking (for both modes, needed by context)
+  const newNeutralStreak = score >= 5 ? (neutralStreak || 0) + 1 : 0
+
+  // Apply pacing caps (safety valve — can't warm too fast early)
   newInterestLevel = applyPacingCap(newInterestLevel, turnCount + 1)
 
-  // 7. Clamp to valid ranges
+  // Clamp to valid ranges
   newInterestLevel = Math.max(RUBRIC.interest.min, Math.min(RUBRIC.interest.max, newInterestLevel))
-  newExitRisk = Math.max(RUBRIC.exitRisk.min, Math.min(RUBRIC.exitRisk.max, newExitRisk))
+  let newExitRisk = Math.max(RUBRIC.exitRisk.min, Math.min(RUBRIC.exitRisk.max, exitRisk + exitRiskDelta))
 
-  // 8. Check end rules
+  // Check end rules
   const endCheck = checkEndRules(newInterestLevel, newExitRisk, turnCount + 1, quality)
 
   return {
     interestLevel: newInterestLevel,
     exitRisk: newExitRisk,
+    neutralStreak: newNeutralStreak,
     isEnded: endCheck.isEnded,
     endReason: endCheck.endReason,
   }

@@ -146,6 +146,48 @@ describe("buildGoalTree", () => {
     expect(result[1].id).toBe("orphan")
     expect(result[1].children).toEqual([])
   })
+
+  test("should treat self-referencing goal as root (no ghost)", () => {
+    const goals = [
+      createGoalWithProgress({ id: "self-ref", title: "Self Ref", parent_goal_id: "self-ref" }),
+      createGoalWithProgress({ id: "normal", title: "Normal" }),
+    ]
+
+    const result = buildGoalTree(goals)
+
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.id)).toContain("self-ref")
+    expect(result.map((r) => r.id)).toContain("normal")
+  })
+
+  test("should break 2-node cycle and treat both as roots (no ghost)", () => {
+    const goals = [
+      createGoalWithProgress({ id: "a", title: "A", parent_goal_id: "b" }),
+      createGoalWithProgress({ id: "b", title: "B", parent_goal_id: "a" }),
+    ]
+
+    const result = buildGoalTree(goals)
+
+    // Both must appear — neither should be a ghost
+    expect(result).toHaveLength(2)
+    expect(result.map((r) => r.id)).toContain("a")
+    expect(result.map((r) => r.id)).toContain("b")
+  })
+
+  test("should break 3-node cycle and treat all as roots (no ghost)", () => {
+    const goals = [
+      createGoalWithProgress({ id: "a", title: "A", parent_goal_id: "c" }),
+      createGoalWithProgress({ id: "b", title: "B", parent_goal_id: "a" }),
+      createGoalWithProgress({ id: "c", title: "C", parent_goal_id: "b" }),
+    ]
+
+    const result = buildGoalTree(goals)
+
+    expect(result).toHaveLength(3)
+    expect(result.map((r) => r.id)).toContain("a")
+    expect(result.map((r) => r.id)).toContain("b")
+    expect(result.map((r) => r.id)).toContain("c")
+  })
 })
 
 // ============================================================================
@@ -360,8 +402,8 @@ describe("groupGoalsByTimeHorizon", () => {
 
     expect(result["Life"]).toHaveLength(1)
     expect(result["Life"][0].id).toBe("g1")
-    expect(result["This Year"]).toHaveLength(1)
-    expect(result["This Year"][0].id).toBe("g2")
+    expect(result["Multi-Year"]).toHaveLength(1)
+    expect(result["Multi-Year"][0].id).toBe("g2")
 
     vi.useRealTimers()
   })
@@ -489,12 +531,12 @@ describe("deriveTimeHorizon", () => {
       expect(deriveTimeHorizon(goal)).toBe("Life")
     })
 
-    test("should return 'This Year' for target_date in a future year (within 5 years)", () => {
+    test("should return 'Multi-Year' for target_date in a future year (within 5 years)", () => {
       const goal = createGoalWithProgress({
         goal_type: "milestone",
         target_date: "2027-03-01",
       })
-      expect(deriveTimeHorizon(goal)).toBe("This Year")
+      expect(deriveTimeHorizon(goal)).toBe("Multi-Year")
     })
 
     test("should return 'This Quarter' for target_date in later quarter this year", () => {
