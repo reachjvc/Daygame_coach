@@ -197,26 +197,23 @@ If a run is interrupted, you can get:
 
 This must be treated as `FAIL(reason_code=partial_write)` and block downstream processing.
 
-#### 2.2.3 Orchestrator Layout Mismatch (Must Fix for Real Batch Runs)
+#### 2.2.3 Orchestrator Layout Mismatch (Resolved on hardening branch)
 
-The sub-batch orchestrator `scripts/training-data/batch/sub-batch-pipeline` currently assumes:
-- stages 01-05 are nested: `data/<stage>/<source>/<video>/...` (correct)
-- stages 06/06b/06c/07 are **root-flat**: `data/<stage>/*.json` (often incorrect)
+Historical mismatch:
+- stages 01-05 were treated as nested (`data/<stage>/<source>/<video>/...`)
+- stages 06/06b/06c/07 were often treated as root-flat (`data/<stage>/*.json`)
 
-But the stage scripts, when run via `--manifest`, default to **nested outputs**:
-- stage 06: `data/06.video-type/<source>/*.conversations.json`
-- stage 06b: `data/06b.verify/<source>/*.verification.json`
-- stage 06c: `data/06c.patched/<source>/*.conversations.json`
-- stage 07: `data/07.content/<source>/*.enriched.json`
+Current branch behavior:
+- canonical writes for 06/06b/06c/07 now default to source-video:
+  `data/<stage>/<source>/<video_dir>/<stem>.*`
+- discovery remains compatibility-safe during migration across:
+  - source-video (canonical)
+  - source-flat (`data/<stage>/<source>/<stem>.*`)
+  - root-flat (`data/<stage>/<stem>.*`)
+- `sub-batch-pipeline --view` now resolves symlink roots and surfaces mixed-layout artifacts for 06/06b/06c/07.
 
-Impact:
-- `--status` may still work (it uses recursive `find`), but
-- historically, `--view` could miss artifacts in mixed layouts (especially when stage dirs were symlinks); this is now fixed for 06/06b/06c/07 by resolving symlink roots and scanning source-flat + root-flat fallbacks.
-
-Plan requirement:
-- Minimum (small change): teach `--view` discovery to look under `data/<stage>/<source>/` for 06/06b/06c/07 (source-flat support). (Implemented)
-- Preferred (long-term consistency): migrate 06/06b/06c/07 outputs to source-video layout and then treat them as nested stages in view logic.
-- Avoid: forcing everything back to root-flat just to satisfy `--view` (increases collisions and breaks per-source isolation).
+Remaining requirement:
+- keep compatibility readers in place until legacy source-flat/root-flat artifacts are retired.
 
 ### 2.3 Confidence Thresholds (06c.patch)
 
@@ -882,10 +879,11 @@ Missing:
   - The script remaps those indices for `techniques_used[].segment` and `turn_phases[].segment`, but **does not** remap `low_quality_segments[].segment` or `transcript_artifacts[].segment_index`.
   - Plan: include global `segments[].id` in the prompt (or extend remapping) so transcript-quality evidence points to real segment ids deterministically.
 - verification gate robustness:
-  - Stage 07 currently expects 06b reports at `data/06b.verify/<source>/<stem>.verification.json`.
-  - If 06b output is written root-flat (`data/06b.verify/*.verification.json`), Stage 07 will incorrectly block videos as "no verification found".
-  - If we migrate 06b outputs to source-video layout (`data/06b.verify/<source>/<video_dir>/<stem>.verification.json`), Stage 07 must mirror the input relative path (or search recursively) instead of only checking the source root.
-  - Plan: enforce canonical layout for 06b (preferred) and implement a robust verification finder consistent with 06c's `find_verification_for`.
+  - historical issue: Stage 07 originally assumed source-flat verification lookups and could miss root-flat artifacts.
+  - current behavior: Stage 07 verification lookup is layout-compatible (canonical source-video + legacy source-flat/root-flat).
+  - `reverify_patched` now requires baseline `06b.verify` verdicts and then applies `06b.reverify` gating (`APPROVE|FLAG` pass; `REJECT` block).
+  - canonical 06b path target is source-video:
+    `data/06b.verify/<source>/<video_dir>/<stem>.verification.json`.
   - No silent skips: when Stage 07 blocks a video due to verification status, it should still emit a stage report with `status=FAIL` and `reason_code=upstream_gate_blocked` (and include the upstream verdict + verification path in `details`).
 
 ### 8.10 Cross-Stage (06/06c <-> 07)
@@ -903,12 +901,12 @@ Indexing contract to clarify (important for validators and chunker correctness):
 Evidence:
 - `cross_stage.report.json` per video and a batch rollup.
 
-Implementation notes (current `validate_cross_stage.py` issues to fix):
-- Pair discovery currently assumes Stage 06/06c outputs live under `data/06c.patched/<source>/...` and silently ignores root-flat artifacts (no `<source>/` dir).
-- In `--all/--source` mode, `video_id` labels are currently derived from filename stems rather than `s06_data["video_id"]` (confusing in reports).
-- Conversation coverage checks currently rely on `s06_data["conversations"]`; they should derive conversation ids from `s06_data["segments"]` (ground truth), especially because 06c can change `segments[].conversation_id`.
-- Add a check that each `turn_phases[].segment` refers to a real `segments[].id` in Stage 06/06c, and that the referenced segment’s `conversation_id` matches the enrichment’s `conversation_id`.
-- Add a check that `turn_phases` coverage is reasonable (e.g., labels exist for most segments in the conversation), otherwise warn.
+Implementation notes (current `validate_cross_stage.py` behavior on this branch):
+- Pair discovery is layout-compatible for root-flat + source-flat + source-video artifacts (with manifest/source coverage diagnostics).
+- `video_id` labels prefer payload `video_id` and only fall back to filename stems when missing.
+- Conversation coverage derives ids from Stage 06/06c `segments[]` (ground truth), not summary `conversations[]`.
+- Each `turn_phases[].segment`, `techniques_used[].segment`, and transcript-quality segment reference is validated against Stage 06 `segments[].id` and conversation alignment.
+- Phase coverage sanity checks now warn when a conversation has turn phases that do not reference its own segments.
 
 ### 8.11 Stage 08 (Taxonomy Gate)
 

@@ -3,7 +3,7 @@
 # Videos: 7
 #
 # Purpose:
-# - Small but diverse canary set for fast end-to-end LLM stage testing (06b.verify -> 06c.patch -> 07.content)
+# - Small but diverse canary set for fast end-to-end LLM stage testing (06b.verify -> 06c.patch -> 06b.reverify -> 07.content in strict mode)
 # - Intended to catch regressions early without burning large Claude quota
 # - Not a permanent evaluation set: expand/rotate once the loop is stable
 #

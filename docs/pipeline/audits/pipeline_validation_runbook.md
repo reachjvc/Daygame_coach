@@ -41,9 +41,9 @@ git worktree add ../daygame-coach-pipeline-validation-hardening pipeline-validat
 `CANARY.1` is a 7-video diverse canary set meant to be cheap and fast.
 
 Expected right now (after a successful run):
-- 06b outputs: `data/06b.verify/<source>/*.verification.json`
-- 06c outputs: `data/06c.patched/<source>/*.conversations.json`
-- 07 outputs:  `data/07.content/<source>/*.enriched.json` and `*.enriched.validation.json`
+- 06b outputs: `data/06b.verify/<source>/<video_dir>/<stem>.verification.json`
+- 06c outputs: `data/06c.patched/<source>/<video_dir>/<stem>.conversations.json`
+- 07 outputs:  `data/07.content/<source>/<video_dir>/<stem>.enriched.json` and `.enriched.validation.json`
 - 09 outputs:  `data/09.chunks/<source>/*.chunks.json` and `data/09.chunks/.chunk_state.json`
 - Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
 
@@ -123,7 +123,7 @@ Notes:
 - `07.content` blocks `REJECT` by default (unless `--verification-gate-policy allow_flag` and patch-clean salvage applies). For debugging/evaluation you can bypass the 06b gate:
 
 ```bash
-./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model opus
+./scripts/training-data/07.content --input data/06c.patched/<source>/<video_dir>/<stem>.conversations.json --skip-verification --overwrite --model opus
 ```
 
 If a `REJECT` video was patched cleanly by `06c.patch` (fixes applied, `flags_not_fixed_count=0`), Stage 07 will allow it under the same explicit waiver as `FLAG` by passing `--verification-gate-policy allow_flag` (or the legacy alias `--allow-flag`).
