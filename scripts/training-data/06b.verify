@@ -1293,11 +1293,62 @@ def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "06b.verify"
 
 
-def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
+def extract_video_ids_from_paths(paths: List[Path]) -> Set[str]:
+    ids: Set[str] = set()
+    for path in paths:
+        video_id = extract_video_id(str(path))
+        if re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+            ids.add(video_id)
+    return ids
+
+
+def compute_output_path(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
     stem = input_path.stem
     if stem.endswith(".conversations"):
         stem = stem[:-len(".conversations")]
-    return output_dir / f"{stem}.verification.json"
+    filename = f"{stem}.verification.json"
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / filename
+        except ValueError:
+            pass
+    return output_dir / filename
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path(input_path, preferred_output_dir, input_root=input_root)
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
@@ -1341,6 +1392,13 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06.video-type, or data/test/06.video-type with --test)"
+        ),
+    )
+    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/06b.verify/)"
     )
@@ -1370,13 +1428,19 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
+        "--allow-reject-verdicts",
+        action="store_true",
+        help="Do not fail the run when one or more videos receive REJECT verdicts",
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging for LLM responses"
     )
     parser.add_argument(
         "--model",
-        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+        default="opus",
+        help="Claude model alias or full name (default: opus)."
     )
 
     args = parser.parse_args()
@@ -1411,7 +1475,9 @@ def main() -> None:
 
     # Route to appropriate mode
     if args.test:
-        _run_directory(test_input_root(), test_output_root(), args)
+        in_root = resolve_root_path(args.input_root, test_input_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+        _run_directory(in_root, out_root, args)
     elif args.manifest:
         _run_manifest(args)
     elif args.input:
@@ -1433,7 +1499,8 @@ def _run_input(args) -> None:
 
     if input_path.is_file():
         out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path(input_path, out_dir)
+        in_base = resolve_root_path(args.input_root, input_root())
+        output_path = compute_output_path(input_path, out_dir, input_root=in_base)
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
@@ -1452,25 +1519,32 @@ def _run_sources(args) -> None:
     if not sources_path.exists():
         raise SystemExit(f"Sources file not found: {sources_path}")
 
+    in_base = resolve_root_path(args.input_root, input_root())
     out_base = Path(args.output) if args.output else output_root()
     total_files = 0
     total_issues = 0
 
     for src_name, _ in parse_sources_file(sources_path):
-        src_in_dir = input_root() / src_name
+        src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no input output under {in_base}")
             continue
 
         src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
 
         for input_file in files:
-            output_file = compute_output_path(input_file, src_out_dir)
-            if output_file.exists() and not args.overwrite:
+            preferred_output = compute_output_path(input_file, src_out_dir, input_root=src_in_dir)
+            existing_output = find_existing_output_path(
+                input_file,
+                src_out_dir,
+                output_root_dir=out_base,
+                input_root=src_in_dir,
+            )
+            if existing_output and not args.overwrite:
                 continue
             try:
-                result = verify_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
+                result = verify_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
                 total_issues += result.get("issues", 0)
                 total_files += 1
             except Exception as e:
@@ -1487,26 +1561,55 @@ def _run_manifest(args) -> None:
     if not manifest_path.exists():
         raise SystemExit(f"Manifest file not found: {manifest_path}")
 
+    in_base = resolve_root_path(args.input_root, input_root())
     out_base = Path(args.output) if args.output else output_root()
     sources_map = load_manifest_sources(manifest_path)
+    root_flat_files: Optional[List[Path]] = None
 
     for src_name, vid_ids in sorted(sources_map.items()):
-        src_in_dir = input_root() / src_name
-        if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
-            continue
+        src_in_dir = in_base / src_name
+
+        in_dir_for_state = src_in_dir
+        src_files: List[Path] = []
+        if src_in_dir.exists():
+            src_files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+
+        covered_ids = extract_video_ids_from_paths(src_files)
+        missing_vid_ids = [vid for vid in vid_ids if vid not in covered_ids]
+
+        fallback_files: List[Path] = []
+        if missing_vid_ids:
+            if root_flat_files is None:
+                root_flat_files = find_input_files(in_base)
+            fallback_files = [
+                path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
+                if path not in src_files
+            ]
+            if fallback_files:
+                print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {in_base}")
+                if not src_in_dir.exists():
+                    in_dir_for_state = in_base
+
+        files = src_files + fallback_files
+        if not src_in_dir.exists() and files:
+            in_dir_for_state = in_base
 
         src_out_dir = out_base / src_name
-        files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
         if not files:
             print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
             continue
 
         print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
-        _run_directory_with_files(files, src_in_dir, src_out_dir, args)
+        _run_directory_with_files(files, in_dir_for_state, src_out_dir, args, output_root_dir=out_base)
 
 
-def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, args) -> None:
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args,
+    output_root_dir: Optional[Path] = None,
+) -> None:
     """Process a specific list of files."""
     if not files:
         return
@@ -1525,15 +1628,24 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
     verdicts: Dict[str, int] = {"APPROVE": 0, "FLAG": 0, "REJECT": 0}
 
     for input_file in files:
-        file_key = str(input_file.relative_to(in_dir))
+        try:
+            file_key = str(input_file.relative_to(in_dir))
+        except ValueError:
+            file_key = input_file.name
 
         if file_key in state.completed_files and not args.overwrite:
             skipped += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root=in_dir,
+        )
 
-        if output_file.exists() and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
@@ -1543,7 +1655,7 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
         save_state(state_path, state)
 
         try:
-            result = verify_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
+            result = verify_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
             processed += 1
             consecutive_failures = 0
 
@@ -1585,13 +1697,15 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
     if reject_count > 0:
         print(f"\n{LOG_PREFIX} WARNING: {reject_count} video(s) received REJECT verdict")
         print(f"{LOG_PREFIX} Review verification reports before proceeding to stage 07")
-        sys.exit(1)
+        if not args.allow_reject_verdicts:
+            sys.exit(1)
 
 
 def _run_named_source(args) -> None:
     """Run for a named source (from pipeline: ./06b.verify source_name url)."""
     name = args.name
-    in_dir = input_root() / name
+    in_base = resolve_root_path(args.input_root, input_root())
+    in_dir = in_base / name
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 

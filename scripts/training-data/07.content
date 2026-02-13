@@ -2631,6 +2631,10 @@ def verification_root() -> Path:
     return repo_root() / "data" / "06b.verify"
 
 
+def reverify_root() -> Path:
+    return repo_root() / "data" / "06b.reverify"
+
+
 def input_root() -> Path:
     return repo_root() / "data" / "06c.patched"
 
@@ -2649,6 +2653,10 @@ def test_output_root() -> Path:
 
 def test_verification_root() -> Path:
     return repo_root() / "data" / "test" / "06b.verify"
+
+
+def test_reverify_root() -> Path:
+    return repo_root() / "data" / "test" / "06b.reverify"
 
 
 def extract_video_stem(input_path: Path) -> str:
@@ -2787,17 +2795,19 @@ def should_process_video(
     input_path: Path,
     source: str,
     verify_root: Path,
+    reverify_verify_root: Optional[Path] = None,
     skip_verification: bool = False,
     gate_policy: str = "approve_only",
 ) -> Tuple[bool, str]:
     """Check if video should be processed based on 06b verification status.
 
     Returns (should_process, reason).
-    APPROVE always proceeds. FLAG proceeds when gate_policy=allow_flag.
-    REJECT is blocked by default, but may be allowed when the Stage 06c patched input includes
-    patch_metadata indicating deterministic fixes were applied and no flags remain (still requires gate_policy=allow_flag).
+    - approve_only: only APPROVE proceeds.
+    - allow_flag: APPROVE + FLAG proceed; REJECT may proceed only when patch-clean salvage is detected.
+    - reverify_patched: require a second verification report from data/06b.reverify and allow only when
+      that second verdict is APPROVE or FLAG.
     """
-    if gate_policy not in {"approve_only", "allow_flag"}:
+    if gate_policy not in {"approve_only", "allow_flag", "reverify_patched"}:
         return False, f"invalid verification gate policy: {gate_policy}"
 
     if skip_verification:
@@ -2808,6 +2818,18 @@ def should_process_video(
 
     if verdict is None:
         return False, f"no 06b verification found at {status.get('path', 'unknown')}"
+    if gate_policy == "reverify_patched":
+        if reverify_verify_root is None:
+            return False, "reverify_patched policy requires reverify root"
+        reverify_status = load_verification_status(input_path, source, reverify_verify_root)
+        reverify_verdict = reverify_status.get("verdict")
+        if reverify_verdict is None:
+            return False, f"no 06b reverify found at {reverify_status.get('path', 'unknown')}"
+        if reverify_verdict == "REJECT":
+            return False, "REVERIFY REJECT verdict - critical issues remain after patching"
+        if reverify_verdict in {"APPROVE", "FLAG"}:
+            return True, f"REVERIFY {reverify_verdict} (allowed by gate policy)"
+        return False, f"unknown reverify verdict: {reverify_verdict}"
     if verdict == "APPROVE":
         return True, "APPROVE"
     if verdict == "FLAG":
@@ -2834,12 +2856,50 @@ def should_process_video(
     return False, f"unknown verdict: {verdict}"
 
 
-def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+def compute_output_path(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
     """Compute output path from input path."""
     stem = input_path.stem
     if stem.endswith(".conversations"):
         stem = stem[:-len(".conversations")]
-    return output_dir / f"{stem}.enriched.json"
+    filename = f"{stem}.enriched.json"
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / filename
+        except ValueError:
+            pass
+    return output_dir / filename
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    """Find existing Stage 07 output across canonical, source-flat, and root-flat layouts."""
+    preferred = compute_output_path(
+        input_path,
+        preferred_output_dir,
+        input_root=input_root,
+    )
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        legacy_root = compute_output_path(input_path, output_root_dir)
+        if legacy_root.exists():
+            return legacy_root
+    return None
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
@@ -2864,7 +2924,13 @@ def find_input_files(in_dir: Path) -> List[Path]:
     return sorted(in_dir.rglob("*.conversations.json"))
 
 
-def _run_named_source(args, verification_gate_policy: str, quarantine_ids: Set[str]) -> None:
+def _run_named_source(
+    args,
+    verification_gate_policy: str,
+    quarantine_ids: Set[str],
+    verify_root_path: Path,
+    reverify_root_path: Path,
+) -> None:
     """Run for a named source (from pipeline: ./07.content source_name url)."""
     name = args.name
     in_dir = input_root() / name
@@ -2895,7 +2961,10 @@ def _run_named_source(args, verification_gate_policy: str, quarantine_ids: Set[s
 
         # Verification gate
         should_process, reason = should_process_video(
-            input_file, name, verification_root(),
+            input_file,
+            name,
+            verify_root_path,
+            reverify_verify_root=reverify_root_path,
             skip_verification=args.skip_verification or args.revalidate,
             gate_policy=verification_gate_policy,
         )
@@ -2904,9 +2973,16 @@ def _run_named_source(args, verification_gate_policy: str, quarantine_ids: Set[s
             skipped_verification += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
-        if not args.revalidate and output_file.exists() and not args.overwrite:
+        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            out_dir.parent,
+            input_root=in_dir,
+        )
+        if not args.revalidate and existing_output and not args.overwrite:
             continue
+        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
         if args.revalidate:
             result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
         else:
@@ -2982,12 +3058,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--verification-gate-policy",
-        choices=["approve_only", "allow_flag"],
+        choices=["approve_only", "allow_flag", "reverify_patched"],
         default="approve_only",
         help=(
             "Verification gate policy: "
             "approve_only=only APPROVE proceeds, "
-            "allow_flag=allow FLAG and patched-clean REJECT"
+            "allow_flag=allow FLAG and patched-clean REJECT, "
+            "reverify_patched=require 06b.verify + 06b.reverify, and allow only when reverify verdict is APPROVE/FLAG"
         ),
     )
     parser.add_argument(
@@ -3002,7 +3079,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+        default="opus",
+        help="Claude model alias or full name (default: opus)."
     )
 
     args = parser.parse_args()
@@ -3042,14 +3120,16 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    # Determine input/output paths and verification root
-    verify_root = verification_root()  # default
+    # Determine input/output paths and verification roots
+    verify_root = verification_root()
+    reverify_verify_root = reverify_root()
     is_test_mode = False
 
     if args.test:
         in_dir = test_input_root()
         out_dir = test_output_root()
         verify_root = test_verification_root()
+        reverify_verify_root = test_reverify_root()
         is_test_mode = True
     elif args.input:
         input_path = Path(args.input)
@@ -3062,7 +3142,12 @@ def main() -> None:
             # Single file mode - extract source from parent directory
             source_name = input_path.parent.name
             out_dir = Path(args.output) if args.output else output_root()
-            output_path = compute_output_path(input_path, out_dir)
+            preferred_output = compute_output_path(input_path, out_dir, input_root=input_root())
+            existing_output = find_existing_output_path(
+                input_path,
+                out_dir,
+                input_root=input_root(),
+            )
 
             quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
             if quarantine_reason:
@@ -3071,7 +3156,10 @@ def main() -> None:
 
             # Verification gate
             should_process, reason = should_process_video(
-                input_path, source_name, verify_root,
+                input_path,
+                source_name,
+                verify_root,
+                reverify_verify_root=reverify_verify_root,
                 skip_verification=args.skip_verification or args.revalidate,
                 gate_policy=verification_gate_policy,
             )
@@ -3083,10 +3171,11 @@ def main() -> None:
                 )
                 return
 
-            if not args.revalidate and output_path.exists() and not args.overwrite:
-                print(f"[07.content] Output exists, skipping: {output_path}")
+            if not args.revalidate and existing_output and not args.overwrite:
+                print(f"[07.content] Output exists, skipping: {existing_output}")
                 return
 
+            output_path = existing_output if (args.revalidate and existing_output) else preferred_output
             if args.revalidate:
                 result = revalidate_video_file(input_path, output_path, dry_run=args.dry_run)
             else:
@@ -3112,15 +3201,34 @@ def main() -> None:
         sources_map = load_manifest_sources(manifest_path)
         total_convs = 0
         total_enriched = 0
+        root_flat_files: Optional[List[Path]] = None
 
         for src_name, vid_ids in sorted(sources_map.items()):
             src_in_dir = input_root() / src_name
-            if not src_in_dir.exists():
-                print(f"[07.content] Skipping {src_name}: no 06c.patched output")
-                continue
 
             src_out_dir = out_base / src_name
-            files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+            src_files: List[Path] = []
+            if src_in_dir.exists():
+                src_files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+
+            covered_ids = {
+                vid for vid in (extract_video_id_from_path(path) for path in src_files)
+                if vid is not None
+            }
+            missing_vid_ids = [vid for vid in vid_ids if vid not in covered_ids]
+
+            fallback_files: List[Path] = []
+            if missing_vid_ids:
+                if root_flat_files is None:
+                    root_flat_files = find_input_files(input_root())
+                fallback_files = [
+                    path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
+                    if path not in src_files
+                ]
+                if fallback_files:
+                    print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {input_root()}")
+
+            files = src_files + fallback_files
             if not files:
                 print(f"[07.content] Skipping {src_name}: no manifest videos found in input")
                 continue
@@ -3137,7 +3245,10 @@ def main() -> None:
 
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file, src_name, verify_root,
+                    input_file,
+                    src_name,
+                    verify_root,
+                    reverify_verify_root=reverify_verify_root,
                     skip_verification=args.skip_verification or args.revalidate,
                     gate_policy=verification_gate_policy,
                 )
@@ -3146,9 +3257,20 @@ def main() -> None:
                     skipped_verification += 1
                     continue
 
-                output_file = compute_output_path(input_file, src_out_dir)
-                if not args.revalidate and output_file.exists() and not args.overwrite:
+                preferred_output = compute_output_path(
+                    input_file,
+                    src_out_dir,
+                    input_root=src_in_dir,
+                )
+                existing_output = find_existing_output_path(
+                    input_file,
+                    src_out_dir,
+                    out_base,
+                    input_root=src_in_dir,
+                )
+                if not args.revalidate and existing_output and not args.overwrite:
                     continue
+                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
                 if args.revalidate:
                     result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
                 else:
@@ -3197,7 +3319,10 @@ def main() -> None:
 
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file, src_name, verify_root,
+                    input_file,
+                    src_name,
+                    verify_root,
+                    reverify_verify_root=reverify_verify_root,
                     skip_verification=args.skip_verification or args.revalidate,
                     gate_policy=verification_gate_policy,
                 )
@@ -3206,9 +3331,20 @@ def main() -> None:
                     skipped_verification += 1
                     continue
 
-                output_file = compute_output_path(input_file, src_out_dir)
-                if not args.revalidate and output_file.exists() and not args.overwrite:
+                preferred_output = compute_output_path(
+                    input_file,
+                    src_out_dir,
+                    input_root=src_in_dir,
+                )
+                existing_output = find_existing_output_path(
+                    input_file,
+                    src_out_dir,
+                    out_base,
+                    input_root=src_in_dir,
+                )
+                if not args.revalidate and existing_output and not args.overwrite:
                     continue
+                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
                 if args.revalidate:
                     result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
                 else:
@@ -3229,7 +3365,13 @@ def main() -> None:
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     elif args.name:
-        _run_named_source(args, verification_gate_policy, quarantine_ids)
+        _run_named_source(
+            args,
+            verification_gate_policy,
+            quarantine_ids,
+            verify_root,
+            reverify_verify_root,
+        )
         return
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
@@ -3278,7 +3420,10 @@ def main() -> None:
 
         # Verification gate
         should_process, reason = should_process_video(
-            input_file, source_name, verify_root,
+            input_file,
+            source_name,
+            verify_root,
+            reverify_verify_root=reverify_verify_root,
             skip_verification=args.skip_verification or args.revalidate,
             gate_policy=verification_gate_policy,
         )
@@ -3287,13 +3432,20 @@ def main() -> None:
             skipped_verification += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            input_root=in_dir,
+        )
 
-        if not args.revalidate and output_file.exists() and not args.overwrite:
+        if not args.revalidate and existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
             continue
+
+        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
 
         # Mark as in progress
         state.in_progress = file_key

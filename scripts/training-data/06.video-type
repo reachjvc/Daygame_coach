@@ -56,8 +56,8 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "3.4.0"
-PIPELINE_VERSION = "06.video-type-v3.5.1"  # v3.5.1: add deterministic fragment/opener validation checks
+SCHEMA_VERSION = "3.5.0"
+PIPELINE_VERSION = "06.video-type-v3.5.2"  # v3.5.2: add conversation-level target participation labels
 PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
@@ -1016,11 +1016,50 @@ def process_file(
             conv_segments[conv_id].append(seg)
 
     for conv_id, segs in sorted(conv_segments.items()):
+        target_speaker_ids: Set[str] = set()
+        has_uncertain_roles = False
+        for s in segs:
+            role = str(s.get("speaker_role", "")).strip().lower()
+            if role == "target":
+                speaker_id = str(s.get("speaker_id", "")).strip()
+                if speaker_id:
+                    target_speaker_ids.add(speaker_id)
+            elif role in {"unknown", "collapsed"}:
+                has_uncertain_roles = True
+
+        target_label = "unknown"
+        target_reason = "No reliable target turns detected in this conversation."
+        target_confidence = 0.4
+        if len(target_speaker_ids) >= 2:
+            target_label = "multiple_women"
+            target_reason = (
+                f"Detected target turns from {len(target_speaker_ids)} distinct speaker IDs."
+            )
+            target_confidence = 0.95
+        elif len(target_speaker_ids) == 1:
+            target_label = "single_woman"
+            target_reason = "Detected target turns from one consistent speaker ID."
+            target_confidence = 0.9
+        elif has_uncertain_roles:
+            target_reason = (
+                "Conversation includes unknown/collapsed role segments, so target participation is uncertain."
+            )
+            target_confidence = 0.3
+
+        if target_label == "unknown":
+            review_flags.append(f"conversation_target_unknown: conv {conv_id}")
+
         conversations.append({
             "conversation_id": conv_id,
             "segment_ids": [s["id"] for s in segs],
             "start_time": segs[0]["start"],
             "end_time": segs[-1]["end"],
+            "target_participation": {
+                "label": target_label,
+                "target_speaker_ids": sorted(target_speaker_ids),
+                "confidence": round(target_confidence, 2),
+                "reasoning": target_reason,
+            },
         })
 
     elapsed = time.time() - start_time
@@ -1122,11 +1161,44 @@ def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "06.video-type"
 
 
-def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+def compute_output_path(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
     stem = input_path.stem
     if stem.endswith(".audio_features"):
         stem = stem[:-len(".audio_features")]
-    return output_dir / f"{stem}.conversations.json"
+    filename = f"{stem}.conversations.json"
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / filename
+        except ValueError:
+            pass
+    return output_dir / filename
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path(input_path, preferred_output_dir, input_root=input_root)
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
@@ -1231,7 +1303,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        help="Claude model alias or full name (e.g. sonnet, opus). Only used when calling Claude."
+        default="opus",
+        help="Claude model alias or full name (default: opus)."
     )
 
     args = parser.parse_args()
@@ -1288,7 +1361,7 @@ def _run_input(args) -> None:
 
     if input_path.is_file():
         out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path(input_path, out_dir)
+        output_path = compute_output_path(input_path, out_dir, input_root=input_root())
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
@@ -1321,11 +1394,17 @@ def _run_sources(args) -> None:
         files = find_input_files(src_in_dir)
 
         for input_file in files:
-            output_file = compute_output_path(input_file, src_out_dir)
-            if output_file.exists() and not args.overwrite:
+            preferred_output = compute_output_path(input_file, src_out_dir, input_root=src_in_dir)
+            existing_output = find_existing_output_path(
+                input_file,
+                src_out_dir,
+                output_root_dir=out_base,
+                input_root=src_in_dir,
+            )
+            if existing_output and not args.overwrite:
                 continue
             try:
-                result = process_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
+                result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
                 total_convs += result.get("conversations", 0)
                 total_files += 1
             except Exception as e:
@@ -1360,10 +1439,16 @@ def _run_manifest(args) -> None:
             continue
 
         print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
-        _run_directory_with_files(files, src_in_dir, src_out_dir, args)
+        _run_directory_with_files(files, src_in_dir, src_out_dir, args, output_root_dir=out_base)
 
 
-def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, args) -> None:
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args,
+    output_root_dir: Optional[Path] = None,
+) -> None:
     """Process a specific list of files (used by manifest mode and _run_directory)."""
     if not files:
         return
@@ -1389,9 +1474,15 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
             skipped += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root=in_dir,
+        )
 
-        if output_file.exists() and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
@@ -1401,7 +1492,7 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
         save_state(state_path, state)
 
         try:
-            result = process_file(input_file, output_file, dry_run=args.dry_run, claude_model=args.model)
+            result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
             total_convs += result.get("conversations", 0)
             processed += 1
 

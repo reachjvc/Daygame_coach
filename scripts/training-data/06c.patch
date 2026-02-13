@@ -53,7 +53,7 @@ import sys
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import jsonschema
 
@@ -191,12 +191,48 @@ def _recompute_conversations_summary(
     out: List[Dict[str, Any]] = []
     for cid, segs in sorted(conv_segments.items()):
         base = dict(old_by_id.get(cid) or {})
+        target_speaker_ids: Set[str] = set()
+        has_uncertain_roles = False
+        for seg in segs:
+            role = str(seg.get("speaker_role", "")).strip().lower()
+            if role == "target":
+                speaker_id = str(seg.get("speaker_id", "")).strip()
+                if speaker_id:
+                    target_speaker_ids.add(speaker_id)
+            elif role in {"unknown", "collapsed"}:
+                has_uncertain_roles = True
+
+        target_label = "unknown"
+        target_reason = "No reliable target turns detected in this conversation."
+        target_confidence = 0.4
+        if len(target_speaker_ids) >= 2:
+            target_label = "multiple_women"
+            target_reason = (
+                f"Detected target turns from {len(target_speaker_ids)} distinct speaker IDs."
+            )
+            target_confidence = 0.95
+        elif len(target_speaker_ids) == 1:
+            target_label = "single_woman"
+            target_reason = "Detected target turns from one consistent speaker ID."
+            target_confidence = 0.9
+        elif has_uncertain_roles:
+            target_reason = (
+                "Conversation includes unknown/collapsed role segments, so target participation is uncertain."
+            )
+            target_confidence = 0.3
+
         base["conversation_id"] = cid
         base["segment_ids"] = [
             s.get("id") for s in segs if isinstance(s.get("id"), int)
         ]
         base["start_time"] = segs[0].get("start", 0)
         base["end_time"] = segs[-1].get("end", 0)
+        base["target_participation"] = {
+            "label": target_label,
+            "target_speaker_ids": sorted(target_speaker_ids),
+            "confidence": round(target_confidence, 2),
+            "reasoning": target_reason,
+        }
         out.append(base)
 
     return out
@@ -759,8 +795,51 @@ def compute_output_path(input_path: Path, output_dir: Path) -> Path:
     stem = input_path.stem
     # Ensure the output has .conversations.json extension
     if stem.endswith(".conversations"):
-        return output_dir / f"{stem}.json"
-    return output_dir / f"{stem}.conversations.json"
+        filename = f"{stem}.json"
+    else:
+        filename = f"{stem}.conversations.json"
+    return output_dir / filename
+
+
+def compute_output_path_with_layout(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
+    canonical = compute_output_path(input_path, output_dir)
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / canonical.name
+        except ValueError:
+            pass
+    return canonical
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path_with_layout(
+        input_path,
+        preferred_output_dir,
+        input_root=input_root,
+    )
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
 
 
 def find_verification_for(
@@ -911,7 +990,7 @@ def _run_input(args) -> None:
 
     if input_path.is_file():
         out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path(input_path, out_dir)
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root=s06_root())
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
@@ -953,15 +1032,25 @@ def _run_sources(args) -> None:
         files = find_input_files(src_in_dir)
 
         for input_file in files:
-            output_file = compute_output_path(input_file, src_out_dir)
-            if output_file.exists() and not args.overwrite:
+            preferred_output = compute_output_path_with_layout(
+                input_file,
+                src_out_dir,
+                input_root=src_in_dir,
+            )
+            existing_output = find_existing_output_path(
+                input_file,
+                src_out_dir,
+                output_root_dir=out_base,
+                input_root=src_in_dir,
+            )
+            if existing_output and not args.overwrite:
                 continue
             try:
                 verification_path = find_verification_for(input_file, s06_root(), s06b_root())
                 result = patch_file(
                     input_file,
                     verification_path,
-                    output_file,
+                    preferred_output,
                     dry_run=args.dry_run,
                     allow_reject=args.allow_reject,
                     allow_invalid_verification=args.allow_invalid_verification,
@@ -998,11 +1087,23 @@ def _run_manifest(args) -> None:
             continue
 
         print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
-        _run_directory_with_files(files, src_in_dir, s06b_root(), src_out_dir, args)
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            s06b_root(),
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+        )
 
 
 def _run_directory_with_files(
-    files: List[Path], in_dir: Path, verify_dir: Path, out_dir: Path, args
+    files: List[Path],
+    in_dir: Path,
+    verify_dir: Path,
+    out_dir: Path,
+    args,
+    output_root_dir: Optional[Path] = None,
 ) -> None:
     """Process a specific list of files."""
     if not files:
@@ -1029,9 +1130,19 @@ def _run_directory_with_files(
             skipped += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path_with_layout(
+            input_file,
+            out_dir,
+            input_root=in_dir,
+        )
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root=in_dir,
+        )
 
-        if output_file.exists() and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
@@ -1045,7 +1156,7 @@ def _run_directory_with_files(
             result = patch_file(
                 input_file,
                 verification_path,
-                output_file,
+                preferred_output,
                 dry_run=args.dry_run,
                 allow_reject=args.allow_reject,
                 allow_invalid_verification=args.allow_invalid_verification,
@@ -1094,7 +1205,7 @@ def _run_named_source(args) -> None:
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 
-    verify_dir = s06b_root() / name
+    verify_dir = s06b_root()
     out_dir = Path(args.output) if args.output else output_root() / name
     _run_directory(in_dir, verify_dir, out_dir, args)
 
