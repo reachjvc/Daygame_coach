@@ -59,6 +59,11 @@ This document is the primary long-form pipeline hardening plan/audit for the cur
   - Pass 3 experiment (auto-demote mixed-speaker `other_flags` to `unknown`): regressed (`06b.reverify.pass3 misattr=5`, Stage 07 warnings=`6`).
   - Decision: keep mixed-speaker `other_flag` demotion as **opt-in only** (`06c.patch --apply-mixed-speaker-other-flags`), not default.
   - `06c.patch` also now avoids counting no-op misattribution role changes as fixes (speaker_id-only defects stay explicit in `flags_not_fixed`).
+- Added targeted stress manifest `docs/pipeline/batches/HARDENING.1.txt` (Barcelona, James Marshall, 7 Minute Pull, recurring Coach Kyle cases, and holdout `e2dLEB-AwmA`).
+  - Current harness snapshot on this set (`2026-02-13`, `reverify_patched`): `passed=false`, `errors=4`, `warnings=28`, with key blockers:
+    - `6ImEzB6NhiI`: reverify `REJECT` gate violation.
+    - `IS2SoUgqDLE`: missing 06b.reverify + severe Stage 06/07 conversation index drift warnings.
+    - `e2dLEB-AwmA`: missing 06b/06b.reverify/06c/07 artifacts (good fresh candidate for new-run baseline).
 
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.

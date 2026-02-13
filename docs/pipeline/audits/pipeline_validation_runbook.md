@@ -4,6 +4,7 @@
 **Worktree (current):** `/tmp/daygame-coach-pipeline-validation-hardening` (temporary location; safe, but `/tmp` can be cleaned)  
 **Canary manifest:** `docs/pipeline/batches/CANARY.1.txt`  
 **Holdout manifest:** `docs/pipeline/batches/HOLDOUT.1.txt`
+**Hardening manifest:** `docs/pipeline/batches/HARDENING.1.txt`
 
 This runbook exists so another agent can pick up work without any chat history.
 
@@ -58,6 +59,16 @@ Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
 
 `HOLDOUT.1` is a second manifest intended to be run less frequently.
 Use it to catch regressions that might not appear in `CANARY.1` and to reduce overfitting.
+
+## Hardening Set (HARDENING.1)
+
+`HARDENING.1` is a targeted stress set for patch-loop iteration.
+Current ranked rationale (from existing 06b/06b.reverify/07 artifacts):
+- `iOSpNACA9VI` (Barcelona immersion): high misattribution + boundary pressure.
+- `IS2SoUgqDLE` (James Marshall): repeated high misattribution counts.
+- `nFjdyAHcTgA` (7 Minute Pull): elevated `other_flags` + Stage 07 warnings.
+- `mv2X8Yhg9M0` and `6ImEzB6NhiI`: recurring coach/target attribution ambiguity.
+- `e2dLEB-AwmA`: known problematic holdout reference; currently lacks local 06b/07 artifacts and should be run fresh.
 
 ## Run Naming + History Policy
 
@@ -162,6 +173,11 @@ Examples:
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy reverify_patched --model opus
 ./scripts/training-data/06b.reverify --manifest docs/pipeline/batches/HOLDOUT.1.txt --model opus
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --verification-gate-policy reverify_patched --model opus
+# Hardening stress set:
+./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/HARDENING.1.txt --model opus
+./scripts/training-data/06c.patch    --manifest docs/pipeline/batches/HARDENING.1.txt --allow-reject
+./scripts/training-data/06b.reverify --manifest docs/pipeline/batches/HARDENING.1.txt --model opus
+./scripts/training-data/07.content   --manifest docs/pipeline/batches/HARDENING.1.txt --verification-gate-policy reverify_patched --model opus
 ```
 
 Notes:
