@@ -26,6 +26,9 @@ Can optionally apply limited deterministic `other_flags` fixes:
   - mixed-speaker / run-on transcript artifacts: demote cited segments to speaker_role=unknown
     (enabled only with --apply-mixed-speaker-other-flags)
 
+Legacy compatibility:
+  - backfills/normalizes top-level transcript_confidence when missing/invalid
+
 Flags but does NOT fix (yet):
   - speaker_id-only diarization defects
   - other free-form notes without deterministic segment targets
@@ -70,7 +73,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.7"  # v1.7: no-op misattribution guard + opt-in mixed-speaker other_flag demotion
+PIPELINE_VERSION = "06c.patch-v1.8"  # v1.8: legacy transcript_confidence compatibility normalization
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -242,6 +245,49 @@ def _recompute_conversations_summary(
         out.append(base)
 
     return out
+
+
+def _normalize_legacy_transcript_confidence(conversations_data: Dict[str, Any]) -> List[str]:
+    """Backfill/normalize transcript_confidence for legacy Stage 06 outputs."""
+    repairs: List[str] = []
+    tc = conversations_data.get("transcript_confidence")
+    default_reason = (
+        "Legacy Stage 06 artifact missing/invalid transcript_confidence; "
+        "backfilled by 06c.patch for schema compatibility."
+    )
+
+    if not isinstance(tc, dict):
+        conversations_data["transcript_confidence"] = {
+            "score": 50,
+            "reasoning": default_reason,
+        }
+        repairs.append("transcript_confidence: backfilled missing object (score=50)")
+        return repairs
+
+    score = tc.get("score")
+    if not isinstance(score, int):
+        try:
+            score = int(score)
+        except (TypeError, ValueError):
+            score = 50
+            repairs.append("transcript_confidence: backfilled non-integer score -> 50")
+    if score < 1:
+        score = 1
+        repairs.append("transcript_confidence: raised score to schema minimum (1)")
+    elif score > 100:
+        score = 100
+        repairs.append("transcript_confidence: lowered score to schema maximum (100)")
+
+    reasoning = tc.get("reasoning")
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        reasoning = default_reason
+        repairs.append("transcript_confidence: backfilled missing reasoning")
+
+    conversations_data["transcript_confidence"] = {
+        "score": score,
+        "reasoning": reasoning.strip(),
+    }
+    return repairs
 
 
 # ---------------------------
@@ -714,6 +760,11 @@ def patch_file(
 
     # Deep copy so we don't modify original
     patched = copy.deepcopy(conversations_data)
+    compatibility_repairs = _normalize_legacy_transcript_confidence(patched)
+    if compatibility_repairs:
+        print(f"{LOG_PREFIX}   Compatibility repairs: {len(compatibility_repairs)}")
+        for repair in compatibility_repairs:
+            print(f"{LOG_PREFIX}     {repair}")
 
     if verification_path is None or not verification_path.exists():
         # No verification file — copy unchanged
@@ -723,6 +774,7 @@ def patch_file(
             "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "pipeline_version": PIPELINE_VERSION,
             "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
+            "compatibility_repairs": compatibility_repairs,
             "verification_verdict": None,
             "verification_file": None,
             "fixes_applied": [],
@@ -795,6 +847,7 @@ def patch_file(
         "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "pipeline_version": PIPELINE_VERSION,
         "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
+        "compatibility_repairs": compatibility_repairs,
         "verification_verdict": verdict,
         "verification_file": str(verification_path),
         "verification_schema_valid": verification_schema_valid,
