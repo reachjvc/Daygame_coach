@@ -2659,6 +2659,15 @@ def test_reverify_root() -> Path:
     return repo_root() / "data" / "test" / "06b.reverify"
 
 
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
 def extract_video_stem(input_path: Path) -> str:
     """Extract video stem from input path (remove .conversations suffix)."""
     stem = input_path.stem
@@ -2729,10 +2738,22 @@ def get_quarantine_block_reason(input_path: Path, quarantine_ids: Set[str]) -> O
     return None
 
 
+def infer_source_name(input_path: Path, input_root_path: Optional[Path]) -> str:
+    if input_root_path is not None:
+        try:
+            rel = input_path.relative_to(input_root_path)
+            if rel.parts:
+                return rel.parts[0]
+        except ValueError:
+            pass
+    return input_path.parent.name
+
+
 def _find_verification_for_input(
     input_path: Path,
     source: str,
     verify_root: Path,
+    input_root_hint: Optional[Path] = None,
 ) -> Optional[Path]:
     """Find a matching 06b verification report for a Stage 06c input file.
 
@@ -2744,9 +2765,10 @@ def _find_verification_for_input(
     video_stem = extract_video_stem(input_path)
     verification_name = f"{video_stem}.verification.json"
 
-    # Strategy 1: mirror relative path from input_root() into verify_root
+    # Strategy 1: mirror relative path from input root into verify_root.
+    mirror_root = input_root_hint or input_root()
     try:
-        rel = input_path.parent.relative_to(input_root())
+        rel = input_path.parent.relative_to(mirror_root)
         candidate = verify_root / rel / verification_name
         if candidate.exists():
             return candidate
@@ -2774,12 +2796,22 @@ def _find_verification_for_input(
     return None
 
 
-def load_verification_status(input_path: Path, source: str, verify_root: Path) -> Dict[str, Any]:
+def load_verification_status(
+    input_path: Path,
+    source: str,
+    verify_root: Path,
+    input_root_hint: Optional[Path] = None,
+) -> Dict[str, Any]:
     """Load 06b verification report for a video.
 
     Returns dict with 'verdict' key (APPROVE/FLAG/REJECT or None if not found).
     """
-    verify_path = _find_verification_for_input(input_path, source, verify_root)
+    verify_path = _find_verification_for_input(
+        input_path,
+        source,
+        verify_root,
+        input_root_hint=input_root_hint,
+    )
     if not verify_path:
         expected = verify_root / source / f"{extract_video_stem(input_path)}.verification.json"
         return {"verdict": None, "path": str(expected)}
@@ -2796,6 +2828,7 @@ def should_process_video(
     source: str,
     verify_root: Path,
     reverify_verify_root: Optional[Path] = None,
+    input_root_hint: Optional[Path] = None,
     skip_verification: bool = False,
     gate_policy: str = "approve_only",
 ) -> Tuple[bool, str]:
@@ -2813,7 +2846,12 @@ def should_process_video(
     if skip_verification:
         return True, "verification skipped (--skip-verification)"
 
-    status = load_verification_status(input_path, source, verify_root)
+    status = load_verification_status(
+        input_path,
+        source,
+        verify_root,
+        input_root_hint=input_root_hint,
+    )
     verdict = status.get("verdict")
 
     if verdict is None:
@@ -2821,7 +2859,12 @@ def should_process_video(
     if gate_policy == "reverify_patched":
         if reverify_verify_root is None:
             return False, "reverify_patched policy requires reverify root"
-        reverify_status = load_verification_status(input_path, source, reverify_verify_root)
+        reverify_status = load_verification_status(
+            input_path,
+            source,
+            reverify_verify_root,
+            input_root_hint=input_root_hint,
+        )
         reverify_verdict = reverify_status.get("verdict")
         if reverify_verdict is None:
             return False, f"no 06b reverify found at {reverify_status.get('path', 'unknown')}"
@@ -2930,14 +2973,16 @@ def _run_named_source(
     quarantine_ids: Set[str],
     verify_root_path: Path,
     reverify_root_path: Path,
+    input_root_path: Path,
+    output_root_path: Path,
 ) -> None:
     """Run for a named source (from pipeline: ./07.content source_name url)."""
     name = args.name
-    in_dir = input_root() / name
+    in_dir = input_root_path / name
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 
-    out_dir = Path(args.output) if args.output else output_root() / name
+    out_dir = Path(args.output) if args.output else output_root_path / name
     files = find_input_files(in_dir)
     if not files:
         print(f"[07.content] No .conversations.json files found in: {in_dir}")
@@ -2965,6 +3010,7 @@ def _run_named_source(
             name,
             verify_root_path,
             reverify_verify_root=reverify_root_path,
+            input_root_hint=input_root_path,
             skip_verification=args.skip_verification or args.revalidate,
             gate_policy=verification_gate_policy,
         )
@@ -3019,8 +3065,29 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06c.patched, or data/test/06c.patched with --test)"
+        ),
+    )
+    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/07.content/)"
+    )
+    parser.add_argument(
+        "--verification-root",
+        help=(
+            "Root directory containing Stage 06b verification reports "
+            "(default: data/06b.verify, or data/test/06b.verify with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--reverify-root",
+        help=(
+            "Root directory containing Stage 06b reverify reports "
+            "(default: data/06b.reverify, or data/test/06b.reverify with --test)"
+        ),
     )
     parser.add_argument(
         "--test",
@@ -3120,17 +3187,20 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    # Determine input/output paths and verification roots
-    verify_root = verification_root()
-    reverify_verify_root = reverify_root()
-    is_test_mode = False
+    # Determine input/output paths and verification roots.
+    default_input_root = test_input_root() if args.test else input_root()
+    default_output_root = test_output_root() if args.test else output_root()
+    default_verify_root = test_verification_root() if args.test else verification_root()
+    default_reverify_root = test_reverify_root() if args.test else reverify_root()
+
+    in_root = resolve_root_path(args.input_root, default_input_root)
+    out_root = Path(args.output) if args.output else default_output_root
+    verify_root = resolve_root_path(args.verification_root, default_verify_root)
+    reverify_verify_root = resolve_root_path(args.reverify_root, default_reverify_root)
 
     if args.test:
-        in_dir = test_input_root()
-        out_dir = test_output_root()
-        verify_root = test_verification_root()
-        reverify_verify_root = test_reverify_root()
-        is_test_mode = True
+        in_dir = in_root
+        out_dir = out_root
     elif args.input:
         input_path = Path(args.input)
         if not input_path.exists():
@@ -3139,14 +3209,13 @@ def main() -> None:
             raise SystemExit(f"Input not found: {args.input}")
 
         if input_path.is_file():
-            # Single file mode - extract source from parent directory
-            source_name = input_path.parent.name
-            out_dir = Path(args.output) if args.output else output_root()
-            preferred_output = compute_output_path(input_path, out_dir, input_root=input_root())
+            source_name = infer_source_name(input_path, in_root)
+            out_dir = Path(args.output) if args.output else out_root
+            preferred_output = compute_output_path(input_path, out_dir, input_root=in_root)
             existing_output = find_existing_output_path(
                 input_path,
                 out_dir,
-                input_root=input_root(),
+                input_root=in_root,
             )
 
             quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
@@ -3160,6 +3229,7 @@ def main() -> None:
                 source_name,
                 verify_root,
                 reverify_verify_root=reverify_verify_root,
+                input_root_hint=in_root,
                 skip_verification=args.skip_verification or args.revalidate,
                 gate_policy=verification_gate_policy,
             )
@@ -3189,7 +3259,7 @@ def main() -> None:
             return
 
         in_dir = input_path
-        out_dir = Path(args.output) if args.output else output_root()
+        out_dir = Path(args.output) if args.output else out_root
     elif args.manifest:
         manifest_path = Path(args.manifest)
         if not manifest_path.is_absolute():
@@ -3197,14 +3267,14 @@ def main() -> None:
         if not manifest_path.exists():
             raise SystemExit(f"Manifest file not found: {manifest_path}")
 
-        out_base = Path(args.output) if args.output else output_root()
+        out_base = Path(args.output) if args.output else out_root
         sources_map = load_manifest_sources(manifest_path)
         total_convs = 0
         total_enriched = 0
         root_flat_files: Optional[List[Path]] = None
 
         for src_name, vid_ids in sorted(sources_map.items()):
-            src_in_dir = input_root() / src_name
+            src_in_dir = in_root / src_name
 
             src_out_dir = out_base / src_name
             src_files: List[Path] = []
@@ -3220,13 +3290,13 @@ def main() -> None:
             fallback_files: List[Path] = []
             if missing_vid_ids:
                 if root_flat_files is None:
-                    root_flat_files = find_input_files(input_root())
+                    root_flat_files = find_input_files(in_root)
                 fallback_files = [
                     path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
                     if path not in src_files
                 ]
                 if fallback_files:
-                    print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {input_root()}")
+                    print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {in_root}")
 
             files = src_files + fallback_files
             if not files:
@@ -3249,6 +3319,7 @@ def main() -> None:
                     src_name,
                     verify_root,
                     reverify_verify_root=reverify_verify_root,
+                    input_root_hint=in_root,
                     skip_verification=args.skip_verification or args.revalidate,
                     gate_policy=verification_gate_policy,
                 )
@@ -3295,12 +3366,12 @@ def main() -> None:
         if not sources_path.exists():
             raise SystemExit(f"Sources file not found: {sources_path}")
 
-        out_base = Path(args.output) if args.output else output_root()
+        out_base = Path(args.output) if args.output else out_root
         total_convs = 0
         total_enriched = 0
 
         for src_name, _ in parse_sources_file(sources_path):
-            src_in_dir = input_root() / src_name
+            src_in_dir = in_root / src_name
             if not src_in_dir.exists():
                 print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
@@ -3323,6 +3394,7 @@ def main() -> None:
                     src_name,
                     verify_root,
                     reverify_verify_root=reverify_verify_root,
+                    input_root_hint=in_root,
                     skip_verification=args.skip_verification or args.revalidate,
                     gate_policy=verification_gate_policy,
                 )
@@ -3371,6 +3443,8 @@ def main() -> None:
             quarantine_ids,
             verify_root,
             reverify_verify_root,
+            in_root,
+            out_root,
         )
         return
     else:
@@ -3382,8 +3456,8 @@ def main() -> None:
         print(f"[07.content] No .conversations.json files found in: {in_dir}")
         return
 
-    # Extract source name from directory path
-    source_name = in_dir.name
+    # Extract source hint from directory path.
+    source_name = infer_source_name(in_dir, in_root)
 
     print(f"[07.content] Input : {in_dir}")
     print(f"[07.content] Output: {out_dir}")
@@ -3421,9 +3495,10 @@ def main() -> None:
         # Verification gate
         should_process, reason = should_process_video(
             input_file,
-            source_name,
+            infer_source_name(input_file, in_root),
             verify_root,
             reverify_verify_root=reverify_verify_root,
+            input_root_hint=in_root,
             skip_verification=args.skip_verification or args.revalidate,
             gate_policy=verification_gate_policy,
         )

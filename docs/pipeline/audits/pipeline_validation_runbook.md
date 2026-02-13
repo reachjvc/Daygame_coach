@@ -85,6 +85,29 @@ Example run ID:
 RUN_ID="CANARY.1.r$(date -u +%Y%m%dT%H%MZ)"
 ```
 
+For isolated no-overwrite experiments, use run-scoped roots under `data/experiments/<run_id>/`:
+- `06c.patch` supports:
+  - `--input-root <path>` (Stage 06 root)
+  - `--verification-root <path>` (Stage 06b root)
+- `07.content` supports:
+  - `--input-root <path>` (Stage 06c root)
+  - `--verification-root <path>` (Stage 06b root)
+  - `--reverify-root <path>` (Stage 06b.reverify root)
+
+One-video strict-gate example (no overwrite of canonical outputs):
+
+```bash
+RUN_ID="CANARY.1.6ImEzB6NhiI.r$(date -u +%Y%m%dT%H%MZ)"
+RUN_BASE="data/experiments/${RUN_ID}"
+
+# 1) Seed Stage 06 artifact into run namespace (or generate fresh Stage 06 in RUN_BASE).
+# 2) Run verification + patch + reverify + enrichment entirely inside RUN_BASE:
+./scripts/training-data/06b.verify   --input "${RUN_BASE}/06.video-type/<source>/<video_dir>/<stem>.conversations.json" --input-root "${RUN_BASE}/06.video-type" --output "${RUN_BASE}/06b.verify" --model opus --allow-reject-verdicts
+./scripts/training-data/06c.patch    --input "${RUN_BASE}/06.video-type/<source>/<video_dir>/<stem>.conversations.json" --input-root "${RUN_BASE}/06.video-type" --verification-root "${RUN_BASE}/06b.verify" --output "${RUN_BASE}/06c.patched"
+./scripts/training-data/06b.reverify --input "${RUN_BASE}/06c.patched/<source>/<video_dir>/<stem>.conversations.json" --input-root "${RUN_BASE}/06c.patched" --output "${RUN_BASE}/06b.reverify" --model opus
+./scripts/training-data/07.content   --input "${RUN_BASE}/06c.patched/<source>/<video_dir>/<stem>.conversations.json" --input-root "${RUN_BASE}/06c.patched" --verification-root "${RUN_BASE}/06b.verify" --reverify-root "${RUN_BASE}/06b.reverify" --output "${RUN_BASE}/07.content" --verification-gate-policy reverify_patched --model opus
+```
+
 ## Where the Plan Lives
 
 - Primary long-form plan: `docs/pipeline/audits/codex_pipeline_validation.md`

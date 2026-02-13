@@ -790,6 +790,15 @@ def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "06c.patched"
 
 
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
     """Compute output path — same *.conversations.json pattern as stage 06."""
     stem = input_path.stem
@@ -918,6 +927,20 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06.video-type, or data/test/06.video-type with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--verification-root",
+        help=(
+            "Root directory containing Stage 06b verification reports "
+            "(default: data/06b.verify, or data/test/06b.verify with --test)"
+        ),
+    )
+    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/06c.patched/)"
     )
@@ -964,24 +987,37 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if args.test:
+        in_root = resolve_root_path(args.input_root, test_s06_root())
+        verify_root = resolve_root_path(args.verification_root, test_s06b_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+    else:
+        in_root = resolve_root_path(args.input_root, s06_root())
+        verify_root = resolve_root_path(args.verification_root, s06b_root())
+        out_root = Path(args.output) if args.output else output_root()
+
     # Route to appropriate mode
     if args.test:
         _run_directory(
-            test_s06_root(), test_s06b_root(), test_output_root(), args
+            in_root,
+            verify_root,
+            out_root,
+            args,
+            verification_input_root=in_root,
         )
     elif args.manifest:
-        _run_manifest(args)
+        _run_manifest(args, in_root, verify_root, out_root)
     elif args.input:
-        _run_input(args)
+        _run_input(args, in_root, verify_root, out_root)
     elif args.sources:
-        _run_sources(args)
+        _run_sources(args, in_root, verify_root, out_root)
     elif args.name:
-        _run_named_source(args)
+        _run_named_source(args, in_root, verify_root, out_root)
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
 
 
-def _run_input(args) -> None:
+def _run_input(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     input_path = Path(args.input)
     if not input_path.exists():
         input_path = repo_root() / args.input
@@ -989,14 +1025,14 @@ def _run_input(args) -> None:
         raise SystemExit(f"Input not found: {args.input}")
 
     if input_path.is_file():
-        out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path_with_layout(input_path, out_dir, input_root=s06_root())
+        out_dir = Path(args.output) if args.output else out_base
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root=in_base)
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        verification_path = find_verification_for(input_path, s06_root(), s06b_root())
+        verification_path = find_verification_for(input_path, in_base, verify_root)
         result = patch_file(
             input_path,
             verification_path,
@@ -1009,21 +1045,26 @@ def _run_input(args) -> None:
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
         return
 
-    out_dir = Path(args.output) if args.output else output_root()
-    _run_directory(input_path, s06b_root(), out_dir, args)
+    out_dir = Path(args.output) if args.output else out_base
+    _run_directory(
+        input_path,
+        verify_root,
+        out_dir,
+        args,
+        verification_input_root=in_base,
+    )
 
 
-def _run_sources(args) -> None:
+def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     sources_path = repo_root() / args.sources
     if not sources_path.exists():
         raise SystemExit(f"Sources file not found: {sources_path}")
 
-    out_base = Path(args.output) if args.output else output_root()
     total_fixes = 0
     total_files = 0
 
     for src_name, _ in parse_sources_file(sources_path):
-        src_in_dir = s06_root() / src_name
+        src_in_dir = in_base / src_name
         if not src_in_dir.exists():
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
@@ -1046,7 +1087,7 @@ def _run_sources(args) -> None:
             if existing_output and not args.overwrite:
                 continue
             try:
-                verification_path = find_verification_for(input_file, s06_root(), s06b_root())
+                verification_path = find_verification_for(input_file, in_base, verify_root)
                 result = patch_file(
                     input_file,
                     verification_path,
@@ -1063,7 +1104,7 @@ def _run_sources(args) -> None:
     print(f"\n{LOG_PREFIX} Done. Patched {total_files} files, {total_fixes} total fixes")
 
 
-def _run_manifest(args) -> None:
+def _run_manifest(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     """Run for videos listed in a manifest file."""
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -1071,11 +1112,10 @@ def _run_manifest(args) -> None:
     if not manifest_path.exists():
         raise SystemExit(f"Manifest file not found: {manifest_path}")
 
-    out_base = Path(args.output) if args.output else output_root()
     sources_map = load_manifest_sources(manifest_path)
 
     for src_name, vid_ids in sorted(sources_map.items()):
-        src_in_dir = s06_root() / src_name
+        src_in_dir = in_base / src_name
         if not src_in_dir.exists():
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
@@ -1090,10 +1130,11 @@ def _run_manifest(args) -> None:
         _run_directory_with_files(
             files,
             src_in_dir,
-            s06b_root(),
+            verify_root,
             src_out_dir,
             args,
             output_root_dir=out_base,
+            verification_input_root=in_base,
         )
 
 
@@ -1104,6 +1145,7 @@ def _run_directory_with_files(
     out_dir: Path,
     args,
     output_root_dir: Optional[Path] = None,
+    verification_input_root: Optional[Path] = None,
 ) -> None:
     """Process a specific list of files."""
     if not files:
@@ -1152,7 +1194,11 @@ def _run_directory_with_files(
         save_state(state_path, state)
 
         try:
-            verification_path = find_verification_for(input_file, s06_root(), verify_dir)
+            verification_path = find_verification_for(
+                input_file,
+                verification_input_root or in_dir,
+                verify_dir,
+            )
             result = patch_file(
                 input_file,
                 verification_path,
@@ -1198,24 +1244,42 @@ def _run_directory_with_files(
             sys.exit(1)
 
 
-def _run_named_source(args) -> None:
+def _run_named_source(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     """Run for a named source (from pipeline: ./06c.patch source_name url)."""
     name = args.name
-    in_dir = s06_root() / name
+    in_dir = in_base / name
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 
-    verify_dir = s06b_root()
-    out_dir = Path(args.output) if args.output else output_root() / name
-    _run_directory(in_dir, verify_dir, out_dir, args)
+    out_dir = Path(args.output) if args.output else out_base / name
+    _run_directory(
+        in_dir,
+        verify_root,
+        out_dir,
+        args,
+        verification_input_root=in_base,
+    )
 
 
-def _run_directory(in_dir: Path, verify_dir: Path, out_dir: Path, args) -> None:
+def _run_directory(
+    in_dir: Path,
+    verify_dir: Path,
+    out_dir: Path,
+    args,
+    verification_input_root: Optional[Path] = None,
+) -> None:
     files = find_input_files(in_dir)
     if not files:
         print(f"{LOG_PREFIX} No .conversations.json files found in: {in_dir}")
         return
-    _run_directory_with_files(files, in_dir, verify_dir, out_dir, args)
+    _run_directory_with_files(
+        files,
+        in_dir,
+        verify_dir,
+        out_dir,
+        args,
+        verification_input_root=verification_input_root,
+    )
 
 
 if __name__ == "__main__":
