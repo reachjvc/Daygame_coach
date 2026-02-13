@@ -1358,6 +1358,7 @@ def _run_input(args) -> None:
         input_path = repo_root() / args.input
     if not input_path.exists():
         raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
 
     if input_path.is_file():
         out_dir = Path(args.output) if args.output else output_root()

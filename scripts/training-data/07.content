@@ -3207,6 +3207,7 @@ def main() -> None:
             input_path = repo_root() / args.input
         if not input_path.exists():
             raise SystemExit(f"Input not found: {args.input}")
+        input_path = input_path.resolve()
 
         if input_path.is_file():
             source_name = infer_source_name(input_path, in_root)
