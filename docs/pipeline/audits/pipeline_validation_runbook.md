@@ -72,19 +72,23 @@ Current ranked rationale (from existing 06b/06b.reverify/07 artifacts):
 
 Latest hardening experiment snapshot (`2026-02-13`):
 - Run ID: `HARDENING.1.r20260213T1041Z`
-- Processed end-to-end in run namespace (no overwrite of canonical outputs): `5/6` videos
-  - completed: `IS2SoUgqDLE`, `nFjdyAHcTgA`, `mv2X8Yhg9M0`, `6ImEzB6NhiI`, `e2dLEB-AwmA`
-  - blocked in this run: `iOSpNACA9VI` (06b verify call repeatedly stalled/timed out)
-- Aggregate outcomes on completed 5:
-  - `06b.verify`: `FLAG=5`, `REJECT=0`
-  - `06b.reverify`: `FLAG=5`, `REJECT=0`
-  - Stage 07 validation: `errors=0`, `warnings=20` (`transcript_artifact=17`, `evidence_not_on_referenced_segment=2`, `evidence_mismatch=1`)
-- Verify->reverify deltas across completed 5:
-  - total misattributions: `-4`
+- Processed end-to-end in run namespace (no overwrite of canonical outputs): `6/6` videos
+  - completed: `iOSpNACA9VI`, `IS2SoUgqDLE`, `nFjdyAHcTgA`, `mv2X8Yhg9M0`, `6ImEzB6NhiI`, `e2dLEB-AwmA`
+  - Barcelona note: `iOSpNACA9VI` needed isolated Stage 06b retries; `sonnet` completed reliably where `opus` stalled.
+- Aggregate outcomes on completed 6:
+  - `06b.verify`: `FLAG=6`, `REJECT=0`
+  - `06b.reverify`: `FLAG=6`, `REJECT=0`
+  - Stage 07 validation: `errors=0`, `warnings=46`
+    - `transcript_artifact=23`
+    - `technique_on_non_coach_segment=19`
+    - `evidence_mismatch=2`
+    - `evidence_not_on_referenced_segment=2`
+- Verify->reverify deltas across completed 6:
+  - total misattributions: `-1`
   - total other_flags: `+5`
-  - boundary issues: unchanged
-- Run-specific caveat:
-  - `IS2SoUgqDLE` Stage 06 artifact lacked top-level `transcript_confidence`; this is now handled by `06c.patch` compatibility normalization (`v1.8`) with automatic backfill.
+  - total boundary issues: `+2`
+- Run-specific compatibility note:
+  - `IS2SoUgqDLE` legacy Stage 06 artifact lacked top-level `transcript_confidence`; this is now handled by `06c.patch` compatibility normalization (`v1.8`) with automatic backfill.
 
 ## Run Naming + History Policy
 

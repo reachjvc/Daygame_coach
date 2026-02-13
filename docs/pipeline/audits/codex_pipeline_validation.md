@@ -65,12 +65,17 @@ This document is the primary long-form pipeline hardening plan/audit for the cur
     - `IS2SoUgqDLE`: missing 06b.reverify + severe Stage 06/07 conversation index drift warnings.
     - `e2dLEB-AwmA`: missing 06b/06b.reverify/06c/07 artifacts (good fresh candidate for new-run baseline).
 - Hardening rerun snapshot (`HARDENING.1.r20260213T1041Z`, no-overwrite run namespace):
-  - End-to-end completed for 5/6 videos (Barcelona `iOSpNACA9VI` blocked by repeated 06b verify latency/timeouts).
-  - Completed set (`IS2SoUgqDLE`, `nFjdyAHcTgA`, `mv2X8Yhg9M0`, `6ImEzB6NhiI`, `e2dLEB-AwmA`) outcomes:
-    - `06b.verify`: `FLAG=5`, `REJECT=0`
-    - `06b.reverify`: `FLAG=5`, `REJECT=0`
-    - Stage 07 validation: `errors=0`, `warnings=20` (`transcript_artifact=17`, `evidence_not_on_referenced_segment=2`, `evidence_mismatch=1`)
-  - Verify->reverify delta across completed 5: `misattributions -4`, `other_flags +5`, `boundary unchanged`.
+  - End-to-end completed for 6/6 videos.
+  - Barcelona (`iOSpNACA9VI`) required isolated retries; `sonnet` succeeded where `opus` verify calls repeatedly stalled.
+  - Full set outcomes:
+    - `06b.verify`: `FLAG=6`, `REJECT=0`
+    - `06b.reverify`: `FLAG=6`, `REJECT=0`
+    - Stage 07 validation: `errors=0`, `warnings=46`
+      - `transcript_artifact=23`
+      - `technique_on_non_coach_segment=19`
+      - `evidence_mismatch=2`
+      - `evidence_not_on_referenced_segment=2`
+  - Verify->reverify delta across completed 6: `misattributions -1`, `other_flags +5`, `boundary +2`.
   - Compatibility follow-up shipped: `06c.patch v1.8` now auto-backfills/normalizes legacy top-level `transcript_confidence` so old Stage 06 artifacts do not fail schema validation in patch runs.
 
 **Command safety legend (to prevent accidental writes while auditing):**
