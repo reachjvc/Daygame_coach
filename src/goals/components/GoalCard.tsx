@@ -3,18 +3,36 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, Check, GitBranch } from "lucide-react"
+import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus } from "lucide-react"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
+import { GoalInputWidget } from "./GoalInputWidget"
 import type { GoalWithProgress } from "../types"
+
+function formatDaysRemaining(days: number): string {
+  if (days <= 0) return "Overdue"
+  const formatted = days.toLocaleString()
+  return `${formatted} ${days === 1 ? "day" : "days"} left`
+}
+
+function getDaysRemainingStyle(days: number): string {
+  if (days <= 0) return "bg-red-500/15 text-red-400 border-red-500/30"
+  if (days <= 7) return "bg-red-500/10 text-red-400 border-red-500/25"
+  if (days <= 30) return "bg-amber-500/10 text-amber-400 border-amber-500/25"
+  if (days <= 90) return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+  return "bg-blue-500/10 text-blue-400 border-blue-500/20"
+}
 
 interface GoalCardProps {
   goal: GoalWithProgress
   allGoals?: GoalWithProgress[]
   variant?: "compact" | "expanded"
   onIncrement?: (goalId: string, amount: number) => Promise<void>
+  onSetValue?: (goalId: string, value: number) => Promise<void>
+  onComplete?: (goal: GoalWithProgress) => void
   onReset?: (goalId: string) => Promise<void>
   onEdit?: (goal: GoalWithProgress) => void
+  onAddChild?: (parentGoal: GoalWithProgress) => void
 }
 
 export function GoalCard({
@@ -22,8 +40,11 @@ export function GoalCard({
   allGoals = [],
   variant = "compact",
   onIncrement,
+  onSetValue,
+  onComplete,
   onReset,
   onEdit,
+  onAddChild,
 }: GoalCardProps) {
   const [isExpanded, setIsExpanded] = useState(variant === "expanded")
   const [isIncrementing, setIsIncrementing] = useState(false)
@@ -46,6 +67,16 @@ export function GoalCard({
     }
   }
 
+  const handleSetValue = async (value: number) => {
+    if (!onSetValue || isIncrementing) return
+    setIsIncrementing(true)
+    try {
+      await onSetValue(goal.id, value)
+    } finally {
+      setIsIncrementing(false)
+    }
+  }
+
   const handleReset = async () => {
     if (!onReset || isResetting) return
     setIsResetting(true)
@@ -57,7 +88,10 @@ export function GoalCard({
     }
   }
 
+  const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0)
+
   return (
+    <div className={`relative ${showAddChild ? "mb-3" : ""}`}>
     <div
       className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80"
       style={{ borderLeftColor: areaConfig.hex, borderLeftWidth: 3 }}
@@ -127,13 +161,19 @@ export function GoalCard({
               </span>
             )}
             {goal.goal_type === "milestone" && goal.days_remaining !== null && (
-              <span className={`flex items-center gap-1 ${isOverdue ? "text-destructive font-medium" : ""}`}>
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${getDaysRemainingStyle(goal.days_remaining)}`}>
                 <Calendar className="size-3" />
-                {goal.days_remaining > 0 ? `${goal.days_remaining}d left` : "Overdue"}
+                {formatDaysRemaining(goal.days_remaining)}
               </span>
             )}
             {goal.goal_type === "recurring" && (
               <span className="capitalize">{goal.period}</span>
+            )}
+            {goal.linked_metric && (
+              <span className="flex items-center gap-1 text-blue-400">
+                <Link className="size-3" />
+                Auto-synced
+              </span>
             )}
           </div>
         </div>
@@ -157,50 +197,15 @@ export function GoalCard({
           )}
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {onIncrement && !goal.is_complete && (
-              isBoolean ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleIncrement(1)}
-                  disabled={isIncrementing}
-                >
-                  {isIncrementing ? (
-                    <Loader2 className="size-3 animate-spin mr-1" />
-                  ) : (
-                    <Check className="size-3 mr-1" />
-                  )}
-                  Mark Done
-                </Button>
-              ) : (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleIncrement(1)}
-                    disabled={isIncrementing}
-                  >
-                    {isIncrementing ? (
-                      <Loader2 className="size-3 animate-spin mr-1" />
-                    ) : (
-                      <Plus className="size-3 mr-1" />
-                    )}
-                    +1
-                  </Button>
-                  {goal.target_value > 5 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncrement(5)}
-                      disabled={isIncrementing}
-                    >
-                      <Plus className="size-3 mr-1" />
-                      +5
-                    </Button>
-                  )}
-                </>
-              )
+              <GoalInputWidget
+                goal={goal}
+                isLoading={isIncrementing}
+                onIncrement={handleIncrement}
+                onSetValue={handleSetValue}
+                onComplete={onComplete ? () => onComplete(goal) : undefined}
+              />
             )}
             {onReset && goal.goal_type === "recurring" && (
               showResetConfirm ? (
@@ -247,6 +252,16 @@ export function GoalCard({
           </div>
         </div>
       )}
+    </div>
+    {showAddChild && (
+      <button
+        onClick={() => onAddChild!(goal)}
+        className="absolute -bottom-3.5 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium text-orange-300 rounded-full bg-orange-950/80 border border-orange-500/40 shadow-[0_1px_4px_rgba(249,115,22,0.2)] hover:bg-orange-900/80 hover:border-orange-500/60 transition-all cursor-pointer"
+      >
+        <Plus className="size-3" />
+        Sub-goal
+      </button>
+    )}
     </div>
   )
 }

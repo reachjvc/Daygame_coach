@@ -2,7 +2,7 @@
  * Goals business logic — tree building, filtering, progress aggregation
  */
 
-import type { GoalWithProgress, GoalTreeNode, GoalFilterState } from "./types"
+import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier } from "./types"
 
 /**
  * Build a hierarchical goal tree from a flat array. O(n) algorithm.
@@ -184,5 +184,53 @@ export function deriveTimeHorizon(goal: GoalWithProgress): string {
       return "This Year"
     default:
       return "Custom"
+  }
+}
+
+/**
+ * Determine the input mode for a goal based on tracking type and target value.
+ * - boolean goals → "boolean" (Mark Done button)
+ * - counter goals with high target (>50) → "direct-entry" (number input)
+ * - counter goals with low target → "buttons" (+1, +5, etc.)
+ */
+export function getInputMode(goal: GoalWithProgress): InputMode {
+  if (goal.tracking_type === "boolean") return "boolean"
+  if (goal.target_value > 50) return "direct-entry"
+  return "buttons"
+}
+
+/**
+ * Get appropriate increment button values based on target value.
+ * Small targets: [1], medium: [1, 5], larger: [1, 5, 10]
+ */
+export function getButtonIncrements(targetValue: number): number[] {
+  if (targetValue <= 5) return [1]
+  if (targetValue <= 20) return [1, 5]
+  return [1, 5, 10]
+}
+
+/**
+ * Get celebration tier for a completed goal based on its time horizon.
+ * Bigger/longer goals get more impressive celebrations.
+ */
+export function getCelebrationTier(goal: GoalWithProgress): CelebrationTier {
+  const horizon = deriveTimeHorizon(goal)
+  switch (horizon) {
+    case "Today":
+      return "subtle"
+    case "This Week":
+      return "toast"
+    case "This Month":
+      return "toast"
+    case "This Quarter":
+      return "confetti-small"
+    case "This Year":
+      return "confetti-full"
+    case "Multi-Year":
+      return "confetti-epic"
+    case "Life":
+      return "confetti-epic"
+    default:
+      return "toast"
   }
 }

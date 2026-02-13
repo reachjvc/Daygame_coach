@@ -62,6 +62,16 @@ export interface LifeAreaConfig {
 }
 
 /**
+ * Input mode for goal progress entry
+ */
+export type InputMode = "boolean" | "buttons" | "direct-entry"
+
+/**
+ * Celebration tier based on goal time horizon
+ */
+export type CelebrationTier = "subtle" | "toast" | "confetti-small" | "confetti-full" | "confetti-epic"
+
+/**
  * View modes for the Goals Hub
  */
 export type GoalViewMode = "standard" | "time-horizon"

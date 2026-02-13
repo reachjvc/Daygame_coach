@@ -1,9 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Target } from "lucide-react"
-import { GoalCard } from "../GoalCard"
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
+import { SortableGoalCard } from "../SortableGoalCard"
 import { getLifeAreaConfig } from "../../data/lifeAreas"
 import { groupGoalsByLifeArea, computeLifeAreaProgress } from "../../goalsService"
 import { LIFE_AREAS } from "../../data/lifeAreas"
@@ -13,9 +15,14 @@ interface DashboardViewProps {
   goals: GoalWithProgress[]
   allGoals: GoalWithProgress[]
   tree: GoalTreeNode[]
+  isEditMode?: boolean
   onIncrement: (goalId: string, amount: number) => Promise<void>
+  onSetValue: (goalId: string, value: number) => Promise<void>
+  onComplete?: (goal: GoalWithProgress) => void
   onReset: (goalId: string) => Promise<void>
   onEdit: (goal: GoalWithProgress) => void
+  onAddChild?: (parentGoal: GoalWithProgress) => void
+  onReorder?: (goalIds: string[]) => void
   onCreateGoal?: () => void
   filterAreaName?: string | null
 }
@@ -26,9 +33,14 @@ export function DashboardView({
   goals,
   allGoals,
   tree,
+  isEditMode = false,
   onIncrement,
+  onSetValue,
+  onComplete,
   onReset,
   onEdit,
+  onAddChild,
+  onReorder,
   onCreateGoal,
   filterAreaName,
 }: DashboardViewProps) {
@@ -132,6 +144,19 @@ export function DashboardView({
       {sortedAreas.map((area) => {
         const config = getLifeAreaConfig(area.lifeArea)
         const areaGoals = grouped[area.lifeArea] || []
+        const goalIds = areaGoals.map(g => g.id)
+
+        const handleDragEnd = (event: DragEndEvent) => {
+          const { active, over } = event
+          if (!over || active.id === over.id || !onReorder) return
+          const oldIndex = areaGoals.findIndex(g => g.id === active.id)
+          const newIndex = areaGoals.findIndex(g => g.id === over.id)
+          if (oldIndex === -1 || newIndex === -1) return
+          const reordered = [...areaGoals]
+          const [moved] = reordered.splice(oldIndex, 1)
+          reordered.splice(newIndex, 0, moved)
+          onReorder(reordered.map(g => g.id))
+        }
 
         return (
           <div key={area.lifeArea}>
@@ -145,20 +170,27 @@ export function DashboardView({
                 {area.completed}/{area.total}
               </span>
             </div>
-            <div className="space-y-2">
-              {areaGoals.map((goal) => (
-                <div key={goal.id} className={goal.parent_goal_id ? "ml-6" : ""}>
-                  <GoalCard
-                    goal={goal}
-                    allGoals={allGoals}
-                    variant="compact"
-                    onIncrement={onIncrement}
-                    onReset={onReset}
-                    onEdit={onEdit}
-                  />
+            <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={goalIds} strategy={verticalListSortingStrategy}>
+                <div className="space-y-2">
+                  {areaGoals.map((goal) => (
+                    <div key={goal.id} className={goal.parent_goal_id && !isEditMode ? "ml-6" : ""}>
+                      <SortableGoalCard
+                        goal={goal}
+                        allGoals={allGoals}
+                        isEditMode={isEditMode}
+                        onIncrement={onIncrement}
+                        onSetValue={onSetValue}
+                        onComplete={onComplete}
+                        onReset={onReset}
+                        onEdit={onEdit}
+                        onAddChild={onAddChild}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </SortableContext>
+            </DndContext>
           </div>
         )
       })}

@@ -6,6 +6,9 @@ import {
   groupGoalsByTimeHorizon,
   computeLifeAreaProgress,
   deriveTimeHorizon,
+  getInputMode,
+  getButtonIncrements,
+  getCelebrationTier,
 } from "@/src/goals/goalsService"
 import type { GoalWithProgress, GoalFilterState } from "@/src/goals/types"
 
@@ -647,6 +650,115 @@ describe("deriveTimeHorizon", () => {
     test("should return 'Custom' for custom period", () => {
       const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
       expect(deriveTimeHorizon(goal)).toBe("Custom")
+    })
+  })
+
+  // ============================================================================
+  // getInputMode
+  // ============================================================================
+
+  describe("getInputMode", () => {
+    test("should return 'boolean' for boolean tracking type", () => {
+      const goal = createGoalWithProgress({ tracking_type: "boolean", target_value: 1 })
+      expect(getInputMode(goal)).toBe("boolean")
+    })
+
+    test("should return 'buttons' for counter with low target", () => {
+      const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 10 })
+      expect(getInputMode(goal)).toBe("buttons")
+    })
+
+    test("should return 'buttons' for counter at boundary (50)", () => {
+      const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 50 })
+      expect(getInputMode(goal)).toBe("buttons")
+    })
+
+    test("should return 'direct-entry' for counter with high target (51+)", () => {
+      const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 51 })
+      expect(getInputMode(goal)).toBe("direct-entry")
+    })
+
+    test("should return 'direct-entry' for counter with target 150", () => {
+      const goal = createGoalWithProgress({ tracking_type: "counter", target_value: 150 })
+      expect(getInputMode(goal)).toBe("direct-entry")
+    })
+  })
+
+  // ============================================================================
+  // getButtonIncrements
+  // ============================================================================
+
+  describe("getButtonIncrements", () => {
+    test("should return [1] for target <= 5", () => {
+      expect(getButtonIncrements(1)).toEqual([1])
+      expect(getButtonIncrements(5)).toEqual([1])
+    })
+
+    test("should return [1, 5] for target 6-20", () => {
+      expect(getButtonIncrements(6)).toEqual([1, 5])
+      expect(getButtonIncrements(10)).toEqual([1, 5])
+      expect(getButtonIncrements(20)).toEqual([1, 5])
+    })
+
+    test("should return [1, 5, 10] for target > 20", () => {
+      expect(getButtonIncrements(21)).toEqual([1, 5, 10])
+      expect(getButtonIncrements(50)).toEqual([1, 5, 10])
+    })
+  })
+
+  // ============================================================================
+  // getCelebrationTier
+  // ============================================================================
+
+  describe("getCelebrationTier", () => {
+    test("daily recurring goal → subtle", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "daily" })
+      expect(getCelebrationTier(goal)).toBe("subtle")
+    })
+
+    test("weekly recurring goal → toast", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "weekly" })
+      expect(getCelebrationTier(goal)).toBe("toast")
+    })
+
+    test("monthly recurring goal → toast", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "monthly" })
+      expect(getCelebrationTier(goal)).toBe("toast")
+    })
+
+    test("quarterly recurring goal → confetti-small", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "quarterly" })
+      expect(getCelebrationTier(goal)).toBe("confetti-small")
+    })
+
+    test("yearly recurring goal → confetti-full", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "yearly" })
+      expect(getCelebrationTier(goal)).toBe("confetti-full")
+    })
+
+    test("multi-year milestone → confetti-epic", () => {
+      const nextYear = new Date()
+      nextYear.setFullYear(nextYear.getFullYear() + 2)
+      const goal = createGoalWithProgress({
+        goal_type: "milestone",
+        target_date: nextYear.toISOString().split("T")[0],
+      })
+      expect(getCelebrationTier(goal)).toBe("confetti-epic")
+    })
+
+    test("life milestone (5+ years) → confetti-epic", () => {
+      const farFuture = new Date()
+      farFuture.setFullYear(farFuture.getFullYear() + 10)
+      const goal = createGoalWithProgress({
+        goal_type: "milestone",
+        target_date: farFuture.toISOString().split("T")[0],
+      })
+      expect(getCelebrationTier(goal)).toBe("confetti-epic")
+    })
+
+    test("custom period → toast", () => {
+      const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
+      expect(getCelebrationTier(goal)).toBe("toast")
     })
   })
 })

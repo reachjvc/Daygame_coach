@@ -101,6 +101,7 @@ import type {
 } from "@/src/db/trackingTypes"
 import type { ConversationFieldValue } from "./types"
 import { ALL_MILESTONES } from "@/src/tracking/data/milestones"
+import { syncLinkedGoals } from "@/src/db/goalRepo"
 
 // ============================================
 // Sessions
@@ -159,6 +160,9 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
     startHour: startedAt.getHours(),
     location: session.primary_location,
   })
+
+  // Sync linked goals with updated tracking stats
+  await syncLinkedGoals(session.user_id).catch(() => {})
 
   return updatedSession
 }
@@ -254,6 +258,9 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
     if (newCount === 25) potentialMilestones.push({ type: "25_field_reports" })
     if (newCount === 50) potentialMilestones.push({ type: "50_field_reports" })
     await repoCheckAndAwardMilestones(report.user_id, potentialMilestones, report.session_id)
+
+    // Sync linked goals with updated tracking stats
+    await syncLinkedGoals(report.user_id).catch(() => {})
   }
 
   return row

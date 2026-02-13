@@ -39,6 +39,7 @@ interface GoalFormModalProps {
   parentGoals?: GoalWithProgress[]
   onSuccess?: () => void
   defaultLifeArea?: string | null
+  defaultParentGoalId?: string | null
 }
 
 const PERIOD_OPTIONS: { value: GoalPeriod; label: string }[] = [
@@ -62,7 +63,7 @@ const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string }[] = [
   { value: "instadates_weekly", label: "Weekly instadates" },
 ]
 
-export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea }: GoalFormModalProps) {
+export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea, defaultParentGoalId }: GoalFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMode, setSubmitMode] = useState<"add" | "continue" | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -118,7 +119,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     setPeriod("weekly")
     setTargetValue(1)
     setTargetDate("")
-    setParentGoalId(null)
+    setParentGoalId(defaultParentGoalId ?? null)
     setDescription("")
     setLinkedMetric(null)
     setSelectedSuggestion(null)
@@ -126,6 +127,13 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     setSuccessMessage(null)
     setShowDeleteConfirm(false)
   }
+
+  // Pre-fill parent when opening as "add child"
+  useEffect(() => {
+    if (!goal && defaultParentGoalId) {
+      setParentGoalId(defaultParentGoalId)
+    }
+  }, [defaultParentGoalId, goal])
 
   const effectiveLifeArea = lifeArea === "custom" ? customLifeArea : lifeArea
   const areaConfig = getLifeAreaConfig(effectiveLifeArea || "custom")
