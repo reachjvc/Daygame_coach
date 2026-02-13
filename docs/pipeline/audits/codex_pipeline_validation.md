@@ -67,6 +67,7 @@ This document is the primary long-form pipeline hardening plan/audit for the cur
 - Hardening rerun snapshot (`HARDENING.1.r20260213T1041Z`, no-overwrite run namespace):
   - End-to-end completed for 6/6 videos.
   - Barcelona (`iOSpNACA9VI`) required isolated retries; `sonnet` succeeded where `opus` verify calls repeatedly stalled.
+  - Follow-up hardening: `06b.verify` now supports automatic timeout fallback (`--fallback-model`, default `sonnet`) so this recovery path is available without manual reruns.
   - Full set outcomes:
     - `06b.verify`: `FLAG=6`, `REJECT=0`
     - `06b.reverify`: `FLAG=6`, `REJECT=0`

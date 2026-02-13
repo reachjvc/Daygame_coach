@@ -1078,6 +1078,7 @@ def verify_file(
     output_path: Path,
     dry_run: bool = False,
     claude_model: Optional[str] = None,
+    fallback_model: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Verify a single stage 06 conversations.json file."""
 
@@ -1112,28 +1113,71 @@ def verify_file(
     raw_response = None
     llm_calls = 0
     used_conversion_fallback = False
+    model_sequence: List[Optional[str]] = [claude_model]
+    if (
+        isinstance(fallback_model, str)
+        and fallback_model.strip()
+        and fallback_model.strip() != (claude_model or "").strip()
+    ):
+        model_sequence.append(fallback_model.strip())
+    model_in_use: Optional[str] = model_sequence[0]
+    used_fallback_model = False
+    timeout_switch_requested = False
+    timeout_switch_reason: Optional[str] = None
+    for model_idx, active_model in enumerate(model_sequence):
+        model_in_use = active_model
+        if model_idx > 0:
+            used_fallback_model = True
+            print(
+                f"{LOG_PREFIX}   Switching model fallback to '{active_model}'"
+                + (f" ({timeout_switch_reason})" if timeout_switch_reason else "")
+            )
+        timeout_switch_requested = False
+        timeout_switch_reason = None
 
-    for attempt in range(max_retries):
-        raw_response = call_claude(prompt, timeout=300, model=claude_model)
-        llm_calls += 1
-        result = parse_json_response(raw_response)
+        for attempt in range(max_retries):
+            try:
+                # Keep retries at 1 here; retry/fallback orchestration is managed at verify_file level.
+                raw_response = call_claude(prompt, retries=1, timeout=300, model=active_model)
+                llm_calls += 1
+            except RuntimeError as e:
+                msg = str(e)
+                is_timeout = "timeout" in msg.lower()
+                if is_timeout and attempt < max_retries - 1:
+                    print(
+                        f"{LOG_PREFIX}   WARNING: verification call timed out on model "
+                        f"'{active_model}' ({attempt + 1}/{max_retries}); retrying..."
+                    )
+                    continue
+                if is_timeout and model_idx < len(model_sequence) - 1:
+                    timeout_switch_requested = True
+                    timeout_switch_reason = f"timeout on model '{active_model}'"
+                    break
+                raise
+
+            result = parse_json_response(raw_response)
+
+            if result and "verdict" in result:
+                break
+
+            # JSON parsing failed - try conversion fallback before retrying full prompt
+            if raw_response and len(raw_response) > 100:
+                print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
+                result = convert_analysis_to_json(raw_response, model=active_model)
+                llm_calls += 1
+                if result and "verdict" in result:
+                    used_conversion_fallback = True
+                    print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
+                    break
+
+            if attempt < max_retries - 1:
+                print(f"{LOG_PREFIX}   WARNING: Conversion also failed, retrying full prompt ({attempt + 2}/{max_retries})...")
+                time.sleep(2)
 
         if result and "verdict" in result:
             break
-
-        # JSON parsing failed - try conversion fallback before retrying full prompt
-        if raw_response and len(raw_response) > 100:
-            print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
-            result = convert_analysis_to_json(raw_response, model=claude_model)
-            llm_calls += 1
-            if result and "verdict" in result:
-                used_conversion_fallback = True
-                print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
-                break
-
-        if attempt < max_retries - 1:
-            print(f"{LOG_PREFIX}   WARNING: Conversion also failed, retrying full prompt ({attempt + 2}/{max_retries})...")
-            time.sleep(2)
+        if timeout_switch_requested:
+            continue
 
     if not result or "verdict" not in result:
         raise RuntimeError(f"Verification LLM failed after {max_retries} retries and conversion fallback")
@@ -1167,9 +1211,13 @@ def verify_file(
             "processing_time_sec": elapsed,
             "llm_calls": llm_calls,
             "model": "claude-cli",
-            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
+            **({"claude_model": model_in_use.strip()} if isinstance(model_in_use, str) and model_in_use.strip() else {}),
+            **({"claude_model_requested": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
+            **({"claude_fallback_model": fallback_model.strip()} if isinstance(fallback_model, str) and fallback_model.strip() else {}),
         }
         notes: List[str] = []
+        if used_fallback_model and isinstance(model_in_use, str) and model_in_use.strip():
+            notes.append(f"Model fallback used ({model_in_use.strip()})")
         if used_conversion_fallback:
             notes.append("Used JSON conversion fallback")
         if schema_repair_attempts:
@@ -1209,7 +1257,7 @@ def verify_file(
             )
 
             llm_calls += 1
-            repaired = repair_json_to_schema(result, str(e), model=claude_model)
+            repaired = repair_json_to_schema(result, str(e), model=model_in_use)
             if repaired and "verdict" in repaired:
                 result = repaired
                 continue
@@ -1217,7 +1265,7 @@ def verify_file(
             if raw_response and len(raw_response) > 100:
                 print(f"{LOG_PREFIX}   WARNING: Schema repair failed, retrying analysis-to-JSON conversion...")
                 llm_calls += 1
-                converted = convert_analysis_to_json(raw_response, model=claude_model)
+                converted = convert_analysis_to_json(raw_response, model=model_in_use)
                 if converted and "verdict" in converted:
                     used_conversion_fallback = True
                     result = converted
@@ -1442,6 +1490,11 @@ def main() -> None:
         default="opus",
         help="Claude model alias or full name (default: opus)."
     )
+    parser.add_argument(
+        "--fallback-model",
+        default="sonnet",
+        help="Fallback Claude model used only if the primary model times out (default: sonnet). Use '' to disable.",
+    )
 
     args = parser.parse_args()
 
@@ -1472,6 +1525,8 @@ def main() -> None:
 
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
+    if isinstance(args.fallback_model, str) and args.fallback_model.strip():
+        print(f"{LOG_PREFIX} Claude fallback model: {args.fallback_model.strip()}")
 
     # Route to appropriate mode
     if args.test:
@@ -1507,7 +1562,13 @@ def _run_input(args) -> None:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        result = verify_file(input_path, output_path, dry_run=args.dry_run, claude_model=args.model)
+        result = verify_file(
+            input_path,
+            output_path,
+            dry_run=args.dry_run,
+            claude_model=args.model,
+            fallback_model=args.fallback_model,
+        )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, Issues: {result.get('issues', 0)}")
         return
 
@@ -1545,7 +1606,13 @@ def _run_sources(args) -> None:
             if existing_output and not args.overwrite:
                 continue
             try:
-                result = verify_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
+                result = verify_file(
+                    input_file,
+                    preferred_output,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                    fallback_model=args.fallback_model,
+                )
                 total_issues += result.get("issues", 0)
                 total_files += 1
             except Exception as e:
@@ -1656,7 +1723,13 @@ def _run_directory_with_files(
         save_state(state_path, state)
 
         try:
-            result = verify_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
+            result = verify_file(
+                input_file,
+                preferred_output,
+                dry_run=args.dry_run,
+                claude_model=args.model,
+                fallback_model=args.fallback_model,
+            )
             processed += 1
             consecutive_failures = 0
 

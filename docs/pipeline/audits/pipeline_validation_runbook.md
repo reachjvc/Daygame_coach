@@ -182,6 +182,7 @@ Stage 06/06b/06c/07 now default to source-video artifact writes (`data/<stage>/<
 
 **Claude model strategy:**
 - `06.video-type`, `06b.verify`, and `07.content` default to `--model opus`.
+- `06b.verify` now supports timeout fallback via `--fallback-model` (default `sonnet`), used only when the primary model times out.
 - Keep `opus` for both canary and holdout so quality behavior is stable across runs.
 
 Examples:
