@@ -53,6 +53,12 @@ This document is the primary long-form pipeline hardening plan/audit for the cur
 - Current CANARY reverify snapshot (`2026-02-13`):
   - `APPROVE=2`, `FLAG=4`, `REJECT=1`
   - blocked by policy: `6ImEzB6NhiI` (reverify verdict `REJECT`).
+- Single-video no-overwrite iteration loop (`CANARY.1.6ImEzB6NhiI.rootoverride.r20260213T0928Z`) results:
+  - Pass 1 (`06b.reverify` on first patched output): `FLAG`, `misattr=3`, `other=6`; Stage 07 validation warnings=`3`.
+  - Pass 2 (`06c.patch` reapplied using `06b.reverify` findings): real role fix landed (`seg 152 target -> coach`); `06b.reverify.pass2` stayed `FLAG` with `misattr=2`, `other=4`; Stage 07 warnings=`4`.
+  - Pass 3 experiment (auto-demote mixed-speaker `other_flags` to `unknown`): regressed (`06b.reverify.pass3 misattr=5`, Stage 07 warnings=`6`).
+  - Decision: keep mixed-speaker `other_flag` demotion as **opt-in only** (`06c.patch --apply-mixed-speaker-other-flags`), not default.
+  - `06c.patch` also now avoids counting no-op misattribution role changes as fixes (speaker_id-only defects stay explicit in `flags_not_fixed`).
 
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.

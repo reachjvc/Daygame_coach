@@ -22,8 +22,13 @@ Auto-applies:
   - boundary_issues: applies merge/split/reclassify when suggested_fix is present and confidence is high
     (and recomputes conversations[] summary)
 
-Flags but does NOT fix:
-  - other_flags
+Can optionally apply limited deterministic `other_flags` fixes:
+  - mixed-speaker / run-on transcript artifacts: demote cited segments to speaker_role=unknown
+    (enabled only with --apply-mixed-speaker-other-flags)
+
+Flags but does NOT fix (yet):
+  - speaker_id-only diarization defects
+  - other free-form notes without deterministic segment targets
 
 Use:
 
@@ -48,6 +53,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 import shlex
 import sys
 import time
@@ -64,7 +70,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.5"  # v1.5: validate 06b verification schema before patching
+PIPELINE_VERSION = "06c.patch-v1.7"  # v1.7: no-op misattribution guard + opt-in mixed-speaker other_flag demotion
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -282,9 +288,48 @@ def _get_next_conversation_id(segments: List[Dict]) -> int:
     return max_id + 1
 
 
+def _extract_segment_ids_from_flag(flag_text: str) -> List[int]:
+    """Extract explicit segment IDs/ranges from free-form other_flag text."""
+    ids: Set[int] = set()
+
+    for m in re.finditer(r"\bsegments?\s+(\d+)\s*-\s*(\d+)\b", flag_text, flags=re.IGNORECASE):
+        start = int(m.group(1))
+        end = int(m.group(2))
+        if start > end:
+            start, end = end, start
+        for seg_id in range(start, end + 1):
+            ids.add(seg_id)
+
+    # Parse single "segment N" mentions after ranges so dedupe is automatic.
+    for m in re.finditer(r"\bsegment\s+(\d+)\b", flag_text, flags=re.IGNORECASE):
+        ids.add(int(m.group(1)))
+
+    return sorted(ids)
+
+
+def _is_mixed_speaker_other_flag(flag_text: str) -> bool:
+    """Heuristic: detect run-on / merged transcript flags that mix coach and target speech."""
+    lower = flag_text.lower()
+    has_role_mix = ("coach" in lower and "target" in lower)
+    has_merge_signal = any(
+        token in lower
+        for token in (
+            "run-on",
+            "merged",
+            "mix coach",
+            "mixes coach",
+            "blends",
+            "speaker switch mid-segment",
+            "interleaved",
+        )
+    )
+    return has_role_mix and has_merge_signal
+
+
 def apply_patches(
     conversations_data: Dict[str, Any],
     verification_data: Dict[str, Any],
+    apply_mixed_speaker_other_flags: bool = False,
 ) -> Tuple[List[Dict], List[str]]:
     """Apply high-confidence fixes from verification report to conversations data.
 
@@ -333,6 +378,13 @@ def apply_patches(
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} current_role mismatch "
                 f"(expected '{current_role}', found '{actual_role}') — skipping"
+            )
+            continue
+
+        if suggested_role == actual_role:
+            flags_not_fixed.append(
+                f"misattribution: segment {seg_id} suggested_role '{suggested_role}' "
+                f"matches current role — likely speaker_id-only issue"
             )
             continue
 
@@ -589,9 +641,54 @@ def apply_patches(
                 f"boundary_issue [{severity}]: Conv {conv_id} — unknown fix type '{suggested_fix}'"
             )
 
-    # --- Log other_flags as unfixed ---
-    for flag in verification_data.get("other_flags", []):
-        flags_not_fixed.append(f"other_flag: {str(flag)[:150]}")
+    # --- Apply deterministic other_flags heuristics, log the rest ---
+    for raw_flag in verification_data.get("other_flags", []):
+        flag_text = str(raw_flag)
+        if apply_mixed_speaker_other_flags and _is_mixed_speaker_other_flag(flag_text):
+            seg_ids = _extract_segment_ids_from_flag(flag_text)
+            if not seg_ids:
+                flags_not_fixed.append(
+                    "other_flag: mixed-speaker artifact detected but no segment IDs parsed"
+                )
+                continue
+
+            demoted = 0
+            for seg_id in seg_ids:
+                seg = seg_by_id.get(seg_id)
+                if seg is None:
+                    flags_not_fixed.append(
+                        f"other_flag: mixed-speaker segment {seg_id} not found — skipping"
+                    )
+                    continue
+
+                old_role = seg.get("speaker_role")
+                old_override = seg.get("speaker_role_override")
+                if old_role == "unknown" and (
+                    old_override is None or old_override == "unknown"
+                ):
+                    continue
+
+                seg["speaker_role"] = "unknown"
+                if old_override is not None:
+                    seg["speaker_role_override"] = "unknown"
+
+                demoted += 1
+                fixes_applied.append({
+                    "segment_id": seg_id,
+                    "field": "speaker_role" + ("+speaker_role_override" if old_override is not None else ""),
+                    "old": f"role={old_role}" + (f", override={old_override}" if old_override is not None else ""),
+                    "new": "unknown",
+                    "source": "other_flag_mixed_speaker",
+                    "evidence": flag_text[:200],
+                })
+
+            if demoted == 0:
+                flags_not_fixed.append(
+                    f"other_flag: mixed-speaker segments already unknown ({','.join(str(i) for i in seg_ids)})"
+                )
+            continue
+
+        flags_not_fixed.append(f"other_flag: {flag_text[:150]}")
 
     return fixes_applied, flags_not_fixed
 
@@ -603,6 +700,7 @@ def patch_file(
     dry_run: bool = False,
     allow_reject: bool = False,
     allow_invalid_verification: bool = False,
+    apply_mixed_speaker_other_flags: bool = False,
 ) -> Dict[str, Any]:
     """Patch a single conversations file using its verification report."""
 
@@ -624,6 +722,7 @@ def patch_file(
         patched["patch_metadata"] = {
             "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "pipeline_version": PIPELINE_VERSION,
+            "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
             "verification_verdict": None,
             "verification_file": None,
             "fixes_applied": [],
@@ -679,7 +778,11 @@ def patch_file(
         flags_not_fixed: List[str] = []
     else:
         # FLAG/REJECT — apply patches
-        fixes_applied, flags_not_fixed = apply_patches(patched, verification_data)
+        fixes_applied, flags_not_fixed = apply_patches(
+            patched,
+            verification_data,
+            apply_mixed_speaker_other_flags=apply_mixed_speaker_other_flags,
+        )
 
     # Always recompute conversations[] from segments after patching to keep semantic consistency,
     # especially when boundary fixes are auto-applied.
@@ -691,6 +794,7 @@ def patch_file(
     patched["patch_metadata"] = {
         "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "pipeline_version": PIPELINE_VERSION,
+        "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
         "verification_verdict": verdict,
         "verification_file": str(verification_path),
         "verification_schema_valid": verification_schema_valid,
@@ -980,6 +1084,14 @@ def main() -> None:
         help="Allow patching with schema-invalid 06b verification reports (legacy fallback; unsafe)",
     )
     parser.add_argument(
+        "--apply-mixed-speaker-other-flags",
+        action="store_true",
+        help=(
+            "Apply deterministic mixed-speaker other_flag demotions "
+            "(set cited run-on/merged segments to speaker_role=unknown)."
+        ),
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging"
@@ -1041,6 +1153,7 @@ def _run_input(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
             dry_run=args.dry_run,
             allow_reject=args.allow_reject,
             allow_invalid_verification=args.allow_invalid_verification,
+            apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
         )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, "
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
@@ -1096,6 +1209,7 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
                     dry_run=args.dry_run,
                     allow_reject=args.allow_reject,
                     allow_invalid_verification=args.allow_invalid_verification,
+                    apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
                 )
                 total_fixes += result.get("fixes", 0)
                 total_files += 1
@@ -1207,6 +1321,7 @@ def _run_directory_with_files(
                 dry_run=args.dry_run,
                 allow_reject=args.allow_reject,
                 allow_invalid_verification=args.allow_invalid_verification,
+                apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
             )
             processed += 1
             consecutive_failures = 0

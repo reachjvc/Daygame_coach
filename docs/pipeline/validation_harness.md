@@ -60,6 +60,7 @@ Run-history note:
 - If you need immutable stage artifact history, snapshot `data/06.video-type`, `data/06b.verify`, `data/06b.reverify`, `data/06c.patched`, and `data/07.content` before overwrite reruns.
 - For isolated experiment runs, root overrides are available:
   - `06c.patch`: `--input-root`, `--verification-root`
+  - `06c.patch` (optional heuristic): `--apply-mixed-speaker-other-flags`
   - `07.content`: `--input-root`, `--verification-root`, `--reverify-root`
 
 ## Advanced

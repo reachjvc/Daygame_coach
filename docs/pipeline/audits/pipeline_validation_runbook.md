@@ -94,6 +94,10 @@ For isolated no-overwrite experiments, use run-scoped roots under `data/experime
   - `--verification-root <path>` (Stage 06b root)
   - `--reverify-root <path>` (Stage 06b.reverify root)
 
+Iteration naming convention inside one experiment run:
+- Keep each loop immutable with stage suffixes: `06c.patched.pass2`, `06b.reverify.pass2`, `07.content.pass2`, etc.
+- Do not reuse a pass directory name; create `pass3`, `pass4`, ... for each additional loop.
+
 One-video strict-gate example (no overwrite of canonical outputs):
 
 ```bash
@@ -166,6 +170,15 @@ Notes:
 ```bash
 ./scripts/training-data/06c.patch --manifest docs/pipeline/batches/HOLDOUT.1.txt --overwrite --allow-reject
 ```
+
+- `06c.patch` now treats most `other_flags` as log-only by default.
+  Experimental heuristic for mixed-speaker run-on flags is opt-in:
+
+```bash
+./scripts/training-data/06c.patch --input ... --apply-mixed-speaker-other-flags
+```
+
+Use that flag only for controlled experiments (it can regress quality; keep outputs in pass-scoped directories).
 
 - `07.content` blocks `REJECT` by default (unless `--verification-gate-policy allow_flag` and patch-clean salvage applies). For debugging/evaluation you can bypass the 06b gate:
 
