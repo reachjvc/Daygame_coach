@@ -59,12 +59,36 @@ Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
 `HOLDOUT.1` is a second manifest intended to be run less frequently.
 Use it to catch regressions that might not appear in `CANARY.1` and to reduce overfitting.
 
+## Run Naming + History Policy
+
+Use stable manifest IDs for dataset membership, and explicit run IDs for repeated executions:
+- Manifest IDs: `CANARY.1`, `HOLDOUT.1` (what videos are in scope)
+- Run IDs: `CANARY.1.rYYYYMMDDTHHMMZ` (which execution produced validation/semantic artifacts)
+
+Overwrite policy for stage outputs (`06`/`06b`/`06c`/`07`):
+- Default behavior is **skip existing outputs**.
+- A real re-run of the same manifest requires `--overwrite` (or you will mostly get skips).
+- Because stage outputs live at stable canonical paths under `data/<stage>/...`, re-runs with `--overwrite` replace prior artifacts.
+
+To preserve first-run vs Nth-run history:
+- Snapshot stage artifacts before overwrite (recommended): copy `data/06.video-type`, `data/06b.verify`, `data/06b.reverify`, `data/06c.patched`, `data/07.content` to `data/archive/runs/<run_id>/`.
+- Emit validation artifacts to run-scoped paths:
+  - `--stage-reports-dir data/validation/stage_reports/<run_id>`
+  - `--quarantine-out data/validation/quarantine/<run_id>.json`
+- Use run-scoped semantic ids:
+  - `semantic_judge.py --batch-id <run_id>` writes to `data/validation_judgements/<run_id>/`
+  - `batch_report.py --batch-id <run_id>` reads matching semantic outputs.
+
+Example run ID:
+
+```bash
+RUN_ID="CANARY.1.r$(date -u +%Y%m%dT%H%MZ)"
+```
+
 ## Where the Plan Lives
 
-- Plan docs intended for merging with Claude:
-  - `docs/pipeline/audits/claude_pipeline_validation.md`
-  - `docs/pipeline/audits/codex_pipeline_validation.md`
-  - `docs/pipeline/audits/merging_optimization.md`
+- Primary long-form plan: `docs/pipeline/audits/codex_pipeline_validation.md`
+- Merge/decision summary: `docs/pipeline/audits/merging_optimization.md`
 
 This file is the execution loop, not the full design spec.
 

@@ -3,7 +3,7 @@
 **Status:** Draft (active implementation; key decisions locked on `pipeline-validation-hardening`)
 **Updated:** 2026-02-13
 
-This document is intentionally structured to merge cleanly with `docs/pipeline/audits/claude_pipeline_validation.md`.
+This document is the primary long-form pipeline hardening plan/audit for the current branch work.
 
 **What this doc focuses on (Codex):**
 - Deterministic validation + evidence bundles ("no silent pass") and how to implement them
@@ -12,7 +12,7 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Snapshot-derived baseline signals (non-authoritative) + reproducible measurement commands (execution phase)
 
 **Doc scope note (important):**
-- This document is the long-form spec/checklist and is intended to merge cleanly with Claude’s audit.
+- This document is the long-form spec/checklist for pipeline validation hardening.
 - Implementation work has started on branch `pipeline-validation-hardening` (separate worktree), including canary manifests and validation tooling improvements.
 - For the concrete execution loop and handoff instructions, see: `docs/pipeline/audits/pipeline_validation_runbook.md`.
 

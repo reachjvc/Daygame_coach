@@ -274,15 +274,14 @@ These are “quiet correctness bugs” that can invalidate downstream evaluation
 
 ### 4.5 Merge Mechanics (Practical)
 
-If the goal is a single “master plan” document that can be implemented without re-litigating fundamentals, use this merge procedure:
+If the goal is a single “master plan” document that can be implemented without re-litigating fundamentals, use this consolidation procedure:
 
-1. Use `docs/pipeline/audits/claude_pipeline_validation.md` as the narrative backbone (it already contains concrete examples, prompt text, and effort estimates).
-2. Copy Codex’s “planning-only / safety” guardrails and make them the top-of-doc constraint block.
-3. Replace Claude Section 7 (“Validation Strategy”) with Codex Section 7 content (evidence bundle contract + reason codes; quarantine + waivers; tiered RAG-ready computation).
-4. In the stage-by-stage section, keep Claude’s table formatting but inject Codex’s stage-specific contract items (layout modes + pairing rules; 06b → 06c enum/schema alignment and “no mixed”; 06c post-patch validation + recompute `conversations[]` if boundary fixes remain auto-applied; 07 → 09 global segment-id contract).
-5. Add Codex appendices (stage report schema, verification schema v2 drafts) as the “spec layer” so implementation can be unblocked without re-deriving schemas.
-6. Consolidate Open Questions into one numbered list and resolve contradictions explicitly (Stage 08 gating scope + threshold; Stage 09/10 key stability + migration).
-7. Keep Claude’s “FLAG video analysis” and “prompt text proposals” as the “evidence layer” (they justify why the specs and validators are needed; they seed threshold calibration and A/B prompt tests).
+1. Use `docs/pipeline/audits/codex_pipeline_validation.md` as the backbone.
+2. Keep planning-only / safety guardrails as the top constraint block.
+3. Keep evidence bundle contract + reason codes + quarantine/waiver + tiered readiness sections as normative spec.
+4. Preserve stage-specific contract items (layout modes + pairing rules; 06b→06c enum/schema alignment and “no mixed”; 06c post-patch validation; 07→09 global segment-id contract).
+5. Keep appendices (stage report schema, verification schema updates) as implementation specs.
+6. Consolidate open questions into one numbered list and resolve contradictions explicitly (Stage 08 gating scope + threshold; Stage 09/10 key stability + migration).
 
 ---
 

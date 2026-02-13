@@ -4,8 +4,8 @@
 **Updated:** 02-07-2026
 
 **Output Filename Convention:**
-- Claude agent → `claude_pipeline_validation.md`
-- Codex agent → `codex_pipeline_validation.md`
+- Primary plan/audit → `codex_pipeline_validation.md`
+- Execution runbook → `pipeline_validation_runbook.md`
 
 ---
 

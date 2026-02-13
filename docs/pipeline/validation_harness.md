@@ -54,6 +54,11 @@ If you want to see whether **output quality improved**, you need to re-run the L
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate
 ```
 
+Run-history note:
+- Stage scripts skip existing outputs unless `--overwrite` is supplied.
+- For first-run vs Nth-run tracking, keep a run ID (for example `P001.1.rYYYYMMDDTHHMMZ`) and use it for validator outputs (`--stage-reports-dir`, `--quarantine-out`, semantic `--batch-id`).
+- If you need immutable stage artifact history, snapshot `data/06.video-type`, `data/06b.verify`, `data/06b.reverify`, `data/06c.patched`, and `data/07.content` before overwrite reruns.
+
 ## Advanced
 
 The manifest validator can be run directly:
