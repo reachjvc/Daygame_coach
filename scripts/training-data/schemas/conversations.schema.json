@@ -166,6 +166,30 @@
           "opener_type": {
             "type": "string",
             "description": "Type of opener used (e.g., direct, compliment, situational)"
+          },
+          "target_participation": {
+            "type": "object",
+            "description": "Conversation-level target participation signal for one-target vs multiple-target scenarios.",
+            "required": ["label", "target_speaker_ids", "confidence", "reasoning"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "enum": ["single_woman", "multiple_women", "unknown"]
+              },
+              "target_speaker_ids": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Distinct speaker_id values that were observed with target role in this conversation."
+              },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "reasoning": {
+                "type": "string"
+              }
+            }
           }
         }
       }

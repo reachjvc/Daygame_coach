@@ -89,22 +89,28 @@ Note: `06b.verify` and `07.content` require Claude (network/auth). In the Codex 
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag
 # Optional: skip known-bad videos from a quarantine file
 # ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag --quarantine-file data/validation/quarantine/CANARY.1.json
+# Strict reverify gate (recommended for production hardening):
+# ./scripts/training-data/06b.reverify --manifest docs/pipeline/batches/CANARY.1.txt
+# ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy reverify_patched
 ```
 
 Note: Stage 06b now drops low-confidence (<0.70) misattribution/collapse auto-fix suggestions from structured fix arrays and records those drops in `other_flags`.
 If 06b returns parseable-but-schema-invalid JSON, it now performs bounded schema-repair retries before failing the video.
+Stage 06/06b/06c/07 now default to source-video artifact writes (`data/<stage>/<source>/<video_dir>/<stem>.*`) while still reading legacy source-flat/root-flat artifacts for compatibility.
 
-**Claude model strategy (quota control):**
-- Use `--model sonnet` for iteration/canary loops (cheaper).
-- Re-run `CANARY.1` and `HOLDOUT.1` with `--model opus` only for sign-off on major changes (or on specific “problem videos”).
+**Claude model strategy:**
+- `06.video-type`, `06b.verify`, and `07.content` default to `--model opus`.
+- Keep `opus` for both canary and holdout so quality behavior is stable across runs.
 
 Examples:
 
 ```bash
-./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
-./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.txt --model sonnet
-./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy allow_flag --model sonnet
-./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --verification-gate-policy allow_flag --model opus
+./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt --model opus
+./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.txt --model opus
+./scripts/training-data/06b.reverify --manifest docs/pipeline/batches/CANARY.1.txt --model opus
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --verification-gate-policy reverify_patched --model opus
+./scripts/training-data/06b.reverify --manifest docs/pipeline/batches/HOLDOUT.1.txt --model opus
+./scripts/training-data/07.content --manifest docs/pipeline/batches/HOLDOUT.1.txt --verification-gate-policy reverify_patched --model opus
 ```
 
 Notes:
@@ -117,10 +123,12 @@ Notes:
 - `07.content` blocks `REJECT` by default (unless `--verification-gate-policy allow_flag` and patch-clean salvage applies). For debugging/evaluation you can bypass the 06b gate:
 
 ```bash
-./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model sonnet
+./scripts/training-data/07.content --input data/06c.patched/<source>/<video>.conversations.json --skip-verification --overwrite --model opus
 ```
 
 If a `REJECT` video was patched cleanly by `06c.patch` (fixes applied, `flags_not_fixed_count=0`), Stage 07 will allow it under the same explicit waiver as `FLAG` by passing `--verification-gate-policy allow_flag` (or the legacy alias `--allow-flag`).
+For stricter production gating, run `06b.reverify` on `06c.patched` outputs and use `--verification-gate-policy reverify_patched` so Stage 07 only proceeds when baseline `06b.verify` exists and reverify is `APPROVE`/`FLAG`.
+When run via `sub-batch-pipeline --stage 07 --verification-gate-policy reverify_patched`, the orchestrator now auto-synthesizes `data/validation/quarantine/<subbatch>.json` from reverify `REJECT` verdicts when no quarantine file is present.
 
 ### 1b) Revalidate Stage 07 (no Claude; deterministic)
 
@@ -128,6 +136,8 @@ Use this after changing Stage 07 normalization/validators, to refresh outputs wi
 
 ```bash
 ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --revalidate
+# Strict gate-friendly revalidate (recommended when using reverify_patched):
+# ./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.txt --revalidate --verification-gate-policy reverify_patched --quarantine-file data/validation/quarantine/CANARY.1.json
 ```
 
 ### 2) PASS/FAIL harness (read-only)
@@ -142,7 +152,7 @@ This includes:
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py \
   --manifest docs/pipeline/batches/CANARY.1.txt \
-  --stage07-gate-policy allow_flag
+  --stage07-gate-policy reverify_patched
 ```
 
 To also require Stage 05 audio_features artifacts/payload integrity in the same harness run, add `--check-stage05-audio`.
@@ -155,6 +165,8 @@ If you run via `sub-batch-pipeline`, use:
 (`--validate-deep` now expands to `--check-stage05-audio --check-stage08-report --check-stage09-chunks`.)
 To use permissive Stage 07 gating in validation (`FLAG` and patched-clean `REJECT` allowed), add:
 `--stage07-gate-policy allow_flag` (or `--allow-flag` alias in the orchestrator).
+To require strict reverify gating in validation, use:
+`--stage07-gate-policy reverify_patched` (requires `data/06b.reverify/*` artifacts for the manifest scope).
 To scope validation to a single source within the manifest:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --source <source_name>`
 Optional waivers: `--waiver-file docs/pipeline/waivers/CANARY.1.json` to downgrade explicit known checks (video/check scoped) to `info`.
@@ -192,6 +204,7 @@ Or emit quarantine from orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-quarantine`
 Then Stage 07 can auto-consume `data/validation/quarantine/CANARY.1.json` when run via:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --stage 07`
+In `reverify_patched` mode, Stage 07 also auto-generates that quarantine file from 06b.reverify verdicts if it is missing.
 
 ### 3) Scorecard (writes by default, use `--no-write` if you only want stdout)
 

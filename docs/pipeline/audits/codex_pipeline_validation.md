@@ -1,7 +1,7 @@
 # Codex Pipeline Validation Plan (Supplement)
 
-**Status:** Draft (in progress; partially implemented on `pipeline-validation-hardening`)
-**Updated:** 2026-02-09
+**Status:** Draft (active implementation; key decisions locked on `pipeline-validation-hardening`)
+**Updated:** 2026-02-13
 
 This document is intentionally structured to merge cleanly with `docs/pipeline/audits/claude_pipeline_validation.md`.
 
@@ -31,6 +31,29 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
 - Canary (`CANARY.1`) was rerun through Stage 07 revalidation; Stage 07/08 remain warning-only (no hard failures) and Barcelona compilation now processes cleanly (Stage 07 passes with transcript-artifact warnings only).
 - Semantic judge prompt is now iterating (`v1.2.8` currently); it’s useful for spotting regressions, but treat phase-related “major” flags as directional until the rubric stabilizes.
 
+**Recent implementation notes (2026-02-13):**
+- Decision lock-in applied from implementation review:
+  - `1b`: no `mixed` schema role; use `unknown` + warnings when uncertain.
+  - `2b`: canonical target remains source-video layout, while keeping root-flat/source-flat compatibility during migration.
+  - `3c`: Stage 07 production gate uses re-verify-on-patched flow (`reverify_patched`).
+- Stage 06 now emits `conversations[].target_participation` with enum:
+  `single_woman|multiple_women|unknown` (and flags unknown conversations for review).
+- Stages 06/06b/07 now default to `--model opus`.
+- Added `scripts/training-data/06b.reverify` and wired `reverify_patched` end-to-end across:
+  - `07.content`
+  - `validation/validate_manifest.py`
+  - `batch/sub-batch-pipeline`
+- `sub-batch-pipeline --stage 07 --verification-gate-policy reverify_patched` now auto-synthesizes
+  `data/validation/quarantine/<subbatch>.json` from 06b.reverify `REJECT` verdicts when no quarantine file exists.
+- Added layout compatibility fixes for manifest mode:
+  - `06b.verify` can reverify from root-flat `06c.patched` inputs via manifest fallback.
+  - `07.content` manifest mode can discover root-flat `06c.patched` inputs and legacy root-flat Stage 07 outputs.
+- Fixed `sub-batch-pipeline --view` discovery for stages 06/06b/06c/07 when stage dirs are symlinks:
+  - stage view now resolves symlink roots before `find`, so root-flat/source-flat artifacts are surfaced correctly.
+- Current CANARY reverify snapshot (`2026-02-13`):
+  - `APPROVE=2`, `FLAG=4`, `REJECT=1`
+  - blocked by policy: `6ImEzB6NhiI` (reverify verdict `REJECT`).
+
 **Command safety legend (to prevent accidental writes while auditing):**
 - Read-only: `rg`, `find`, `ls`, `cat`, `jq`, viewing code, opening existing JSON, etc.
 - Writes-to-`data/`: any stage script run (01-10), `batch_report.py` (always creates `data/batch_reports/*`), and any command that creates/updates state under `data/`.
@@ -43,15 +66,10 @@ This document is intentionally structured to merge cleanly with `docs/pipeline/a
   - output layout/pairing rules + cross-stage indexing semantics
 - Where the docs disagree on baseline numbers, treat them as "snapshot-only" and re-measure during the execution phase.
 
-**Known deltas with Claude (resolve explicitly during merge):**
-- Stage 07 verification gate policy:
-  - current code and Claude rubric: only `APPROVE` proceeds
-  - this doc’s recommended default: block `REJECT`; allow `FLAG` after patching (or require explicit waiver)
+**Known deltas with Claude (remaining to resolve during merge):**
 - RAG-ready rubric strictness:
   - Claude’s rubric treats several 06b-derived issues as blocking for readiness
   - this doc proposes a tiered readiness label (`RAG_READY`, `RAG_READY_WITH_WARNINGS`, `NOT_READY`) computed from deterministic reports
-- Stage 09/10 idempotency keys:
-  - current code uses title-derived stems; this doc recommends `sourceKey = <channel>/<video_id>.txt`
 
 **Non-goals (still):**
 - Don’t redesign the taxonomy content yet; measure drift first (treat taxonomy expansion as a human decision).
@@ -193,10 +211,10 @@ But the stage scripts, when run via `--manifest`, default to **nested outputs**:
 
 Impact:
 - `--status` may still work (it uses recursive `find`), but
-- `--view` can miss artifacts because it only searches `maxdepth 1` for "flat" stages.
+- historically, `--view` could miss artifacts in mixed layouts (especially when stage dirs were symlinks); this is now fixed for 06/06b/06c/07 by resolving symlink roots and scanning source-flat + root-flat fallbacks.
 
 Plan requirement:
-- Minimum (small change): teach `--view` discovery to look under `data/<stage>/<source>/` for 06/06b/06c/07 (source-flat support).
+- Minimum (small change): teach `--view` discovery to look under `data/<stage>/<source>/` for 06/06b/06c/07 (source-flat support). (Implemented)
 - Preferred (long-term consistency): migrate 06/06b/06c/07 outputs to source-video layout and then treat them as nested stages in view logic.
 - Avoid: forcing everything back to root-flat just to satisfy `--view` (increases collisions and breaks per-source isolation).
 
@@ -215,27 +233,40 @@ Plan requirement:
 |---------|---------|-----------------|
 | APPROVE | No issues found | Copy unchanged to 06c |
 | FLAG | Issues with fixes | Apply fixes in 06c |
-| REJECT | Critical issues | Halt pipeline |
+| REJECT | Critical issues | Block Stage 07 under gate policy (`allow_flag`/`reverify_patched` can still keep run continuity while quarantining blocked videos) |
 
-### 2.5 Decision Recommendations (Proposed Defaults)
+### 2.5 Decision Outcomes (Locked Defaults)
 
-These are the defaults I would implement unless you explicitly choose otherwise.
+These defaults are now selected for implementation (decision lock: 2026-02-13).
 
 1. **Canonical output layout (recommended target): source-video for 01-07**
+   - Decision: **accepted** (target layout remains source-video).
    - Target standard (recommended): **source-video** for stages 01-07:
      - `data/<stage>/<source>/<video_dir>/<stem>.*`
      - Implementation approach: compute outputs by mirroring the input’s relative path under the stage root (i.e., keep `<video_dir>/`).
    - Legacy/compatibility requirement: during migration, validators + views must support:
      - root-flat (`data/<stage>/*.json`) and source-flat (`data/<stage>/<source>/*.json`)
    - Root-flat should remain allowed only for ad-hoc single-file runs, but must embed `source`+`video_id` in metadata and validators must still be able to locate/pair it.
+   - Current implementation state:
+     - manifest discovery for 06b/07 is now compatibility-safe across root-flat/source-flat/source-video.
+     - source-video default writes are now implemented for 06/06b/06c/07 by mirroring input-relative paths.
+     - legacy source-flat/root-flat artifact detection remains for compatibility during migration.
 
 2. **No `mixed` role in conversations schema**
+   - Decision: **accepted** (no schema enum expansion to `mixed`).
    - Keep conversations schema enums strict.
    - Handle “mixed speaker” as a non-patchable artifact (`other_flags` + quarantine) instead of a role value.
+   - Additional decision detail:
+     - Stage 06 now tracks target multiplicity with `target_participation.label = single_woman|multiple_women|unknown`.
 
-3. **Stage 07 should not block on 06b FLAG by default**
-   - Preferred gate: block only on 06b `REJECT` and on schema-invalid/failed patch outputs.
-   - If we want an “only APPROVE proceeds” cost-control gate, make it explicit and auditable (waiver file), not the default.
+3. **Stage 07 gate policy: reverify patched outputs**
+   - Decision: **accepted** (`reverify_patched` for production-quality runs).
+   - Policy behavior:
+     - Baseline `06b.verify` artifacts/verdicts are still required.
+     - Run 06b verification on `data/06c.patched` outputs (`06b.reverify`).
+     - Stage 07 proceeds only when reverify verdict is `APPROVE` or `FLAG`.
+     - Reverify `REJECT` remains blocked and auditable.
+   - `allow_flag` remains available as an explicit override path for exploratory/debug runs.
 
 4. **Cross-stage validation is mandatory**
    - Run it after 07 (or as part of 07’s post-validation) and fail fast on structural mismatches.
@@ -1065,10 +1096,9 @@ Plan:
 5. Sample size discipline:
    - Always report `n` and confidence bounds (at least p50/p90, not only mean).
    - Keep canary samples small (quota control) but run holdout periodically to avoid overfitting.
-6. Claude model selection discipline (quota control):
-   - Use `sonnet` for day-to-day iteration on `CANARY.*` (cheap trend signal).
-   - Re-run with `opus` for sign-off on major prompt/schema changes (or for targeted “problem video” deep dives).
-   - Record the model identifier in stage `metadata` so cost/perf drift is attributable.
+6. Claude model selection discipline:
+   - Decision lock: use `opus` for canary + holdout validation runs (no split-model shortcut between iteration and sign-off).
+   - Keep model identifier in stage `metadata` so drift is attributable.
 
 ### 9.5.2 Retrieval-First Evaluation (More Direct Than Rubric)
 
@@ -1200,16 +1230,19 @@ P2 (drift + regression):
 
 This section is intentionally written as a dependency graph + sequencing so it can be merged with Claude's recommendations and then converted into an implementation checklist.
 
-### 13.1 Decisions Required Before Coding (Choose Explicitly)
+### 13.1 Decisions (Locked 2026-02-13)
 
-1. Canonical artifact layout (recommended target: source-video for stages 01-07).
+1. Canonical artifact layout:
+   - Decision: source-video is the target for stages 01-07.
+   - Migration policy: keep root-flat + source-flat compatibility in validators/orchestration until full write-path migration is complete.
 2. Stage 07 verification gate policy:
-   - current behavior: only `APPROVE` proceeds
-   - proposed default: block `REJECT`; allow `FLAG` after patching (or require explicit waiver)
+   - Decision: `reverify_patched` (baseline `06b.verify` required; run 06b on `06c.patched`, allow only reverify `APPROVE|FLAG`).
+   - Explicit override available: `allow_flag`.
 3. “Mixed speaker” representation:
-   - recommended: do not introduce new enums into `conversations.schema.json`; represent as artifact flags + quarantine
+   - Decision: do not introduce `mixed` into `conversations.schema.json`.
+   - Use unknown + artifact/warning signaling; include conversation-level `target_participation` with `multiple_women` when confidence is high.
 4. Stable idempotency keys for stages 09/10:
-   - recommended: `sourceKey = <channel>/<video_id>.txt` (not title-based)
+   - Decision: use `sourceKey = <channel>/<video_id>.txt` (not title-based).
 
 ### 13.2 Phase P0 (Correctness, Scale Blockers)
 
@@ -1263,11 +1296,12 @@ Deliverables:
 Acceptance criteria (P2):
 - A regression in key distributions (e.g., unknown-speaker rate, evidence mismatch rate) is caught automatically before scaling to full batch runs.
 
-### 13.5 Files Likely Touched (For Implementation Later)
+### 13.5 Files Touched + Likely Next
 
 Layout + orchestration:
 - `scripts/training-data/06.video-type` (output path mirroring, true dry-run, debug artifact location)
 - `scripts/training-data/06b.verify` (schema enforcement, output path mirroring, true dry-run, debug artifact location)
+- `scripts/training-data/06b.reverify` (new wrapper stage: verify patched 06c outputs into `data/06b.reverify`)
 - `scripts/training-data/06c.patch` (post-patch schema validation, patch refusal, report emission)
 - `scripts/training-data/07.content` (verification finder robustness, gate policy, output path mirroring, cross-stage validator invocation)
 - `scripts/training-data/batch/sub-batch-pipeline` (view discovery for 06-07 layouts)
@@ -1580,43 +1614,45 @@ Recommendation:
 
 ## 14) Execution Checklist (Next Work)
 
-- [ ] Confirm canonical artifact layout (recommended target: source-video for stages 01-07) and align: stage scripts, orchestrator views, and validators
+- [x] Confirm canonical artifact layout policy (target: source-video for stages 01-07; migration supports root/source-flat compatibility)
+- [x] Complete source-video default write migration for 06/06b/06c/07 (keep compatibility but stop relying on root-flat writes)
 - [ ] Approve the stage report contract (Appendix B) and reason-code enum (Section 7.2.1)
-- [ ] Approve the 06b verification contract (Appendix C) and decide how to represent “mixed speaker” without breaking schema
-- [ ] Decide Stage 07 gate policy (block only REJECT vs block FLAG) and make it explicit (waivers if needed)
-- [ ] Decide Stage 08 report naming (avoid overwrites; batch/manifest scoped)
+- [x] Approve the 06b verification contract direction for “mixed speaker” handling (no `mixed` enum; unknown + artifact flags)
+- [x] Decide Stage 07 gate policy and wire it end-to-end (`reverify_patched` for production runs)
+- [x] Decide Stage 08 report naming (batch/manifest scoped; avoid overwrite)
 - [ ] Finalize RAG-ready warning policy thresholds (Section 7.3.2) and which warnings are allowed to ingest
 - [ ] Adopt quarantine + waiver mechanism (Section 7.2.2) so failures don’t get reprocessed silently
 
 ---
 
-## 15) Open Questions (Needs Decision)
+## 15) Open Questions (Remaining)
 
-1. Should the pipeline allow a "mixed" role at all?
-   - If yes: expand `conversations.schema.json` and update downstream chunking/ingest to handle it.
-   - If no: treat mixed-speaker segments as `unknown` + artifact flag, and never auto-patch into "mixed".
+Resolved on 2026-02-13 (no longer open):
+1. `mixed` role handling:
+   - Decision: no `mixed` enum in conversations schema.
+   - Use unknown + artifact/warning handling; add conversation-level `target_participation` with `multiple_women` when confidence is high.
+2. Canonical output layout direction:
+   - Decision: source-video is the target.
+   - Transition policy: keep root/source-flat compatibility until migration is complete.
+3. Stage 07 gate policy:
+   - Decision: `reverify_patched` for production-quality gating; `allow_flag` remains an explicit override.
+4. Stable idempotency keys for Stage 09/10:
+   - Decision: use `<channel>/<video_id>.txt` stable source keys.
 
-2. Canonical output layout:
-   - Target: source-video for 01-07 (recommended), or keep 06/06b/06c/07 source-flat?
-   - Migration: one-time move of legacy artifacts into the canonical layout, or support all modes indefinitely in tooling?
-
-3. RAG-ready acceptance:
+Still open:
+1. RAG-ready acceptance:
    - Are WARNING-level transcript artifacts allowed for ingestion, or do they require quarantine?
 
-4. Stage 07 verification gate policy:
-   - Only `APPROVE` proceeds (current behavior), or allow `FLAG` after 06c patching (recommended default), or allow `FLAG` only with an explicit waiver?
-   - Alternative: introduce a “re-verify patched” step (run 06b.verify on `data/06c.patched` outputs) and gate Stage 07 on that second verdict.
-
-5. Turn-phase segment indexing contract:
+2. Turn-phase segment indexing contract:
    - Current reality: Stage 07 output uses global `segments[].id` for `turn_phases[].segment` (it remaps from conversation-local indices before writing).
-   - Decision: keep global ids (recommended) and fix Stage 09 to consume them, or emit both `segment_id` (global) and `segment_index` (conversation-local) explicitly to avoid future ambiguity?
+   - Remaining implementation choice: keep global ids and fix Stage 09 consumption, or emit both `segment_id` and `segment_index` explicitly.
 
-6. Stable idempotency keys for Stage 09/10:
-   - Switch `sourceKey` to `<channel>/<video_id>.txt` (recommended) and migrate/delete old embeddings keyed by title-derived stems, or keep title-derived keys and accept potential orphans?
+3. Stage 08 (taxonomy) gating scope:
+   - Option A: treat it as a strict batch gate that blocks 09/10 for the entire batch.
+   - Option B: quarantine only offending videos/concepts and allow the rest of the batch to proceed.
 
-7. Stage 08 (taxonomy) gating scope:
-   - Option A: treat it as a strict batch gate that blocks 09/10 for the entire batch (current-style, simplest).
-   - Option B: quarantine only the offending videos/concepts and allow the rest of the batch to proceed (more complex but less “batch hostage” behavior).
+4. Layout migration cutoff:
+   - When should legacy root-flat/source-flat write paths be considered deprecated enough to enforce source-video-only outputs for 06/06b/06c/07?
 
 ---
 

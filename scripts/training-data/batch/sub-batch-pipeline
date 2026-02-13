@@ -139,12 +139,15 @@ Options:
   --waiver-file <path>     With --validate, apply manifest-validator waivers file
                            Default auto-detect: docs/pipeline/waivers/<subbatch>.json
   --stage07-gate-policy <p>
-                           With --validate, gate policy: approve_only (default) or allow_flag
+                           With --validate, gate policy: approve_only (default), allow_flag, or reverify_patched
+                           reverify_patched requires baseline 06b.verify artifacts plus 06b.reverify verdicts
   --allow-flag             Alias for --stage07-gate-policy allow_flag
   --verification-gate-policy <p>
-                           With --stage 07, gate policy for 07.content: approve_only (default) or allow_flag
+                           With --stage 07, gate policy for 07.content: approve_only (default), allow_flag, or reverify_patched
+                           reverify_patched still requires baseline 06b.verify artifacts; it adds 06b.reverify gating on top
   --quarantine-file <path> With --stage 07, skip quarantined videos; with --validate, treat listed videos as quarantined
                            Default auto-detect: data/validation/quarantine/<subbatch>.json (for both modes)
+                           In --stage 07 + reverify_patched mode, missing auto quarantine is synthesized from 06b.reverify REJECT verdicts
   --source <name>          With --validate, only validate one source from the manifest
   --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
   --stage-reports-dir <p>  Output directory for --emit-stage-reports
@@ -203,6 +206,127 @@ load_manifest_ids() {
   grep -v "^#" "$manifest" | while read -r line; do
     extract_video_id "$line"
   done
+}
+
+# Build quarantine JSON from Stage 06b.reverify REJECT verdicts for a manifest.
+emit_reverify_quarantine() {
+  local manifest="$1"
+  local out_path="$2"
+  local reverify_root="$REPO_ROOT/data/06b.reverify"
+
+  python3 - "$manifest" "$out_path" "$reverify_root" <<'PYEOF'
+import json
+import re
+import sys
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+manifest_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+reverify_root = Path(sys.argv[3])
+
+video_re = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+def parse_manifest(path: Path) -> List[Tuple[str, str]]:
+    entries: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        source = parts[0].strip()
+        folder = parts[1].strip()
+        match = video_re.search(folder)
+        if not match:
+            continue
+        entries.append((source, match.group(1)))
+    return entries
+
+def pick_verification_path(candidates: List[Path], source: str) -> Optional[Path]:
+    if not candidates:
+        return None
+    source_tag = f"/{source}/"
+    for path in candidates:
+        normalized = str(path).replace("\\", "/")
+        if source_tag in normalized:
+            return path
+    return candidates[0]
+
+def index_verification_paths(paths) -> Dict[str, List[Path]]:
+    idx: Dict[str, List[Path]] = {}
+    for path in sorted(paths):
+        match = video_re.search(path.name)
+        if not match:
+            continue
+        idx.setdefault(match.group(1), []).append(path)
+    return idx
+
+entries = parse_manifest(manifest_path)
+source_index: Dict[str, Dict[str, List[Path]]] = {}
+root_flat_index: Dict[str, List[Path]] = {}
+if reverify_root.exists():
+    for source in sorted({src for src, _ in entries}):
+        source_dir = reverify_root / source
+        if source_dir.exists():
+            source_index[source] = index_verification_paths(source_dir.rglob("*.verification.json"))
+        else:
+            source_index[source] = {}
+    root_flat_index = index_verification_paths(reverify_root.glob("*.verification.json"))
+
+reject_video_ids: List[str] = []
+reject_videos: List[Dict[str, object]] = []
+for source, video_id in entries:
+    candidates = source_index.get(source, {}).get(video_id, [])
+    if not candidates:
+        candidates = root_flat_index.get(video_id, [])
+    path = pick_verification_path(candidates, source)
+    if path is None:
+        continue
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+    verdict_raw = payload.get("verdict") or payload.get("overall_verdict")
+    verdict = str(verdict_raw or "").strip().upper()
+    if verdict == "REJECT":
+        reject_video_ids.append(video_id)
+        reject_videos.append({
+            "video_id": video_id,
+            "source": source,
+            "checks": ["reverify_reject"],
+            "reasons": [{
+                "severity": "error",
+                "check": "reverify_reject",
+                "message": "Stage 06b.reverify verdict is REJECT",
+            }],
+            "verification": str(path),
+        })
+
+reject_video_ids = sorted(set(reject_video_ids))
+reject_videos.sort(key=lambda row: str(row.get("video_id", "")))
+
+payload = {
+    "version": 1,
+    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "manifest": str(manifest_path),
+    "source_filter": None,
+    "quarantine_level": "error",
+    "video_count": len(entries),
+    "quarantined_video_count": len(reject_video_ids),
+    "quarantined_video_ids": reject_video_ids,
+    "videos": reject_videos,
+    "generator": "sub-batch-pipeline:reverify",
+}
+out_path.parent.mkdir(parents=True, exist_ok=True)
+out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(
+    f"[sub-batch-pipeline] Reverify quarantine emitted: {out_path} "
+    f"(rejected={len(reject_video_ids)}, manifest_videos={len(entries)})"
+)
+PYEOF
 }
 
 # List all batches
@@ -414,6 +538,11 @@ run_stage() {
 
   local stage_dir="${STAGE_DIRS[$stage]}"
   local -a stage_args=(--manifest "$manifest")
+  local run_reverify=false
+  local reverify_script="$REPO_ROOT/scripts/training-data/06b.reverify"
+  local -a reverify_args=(--manifest "$manifest")
+  local quarantine_file=""
+  local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
 
   echo ""
   echo "=== Running Stage $stage for $sub_id ==="
@@ -421,22 +550,27 @@ run_stage() {
 
   if [[ "$stage" == "07" ]]; then
     stage_args+=(--verification-gate-policy "$RUN_VERIFICATION_GATE_POLICY")
-    local quarantine_file="$RUN_QUARANTINE_FILE"
+    if [[ "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]]; then
+      run_reverify=true
+    fi
+    quarantine_file="$RUN_QUARANTINE_FILE"
     if [[ -z "$quarantine_file" ]]; then
-      local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
       if [[ -f "$auto_quarantine" ]]; then
         quarantine_file="$auto_quarantine"
       fi
     fi
-    if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
-      stage_args+=(--quarantine-file "$quarantine_file")
-      echo "Using quarantine file: $quarantine_file"
-    elif [[ -n "$quarantine_file" ]]; then
-      echo "WARNING: Quarantine file not found, ignoring: $quarantine_file"
-    fi
   fi
 
   if [[ "$DRY_RUN" == true ]]; then
+    if [[ "$run_reverify" == true ]]; then
+      echo "[DRY RUN] Would run pre-gate reverify: $reverify_script ${reverify_args[*]}"
+    fi
+    if [[ "$stage" == "07" && -z "$quarantine_file" && "$run_reverify" == true ]]; then
+      echo "[DRY RUN] Would synthesize quarantine from reverify verdicts: $auto_quarantine"
+      stage_args+=(--quarantine-file "$auto_quarantine")
+    elif [[ "$stage" == "07" && -n "$quarantine_file" ]]; then
+      stage_args+=(--quarantine-file "$quarantine_file")
+    fi
     echo "[DRY RUN] Would run: $script ${stage_args[*]}"
     return 0
   fi
@@ -461,6 +595,38 @@ with open(status_file, "w") as f:
     json.dump(data, f, indent=2)
     f.write("\n")
 PYEOF
+  fi
+
+  # Optional pre-gate reverify pass
+  if [[ "$run_reverify" == true ]]; then
+    if [[ ! -x "$reverify_script" ]]; then
+      echo "ERROR: Missing executable reverify script: $reverify_script"
+      return 1
+    fi
+    echo "Running Stage 06b.reverify prerequisite (policy=reverify_patched)"
+    if ! "$reverify_script" "${reverify_args[@]}"; then
+      echo "Stage 06b.reverify: FAILED"
+      return 1
+    fi
+    echo "Stage 06b.reverify: COMPLETE"
+
+    if [[ -z "$quarantine_file" ]]; then
+      echo "Synthesizing quarantine file from 06b.reverify REJECT verdicts: $auto_quarantine"
+      if emit_reverify_quarantine "$manifest" "$auto_quarantine"; then
+        quarantine_file="$auto_quarantine"
+      else
+        echo "WARNING: Failed to synthesize reverify quarantine; continuing without quarantine file"
+      fi
+    fi
+  fi
+
+  if [[ "$stage" == "07" ]]; then
+    if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
+      stage_args+=(--quarantine-file "$quarantine_file")
+      echo "Using quarantine file: $quarantine_file"
+    elif [[ -n "$quarantine_file" ]]; then
+      echo "WARNING: Quarantine file not found, ignoring: $quarantine_file"
+    fi
   fi
 
   # Run the stage
@@ -501,6 +667,10 @@ create_stage_view() {
   local pattern="${STAGE_PATTERNS[$stage]}"
   local manifest="$BATCHES_DIR/${sub_id}.txt"
   local view_base="$VIEWS_DIR/$batch_id/$sub_id/$stage_dir"
+  local stage_data_root="$DATA_DIR/$stage_dir"
+  if [[ -L "$stage_data_root" ]]; then
+    stage_data_root=$(realpath "$stage_data_root")
+  fi
 
   # Clear existing view for this stage
   rm -rf "$view_base" 2>/dev/null || true
@@ -528,8 +698,8 @@ create_stage_view() {
 
 	    if is_nested_stage "$stage"; then
 	      # Nested stage: data/<stage>/<source>/<video>/
-	      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
-	      if [[ ! -d "$src_video_dir" && -d "$DATA_DIR/$stage_dir/$source" ]]; then
+	      local src_video_dir="$stage_data_root/$source/$folder"
+	      if [[ ! -d "$src_video_dir" && -d "$stage_data_root/$source" ]]; then
 	        # Folder names in manifests are display-only and can drift (unicode punctuation, title edits).
 	        # Resolve nested stage dirs by video_id when the exact folder is missing.
 	        while IFS= read -r -d '' d; do
@@ -541,7 +711,7 @@ create_stage_view() {
 	            src_video_dir="$d"
 	            break
 	          fi
-	        done < <(find "$DATA_DIR/$stage_dir/$source" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+	        done < <(find "$stage_data_root/$source" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 	      fi
 	      if [[ -d "$src_video_dir" ]]; then
 	        # Symlink all matching files in the video folder
@@ -561,7 +731,7 @@ create_stage_view() {
       # - Legacy (ad-hoc runs):         data/<stage>/*.json
 
       # 1) Source-video layout (if present)
-      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
+      local src_video_dir="$stage_data_root/$source/$folder"
       if [[ -d "$src_video_dir" ]]; then
         while IFS= read -r -d '' f; do
           found_file=true
@@ -574,7 +744,7 @@ create_stage_view() {
       fi
 
       # 2) Source-flat layout (if present)
-      local src_source_dir="$DATA_DIR/$stage_dir/$source"
+      local src_source_dir="$stage_data_root/$source"
       if [[ "$found_file" == false && -d "$src_source_dir" ]]; then
         while IFS= read -r -d '' f; do
           found_file=true
@@ -587,7 +757,7 @@ create_stage_view() {
       fi
 
       # 3) Root-flat fallback
-      if [[ "$found_file" == false && -d "$DATA_DIR/$stage_dir" ]]; then
+      if [[ "$found_file" == false && -d "$stage_data_root" ]]; then
         while IFS= read -r -d '' f; do
           found_file=true
           local link_name=$(basename "$f")
@@ -595,7 +765,7 @@ create_stage_view() {
           rel_target=$(realpath --relative-to="$video_view_dir" "$f")
           ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
           ((++link_count))
-        done < <(find "$DATA_DIR/$stage_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+        done < <(find "$stage_data_root" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
     fi
 
@@ -973,27 +1143,27 @@ while [[ $# -gt 0 ]]; do
     --stage07-gate-policy)
       [[ $# -lt 2 ]] && error "--stage07-gate-policy requires a value"
       VALIDATE_STAGE07_GATE_POLICY="$2"
-      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" ]] \
-        || error "--stage07-gate-policy must be one of: approve_only, allow_flag"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" || "$VALIDATE_STAGE07_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
       shift 2
       ;;
     --stage07-gate-policy=*)
       VALIDATE_STAGE07_GATE_POLICY="${1#--stage07-gate-policy=}"
-      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" ]] \
-        || error "--stage07-gate-policy must be one of: approve_only, allow_flag"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" || "$VALIDATE_STAGE07_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
       shift
       ;;
     --verification-gate-policy)
       [[ $# -lt 2 ]] && error "--verification-gate-policy requires a value"
       RUN_VERIFICATION_GATE_POLICY="$2"
-      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" ]] \
-        || error "--verification-gate-policy must be one of: approve_only, allow_flag"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" || "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
       shift 2
       ;;
     --verification-gate-policy=*)
       RUN_VERIFICATION_GATE_POLICY="${1#--verification-gate-policy=}"
-      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" ]] \
-        || error "--verification-gate-policy must be one of: approve_only, allow_flag"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" || "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
       shift
       ;;
     --quarantine-file)
