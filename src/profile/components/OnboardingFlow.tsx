@@ -53,7 +53,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   const [primaryGoal, setPrimaryGoal] = useState<string | null>(null);
 
   // Get archetypes based on age and region
-  const archetypes = getArchetypes(ageRange);
+  const archetypes = getArchetypes(ageRange, selectedRegion ?? undefined);
 
   const handleNext = () => {
     if (step < 5) {

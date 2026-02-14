@@ -5,6 +5,7 @@ import { ChevronDown, ChevronRight } from "lucide-react"
 import { GoalCard } from "./GoalCard"
 import { GoalToggle } from "./GoalToggle"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
+import type { ProjectedDateInfo } from "../goalsService"
 
 const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
@@ -25,6 +26,7 @@ interface GoalCategorySectionProps {
   onEdit: (goal: GoalWithProgress) => void
   onAddChild?: (parentGoal: GoalWithProgress) => void
   onGoalToggle?: (goalId: string, active: boolean) => Promise<void>
+  projections?: Map<string, ProjectedDateInfo>
 }
 
 export function GoalCategorySection({
@@ -40,6 +42,7 @@ export function GoalCategorySection({
   onEdit,
   onAddChild,
   onGoalToggle,
+  projections,
 }: GoalCategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const label = CATEGORY_LABELS[category]
@@ -79,6 +82,8 @@ export function GoalCategorySection({
                 <GoalCard
                   goal={goal}
                   allGoals={allGoals}
+                  breadcrumbMode="none"
+                  projectedDate={projections?.get(goal.id) ?? null}
                   onIncrement={onIncrement}
                   onSetValue={onSetValue}
                   onComplete={onComplete}

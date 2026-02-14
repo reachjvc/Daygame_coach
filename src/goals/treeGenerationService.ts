@@ -108,10 +108,12 @@ function templateToInsert(tmpl: GoalTemplate, tempParentId: string | null): Batc
   if (tmpl.templateType === "milestone_ladder" && tmpl.defaultMilestoneConfig) {
     base.target_value = tmpl.defaultMilestoneConfig.target
     base.goal_type = "milestone"
+    base.milestone_config = tmpl.defaultMilestoneConfig as unknown as Record<string, unknown>
   } else if (tmpl.templateType === "habit_ramp" && tmpl.defaultRampSteps) {
     base.target_value = tmpl.defaultRampSteps[0].frequencyPerWeek
     base.goal_type = "habit_ramp"
     base.period = "weekly"
+    base.ramp_steps = tmpl.defaultRampSteps as unknown as Record<string, unknown>[]
   }
 
   if (tmpl.linkedMetric) {

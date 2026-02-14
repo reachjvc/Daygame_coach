@@ -2,14 +2,16 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Target, Settings2 } from "lucide-react"
+import { Plus, Loader2, Target, Settings2, Sparkles } from "lucide-react"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
 import { GoalCatalogPicker } from "./GoalCatalogPicker"
 import { GoalHierarchyView } from "./GoalHierarchyView"
-import { flattenTree, getCelebrationTier } from "../goalsService"
-import type { GoalWithProgress, GoalTreeNode, CelebrationTier } from "../types"
+import { DailyActionView } from "./DailyActionView"
+import { ViewSwitcher } from "./views/ViewSwitcher"
+import { flattenTree, getCelebrationTier, generateDirtyDogInserts } from "../goalsService"
+import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier } from "../types"
 
 export function GoalsHubContent() {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
@@ -24,6 +26,8 @@ export function GoalsHubContent() {
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
   const [defaultParentGoalId, setDefaultParentGoalId] = useState<string | null>(null)
   const [isCustomizeMode, setIsCustomizeMode] = useState(false)
+  const [viewMode, setViewMode] = useState<GoalViewMode>("daily")
+  const [showCatalog, setShowCatalog] = useState(false)
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -133,6 +137,18 @@ export function GoalsHubContent() {
     await fetchGoals()
   }
 
+  const handleAddDirtyDogGoals = async () => {
+    const inserts = generateDirtyDogInserts(goals)
+    if (inserts.length === 0) return
+    const response = await fetch("/api/goals/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goals: inserts }),
+    })
+    if (!response.ok) throw new Error("Failed to create dirty dog goals")
+    await fetchGoals()
+  }
+
   const handleFormSuccess = () => { fetchGoals() }
 
   const handleFormClose = (open: boolean) => {
@@ -176,13 +192,20 @@ export function GoalsHubContent() {
         <div className="flex items-center gap-2">
           {goals.length > 0 && (
             <>
-              <Button
-                variant={isCustomizeMode ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setIsCustomizeMode(!isCustomizeMode)}
-              >
-                <Settings2 className="size-4 mr-1" />
-                {isCustomizeMode ? "Done" : "Customize"}
+              <ViewSwitcher activeView={viewMode} onViewChange={setViewMode} />
+              {viewMode === "strategic" && (
+                <Button
+                  variant={isCustomizeMode ? "secondary" : "ghost"}
+                  size="sm"
+                  onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+                >
+                  <Settings2 className="size-4 mr-1" />
+                  {isCustomizeMode ? "Done" : "Customize"}
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => setShowCatalog(true)}>
+                <Sparkles className="size-4 mr-1" />
+                Browse Catalog
               </Button>
               <Button onClick={handleCreateGoal}>
                 <Plus className="size-4 mr-1" />
@@ -193,9 +216,18 @@ export function GoalsHubContent() {
         </div>
       </div>
 
-      {/* Content: catalog picker or goal display */}
       {goals.length === 0 ? (
         <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
+      ) : viewMode === "daily" ? (
+        <DailyActionView
+          goals={goals}
+          onIncrement={handleIncrement}
+          onSetValue={handleSetValue}
+          onComplete={handleComplete}
+          onReset={handleReset}
+          onEdit={handleEdit}
+          onAddChild={handleAddChild}
+        />
       ) : (
         <GoalHierarchyView
           goals={goals}
@@ -207,10 +239,10 @@ export function GoalsHubContent() {
           onEdit={handleEdit}
           onAddChild={handleAddChild}
           onGoalToggle={handleGoalToggle}
+          onAddDirtyDogGoals={handleAddDirtyDogGoals}
         />
       )}
 
-      {/* Goal Form Modal (manual creation still available) */}
       <GoalFormModal
         open={isFormOpen}
         onOpenChange={handleFormClose}
@@ -236,6 +268,19 @@ export function GoalsHubContent() {
           tier={celebration.tier}
           goalTitle={celebration.title}
           onDismiss={() => setCelebration(null)}
+        />
+      )}
+
+      {/* Catalog modal for existing users */}
+      {showCatalog && goals.length > 0 && (
+        <GoalCatalogPicker
+          existingGoals={goals}
+          onTreeCreated={() => {
+            setShowCatalog(false)
+            setIsLoading(true)
+            fetchGoals()
+          }}
+          onClose={() => setShowCatalog(false)}
         />
       )}
     </div>

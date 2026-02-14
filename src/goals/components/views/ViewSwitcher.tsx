@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { LayoutGrid, Clock } from "lucide-react"
+import { Sun, Map } from "lucide-react"
 import type { GoalViewMode } from "../../types"
 
 interface ViewSwitcherProps {
@@ -9,9 +9,9 @@ interface ViewSwitcherProps {
   onViewChange: (view: GoalViewMode) => void
 }
 
-const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof LayoutGrid; label: string }[] = [
-  { mode: "standard", icon: LayoutGrid, label: "Standard" },
-  { mode: "time-horizon", icon: Clock, label: "Time Horizon" },
+const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = [
+  { mode: "daily", icon: Sun, label: "Daily" },
+  { mode: "strategic", icon: Map, label: "Strategic" },
 ]
 
 export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {

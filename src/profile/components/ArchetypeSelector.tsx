@@ -15,6 +15,7 @@ interface ArchetypeSelectorProps {
   initialArchetype?: string | null
   initialSecondaryArchetype?: string | null
   initialTertiaryArchetype?: string | null
+  region?: string
 }
 
 const getArchetypePriorityLabel = (index: number) => {
@@ -44,9 +45,10 @@ export function ArchetypeSelector({
   initialArchetype,
   initialSecondaryArchetype,
   initialTertiaryArchetype,
+  region,
 }: ArchetypeSelectorProps) {
   const ageRange = useMemo(() => [ageRangeStart, ageRangeEnd], [ageRangeStart, ageRangeEnd])
-  const archetypes = useMemo(() => getArchetypes(ageRange), [ageRange])
+  const archetypes = useMemo(() => getArchetypes(ageRange, region), [ageRange, region])
   const [selectedArchetypes, setSelectedArchetypes] = useState<string[]>(() =>
     [initialArchetype, initialSecondaryArchetype, initialTertiaryArchetype].filter(
       (name): name is string => Boolean(name)

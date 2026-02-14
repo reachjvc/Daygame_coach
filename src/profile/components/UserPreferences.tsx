@@ -87,7 +87,7 @@ export function UserPreferences({
 }: UserPreferencesProps) {
   const ageRange = [age_range_start, age_range_end];
   const archetypeMap = new Map(
-    getArchetypes(ageRange).map((arch) => [arch.name, arch])
+    getArchetypes(ageRange, preferred_region).map((arch) => [arch.name, arch])
   );
   const primaryArchetypeData = archetypeMap.get(archetype);
   const secondaryArchetypeData = secondary_archetype

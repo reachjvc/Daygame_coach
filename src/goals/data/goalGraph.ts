@@ -93,7 +93,7 @@ const L3_FIELD_WORK: GoalTemplate[] = [
     displayCategory: "field_work",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 1000, steps: 15, curveTension: CURVE_TENSION },
-    linkedMetric: "approaches_weekly",
+    linkedMetric: "approaches_cumulative",
   }),
   template("l3_approach_frequency", "Approach Frequency", 3, "input", {
     displayCategory: "field_work",
@@ -125,13 +125,13 @@ const L3_RESULTS: GoalTemplate[] = [
     displayCategory: "results",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 25, steps: 6, curveTension: CURVE_TENSION },
-    linkedMetric: "numbers_weekly",
+    linkedMetric: "numbers_cumulative",
   }),
   template("l3_instadates", "Instadates", 3, "outcome", {
     displayCategory: "results",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
-    linkedMetric: "instadates_weekly",
+    linkedMetric: "instadates_cumulative",
   }),
   template("l3_dates", "Dates from Cold Approach", 3, "outcome", {
     displayCategory: "results",

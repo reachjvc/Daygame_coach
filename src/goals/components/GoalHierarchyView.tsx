@@ -1,11 +1,14 @@
 "use client"
 
 import { useMemo } from "react"
-import { Target } from "lucide-react"
+import { Target, Clock, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { AchievementBadge } from "./AchievementBadge"
 import { GoalCategorySection } from "./GoalCategorySection"
 import { GoalCard } from "./GoalCard"
 import { groupGoalsByHierarchy } from "../goalHierarchyService"
+import { computeProjectedDate } from "../goalsService"
+import type { ProjectedDateInfo } from "../goalsService"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
 
 const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog"]
@@ -20,6 +23,7 @@ interface GoalHierarchyViewProps {
   onAddChild?: (parentGoal: GoalWithProgress) => void
   isCustomizeMode?: boolean
   onGoalToggle?: (goalId: string, active: boolean) => Promise<void>
+  onAddDirtyDogGoals?: () => void
 }
 
 export function GoalHierarchyView({
@@ -32,6 +36,7 @@ export function GoalHierarchyView({
   onAddChild,
   isCustomizeMode = false,
   onGoalToggle,
+  onAddDirtyDogGoals,
 }: GoalHierarchyViewProps) {
   const { sections, customGoals } = useMemo(
     () => groupGoalsByHierarchy(goals),
@@ -40,6 +45,16 @@ export function GoalHierarchyView({
 
   // Collect all L3 goals across all sections for achievement progress
   const allL3Goals = useMemo(() => goals.filter((g) => g.goal_level === 3), [goals])
+
+  // Compute date projections for all goals
+  const projectionMap = useMemo(() => {
+    const map = new Map<string, ProjectedDateInfo>()
+    for (const goal of goals) {
+      const projection = computeProjectedDate(goal)
+      if (projection) map.set(goal.id, projection)
+    }
+    return map
+  }, [goals])
 
   return (
     <div className="space-y-8">
@@ -83,24 +98,72 @@ export function GoalHierarchyView({
               {CATEGORY_ORDER.map((cat) => {
                 const catGoals = section.categories[cat]
                 if (!catGoals || catGoals.length === 0) return null
+
+                // Collect projections for this category's goals
+                const catProjections = catGoals
+                  .map((g) => ({ goal: g, projection: projectionMap.get(g.id) }))
+                  .filter((p): p is { goal: GoalWithProgress; projection: ProjectedDateInfo } => !!p.projection)
+
                 return (
-                  <GoalCategorySection
-                    key={cat}
-                    category={cat}
-                    goals={catGoals}
-                    allGoals={goals}
-                    defaultCollapsed={cat === "dirty_dog"}
-                    isCustomizeMode={isCustomizeMode}
-                    onIncrement={onIncrement}
-                    onSetValue={onSetValue}
-                    onComplete={onComplete}
-                    onReset={onReset}
-                    onEdit={onEdit}
-                    onAddChild={onAddChild}
-                    onGoalToggle={onGoalToggle}
-                  />
+                  <div key={cat}>
+                    <GoalCategorySection
+                      category={cat}
+                      goals={catGoals}
+                      allGoals={goals}
+                      defaultCollapsed={cat === "dirty_dog"}
+                      isCustomizeMode={isCustomizeMode}
+                      projections={projectionMap}
+                      onIncrement={onIncrement}
+                      onSetValue={onSetValue}
+                      onComplete={onComplete}
+                      onReset={onReset}
+                      onEdit={onEdit}
+                      onAddChild={onAddChild}
+                      onGoalToggle={onGoalToggle}
+                    />
+
+                    {/* Projected timeline summary */}
+                    {catProjections.length > 0 && (
+                      <div className="mt-2 ml-5 rounded-md border border-border/50 bg-muted/30 p-3">
+                        <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-2">
+                          <Clock className="size-3" />
+                          Projected Timeline
+                        </p>
+                        <div className="space-y-1">
+                          {catProjections.map(({ goal, projection }) => (
+                            <p key={goal.id} className="text-xs text-muted-foreground">
+                              <span className="font-medium text-foreground/80">{goal.title}:</span>{" "}
+                              {projection.finalLabel ?? projection.nextLabel}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )
               })}
+
+              {/* Dirty Dog opt-in placeholder */}
+              {(!section.categories.dirty_dog || section.categories.dirty_dog.length === 0) && onAddDirtyDogGoals && (
+                <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Dirty Dog Goals
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Track intimate outcomes like kiss closes, lays, and rotation. Opt in if relevant to your goals.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onAddDirtyDogGoals}
+                  >
+                    <Plus className="size-3.5 mr-1" />
+                    Add Goals
+                  </Button>
+                </div>
+              )}
 
               {/* Uncategorized L3 goals */}
               {section.uncategorized.length > 0 && (

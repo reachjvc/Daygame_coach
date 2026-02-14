@@ -3,12 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus } from "lucide-react"
+import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock } from "lucide-react"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import { getGoalAccentColor } from "../goalHierarchyService"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
 import { GoalInputWidget } from "./GoalInputWidget"
 import type { GoalWithProgress } from "../types"
+import type { ProjectedDateInfo } from "../goalsService"
 
 function formatDaysRemaining(days: number): string {
   if (days <= 0) return "Overdue"
@@ -28,6 +29,9 @@ interface GoalCardProps {
   goal: GoalWithProgress
   allGoals?: GoalWithProgress[]
   variant?: "compact" | "expanded"
+  breadcrumbMode?: "full" | "parent-only" | "none"
+  nextMilestone?: { nextValue: number; remaining: number } | null
+  projectedDate?: ProjectedDateInfo | null
   onIncrement?: (goalId: string, amount: number) => Promise<void>
   onSetValue?: (goalId: string, value: number) => Promise<void>
   onComplete?: (goal: GoalWithProgress) => void
@@ -40,6 +44,9 @@ export function GoalCard({
   goal,
   allGoals = [],
   variant = "compact",
+  breadcrumbMode = "full",
+  nextMilestone,
+  projectedDate,
   onIncrement,
   onSetValue,
   onComplete,
@@ -112,8 +119,14 @@ export function GoalCard({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Breadcrumb */}
-          {goal.parent_goal_id && allGoals.length > 0 && (
-            <GoalHierarchyBreadcrumb goal={goal} allGoals={allGoals} />
+          {breadcrumbMode !== "none" && goal.parent_goal_id && allGoals.length > 0 && (
+            breadcrumbMode === "parent-only" ? (
+              <div className="text-xs text-muted-foreground mb-1">
+                {allGoals.find(g => g.id === goal.parent_goal_id)?.title}
+              </div>
+            ) : (
+              <GoalHierarchyBreadcrumb goal={goal} allGoals={allGoals} />
+            )
           )}
 
           <div className="flex items-center gap-2">
@@ -171,6 +184,18 @@ export function GoalCard({
             )}
             {goal.goal_type === "recurring" && (
               <span className="capitalize">{goal.period}</span>
+            )}
+            {nextMilestone && (
+              <span className="flex items-center gap-1 text-emerald-400">
+                <TrendingUp className="size-3" />
+                {nextMilestone.remaining} from next milestone
+              </span>
+            )}
+            {projectedDate?.nextLabel && (
+              <span className="flex items-center gap-1 text-sky-400">
+                <Clock className="size-3" />
+                Next: {projectedDate.nextLabel}
+              </span>
             )}
             {goal.linked_metric && (
               <span className="flex items-center gap-1 text-blue-400">

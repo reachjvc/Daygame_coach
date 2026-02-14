@@ -99,6 +99,45 @@ describe("generateGoalTreeInserts", () => {
         expect(g.linked_metric).toBe(tmpl.linkedMetric)
       }
     })
+
+    it("approach_volume uses cumulative metric, approach_frequency uses weekly", () => {
+      const volume = inserts.find((i) => i.template_id === "l3_approach_volume")!
+      const frequency = inserts.find((i) => i.template_id === "l3_approach_frequency")!
+      expect(volume.linked_metric).toBe("approaches_cumulative")
+      expect(frequency.linked_metric).toBe("approaches_weekly")
+    })
+
+    it("phone_numbers and instadates use cumulative metrics", () => {
+      const numbers = inserts.find((i) => i.template_id === "l3_phone_numbers")!
+      const instadates = inserts.find((i) => i.template_id === "l3_instadates")!
+      expect(numbers.linked_metric).toBe("numbers_cumulative")
+      expect(instadates.linked_metric).toBe("instadates_cumulative")
+    })
+
+    it("milestone_ladder goals include milestone_config from template defaults", () => {
+      const approachVolume = inserts.find((i) => i.template_id === "l3_approach_volume")!
+      expect(approachVolume.milestone_config).toBeDefined()
+      const config = approachVolume.milestone_config as Record<string, unknown>
+      expect(config.start).toBe(1)
+      expect(config.target).toBe(1000)
+      expect(config.steps).toBe(15)
+      expect(config.curveTension).toBe(5)
+    })
+
+    it("habit_ramp goals include ramp_steps from template defaults", () => {
+      const approachFreq = inserts.find((i) => i.template_id === "l3_approach_frequency")!
+      expect(approachFreq.ramp_steps).toBeDefined()
+      expect(Array.isArray(approachFreq.ramp_steps)).toBe(true)
+      const steps = approachFreq.ramp_steps as Record<string, unknown>[]
+      expect(steps.length).toBeGreaterThan(0)
+      expect(steps[0].frequencyPerWeek).toBe(10)
+    })
+
+    it("goals without template config have no milestone_config or ramp_steps", () => {
+      const l1 = inserts.find((i) => i.goal_level === 1)!
+      expect(l1.milestone_config).toBeUndefined()
+      expect(l1.ramp_steps).toBeUndefined()
+    })
   })
 
   describe("L0 pick", () => {

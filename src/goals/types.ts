@@ -76,7 +76,7 @@ export type CelebrationTier = "subtle" | "toast" | "confetti-small" | "confetti-
 /**
  * View modes for the Goals Hub
  */
-export type GoalViewMode = "standard" | "time-horizon"
+export type GoalViewMode = "daily" | "strategic" | "standard" | "time-horizon"
 
 /**
  * Filter state for goals list/views
@@ -227,4 +227,13 @@ export interface HierarchySection {
   achievements: GoalWithProgress[]
   categories: Partial<Record<GoalDisplayCategory, GoalWithProgress[]>>
   uncategorized: GoalWithProgress[]
+}
+
+/**
+ * State for a single goal in the fan-out preview.
+ * Tracks whether the user wants this goal and any target overrides.
+ */
+export interface PreviewGoalState {
+  enabled: boolean
+  targetValue: number
 }

@@ -21,9 +21,11 @@ export function GoalHierarchyBreadcrumb({
   const ancestors = useMemo(() => {
     const goalMap = new Map(allGoals.map((g) => [g.id, g]))
     const chain: GoalWithProgress[] = []
+    const visited = new Set<string>()
     let current = goal.parent_goal_id ? goalMap.get(goal.parent_goal_id) : undefined
 
-    while (current) {
+    while (current && !visited.has(current.id)) {
+      visited.add(current.id)
       chain.unshift(current)
       current = current.parent_goal_id ? goalMap.get(current.parent_goal_id) : undefined
     }

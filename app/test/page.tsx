@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid, Archive } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid, Archive, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -76,6 +76,12 @@ const testPages = [
     href: "/test/old-goals",
     description: "Original goals hub (archived from Phase 4 transition)",
     icon: Archive,
+  },
+  {
+    name: "Archetype Image Picker",
+    href: "/test/archetypes",
+    description: "Compare existing vs new Scandinavian archetype images — pick winners",
+    icon: ImageIcon,
   },
 ]
 

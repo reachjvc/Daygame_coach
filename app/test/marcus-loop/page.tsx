@@ -11,8 +11,12 @@ const IMAGES_V3 = Array.from({ length: 12 }, (_, i) =>
   `/marcus-test/marcus_alive4_${String(i + 1).padStart(2, "0")}.png`
 )
 
+const IMAGES_V4 = Array.from({ length: 12 }, (_, i) =>
+  `/new%20new%20marcus/frame_${String(i + 1).padStart(2, "0")}.png`
+)
+
 type AnimationMode = "loop" | "pingpong" | "crossfade"
-type ImageSet = "v1" | "v3" | "both"
+type ImageSet = "v1" | "v3" | "v4" | "both"
 
 // Rich content for Marcus Aurelius - this is what the expanded card will show
 const MARCUS_CONTENT = {
@@ -54,7 +58,7 @@ export default function MarcusLoopPage() {
   const [crossfadeProgress, setCrossfadeProgress] = useState(0)
   const [crossfadeDuration, setCrossfadeDuration] = useState(150) // ms
 
-  const images = imageSet === "v3" ? IMAGES_V3 : IMAGES_V1
+  const images = imageSet === "v4" ? IMAGES_V4 : imageSet === "v3" ? IMAGES_V3 : IMAGES_V1
 
   // Pingpong logic
   const getNextIndex = useCallback((current: number, dir: number) => {
@@ -172,7 +176,8 @@ export default function MarcusLoopPage() {
             >
               <option value="v1">Marcus v1 (Original)</option>
               <option value="v3">Marcus v3 (New)</option>
-              <option value="both">Compare Both</option>
+              <option value="v4">Marcus v4 (New New)</option>
+              <option value="both">Compare All</option>
             </select>
           </div>
 
@@ -234,7 +239,7 @@ export default function MarcusLoopPage() {
       {/* Image Display */}
       {imageSet === "both" ? (
         // Side by side comparison
-        <div className="flex flex-col md:flex-row gap-6 w-full max-w-4xl justify-center">
+        <div className="flex flex-col md:flex-row gap-6 w-full max-w-6xl justify-center">
           <ImageViewer
             images={IMAGES_V1}
             currentIndex={currentIndex}
@@ -242,7 +247,7 @@ export default function MarcusLoopPage() {
             mode={mode}
             crossfadeProgress={crossfadeProgress}
             label="Version 1 (Original)"
-            size={380}
+            size={320}
           />
           <ImageViewer
             images={IMAGES_V3}
@@ -251,7 +256,16 @@ export default function MarcusLoopPage() {
             mode={mode}
             crossfadeProgress={crossfadeProgress}
             label="Version 3 (New)"
-            size={380}
+            size={320}
+          />
+          <ImageViewer
+            images={IMAGES_V4}
+            currentIndex={currentIndex}
+            nextIndex={nextIndex}
+            mode={mode}
+            crossfadeProgress={crossfadeProgress}
+            label="Version 4 (New New)"
+            size={320}
           />
         </div>
       ) : (
@@ -262,7 +276,7 @@ export default function MarcusLoopPage() {
           nextIndex={nextIndex}
           mode={mode}
           crossfadeProgress={crossfadeProgress}
-          label={imageSet === "v1" ? "Version 1" : "Version 3"}
+          label={imageSet === "v1" ? "Version 1" : imageSet === "v3" ? "Version 3" : "Version 4 (New New)"}
           size={512}
         />
       )}
@@ -274,7 +288,7 @@ export default function MarcusLoopPage() {
           {[0, 1, 2, 3, 4].map((i) => (
             <ExpandableCard
               key={i}
-              images={i < 2 ? IMAGES_V1 : IMAGES_V3}
+              images={imageSet === "v4" ? IMAGES_V4 : imageSet === "v3" ? IMAGES_V3 : imageSet === "v1" ? IMAGES_V1 : i < 2 ? IMAGES_V1 : i < 4 ? IMAGES_V3 : IMAGES_V4}
               currentIndex={currentIndex}
               nextIndex={nextIndex}
               mode={mode}

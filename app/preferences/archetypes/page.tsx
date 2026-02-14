@@ -12,7 +12,7 @@ export default async function ArchetypesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("age_range_start, age_range_end, archetype, secondary_archetype, tertiary_archetype")
+    .select("age_range_start, age_range_end, archetype, secondary_archetype, tertiary_archetype, preferred_region")
     .eq("id", user.id)
     .single()
 
@@ -27,6 +27,7 @@ export default async function ArchetypesPage() {
       initialArchetype={profile.archetype}
       initialSecondaryArchetype={profile.secondary_archetype}
       initialTertiaryArchetype={profile.tertiary_archetype}
+      region={profile.preferred_region ?? undefined}
     />
   )
 }

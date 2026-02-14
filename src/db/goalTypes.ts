@@ -16,6 +16,10 @@ export type LinkedMetric =
   | "sessions_weekly"
   | "numbers_weekly"
   | "instadates_weekly"
+  | "approaches_cumulative"
+  | "sessions_cumulative"
+  | "numbers_cumulative"
+  | "instadates_cumulative"
   | null
 
 /**
@@ -49,6 +53,8 @@ export interface UserGoalRow {
   display_category: GoalDisplayCategory | null
   goal_level: number | null
   template_id: string | null
+  milestone_config: Record<string, unknown> | null
+  ramp_steps: Record<string, unknown>[] | null
 }
 
 /**
@@ -72,6 +78,8 @@ export interface UserGoalInsert {
   display_category?: GoalDisplayCategory
   goal_level?: number
   template_id?: string
+  milestone_config?: Record<string, unknown> | null
+  ramp_steps?: Record<string, unknown>[] | null
 }
 
 /**
@@ -97,6 +105,8 @@ export interface UserGoalUpdate {
   display_category?: GoalDisplayCategory
   goal_level?: number | null
   template_id?: string | null
+  milestone_config?: Record<string, unknown> | null
+  ramp_steps?: Record<string, unknown>[] | null
 }
 
 /**

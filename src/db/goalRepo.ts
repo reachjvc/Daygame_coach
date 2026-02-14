@@ -163,6 +163,8 @@ export async function createGoal(
       display_category: goal.display_category ?? null,
       goal_level: goal.goal_level ?? null,
       template_id: goal.template_id ?? null,
+      milestone_config: goal.milestone_config ?? null,
+      ramp_steps: goal.ramp_steps ?? null,
     })
     .select()
     .single()
@@ -401,7 +403,14 @@ export async function resetDailyGoals(userId: string): Promise<number> {
  * Get the metric value from tracking stats based on linked_metric type
  */
 function getMetricValue(
-  stats: { current_week_approaches: number; current_week_sessions: number },
+  stats: {
+    current_week_approaches: number
+    current_week_sessions: number
+    total_approaches: number
+    total_sessions: number
+    total_numbers: number
+    total_instadates: number
+  },
   metric: LinkedMetric
 ): number {
   switch (metric) {
@@ -409,11 +418,17 @@ function getMetricValue(
       return stats.current_week_approaches
     case "sessions_weekly":
       return stats.current_week_sessions
-    // For numbers and instadates, we need weekly values which aren't tracked
-    // separately, so we return 0 for now (these would need additional tracking)
     case "numbers_weekly":
     case "instadates_weekly":
       return 0
+    case "approaches_cumulative":
+      return stats.total_approaches
+    case "sessions_cumulative":
+      return stats.total_sessions
+    case "numbers_cumulative":
+      return stats.total_numbers
+    case "instadates_cumulative":
+      return stats.total_instadates
     default:
       return 0
   }

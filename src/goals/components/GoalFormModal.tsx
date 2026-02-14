@@ -23,13 +23,20 @@ import {
 } from "@/components/ui/select"
 import { Loader2, Plus, Minus, Lightbulb, Calendar, Trash2, Archive } from "lucide-react"
 import { LIFE_AREAS, getLifeAreaConfig } from "../data/lifeAreas"
+import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
+import { HabitRampEditor } from "./HabitRampEditor"
+import { UpwardConnectionPrompt } from "./UpwardConnectionPrompt"
+import { deriveChildLevel } from "../goalsService"
 import type {
   GoalWithProgress,
   GoalPeriod,
   GoalTrackingType,
   GoalType,
+  GoalNature,
   LinkedMetric,
   GoalSuggestion,
+  MilestoneLadderConfig,
+  HabitRampStep,
 } from "../types"
 
 interface GoalFormModalProps {
@@ -84,6 +91,23 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   const [description, setDescription] = useState("")
   const [linkedMetric, setLinkedMetric] = useState<LinkedMetric>(null)
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null)
+  const [goalNature, setGoalNature] = useState<GoalNature>("input")
+
+  // Milestone curve editor state
+  const [milestoneConfig, setMilestoneConfig] = useState<MilestoneLadderConfig>({
+    start: 1,
+    target: 100,
+    steps: 10,
+    curveTension: 2,
+  })
+  const [showCurveEditor, setShowCurveEditor] = useState(false)
+
+  // Habit ramp editor state
+  const [rampSteps, setRampSteps] = useState<HabitRampStep[]>([
+    { frequencyPerWeek: 10, durationWeeks: 4 },
+    { frequencyPerWeek: 15, durationWeeks: 4 },
+    { frequencyPerWeek: 25, durationWeeks: 8 },
+  ])
 
   const isEditing = !!goal
 
@@ -107,6 +131,16 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       setParentGoalId(goal.parent_goal_id)
       setDescription(goal.description || "")
       setLinkedMetric(goal.linked_metric)
+      setGoalNature(goal.goal_nature || "input")
+      // Restore milestone config if saved
+      if (goal.milestone_config) {
+        setMilestoneConfig(goal.milestone_config as unknown as MilestoneLadderConfig)
+        setShowCurveEditor(true)
+      }
+      // Restore ramp steps if saved
+      if (goal.ramp_steps) {
+        setRampSteps(goal.ramp_steps as unknown as HabitRampStep[])
+      }
     }
   }, [goal])
 
@@ -123,6 +157,14 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     setDescription("")
     setLinkedMetric(null)
     setSelectedSuggestion(null)
+    setGoalNature("input")
+    setMilestoneConfig({ start: 1, target: 100, steps: 10, curveTension: 2 })
+    setShowCurveEditor(false)
+    setRampSteps([
+      { frequencyPerWeek: 10, durationWeeks: 4 },
+      { frequencyPerWeek: 15, durationWeeks: 4 },
+      { frequencyPerWeek: 25, durationWeeks: 8 },
+    ])
     setError(null)
     setSuccessMessage(null)
     setShowDeleteConfirm(false)
@@ -229,11 +271,14 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         goal_type: goalType,
       }
 
-      if (goalType === "recurring") {
+      if (goalType === "recurring" || goalType === "habit_ramp") {
         payload.period = period
       }
       if (goalType === "milestone" && targetDate) {
         payload.target_date = targetDate
+      }
+      if (goalType === "habit_ramp") {
+        payload.period = period
       }
       if (parentGoalId) {
         payload.parent_goal_id = parentGoalId
@@ -241,8 +286,26 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       if (description.trim()) {
         payload.description = description.trim()
       }
-      if (effectiveLifeArea === "daygame" && period === "weekly") {
+      if (effectiveLifeArea === "daygame" && (goalType === "recurring" || goalType === "habit_ramp") && period === "weekly") {
         payload.linked_metric = linkedMetric
+      }
+      // Graph fields: nature, display_category, goal_level
+      payload.goal_nature = goalNature
+      if (parentGoalId && parentGoals.length) {
+        const parent = parentGoals.find((g) => g.id === parentGoalId)
+        if (parent) {
+          if (parent.display_category) payload.display_category = parent.display_category
+          payload.goal_level = deriveChildLevel(parent.goal_level)
+        }
+      }
+      // Persist milestone curve config
+      if (goalType === "milestone" && trackingType === "counter" && targetValue > 1) {
+        payload.milestone_config = { ...milestoneConfig, target: targetValue }
+      }
+      // Persist habit ramp config
+      if (goalType === "habit_ramp") {
+        payload.ramp_steps = rampSteps
+        payload.milestone_config = milestoneConfig
       }
 
       const url = isEditing ? `/api/goals/${goal.id}` : "/api/goals"
@@ -305,11 +368,13 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Goal Type Toggle */}
           <div className="space-y-2">
             <Label>Goal Type</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["recurring", "milestone"] as const).map((type) => {
+            <div className="grid grid-cols-3 gap-2">
+              {([
+                { type: "recurring" as GoalType, label: "Recurring", desc: "Resets each period" },
+                { type: "milestone" as GoalType, label: "Milestone", desc: "One-time target" },
+                { type: "habit_ramp" as GoalType, label: "Habit Ramp", desc: "Gradual increase" },
+              ]).map(({ type, label, desc }) => {
                 const isSelected = goalType === type
-                const label = type === "recurring" ? "Recurring" : "Milestone"
-                const desc = type === "recurring" ? "Resets each period" : "One-time target date"
                 return (
                   <Button
                     key={type}
@@ -323,8 +388,40 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     } : undefined}
                     onClick={() => setGoalType(type)}
                   >
-                    <span className="font-medium">{label}</span>
-                    <span className={`text-xs ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
+                    <span className="font-medium text-xs">{label}</span>
+                    <span className={`text-[10px] ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
+                      {desc}
+                    </span>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Goal Nature Toggle */}
+          <div className="space-y-2">
+            <Label>Goal Nature</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { nature: "input" as GoalNature, label: "Input", desc: "Actions you control", color: "#22c55e" },
+                { nature: "outcome" as GoalNature, label: "Outcome", desc: "Results you measure", color: "#ef4444" },
+              ]).map(({ nature, label, desc, color }) => {
+                const isSelected = goalNature === nature
+                return (
+                  <Button
+                    key={nature}
+                    type="button"
+                    variant="outline"
+                    className="h-auto py-2 px-3 flex-col items-start transition-colors"
+                    style={isSelected ? {
+                      backgroundColor: color,
+                      color: "white",
+                      borderColor: "transparent",
+                    } : undefined}
+                    onClick={() => setGoalNature(nature)}
+                  >
+                    <span className="font-medium text-xs">{label}</span>
+                    <span className={`text-[10px] ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
                       {desc}
                     </span>
                   </Button>
@@ -483,8 +580,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             </div>
           </div>
 
-          {/* Target Value (counter only) */}
-          {trackingType === "counter" && (
+          {/* Target Value (counter only, non-ramp) */}
+          {trackingType === "counter" && goalType !== "habit_ramp" && (
             <div className="space-y-2">
               <Label>Target</Label>
               <div className="flex items-center gap-4">
@@ -492,7 +589,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={() => setTargetValue(Math.max(1, targetValue - 1))}
+                  onClick={() => {
+                    const newVal = Math.max(1, targetValue - 1)
+                    setTargetValue(newVal)
+                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
+                  }}
                   disabled={targetValue <= 1}
                 >
                   <Minus className="size-4" />
@@ -500,9 +601,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 <Input
                   type="number"
                   value={targetValue}
-                  onChange={(e) =>
-                    setTargetValue(Math.max(1, parseInt(e.target.value) || 1))
-                  }
+                  onChange={(e) => {
+                    const newVal = Math.max(1, parseInt(e.target.value) || 1)
+                    setTargetValue(newVal)
+                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
+                  }}
                   className="w-20 text-center text-lg font-bold"
                   min={1}
                 />
@@ -510,7 +613,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   type="button"
                   variant="outline"
                   size="icon"
-                  onClick={() => setTargetValue(targetValue + 1)}
+                  onClick={() => {
+                    const newVal = targetValue + 1
+                    setTargetValue(newVal)
+                    setMilestoneConfig((c) => ({ ...c, target: newVal }))
+                  }}
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -518,8 +625,46 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             </div>
           )}
 
-          {/* Period (recurring goals only) */}
-          {goalType === "recurring" && (
+          {/* Milestone Curve Editor */}
+          {goalType === "milestone" && trackingType === "counter" && targetValue > 1 && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Milestone Ladder</Label>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs h-6"
+                  onClick={() => setShowCurveEditor(!showCurveEditor)}
+                >
+                  {showCurveEditor ? "Hide" : "Customize curve"}
+                </Button>
+              </div>
+              {showCurveEditor && (
+                <MilestoneCurveEditor
+                  config={{ ...milestoneConfig, target: targetValue }}
+                  onChange={setMilestoneConfig}
+                  accentColor={areaConfig.hex}
+                  allowDirectEdit
+                />
+              )}
+            </div>
+          )}
+
+          {/* Habit Ramp Editor */}
+          {goalType === "habit_ramp" && (
+            <div className="space-y-2">
+              <Label>Ramp Schedule</Label>
+              <HabitRampEditor
+                steps={rampSteps}
+                onChange={setRampSteps}
+                milestoneConfig={milestoneConfig}
+                accentColor={areaConfig.hex}
+              />
+            </div>
+          )}
+
+          {/* Period (recurring and habit_ramp goals) */}
+          {(goalType === "recurring" || goalType === "habit_ramp") && (
             <div className="space-y-2">
               <Label>Reset Period</Label>
               <div className="flex flex-wrap gap-2">
@@ -574,35 +719,21 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             </div>
           )}
 
-          {/* Parent Goal Selector */}
+          {/* Parent Goal / Upward Connection */}
           {parentGoals.length > 0 && (
             <div className="space-y-2">
-              <Label>Parent Goal (optional)</Label>
-              <Select
-                value={parentGoalId ?? "none"}
-                onValueChange={(v) => setParentGoalId(v === "none" ? null : v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Link to a parent goal" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No parent (top-level)</SelectItem>
-                  {(filteredParentGoals.length > 0 ? filteredParentGoals : parentGoals).map((g) => {
-                    const gArea = getLifeAreaConfig(g.life_area)
-                    return (
-                      <SelectItem key={g.id} value={g.id}>
-                        <span className="inline-block size-2 rounded-full mr-1.5" style={{ backgroundColor: gArea.hex }} />
-                        {g.title}
-                      </SelectItem>
-                    )
-                  })}
-                </SelectContent>
-              </Select>
+              <Label>Parent Goal</Label>
+              <UpwardConnectionPrompt
+                availableParents={filteredParentGoals.length > 0 ? filteredParentGoals : parentGoals}
+                selectedParentId={parentGoalId}
+                onSelectParent={setParentGoalId}
+                alwaysShow
+              />
             </div>
           )}
 
           {/* Linked Metric (daygame + weekly only) */}
-          {effectiveLifeArea === "daygame" && goalType === "recurring" && period === "weekly" && (
+          {effectiveLifeArea === "daygame" && (goalType === "recurring" || goalType === "habit_ramp") && period === "weekly" && (
             <div className="space-y-2">
               <Label>Auto-Sync with Tracking</Label>
               <Select

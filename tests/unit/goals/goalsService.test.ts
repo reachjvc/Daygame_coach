@@ -6,9 +6,17 @@ import {
   groupGoalsByTimeHorizon,
   computeLifeAreaProgress,
   deriveTimeHorizon,
+  isDailyActionable,
   getInputMode,
   getButtonIncrements,
   getCelebrationTier,
+  deriveChildLevel,
+  getNextMilestoneInfo,
+  formatStreakLabel,
+  getDaysLeftInWeek,
+  computeProjectedDate,
+  findExistingByTemplate,
+  generateDirtyDogInserts,
 } from "@/src/goals/goalsService"
 import type { GoalWithProgress, GoalFilterState } from "@/src/goals/types"
 
@@ -41,6 +49,12 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
     target_date: null,
     description: null,
     goal_type: "recurring",
+    goal_nature: null,
+    display_category: null,
+    goal_level: null,
+    template_id: null,
+    milestone_config: null,
+    ramp_steps: null,
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,
@@ -596,26 +610,22 @@ describe("deriveTimeHorizon", () => {
       expect(deriveTimeHorizon(goal)).toBe("Custom")
     })
 
-    test("should fall through to period switch for milestone without target_date", () => {
-      // When goal_type is "milestone" but target_date is null, the code skips
-      // the milestone branch and falls through to the period switch.
-      // With period="custom", this returns "Custom".
+    test("should return Long-term for milestone without target_date", () => {
       const goal = createGoalWithProgress({
         goal_type: "milestone",
         target_date: null,
         period: "custom",
       })
-      expect(deriveTimeHorizon(goal)).toBe("Custom")
+      expect(deriveTimeHorizon(goal)).toBe("Long-term")
     })
 
-    test("should fall through to period for milestone without target_date (weekly)", () => {
-      // Verifies the fallthrough behavior: milestone + no target_date + weekly period
+    test("should return Long-term for milestone without target_date regardless of period", () => {
       const goal = createGoalWithProgress({
         goal_type: "milestone",
         target_date: null,
         period: "weekly",
       })
-      expect(deriveTimeHorizon(goal)).toBe("This Week")
+      expect(deriveTimeHorizon(goal)).toBe("Long-term")
     })
   })
 
@@ -650,6 +660,42 @@ describe("deriveTimeHorizon", () => {
     test("should return 'Custom' for custom period", () => {
       const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
       expect(deriveTimeHorizon(goal)).toBe("Custom")
+    })
+  })
+
+  // ============================================================================
+  // isDailyActionable
+  // ============================================================================
+
+  describe("isDailyActionable", () => {
+    test("returns true for L3 habit_ramp goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "habit_ramp", period: "weekly" })
+      expect(isDailyActionable(goal)).toBe(true)
+    })
+
+    test("returns true for L3 recurring weekly goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "recurring", period: "weekly" })
+      expect(isDailyActionable(goal)).toBe(true)
+    })
+
+    test("returns false for L3 milestone goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "milestone" })
+      expect(isDailyActionable(goal)).toBe(false)
+    })
+
+    test("returns false for L1 goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 1, goal_type: "milestone" })
+      expect(isDailyActionable(goal)).toBe(false)
+    })
+
+    test("returns false for L2 goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 2, goal_type: "milestone" })
+      expect(isDailyActionable(goal)).toBe(false)
+    })
+
+    test("returns false for null goal_level", () => {
+      const goal = createGoalWithProgress({ goal_level: null, goal_type: "recurring" })
+      expect(isDailyActionable(goal)).toBe(false)
     })
   })
 
@@ -759,6 +805,256 @@ describe("deriveTimeHorizon", () => {
     test("custom period → toast", () => {
       const goal = createGoalWithProgress({ goal_type: "recurring", period: "custom" })
       expect(getCelebrationTier(goal)).toBe("toast")
+    })
+  })
+
+  // ===========================================================================
+  // deriveChildLevel
+  // ===========================================================================
+
+  describe("deriveChildLevel", () => {
+    test("null parent level → null", () => {
+      expect(deriveChildLevel(null)).toBeNull()
+    })
+
+    test("L0 → L1", () => {
+      expect(deriveChildLevel(0)).toBe(1)
+    })
+
+    test("L1 → L2", () => {
+      expect(deriveChildLevel(1)).toBe(2)
+    })
+
+    test("L2 → L3", () => {
+      expect(deriveChildLevel(2)).toBe(3)
+    })
+
+    test("L3 → L3 (capped)", () => {
+      expect(deriveChildLevel(3)).toBe(3)
+    })
+  })
+
+  // ===========================================================================
+  // getNextMilestoneInfo
+  // ===========================================================================
+
+  describe("getNextMilestoneInfo", () => {
+    test("returns null when goal has no milestone_config", () => {
+      const goal = createGoalWithProgress({ milestone_config: null, current_value: 5 })
+      expect(getNextMilestoneInfo(goal)).toBeNull()
+    })
+
+    test("returns next milestone and remaining for goal with config", () => {
+      const goal = createGoalWithProgress({
+        current_value: 3,
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+      })
+      const result = getNextMilestoneInfo(goal)
+      expect(result).not.toBeNull()
+      expect(result!.nextValue).toBeGreaterThan(3)
+      expect(result!.remaining).toBe(result!.nextValue - 3)
+    })
+
+    test("returns null when goal has surpassed all milestones", () => {
+      const goal = createGoalWithProgress({
+        current_value: 100,
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+      })
+      expect(getNextMilestoneInfo(goal)).toBeNull()
+    })
+  })
+
+  // ===========================================================================
+  // formatStreakLabel
+  // ===========================================================================
+
+  describe("formatStreakLabel", () => {
+    test("returns empty string for 0 weeks", () => {
+      expect(formatStreakLabel(0)).toBe("")
+    })
+
+    test("returns empty string for negative weeks", () => {
+      expect(formatStreakLabel(-1)).toBe("")
+    })
+
+    test("returns formatted label for positive weeks", () => {
+      expect(formatStreakLabel(8)).toBe("Week 8 of your daygame journey")
+    })
+
+    test("returns formatted label for 1 week", () => {
+      expect(formatStreakLabel(1)).toBe("Week 1 of your daygame journey")
+    })
+  })
+
+  // ===========================================================================
+  // getDaysLeftInWeek
+  // ===========================================================================
+
+  describe("getDaysLeftInWeek", () => {
+    test("returns 0 on Sunday", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-02-08T12:00:00Z")) // Sunday
+      expect(getDaysLeftInWeek()).toBe(0)
+      vi.useRealTimers()
+    })
+
+    test("returns 6 on Monday", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-02-09T12:00:00Z")) // Monday
+      expect(getDaysLeftInWeek()).toBe(6)
+      vi.useRealTimers()
+    })
+
+    test("returns 1 on Saturday", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-02-07T12:00:00Z")) // Saturday
+      expect(getDaysLeftInWeek()).toBe(1)
+      vi.useRealTimers()
+    })
+
+    test("returns 4 on Wednesday", () => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date("2026-02-11T12:00:00Z")) // Wednesday
+      expect(getDaysLeftInWeek()).toBe(4)
+      vi.useRealTimers()
+    })
+  })
+
+  // ===========================================================================
+  // computeProjectedDate
+  // ===========================================================================
+
+  describe("computeProjectedDate", () => {
+    test("returns null when goal has no milestone_config", () => {
+      const goal = createGoalWithProgress({
+        milestone_config: null,
+        ramp_steps: [{ frequencyPerWeek: 10, durationWeeks: 12 }],
+      })
+      expect(computeProjectedDate(goal)).toBeNull()
+    })
+
+    test("returns null when goal has no ramp_steps", () => {
+      const goal = createGoalWithProgress({
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+        ramp_steps: null,
+      })
+      expect(computeProjectedDate(goal)).toBeNull()
+    })
+
+    test("returns null when ramp_steps is empty array", () => {
+      const goal = createGoalWithProgress({
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+        ramp_steps: [],
+      })
+      expect(computeProjectedDate(goal)).toBeNull()
+    })
+
+    test("returns projections when goal has both config and ramp_steps", () => {
+      const goal = createGoalWithProgress({
+        current_value: 3,
+        period_start_date: "2026-01-01",
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+        ramp_steps: [
+          { frequencyPerWeek: 10, durationWeeks: 4 },
+          { frequencyPerWeek: 15, durationWeeks: 8 },
+        ],
+      })
+      const result = computeProjectedDate(goal)
+      expect(result).not.toBeNull()
+      expect(result!.nextLabel).toBeTruthy()
+      expect(result!.nextLabel).toMatch(/\d+ by \w+ \d{4}/)
+      expect(result!.finalLabel).toBeTruthy()
+      expect(result!.finalLabel).toMatch(/100 by \w+ \d{4}/)
+    })
+
+    test("returns null nextLabel when goal has surpassed all milestones", () => {
+      const goal = createGoalWithProgress({
+        current_value: 100,
+        period_start_date: "2026-01-01",
+        milestone_config: { start: 1, target: 100, steps: 5, curveTension: 2 },
+        ramp_steps: [{ frequencyPerWeek: 10, durationWeeks: 12 }],
+      })
+      const result = computeProjectedDate(goal)
+      expect(result).not.toBeNull()
+      expect(result!.nextLabel).toBeNull()
+      expect(result!.finalLabel).toBeTruthy()
+    })
+  })
+
+  // ============================================================================
+  // findExistingByTemplate
+  // ============================================================================
+
+  describe("findExistingByTemplate", () => {
+    test("returns matching goal when template_id matches", () => {
+      const goals = [
+        createGoalWithProgress({ id: "g1", template_id: "l3_approach_volume" }),
+        createGoalWithProgress({ id: "g2", template_id: "l3_phone_numbers" }),
+      ]
+      const result = findExistingByTemplate(goals, "l3_approach_volume")
+      expect(result).not.toBeNull()
+      expect(result!.id).toBe("g1")
+    })
+
+    test("returns null when no template_id matches", () => {
+      const goals = [
+        createGoalWithProgress({ id: "g1", template_id: "l3_approach_volume" }),
+      ]
+      expect(findExistingByTemplate(goals, "l3_instadates")).toBeNull()
+    })
+
+    test("returns null for empty array", () => {
+      expect(findExistingByTemplate([], "l3_approach_volume")).toBeNull()
+    })
+  })
+
+  // ============================================================================
+  // generateDirtyDogInserts
+  // ============================================================================
+
+  describe("generateDirtyDogInserts", () => {
+    test("returns 4 dirty dog goals when none exist and L2 parent present", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
+        createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
+      ]
+      const inserts = generateDirtyDogInserts(goals)
+      expect(inserts.length).toBe(4)
+      const templateIds = inserts.map((i) => i.template_id)
+      expect(templateIds).toContain("l3_kiss_closes")
+      expect(templateIds).toContain("l3_lays")
+      expect(templateIds).toContain("l3_rotation_size")
+      expect(templateIds).toContain("l3_sustained_rotation")
+    })
+
+    test("all inserts parented to existing L2 goal", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
+      ]
+      const inserts = generateDirtyDogInserts(goals)
+      for (const insert of inserts) {
+        expect(insert.parent_goal_id).toBe("l2-1")
+      }
+    })
+
+    test("returns empty when no L2 parent exists", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
+      ]
+      expect(generateDirtyDogInserts(goals)).toEqual([])
+    })
+
+    test("skips dirty dog goals that already exist", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
+        createGoalWithProgress({ id: "dd-1", goal_level: 3, template_id: "l3_kiss_closes" }),
+        createGoalWithProgress({ id: "dd-2", goal_level: 3, template_id: "l3_lays" }),
+      ]
+      const inserts = generateDirtyDogInserts(goals)
+      expect(inserts.length).toBe(2)
+      const templateIds = inserts.map((i) => i.template_id)
+      expect(templateIds).toContain("l3_rotation_size")
+      expect(templateIds).toContain("l3_sustained_rotation")
     })
   })
 })
