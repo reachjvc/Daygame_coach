@@ -1027,6 +1027,28 @@ describe("deriveTimeHorizon", () => {
       expect(templateIds).toContain("l3_sustained_rotation")
     })
 
+    test("all inserts have _tempId starting with __temp_", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
+      ]
+      const inserts = generateDirtyDogInserts(goals)
+      for (const insert of inserts) {
+        expect(insert._tempId).toBeDefined()
+        expect(insert._tempId).toMatch(/^__temp_/)
+      }
+    })
+
+    test("all inserts have _tempParentId null (real parent_goal_id used instead)", () => {
+      const goals = [
+        createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
+      ]
+      const inserts = generateDirtyDogInserts(goals)
+      for (const insert of inserts) {
+        expect(insert._tempParentId).toBeNull()
+        expect(insert.parent_goal_id).toBe("l2-1")
+      }
+    })
+
     test("all inserts parented to existing L2 goal", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),

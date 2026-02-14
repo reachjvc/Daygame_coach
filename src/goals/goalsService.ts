@@ -3,7 +3,6 @@
  */
 
 import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, CelebrationTier, MilestoneLadderConfig, HabitRampStep, PreviewGoalState } from "./types"
-import type { UserGoalInsert } from "../db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
 import { getTemplatesByCategory } from "./data/goalGraph"
@@ -409,7 +408,7 @@ export function findExistingByTemplate(
  */
 export function generateDirtyDogInserts(
   existingGoals: GoalWithProgress[]
-): UserGoalInsert[] {
+): BatchGoalInsert[] {
   const l2Parent = existingGoals.find((g) => g.goal_level === 2)
   if (!l2Parent) return []
 
@@ -419,7 +418,9 @@ export function generateDirtyDogInserts(
   return dirtyDogTemplates
     .filter((tmpl) => !existingTemplateIds.has(tmpl.id))
     .map((tmpl) => {
-      const insert: UserGoalInsert = {
+      const insert: BatchGoalInsert = {
+        _tempId: "__temp_" + tmpl.id,
+        _tempParentId: null,
         title: tmpl.title,
         category: "daygame",
         life_area: "daygame",

@@ -217,19 +217,23 @@ Daygame/dating first. Future: book writing, YouTube channel, financial independe
 
 ---
 
-## Completed Phases (0–6) — Summary
+## Completed Phases (0–7) — Summary
 
-All phases 0–6 are ✅ DONE. Key deliverables:
+All phases 0–7 are ✅ DONE (code complete; Phase 7 has migration/runtime bugs fixed in Phase 8).
 - **Phase 0:** Goal catalog, fan-out edges, default targets, UX direction
 - **Phase 1:** Type system (`goal_nature`, `display_category`, `goal_level`, `template_id`, `goal_type: habit_ramp`), DB migrations
 - **Phase 2:** Algorithms (milestone ladder generator, curve engine, ramp date calculator, achievement progress)
 - **Phase 3:** Goal graph data files (`goalGraph.ts`)
 - **Phase 4:** All UI (catalog picker, fan-out customization, achievement badges, categories, curve/ramp editors, upward prompts)
 - **Phase 6:** Gap fixes (persist milestone_config/ramp_steps, manual goal graph fields, daily/strategic views, date projections)
+- **Phase 7:** UI/UX polish (cumulative metrics, daily view filter, catalog for existing users, contextual breadcrumbs, dirty dog opt-in, L1/L2 daily hiding)
 
 **Migrations applied:**
 - `20260213_add_goal_graph_fields.sql` — goal_nature, display_category, goal_level, template_id, goal_type CHECK
 - `20260214_add_milestone_ramp_columns.sql` — milestone_config (jsonb), ramp_steps (jsonb)
+
+**Migrations NOT YET applied (see Phase 8.2):**
+- Cumulative enum values (`approaches_cumulative`, etc.) + 3 UPDATE statements for existing goals
 
 ---
 
@@ -246,59 +250,111 @@ All phases 0–6 are ✅ DONE. Key deliverables:
 
 ---
 
-## Phase 7: UI/UX Polish (AI)
+## Phase 7: UI/UX Polish — ✅ DONE
 
-Bugs and UX gaps discovered during live testing with a real user account. Six milestones, each produces a working app state improvement.
+Code for 7.1–7.6 implemented. Key deliverables:
+- **7.1:** Cumulative metric types (`approaches_cumulative`, etc.) in goalTypes, goalRepo, goalGraph. Code correct.
+- **7.2:** `isDailyActionable()` filter, per-goal weekly summaries in DailyActionView, `deriveTimeHorizon` fix for milestones.
+- **7.3:** "Browse Catalog" modal for existing users, "Active"/"Already tracking" badges, parent remapping.
+- **7.4:** `breadcrumbMode` prop on GoalCard — "none" in categories, "parent-only" in daily.
+- **7.5:** Dirty Dog placeholder with opt-in in strategic view, `generateDirtyDogInserts`.
+- **7.6:** Merged into 7.2 — L0/L1/L2 excluded from daily via `goal_level === 3` check.
 
-**Dependency graph:**
-```
-7.1 (metric sync fix) ───┐
-7.6 (L2 daily hiding) ───┼──→ 7.2 (daily view redesign) ──→ 7.4 (breadcrumb cleanup)
-                          │
-7.3 (catalog for existing users) — independent
-7.5 (dirty dog opt-in) — independent
-```
-
-7.1, 7.3, 7.5, 7.6 are independent (parallelizable). 7.2 depends on 7.1 + 7.6. 7.4 depends on 7.2.
+**Known issues from Phase 7 (fixed in Phase 8 below):**
+- 7.1 migration was incomplete (missing 2 of 3 UPDATE statements)
+- 7.5 dirty dog opt-in crashes at runtime (batch API rejects inserts without `_tempId`)
+- Auto-synced goals misleadingly show manual increment buttons
 
 ---
 
-### MILESTONE 7.1: "Auto-sync uses correct metric type (cumulative vs weekly)"
+## Phase 8: Bug Fixes & UX Hardening
+
+Bugs and UX gaps found during post-Phase-7 audit. Three bugs (one blocker, one data, one UX) plus one minor cleanup.
+
+**Dependency graph:**
+```
+8.1 (dirty dog batch fix) — independent
+8.2 (migration file) — independent
+8.3 (auto-sync read-only) — independent
+8.4 (sub-goal button cleanup) — independent
+```
+
+All four are independent and parallelizable.
+
+---
+
+### MILESTONE 8.1: "Dirty Dog opt-in actually works"
 
 **DEPENDS ON:** Nothing
-**DESTRUCTIVE:** No — extends LinkedMetric type and fixes data mappings.
+**DESTRUCTIVE:** No — fixes existing broken code path.
+**PRIORITY:** P0 BLOCKER — clicking "Add Goals" in dirty dog placeholder returns 400 error.
 
-**Problem:** `Approach Volume` (milestone_ladder, target 1000) and `Approach Frequency` (habit_ramp, target 10/wk) both link to `approaches_weekly`. The sync function puts `current_week_approaches` (e.g. 12) into both goals. Approach Volume should show **cumulative total** approaches (from `total_approaches` in tracking stats), not this week's count. Same issue for Phone Numbers and Instadates — milestone goals linking to weekly metrics that return 0.
+**Problem:** `generateDirtyDogInserts()` (goalsService.ts:410) returns `UserGoalInsert[]` without `_tempId`. The batch API (`app/api/goals/batch/route.ts:17`) requires `_tempId` on every insert:
+```ts
+if (!g.title || !g._tempId) {
+  return NextResponse.json({ error: "Each goal needs title and _tempId" }, { status: 400 })
+}
+```
+Every call to "Add Goals" fails silently (the error is caught but just sets error state).
 
-**Root cause:** `goalGraph.ts` assigns `linkedMetric: "approaches_weekly"` to `l3_approach_volume`, but that goal is cumulative. The `LinkedMetric` type only has weekly variants. No cumulative metric types exist.
+**Root cause:** `generateDirtyDogInserts` was designed to return plain `UserGoalInsert[]` but the only batch endpoint requires `BatchGoalInsert` format (with `_tempId` and `_tempParentId`).
+
+**Fix approach:** Change `generateDirtyDogInserts` to return `BatchGoalInsert[]`. These inserts already have real `parent_goal_id` (the L2 parent's UUID), so `_tempParentId` should be `null`. Each insert needs a unique `_tempId` (e.g., `"__temp_" + tmpl.id`).
 
 **FILES TO MODIFY:**
 
-- `src/db/goalTypes.ts` — extend `LinkedMetric` union with:
-  - `"approaches_cumulative"`
-  - `"sessions_cumulative"`
-  - `"numbers_cumulative"`
-  - `"instadates_cumulative"`
+- `src/goals/goalsService.ts` — `generateDirtyDogInserts()`:
+  - Change return type from `UserGoalInsert[]` to `BatchGoalInsert[]`
+  - Import `BatchGoalInsert` from `treeGenerationService`
+  - Add `_tempId: "__temp_" + tmpl.id` and `_tempParentId: null` to each insert
+  - Keep existing `parent_goal_id: l2Parent.id` (real UUID, not temp)
 
-- `src/db/goalRepo.ts` — in `getMetricValue()` (~line 405):
-  - Add cases for cumulative types: `"approaches_cumulative"` → `stats.total_approaches`, `"sessions_cumulative"` → `stats.total_sessions`
-  - For `numbers_cumulative` and `instadates_cumulative`: return 0 (tracking doesn't count these yet — add TODO)
-  - Widen `stats` param type to include `total_approaches` and `total_sessions` (already returned by `getUserTrackingStats`)
-
-- `src/goals/data/goalGraph.ts` — change linked metrics on milestone goals:
-  - `l3_approach_volume`: `"approaches_weekly"` → `"approaches_cumulative"`
-  - `l3_phone_numbers`: `"numbers_weekly"` → `"numbers_cumulative"`
-  - `l3_instadates`: `"instadates_weekly"` → `"instadates_cumulative"`
-  - Keep `l3_approach_frequency` as `"approaches_weekly"` (correct)
-  - Keep `l3_session_frequency` as `"sessions_weekly"` (correct)
+- `src/goals/components/GoalsHubContent.tsx` — `handleAddDirtyDogGoals`:
+  - No change needed — it already sends `{ goals: inserts }` to batch endpoint
+  - The batch endpoint's `createGoalBatch` handles `_tempParentId: null` correctly (uses `parent_goal_id` as-is)
 
 **FILES TO NOT TOUCH:**
-- `src/goals/components/GoalCard.tsx`
-- `src/goals/milestoneService.ts`
+- `app/api/goals/batch/route.ts` — validation is correct, inserts need to conform to it
+- `src/db/goalRepo.ts`
 
-**MIGRATION SQL** (fix existing goals in DB):
+**TESTS TO ADD:**
+- `goalsService.test.ts`: `generateDirtyDogInserts` returns objects with `_tempId` and `_tempParentId: null`
+- `goalsService.test.ts`: each returned insert has `_tempId` starting with `"__temp_"`
+- `goalsService.test.ts`: each returned insert has `parent_goal_id` set to the L2 parent's ID (real UUID)
+
+**ACCEPTANCE TEST:**
+1. User has goals, no dirty dog category
+2. Strategic view → dirty dog placeholder visible
+3. Click "Add Goals" → API returns 201 (not 400)
+4. 4 dirty dog goals appear in dirty dog section
+5. Goals have correct parent (first L2 achievement)
+
+**DONE WHEN:** Dirty dog opt-in creates goals without errors.
+
+---
+
+### MILESTONE 8.2: "Complete cumulative metric migration"
+
+**DEPENDS ON:** Nothing
+**DESTRUCTIVE:** No — only adds enum values and fixes existing data.
+**PRIORITY:** P0 DATA — Phone Numbers and Instadates goals show 0 progress for existing users.
+
+**Problem:** The Phase 7.1 code changes are correct (goalGraph, goalTypes, goalRepo all handle cumulative metrics). But the DB migration was never created on disk, and the draft only contained 1 of 3 required UPDATE statements. Existing goals in the DB still have `linked_metric = 'numbers_weekly'` and `linked_metric = 'instadates_weekly'`, so sync returns 0 for them.
+
+**FILES TO CREATE:**
+
+- `supabase/migrations/20260214_fix_cumulative_linked_metrics.sql`:
 ```sql
--- Fix cumulative milestone goals incorrectly linked to weekly metrics
+-- Step 1: Add cumulative values to the linked_metric enum type
+ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'approaches_cumulative';
+ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'sessions_cumulative';
+ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'numbers_cumulative';
+ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'instadates_cumulative';
+
+-- Step 2: Fix existing milestone goals incorrectly linked to weekly metrics
+-- (Must run in a separate transaction from ALTER TYPE — Supabase runs each
+--  migration as one transaction, so run Step 1 first as its own migration
+--  if this fails. Or run Step 2 manually in SQL editor after Step 1 commits.)
 UPDATE user_goals SET linked_metric = 'approaches_cumulative'
   WHERE template_id = 'l3_approach_volume' AND linked_metric = 'approaches_weekly';
 UPDATE user_goals SET linked_metric = 'numbers_cumulative'
@@ -307,215 +363,98 @@ UPDATE user_goals SET linked_metric = 'instadates_cumulative'
   WHERE template_id = 'l3_instadates' AND linked_metric = 'instadates_weekly';
 ```
 
-**TESTS TO ADD:**
-- Unit test: `getMetricValue` returns `total_approaches` for `"approaches_cumulative"` and `current_week_approaches` for `"approaches_weekly"`
-- `treeGenerationService.test.ts`: verify `l3_approach_volume` insert has `linked_metric: "approaches_cumulative"`, `l3_approach_frequency` has `"approaches_weekly"`
+**FILES TO NOT TOUCH:** All application code — 7.1 code is correct, only the migration is missing.
+
+**IMPORTANT:** `ALTER TYPE ... ADD VALUE` cannot run inside a transaction in PostgreSQL. Supabase wraps each migration file in a transaction. Two options:
+1. Split into two migration files: `20260214a_add_cumulative_enum.sql` (ALTER TYPE only) and `20260214b_fix_linked_metrics.sql` (UPDATE only)
+2. Run the ALTER TYPE statements manually in the Supabase SQL editor first, then apply only the UPDATE migration
+
+Option 1 (two files) is cleaner and automated. Use that approach.
 
 **ACCEPTANCE TEST:**
-1. Sync runs → Approach Volume shows cumulative total (e.g., 363/1000)
-2. Approach Frequency shows this week only (e.g., 12/10)
-3. Session Frequency shows this week only
+1. Run migrations against Supabase
+2. Query: `SELECT id, template_id, linked_metric FROM user_goals WHERE template_id IN ('l3_approach_volume', 'l3_phone_numbers', 'l3_instadates')` → all show cumulative metrics
+3. Visit goals page → sync runs → Phone Numbers shows cumulative total (not 0)
+4. Instadates shows cumulative total (not 0)
+5. Approach Volume shows cumulative total
 
-**DONE WHEN:** Milestone goals display cumulative metrics. Habit ramp goals display weekly metrics.
+**DONE WHEN:** All three cumulative goals show real data from tracking stats after sync. Migration files exist on disk and are ready to apply.
 
 ---
 
-### MILESTONE 7.2: "Daily view shows only actionable goals, with meaningful summary"
+### MILESTONE 8.3: "Auto-synced goals don't show manual increment buttons"
 
-**DEPENDS ON:** 7.1 (correct metrics), 7.6 (L2 exclusion logic)
-**DESTRUCTIVE:** Yes — rewrites DailyActionView filtering and summary.
-**SAFE BECAUSE:** Only changes DailyActionView.tsx and goalsService.ts. Strategic view untouched.
+**DEPENDS ON:** Nothing
+**DESTRUCTIVE:** No — hides buttons, doesn't remove functionality.
+**PRIORITY:** P1 UX — confusing but not data-breaking.
 
-**Problem (two bugs):**
+**Problem:** Goals with `linked_metric` (Approach Frequency, Session Frequency, Approach Volume, etc.) show +1/+5 increment buttons and direct-entry inputs in both Daily and Strategic views. But every page load calls `syncLinkedGoals` which overwrites `current_value` with tracking data. So: user increments → sees change → refreshes → value reverts to synced data. The "Auto-synced" badge is visible but buried in the meta row.
 
-**Bug A — All goals appear in Daily view:** `deriveTimeHorizon()` (goalsService.ts:149) for milestone goals without `target_date` falls through to the `period` switch (line 176). Since all generated goals have `period: "weekly"`, every goal — including "Get a girlfriend" (L1), "Approach Volume" (cumulative milestone), "Phone Numbers" (cumulative milestone) — gets classified as "This Week" and shows in Daily view.
-
-**Bug B — Summary is meaningless:** Weekly progress header sums ALL goal targets: `363/1093 this week`. This sums Approach Volume target (1000) + Frequency (10) + Sessions (3) + Days (30) + Numbers (25) + etc. — different units, different horizons, nonsensical total.
-
-**FILES TO MODIFY:**
-
-- `src/goals/goalsService.ts`:
-  - Fix `deriveTimeHorizon()`: milestone goals without `target_date` → return `"Long-term"` instead of falling through to period switch. Only `recurring` and `habit_ramp` use period-based logic.
-  - Add `isDailyActionable(goal: GoalWithProgress): boolean`:
-    - Returns `true` ONLY for L3 goals (`goal_level === 3`) with `goal_type === "habit_ramp"` or `goal_type === "recurring"`
-    - Returns `false` for milestone goals, L0/L1/L2 goals, goals without `goal_level`
-
-- `src/goals/components/DailyActionView.tsx`:
-  - Replace `deriveTimeHorizon` filtering with `isDailyActionable(goal)` filter
-  - Summary header: instead of summing all targets, show per-goal lines:
-    - "Approaches: 12/15 this week" (from approach frequency goal)
-    - "Sessions: 2/3 this week" (from session frequency goal)
-  - Remove broken aggregate `totalCurrent/totalTarget`
-
-**FILES TO NOT TOUCH:**
-- `src/goals/components/GoalHierarchyView.tsx`
-- `src/goals/components/GoalCard.tsx`
-- `src/db/goalRepo.ts`
-
-**TESTS TO ADD:**
-- `isDailyActionable`: true for L3 habit_ramp weekly, true for L3 recurring weekly, false for L3 milestone, false for L1/L2, false for null level
-- `deriveTimeHorizon`: returns `"Long-term"` for milestone without target_date
-
-**ACCEPTANCE TEST:**
-1. Daily view shows ONLY habit ramp + recurring L3 goals (Approach Frequency, Session Frequency)
-2. Milestone goals (Approach Volume, Phone Numbers, etc.) do NOT appear
-3. L1/L2 goals do NOT appear
-4. Summary shows per-goal weekly progress, not broken aggregate
-5. Strategic view unchanged — all goals visible
-
-**DONE WHEN:** Daily view is a focused action dashboard with only this-week habits.
-
----
-
-### MILESTONE 7.3: "Existing users can add new goal trees from catalog"
-
-**DEPENDS ON:** Nothing (independent)
-**DESTRUCTIVE:** No — adds UI paths, removes nothing.
-
-**Problem:** `GoalCatalogPicker` only renders when `goals.length === 0` (`GoalsHubContent.tsx:202`). Once a user creates goals, they can never access the catalog again. If a user has "Get a girlfriend" and wants to add "Build a rotation", they must create every sub-goal manually — defeating the system's purpose.
-
-**UX design:**
-- "Browse Catalog" button next to "New Goal" in hub header (visible when goals exist)
-- Opens catalog picker in modal/overlay (not replacing hub view)
-- Already-created L0/L1 goals shown with "Active" badge, not selectable
-- Tree preview marks sub-goals user already has (via `template_id` match) as "Already tracking" and pre-unchecks them
-- "Create N Goals" only creates NEW goals, skipping duplicates
-- New goals wire parent references to existing parents (e.g., new L3 goals under existing "Master Daygame")
-
-**FILES TO MODIFY:**
-
-- `src/goals/components/GoalsHubContent.tsx`:
-  - Add `showCatalog` state
-  - Add "Browse Catalog" button (Sparkles icon) next to "New Goal"
-  - Render `GoalCatalogPicker` in modal when `showCatalog && goals.length > 0`
-  - Pass `existingGoals={goals}` to picker
-
-- `src/goals/components/GoalCatalogPicker.tsx`:
-  - Accept optional `existingGoals?: GoalWithProgress[]` prop
-  - When provided:
-    - Gray out L0/L1 cards whose `template_id` matches existing goal, add "Active" badge
-    - In tree preview: pre-uncheck goals matching existing `template_id`, label "Already tracking"
-    - Wire `parent_goal_id` for new L3 goals to existing L2 parents (find by `template_id`)
-  - Support modal mode (close button, backdrop overlay)
-
-- `src/goals/goalsService.ts`:
-  - Add `findExistingByTemplate(goals, templateId): GoalWithProgress | null`
-
-**FILES TO NOT TOUCH:**
-- `src/goals/treeGenerationService.ts`
-- `src/goals/data/goalGraph.ts`
-- `app/api/goals/batch/route.ts`
-
-**TESTS TO ADD:**
-- `findExistingByTemplate` returns match or null
-
-**ACCEPTANCE TEST:**
-1. User has 11 goals from "Get a girlfriend"
-2. Click "Browse Catalog" → catalog opens in overlay
-3. "Get a girlfriend" grayed out with "Active" badge
-4. Click "Build a rotation" → preview shows sub-goals
-5. Shared sub-goals (Approach Volume etc.) pre-unchecked, labeled "Already tracking"
-6. "Create N Goals" creates only new ones
-7. New L3 goals under shared L2 parent wire correctly
-
-**DONE WHEN:** Existing users add goal trees without duplicates. Shared sub-goals detected and skipped.
-
----
-
-### MILESTONE 7.4: "Breadcrumbs are contextual, not redundant"
-
-**DEPENDS ON:** 7.2 (daily view affects breadcrumb needs)
-**DESTRUCTIVE:** No — modifies display logic only.
-
-**Problem:** Every GoalCard shows full ancestor breadcrumb "Daygame > Get a girlfriend > Master Daygame" even when all sibling cards share the same parent. In "FIELD WORK" section containing only children of "Master Daygame", the full breadcrumb repeated 4x is visual noise.
-
-**Design rule:** Show breadcrumb only when it adds info:
-- **Category sections** (strategic view): hide breadcrumbs — section header provides context
-- **Daily view:** show parent name only, not full chain
-- **Standalone contexts:** full breadcrumb
+**Design:** Auto-synced goals should show read-only progress, not editable inputs. The GoalCard already shows an "Auto-synced" badge with a Link icon. Expand this to replace the input widget.
 
 **FILES TO MODIFY:**
 
 - `src/goals/components/GoalCard.tsx`:
-  - Add `breadcrumbMode?: "full" | "parent-only" | "none"` prop (default: `"full"`)
-
-- `src/goals/components/GoalCategorySection.tsx`:
-  - Pass `breadcrumbMode="none"` to GoalCard children
+  - In the expanded actions section (~line 229), before rendering `GoalInputWidget`, check `goal.linked_metric`:
+    - If `linked_metric` is set: render a read-only message instead of the input widget
+    - Message: "Progress synced automatically from your session data" (small, muted text)
+    - Still show Edit button (user can change linked_metric via form)
+  - Keep the "Auto-synced" badge in the meta row as-is
 
 - `src/goals/components/DailyActionView.tsx`:
-  - Pass `breadcrumbMode="parent-only"` to GoalCard children
-
-- `src/goals/components/GoalHierarchyView.tsx`:
-  - Uncategorized goals keep `breadcrumbMode="full"`
+  - No change needed — it passes `onIncrement` to GoalCard, and GoalCard will now gate it
 
 **FILES TO NOT TOUCH:**
-- `src/goals/components/GoalHierarchyBreadcrumb.tsx`
+- `src/goals/components/GoalInputWidget.tsx` — the widget itself is fine, GoalCard just won't render it for synced goals
+- `src/goals/goalsService.ts`
+- `src/db/goalRepo.ts`
 
 **ACCEPTANCE TEST:**
-1. Strategic FIELD WORK section: no breadcrumbs on cards
-2. Daily view: cards show just "Master Daygame" not full chain
-3. Uncategorized goals still show full breadcrumb
+1. Daily view → Approach Frequency card (auto-synced) → expand → no +1/+5 buttons, shows "synced automatically" message
+2. Session Frequency card → same behavior
+3. Strategic view → Approach Volume card → expand → no direct-entry input, shows sync message
+4. Manual (non-synced) goals → still show increment buttons normally
+5. Edit button still works on synced goals → can change linked_metric to null → increment buttons reappear
 
-**DONE WHEN:** Breadcrumbs appear only when they add context.
+**DONE WHEN:** Auto-synced goals show read-only progress. Manual goals unchanged.
 
 ---
 
-### MILESTONE 7.5: "Dirty Dog section visible as collapsed opt-in in strategic view"
+### MILESTONE 8.4: "Sub-goal button only on L1/L2 goals"
 
-**DEPENDS ON:** Nothing (independent)
-**DESTRUCTIVE:** No — adds UI section.
+**DEPENDS ON:** Nothing
+**DESTRUCTIVE:** No — hides a button on leaf goals.
+**PRIORITY:** P2 MINOR — cosmetic, no functional impact.
 
-**Problem:** If user didn't opt into Dirty Dog goals during catalog creation, strategic view shows no Dirty Dog section. User has no way to discover or opt into these goals later.
+**Problem:** GoalCard shows a "Sub-goal" button on all milestone-type goals, including L3 leaf goals (Approach Volume, Phone Numbers, etc.). Creating a child of an L3 has no meaning in the goal graph — L3 is the lowest level. The button just adds visual noise to leaf cards.
 
 **FILES TO MODIFY:**
 
-- `src/goals/components/GoalHierarchyView.tsx`:
-  - After existing category sections, if `dirty_dog` category has 0 goals: render placeholder section
-  - Placeholder: "DIRTY DOG GOALS" header, opt-in copy ("These track intimate outcomes. Opt in if relevant to your goals."), "Add Goals" button
-  - Wire button to `onAddDirtyDogGoals` callback
+- `src/goals/components/GoalCard.tsx` — line 101:
+  - Current: `const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0)`
+  - Change to: `const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0) && (goal.goal_level === null || goal.goal_level < 3)`
+  - This hides the button on L3 goals. Goals without `goal_level` (legacy/custom) keep existing behavior.
 
-- `src/goals/components/GoalsHubContent.tsx`:
-  - Handle `onAddDirtyDogGoals`: create 4 dirty dog goals via batch API with correct parent refs
-
-- `src/goals/goalsService.ts`:
-  - Add `generateDirtyDogInserts(existingGoals): UserGoalInsert[]` — returns 4 dirty dog template goals parented to existing L2
-
-**TESTS TO ADD:**
-- `generateDirtyDogInserts` returns 4 goals with correct template_ids
+**FILES TO NOT TOUCH:** Everything else.
 
 **ACCEPTANCE TEST:**
-1. No dirty dog goals → strategic view shows collapsed placeholder with opt-in copy
-2. Click "Add Goals" → 4 goals created
-3. Section shows goals normally after opt-in
+1. Strategic view → Approach Volume (L3 milestone) → no "Sub-goal" button
+2. Phone Numbers (L3 milestone) → no "Sub-goal" button
+3. Get a Girlfriend (L1 milestone) → "Sub-goal" button still shows
+4. Master Daygame (L2 milestone) → "Sub-goal" button still shows
+5. Custom goal without goal_level → existing behavior preserved
 
-**DONE WHEN:** Strategic view always shows dirty dog section — either with goals or as opt-in.
-
----
-
-### MILESTONE 7.6: "L1/L2 goals hidden from Daily view"
-
-**DEPENDS ON:** Nothing (but do before 7.2)
-**DESTRUCTIVE:** No — filtering only.
-
-**Problem:** L1 ("Get a girlfriend" 0/1) and L2 ("Master Daygame" 0/1) appear as cards in Daily view. These are structural/aspirational, not daily action items. They clutter the dashboard with misleading "0/1" progress bars.
-
-**Design:** L0/L1/L2 goals appear ONLY in Strategic view. Daily view is exclusively for L3 work goals.
-
-**Implementation:** Handled by `isDailyActionable(goal)` in 7.2 — checks `goal_level >= 3`. This milestone documents the design decision; implementation is merged into 7.2.
-
-**DONE WHEN:** L0/L1/L2 goals never appear in Daily view.
+**DONE WHEN:** "Sub-goal" button only appears on L0/L1/L2 goals.
 
 ---
 
-### Phase 7 Work Summary
+### Phase 8 Work Summary
 
 | Milestone | What | Priority | Status |
 |-----------|------|----------|--------|
-| **7.1** | Fix linked metric sync (cumulative vs weekly) | P0 | DONE |
-| **7.2** | Daily view: only actionable L3 goals + meaningful summary | P0 | DONE |
-| **7.3** | Existing users add goal trees from catalog | P0 | DONE |
-| **7.4** | Breadcrumbs contextual, not redundant | P1 | DONE |
-| **7.5** | Dirty Dog section opt-in placeholder in strategic view | P1 | DONE |
-| **7.6** | L1/L2 goals hidden from Daily view (merged into 7.2) | P0 | DONE |
+| **8.1** | Fix dirty dog batch insert (add `_tempId`) | P0 BLOCKER | ✅ DONE |
+| **8.2** | Complete cumulative metric migration (3 UPDATEs + enum) | P0 DATA | ✅ DONE |
+| **8.3** | Auto-synced goals read-only (hide increment buttons) | P1 UX | ✅ DONE |
+| **8.4** | Sub-goal button only on L1/L2 (not L3 leaves) | P2 MINOR | ✅ DONE |
 
-**Recommended build order:** 7.1 → 7.6 → 7.2 → 7.4 (serial). 7.3 and 7.5 parallel with anything.
+All four are independent — can be done in any order or in parallel.

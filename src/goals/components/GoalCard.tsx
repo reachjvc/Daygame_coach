@@ -98,7 +98,7 @@ export function GoalCard({
     }
   }
 
-  const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0)
+  const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0) && (goal.goal_level === null || goal.goal_level < 3)
 
   return (
     <div className={`relative ${showAddChild ? "mb-3" : ""}`}>
@@ -227,13 +227,19 @@ export function GoalCard({
           {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
             {onIncrement && !goal.is_complete && (
-              <GoalInputWidget
-                goal={goal}
-                isLoading={isIncrementing}
-                onIncrement={handleIncrement}
-                onSetValue={handleSetValue}
-                onComplete={onComplete ? () => onComplete(goal) : undefined}
-              />
+              goal.linked_metric ? (
+                <p className="text-xs text-muted-foreground">
+                  Progress synced automatically from your session data
+                </p>
+              ) : (
+                <GoalInputWidget
+                  goal={goal}
+                  isLoading={isIncrementing}
+                  onIncrement={handleIncrement}
+                  onSetValue={handleSetValue}
+                  onComplete={onComplete ? () => onComplete(goal) : undefined}
+                />
+              )
             )}
             {onReset && goal.goal_type === "recurring" && (
               showResetConfirm ? (
