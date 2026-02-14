@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import time
 from dataclasses import dataclass
@@ -88,6 +89,10 @@ def validate_cross_stage(
     # --- 2. Segment text integrity ---
     s06_segments = s06_data.get("segments", [])
     s07_segments = s07_data.get("segments", [])
+    s06_segments_by_id = {
+        seg.get("id"): seg for seg in s06_segments
+        if isinstance(seg, dict) and isinstance(seg.get("id"), int)
+    }
 
     if len(s06_segments) != len(s07_segments):
         results.append(ValidationResult(
@@ -148,9 +153,32 @@ def validate_cross_stage(
     for enrichment in s07_enrichments:
         if enrichment.get("type") != "approach":
             continue
+        conv_id = enrichment.get("conversation_id")
         for tp in enrichment.get("turn_phases", []):
             seg_idx = tp.get("segment")
-            if seg_idx is not None and seg_idx in s06_commentary_seg_ids:
+            if seg_idx is None:
+                continue
+
+            # Stage 07 contract: turn_phases[].segment is global segments[].id.
+            if seg_idx not in s06_segments_by_id:
+                results.append(ValidationResult(
+                    "error", "phase_segment_missing",
+                    f"turn_phases references segment id {seg_idx} that does not exist in Stage 06",
+                    video_id,
+                ))
+                continue
+
+            ref_seg = s06_segments_by_id[seg_idx]
+            ref_conv_id = ref_seg.get("conversation_id")
+            if conv_id is not None and ref_conv_id != conv_id:
+                results.append(ValidationResult(
+                    "error", "phase_conversation_mismatch",
+                    f"turn_phases segment {seg_idx} belongs to conv {ref_conv_id}, "
+                    f"but enrichment is conv {conv_id}",
+                    video_id,
+                ))
+
+            if seg_idx in s06_commentary_seg_ids:
                 results.append(ValidationResult(
                     "warning", "commentary_in_approach",
                     f"Stage 07 approach enrichment for conv {enrichment.get('conversation_id')} "
@@ -188,34 +216,106 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def canonical_stem(path: Path) -> str:
+    """Normalize stage filename to canonical <title> [video_id].audio.asr.* stem."""
+    stem = path.stem
+    if stem.endswith(".conversations"):
+        stem = stem[: -len(".conversations")]
+    if stem.endswith(".enriched"):
+        stem = stem[: -len(".enriched")]
+    return stem
+
+
+def maybe_source_name(path: Path, stage_root: Path) -> Optional[str]:
+    try:
+        rel = path.relative_to(stage_root)
+    except ValueError:
+        return None
+    parts = rel.parts
+    if len(parts) >= 2:
+        return parts[0]
+    return None
+
+
+def extract_video_id_from_name(name: str) -> str:
+    match = re.search(r"\[([A-Za-z0-9_-]{11})\]", name)
+    if match:
+        return match.group(1)
+    return name
+
+
+def path_includes_source(path: Path, source: str) -> bool:
+    token = Path(source).name
+    return token in path.parts
+
+
+def is_root_flat(path: Path, stage_root: Path) -> bool:
+    try:
+        rel = path.relative_to(stage_root)
+    except ValueError:
+        return False
+    return len(rel.parts) == 1
+
+
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
-    """Find matching Stage 06/07 output file pairs."""
-    s06_root = repo_root() / "data" / "06c.patched"
-    if not s06_root.exists():
-        s06_root = repo_root() / "data" / "06.video-type"
-    s07_root = repo_root() / "data" / "07.content"
+    """Find matching Stage 06/07 output file pairs across root/source/video layouts."""
+    root = repo_root()
+    s06c_root = root / "data" / "06c.patched"
+    s06_root = root / "data" / "06.video-type"
+    s07_root = root / "data" / "07.content"
+
+    s06_candidates: List[Path] = []
+    if s06c_root.exists():
+        s06_candidates.extend(sorted(s06c_root.rglob("*.conversations.json")))
+    if not s06_candidates and s06_root.exists():
+        s06_candidates.extend(sorted(s06_root.rglob("*.conversations.json")))
+    if source:
+        active_root = s06c_root if s06c_root.exists() else s06_root
+        s06_candidates = [
+            p for p in s06_candidates
+            if path_includes_source(p, source) or is_root_flat(p, active_root)
+        ]
+
+    if not s07_root.exists():
+        return []
+    s07_candidates = sorted(s07_root.rglob("*.enriched.json"))
+    if source:
+        s07_candidates = [
+            p for p in s07_candidates
+            if path_includes_source(p, source) or is_root_flat(p, s07_root)
+        ]
+
+    s07_by_stem: Dict[str, List[Path]] = {}
+    for s07 in s07_candidates:
+        s07_by_stem.setdefault(canonical_stem(s07), []).append(s07)
 
     pairs: List[Tuple[Path, Path, str]] = []
+    seen: set[Tuple[str, str]] = set()
 
-    search_dirs = [s06_root / source] if source else list(s06_root.iterdir()) if s06_root.exists() else []
-
-    for source_dir in search_dirs:
-        if not source_dir.is_dir():
+    for s06_file in s06_candidates:
+        stem = canonical_stem(s06_file)
+        candidates = s07_by_stem.get(stem, [])
+        if not candidates:
             continue
-        source_name = source_dir.name
 
-        for s06_file in sorted(source_dir.rglob("*.conversations.json")):
-            # Find matching Stage 07 file
-            stem = s06_file.stem
-            if stem.endswith(".conversations"):
-                stem = stem[:-len(".conversations")]
-            s07_file = s07_root / source_name / f"{stem}.enriched.json"
+        s06_source = maybe_source_name(s06_file, s06c_root if s06c_root.exists() else s06_root)
+        chosen = candidates[0]
+        if s06_source:
+            source_matched = [
+                c for c in candidates
+                if maybe_source_name(c, s07_root) == s06_source
+            ]
+            if source_matched:
+                chosen = source_matched[0]
 
-            if s07_file.exists():
-                video_id = stem
-                pairs.append((s06_file, s07_file, video_id))
+        key = (str(s06_file), str(chosen))
+        if key in seen:
+            continue
+        seen.add(key)
+        video_id = extract_video_id_from_name(stem)
+        pairs.append((s06_file, chosen, video_id))
 
-    return pairs
+    return sorted(pairs, key=lambda x: (str(x[0]), str(x[1])))
 
 
 def main() -> None:

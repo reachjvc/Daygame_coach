@@ -159,6 +159,10 @@ export async function createGoal(
       target_date: goal.target_date ?? null,
       description: goal.description ?? null,
       goal_type: goal.goal_type ?? "recurring",
+      goal_nature: goal.goal_nature ?? null,
+      display_category: goal.display_category ?? null,
+      goal_level: goal.goal_level ?? null,
+      template_id: goal.template_id ?? null,
     })
     .select()
     .single()
@@ -168,6 +172,34 @@ export async function createGoal(
   }
 
   return computeGoalProgress(data as UserGoalRow)
+}
+
+// ============================================
+// Batch Create Goals (for tree generation)
+// ============================================
+
+/**
+ * Create multiple goals in order, resolving temp parent IDs to real UUIDs.
+ * Inserts must be ordered so that parents appear before children.
+ */
+export async function createGoalBatch(
+  userId: string,
+  goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[]
+): Promise<GoalWithProgress[]> {
+  const tempToReal = new Map<string, string>()
+  const created: GoalWithProgress[] = []
+
+  for (const goal of goals) {
+    const realParentId = goal._tempParentId ? tempToReal.get(goal._tempParentId) ?? null : null
+    const { _tempId, _tempParentId, ...insert } = goal
+    insert.parent_goal_id = realParentId ?? undefined
+
+    const result = await createGoal(userId, insert)
+    tempToReal.set(_tempId, result.id)
+    created.push(result)
+  }
+
+  return created
 }
 
 // ============================================

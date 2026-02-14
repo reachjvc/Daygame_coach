@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid, Archive } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -70,6 +70,12 @@ const testPages = [
     href: "/test/goals-views",
     description: "Compare 4 goal view layouts: Dashboard, Tree, Kanban, List",
     icon: LayoutGrid,
+  },
+  {
+    name: "Old Goals",
+    href: "/test/old-goals",
+    description: "Original goals hub (archived from Phase 4 transition)",
+    icon: Archive,
   },
 ]
 

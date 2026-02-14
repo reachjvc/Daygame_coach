@@ -117,6 +117,15 @@ class Config:
     pitch_method: str = "pyin"  # "pyin" (recommended) or "yin"
     pitch_trim_percentile: float = 2.0  # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
 
+    # Segment-level quality heuristics
+    # speech_activity_ratio is estimated from frame RMS using a dynamic threshold:
+    #   max(noise_floor_db + quality_activity_margin_db, quality_activity_floor_db)
+    quality_noise_percentile: float = 20.0
+    quality_activity_margin_db: float = 6.0
+    quality_activity_floor_db: float = -40.0
+    quality_low_energy_peak_db: float = -35.0
+    quality_min_speech_activity_ratio: float = 0.30
+
     # Speaker embeddings (resemblyzer)
     # NOTE: Speaker identification now uses pyannote diarization from 04.diarize.
     # 06.segment-enrich uses pyannote_speaker field, NOT embeddings.
@@ -444,6 +453,45 @@ def compute_spectral_features(y: np.ndarray, sr: int) -> Dict[str, float]:
     }
 
 
+def compute_quality_features(y: np.ndarray, cfg: Config) -> Dict[str, Any]:
+    """
+    Estimate segment audio quality for downstream gating/inspection.
+
+    low_energy=true when segment is mostly below dynamic speech activity threshold
+    or the segment peak level is extremely quiet.
+    """
+    if librosa is None or y.size == 0:
+        return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+    try:
+        rms = librosa.feature.rms(y=y)[0]
+        rms = np.asarray(rms, dtype=np.float32)
+        if rms.size == 0:
+            return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+        db = 20.0 * np.log10(rms + 1e-9)
+        noise_floor_db = float(np.percentile(db, cfg.quality_noise_percentile))
+        activity_threshold_db = max(
+            noise_floor_db + cfg.quality_activity_margin_db,
+            cfg.quality_activity_floor_db,
+        )
+
+        active_frames = int(np.sum(db >= activity_threshold_db))
+        speech_activity_ratio = float(active_frames / max(1, db.size))
+        peak_db = float(np.percentile(db, 95.0))
+
+        low_energy = bool(
+            speech_activity_ratio < cfg.quality_min_speech_activity_ratio
+            or peak_db < cfg.quality_low_energy_peak_db
+        )
+        return {
+            "low_energy": low_energy,
+            "speech_activity_ratio": r3(speech_activity_ratio),
+        }
+    except Exception:
+        return {"low_energy": True, "speech_activity_ratio": 0.0}
+
+
 # -------------------------
 # Speaker embeddings
 # -------------------------
@@ -558,6 +606,7 @@ def build_audio_features(
         energy = compute_energy_features(y_feat, cfg.sample_rate)
         tempo = compute_tempo_features(y_feat, cfg.sample_rate, dur)
         spectral = compute_spectral_features(y_feat, cfg.sample_rate)
+        quality = compute_quality_features(y_feat, cfg)
 
         # Speaker embedding (clustering done in 06.segment-enrich)
         emb = try_embed_segment(encoder, y_orig, sr_orig, start, end, cfg)
@@ -586,6 +635,7 @@ def build_audio_features(
                     "energy": energy,
                     "tempo": tempo,
                     "spectral": spectral,
+                    "quality": quality,
                     "speaker_embedding": speaker_embedding_obj,
                 },
                 "audio_clip": {
@@ -607,6 +657,11 @@ def build_audio_features(
             "pitch_range_hz": [cfg.pitch_fmin_hz, cfg.pitch_fmax_hz],
             "pitch_method": cfg.pitch_method,
             "pitch_trim_percentile": cfg.pitch_trim_percentile,
+            "quality_noise_percentile": cfg.quality_noise_percentile,
+            "quality_activity_margin_db": cfg.quality_activity_margin_db,
+            "quality_activity_floor_db": cfg.quality_activity_floor_db,
+            "quality_low_energy_peak_db": cfg.quality_low_energy_peak_db,
+            "quality_min_speech_activity_ratio": cfg.quality_min_speech_activity_ratio,
             "embedder": cfg.embedder,
             "embedder_sample_rate": cfg.embedder_sample_rate,
             "min_embed_raw_sec": cfg.min_embed_raw_sec,
@@ -749,6 +804,15 @@ if __name__ == "__main__":
 
     p.add_argument("--pitch_method", type=str, default=Config.pitch_method)
     p.add_argument("--pitch_trim_percentile", type=float, default=Config.pitch_trim_percentile)
+    p.add_argument("--quality_noise_percentile", type=float, default=Config.quality_noise_percentile)
+    p.add_argument("--quality_activity_margin_db", type=float, default=Config.quality_activity_margin_db)
+    p.add_argument("--quality_activity_floor_db", type=float, default=Config.quality_activity_floor_db)
+    p.add_argument("--quality_low_energy_peak_db", type=float, default=Config.quality_low_energy_peak_db)
+    p.add_argument(
+        "--quality_min_speech_activity_ratio",
+        type=float,
+        default=Config.quality_min_speech_activity_ratio,
+    )
 
     p.add_argument("--min_embed_raw_sec", type=float, default=Config.min_embed_raw_sec)
     p.add_argument("--min_embed_window_sec", type=float, default=Config.min_embed_window_sec)
@@ -764,6 +828,11 @@ if __name__ == "__main__":
         pitch_fmax_hz=float(args.pitch_fmax_hz),
         pitch_method=str(args.pitch_method),
         pitch_trim_percentile=float(args.pitch_trim_percentile),
+        quality_noise_percentile=float(args.quality_noise_percentile),
+        quality_activity_margin_db=float(args.quality_activity_margin_db),
+        quality_activity_floor_db=float(args.quality_activity_floor_db),
+        quality_low_energy_peak_db=float(args.quality_low_energy_peak_db),
+        quality_min_speech_activity_ratio=float(args.quality_min_speech_activity_ratio),
         min_embed_raw_sec=float(args.min_embed_raw_sec),
         min_embed_window_sec=float(args.min_embed_window_sec),
         embed_pad_sec=float(args.embed_pad_sec),

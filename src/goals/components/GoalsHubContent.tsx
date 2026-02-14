@@ -1,49 +1,29 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Plus, Loader2, Target, Search, RefreshCw, Pencil } from "lucide-react"
+import { Plus, Loader2, Target, Settings2 } from "lucide-react"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
-import { LifeAreaFilter } from "./LifeAreaFilter"
-import { ViewSwitcher } from "./views/ViewSwitcher"
-import { DashboardView } from "./views/DashboardView"
-import { TimeHorizonView } from "./views/TimeHorizonView"
-import { flattenTree, filterGoals, getCelebrationTier } from "../goalsService"
-import { getLifeAreaConfig } from "../data/lifeAreas"
-import { DEFAULT_FILTER_STATE } from "../config"
-import type { GoalWithProgress, GoalTreeNode, GoalViewMode, GoalFilterState, CelebrationTier } from "../types"
+import { GoalCatalogPicker } from "./GoalCatalogPicker"
+import { GoalHierarchyView } from "./GoalHierarchyView"
+import { flattenTree, getCelebrationTier } from "../goalsService"
+import type { GoalWithProgress, GoalTreeNode, CelebrationTier } from "../types"
 
 export function GoalsHubContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [tree, setTree] = useState<GoalTreeNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [viewMode, setViewMode] = useState<GoalViewMode>(() => {
-    const fromUrl = searchParams.get("view") as GoalViewMode
-    if (fromUrl === "standard" || fromUrl === "time-horizon") return fromUrl
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("goals-view-mode") as GoalViewMode
-      if (stored === "standard" || stored === "time-horizon") return stored
-    }
-    return "standard"
-  })
-  const [filters, setFilters] = useState<GoalFilterState>(DEFAULT_FILTER_STATE)
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [isSyncing, setIsSyncing] = useState(false)
   const [celebration, setCelebration] = useState<{ tier: CelebrationTier; title: string } | null>(null)
   const [completingGoal, setCompletingGoal] = useState<GoalWithProgress | null>(null)
   const [isCompleting, setIsCompleting] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
   const [defaultParentGoalId, setDefaultParentGoalId] = useState<string | null>(null)
+  const [isCustomizeMode, setIsCustomizeMode] = useState(false)
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -65,43 +45,11 @@ export function GoalsHubContent() {
     fetchGoals()
   }, [fetchGoals])
 
-  // Sync view mode to URL
-  useEffect(() => {
-    const current = searchParams.get("view")
-    if (current !== viewMode) {
-      const params = new URLSearchParams(searchParams.toString())
-      params.set("view", viewMode)
-      router.replace(`?${params.toString()}`, { scroll: false })
-    }
-  }, [viewMode, searchParams, router])
-
-  const handleViewChange = (mode: GoalViewMode) => {
-    setViewMode(mode)
-    localStorage.setItem("goals-view-mode", mode)
-  }
-
-  const handleFilterChange = (update: Partial<GoalFilterState>) => {
-    setFilters((prev) => ({ ...prev, ...update }))
-  }
-
-  const handleSync = async () => {
-    if (isSyncing) return
-    setIsSyncing(true)
-    try {
-      await fetch("/api/goals/sync", { method: "POST" })
-      await fetchGoals()
-    } finally {
-      setIsSyncing(false)
-    }
-  }
-
-  // Trigger celebration after any goal completion (increment or set value)
   const triggerCelebration = useCallback((goal: GoalWithProgress) => {
     const tier = getCelebrationTier(goal)
     setCelebration({ tier, title: goal.title })
   }, [])
 
-  // Milestone completion: show confirmation dialog first
   const handleComplete = useCallback((goal: GoalWithProgress) => {
     setCompletingGoal(goal)
   }, [])
@@ -124,8 +72,7 @@ export function GoalsHubContent() {
     }
   }
 
-  // Enhanced increment that checks for completion
-  const handleIncrementWithCelebration = async (goalId: string, amount: number) => {
+  const handleIncrement = async (goalId: string, amount: number) => {
     const goal = goals.find(g => g.id === goalId)
     const response = await fetch(`/api/goals/${goalId}/increment`, {
       method: "POST",
@@ -134,14 +81,12 @@ export function GoalsHubContent() {
     })
     if (!response.ok) throw new Error("Failed to increment")
     await fetchGoals()
-
-    // Check if this increment completed the goal
     if (goal && !goal.is_complete && goal.current_value + amount >= goal.target_value) {
       triggerCelebration(goal)
     }
   }
 
-  const handleSetValueWithCelebration = async (goalId: string, value: number) => {
+  const handleSetValue = async (goalId: string, value: number) => {
     const goal = goals.find(g => g.id === goalId)
     const response = await fetch(`/api/goals/${goalId}`, {
       method: "PUT",
@@ -150,17 +95,13 @@ export function GoalsHubContent() {
     })
     if (!response.ok) throw new Error("Failed to set value")
     await fetchGoals()
-
-    // Check if this set value completed the goal
     if (goal && !goal.is_complete && value >= goal.target_value) {
       triggerCelebration(goal)
     }
   }
 
   const handleReset = async (goalId: string) => {
-    const response = await fetch(`/api/goals/${goalId}/reset`, {
-      method: "POST",
-    })
+    const response = await fetch(`/api/goals/${goalId}/reset`, { method: "POST" })
     if (!response.ok) throw new Error("Failed to reset")
     await fetchGoals()
   }
@@ -182,23 +123,17 @@ export function GoalsHubContent() {
     setIsFormOpen(true)
   }
 
-  const handleReorder = async (goalIds: string[]) => {
-    try {
-      await fetch("/api/goals/reorder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goalIds }),
-      })
-      await fetchGoals()
-    } catch {
-      // Refetch to restore correct order on failure
-      await fetchGoals()
-    }
+  const handleGoalToggle = async (goalId: string, active: boolean) => {
+    const response = await fetch(`/api/goals/${goalId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_archived: !active, is_active: active }),
+    })
+    if (!response.ok) throw new Error("Failed to toggle goal")
+    await fetchGoals()
   }
 
-  const handleFormSuccess = () => {
-    fetchGoals()
-  }
+  const handleFormSuccess = () => { fetchGoals() }
 
   const handleFormClose = (open: boolean) => {
     setIsFormOpen(open)
@@ -207,14 +142,6 @@ export function GoalsHubContent() {
       setDefaultParentGoalId(null)
     }
   }
-
-  const filteredGoals = filterGoals(goals, filters)
-
-  // Derive the filter area name for empty states
-  const filterAreaName = useMemo(() => {
-    if (!filters.lifeArea) return null
-    return getLifeAreaConfig(filters.lifeArea).name
-  }, [filters.lifeArea])
 
   if (isLoading) {
     return (
@@ -228,9 +155,7 @@ export function GoalsHubContent() {
     return (
       <div className="text-center py-20">
         <p className="text-destructive mb-4">{error}</p>
-        <Button onClick={() => { setIsLoading(true); fetchGoals() }}>
-          Retry
-        </Button>
+        <Button onClick={() => { setIsLoading(true); fetchGoals() }}>Retry</Button>
       </div>
     )
   }
@@ -249,94 +174,49 @@ export function GoalsHubContent() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative hidden sm:block">
-            <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search goals..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange({ search: e.target.value })}
-              className="w-48 pl-8 h-9"
-            />
-          </div>
-          <Button
-            variant={isEditMode ? "secondary" : "ghost"}
-            size="icon"
-            className="h-9 w-9"
-            onClick={() => setIsEditMode(!isEditMode)}
-            title={isEditMode ? "Done editing" : "Edit layout"}
-          >
-            <Pencil className="size-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9"
-            onClick={handleSync}
-            disabled={isSyncing}
-            title="Sync linked goals"
-          >
-            <RefreshCw className={`size-4 ${isSyncing ? "animate-spin" : ""}`} />
-          </Button>
-          <ViewSwitcher activeView={viewMode} onViewChange={handleViewChange} />
-          <Button onClick={handleCreateGoal}>
-            <Plus className="size-4 mr-1" />
-            New Goal
-          </Button>
+          {goals.length > 0 && (
+            <>
+              <Button
+                variant={isCustomizeMode ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+              >
+                <Settings2 className="size-4 mr-1" />
+                {isCustomizeMode ? "Done" : "Customize"}
+              </Button>
+              <Button onClick={handleCreateGoal}>
+                <Plus className="size-4 mr-1" />
+                New Goal
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Life Area Filter */}
-      <LifeAreaFilter
-        goals={goals}
-        selectedArea={filters.lifeArea}
-        onSelect={(area) => handleFilterChange({ lifeArea: area })}
-      />
-
-      {/* Active View */}
-      {viewMode === "standard" && (
-        <DashboardView
-          goals={filteredGoals}
-          allGoals={goals}
-          tree={tree}
-          isEditMode={isEditMode}
-          onIncrement={handleIncrementWithCelebration}
-          onSetValue={handleSetValueWithCelebration}
+      {/* Content: catalog picker or goal display */}
+      {goals.length === 0 ? (
+        <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
+      ) : (
+        <GoalHierarchyView
+          goals={goals}
+          isCustomizeMode={isCustomizeMode}
+          onIncrement={handleIncrement}
+          onSetValue={handleSetValue}
           onComplete={handleComplete}
-          onReorder={handleReorder}
           onReset={handleReset}
           onEdit={handleEdit}
           onAddChild={handleAddChild}
-          onCreateGoal={handleCreateGoal}
-          filterAreaName={filterAreaName}
+          onGoalToggle={handleGoalToggle}
         />
       )}
 
-      {viewMode === "time-horizon" && (
-        <TimeHorizonView
-          goals={filteredGoals}
-          allGoals={goals}
-          tree={tree}
-          isEditMode={isEditMode}
-          onIncrement={handleIncrementWithCelebration}
-          onSetValue={handleSetValueWithCelebration}
-          onComplete={handleComplete}
-          onReorder={handleReorder}
-          onReset={handleReset}
-          onEdit={handleEdit}
-          onAddChild={handleAddChild}
-          onCreateGoal={handleCreateGoal}
-          filterAreaName={filterAreaName}
-        />
-      )}
-
-      {/* Goal Form Modal */}
+      {/* Goal Form Modal (manual creation still available) */}
       <GoalFormModal
         open={isFormOpen}
         onOpenChange={handleFormClose}
         goal={editingGoal}
         parentGoals={goals}
         onSuccess={handleFormSuccess}
-        defaultLifeArea={filters.lifeArea}
         defaultParentGoalId={defaultParentGoalId}
       />
 

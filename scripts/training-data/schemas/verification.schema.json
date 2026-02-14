@@ -1,10 +1,21 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "verification.schema.json",
-  "title": "Stage 06b Verification Output",
+  "title": "Stage 06b Verification Output (v2)",
   "description": "Schema for LLM verification of stage 06 video type classification output",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
+    "video_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{11}$"
+    },
+    "verified_at": {
+      "type": "string"
+    },
+    "pipeline_version": {
+      "type": "string"
+    },
     "verdict": {
       "type": "string",
       "enum": ["APPROVE", "FLAG", "REJECT"],
@@ -12,10 +23,20 @@
     },
     "video_type_check": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "agrees": {
           "type": "boolean",
           "description": "Whether the verifier agrees with the video type classification"
+        },
+        "suggested_type": {
+          "type": ["string", "null"],
+          "enum": ["infield", "talking_head", "podcast", "compilation", null]
+        },
+        "confidence": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
         },
         "reasoning": {
           "type": "string",
@@ -29,9 +50,11 @@
       "description": "Verdict for each conversation",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "conversation_id": {
             "type": "integer",
+            "minimum": 1,
             "description": "The conversation ID being evaluated"
           },
           "verdict": {
@@ -52,9 +75,11 @@
       "description": "Segments where speaker role is incorrectly assigned",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "segment_id": {
             "type": "integer",
+            "minimum": 0,
             "description": "The segment ID with wrong role"
           },
           "current_role": {
@@ -62,7 +87,8 @@
             "description": "The currently assigned role"
           },
           "suggested_role": {
-            "type": "string",
+            "type": ["string", "null"],
+            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
             "description": "The correct role this segment should have"
           },
           "confidence": {
@@ -76,7 +102,7 @@
             "description": "Evidence supporting this correction"
           }
         },
-        "required": ["segment_id", "current_role", "suggested_role", "evidence"]
+        "required": ["segment_id", "current_role", "suggested_role", "confidence", "evidence"]
       }
     },
     "boundary_issues": {
@@ -84,9 +110,11 @@
       "description": "Problems with conversation boundaries",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "conversation_id": {
             "type": "integer",
+            "minimum": 1,
             "description": "The conversation with boundary issues"
           },
           "issue": {
@@ -97,9 +125,18 @@
             "type": "string",
             "enum": ["minor", "moderate", "major"],
             "description": "Severity of the boundary issue"
+          },
+          "suggested_fix": {
+            "type": ["string", "null"],
+            "pattern": "^(merge_with_next|merge_with_previous|reclassify_as_commentary|split_at_segment_[0-9]+)$"
+          },
+          "confidence": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
           }
         },
-        "required": ["conversation_id", "issue", "severity"]
+        "required": ["conversation_id", "issue", "severity", "suggested_fix", "confidence"]
       }
     },
     "collapse_issues": {
@@ -107,6 +144,7 @@
       "description": "Problems with collapsed speaker override assignments",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
           "speaker_id": {
             "type": "string",
@@ -114,22 +152,30 @@
           },
           "segment_id": {
             "type": "integer",
+            "minimum": 0,
             "description": "The specific segment with wrong override"
           },
           "current_override": {
-            "type": "string",
+            "type": ["string", "null"],
+            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
             "description": "The current speaker_role_override value"
           },
           "suggested_override": {
-            "type": "string",
+            "type": ["string", "null"],
+            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
             "description": "The correct override value"
+          },
+          "confidence": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
           },
           "evidence": {
             "type": "string",
             "description": "Evidence supporting this correction"
           }
         },
-        "required": ["speaker_id", "segment_id", "suggested_override", "evidence"]
+        "required": ["speaker_id", "segment_id", "current_override", "suggested_override", "confidence", "evidence"]
       }
     },
     "other_flags": {
@@ -142,9 +188,15 @@
     "summary": {
       "type": "string",
       "description": "One paragraph overall assessment"
+    },
+    "metadata": {
+      "type": "object"
     }
   },
   "required": [
+    "video_id",
+    "verified_at",
+    "pipeline_version",
     "verdict",
     "video_type_check",
     "conversation_verdicts",

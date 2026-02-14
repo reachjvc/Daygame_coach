@@ -54,6 +54,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import jsonschema
+
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 
@@ -61,7 +63,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.2"  # v1.2: Handle reclassify_as_commentary, lenient override matching
+PIPELINE_VERSION = "06c.patch-v1.3"  # v1.3: enforce schema-safe roles + post-patch schema validation
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -73,6 +75,36 @@ MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
 MIN_MISATTRIBUTION_CONFIDENCE = 0.7
 MIN_VIDEO_TYPE_CONFIDENCE = 0.85
 MIN_BOUNDARY_CONFIDENCE = 0.90  # Higher threshold - structural changes
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
+_CACHED_SCHEMA: Optional[Dict[str, Any]] = None
+
+
+def load_conversations_schema() -> Optional[Dict[str, Any]]:
+    if not SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: conversations schema not found at {SCHEMA_PATH}")
+        return None
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def get_conversations_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = load_conversations_schema()
+    return _CACHED_SCHEMA
+
+
+def validate_conversations_output(data: Dict[str, Any]) -> List[str]:
+    """Validate patched output against conversations.schema.json."""
+    schema = get_conversations_schema()
+    if schema is None:
+        return []
+    try:
+        jsonschema.validate(instance=data, schema=schema)
+        return []
+    except jsonschema.ValidationError as exc:
+        path = ".".join(str(p) for p in exc.path) or "<root>"
+        return [f"schema_invalid at {path}: {exc.message}"]
 
 
 # ---------------------------
@@ -182,8 +214,8 @@ def apply_patches(
             )
             continue
 
-        # Skip prose suggested_roles (should be role values like "coach", "target", "other", "mixed")
-        valid_roles = {"coach", "target", "other", "mixed"}
+        # Keep patches schema-safe for conversations.schema.json segment-level roles.
+        valid_roles = {"coach", "target", "voiceover", "other", "unknown"}
         if suggested_role not in valid_roles:
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} suggested_role '{suggested_role}' is not a valid role — skipping"
@@ -239,8 +271,8 @@ def apply_patches(
             )
             continue
 
-        # Skip prose suggested_overrides (should be role values like "coach", "target", "other")
-        valid_roles = {"coach", "target", "other", "mixed"}
+        # Keep patches schema-safe for conversations.schema.json override roles.
+        valid_roles = {"coach", "target", "voiceover", "other", "unknown"}
         if suggested_override not in valid_roles:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} suggested_override '{suggested_override}' is not a valid role — skipping"
@@ -522,11 +554,22 @@ def patch_file(
     if fixes_applied:
         print(f"{LOG_PREFIX}   Fixes applied: {len(fixes_applied)}")
         for fix in fixes_applied:
-            print(f"{LOG_PREFIX}     seg {fix['segment_id']}: {fix['old']} → {fix['new']} ({fix['source']})")
+            segment_label = f"seg {fix['segment_id']}" if "segment_id" in fix else "non-segment fix"
+            old_value = fix.get("old", fix.get("action", ""))
+            new_value = fix.get("new", fix.get("to_conv", ""))
+            source_value = fix.get("source", "unknown")
+            print(f"{LOG_PREFIX}     {segment_label}: {old_value} → {new_value} ({source_value})")
     if flags_not_fixed:
         print(f"{LOG_PREFIX}   Flags not fixed: {len(flags_not_fixed)}")
         for flag in flags_not_fixed:
             print(f"{LOG_PREFIX}     {flag[:120]}")
+
+    validation_errors = validate_conversations_output(patched)
+    if validation_errors:
+        raise RuntimeError(
+            "Post-patch conversations schema validation failed: "
+            + "; ".join(validation_errors[:3])
+        )
 
     if not dry_run:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -540,6 +583,7 @@ def patch_file(
         "verdict": verdict,
         "fixes": len(fixes_applied),
         "flags": len(flags_not_fixed),
+        "validation_errors": len(validation_errors),
     }
 
 

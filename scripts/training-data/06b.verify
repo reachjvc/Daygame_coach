@@ -47,6 +47,8 @@ from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+import jsonschema
+
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
 
 
@@ -54,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v1.4"  # v1.4: Enforce structured fix fields for 06c auto-patching
+PIPELINE_VERSION = "06b.verify-v1.5"  # v1.5: schema-validated verifier output contract
 
 DEBUG_MODE = False
 
@@ -70,6 +72,9 @@ LOG_PREFIX = "[06b.verify]"
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
+
+SCHEMA_PATH = Path(__file__).parent / "schemas" / "verification.schema.json"
+_CACHED_SCHEMA: Optional[Dict[str, Any]] = None
 
 
 # ---------------------------
@@ -229,7 +234,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose like "should be coach")
+   - "suggested_role": one of "coach", "target", "voiceover", "other", "unknown" (NOT prose like "should be coach")
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
@@ -309,7 +314,7 @@ CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields
    - "confidence": 0.0-1.0
 
 2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "target", "other", "mixed" (NOT prose)
+   - "suggested_role": one of "coach", "target", "voiceover", "other", "unknown" (NOT prose)
    - "confidence": 0.0-1.0
 
 3. boundary_issues: Each entry MUST include:
@@ -403,6 +408,69 @@ def load_state(state_path: Path) -> ProcessingState:
 def save_state(state_path: Path, state: ProcessingState) -> None:
     state_path.parent.mkdir(parents=True, exist_ok=True)
     state_path.write_text(json.dumps(asdict(state), indent=2))
+
+
+# ---------------------------
+# Contract Validation
+# ---------------------------
+
+def load_schema() -> Optional[Dict[str, Any]]:
+    if not SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: verification schema not found at {SCHEMA_PATH}")
+        return None
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def get_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = load_schema()
+    return _CACHED_SCHEMA
+
+
+def validate_verification_contract(
+    result: Dict[str, Any],
+    allow_missing_envelope: bool = False,
+) -> List[str]:
+    errors: List[str] = []
+
+    schema = get_schema()
+    if schema is not None:
+        instance: Dict[str, Any] = result
+        if allow_missing_envelope:
+            instance = dict(result)
+            instance.setdefault("video_id", "AAAAAAAAAAA")
+            instance.setdefault("verified_at", "1970-01-01T00:00:00Z")
+            instance.setdefault("pipeline_version", PIPELINE_VERSION)
+        try:
+            jsonschema.validate(instance=instance, schema=schema)
+        except jsonschema.ValidationError as exc:
+            path = ".".join(str(p) for p in exc.path) or "<root>"
+            errors.append(f"schema_invalid at {path}: {exc.message}")
+
+    video_type_check = result.get("video_type_check", {})
+    if isinstance(video_type_check, dict):
+        agrees = video_type_check.get("agrees")
+        if agrees is False:
+            if video_type_check.get("suggested_type") is None:
+                errors.append("video_type_check.suggested_type is required when agrees=false")
+            if video_type_check.get("confidence") is None:
+                errors.append("video_type_check.confidence is required when agrees=false")
+
+    boundary_issues = result.get("boundary_issues", [])
+    if isinstance(boundary_issues, list):
+        for idx, issue in enumerate(boundary_issues):
+            if not isinstance(issue, dict):
+                continue
+            suggested_fix = issue.get("suggested_fix")
+            if isinstance(suggested_fix, str) and suggested_fix.startswith("split_at_segment_"):
+                segment_suffix = suggested_fix.split("_")[-1]
+                if not segment_suffix.isdigit():
+                    errors.append(
+                        f"boundary_issues[{idx}].suggested_fix has invalid split segment id: {suggested_fix}"
+                    )
+
+    return errors
 
 
 # ---------------------------
@@ -556,8 +624,10 @@ def extract_video_title(filename: str) -> str:
 
 
 def extract_video_id(filename: str) -> str:
-    match = re.search(r"\[([^\]]+)\]", filename)
-    return match.group(1) if match else Path(filename).stem
+    matches = re.findall(r"\[([A-Za-z0-9_-]{11})\]", filename)
+    if matches:
+        return matches[-1]
+    return Path(filename).stem
 
 
 def build_verification_prompt(data: Dict) -> str:
@@ -690,6 +760,7 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
     raw_response = None
     llm_calls = 0
     used_conversion_fallback = False
+    contract_errors: List[str] = []
 
     for attempt in range(max_retries):
         raw_response = call_claude(prompt, timeout=300)
@@ -697,23 +768,42 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
         result = parse_json_response(raw_response)
 
         if result and "verdict" in result:
-            break
+            contract_errors = validate_verification_contract(result, allow_missing_envelope=True)
+            if not contract_errors:
+                break
+            print(f"{LOG_PREFIX}   WARNING: LLM output contract validation failed:")
+            for err in contract_errors[:5]:
+                print(f"{LOG_PREFIX}     - {err}")
+            result = None
 
-        # JSON parsing failed - try conversion fallback before retrying full prompt
+        # Parsing/contract validation failed - try conversion fallback before retrying full prompt
         if raw_response and len(raw_response) > 100:
-            print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
+            print(f"{LOG_PREFIX}   WARNING: Output invalid, trying conversion fallback...")
             result = convert_analysis_to_json(raw_response)
             llm_calls += 1
             if result and "verdict" in result:
-                used_conversion_fallback = True
-                print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
-                break
+                conversion_errors = validate_verification_contract(result, allow_missing_envelope=True)
+                if not conversion_errors:
+                    used_conversion_fallback = True
+                    contract_errors = []
+                    print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
+                    break
+                contract_errors = conversion_errors
+                print(f"{LOG_PREFIX}   Conversion output failed contract validation:")
+                for err in conversion_errors[:5]:
+                    print(f"{LOG_PREFIX}     - {err}")
+                result = None
 
         if attempt < max_retries - 1:
             print(f"{LOG_PREFIX}   WARNING: Conversion also failed, retrying full prompt ({attempt + 2}/{max_retries})...")
             time.sleep(2)
 
     if not result or "verdict" not in result:
+        if contract_errors:
+            raise RuntimeError(
+                "Verification LLM produced schema-invalid output after retries: "
+                + "; ".join(contract_errors[:3])
+            )
         raise RuntimeError(f"Verification LLM failed after {max_retries} retries and conversion fallback")
 
     elapsed = time.time() - start_time
@@ -751,6 +841,13 @@ def verify_file(input_path: Path, output_path: Path, dry_run: bool = False) -> D
             **({"note": "Used JSON conversion fallback"} if used_conversion_fallback else {}),
         },
     }
+
+    output_contract_errors = validate_verification_contract(output)
+    if output_contract_errors:
+        raise RuntimeError(
+            "Internal verification output failed contract validation: "
+            + "; ".join(output_contract_errors[:3])
+        )
 
     # Write output
     output_path.parent.mkdir(parents=True, exist_ok=True)

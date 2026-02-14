@@ -53,6 +53,7 @@ type ChunkStateV1 = {
 }
 
 type Args = {
+  help: boolean
   force: boolean
   dryRun: boolean
   source: string | null
@@ -97,10 +98,12 @@ type Chunk = {
 type ChunksFile = {
   version: 1
   sourceFile: string
+  sourceKey: string
   sourceHash: string
   embeddingModel: string
   chunkSize: number
   chunkOverlap: number
+  videoId: string
   videoType: string
   channel: string
   videoTitle: string
@@ -210,6 +213,7 @@ function parseArgs(argv: string[]): Args {
   }
 
   return {
+    help: flags.has("--help") || flags.has("-h"),
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     source,
@@ -264,16 +268,18 @@ function hashFile(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
 }
 
-/**
- * Generate a deterministic videoId from channel + video stem.
- * Uses MD5 truncated to 12 chars for reasonable uniqueness + readability.
- */
-function generateVideoId(channel: string, videoStem: string): string {
-  return crypto
-    .createHash("md5")
-    .update(`${channel}/${videoStem}`)
-    .digest("hex")
-    .slice(0, 12)
+function extractVideoIdFromStem(videoStem: string): string | null {
+  const match = videoStem.match(/\[([A-Za-z0-9_-]{11})\]/)
+  return match?.[1] ?? null
+}
+
+function extractStableVideoId(parsedFile: EnrichedFile, videoStem: string): string {
+  if (typeof parsedFile.video_id === "string" && parsedFile.video_id.trim()) {
+    return parsedFile.video_id.trim()
+  }
+  const fromStem = extractVideoIdFromStem(videoStem)
+  if (fromStem) return fromStem
+  throw new Error(`Could not determine stable video_id from enriched file stem: ${videoStem}`)
 }
 
 async function loadState(
@@ -707,6 +713,11 @@ async function generateEmbeddingWithRetry(
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
+  if (args.help) {
+    console.log("Usage: 09.chunk-embed.ts [--source <name>] [--dry-run] [--full]")
+    return
+  }
+
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
   const { QA_CONFIG } = await import("../../src/qa/config")
@@ -752,6 +763,7 @@ async function main() {
   const toProcess: Array<{
     filePath: string
     sourceKey: string
+    videoId: string
     channel: string
     videoStem: string
     rawContent: string
@@ -765,7 +777,6 @@ async function main() {
     const relEnrichedPath = path.relative(enrichedDir, filePath)
     const channel = relEnrichedPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
     const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
-    const sourceKey = path.join(channel, `${videoStem}.txt`)
 
     const rawContent = await fsp.readFile(filePath, "utf-8")
     const fileHash = hashFile(rawContent)
@@ -777,6 +788,8 @@ async function main() {
       continue
     }
 
+    const fileVideoId = extractStableVideoId(parsedFile, videoStem)
+    const sourceKey = path.join(channel, `${fileVideoId}.txt`)
     const fileVideoType = extractVideoType(parsedFile?.video_type)
     const fileSegments = parsedFile?.segments
     const fileEnrichments = parsedFile?.enrichments
@@ -801,6 +814,7 @@ async function main() {
     toProcess.push({
       filePath,
       sourceKey,
+      videoId: fileVideoId,
       channel,
       videoStem,
       rawContent,
@@ -833,10 +847,7 @@ async function main() {
   }
 
   for (const item of toProcess) {
-    const { sourceKey, channel, videoStem, fileHash, videoType, parsedFile, filePath } = item
-
-    // Generate deterministic videoId for parent references
-    const videoId = generateVideoId(channel, videoStem)
+    const { sourceKey, videoId, channel, videoStem, fileHash, videoType, parsedFile, filePath } = item
 
     console.log("")
     console.log(`🔁 Processing: ${sourceKey} (videoId: ${videoId})`)
@@ -869,12 +880,13 @@ async function main() {
         }
       }
 
-      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg, idx) => ({
+      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg) => ({
         speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
         text: seg.text ?? "",
         start: seg.start,
         end: seg.end,
-        phase: phaseMap.get(idx),
+        // Stage 07 contract stores global segment IDs in turn_phases[].segment.
+        phase: seg.id !== undefined ? phaseMap.get(seg.id) : undefined,
       }))
 
       const row: InteractionJsonlRow = {
@@ -1051,14 +1063,16 @@ async function main() {
     const outputDir = path.join(chunksDir, channel)
     await fsp.mkdir(outputDir, { recursive: true })
 
-    const outputPath = path.join(outputDir, `${videoStem}.chunks.json`)
+    const outputPath = path.join(outputDir, `${videoId}.chunks.json`)
     const chunksFile: ChunksFile = {
       version: 1,
       sourceFile: filePath,
+      sourceKey,
       sourceHash: fileHash,
       embeddingModel,
       chunkSize,
       chunkOverlap,
+      videoId,
       videoType,
       channel,
       videoTitle: videoStem,

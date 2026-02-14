@@ -10,6 +10,8 @@ export type {
   GoalType,
   GoalPeriod,
   GoalTrackingType,
+  GoalNature,
+  GoalDisplayCategory,
   LinkedMetric,
   UserGoalRow,
   UserGoalInsert,
@@ -84,4 +86,145 @@ export interface GoalFilterState {
   timeHorizon: string | null
   status: string | null
   search: string
+}
+
+// ============================================================================
+// Milestone Ladder & Curve Types
+// ============================================================================
+
+/**
+ * Configuration for generating a milestone ladder.
+ * The curve maps step indices to values between start and target.
+ */
+export interface MilestoneLadderConfig {
+  start: number
+  target: number
+  steps: number
+  curveTension: number
+  controlPoints?: CurveControlPoint[]
+}
+
+/**
+ * A draggable control point on the curve editor.
+ * Coordinates are normalized 0–1 (x = position along steps, y = position along value range).
+ */
+export interface CurveControlPoint {
+  x: number
+  y: number
+}
+
+/**
+ * A single generated milestone in the ladder.
+ */
+export interface GeneratedMilestone {
+  step: number
+  rawValue: number
+  value: number
+}
+
+// ============================================================================
+// Habit Ramp & Date Derivation Types
+// ============================================================================
+
+/**
+ * One step in a habit ramp schedule.
+ * E.g., "Do 10 approaches/week for 4 weeks, then 15/week for 4 weeks, ..."
+ */
+export interface HabitRampStep {
+  frequencyPerWeek: number
+  durationWeeks: number
+}
+
+/**
+ * A milestone with its estimated completion date derived from a habit ramp.
+ */
+export interface RampMilestoneDate {
+  milestoneValue: number
+  estimatedDate: Date
+  weekNumber: number
+  cumulativeAtDate: number
+}
+
+// ============================================================================
+// Achievement Types
+// ============================================================================
+
+/**
+ * How much a single L3 goal contributes to an L2 achievement.
+ * Weights across all contributing goals should sum to 1.
+ */
+export interface AchievementWeight {
+  goalId: string
+  weight: number
+}
+
+/**
+ * Computed progress for an achievement badge.
+ */
+export interface AchievementProgressResult {
+  progressPercent: number
+  contributingGoals: {
+    goalId: string
+    weight: number
+    goalProgress: number
+    contribution: number
+  }[]
+}
+
+// ============================================================================
+// Goal Graph & Template Types
+// ============================================================================
+
+/**
+ * Goal graph level in the hierarchy.
+ * 0 = life dream, 1 = major life goal, 2 = transformation/mastery, 3 = specific skill/metric
+ */
+export type GoalGraphLevel = 0 | 1 | 2 | 3
+
+/**
+ * Goal template type — milestone_ladder or habit_ramp.
+ */
+export type GoalTemplateType = "milestone_ladder" | "habit_ramp"
+
+/**
+ * A goal template in the static goal graph catalog.
+ * Used by "Just get me started" to generate user goals from a template.
+ */
+export interface GoalTemplate {
+  id: string
+  title: string
+  level: GoalGraphLevel
+  nature: "input" | "outcome"
+  displayCategory: GoalDisplayCategory | null
+  templateType: GoalTemplateType | null
+  defaultMilestoneConfig: MilestoneLadderConfig | null
+  defaultRampSteps: HabitRampStep[] | null
+  linkedMetric: LinkedMetric
+}
+
+/**
+ * An edge in the goal graph: parent fans out into children.
+ */
+export interface GoalGraphEdge {
+  parentId: string
+  childId: string
+}
+
+/**
+ * Default achievement weight for an L3 goal contributing to an L2 achievement.
+ */
+export interface DefaultAchievementWeight {
+  achievementId: string
+  goalId: string
+  weight: number
+}
+
+/**
+ * A section in the hierarchy display — one L1 goal with its achievements and L3 categories.
+ */
+export interface HierarchySection {
+  l1Goal: GoalWithProgress
+  achievements: GoalWithProgress[]
+  categories: Partial<Record<GoalDisplayCategory, GoalWithProgress[]>>
+  uncategorized: GoalWithProgress[]
 }

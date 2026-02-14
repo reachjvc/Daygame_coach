@@ -13,7 +13,7 @@ Reads:
 
 Writes:
   - Validation report:
-      data/08.taxonomy-validation/report.json
+      data/08.taxonomy-validation/<scope>.report.json
 
 Exit codes:
   0 - PASS: No high-frequency unlisted concepts (below threshold)
@@ -337,7 +337,10 @@ def save_report(
 ) -> Path:
     """Save validation report to JSON file."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "report.json"
+    safe_label = re.sub(r"[^A-Za-z0-9._-]+", "_", label).strip("_")
+    if not safe_label:
+        safe_label = "all"
+    output_path = output_dir / f"{safe_label[:120]}.report.json"
 
     output_data = {
         "version": 1,

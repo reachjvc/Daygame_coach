@@ -4,7 +4,9 @@
 
 export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
 export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
-export type GoalType = "recurring" | "milestone"
+export type GoalType = "recurring" | "milestone" | "habit_ramp"
+export type GoalNature = "input" | "outcome"
+export type GoalDisplayCategory = "field_work" | "results" | "dirty_dog"
 
 /**
  * Metrics that can be linked to goals for auto-sync with tracking data
@@ -43,6 +45,10 @@ export interface UserGoalRow {
   target_date: string | null
   description: string | null
   goal_type: GoalType
+  goal_nature: GoalNature | null
+  display_category: GoalDisplayCategory | null
+  goal_level: number | null
+  template_id: string | null
 }
 
 /**
@@ -62,6 +68,10 @@ export interface UserGoalInsert {
   target_date?: string
   description?: string
   goal_type?: GoalType
+  goal_nature?: GoalNature
+  display_category?: GoalDisplayCategory
+  goal_level?: number
+  template_id?: string
 }
 
 /**
@@ -83,6 +93,10 @@ export interface UserGoalUpdate {
   target_date?: string | null
   description?: string | null
   goal_type?: GoalType
+  goal_nature?: GoalNature
+  display_category?: GoalDisplayCategory
+  goal_level?: number | null
+  template_id?: string | null
 }
 
 /**

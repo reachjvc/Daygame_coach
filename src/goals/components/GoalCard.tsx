@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus } from "lucide-react"
 import { getLifeAreaConfig } from "../data/lifeAreas"
+import { getGoalAccentColor } from "../goalHierarchyService"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
 import { GoalInputWidget } from "./GoalInputWidget"
 import type { GoalWithProgress } from "../types"
@@ -53,6 +54,8 @@ export function GoalCard({
 
   const areaConfig = getLifeAreaConfig(goal.life_area)
   const Icon = areaConfig.icon
+  const natureColor = getGoalAccentColor(goal)
+  const accentColor = natureColor ?? areaConfig.hex
   const isBoolean = goal.tracking_type === "boolean"
   const childCount = allGoals.filter(g => g.parent_goal_id === goal.id).length
   const isOverdue = goal.goal_type === "milestone" && goal.days_remaining !== null && goal.days_remaining <= 0
@@ -94,7 +97,7 @@ export function GoalCard({
     <div className={`relative ${showAddChild ? "mb-3" : ""}`}>
     <div
       className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80"
-      style={{ borderLeftColor: areaConfig.hex, borderLeftWidth: 3 }}
+      style={{ borderLeftColor: accentColor, borderLeftWidth: 3 }}
     >
       {/* Header row */}
       <div className="flex items-start gap-3">
@@ -140,7 +143,7 @@ export function GoalCard({
                 className="h-full rounded-full transition-all duration-300"
                 style={{
                   width: `${goal.progress_percentage}%`,
-                  backgroundColor: areaConfig.hex,
+                  backgroundColor: accentColor,
                 }}
               />
             </div>

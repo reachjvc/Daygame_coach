@@ -1,0 +1,6 @@
+# Canary manifest for pipeline-validation-hardening
+# Purpose: end-to-end stage validation with manual review across diverse sources
+
+coach_kyle_how_to_approach_a_girl | 4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]
+austen_summers_meets_girls | 7 Minute Pull [nFjdyAHcTgA]
+natural_lifestyles_meetingGirlsIRL | Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]

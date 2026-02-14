@@ -49,6 +49,7 @@ type IngestStateV1 = {
 }
 
 type Args = {
+  help: boolean
   force: boolean
   dryRun: boolean
   verifyOnly: boolean
@@ -60,6 +61,7 @@ type ChunkMetadata = {
   isRealExample: boolean
   chunkIndex: number
   totalChunks: number
+  videoId?: string
   conversationId?: number
   phase?: string
   techniques?: string[]
@@ -75,10 +77,12 @@ type Chunk = {
 type ChunksFile = {
   version: 1
   sourceFile: string
+  sourceKey?: string
   sourceHash: string
   embeddingModel: string
   chunkSize: number
   chunkOverlap: number
+  videoId?: string
   videoType: string
   channel: string
   videoTitle: string
@@ -105,6 +109,7 @@ function parseArgs(argv: string[]): Args {
   }
 
   return {
+    help: flags.has("--help") || flags.has("-h"),
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     verifyOnly: flags.has("--verify"),
@@ -190,6 +195,11 @@ async function saveState(statePath: string, state: IngestStateV1): Promise<void>
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
+  if (args.help) {
+    console.log("Usage: 10.ingest.ts [--source <name>] [--dry-run|--verify] [--full]")
+    return
+  }
+
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
   const chunksDir = path.join(process.cwd(), "data", "09.chunks")
@@ -212,6 +222,16 @@ async function main() {
     return
   }
 
+  const pendingBySource = new Map<
+    string,
+    {
+      filePath: string
+      sourceKey: string
+      chunksData: ChunksFile
+      fileHash: string
+      mtimeMs: number
+    }
+  >()
   const toIngest: Array<{
     filePath: string
     sourceKey: string
@@ -237,7 +257,15 @@ async function main() {
       continue
     }
 
-    const sourceKey = path.join(chunksData.channel, `${chunksData.videoTitle}.txt`)
+    const stableVideoId =
+      typeof chunksData.videoId === "string" && chunksData.videoId.trim()
+        ? chunksData.videoId.trim()
+        : null
+    const sourceKey =
+      (typeof chunksData.sourceKey === "string" && chunksData.sourceKey.trim()) ||
+      (stableVideoId
+        ? path.join(chunksData.channel, `${stableVideoId}.txt`)
+        : path.join(chunksData.channel, `${chunksData.videoTitle}.txt`))
 
     const prev = state.sources[sourceKey]
     const isUnchanged = !args.force && prev?.chunksHash === fileHash
@@ -247,8 +275,23 @@ async function main() {
       continue
     }
 
-    toIngest.push({ filePath, sourceKey, chunksData, fileHash })
+    const stat = await fsp.stat(filePath)
+    const candidate = { filePath, sourceKey, chunksData, fileHash, mtimeMs: stat.mtimeMs }
+    const existing = pendingBySource.get(sourceKey)
+    if (!existing || candidate.mtimeMs >= existing.mtimeMs) {
+      pendingBySource.set(sourceKey, candidate)
+    }
   }
+
+  for (const item of pendingBySource.values()) {
+    toIngest.push({
+      filePath: item.filePath,
+      sourceKey: item.sourceKey,
+      chunksData: item.chunksData,
+      fileHash: item.fileHash,
+    })
+  }
+  toIngest.sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))
 
   console.log("================================")
   console.log("💾 INGEST TO SUPABASE (Stage 10)")
@@ -282,6 +325,10 @@ async function main() {
   for (const item of toIngest) {
     const { sourceKey, chunksData, fileHash } = item
     const { channel, videoTitle, videoType, chunks } = chunksData
+    const stableVideoId =
+      typeof chunksData.videoId === "string" && chunksData.videoId.trim()
+        ? chunksData.videoId.trim()
+        : null
 
     console.log("")
     console.log(`🔁 Ingesting: ${sourceKey} (${chunks.length} chunks)`)
@@ -299,6 +346,12 @@ async function main() {
 
       if (videoType) {
         metadata.video_type = videoType
+      }
+      if (stableVideoId) {
+        metadata.video_id = stableVideoId
+      }
+      if (chunk.metadata.videoId) {
+        metadata.video_id = chunk.metadata.videoId
       }
 
       if (chunk.metadata.conversationId !== undefined) {

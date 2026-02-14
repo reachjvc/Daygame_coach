@@ -797,8 +797,10 @@ def extract_video_title(filename: str) -> str:
 
 
 def extract_video_id(filename: str) -> str:
-    match = re.search(r"\[([^\]]+)\]", filename)
-    return match.group(1) if match else Path(filename).stem
+    matches = re.findall(r"\[([A-Za-z0-9_-]{11})\]", filename)
+    if matches:
+        return matches[-1]
+    return Path(filename).stem
 
 
 def compute_checksum(data: Any) -> str:

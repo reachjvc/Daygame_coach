@@ -31,8 +31,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required fields: title, category/life_area, target_value" }, { status: 400 })
     if (body.target_value < 1)
       return NextResponse.json({ error: "Target value must be at least 1" }, { status: 400 })
-    if (body.goal_type && body.goal_type !== "recurring" && body.goal_type !== "milestone")
-      return NextResponse.json({ error: "goal_type must be 'recurring' or 'milestone'" }, { status: 400 })
+    if (body.goal_type && !["recurring", "milestone", "habit_ramp"].includes(body.goal_type))
+      return NextResponse.json({ error: "goal_type must be 'recurring', 'milestone', or 'habit_ramp'" }, { status: 400 })
     if (!body.category && body.life_area) body.category = body.life_area
     const goal = await createGoal(auth.userId, body)
     return NextResponse.json(goal, { status: 201 })
