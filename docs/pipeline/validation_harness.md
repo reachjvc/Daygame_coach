@@ -18,26 +18,39 @@ Run validations + a manifest-filtered batch report:
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quarantine-file data/validation/quarantine/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports
-./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-review-ingest
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --allow-review-ingest
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3
+./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --emit-stage-reports --max-warning-check transcript_artifact=1 --max-warning-check evidence_mismatch=0
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quality-gate
 ./scripts/training-data/batch/sub-batch-pipeline P001.1 --validate --quality-gate --check-stage10
 ```
 
+Correctness scope policy:
+- Stage 02+ correctness is the default validation target.
+- Use `--skip-stage01-presence` for correctness runs (recommended), especially when Stage 01 media artifacts are not retained in the working dataset.
+- Enforce Stage 01 only for explicit download/media-retention audits.
+
 This is read-only: it does not call the LLM and does not modify pipeline artifacts.
 `--validate-deep` enables Stage 05 audio_features, Stage 08 report, and Stage 09 chunk payload checks.
 With `--emit-stage-reports`, the orchestrator now also validates emitted stage-report contract coverage for the manifest and writes a readiness summary.
 Readiness policy can be hardened during this step:
-- `--block-review-ingest` makes ingest READY-only
+- READY-only is now the default ingest policy for readiness summaries
+- `--allow-review-ingest` opts into allowing `REVIEW` status for ingest
 - `--block-warning-check <name>` escalates matching warning checks to BLOCKED
 - `--max-warning-checks <n>` enforces a warning budget per video
+- `--max-warning-check <check>=<n>` enforces per-warning-type budgets (repeatable)
+Readiness warning-budget behavior:
+- `stage07_validation_warnings` is expanded into per-warning-type counts (for example `transcript_artifact`, `evidence_mismatch`)
+- contextual warnings (`missing_stage01_audio`, `stage08_validation_warning`, `stage08_video_warning`, `stage07_normalization_repairs`) are excluded from the generic `--max-warning-checks` budget
+- those contextual warnings also do not downgrade readiness from `READY` to `REVIEW` by themselves
+- those contextual checks can still be explicitly enforced via `--block-warning-check` or `--max-warning-check <check>=<n>`
 Semantic quality can also be gated in `--validate` via `--semantic-*` thresholds (evaluated during the batch-report step, requires semantic_judge outputs).
 `--quality-gate` is a strict shortcut in `sub-batch-pipeline --validate` that applies:
 - deep checks (`--validate-deep`)
 - stage-report emission
-- READY-only readiness (`--block-review-ingest`)
-- warning policy defaults (`--max-warning-checks 3`, `--block-warning-check transcript_artifact`)
+- READY-only readiness (default)
+- warning policy defaults (`--max-warning-checks 3`, `--max-warning-check transcript_artifact=1`, `--max-warning-check evidence_mismatch=0`, `--max-warning-check evidence_not_on_referenced_segment=0`)
 - semantic defaults (`--semantic-min-fresh 5`, `--semantic-min-mean-overall 75`, `--semantic-max-major-error-rate 0.20`, `--semantic-max-hallucination-rate 0.10`, `--semantic-fail-on-stale`)
 `--check-stage10` adds a Stage 10 dry-run gate check at the end of validation (no DB writes) to verify ingest gates before production ingest.
 
@@ -68,7 +81,7 @@ Run-history note:
 The manifest validator can be run directly:
 
 ```bash
-python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt
+python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --skip-stage01-presence
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --json
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --source coach_kyle_how_to_approach_a_girl
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --stage07-gate-policy allow_flag
@@ -83,12 +96,15 @@ python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pi
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --emit-stage-reports
 ```
 
+For correctness-focused runs, append `--skip-stage01-presence` to the above commands unless you are explicitly auditing Stage 01 media retention.
+
 With `--check-stage09-chunks`, the harness also enforces Stage 09 chunk contract integrity:
 - stable `sourceKey`/`videoId`/`channel` alignment
 - finite + consistent embedding dimensions
 - `chunkIndex`/`totalChunks` bounds, dedupe, and continuity checks
 
-With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed, mismatched, or `FAIL`.
+With `--check-stage08-report`, the harness requires a valid manifest-scoped Stage 08 report and fails if that report is malformed or mismatched.
+If the report is `FAIL` but includes per-video outcomes, failures are surfaced per video (quarantine-friendly) instead of only as a batch-level blocker.
 When `--source` is also set, the expected Stage 08 report path is source-scoped (`<manifest>.<source>.report.json`) and scope metadata is validated.
 The Stage 08 report gate also treats unreadable Stage 07 outputs or incomplete manifest coverage as blocking.
 Stage 10 additionally verifies that Stage 08 report manifest coverage size matches the ingest manifest scope (`--source` aware).
@@ -103,7 +119,7 @@ Stage 07 gate policy is explicit via `--stage07-gate-policy` (`approve_only` def
 Waivers with `expires_at` in the past are ignored automatically (and reported as expired).
 When using `sub-batch-pipeline --validate`, a waiver file at `docs/pipeline/waivers/<subbatch>.json` is auto-detected.
 `--emit-stage-reports` writes per-video stage-report artifacts under `data/validation/stage_reports/<manifest>/`.
-In `sub-batch-pipeline`, readiness policy flags (`--block-review-ingest`, `--block-warning-check`, `--max-warning-checks`) require `--validate --emit-stage-reports`.
+In `sub-batch-pipeline`, readiness policy flags (`--allow-review-ingest`, `--block-review-ingest` [deprecated alias], `--block-warning-check`, `--max-warning-checks`, `--max-warning-check`) require `--validate --emit-stage-reports`.
 In `sub-batch-pipeline`, semantic gate flags (`--semantic-min-fresh`, `--semantic-min-mean-overall`, `--semantic-max-major-error-rate`, `--semantic-max-hallucination-rate`, `--semantic-fail-on-stale`) require `--validate`.
 
 Stage 10 semantic gate example:
@@ -114,6 +130,7 @@ node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest
 ```
 If semantic judgements are stored under a different batch label, override lookup via `--semantic-batch-id <id>`.
 Semantic gate writes an audit report by default to `data/validation/semantic_gate/<manifest>[.<source>].<batch_id>.report.json` (override with `--semantic-report-out <path>`).
+Manifest ingest now also writes a quarantine decision report to `data/validation/ingest_quarantine/<manifest>[.<source>].<run>.report.json`, listing per-video Stage 08/readiness blocks and final ingest eligibility (override with `--quarantine-report-out <path>`).
 
 Stage-report contract tooling:
 
@@ -121,9 +138,11 @@ Stage-report contract tooling:
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1
 python3 scripts/training-data/validation/validate_stage_report.py --file data/validation/stage_reports/P001.1/abc123XYZ99.manifest-validation.report.json
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary
-python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --block-review-ingest
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --allow-review-ingest
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --block-warning-check transcript_artifact --max-warning-checks 3
+python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --max-warning-check transcript_artifact=1 --max-warning-check evidence_mismatch=0
 ```
+Text mode now prints per-video `BLOCKED`/`REVIEW` rows (with `reason_code` and report path hints) so you can see exactly what failed and where.
 
 Contract files:
 - `scripts/training-data/schemas/stage_report.schema.json`

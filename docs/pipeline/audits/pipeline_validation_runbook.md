@@ -55,6 +55,31 @@ Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
 - Stage 06 validation now includes deterministic sanity checks for likely fragment conversations and opener-as-target misattributions (reported as warnings in `.conversations.validation.json`).
 - NOTE: semantic judge results become **stale** when their `request_fingerprint` no longer matches the current Stage 07 output for that `(video_id, conversation_id)`. `batch_report.py` will report fresh vs stale; rerun `semantic_judge.py` after prompt/normalization changes.
 
+Latest status snapshot (`2026-02-14`, after readiness + gate hardening):
+- Manifest validation now passes for all three active manifests under strict cross-stage checks:
+  - `CANARY.1`: `validate_manifest.py` PASS (warnings only)
+  - `HARDENING.1`: PASS (warnings only)
+  - `HOLDOUT.1`: PASS (warnings only)
+- The prior hard blocker `stage07_gate_policy_violation` on `6ImEzB6NhiI` was resolved:
+  - One-video isolated loop (`06c.patch` -> `06b.reverify` -> `07.content`) produced `06b.reverify verdict=FLAG` (was `REJECT`).
+  - Canonical artifacts were promoted to `data/06b.reverify`, `data/06c.patched`, and `data/07.content`.
+- Readiness policy implementation was hardened in `validate_stage_report.py`:
+  - `stage07_validation_warnings` now expands into per-type counts (for example `transcript_artifact`, `evidence_mismatch`).
+  - Contextual warnings (`missing_stage01_audio`, Stage 08 warning wrappers, normalization-repair warnings) are excluded from warning-budget math.
+  - Contextual-only warnings do not downgrade `READY` to `REVIEW`.
+- Stage 10 dry-run ingest scope after these fixes:
+  - READY-only policy:
+    - `CANARY.1`: `0/7` ingestable
+    - `HARDENING.1`: `1/6` ingestable (`IS2SoUgqDLE`)
+    - `HOLDOUT.1`: `1/7` ingestable (`yVbiH29D3Q0`)
+  - allow-review policy:
+    - `CANARY.1`: `0/7` ingestable
+    - `HARDENING.1`: `1/6` ingestable
+    - `HOLDOUT.1`: `2/7` ingestable (`yVbiH29D3Q0`, `v31iSEwaGFI`)
+- Remaining blockers are now quality-policy driven (not contract/gate bugs):
+  - repeated `transcript_artifact` budget exceedances (`transcript_artifact>1`)
+  - one `evidence_mismatch>0` blocker (`e2dLEB-AwmA` in hardening/holdout).
+
 ## Holdout Set (HOLDOUT.1)
 
 `HOLDOUT.1` is a second manifest intended to be run less frequently.
@@ -143,12 +168,59 @@ RUN_BASE="data/experiments/${RUN_ID}"
 ./scripts/training-data/07.content   --input "${RUN_BASE}/06c.patched/<source>/<video_dir>/<stem>.conversations.json" --input-root "${RUN_BASE}/06c.patched" --verification-root "${RUN_BASE}/06b.verify" --reverify-root "${RUN_BASE}/06b.reverify" --output "${RUN_BASE}/07.content" --verification-gate-policy reverify_patched --model opus
 ```
 
-## Where the Plan Lives
+## Plan Source (Consolidated)
 
-- Primary long-form plan: `docs/pipeline/audits/codex_pipeline_validation.md`
-- Merge/decision summary: `docs/pipeline/audits/merging_optimization.md`
+- Primary planning + execution source of truth: `docs/pipeline/audits/pipeline_validation_runbook.md` (this file).
+- Historical long-form reference (archival): `docs/pipeline/audits/codex_pipeline_validation.md`.
+- Merge/decision summary: `docs/pipeline/audits/merging_optimization.md`.
 
-This file is the execution loop, not the full design spec.
+## Strategic Plan Snapshot (Merged From Audit)
+
+### Mission
+
+Produce a high-quality evaluation + validation plan for the full video pipeline with correctness, observability, and repeatability prioritized over speed. The pipeline should be safe on sub-batches (1, 2, or 10 videos) and scale to ~150 batches of 10 videos without regressions.
+
+Objectives:
+- Evaluate quality at each stage and localize where failures are introduced.
+- Prevent silent passes with explicit evidence and deterministic status.
+- Label each video/batch as ingest-ready (or not) with clear reasons.
+- Improve automated detection, validators, and prompt quality.
+
+### Definitions
+
+- Validation: deterministic correctness checks (schema, presence, invariants, thresholds).
+- Evaluation: quality measurement (metrics, sampling, model-based checks).
+- Gating: rule that blocks downstream processing or ingestion.
+- No silent pass: missing/empty/invalid outputs are explicit failures with reason.
+
+### Locked Decisions
+
+1. Canonical layout target is source-video for stages 01-07 (`data/<stage>/<source>/<video_dir>/<stem>.*`) with compatibility reads during migration.
+2. No `mixed` speaker role in conversations schema. Keep enum strict; represent uncertainty via warnings/artifacts.
+3. Stage 07 production gate policy is `reverify_patched` (with `allow_flag` as explicit override).
+4. Stage 08 report naming is manifest/scope-specific (no single overwrite-prone report path).
+5. Stage 08 gate scope is per-video quarantine, not full-manifest hard fail when per-video details are available.
+6. Stage 10 default ingest policy is READY-only; REVIEW requires explicit override via readiness policy.
+7. Stage 10 idempotency keys are stable `<channel>/<video_id>.txt`.
+
+### Execution Checklist
+
+- [x] Confirm canonical artifact layout policy and migration guardrails.
+- [x] Complete source-video default write migration for 06/06b/06c/07 (with compatibility reads).
+- [ ] Approve final stage report contract + reason-code enum as stable.
+- [x] Lock 06b verification contract direction for mixed-speaker handling.
+- [x] Lock and wire Stage 07 gate policy (`reverify_patched`).
+- [x] Lock Stage 08 report naming + per-video gating scope.
+- [x] Finalize readiness warning policy thresholds (`--max-warning-check` budgets).
+- [x] Adopt quarantine + waiver mechanism to prevent silent reprocessing.
+- [x] Add Stage 10 manifest quarantine decision reporting (`data/validation/ingest_quarantine/...`).
+
+### Open Questions
+
+1. Turn-phase segment indexing contract:
+   - Keep global `segment_id` only and align Stage 09, or emit both `segment_id` and conversation-local `segment_index`.
+2. Layout migration cutoff:
+   - Define date/criterion to stop supporting legacy root-flat/source-flat writes for 06/06b/06c/07.
 
 ## Repeatable Canary Loop
 
@@ -244,13 +316,20 @@ This includes:
 - Stage 06b verification payload contract sanity checks
 - cross-stage consistency (06/06c vs 07)
 - Stage 07 per-file validation summary (warnings/errors) and partial-write detection
-- Optional Stage 01 artifact integrity check (`--skip-stage01-presence` when validating archived outputs that no longer retain Stage 01 `.wav` files)
+- Stage 02+ correctness checks by default (transcript/conversation/enrichment/chunk path)
+- Optional Stage 01 artifact presence check only (`--skip-stage01-presence` recommended for correctness validation runs where Stage 01 media retention is not guaranteed)
 
 ```bash
 python3 scripts/training-data/validation/validate_manifest.py \
   --manifest docs/pipeline/batches/CANARY.1.txt \
+  --skip-stage01-presence \
   --stage07-gate-policy reverify_patched
 ```
+
+Policy note:
+- Treat Stage 01 as media-retention/integrity metadata, not a correctness blocker for Stage 02+ pipeline behavior.
+- For correctness hardening loops, run validation with `--skip-stage01-presence`.
+- Only enforce Stage 01 presence when specifically auditing download/media retention.
 
 To also require Stage 05 audio_features artifacts/payload integrity in the same harness run, add `--check-stage05-audio`.
 To also require Stage 09 chunk artifacts/payload integrity in the same harness run, add `--check-stage09-chunks`.
@@ -282,19 +361,26 @@ To apply an existing quarantine list during validation:
 Validate emitted reports with:
 `python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary`
 Optional readiness hardening during summary generation:
-`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --block-review-ingest`
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --allow-review-ingest`
 `python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --block-warning-check transcript_artifact --max-warning-checks 3`
+`python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/CANARY.1 --manifest docs/pipeline/batches/CANARY.1.txt --emit-readiness-summary --max-warning-check transcript_artifact=1 --max-warning-check evidence_mismatch=0`
+Readiness warning-budget behavior:
+- `stage07_validation_warnings` is expanded into per-warning-type counts (for example `transcript_artifact`, `evidence_mismatch`).
+- contextual warnings (`missing_stage01_audio`, `stage08_validation_warning`, `stage08_video_warning`, `stage07_normalization_repairs`) are excluded from generic `max_warning_checks`.
+- those contextual warnings also do not downgrade readiness from `READY` to `REVIEW` by themselves.
+- contextual checks can still be forced via explicit `--block-warning-check` or `--max-warning-check <check>=<n>`.
 The same can be triggered from the orchestrator:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports`
 (`sub-batch-pipeline` now runs this contract+coverage check automatically and writes `readiness-summary.json` under the stage-reports directory.)
 With orchestrator readiness policy controls:
-`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-review-ingest`
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --allow-review-ingest`
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --block-warning-check transcript_artifact --max-warning-checks 3`
+`./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --emit-stage-reports --max-warning-check transcript_artifact=1 --max-warning-check evidence_mismatch=0`
 Optional semantic-quality gate in the same `--validate` run (requires semantic_judge outputs):
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
 Strict one-flag profile:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --quality-gate`
-(`--quality-gate` expands to deep checks + stage reports + READY-only readiness + warning policy + semantic defaults.)
+(`--quality-gate` expands to deep checks + stage reports + READY-only readiness + warning policy defaults: `max_warning_checks=3`, `transcript_artifact<=1`, `evidence_mismatch=0`, `evidence_not_on_referenced_segment=0` + semantic defaults.)
 To also run Stage 10 ingest gates in dry-run mode (no DB writes) at the end of validation:
 `./scripts/training-data/batch/sub-batch-pipeline CANARY.1 --validate --quality-gate --check-stage10`
 Or emit quarantine from orchestrator:
@@ -362,13 +448,14 @@ Note: when running with `--manifest`, Stage 10 requires a valid Stage 08 manifes
 - the report is malformed or has an unexpected scope/source label
 - the report indicates unreadable Stage 07 outputs or incomplete manifest coverage
 - the report manifest scope size does not match the ingest manifest scope (or `--source` subset)
-- the report status is `FAIL`
+- the report status is `FAIL` and no per-video failure details are available for safe quarantine
+When per-video Stage 08 failures are present in the report, Stage 10 now quarantines those videos and continues ingest for the remaining eligible scope.
 Stage 10 also requires a readiness summary at `data/validation/stage_reports/<manifest>/readiness-summary.json` (or `<manifest>.<source>/` for `--source` runs) and will refuse ingest if:
 - the summary is missing/invalid
-- the summary does not cover the ingest manifest scope
+- the summary does not cover the ingest-eligible scope
 - the summary scope metadata (when present) does not match ingest manifest/source
-- any ingest-scope video is not ingest-ready (`BLOCKED` or `ready_for_ingest=false`; default policy keeps REVIEW ingest-allowed)
-To enforce READY-only ingest, generate readiness summaries with `--block-review-ingest`.
+- all ingest-scope videos are non-ingest-ready (`BLOCKED`/`REVIEW` under READY-only policy)
+By default readiness policy is READY-only. To allow REVIEW ingest, generate readiness summaries with `--allow-review-ingest`.
 Stage 10 can optionally run a semantic-quality gate for the same manifest scope when `--semantic-*` flags are provided (native gate logic aligned with `batch_report.py`).
 Example:
 `node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
@@ -376,6 +463,7 @@ Shortcut:
 `node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --quality-gate`
 If semantic judgements use a different directory label than the manifest stem, pass `--semantic-batch-id <id>`.
 Stage 10 writes a semantic gate report to `data/validation/semantic_gate/<manifest>[.<source>].<batch_id>.report.json` by default (override with `--semantic-report-out <path>`).
+Stage 10 also writes a manifest quarantine decision report to `data/validation/ingest_quarantine/<manifest>[.<source>].<run>.report.json` (override with `--quarantine-report-out <path>`).
 Use `--skip-taxonomy-gate` only when you intentionally bypass this gate.
 Use `--skip-readiness-gate` only when you intentionally bypass readiness gating.
 It also refuses manifest ingest when chunk files cannot derive a stable video-id-based `sourceKey` (to avoid idempotency drift).

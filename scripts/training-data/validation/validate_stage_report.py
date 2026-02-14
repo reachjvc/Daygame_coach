@@ -12,6 +12,7 @@ No external dependencies (jsonschema) are required.
 
 from __future__ import annotations
 
+import ast
 import argparse
 import json
 import re
@@ -43,6 +44,13 @@ TOP_REQUIRED: Set[str] = {
 TOP_ALLOWED: Set[str] = TOP_REQUIRED | {"batch_id", "manifest_path"}
 STATUS_ALLOWED = {"PASS", "WARN", "FAIL"}
 CHECK_SEVERITY_ALLOWED = {"error", "warning", "info"}
+POLICY_WARNING_BUDGET_EXCLUDED_CHECKS: Set[str] = {
+    # These warnings are useful context but should not consume readiness warning budgets.
+    "missing_stage01_audio",
+    "stage07_normalization_repairs",
+    "stage08_validation_warning",
+    "stage08_video_warning",
+}
 
 ARTIFACT_KEYS = {"path", "sha256", "bytes"}
 CHECK_KEYS = {"severity", "check", "message"}
@@ -121,6 +129,73 @@ def _video_id_from_report(record: ReportRecord) -> Optional[str]:
     if isinstance(vid, str) and VIDEO_ID_RE.fullmatch(vid.strip()):
         return vid.strip()
     return _video_id_from_filename_hint(record.path)
+
+
+def _parse_warning_check_budget(raw: str) -> Tuple[str, int]:
+    text = str(raw).strip()
+    if not text:
+        raise ValueError("empty value")
+
+    check = ""
+    budget_raw = ""
+    for sep in ("=", ":"):
+        if sep in text:
+            check, budget_raw = text.split(sep, 1)
+            break
+    else:
+        raise ValueError("expected '<check>=<max>'")
+
+    check = check.strip()
+    budget_raw = budget_raw.strip()
+    if not check:
+        raise ValueError("missing check name")
+    if not budget_raw.isdigit():
+        raise ValueError("max must be an integer >= 0")
+    return check, int(budget_raw)
+
+
+def _parse_stage07_warning_breakdown(message: str) -> Counter[str]:
+    """
+    Parse Stage 07 warning breakdowns encoded in the check message, e.g.:
+      "Stage 07 validation reports 2 warning(s): {'transcript_artifact': 2}"
+    Returns an empty counter when the message has no parseable breakdown.
+    """
+    text = str(message)
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end <= start:
+        return Counter()
+
+    payload = text[start : end + 1]
+    try:
+        parsed = ast.literal_eval(payload)
+    except Exception:
+        return Counter()
+    if not isinstance(parsed, dict):
+        return Counter()
+
+    out: Counter[str] = Counter()
+    for raw_check, raw_count in parsed.items():
+        if not isinstance(raw_check, str):
+            continue
+        check = raw_check.strip()
+        if not check:
+            continue
+
+        count: Optional[int] = None
+        if isinstance(raw_count, bool):
+            count = None
+        elif isinstance(raw_count, int):
+            count = raw_count
+        elif isinstance(raw_count, float) and raw_count.is_integer():
+            count = int(raw_count)
+        elif isinstance(raw_count, str) and raw_count.strip().isdigit():
+            count = int(raw_count.strip())
+        if count is None or count <= 0:
+            continue
+        out[check] += count
+
+    return out
 
 
 def _validate_artifact(item: Any, *, path: str, loc: str, issues: List[Issue]) -> None:
@@ -265,6 +340,7 @@ def _compute_readiness(
     missing_manifest_ids: Set[str],
     block_warning_checks: Set[str],
     max_warning_checks: Optional[int],
+    max_warning_checks_by_type: Dict[str, int],
     allow_review_ingest: bool,
 ) -> Dict[str, Any]:
     reports_by_vid: Dict[str, List[ReportRecord]] = defaultdict(list)
@@ -296,10 +372,12 @@ def _compute_readiness(
         error_checks = 0
         warning_checks = 0
         info_checks = 0
+        policy_warning_checks = 0
         reasons: List[str] = []
         report_paths: List[str] = []
         sources: Set[str] = set()
-        warning_check_counts: Counter[str] = Counter()
+        warning_signal_counts: Counter[str] = Counter()
+        policy_warning_signal_counts: Counter[str] = Counter()
 
         for rec in recs:
             report_paths.append(str(rec.path))
@@ -333,8 +411,26 @@ def _compute_readiness(
                     error_checks += 1
                 elif sev == "warning":
                     warning_checks += 1
-                    if isinstance(chk, str) and chk.strip():
-                        warning_check_counts[chk.strip()] += 1
+                    chk_name = chk.strip() if isinstance(chk, str) and chk.strip() else ""
+                    msg = item.get("message")
+                    expanded_warning_counts: Counter[str] = Counter()
+                    if chk_name == "stage07_validation_warnings" and isinstance(msg, str):
+                        expanded_warning_counts = _parse_stage07_warning_breakdown(msg)
+
+                    if expanded_warning_counts:
+                        for sub_check, sub_count in expanded_warning_counts.items():
+                            warning_signal_counts[sub_check] += sub_count
+                            if sub_check not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
+                                policy_warning_signal_counts[sub_check] += sub_count
+                                policy_warning_checks += sub_count
+                    elif chk_name:
+                        warning_signal_counts[chk_name] += 1
+                        if chk_name not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
+                            policy_warning_signal_counts[chk_name] += 1
+                            policy_warning_checks += 1
+                    else:
+                        # Unnamed warnings still count against the generic warning budget.
+                        policy_warning_checks += 1
                 elif sev == "info":
                     info_checks += 1
 
@@ -347,22 +443,45 @@ def _compute_readiness(
         elif fail_reports > 0 or error_checks > 0:
             status = "BLOCKED"
             reason_code = next((r for r in reasons if r), "report_fail")
-        elif warn_reports > 0 or warning_checks > 0:
+        elif policy_warning_checks > 0:
             status = "REVIEW"
-            reason_code = next((r for r in reasons if r), "warnings_present")
+            if policy_warning_signal_counts:
+                # Use the dominant actionable warning check as REVIEW reason.
+                reason_code = sorted(
+                    policy_warning_signal_counts.items(),
+                    key=lambda item: (-item[1], item[0]),
+                )[0][0]
+            else:
+                reason_code = "warnings_present"
         else:
             status = "READY"
             reason_code = "ok"
 
         # Optional policy hardening: escalate selected warning patterns into BLOCKED.
         if status != "BLOCKED":
-            blocked_warning_hit = next((chk for chk in sorted(block_warning_checks) if warning_check_counts.get(chk, 0) > 0), None)
+            blocked_warning_hit = next(
+                (chk for chk in sorted(block_warning_checks) if warning_signal_counts.get(chk, 0) > 0),
+                None,
+            )
             if blocked_warning_hit:
                 status = "BLOCKED"
                 reason_code = f"policy_block_warning_check:{blocked_warning_hit}"
-            elif max_warning_checks is not None and warning_checks > max_warning_checks:
-                status = "BLOCKED"
-                reason_code = "policy_warning_budget_exceeded"
+            else:
+                per_check_exceeded = next(
+                    (
+                        (chk, warning_signal_counts.get(chk, 0), limit)
+                        for chk, limit in sorted(max_warning_checks_by_type.items(), key=lambda item: item[0])
+                        if warning_signal_counts.get(chk, 0) > limit
+                    ),
+                    None,
+                )
+                if per_check_exceeded is not None:
+                    chk, seen, limit = per_check_exceeded
+                    status = "BLOCKED"
+                    reason_code = f"policy_warning_check_budget_exceeded:{chk}:{seen}>{limit}"
+                elif max_warning_checks is not None and policy_warning_checks > max_warning_checks:
+                    status = "BLOCKED"
+                    reason_code = "policy_warning_budget_exceeded"
 
         ready_for_ingest = status in allow_ingest_statuses
         if ready_for_ingest:
@@ -385,8 +504,10 @@ def _compute_readiness(
             "check_counts": {
                 "errors": error_checks,
                 "warnings": warning_checks,
+                "policy_warnings": policy_warning_checks,
                 "info": info_checks,
-                "warning_types": dict(warning_check_counts),
+                "warning_types": dict(warning_signal_counts),
+                "policy_warning_types": dict(policy_warning_signal_counts),
             },
             "sources": sorted(sources),
             "reports": sorted(report_paths),
@@ -407,6 +528,8 @@ def _compute_readiness(
             "allow_ingest_statuses": sorted(allow_ingest_statuses),
             "block_warning_checks": sorted(block_warning_checks),
             "max_warning_checks": max_warning_checks,
+            "max_warning_checks_by_type": {k: max_warning_checks_by_type[k] for k in sorted(max_warning_checks_by_type)},
+            "warning_budget_excluded_checks": sorted(POLICY_WARNING_BUDGET_EXCLUDED_CHECKS),
         },
         "summary": {
             "videos": len(videos),
@@ -443,12 +566,26 @@ def main() -> None:
     parser.add_argument(
         "--max-warning-checks",
         type=int,
-        help="Escalate to BLOCKED when a video has more than this many warning checks",
+        help="Escalate to BLOCKED when a video has more than this many warning checks (all checks combined)",
+    )
+    parser.add_argument(
+        "--max-warning-check",
+        action="append",
+        default=[],
+        help=(
+            "Escalate to BLOCKED when a warning check exceeds its budget. "
+            "Format: <check>=<max> (or <check>:<max>), repeatable."
+        ),
     )
     parser.add_argument(
         "--block-review-ingest",
         action="store_true",
-        help="Treat REVIEW videos as not ready_for_ingest (READY-only ingest policy)",
+        help="Deprecated alias for READY-only ingest policy (default behavior)",
+    )
+    parser.add_argument(
+        "--allow-review-ingest",
+        action="store_true",
+        help="Allow REVIEW videos as ingest-ready in readiness summary policy",
     )
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--show", type=int, default=40, help="Max issue lines in text mode")
@@ -457,7 +594,29 @@ def main() -> None:
     if args.max_warning_checks is not None and args.max_warning_checks < 0:
         print(f"{LOG_PREFIX} ERROR: --max-warning-checks must be >= 0", file=sys.stderr)
         sys.exit(2)
+    if args.block_review_ingest and args.allow_review_ingest:
+        print(f"{LOG_PREFIX} ERROR: --block-review-ingest and --allow-review-ingest are mutually exclusive", file=sys.stderr)
+        sys.exit(2)
     block_warning_checks = {str(c).strip() for c in (args.block_warning_check or []) if str(c).strip()}
+    max_warning_checks_by_type: Dict[str, int] = {}
+    for raw in args.max_warning_check or []:
+        try:
+            check, budget = _parse_warning_check_budget(raw)
+        except ValueError as exc:
+            print(
+                f"{LOG_PREFIX} ERROR: invalid --max-warning-check value '{raw}': {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        prev = max_warning_checks_by_type.get(check)
+        if prev is not None and prev != budget:
+            print(
+                f"{LOG_PREFIX} ERROR: conflicting --max-warning-check budgets for '{check}' "
+                f"({prev} vs {budget})",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        max_warning_checks_by_type[check] = budget
 
     files: List[Path] = []
     if args.file:
@@ -523,6 +682,7 @@ def main() -> None:
                 )
             )
 
+    allow_review_ingest = bool(args.allow_review_ingest)
     readiness_summary = _compute_readiness(
         report_records=report_records,
         unreadable_by_vid=dict(unreadable_by_vid),
@@ -533,7 +693,8 @@ def main() -> None:
         missing_manifest_ids=missing_manifest_ids,
         block_warning_checks=block_warning_checks,
         max_warning_checks=args.max_warning_checks,
-        allow_review_ingest=not args.block_review_ingest,
+        max_warning_checks_by_type=max_warning_checks_by_type,
+        allow_review_ingest=allow_review_ingest,
     )
     readiness_out: Optional[Path] = None
     if args.emit_readiness_summary:
@@ -585,6 +746,48 @@ def main() -> None:
             f"REVIEW={readiness_summary['summary']['by_status'].get('REVIEW', 0)}, "
             f"BLOCKED={readiness_summary['summary']['by_status'].get('BLOCKED', 0)}"
         )
+        readiness_videos = readiness_summary.get("videos")
+        if isinstance(readiness_videos, list):
+            blocked_rows = [
+                row for row in readiness_videos
+                if isinstance(row, dict) and row.get("status") == "BLOCKED"
+            ]
+            review_rows = [
+                row for row in readiness_videos
+                if isinstance(row, dict) and row.get("status") == "REVIEW"
+            ]
+            if blocked_rows:
+                limit = min(args.show, len(blocked_rows))
+                print(f"{LOG_PREFIX} Readiness blocked videos: {len(blocked_rows)} (showing {limit})")
+                for row in blocked_rows[:limit]:
+                    vid = str(row.get("video_id", "?"))
+                    reason = str(row.get("reason_code", "")).strip() or "blocked"
+                    src_hint = ""
+                    sources = row.get("sources")
+                    if isinstance(sources, list):
+                        first_src = next((s for s in sources if isinstance(s, str) and s.strip()), None)
+                        if isinstance(first_src, str):
+                            src_hint = first_src.strip()
+                    report_hint = ""
+                    reports = row.get("reports")
+                    if isinstance(reports, list):
+                        first_report = next((r for r in reports if isinstance(r, str) and r.strip()), None)
+                        if isinstance(first_report, str):
+                            report_hint = first_report.strip()
+                    extra = f", source={src_hint}" if src_hint else ""
+                    where = f", report={report_hint}" if report_hint else ""
+                    print(f"{LOG_PREFIX}   BLOCKED [{vid}] reason={reason}{extra}{where}")
+                if len(blocked_rows) > limit:
+                    print(f"{LOG_PREFIX}   ... ({len(blocked_rows) - limit} more blocked videos)")
+            if review_rows:
+                limit = min(args.show, len(review_rows))
+                print(f"{LOG_PREFIX} Readiness review videos: {len(review_rows)} (showing {limit})")
+                for row in review_rows[:limit]:
+                    vid = str(row.get("video_id", "?"))
+                    reason = str(row.get("reason_code", "")).strip() or "review"
+                    print(f"{LOG_PREFIX}   REVIEW [{vid}] reason={reason}")
+                if len(review_rows) > limit:
+                    print(f"{LOG_PREFIX}   ... ({len(review_rows) - limit} more review videos)")
         if readiness_out:
             print(f"{LOG_PREFIX} Readiness summary written: {readiness_out}")
         print(f"{LOG_PREFIX} Issues: errors={errors}, warnings={warnings}")
