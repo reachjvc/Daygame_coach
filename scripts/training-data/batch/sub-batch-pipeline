@@ -104,8 +104,10 @@ VALIDATE_EMIT_QUARANTINE=false
 VALIDATE_QUARANTINE_OUT=""
 VALIDATE_QUARANTINE_LEVEL="error"
 VALIDATE_READINESS_BLOCK_REVIEW=false
+VALIDATE_READINESS_ALLOW_REVIEW=false
 VALIDATE_READINESS_MAX_WARNING_CHECKS=""
 VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
+VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE=()
 VALIDATE_SEMANTIC_MIN_FRESH=""
 VALIDATE_SEMANTIC_MIN_MEAN_OVERALL=""
 VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE=""
@@ -154,10 +156,13 @@ Options:
   --emit-quarantine        With --validate, write quarantine list from issues
   --quarantine-out <p>     Output path for --emit-quarantine
   --quarantine-level <p>   With --validate, quarantine threshold: error (default) or warning
-  --block-review-ingest    With --validate+--emit-stage-reports, readiness treats REVIEW as not ingest-ready
+  --block-review-ingest    Deprecated alias (READY-only is now the default)
+  --allow-review-ingest    With --validate+--emit-stage-reports, allow REVIEW as ingest-ready
   --max-warning-checks <n> With --validate+--emit-stage-reports, BLOCKED when warnings exceed n
   --block-warning-check <c>
                            With --validate+--emit-stage-reports, escalate this warning check to BLOCKED (repeatable)
+  --max-warning-check <s>  With --validate+--emit-stage-reports, set per-check warning budget
+                           Format: <check>=<n> (or <check>:<n>), repeatable
   --semantic-min-fresh <n>
                            With --validate, semantic gate requires at least n fresh semantic judgements
   --semantic-min-mean-overall <n>
@@ -955,12 +960,15 @@ validate_sub_batch() {
     echo "Quality gate profile: strict"
   fi
   if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
-    local readiness_policy_msg="Readiness policy: allow REVIEW ingest"
-    if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
-      readiness_policy_msg="Readiness policy: READY-only ingest"
+    local readiness_policy_msg="Readiness policy: READY-only ingest"
+    if [[ "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+      readiness_policy_msg="Readiness policy: allow REVIEW ingest"
     fi
     if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
       readiness_policy_msg="$readiness_policy_msg, max_warning_checks=$VALIDATE_READINESS_MAX_WARNING_CHECKS"
+    fi
+    if [[ ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 ]]; then
+      readiness_policy_msg="$readiness_policy_msg, max_warning_checks_by_type=${VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[*]}"
     fi
     if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
       readiness_policy_msg="$readiness_policy_msg, block_warning_checks=${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[*]}"
@@ -997,9 +1005,15 @@ validate_sub_batch() {
     if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
       stage_report_check_args+=(--block-review-ingest)
     fi
+    if [[ "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+      stage_report_check_args+=(--allow-review-ingest)
+    fi
     if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
       stage_report_check_args+=(--max-warning-checks "$VALIDATE_READINESS_MAX_WARNING_CHECKS")
     fi
+    for rule in "${VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]}"; do
+      stage_report_check_args+=(--max-warning-check "$rule")
+    done
     for chk in "${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]}"; do
       stage_report_check_args+=(--block-warning-check "$chk")
     done
@@ -1232,6 +1246,12 @@ while [[ $# -gt 0 ]]; do
       ;;
     --block-review-ingest)
       VALIDATE_READINESS_BLOCK_REVIEW=true
+      VALIDATE_READINESS_ALLOW_REVIEW=false
+      shift
+      ;;
+    --allow-review-ingest)
+      VALIDATE_READINESS_ALLOW_REVIEW=true
+      VALIDATE_READINESS_BLOCK_REVIEW=false
       shift
       ;;
     --max-warning-checks)
@@ -1257,6 +1277,25 @@ while [[ $# -gt 0 ]]; do
       local_check="${1#--block-warning-check=}"
       [[ -n "${local_check//[[:space:]]/}" ]] || error "--block-warning-check requires a non-empty value"
       VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$local_check")
+      shift
+      ;;
+    --max-warning-check)
+      [[ $# -lt 2 ]] && error "--max-warning-check requires a value"
+      local_rule="$2"
+      [[ -n "${local_rule//[[:space:]]/}" ]] || error "--max-warning-check requires a non-empty value"
+      if [[ ! "$local_rule" =~ .+[:=][0-9]+$ ]]; then
+        error "--max-warning-check must use '<check>=<n>' (or '<check>:<n>') with integer n >= 0"
+      fi
+      VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE+=("$local_rule")
+      shift 2
+      ;;
+    --max-warning-check=*)
+      local_rule="${1#--max-warning-check=}"
+      [[ -n "${local_rule//[[:space:]]/}" ]] || error "--max-warning-check requires a non-empty value"
+      if [[ ! "$local_rule" =~ .+[:=][0-9]+$ ]]; then
+        error "--max-warning-check must use '<check>=<n>' (or '<check>:<n>') with integer n >= 0"
+      fi
+      VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE+=("$local_rule")
       shift
       ;;
     --semantic-min-fresh)
@@ -1365,11 +1404,19 @@ if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
   VALIDATE_STAGE09_CHUNKS=true
   VALIDATE_EMIT_STAGE_REPORTS=true
   VALIDATE_READINESS_BLOCK_REVIEW=true
+  VALIDATE_READINESS_ALLOW_REVIEW=false
   if [[ -z "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
     VALIDATE_READINESS_MAX_WARNING_CHECKS="3"
   fi
+  if [[ ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -eq 0 ]]; then
+    VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE=(
+      "transcript_artifact=1"
+      "evidence_mismatch=0"
+      "evidence_not_on_referenced_segment=0"
+    )
+  fi
   if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -eq 0 ]]; then
-    VALIDATE_READINESS_BLOCK_WARNING_CHECKS=("transcript_artifact")
+    VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
   fi
   if [[ -z "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
     VALIDATE_SEMANTIC_MIN_FRESH="5"
@@ -1387,7 +1434,7 @@ if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
 fi
 
 if [[ "$MODE" != "validate" ]]; then
-  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || "$VALIDATE_READINESS_ALLOW_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
     error "Readiness policy flags require --validate mode"
   fi
   if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" || -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" || -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" || -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" || "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
@@ -1396,9 +1443,13 @@ if [[ "$MODE" != "validate" ]]; then
 fi
 
 if [[ "$MODE" == "validate" && "$VALIDATE_EMIT_STAGE_REPORTS" != true ]]; then
-  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || "$VALIDATE_READINESS_ALLOW_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
     error "Readiness policy flags require --emit-stage-reports"
   fi
+fi
+
+if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true && "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+  error "--block-review-ingest and --allow-review-ingest are mutually exclusive"
 fi
 
 # Determine if this is a batch ID or sub-batch ID

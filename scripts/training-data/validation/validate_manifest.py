@@ -34,6 +34,7 @@ LOG_PREFIX = "[manifest-validate]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
+_CHUNKS_BASENAME_VIDEO_ID_RE = re.compile(r"^([A-Za-z0-9_-]{11})\.chunks\.json$")
 _WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
@@ -59,7 +60,36 @@ def _extract_video_id_from_text(text: str) -> Optional[str]:
 
 
 def _video_id_for_file(p: Path) -> Optional[str]:
-    return _extract_video_id_from_text(str(p)) or validate_cross_stage._extract_video_id_from_json(p)  # type: ignore[attr-defined]
+    # Common stage artifacts include [VIDEO_ID] in filenames.
+    vid = _extract_video_id_from_text(str(p))
+    if vid:
+        return vid
+
+    # Stage 09 chunks are often emitted as <video_id>.chunks.json (no [VIDEO_ID] token).
+    m = _CHUNKS_BASENAME_VIDEO_ID_RE.match(p.name)
+    if m:
+        return m.group(1)
+
+    # Fall back to JSON metadata (supports legacy `video_id`, Stage 09 `videoId`, and `sourceKey`).
+    vid = validate_cross_stage._extract_video_id_from_json(p)  # type: ignore[attr-defined]
+    if vid:
+        return vid
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    for key in ("videoId", "video_id"):
+        raw = data.get(key)
+        if isinstance(raw, str) and _VIDEO_ID_RE.fullmatch(raw.strip()):
+            return raw.strip()
+    source_key = data.get("sourceKey")
+    if isinstance(source_key, str):
+        m2 = re.search(r"[\\/](?P<vid>[A-Za-z0-9_-]{11})\.txt$", source_key)
+        if m2:
+            return m2.group("vid")
+    return None
 
 
 def _safe_report_name(raw: str) -> str:
@@ -172,10 +202,13 @@ def _index_paths_by_video_id(
 
 
 def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]) -> Path:
-    def rank(p: Path) -> Tuple[int, int, str]:
+    def rank(p: Path) -> Tuple[int, int, int, str]:
         source_bonus = 1 if (preferred_source and preferred_source in p.parts) else 0
         depth = len(p.parts)
-        return (source_bonus, depth, str(p))
+        name = p.name.lower()
+        # Prefer clean16k over raw16k when both artifacts exist for the same video id.
+        quality_bonus = 2 if ".audio.asr.clean16k" in name else (1 if ".audio.asr.raw16k" in name else 0)
+        return (source_bonus, quality_bonus, depth, str(p))
 
     return sorted(candidates, key=rank, reverse=True)[0]
 
@@ -619,8 +652,12 @@ def _validate_audio_features_payload(audio_features_path: Path) -> List[str]:
             if not isinstance(val, (int, float)) or not math.isfinite(float(val)):
                 errs.append(f"segment[{i}]_invalid_spectral_brightness_hz")
 
-        if not isinstance(quality, dict):
-            errs.append(f"segment[{i}]_missing_quality")
+        # Stage 05 quality fields were added after some legacy artifacts were created.
+        # Accept missing quality for backward compatibility; validate strictly when present.
+        if quality is None:
+            pass
+        elif not isinstance(quality, dict):
+            errs.append(f"segment[{i}]_invalid_quality")
         else:
             low_energy = quality.get("low_energy")
             speech_ratio = quality.get("speech_activity_ratio")
@@ -907,6 +944,8 @@ def main() -> None:
     stage08_checked = False
     stage08_status: Optional[str] = None
     stage08_report_path: Optional[Path] = None
+    stage08_blocked_video_ids: Set[str] = set()
+    stage08_block_reason_by_video: Dict[str, str] = {}
 
     # Stage 07 quality signals (from per-file validation + normalization metadata)
     stage07_val_errors = 0
@@ -916,6 +955,7 @@ def main() -> None:
     stage07_videos_with_repairs = 0
 
     blocked_by_gate = 0
+    gate_blocked_video_ids: Set[str] = set()
     allowed_by_gate = 0
     gate_reject = 0
     gate_reject_patched_allowed = 0
@@ -1140,6 +1180,8 @@ def main() -> None:
                     stage08_status = status if isinstance(status, str) else None
                     reason = validation.get("reason")
                     reason_text = reason.strip() if isinstance(reason, str) else ""
+                    video_results = validation.get("video_results")
+                    has_video_results = isinstance(video_results, list)
 
                     if status not in {"PASS", "WARNING", "FAIL"}:
                         issues.append({
@@ -1152,18 +1194,32 @@ def main() -> None:
                         })
                         check_counts["error:invalid_stage08_report_status"] += 1
                     elif status == "FAIL":
-                        issues.append({
-                            "video_id": "*",
-                            "source": args.source or "all",
-                            "severity": "error",
-                            "check": "stage08_validation_fail",
-                            "message": (
-                                f"Stage 08 report status is FAIL"
-                                + (f": {reason_text}" if reason_text else "")
-                            ),
-                            "stage08_report": str(stage08_report_path),
-                        })
-                        check_counts["error:stage08_validation_fail"] += 1
+                        if has_video_results:
+                            issues.append({
+                                "video_id": "*",
+                                "source": args.source or "all",
+                                "severity": "warning",
+                                "check": "stage08_validation_fail_manifest",
+                                "message": (
+                                    "Stage 08 report status is FAIL; per-video failures will be quarantined"
+                                    + (f": {reason_text}" if reason_text else "")
+                                ),
+                                "stage08_report": str(stage08_report_path),
+                            })
+                            check_counts["warning:stage08_validation_fail_manifest"] += 1
+                        else:
+                            issues.append({
+                                "video_id": "*",
+                                "source": args.source or "all",
+                                "severity": "error",
+                                "check": "stage08_validation_fail",
+                                "message": (
+                                    f"Stage 08 report status is FAIL"
+                                    + (f": {reason_text}" if reason_text else "")
+                                ),
+                                "stage08_report": str(stage08_report_path),
+                            })
+                            check_counts["error:stage08_validation_fail"] += 1
                     elif status == "WARNING":
                         issues.append({
                             "video_id": "*",
@@ -1177,6 +1233,55 @@ def main() -> None:
                             "stage08_report": str(stage08_report_path),
                         })
                         check_counts["warning:stage08_validation_warning"] += 1
+
+                    if has_video_results:
+                        for row in video_results:
+                            if not isinstance(row, dict):
+                                continue
+                            raw_vid = row.get("video_id")
+                            if not isinstance(raw_vid, str):
+                                continue
+                            vid = raw_vid.strip()
+                            if not _VIDEO_ID_RE.fullmatch(vid):
+                                continue
+                            if vid not in manifest_ids:
+                                continue
+                            row_status = row.get("status")
+                            row_reason = row.get("reason")
+                            reason_text = row_reason.strip() if isinstance(row_reason, str) else ""
+
+                            if row_status == "FAIL":
+                                if vid not in stage08_blocked_video_ids:
+                                    issues.append({
+                                        "video_id": vid,
+                                        "source": source_by_vid.get(vid, args.source or "all"),
+                                        "severity": "error",
+                                        "check": "stage08_video_fail",
+                                        "message": (
+                                            "Stage 08 per-video taxonomy status is FAIL"
+                                            + (f": {reason_text}" if reason_text else "")
+                                        ),
+                                        "stage08_report": str(stage08_report_path),
+                                    })
+                                    check_counts["error:stage08_video_fail"] += 1
+                                stage08_blocked_video_ids.add(vid)
+                                stage08_block_reason_by_video.setdefault(
+                                    vid,
+                                    reason_text or "stage08_video_fail",
+                                )
+                            elif row_status == "WARNING":
+                                issues.append({
+                                    "video_id": vid,
+                                    "source": source_by_vid.get(vid, args.source or "all"),
+                                    "severity": "warning",
+                                    "check": "stage08_video_warning",
+                                    "message": (
+                                        "Stage 08 per-video taxonomy status is WARNING"
+                                        + (f": {reason_text}" if reason_text else "")
+                                    ),
+                                    "stage08_report": str(stage08_report_path),
+                                })
+                                check_counts["warning:stage08_video_warning"] += 1
 
                 details = report_data.get("details")
                 files_processed = details.get("files_processed") if isinstance(details, dict) else None
@@ -1202,15 +1307,39 @@ def main() -> None:
                     })
                     check_counts["error:invalid_stage08_report_files_unreadable"] += 1
                 elif files_unreadable > 0:
-                    issues.append({
-                        "video_id": "*",
-                        "source": args.source or "all",
-                        "severity": "error",
-                        "check": "stage08_unreadable_enriched_files",
-                        "message": f"Stage 08 report indicates {files_unreadable} unreadable Stage 07 enriched file(s)",
-                        "stage08_report": str(stage08_report_path),
-                    })
-                    check_counts["error:stage08_unreadable_enriched_files"] += 1
+                    unreadable_ids = details.get("unreadable_video_ids") if isinstance(details, dict) else None
+                    if not isinstance(unreadable_ids, list):
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "stage08_unreadable_enriched_files",
+                            "message": (
+                                f"Stage 08 report indicates {files_unreadable} unreadable Stage 07 enriched file(s) "
+                                "but no unreadable_video_ids list is present"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:stage08_unreadable_enriched_files"] += 1
+                    else:
+                        for raw_vid in unreadable_ids:
+                            vid = raw_vid.strip() if isinstance(raw_vid, str) else ""
+                            if not _VIDEO_ID_RE.fullmatch(vid):
+                                continue
+                            if vid not in manifest_ids:
+                                continue
+                            if vid not in stage08_blocked_video_ids:
+                                issues.append({
+                                    "video_id": vid,
+                                    "source": source_by_vid.get(vid, args.source or "all"),
+                                    "severity": "error",
+                                    "check": "stage08_unreadable_enriched_file",
+                                    "message": "Stage 08 report marks this video as unreadable in Stage 07 enriched input",
+                                    "stage08_report": str(stage08_report_path),
+                                })
+                                check_counts["error:stage08_unreadable_enriched_file"] += 1
+                            stage08_blocked_video_ids.add(vid)
+                            stage08_block_reason_by_video.setdefault(vid, "unreadable_stage07_enriched")
 
                 manifest_cov = details.get("manifest_coverage") if isinstance(details, dict) else None
                 if not isinstance(manifest_cov, dict):
@@ -1226,6 +1355,7 @@ def main() -> None:
                 else:
                     missing_videos = manifest_cov.get("missing_videos")
                     matched_video_ids = manifest_cov.get("matched_video_ids")
+                    missing_video_ids = manifest_cov.get("missing_video_ids")
                     if not isinstance(missing_videos, int) or missing_videos < 0:
                         issues.append({
                             "video_id": "*",
@@ -1237,15 +1367,38 @@ def main() -> None:
                         })
                         check_counts["error:invalid_stage08_report_missing_videos"] += 1
                     elif missing_videos > 0:
-                        issues.append({
-                            "video_id": "*",
-                            "source": args.source or "all",
-                            "severity": "error",
-                            "check": "stage08_manifest_coverage_incomplete",
-                            "message": f"Stage 08 report indicates incomplete manifest coverage (missing_videos={missing_videos})",
-                            "stage08_report": str(stage08_report_path),
-                        })
-                        check_counts["error:stage08_manifest_coverage_incomplete"] += 1
+                        if not isinstance(missing_video_ids, list):
+                            issues.append({
+                                "video_id": "*",
+                                "source": args.source or "all",
+                                "severity": "error",
+                                "check": "stage08_manifest_coverage_incomplete",
+                                "message": (
+                                    f"Stage 08 report indicates incomplete manifest coverage (missing_videos={missing_videos}) "
+                                    "but missing_video_ids list is absent"
+                                ),
+                                "stage08_report": str(stage08_report_path),
+                            })
+                            check_counts["error:stage08_manifest_coverage_incomplete"] += 1
+                        else:
+                            for raw_vid in missing_video_ids:
+                                vid = raw_vid.strip() if isinstance(raw_vid, str) else ""
+                                if not _VIDEO_ID_RE.fullmatch(vid):
+                                    continue
+                                if vid not in manifest_ids:
+                                    continue
+                                if vid not in stage08_blocked_video_ids:
+                                    issues.append({
+                                        "video_id": vid,
+                                        "source": source_by_vid.get(vid, args.source or "all"),
+                                        "severity": "error",
+                                        "check": "stage08_missing_stage07_enriched",
+                                        "message": "Stage 08 report marks this video as missing Stage 07 enriched output",
+                                        "stage08_report": str(stage08_report_path),
+                                    })
+                                    check_counts["error:stage08_missing_stage07_enriched"] += 1
+                                stage08_blocked_video_ids.add(vid)
+                                stage08_block_reason_by_video.setdefault(vid, "missing_stage07_enriched")
 
                     if not isinstance(matched_video_ids, int) or matched_video_ids <= 0:
                         issues.append({
@@ -1495,6 +1648,8 @@ def main() -> None:
             stage07_gate_policy,
             reverify_verdict=reverify_verdict,
         )
+        if not gate_allowed:
+            gate_blocked_video_ids.add(vid)
         if stage07_gate_policy == "reverify_patched":
             if gate_allowed:
                 allowed_by_gate += 1
@@ -1761,7 +1916,13 @@ def main() -> None:
 
     # In text mode, compute a simple pass/fail heuristic that matches how we'd use this in CI.
     # "Complete" here means: for manifest videos, 06c + 07 + 06b verification exist.
-    effective_manifest_ids = {vid for vid in manifest_ids if vid not in quarantine_video_ids}
+    # Completeness should be measured on the active processing scope:
+    # remove user-quarantined items and videos intentionally blocked by gate policy.
+    effective_manifest_ids = {
+        vid
+        for vid in manifest_ids
+        if vid not in quarantine_video_ids and vid not in gate_blocked_video_ids
+    }
     missing_verify_effective = sum(1 for vid in missing_verify if vid in effective_manifest_ids)
     missing_reverify_effective = sum(1 for vid in missing_reverify if vid in effective_manifest_ids)
     missing_s05_effective = sum(1 for vid in missing_s05 if vid in effective_manifest_ids)
@@ -1863,6 +2024,8 @@ def main() -> None:
                 "checked": stage08_checked,
                 "status": stage08_status,
                 "report": str(stage08_report_path) if stage08_report_path else None,
+                "blocked_videos": len(stage08_blocked_video_ids),
+                "blocked_video_ids": sorted(stage08_blocked_video_ids),
             }
             if args.check_stage08_report
             else None
@@ -1968,7 +2131,8 @@ def main() -> None:
         if args.check_stage08_report:
             print(
                 f"{LOG_PREFIX} Stage 08 report check: enabled "
-                f"(status={stage08_status or 'unknown'}, report={str(stage08_report_path) if stage08_report_path else 'n/a'})"
+                f"(status={stage08_status or 'unknown'}, blocked_videos={len(stage08_blocked_video_ids)}, "
+                f"report={str(stage08_report_path) if stage08_report_path else 'n/a'})"
             )
         if args.emit_stage_reports:
             print(

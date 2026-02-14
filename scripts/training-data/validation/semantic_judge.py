@@ -257,7 +257,7 @@ class JudgementRequest:
     conversation_id: int
     enrichment: Dict[str, Any]
     transcript_segments: List[Dict[str, Any]]
-    prompt_version: str = "1.2.9"
+    prompt_version: str = "1.3.1"
 
     def to_prompt(self, max_segments: int) -> str:
         # Ensure the judge sees any segments explicitly referenced by the enrichment.
@@ -363,6 +363,14 @@ SEVERITY + CATEGORIZATION GUIDELINES:
 - Mark an issue as MAJOR only if it materially harms retrieval usefulness or is clearly wrong (wrong technique, wrong topic, invalid phase order, missing hook/investment when post_hook is present, etc).
 - Description-level inaccuracies (e.g., mentioning a number close when none is shown) are usually MINOR unless the description is fundamentally misleading.
 - The boundary between open vs pre_hook vs post_hook can be subjective; small boundary disagreements should be MINOR unless they break the monotonic phase order or clearly misrepresent the interaction.
+
+PHASE DISAGREEMENT POLICY (strict):
+- Treat open/pre_hook/post_hook boundary disagreements as MINOR by default when order is monotonic.
+- If close start differs by only 1-2 segments around an ambiguous transition, keep it MINOR.
+- For noisy transcripts, diarization errors, or language-barrier interactions, prefer MINOR for phase interpretation disputes unless there is a clear contract violation.
+- Mark a phase issue MAJOR only when it creates a materially wrong retrieval picture (for example: non-monotonic ordering, missing close after a clear explicit coach close attempt, or close starting far before any plausible close attempt).
+- If phase labels are monotonic and a close technique is correctly present near close start, disagreements about whether post_hook exists are MINOR (not MAJOR).
+- If an interaction is clearly failed/chaotic (e.g., language barrier, interruption, immediate rejection) and enrichment marks it as open-only or no-hook, do NOT mark MAJOR unless it fabricates substantial content.
 
 TASK:
 1) Judge whether the enrichment is accurate and useful for retrieval (RAG).

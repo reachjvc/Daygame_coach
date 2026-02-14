@@ -129,7 +129,9 @@ def _infer_source_from_stage07_path(p: str) -> Optional[str]:
     try:
         parts = Path(p).parts
         idx = parts.index("07.content")
-        if idx + 1 < len(parts):
+        # Only infer a source when there is an extra path component between
+        # 07.content and the filename. Root-flat layout has no source segment.
+        if idx + 2 < len(parts):
             src = parts[idx + 1]
             if src and src != "07.content":
                 return src
@@ -140,6 +142,7 @@ def _infer_source_from_stage07_path(p: str) -> Optional[str]:
 
 def _build_stage07_semantic_request_index(
     enriched_files: List[Dict[str, Any]],
+    preferred_source_by_vid: Optional[Dict[str, str]] = None,
 ) -> Dict[Tuple[str, int], Dict[str, Any]]:
     """Build an index of the current Stage 07 "approach" conversations for fingerprint checks."""
     out: Dict[Tuple[str, int], Dict[str, Any]] = {}
@@ -149,12 +152,31 @@ def _build_stage07_semantic_request_index(
             continue
 
         source = ef.get("source")
+        if isinstance(source, str):
+            src_clean = source.strip()
+            # Guard against malformed source metadata (observed in some legacy/root-flat
+            # artifacts where this field is accidentally set to a filename/path-ish value).
+            if (
+                not src_clean
+                or "/" in src_clean
+                or "\\" in src_clean
+                or ".audio.asr." in src_clean
+                or src_clean.endswith(".json")
+                or "[" in src_clean
+            ):
+                source = None
+            else:
+                source = src_clean
         if not isinstance(source, str) or not source:
             p = ef.get("_source_file")
             if isinstance(p, str):
                 inferred = _infer_source_from_stage07_path(p)
                 if inferred:
                     source = inferred
+        if (not isinstance(source, str) or not source) and preferred_source_by_vid:
+            preferred = preferred_source_by_vid.get(vid)
+            if isinstance(preferred, str) and preferred.strip():
+                source = preferred.strip()
         if not isinstance(source, str):
             source = ""
 
@@ -204,14 +226,16 @@ def _index_paths_by_video_id(
 
 
 def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]) -> Path:
-    def rank(p: Path) -> Tuple[int, int, float, str]:
+    def rank(p: Path) -> Tuple[int, int, int, float, str]:
         source_bonus = 1 if (preferred_source and preferred_source in p.parts) else 0
+        name = p.name.lower()
+        quality_bonus = 2 if ".audio.asr.clean16k" in name else (1 if ".audio.asr.raw16k" in name else 0)
         depth = len(p.parts)
         try:
             mtime = p.stat().st_mtime
         except OSError:
             mtime = 0.0
-        return (source_bonus, depth, mtime, str(p))
+        return (source_bonus, quality_bonus, depth, mtime, str(p))
 
     return sorted(candidates, key=rank, reverse=True)[0]
 
@@ -332,6 +356,7 @@ def compute_batch_stats(
     enriched_files: List[Dict],
     validation_files: List[Dict],
     semantic_judgements: Optional[List[Dict[str, Any]]] = None,
+    manifest_source_by_vid: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
     """Compute aggregate statistics for a batch."""
 
@@ -574,7 +599,10 @@ def compute_batch_stats(
         # Detect "fresh" by comparing request_fingerprint against the current Stage 07
         # enrichment + segment ids, not by file mtimes (Stage 07 revalidate rewrites files
         # even when content is unchanged).
-        s07_req_by_vid_conv = _build_stage07_semantic_request_index(enriched_files)
+        s07_req_by_vid_conv = _build_stage07_semantic_request_index(
+            enriched_files,
+            preferred_source_by_vid=manifest_source_by_vid,
+        )
         fresh: List[Dict[str, Any]] = []
         stale = 0
         stale_missing_or_deleted = 0
@@ -965,6 +993,7 @@ def main() -> None:
     source = args.source if args.source else None
 
     manifest_ids: Set[str] = set()
+    manifest_source_by_vid: Dict[str, str] = {}
     manifest_path: Optional[Path] = None
     if args.manifest:
         manifest_path = Path(args.manifest)
@@ -977,6 +1006,8 @@ def main() -> None:
         if not manifest_ids:
             print(f"{LOG_PREFIX} No video ids found in manifest: {manifest_path}")
             sys.exit(0)
+        for src_name, vid in _load_manifest_entries(manifest_path, source=source):
+            manifest_source_by_vid.setdefault(vid, src_name)
 
     # Load data
     conversations_files = load_conversations_files(source)
@@ -1019,6 +1050,7 @@ def main() -> None:
         enriched_files,
         validation_files,
         semantic_judgements=semantic_judgements,
+        manifest_source_by_vid=manifest_source_by_vid if manifest_source_by_vid else None,
     )
 
     # Compare with prior batches

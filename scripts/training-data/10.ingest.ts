@@ -14,6 +14,8 @@
  *   - Supabase embeddings (via `storeEmbeddings`)
  *   - Ingest state tracking:
  *       data/.ingest_state.json
+ *   - Manifest quarantine decision report:
+ *       data/validation/ingest_quarantine/<manifest>[.<source>].<run>.report.json
  *
  * Use:
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts
@@ -28,6 +30,10 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
+ *
+ * Notes:
+ *   - Manifest ingest uses per-video quarantine for Stage 08/Readiness failures when report detail is available.
+ *   - Default readiness ingest policy is READY-only.
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -65,6 +71,7 @@ type Args = {
   skipTaxonomyGate: boolean
   skipReadinessGate: boolean
   readinessSummary: string | null
+  quarantineReportOut: string | null
   semanticBatchId: string | null
   semanticReportOut: string | null
   semanticMinFresh: number | null
@@ -144,6 +151,9 @@ Gates:
   --skip-taxonomy-gate      Skip Stage 08 taxonomy gate (manifest mode)
   --skip-readiness-gate     Skip readiness summary gate (manifest mode)
   --readiness-summary <p>   Override readiness summary path
+                            (default readiness policy is READY-only)
+  --quarantine-report-out <p>
+                            Override manifest quarantine report output path
 
 Semantic Gate:
   --quality-gate                 Strict semantic policy preset
@@ -182,6 +192,7 @@ function validateKnownArgs(argv: string[]): void {
     "--source",
     "--manifest",
     "--readiness-summary",
+    "--quarantine-report-out",
     "--semantic-batch-id",
     "--semantic-report-out",
     "--semantic-min-fresh",
@@ -234,6 +245,7 @@ function parseArgs(argv: string[]): Args {
   let source: string | null = null
   let manifest: string | null = null
   let readinessSummary: string | null = null
+  let quarantineReportOut: string | null = null
   let semanticBatchId: string | null = null
   let semanticReportOut: string | null = null
   let semanticMinFresh: number | null = null
@@ -260,6 +272,12 @@ function parseArgs(argv: string[]): Args {
     }
     if (arg.startsWith("--readiness-summary=")) {
       readinessSummary = arg.split("=", 2)[1]
+    }
+    if (arg === "--quarantine-report-out" && argv[i + 1]) {
+      quarantineReportOut = argv[++i]
+    }
+    if (arg.startsWith("--quarantine-report-out=")) {
+      quarantineReportOut = arg.split("=", 2)[1]
     }
     if (arg === "--semantic-batch-id" && argv[i + 1]) {
       semanticBatchId = argv[++i]
@@ -309,6 +327,7 @@ function parseArgs(argv: string[]): Args {
     skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
     skipReadinessGate: flags.has("--skip-readiness-gate"),
     readinessSummary,
+    quarantineReportOut,
     semanticBatchId,
     semanticReportOut,
     semanticMinFresh,
@@ -906,6 +925,136 @@ function resolveSemanticGateReportPath(
   return path.join(process.cwd(), "data", "validation", "semantic_gate", `${label}.report.json`)
 }
 
+function compactUtcRunLabel(isoTimestamp: string): string {
+  return isoTimestamp.replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z")
+}
+
+function resolveManifestQuarantineReportPath(
+  manifestPath: string,
+  source: string | null,
+  generatedAt: string,
+  overridePath: string | null
+): string {
+  if (overridePath && overridePath.trim()) {
+    return path.isAbsolute(overridePath) ? overridePath : path.join(process.cwd(), overridePath)
+  }
+  const manifestStem = path.basename(manifestPath, path.extname(manifestPath))
+  const suffix = source ? `.${source}` : ""
+  const runLabel = compactUtcRunLabel(generatedAt)
+  const label = safeReportName(`${manifestStem}${suffix}.${runLabel}`)
+  return path.join(process.cwd(), "data", "validation", "ingest_quarantine", `${label}.report.json`)
+}
+
+async function writeManifestQuarantineReport({
+  manifestPath,
+  source,
+  generatedAt,
+  overridePath,
+  initialVideoIds,
+  postTaxonomyVideoIds,
+  postReadinessVideoIds,
+  sourceByVideo,
+  taxonomyGate,
+  readinessGate,
+  taxonomyGateEnabled,
+  readinessGateEnabled,
+}: {
+  manifestPath: string
+  source: string | null
+  generatedAt: string
+  overridePath: string | null
+  initialVideoIds: Set<string>
+  postTaxonomyVideoIds: Set<string>
+  postReadinessVideoIds: Set<string>
+  sourceByVideo: Map<string, string>
+  taxonomyGate: TaxonomyGateResult | null
+  readinessGate: ReadinessGateResult | null
+  taxonomyGateEnabled: boolean
+  readinessGateEnabled: boolean
+}): Promise<string> {
+  const taxonomyBlocked = taxonomyGate?.blockedReasons ?? new Map<string, string>()
+  const readinessBlocked = new Map<string, ReadinessBlockedItem>()
+  for (const item of readinessGate?.blocked ?? []) {
+    if (!readinessBlocked.has(item.videoId)) {
+      readinessBlocked.set(item.videoId, item)
+    }
+  }
+
+  const blockedIds = Array.from(new Set<string>([
+    ...Array.from(taxonomyBlocked.keys()),
+    ...Array.from(readinessBlocked.keys()),
+  ])).sort((a, b) => a.localeCompare(b))
+
+  const blockedVideos: ManifestQuarantineReportVideo[] = blockedIds.map((vid) => {
+    const readiness = readinessBlocked.get(vid)
+    const taxonomyReason = taxonomyBlocked.get(vid)
+    const blockedBy: string[] = []
+    if (taxonomyReason) blockedBy.push("stage08_taxonomy")
+    if (readiness) blockedBy.push("readiness")
+    return {
+      video_id: vid,
+      source: sourceByVideo.get(vid) ?? readiness?.source ?? null,
+      blocked_by: blockedBy,
+      ...(taxonomyReason
+        ? {
+            stage08: {
+              reason: taxonomyReason,
+              report: taxonomyGate?.reportPath ?? "",
+            },
+          }
+        : {}),
+      ...(readiness
+        ? {
+            readiness: {
+              status: readiness.status,
+              reason: readiness.reason || "not_ingest_ready",
+              source: readiness.source ?? null,
+              report: readiness.report ?? null,
+            },
+          }
+        : {}),
+    }
+  })
+
+  const eligibleVideoIds = Array.from(postReadinessVideoIds).sort((a, b) => a.localeCompare(b))
+
+  const report = {
+    version: 1,
+    generated_at: generatedAt,
+    manifest: manifestPath,
+    source_filter: source ?? null,
+    scope: {
+      initial_videos: initialVideoIds.size,
+      post_taxonomy_videos: postTaxonomyVideoIds.size,
+      post_readiness_videos: postReadinessVideoIds.size,
+      blocked_videos: blockedIds.length,
+      eligible_videos: eligibleVideoIds.length,
+    },
+    stages: {
+      taxonomy: {
+        enabled: taxonomyGateEnabled,
+        report: taxonomyGate?.reportPath ?? null,
+        status: taxonomyGate?.status ?? null,
+        reason: taxonomyGate?.reason || null,
+        blocked_videos: taxonomyGate?.blockedVideoIds.size ?? 0,
+      },
+      readiness: {
+        enabled: readinessGateEnabled,
+        summary: readinessGate?.summaryPath ?? null,
+        blocked_videos: readinessGate?.blocked.length ?? 0,
+      },
+    },
+    blocked_video_ids: blockedIds,
+    eligible_video_ids: eligibleVideoIds,
+    blocked_videos: blockedVideos,
+  }
+
+  const reportPath = resolveManifestQuarantineReportPath(manifestPath, source, generatedAt, overridePath)
+  await fsp.mkdir(path.dirname(reportPath), { recursive: true })
+  await fsp.writeFile(reportPath, JSON.stringify(report, null, 2) + "\n", "utf-8")
+  return reportPath
+}
+
 function semanticGateRequested(args: Args): boolean {
   return (
     args.semanticMinFresh !== null
@@ -916,14 +1065,53 @@ function semanticGateRequested(args: Args): boolean {
   )
 }
 
+type ReadinessBlockedItem = {
+  videoId: string
+  status: "READY" | "REVIEW" | "BLOCKED"
+  reason: string
+  source?: string | null
+  report?: string | null
+}
+
+type ReadinessGateResult = {
+  eligibleVideoIds: Set<string>
+  blocked: ReadinessBlockedItem[]
+  summaryPath: string
+}
+
+type TaxonomyGateResult = {
+  blockedVideoIds: Set<string>
+  blockedReasons: Map<string, string>
+  reportPath: string
+  status: "PASS" | "WARNING" | "FAIL"
+  reason: string
+}
+
+type ManifestQuarantineReportVideo = {
+  video_id: string
+  source: string | null
+  blocked_by: string[]
+  stage08?: {
+    reason: string
+    report: string
+  }
+  readiness?: {
+    status: "READY" | "REVIEW" | "BLOCKED"
+    reason: string
+    source: string | null
+    report: string | null
+  }
+}
+
 function checkReadinessGate(
   manifestPath: string,
   expectedVideoIds: Set<string>,
   source: string | null,
   readinessSummaryOverride: string | null
-): void {
+) : ReadinessGateResult {
+  const emptyResult: ReadinessGateResult = { eligibleVideoIds: new Set<string>(), blocked: [], summaryPath: "" }
   if (expectedVideoIds.size <= 0) {
-    return
+    return emptyResult
   }
 
   const summaryPath = resolveReadinessSummaryPath(manifestPath, source, readinessSummaryOverride)
@@ -1012,16 +1200,28 @@ function checkReadinessGate(
         console.error(`❌ Readiness summary scope.video_count must be integer >= 0 (${summaryPath})`)
         process.exit(1)
       }
-      if (scopeVideoCount > 0 && scopeVideoCount !== expectedVideoIds.size) {
+      if (scopeVideoCount > 0 && scopeVideoCount < expectedVideoIds.size) {
         console.error(
-          `❌ Readiness summary scope.video_count mismatch: expected ${expectedVideoIds.size}, got ${scopeVideoCount} (${summaryPath})`
+          `❌ Readiness summary scope.video_count mismatch: expected at least ${expectedVideoIds.size}, got ${scopeVideoCount} (${summaryPath})`
         )
         process.exit(1)
+      }
+      if (scopeVideoCount > expectedVideoIds.size) {
+        console.warn(
+          `⚠️  Readiness summary scope.video_count=${scopeVideoCount} is larger than current ingest-eligible set=${expectedVideoIds.size} `
+          + "(likely due to upstream per-video quarantine)."
+        )
       }
     }
   }
 
-  const byVideo = new Map<string, { status: string; readyForIngest: boolean; reason: string }>()
+  const byVideo = new Map<string, {
+    status: "READY" | "REVIEW" | "BLOCKED"
+    readyForIngest: boolean
+    reason: string
+    source: string | null
+    report: string | null
+  }>()
   for (const item of (data as any).videos as unknown[]) {
     if (!isObject(item)) {
       console.error(`❌ Readiness summary contains non-object video entry: ${summaryPath}`)
@@ -1036,21 +1236,48 @@ function checkReadinessGate(
       console.error(`❌ Readiness summary contains duplicate video_id=${rawVid} (${summaryPath})`)
       process.exit(1)
     }
-    const status = String(item.status || "")
-    if (status !== "READY" && status !== "REVIEW" && status !== "BLOCKED") {
-      console.error(`❌ Readiness summary contains invalid status='${status}' for video_id=${rawVid} (${summaryPath})`)
+    const statusRaw = String(item.status || "")
+    let status: "READY" | "REVIEW" | "BLOCKED"
+    if (statusRaw === "READY") {
+      status = "READY"
+    } else if (statusRaw === "REVIEW") {
+      status = "REVIEW"
+    } else if (statusRaw === "BLOCKED") {
+      status = "BLOCKED"
+    } else {
+      console.error(`❌ Readiness summary contains invalid status='${statusRaw}' for video_id=${rawVid} (${summaryPath})`)
       process.exit(1)
     }
     const readyRaw = item.ready_for_ingest
     const readyForIngest = typeof readyRaw === "boolean"
       ? readyRaw
-      : (allowIngestStatuses ? allowIngestStatuses.has(status) : status !== "BLOCKED")
+      : (allowIngestStatuses ? allowIngestStatuses.has(status) : status === "READY")
     const reason = typeof item.reason_code === "string" ? item.reason_code : ""
-    byVideo.set(rawVid, { status, readyForIngest, reason })
+
+    let sourceLabel: string | null = null
+    const sourcesRaw = item.sources
+    if (Array.isArray(sourcesRaw)) {
+      const firstSource = sourcesRaw.find((raw: unknown) => typeof raw === "string" && raw.trim())
+      if (typeof firstSource === "string" && firstSource.trim()) {
+        sourceLabel = firstSource.trim()
+      }
+    }
+
+    let reportPath: string | null = null
+    const reportsRaw = item.reports
+    if (Array.isArray(reportsRaw)) {
+      const firstReport = reportsRaw.find((raw: unknown) => typeof raw === "string" && raw.trim())
+      if (typeof firstReport === "string" && firstReport.trim()) {
+        reportPath = firstReport.trim()
+      }
+    }
+
+    byVideo.set(rawVid, { status, readyForIngest, reason, source: sourceLabel, report: reportPath })
   }
 
+  const eligibleVideoIds = new Set<string>()
   const missing: string[] = []
-  const blocked: string[] = []
+  const blocked: ReadinessBlockedItem[] = []
   const blockedByStatus: Record<"READY" | "REVIEW" | "BLOCKED", number> = { READY: 0, REVIEW: 0, BLOCKED: 0 }
   let reviewCount = 0
 
@@ -1065,8 +1292,15 @@ function checkReadinessGate(
     }
     if (item.status === "BLOCKED" || item.readyForIngest === false) {
       blockedByStatus[item.status] += 1
-      const reasonSuffix = item.reason ? `:${item.reason}` : ""
-      blocked.push(`${vid}:${item.status}${reasonSuffix}`)
+      blocked.push({
+        videoId: vid,
+        status: item.status,
+        reason: item.reason,
+        source: item.source,
+        report: item.report,
+      })
+    } else {
+      eligibleVideoIds.add(vid)
     }
   }
 
@@ -1081,23 +1315,42 @@ function checkReadinessGate(
   }
 
   if (blocked.length > 0) {
-    const sample = blocked.slice(0, 8).join(", ")
+    const sample = blocked
+      .slice(0, 8)
+      .map((b) => `${b.videoId}:${b.status}${b.reason ? `:${b.reason}` : ""}`)
+      .join(", ")
     const suffix = blocked.length > 8 ? ", ..." : ""
     const policyLabel = allowIngestStatuses
       ? `[${Array.from(allowIngestStatuses).sort((a, b) => a.localeCompare(b)).join(", ")}]`
-      : "[READY, REVIEW] (default)"
+      : "[READY] (default)"
     const breakdown = `READY=${blockedByStatus.READY}, REVIEW=${blockedByStatus.REVIEW}, BLOCKED=${blockedByStatus.BLOCKED}`
-    console.error(
-      `❌ Readiness gate blocked ingest: ${blocked.length} video(s) are not ingest-ready `
+    console.warn(
+      `⚠️  Readiness gate quarantined ${blocked.length} video(s): `
       + `under allow_ingest_statuses=${policyLabel} (${breakdown}; e.g. ${sample}${suffix}).`
     )
-    process.exit(1)
+    console.warn(`   Ingest scope reduced to ${eligibleVideoIds.size}/${expectedVideoIds.size} READY video(s).`)
+    console.warn(`   Readiness summary: ${summaryPath}`)
+    for (const row of blocked.slice(0, 12)) {
+      const details = [
+        row.videoId,
+        `status=${row.status}`,
+        `reason=${row.reason || "not_ingest_ready"}`,
+      ]
+      if (row.source) details.push(`source=${row.source}`)
+      if (row.report) details.push(`report=${row.report}`)
+      console.warn(`   - ${details.join(" ")}`)
+    }
+    if (blocked.length > 12) {
+      console.warn(`   ... (${blocked.length - 12} more blocked video(s))`)
+    }
   }
 
-  const reviewAllowed = allowIngestStatuses ? allowIngestStatuses.has("REVIEW") : true
+  const reviewAllowed = allowIngestStatuses ? allowIngestStatuses.has("REVIEW") : false
   if (reviewCount > 0 && reviewAllowed) {
     console.warn(`⚠️  Readiness gate: ${reviewCount} video(s) are REVIEW (ingest allowed).`)
   }
+
+  return { eligibleVideoIds, blocked, summaryPath }
 }
 
 function checkSemanticGate(
@@ -1300,10 +1553,37 @@ function checkSemanticGate(
   console.log(`Semantic gate report: ${reportPath}`)
 }
 
-function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number): void {
+function checkTaxonomyGate(
+  manifestPath: string,
+  source: string | null,
+  expectedVideoIds: Set<string>
+): TaxonomyGateResult {
+  const emptyResult: TaxonomyGateResult = {
+    blockedVideoIds: new Set<string>(),
+    blockedReasons: new Map<string, string>(),
+    reportPath: "",
+    status: "PASS",
+    reason: "",
+  }
+  if (expectedVideoIds.size <= 0) {
+    return emptyResult
+  }
+
+  const expectedManifestVideos = expectedVideoIds.size
   const stem = path.basename(manifestPath, path.extname(manifestPath))
-  const expectedSource = `manifest:${path.basename(manifestPath)}`
-  const reportPath = path.join(
+  const manifestBase = path.basename(manifestPath)
+  const expectedSource = source
+    ? `manifest:${manifestBase}|source:${source}`
+    : `manifest:${manifestBase}`
+  const legacyExpectedSource = `manifest:${manifestBase}`
+  const reportStem = source ? `${stem}.${source}` : stem
+  let reportPath = path.join(
+    process.cwd(),
+    "data",
+    "08.taxonomy-validation",
+    `${safeReportName(reportStem)}.report.json`
+  )
+  const legacyReportPath = path.join(
     process.cwd(),
     "data",
     "08.taxonomy-validation",
@@ -1311,9 +1591,16 @@ function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number)
   )
 
   if (!fs.existsSync(reportPath)) {
-    console.error(`❌ Missing Stage 08 report: ${reportPath}`)
-    console.error(`   Run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
-    process.exit(1)
+    if (source && fs.existsSync(legacyReportPath)) {
+      console.warn(
+        `⚠️  Using legacy Stage 08 report path without source suffix: ${legacyReportPath}`
+      )
+      reportPath = legacyReportPath
+    } else {
+      console.error(`❌ Missing Stage 08 report: ${reportPath}`)
+      console.error(`   Run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+      process.exit(1)
+    }
   }
 
   let data: unknown
@@ -1335,10 +1622,47 @@ function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number)
     process.exit(1)
   }
 
-  if (data.source !== expectedSource) {
-    console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${String(data.source)}'`)
-    console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
-    process.exit(1)
+  const reportSource = String(data.source ?? "")
+  if (reportSource !== expectedSource) {
+    if (!(source && reportSource === legacyExpectedSource)) {
+      console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${reportSource}'`)
+      console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+      process.exit(1)
+    }
+  }
+
+  const scope = isObject(data.scope) ? (data.scope as Record<string, unknown>) : null
+  if (scope) {
+    const scopeManifest = typeof scope.manifest === "string" ? path.basename(scope.manifest) : null
+    if (scopeManifest && scopeManifest !== manifestBase) {
+      console.error(
+        `❌ Stage 08 report scope.manifest mismatch: expected '${manifestBase}', found '${scopeManifest}' (${reportPath})`
+      )
+      process.exit(1)
+    }
+    const scopeSource = typeof scope.source_filter === "string" ? scope.source_filter.trim() : ""
+    if (source) {
+      if (scopeSource && scopeSource !== source) {
+        console.error(
+          `❌ Stage 08 report scope.source_filter mismatch: expected '${source}', found '${scopeSource}' (${reportPath})`
+        )
+        process.exit(1)
+      }
+    } else if (scopeSource) {
+      console.error(
+        `❌ Stage 08 report is source-scoped ('${scopeSource}') but ingest is manifest-wide (${reportPath})`
+      )
+      process.exit(1)
+    }
+    const scopeManifestVideos = scope.manifest_videos
+    if (typeof scopeManifestVideos === "number" && Number.isFinite(scopeManifestVideos) && scopeManifestVideos > 0) {
+      if (scopeManifestVideos !== expectedManifestVideos) {
+        console.error(
+          `❌ Stage 08 report scope.manifest_videos mismatch: expected ${expectedManifestVideos}, got ${scopeManifestVideos} (${reportPath})`
+        )
+        process.exit(1)
+      }
+    }
   }
 
   const validation = data.validation
@@ -1365,10 +1689,6 @@ function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number)
     console.error(`❌ Stage 08 report has invalid details.files_unreadable=${String(filesUnreadable)} (${reportPath})`)
     process.exit(1)
   }
-  if (filesUnreadable > 0) {
-    console.error(`❌ Stage 08 report indicates unreadable enriched files (${filesUnreadable}); refusing ingest.`)
-    process.exit(1)
-  }
 
   const manifestCoverage = isObject(details) ? details.manifest_coverage : undefined
   if (!isObject(manifestCoverage)) {
@@ -1382,13 +1702,10 @@ function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number)
     typeof manifestVideos !== "number"
     || !Number.isFinite(manifestVideos)
     || manifestVideos <= 0
-    || typeof expectedManifestVideos !== "number"
-    || !Number.isFinite(expectedManifestVideos)
-    || expectedManifestVideos <= 0
     || manifestVideos !== expectedManifestVideos
     || typeof matchedVideoIds !== "number"
     || !Number.isFinite(matchedVideoIds)
-    || matchedVideoIds <= 0
+    || matchedVideoIds < 0
     || typeof missingVideos !== "number"
     || !Number.isFinite(missingVideos)
     || missingVideos < 0
@@ -1399,21 +1716,100 @@ function checkTaxonomyGate(manifestPath: string, expectedManifestVideos: number)
     )
     process.exit(1)
   }
-  if (missingVideos > 0) {
-    console.error(`❌ Stage 08 report indicates incomplete manifest coverage (missing_videos=${missingVideos}).`)
-    console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+
+  const blockedReasons = new Map<string, string>()
+  const addBlocked = (videoId: string, reasonCode: string) => {
+    if (!isValidVideoId(videoId)) return
+    if (!expectedVideoIds.has(videoId)) return
+    if (!blockedReasons.has(videoId)) {
+      blockedReasons.set(videoId, reasonCode)
+    }
+  }
+
+  const missingVideoIdsRaw = manifestCoverage.missing_video_ids
+  if (Array.isArray(missingVideoIdsRaw)) {
+    for (const raw of missingVideoIdsRaw) {
+      if (typeof raw !== "string") continue
+      addBlocked(raw.trim(), "missing_stage07_enriched")
+    }
+  } else if (missingVideos > 0) {
+    console.error(
+      `❌ Stage 08 report missing details.manifest_coverage.missing_video_ids while missing_videos=${missingVideos} (${reportPath})`
+    )
     process.exit(1)
   }
 
-  if (status === "FAIL") {
+  const unreadableVideoIdsRaw = isObject(details) ? details.unreadable_video_ids : undefined
+  if (Array.isArray(unreadableVideoIdsRaw)) {
+    for (const raw of unreadableVideoIdsRaw) {
+      if (typeof raw !== "string") continue
+      addBlocked(raw.trim(), "unreadable_stage07_enriched")
+    }
+  } else if (filesUnreadable > 0) {
+    console.error(
+      `❌ Stage 08 report missing details.unreadable_video_ids while files_unreadable=${filesUnreadable} (${reportPath})`
+    )
+    process.exit(1)
+  }
+
+  const videoResultsRaw = validation.video_results
+  let sawPerVideoResults = false
+  if (Array.isArray(videoResultsRaw)) {
+    sawPerVideoResults = true
+    for (const row of videoResultsRaw) {
+      if (!isObject(row)) continue
+      const rowVid = typeof row.video_id === "string" ? row.video_id.trim() : ""
+      if (!isValidVideoId(rowVid) || !expectedVideoIds.has(rowVid)) continue
+      const rowStatus = typeof row.status === "string" ? row.status.trim().toUpperCase() : ""
+      const rowReason = typeof row.reason === "string" ? row.reason.trim() : ""
+      if (rowStatus === "FAIL") {
+        addBlocked(rowVid, rowReason || "stage08_video_fail")
+      }
+    }
+  }
+
+  if (status === "FAIL" && !sawPerVideoResults && blockedReasons.size === 0) {
     console.error(`❌ Stage 08 taxonomy gate FAIL (${reportPath})`)
     if (typeof reason === "string" && reason.trim()) console.error(`   Reason: ${reason.trim()}`)
+    console.error("   This report does not expose per-video failures; cannot quarantine safely.")
     process.exit(1)
+  }
+
+  if (blockedReasons.size > 0) {
+    const blockedRows = Array.from(blockedReasons.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+    const blockedLabels = blockedRows.map(([vid, why]) => `${vid}:${why || "taxonomy_fail"}`)
+    const sample = blockedLabels.slice(0, 10).join(", ")
+    const suffix = blockedLabels.length > 10 ? ", ..." : ""
+    console.warn(
+      `⚠️  Stage 08 quarantine: ${blockedLabels.length} video(s) blocked by taxonomy gate `
+      + `(e.g. ${sample}${suffix}).`
+    )
+    console.warn(`   Report: ${reportPath}`)
+    for (const [vid, why] of blockedRows.slice(0, 12)) {
+      console.warn(`   - ${vid} reason=${why || "taxonomy_fail"} report=${reportPath}`)
+    }
+    if (blockedRows.length > 12) {
+      console.warn(`   ... (${blockedRows.length - 12} more blocked video(s))`)
+    }
   }
 
   if (status === "WARNING") {
     console.warn(`⚠️  Stage 08 taxonomy gate WARNING (${reportPath})`)
     if (typeof reason === "string" && reason.trim()) console.warn(`   Reason: ${reason.trim()}`)
+  } else if (status === "PASS") {
+    console.log(`✅ Stage 08 taxonomy gate PASS (${reportPath})`)
+  } else if (status === "FAIL") {
+    console.warn(
+      `⚠️  Stage 08 taxonomy gate FAIL at manifest level, but per-video quarantine was derived from report details.`
+    )
+  }
+
+  return {
+    blockedVideoIds: new Set<string>(blockedReasons.keys()),
+    blockedReasons,
+    reportPath,
+    status,
+    reason: typeof reason === "string" ? reason.trim() : "",
   }
 }
 
@@ -1509,11 +1905,21 @@ async function main() {
 
   const chunksDir = path.join(process.cwd(), "data", "09.chunks")
   const statePath = path.join(process.cwd(), "data", ".ingest_state.json")
+  const runStartedAt = new Date().toISOString()
 
   const state = await loadState(statePath)
 
   let manifestAllowList: Map<string, Set<string>> | null = null
+  let eligibleManifestVideoIds: Set<string> | null = null
   let expectedManifestVideos = 0
+  let manifestScopeVideoIds: Set<string> | null = null
+  let postTaxonomyVideoIds: Set<string> | null = null
+  let postReadinessVideoIds: Set<string> | null = null
+  let manifestSourceByVideo: Map<string, string> | null = null
+  let taxonomyGateResult: TaxonomyGateResult | null = null
+  let readinessGateResult: ReadinessGateResult | null = null
+  let taxonomyGateExecuted = false
+  let readinessGateExecuted = false
   if (args.manifest) {
     try {
       manifestAllowList = loadManifestAllowList(args.manifest)
@@ -1541,7 +1947,7 @@ async function main() {
       }
     }
 
-    const expectedVideoIds = new Set<string>()
+    let expectedVideoIds = new Set<string>()
     const expectedSourceByVideo = new Map<string, string>()
     if (args.source) {
       for (const vid of manifestAllowList.get(args.source) ?? []) {
@@ -1558,14 +1964,39 @@ async function main() {
         }
       }
     }
+    manifestScopeVideoIds = new Set(expectedVideoIds)
+    manifestSourceByVideo = new Map(expectedSourceByVideo)
+    postTaxonomyVideoIds = new Set(expectedVideoIds)
+    postReadinessVideoIds = new Set(expectedVideoIds)
 
     if (!args.skipTaxonomyGate) {
-      checkTaxonomyGate(args.manifest, expectedManifestVideos)
+      taxonomyGateExecuted = true
+      taxonomyGateResult = checkTaxonomyGate(args.manifest, args.source, expectedVideoIds)
+      if (taxonomyGateResult.blockedVideoIds.size > 0) {
+        const before = expectedVideoIds.size
+        const filtered = new Set<string>()
+        for (const vid of expectedVideoIds) {
+          if (!taxonomyGateResult.blockedVideoIds.has(vid)) {
+            filtered.add(vid)
+          }
+        }
+        expectedVideoIds = filtered
+        console.warn(
+          `⚠️  Taxonomy quarantine applied: ${taxonomyGateResult.blockedVideoIds.size} blocked, `
+          + `${expectedVideoIds.size}/${before} remain ingest-eligible.`
+        )
+      }
+      postTaxonomyVideoIds = new Set(expectedVideoIds)
     }
-    if (!args.skipReadinessGate) {
-      checkReadinessGate(args.manifest, expectedVideoIds, args.source, args.readinessSummary)
+
+    if (expectedVideoIds.size > 0 && !args.skipReadinessGate) {
+      readinessGateExecuted = true
+      readinessGateResult = checkReadinessGate(args.manifest, expectedVideoIds, args.source, args.readinessSummary)
+      expectedVideoIds = readinessGateResult.eligibleVideoIds
+      postReadinessVideoIds = new Set(expectedVideoIds)
     }
-    if (semanticGateRequested(args)) {
+
+    if (expectedVideoIds.size > 0 && semanticGateRequested(args)) {
       const semanticBatchId = (args.semanticBatchId && args.semanticBatchId.trim())
         ? args.semanticBatchId.trim()
         : defaultSemanticBatchId(args.manifest)
@@ -1578,6 +2009,41 @@ async function main() {
         semanticMaxHallucinationRate: args.semanticMaxHallucinationRate,
         semanticFailOnStale: args.semanticFailOnStale,
       })
+    }
+    eligibleManifestVideoIds = new Set(expectedVideoIds)
+  }
+
+  let quarantineReportPath: string | null = null
+  if (
+    args.manifest
+    && manifestScopeVideoIds
+    && postTaxonomyVideoIds
+    && postReadinessVideoIds
+    && manifestSourceByVideo
+  ) {
+    quarantineReportPath = await writeManifestQuarantineReport({
+      manifestPath: args.manifest,
+      source: args.source,
+      generatedAt: runStartedAt,
+      overridePath: args.quarantineReportOut,
+      initialVideoIds: manifestScopeVideoIds,
+      postTaxonomyVideoIds,
+      postReadinessVideoIds,
+      sourceByVideo: manifestSourceByVideo,
+      taxonomyGate: taxonomyGateResult,
+      readinessGate: readinessGateResult,
+      taxonomyGateEnabled: taxonomyGateExecuted,
+      readinessGateEnabled: readinessGateExecuted,
+    })
+    console.log(`Quarantine report: ${quarantineReportPath}`)
+
+    if (eligibleManifestVideoIds && eligibleManifestVideoIds.size <= 0) {
+      if (!args.skipTaxonomyGate && postTaxonomyVideoIds.size <= 0) {
+        console.error("❌ All manifest videos were blocked by Stage 08 taxonomy quarantine.")
+      } else {
+        console.error("❌ All manifest videos were blocked by readiness policy.")
+      }
+      process.exit(1)
     }
   }
 
@@ -1592,6 +2058,9 @@ async function main() {
       const ids = manifestAllowList.get(src)
       if (!ids) continue
       for (const vid of Array.from(ids).sort((a, b) => a.localeCompare(b))) {
+        if (eligibleManifestVideoIds && !eligibleManifestVideoIds.has(vid)) {
+          continue
+        }
         const candidate = path.join(chunksDir, src, `${vid}.chunks.json`)
         if (fs.existsSync(candidate)) {
           chunkFiles.push(candidate)

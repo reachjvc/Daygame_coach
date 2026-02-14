@@ -121,7 +121,7 @@ TECHNIQUE_TAXONOMY = {
     "logistics_check": "Asking about her schedule/availability (does not start close by itself)",
 }
 
-# 22 topics across 5 categories
+# Topics across core interaction + coaching context categories
 TOPIC_TAXONOMY = {
     # Personal (8)
     "name": "Her name or introductions",
@@ -154,6 +154,13 @@ TOPIC_TAXONOMY = {
     "location": "The current place, area, city",
     "humor": "Jokes, banter, playful exchanges",
     "flirting": "Romantic/sexual tension, attraction",
+
+    # Recurring taxonomy additions from validation hardening
+    "tattoos": "Discussion of tattoos, their meaning, or appearance",
+    "language_learning": "Learning, practicing, or discussing languages",
+    "language_barrier": "Communication friction due to limited shared language",
+    "breakthrough_moment": "A pivotal realization or turning point in confidence or progress",
+    "coaching_promotion": "Coach promoting programs, workshops, offers, or calls-to-action",
 }
 
 LOG_PREFIX = "[07.content]"
@@ -445,6 +452,44 @@ def normalize_enrichments(
                     )
             e["topics_discussed"] = normalized_topics
 
+        # Promote previously-unlisted topics that are now in taxonomy.
+        topics_discussed = e.get("topics_discussed")
+        if not isinstance(topics_discussed, list):
+            topics_discussed = []
+            e["topics_discussed"] = topics_discussed
+        promoted_topics = 0
+        kept_unlisted_topics: List[str] = []
+        for raw_topic in unlisted_topics:
+            if not isinstance(raw_topic, str):
+                continue
+            raw_text = raw_topic.strip()
+            if not raw_text:
+                continue
+            raw_name = raw_text.split(":", 1)[0].strip()
+            canon = topic_canon.get(raw_name.lower())
+            if canon:
+                topics_discussed.append(canon)
+                promoted_topics += 1
+            else:
+                kept_unlisted_topics.append(raw_text)
+        if promoted_topics:
+            # Preserve order while removing duplicates after promotion.
+            deduped_topics: List[str] = []
+            seen_topics: Set[str] = set()
+            for t in topics_discussed:
+                if not isinstance(t, str):
+                    continue
+                name = t.strip()
+                if not name or name in seen_topics:
+                    continue
+                seen_topics.add(name)
+                deduped_topics.append(name)
+            e["topics_discussed"] = deduped_topics
+            unlisted["topics"] = kept_unlisted_topics
+            repairs.append(
+                f"enrichment {i}: promoted {promoted_topics} unlisted topic(s) into taxonomy"
+            )
+
         def normalize_technique_list(field_name: str) -> None:
             items = e.get(field_name)
             if items is None:
@@ -490,6 +535,105 @@ def normalize_enrichments(
         if e.get("type") != "approach":
             continue
 
+        # Deterministic close-technique fixes from transcript cues:
+        # - downgrade unsupported number/instagram close tags when the cited segment
+        #   is actually a logistics/bounce invite.
+        # - recover missed target-initiated contact closes (common in failed/chaotic clips).
+        if conversations is not None:
+            conv_id = e.get("conversation_id")
+            if isinstance(conv_id, int) and conv_id in conversations:
+                conv_segments = [
+                    s for s in (conversations.get(conv_id) or [])
+                    if isinstance(s, dict)
+                ]
+                conv_seg_by_id: Dict[int, Dict[str, Any]] = {
+                    int(s.get("id")): s
+                    for s in conv_segments
+                    if isinstance(s.get("id"), int)
+                }
+
+                contact_cue_re = re.compile(
+                    r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
+                    r"|\btext me\b"
+                    r"|\bcall me\b",
+                    re.IGNORECASE,
+                )
+                instagram_cue_re = re.compile(r"\binstagram(?:s)?\b|\big\b", re.IGNORECASE)
+                invite_cue_re = re.compile(
+                    r"\b(grab|get|go for)\b (?:a |some )?(?:drink|coffee|tea|water)\b"
+                    r"|\bhang out\b"
+                    r"|\bmeet up\b"
+                    r"|\bgo (?:out|somewhere)\b"
+                    r"|\bwalk around\b"
+                    r"|\bcome with (?:me|us)\b"
+                    r"|\bjoin (?:me|us)\b"
+                    r"|\bwalk with (?:me|us)\b"
+                    r"|\blet'?s (?:grab|get|go|hang|meet|walk)\b"
+                    r"|\bwhy (?:don't|dont) we\b"
+                    r"|\buber you back\b",
+                    re.IGNORECASE,
+                )
+                close_contact_techs = {"number_close", "instagram_close"}
+
+                def _nearby_text(seg_id: int) -> str:
+                    bits: List[str] = []
+                    for off in (-1, 0, 1):
+                        s = conv_seg_by_id.get(seg_id + off)
+                        if isinstance(s, dict):
+                            bits.append(str(s.get("text") or ""))
+                    return " ".join(bits)
+
+                techniques_used = e.get("techniques_used")
+                if not isinstance(techniques_used, list):
+                    techniques_used = []
+                    e["techniques_used"] = techniques_used
+                if isinstance(techniques_used, list):
+                    for t in techniques_used:
+                        if not isinstance(t, dict):
+                            continue
+                        name = t.get("technique")
+                        seg_id = t.get("segment")
+                        if name not in close_contact_techs or not isinstance(seg_id, int):
+                            continue
+                        ctx = _nearby_text(seg_id)
+                        if contact_cue_re.search(ctx):
+                            continue
+
+                        seg_text = str((conv_seg_by_id.get(seg_id) or {}).get("text") or "")
+                        if invite_cue_re.search(seg_text):
+                            t["technique"] = "bounce"
+                            repairs.append(
+                                f"conv {conv_id}: downgraded unsupported {name} -> bounce at seg {seg_id}"
+                            )
+                        else:
+                            t["technique"] = "soft_close"
+                            repairs.append(
+                                f"conv {conv_id}: downgraded unsupported {name} -> soft_close at seg {seg_id}"
+                            )
+
+                    has_contact_close_tech = any(
+                        isinstance(t, dict) and t.get("technique") in close_contact_techs
+                        for t in techniques_used
+                    )
+                    if not has_contact_close_tech:
+                        for s in conv_segments:
+                            sid = s.get("id")
+                            text = str(s.get("text") or "")
+                            if not isinstance(sid, int) or not text.strip():
+                                continue
+                            if not contact_cue_re.search(text):
+                                continue
+                            inferred = "instagram_close" if instagram_cue_re.search(text) else "number_close"
+                            techniques_used.append({
+                                "technique": inferred,
+                                "segment": sid,
+                                "example": text.strip(),
+                            })
+                            repairs.append(
+                                f"conv {conv_id}: added missing {inferred} from transcript cue at seg {sid}"
+                            )
+                            break
+
         # If the description claims a contact close (number/Instagram) but we can't find any
         # contact-exchange evidence in the transcript, soften the wording to avoid misleading summaries.
         if conversations is not None:
@@ -497,6 +641,12 @@ def normalize_enrichments(
             if isinstance(conv_id, int) and conv_id in conversations:
                 desc = e.get("description")
                 if isinstance(desc, str) and desc.strip():
+                    contact_cue_re = re.compile(
+                        r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
+                        r"|\btext me\b"
+                        r"|\bcall me\b",
+                        re.IGNORECASE,
+                    )
                     close_claim_re = re.compile(
                         r"\b("
                         r"number close(?:s)?|instagram close(?:s)?|ig close(?:s)?|"
@@ -509,14 +659,6 @@ def normalize_enrichments(
                             isinstance(t, dict)
                             and t.get("technique") in ("number_close", "instagram_close")
                             for t in (e.get("techniques_used", []) or [])
-                        )
-                        # Heuristic: detect explicit contact exchange / close logistics cues.
-                        # Avoid overly-broad tokens like "call" (e.g. "call an Uber").
-                        contact_cue_re = re.compile(
-                            r"\b(number|phone|instagram|\big\b|whatsapp|snap(?:chat)?)\b"
-                            r"|\btext me\b"
-                            r"|\bcall me\b",
-                            re.IGNORECASE,
                         )
                         conv_has_contact_cue = any(
                             contact_cue_re.search((s.get("text") or ""))
@@ -543,6 +685,26 @@ def normalize_enrichments(
                                 e["description"] = new_desc
                                 repairs.append(
                                     f"conv {conv_id}: softened unsupported contact-close claim in description"
+                                )
+
+                    # If summary claims there was "no close" but transcript has explicit
+                    # contact-close evidence, make wording outcome-agnostic and factually aligned.
+                    desc_now = e.get("description")
+                    if not isinstance(desc_now, str):
+                        desc_now = desc
+                    no_close_re = re.compile(r"\bno close\b", re.IGNORECASE)
+                    if no_close_re.search(desc_now):
+                        conv_has_contact_cue = any(
+                            contact_cue_re.search((s.get("text") or ""))
+                            for s in (conversations.get(conv_id) or [])
+                            if isinstance(s, dict)
+                        )
+                        if conv_has_contact_cue:
+                            new_desc = no_close_re.sub("contact close attempt", desc_now)
+                            if new_desc != desc_now:
+                                e["description"] = new_desc
+                                repairs.append(
+                                    f"conv {conv_id}: normalized 'no close' phrasing to contact close attempt"
                                 )
 
                 # If we already softened a claim previously, ensure we don't imply "success" via phrasing.
@@ -666,32 +828,65 @@ def normalize_enrichments(
                     # Prefer the closest match to the original segment id to avoid surprising jumps.
                     return sorted(matches, key=lambda sid: (abs(sid - prefer_near), sid))[0]
 
+                conv_seg_ids_set: Set[int] = {
+                    int(s.get("id"))
+                    for s in conv_segs
+                    if isinstance(s.get("id"), int)
+                }
+                normalized_techniques: List[Dict[str, Any]] = []
                 for tech in e.get("techniques_used", []) or []:
                     if not isinstance(tech, dict):
                         continue
+
                     seg_id = tech.get("segment")
                     example = tech.get("example")
-                    if not isinstance(seg_id, int) or not isinstance(example, str) or not example.strip():
-                        continue
+                    if isinstance(seg_id, int) and isinstance(example, str) and example.strip():
+                        new_seg_id = _find_evidence_anchor_segment_id(example, seg_id)
+                        if new_seg_id is not None and new_seg_id != seg_id:
+                            old_seg_id = seg_id
+                            tech["segment"] = new_seg_id
+                            seg_id = new_seg_id
+                            repairs.append(
+                                f"conv {conv_id}: re-anchored technique '{tech.get('technique', '?')}' "
+                                f"segment {old_seg_id} -> {new_seg_id} (evidence match)"
+                            )
 
-                    new_seg_id = _find_evidence_anchor_segment_id(example, seg_id)
-                    if new_seg_id is None:
-                        continue
-
-                    if new_seg_id != seg_id:
-                        old_seg_id = seg_id
-                        tech["segment"] = new_seg_id
-                        repairs.append(
-                            f"conv {conv_id}: re-anchored technique '{tech.get('technique', '?')}' "
-                            f"segment {old_seg_id} -> {new_seg_id} (evidence match)"
-                        )
-
-                    # Prefer storing the exact transcript line for the referenced segment as the
-                    # example, so evidence is segment-aligned (and we preserve the ability to flag
-                    # hallucinated examples).
                     effective_seg_id = tech.get("segment")
                     if isinstance(effective_seg_id, int):
+                        # If a technique still points outside this conversation after re-anchoring,
+                        # drop it to avoid cross-conversation leakage/hallucinated evidence.
+                        if effective_seg_id not in conv_seg_ids_set:
+                            repairs.append(
+                                f"conv {conv_id}: dropped technique '{tech.get('technique', '?')}' "
+                                f"(segment {effective_seg_id} not in conversation)"
+                            )
+                            continue
+
                         seg = seg_by_id.get(effective_seg_id) if seg_by_id else None
+                        role = ((seg or {}).get("speaker_role") or "").lower() if isinstance(seg, dict) else ""
+                        target_allowed_techniques = {
+                            "number_close",
+                            "instagram_close",
+                            "soft_close",
+                            "assumptive_close",
+                            "instant_date",
+                            "bounce",
+                            "time_bridge",
+                            "logistics_check",
+                        }
+                        tech_name = str(tech.get("technique") or "")
+                        if role and role not in ("coach", "student"):
+                            if role == "target" and tech_name in target_allowed_techniques:
+                                pass
+                            else:
+                                repairs.append(
+                                    f"conv {conv_id}: dropped technique '{tech.get('technique', '?')}' "
+                                    f"(segment {effective_seg_id} speaker_role={role})"
+                                )
+                                continue
+                        # Prefer storing the exact transcript line for the referenced segment as the
+                        # example, so evidence is segment-aligned (and we preserve the ability to flag
+                        # hallucinated examples).
                         seg_text = (seg.get("text") if isinstance(seg, dict) else "") or ""
                         seg_text = seg_text.strip()
                         if seg_text:
@@ -706,6 +901,11 @@ def normalize_enrichments(
                                     f"conv {conv_id}: refreshed technique '{tech.get('technique', '?')}' "
                                     f"example from segment {effective_seg_id}"
                                 )
+
+                    normalized_techniques.append(tech)
+
+                if isinstance(e.get("techniques_used"), list):
+                    e["techniques_used"] = normalized_techniques
 
         # Normalize empty-ish fields
         if e.get("hook_point") in ("", {}, []):
@@ -792,6 +992,55 @@ def normalize_enrichments(
                         tp_map[sid] = ph
 
                 tp_changed = False
+
+                # --- Failed/open-only interaction guard ---
+                # Some short language-barrier/rejection interactions are better modeled as
+                # pure "open" (no meaningful pre_hook progression), even when the LLM emits
+                # pre_hook labels by default.
+                if (
+                    not (e.get("techniques_used") or [])
+                    and e.get("hook_point") is None
+                    and e.get("investment_level") is None
+                ):
+                    conv_segs = [
+                        s for s in (conversations.get(conv_id) or [])
+                        if isinstance(s, dict)
+                    ]
+                    conv_seg_ids_all = [
+                        int(s.get("id"))
+                        for s in conv_segs
+                        if isinstance(s.get("id"), int)
+                    ]
+                    phases_now = set(tp_map.values())
+                    if (
+                        conv_seg_ids_all
+                        and len(conv_seg_ids_all) <= 30
+                        and phases_now.issubset({"open", "pre_hook"})
+                    ):
+                        cue_text = " ".join(
+                            str(s.get("text") or "").lower()
+                            for s in conv_segs
+                        )
+                        failed_cue = any(
+                            phrase in cue_text
+                            for phrase in (
+                                "boyfriend",
+                                "no speak english",
+                                "i have to go",
+                                "sorry",
+                                "can't",
+                                "cannot",
+                            )
+                        )
+                        if failed_cue:
+                            for sid in list(tp_map.keys()):
+                                if tp_map[sid] != "open":
+                                    tp_map[sid] = "open"
+                                    tp_changed = True
+                            if tp_changed:
+                                repairs.append(
+                                    f"conv {conv_id}: collapsed phases to open (short failed/language-barrier interaction)"
+                                )
 
                 # --- Post-hook false-positive guard (minimal target engagement) ---
                 if "post_hook" in set(tp_map.values()):
@@ -884,7 +1133,7 @@ def normalize_enrichments(
                         # This is intentionally conservative; if we can't find cues, we prefer
                         # not to claim the interaction reached a close attempt.
                         close_contact_cue_re = re.compile(
-                            r"\b(number|phone|instagram|\big\b|whatsapp|snap(?:chat)?)\b"
+                            r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
                             r"|\btext me\b"
                             r"|\bcall me\b",
                             re.IGNORECASE,
@@ -1260,6 +1509,16 @@ def validate_enrichment_output(
                 ))
 
     # --- 3b. Technique evidence should anchor to approacher turns (coach/student) ---
+    target_allowed_techniques = {
+        "number_close",
+        "instagram_close",
+        "soft_close",
+        "assumptive_close",
+        "instant_date",
+        "bounce",
+        "time_bridge",
+        "logistics_check",
+    }
     for i, enrichment in enumerate(enrichments):
         if enrichment.get("type") != "approach":
             continue
@@ -1273,6 +1532,9 @@ def validate_enrichment_output(
             if not seg:
                 continue
             role = seg.get("speaker_role")
+            tech_name = tech.get("technique")
+            if role == "target" and tech_name in target_allowed_techniques:
+                continue
             if role and role not in ("coach", "student"):
                 results.append(ValidationResult(
                     "warning", "technique_on_non_coach_segment",

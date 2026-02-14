@@ -84,6 +84,19 @@ def extract_video_id(name: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
+def infer_source_from_path(file_path: Path) -> Optional[str]:
+    """Infer source name from .../data/07.content/<source>/... path."""
+    parts = file_path.parts
+    try:
+        idx = parts.index("07.content")
+    except ValueError:
+        return None
+    if idx + 1 < len(parts):
+        src = parts[idx + 1].strip()
+        return src or None
+    return None
+
+
 def load_manifest_video_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
     """Load manifest and return set of video IDs (optionally source-filtered)."""
     video_ids = set()
@@ -156,6 +169,11 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
     topic_examples: Dict[str, List[str]] = {}
     technique_sources: Dict[str, List[str]] = {}
     topic_sources: Dict[str, List[str]] = {}
+    unreadable_video_ids: Set[str] = set()
+
+    # Per-video aggregation for quarantine-aware gating.
+    # Internal shape uses sets for dedupe; converted to JSON-safe dict at return.
+    per_video: Dict[str, Dict[str, Any]] = {}
 
     files_processed = 0
     files_with_unlisted = 0
@@ -169,12 +187,36 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
         except (json.JSONDecodeError, OSError) as e:
             print(f"[08.taxonomy-validation] Warning: skipping {file_path.name}: {e}")
             unreadable_files += 1
+            vid_hint = extract_video_id(file_path.name) or extract_video_id(file_path.parent.name)
+            if vid_hint:
+                unreadable_video_ids.add(vid_hint)
             continue
 
         files_processed += 1
-        video_id = data.get("video_id", file_path.stem)
+        raw_vid = data.get("video_id")
+        if isinstance(raw_vid, str) and raw_vid.strip():
+            video_id = raw_vid.strip()
+        else:
+            video_id = extract_video_id(file_path.name) or extract_video_id(file_path.parent.name) or file_path.stem
+        source_name = infer_source_from_path(file_path)
         enrichments = data.get("enrichments", [])
         file_has_unlisted = False
+
+        video_entry = per_video.setdefault(
+            video_id,
+            {
+                "video_id": video_id,
+                "source": source_name,
+                "files": set(),
+                "enrichments_total": 0,
+                "enrichments_with_unlisted": 0,
+                "unlisted_techniques": set(),
+                "unlisted_topics": set(),
+            },
+        )
+        video_entry["files"].add(str(file_path))
+        if not video_entry.get("source") and source_name:
+            video_entry["source"] = source_name
 
         if not isinstance(enrichments, list):
             continue
@@ -184,11 +226,13 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 continue
 
             total_enrichments += 1
+            video_entry["enrichments_total"] += 1
             tech_list, topic_list = parse_unlisted_from_enrichment(enrichment)
 
             if tech_list or topic_list:
                 enrichments_with_unlisted += 1
                 file_has_unlisted = True
+                video_entry["enrichments_with_unlisted"] += 1
 
             for raw_tech in tech_list:
                 name, desc = normalize_concept(raw_tech)
@@ -198,6 +242,7 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 if desc and desc not in technique_examples.get(name, []):
                     technique_examples.setdefault(name, []).append(desc)
                 technique_sources.setdefault(name, []).append(video_id)
+                video_entry["unlisted_techniques"].add(name)
 
             for raw_topic in topic_list:
                 name, desc = normalize_concept(raw_topic)
@@ -207,14 +252,34 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 if desc and desc not in topic_examples.get(name, []):
                     topic_examples.setdefault(name, []).append(desc)
                 topic_sources.setdefault(name, []).append(video_id)
+                video_entry["unlisted_topics"].add(name)
 
         if file_has_unlisted:
             files_with_unlisted += 1
+
+    video_stats: Dict[str, Dict[str, Any]] = {}
+    for video_id in sorted(per_video.keys()):
+        entry = per_video[video_id]
+        files_list = sorted(str(x) for x in entry.get("files", set()) if isinstance(x, str))
+        techniques = sorted(str(x) for x in entry.get("unlisted_techniques", set()) if isinstance(x, str))
+        topics = sorted(str(x) for x in entry.get("unlisted_topics", set()) if isinstance(x, str))
+        video_stats[video_id] = {
+            "video_id": video_id,
+            "source": entry.get("source"),
+            "files": files_list,
+            "enrichments_total": int(entry.get("enrichments_total", 0) or 0),
+            "enrichments_with_unlisted": int(entry.get("enrichments_with_unlisted", 0) or 0),
+            "unlisted_techniques": techniques,
+            "unlisted_topics": topics,
+            "unlisted_technique_count": len(techniques),
+            "unlisted_topic_count": len(topics),
+        }
 
     return {
         "files_processed": files_processed,
         "files_with_unlisted": files_with_unlisted,
         "files_unreadable": unreadable_files,
+        "unreadable_video_ids": sorted(unreadable_video_ids),
         "total_enrichments": total_enrichments,
         "enrichments_with_unlisted": enrichments_with_unlisted,
         "techniques": {
@@ -222,6 +287,7 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "count": count,
                 "examples": technique_examples.get(name, [])[:3],
                 "videos": sorted(set(technique_sources.get(name, [])))[:5],
+                "video_ids": sorted(set(technique_sources.get(name, []))),
             }
             for name, count in technique_counter.most_common()
         },
@@ -230,9 +296,11 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "count": count,
                 "examples": topic_examples.get(name, [])[:3],
                 "videos": sorted(set(topic_sources.get(name, [])))[:5],
+                "video_ids": sorted(set(topic_sources.get(name, []))),
             }
             for name, count in topic_counter.most_common()
         },
+        "video_stats": video_stats,
     }
 
 
@@ -242,7 +310,8 @@ def evaluate_validation(
     threshold_techniques: int,
     threshold_topics: int,
     strict: bool,
-    manifest_missing_videos: int = 0,
+    manifest_video_ids: Optional[Set[str]] = None,
+    manifest_missing_video_ids: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """Evaluate validation status based on per-domain thresholds and strict mode."""
     techniques = report["techniques"]
@@ -255,6 +324,128 @@ def evaluate_validation(
     high_freq_unlisted = bool(high_freq_techniques) or bool(high_freq_topics)
 
     unreadable_files = int(report.get("files_unreadable", 0) or 0)
+    unreadable_video_ids: Set[str] = {
+        str(v).strip()
+        for v in (report.get("unreadable_video_ids") or [])
+        if isinstance(v, str) and str(v).strip()
+    }
+    missing_video_ids = {
+        str(v).strip()
+        for v in (manifest_missing_video_ids or [])
+        if isinstance(v, str) and str(v).strip()
+    }
+
+    high_freq_tech_by_video: Dict[str, List[str]] = {}
+    for concept in high_freq_techniques:
+        info = techniques.get(concept, {})
+        vids = info.get("video_ids") if isinstance(info, dict) else None
+        if not isinstance(vids, list):
+            vids = info.get("videos") if isinstance(info, dict) else []
+        if not isinstance(vids, list):
+            continue
+        for vid in vids:
+            if not isinstance(vid, str) or not vid.strip():
+                continue
+            key = vid.strip()
+            high_freq_tech_by_video.setdefault(key, []).append(concept)
+
+    high_freq_topics_by_video: Dict[str, List[str]] = {}
+    for concept in high_freq_topics:
+        info = topics.get(concept, {})
+        vids = info.get("video_ids") if isinstance(info, dict) else None
+        if not isinstance(vids, list):
+            vids = info.get("videos") if isinstance(info, dict) else []
+        if not isinstance(vids, list):
+            continue
+        for vid in vids:
+            if not isinstance(vid, str) or not vid.strip():
+                continue
+            key = vid.strip()
+            high_freq_topics_by_video.setdefault(key, []).append(concept)
+
+    per_video_stats = report.get("video_stats")
+    per_video_stats = per_video_stats if isinstance(per_video_stats, dict) else {}
+    if manifest_video_ids is not None:
+        candidate_video_ids = sorted(manifest_video_ids)
+    else:
+        candidate_video_ids = sorted(
+            set(per_video_stats.keys()) | unreadable_video_ids | missing_video_ids
+        )
+
+    per_video_status: List[Dict[str, Any]] = []
+    per_video_counts: Counter = Counter()
+    blocked_video_ids: List[str] = []
+    for video_id in candidate_video_ids:
+        stats = per_video_stats.get(video_id)
+        stats = stats if isinstance(stats, dict) else {}
+
+        unlisted_techniques = stats.get("unlisted_techniques")
+        if not isinstance(unlisted_techniques, list):
+            unlisted_techniques = []
+        unlisted_techniques = sorted(
+            {str(x).strip() for x in unlisted_techniques if isinstance(x, str) and str(x).strip()}
+        )
+
+        unlisted_topics = stats.get("unlisted_topics")
+        if not isinstance(unlisted_topics, list):
+            unlisted_topics = []
+        unlisted_topics = sorted(
+            {str(x).strip() for x in unlisted_topics if isinstance(x, str) and str(x).strip()}
+        )
+
+        high_tech = sorted(set(high_freq_tech_by_video.get(video_id, [])))
+        high_topic = sorted(set(high_freq_topics_by_video.get(video_id, [])))
+        has_unlisted = bool(unlisted_techniques or unlisted_topics)
+        is_missing = video_id in missing_video_ids
+        is_unreadable = video_id in unreadable_video_ids
+
+        status = "PASS"
+        reason = "no_unlisted_concepts"
+        blocking_reasons: List[str] = []
+        if is_missing:
+            status = "FAIL"
+            reason = "missing_stage07_enriched"
+            blocking_reasons.append("missing_stage07_enriched")
+        elif is_unreadable:
+            status = "FAIL"
+            reason = "unreadable_stage07_enriched"
+            blocking_reasons.append("unreadable_stage07_enriched")
+        elif strict and has_unlisted:
+            status = "FAIL"
+            reason = "strict_mode_unlisted_detected"
+            blocking_reasons.append("strict_mode_unlisted_detected")
+        elif high_tech or high_topic:
+            status = "FAIL"
+            reason = "high_frequency_unlisted_concepts"
+            if high_tech:
+                blocking_reasons.append("high_frequency_unlisted_techniques")
+            if high_topic:
+                blocking_reasons.append("high_frequency_unlisted_topics")
+        elif has_unlisted:
+            status = "WARNING"
+            reason = "unlisted_below_threshold"
+
+        if status == "FAIL":
+            blocked_video_ids.append(video_id)
+        per_video_counts[status] += 1
+        per_video_status.append(
+            {
+                "video_id": video_id,
+                "source": stats.get("source"),
+                "status": status,
+                "reason": reason,
+                "blocking_reasons": blocking_reasons,
+                "high_frequency_unlisted_techniques": high_tech,
+                "high_frequency_unlisted_topics": high_topic,
+                "unlisted_techniques": unlisted_techniques,
+                "unlisted_topics": unlisted_topics,
+                "enrichments_total": int(stats.get("enrichments_total", 0) or 0),
+                "enrichments_with_unlisted": int(stats.get("enrichments_with_unlisted", 0) or 0),
+                "files": stats.get("files") if isinstance(stats.get("files"), list) else [],
+            }
+        )
+
+    manifest_missing_videos = len(missing_video_ids)
 
     if manifest_missing_videos > 0:
         status = "FAIL"
@@ -297,6 +488,13 @@ def evaluate_validation(
         },
         "manifest_missing_videos": manifest_missing_videos,
         "files_unreadable": unreadable_files,
+        "video_status_counts": {
+            "PASS": int(per_video_counts.get("PASS", 0)),
+            "WARNING": int(per_video_counts.get("WARNING", 0)),
+            "FAIL": int(per_video_counts.get("FAIL", 0)),
+        },
+        "blocked_video_ids": sorted(blocked_video_ids),
+        "video_results": per_video_status,
     }
 
 
@@ -333,6 +531,21 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
             shown = ", ".join(str(x) for x in missing_ids[:5])
             suffix = " ..." if len(missing_ids) > 5 else ""
             print(f"  Missing video IDs:         {shown}{suffix}")
+        print()
+
+    video_status_counts = validation.get("video_status_counts", {})
+    if isinstance(video_status_counts, dict):
+        print(
+            "  Per-video status:          "
+            f"PASS={video_status_counts.get('PASS', 0)} "
+            f"WARNING={video_status_counts.get('WARNING', 0)} "
+            f"FAIL={video_status_counts.get('FAIL', 0)}"
+        )
+        blocked_ids = validation.get("blocked_video_ids", [])
+        if isinstance(blocked_ids, list) and blocked_ids:
+            shown = ", ".join(str(x) for x in blocked_ids[:8])
+            suffix = " ..." if len(blocked_ids) > 8 else ""
+            print(f"  Quarantine candidates:     {shown}{suffix}")
         print()
 
     techniques = report["techniques"]
@@ -396,6 +609,25 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print("    2. Re-run with higher --threshold (both) or --threshold-topics/--threshold-techniques")
         print("    3. Manually verify and exclude problematic files")
         print()
+
+    video_results = validation.get("video_results", [])
+    if isinstance(video_results, list):
+        fail_rows = [r for r in video_results if isinstance(r, dict) and r.get("status") == "FAIL"]
+        if fail_rows:
+            print("-" * 60)
+            print("  FAILING VIDEOS (per-video quarantine)")
+            print("-" * 60)
+            for row in fail_rows[:12]:
+                vid = row.get("video_id", "?")
+                reason = row.get("reason", "")
+                b_reasons = row.get("blocking_reasons", [])
+                extra = ""
+                if isinstance(b_reasons, list) and b_reasons:
+                    extra = f" ({', '.join(str(x) for x in b_reasons)})"
+                print(f"  {vid}: {reason}{extra}")
+            if len(fail_rows) > 12:
+                print(f"  ... ({len(fail_rows) - 12} more)")
+            print()
 
 
 def save_report(
@@ -552,7 +784,8 @@ def main() -> int:
         threshold_techniques=threshold_techniques,
         threshold_topics=threshold_topics,
         strict=args.strict,
-        manifest_missing_videos=len(manifest_missing_video_ids),
+        manifest_video_ids=manifest_video_ids,
+        manifest_missing_video_ids=manifest_missing_video_ids,
     )
     scope = {
         "manifest": manifest_path.name if manifest_path else None,
@@ -561,6 +794,7 @@ def main() -> int:
         "manifest_videos": len(manifest_video_ids) if manifest_video_ids is not None else None,
         "manifest_matched_videos": len(matched_manifest_video_ids) if manifest_video_ids is not None else None,
         "manifest_missing_videos": len(manifest_missing_video_ids) if manifest_video_ids is not None else None,
+        "blocked_videos": len(validation.get("blocked_video_ids", []) or []),
     }
 
     if args.json:
