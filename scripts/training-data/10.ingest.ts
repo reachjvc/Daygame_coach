@@ -102,6 +102,7 @@ type ChunkMetadata = {
   asrLowQualitySegmentCount?: number
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
+  worstArtifactSeverity?: string
   chunkConfidence?: number
   chunkConfidenceScore?: number
   chunk_confidence_score?: number
@@ -111,6 +112,10 @@ type ChunkMetadata = {
   damaged_segment_ids?: number[]
   containsRepairedText?: boolean
   contains_repaired_text?: boolean
+  // Cross-reference fields (D14b)
+  blockIndex?: number
+  relatedConversationId?: number | null
+  relatedCommentaryBlockIndices?: number[]
 }
 
 type Chunk = {
@@ -2353,6 +2358,9 @@ async function main() {
       if (chunk.metadata.asrTranscriptArtifactTypes && chunk.metadata.asrTranscriptArtifactTypes.length > 0) {
         metadata.asrTranscriptArtifactTypes = chunk.metadata.asrTranscriptArtifactTypes
       }
+      if (typeof chunk.metadata.worstArtifactSeverity === "string") {
+        metadata.worstArtifactSeverity = chunk.metadata.worstArtifactSeverity
+      }
       if (typeof chunk.metadata.chunkConfidence === "number") {
         metadata.chunkConfidence = chunk.metadata.chunkConfidence
       }
@@ -2391,6 +2399,16 @@ async function main() {
       if (containsRepairedText) {
         metadata.containsRepairedText = true
         metadata.contains_repaired_text = true
+      }
+      // D14b: cross-reference metadata pass-through
+      if (typeof chunk.metadata.blockIndex === "number") {
+        metadata.blockIndex = chunk.metadata.blockIndex
+      }
+      if (chunk.metadata.relatedConversationId !== undefined) {
+        metadata.relatedConversationId = chunk.metadata.relatedConversationId
+      }
+      if (Array.isArray(chunk.metadata.relatedCommentaryBlockIndices) && chunk.metadata.relatedCommentaryBlockIndices.length > 0) {
+        metadata.relatedCommentaryBlockIndices = chunk.metadata.relatedCommentaryBlockIndices
       }
 
       const lane: "primary" | "review" =

@@ -65,6 +65,19 @@ describe("buildPreviewState", () => {
     expect(state.get("__temp_x")!.targetValue).toBe(500)
   })
 
+  test("extracts milestoneConfig from insert milestone_config", () => {
+    const config = { start: 1, target: 1000, steps: 15, curveTension: 5 }
+    const inserts = [createInsert({ _tempId: "__temp_mc", milestone_config: config })]
+    const state = buildPreviewState(inserts)
+    expect(state.get("__temp_mc")!.milestoneConfig).toEqual(config)
+  })
+
+  test("milestoneConfig is undefined when insert has no milestone_config", () => {
+    const inserts = [createInsert({ _tempId: "__temp_no_mc", milestone_config: undefined })]
+    const state = buildPreviewState(inserts)
+    expect(state.get("__temp_no_mc")!.milestoneConfig).toBeUndefined()
+  })
+
   test("works with real generated inserts from L1 template", () => {
     const inserts = generateGoalTreeInserts("l1_girlfriend")
     const state = buildPreviewState(inserts)
@@ -107,7 +120,7 @@ describe("applyPreviewState", () => {
     expect(result[0].title).toBe("Enabled")
   })
 
-  test("keeps all L0/L1/L2 regardless of state", () => {
+  test("keeps L0/L1 regardless of state, filters disabled L2", () => {
     const inserts: BatchGoalInsert[] = [
       createInsert({ _tempId: "__temp_l1", goal_level: 1 }),
       createInsert({ _tempId: "__temp_l2", goal_level: 2 }),
@@ -117,7 +130,8 @@ describe("applyPreviewState", () => {
       ["__temp_l2", { enabled: false, targetValue: 1 }],
     ])
     const result = applyPreviewState(inserts, state)
-    expect(result).toHaveLength(2)
+    expect(result).toHaveLength(1)
+    expect(result[0]._tempId).toBe("__temp_l1")
   })
 
   test("updates target_value when state has override", () => {
@@ -168,6 +182,62 @@ describe("applyPreviewState", () => {
     const result = applyPreviewState(inserts, state)
     expect(result).toHaveLength(2)
     expect(result.every((r) => (r.goal_level ?? 0) < 3)).toBe(true)
+  })
+
+  test("filters L3 children when parent L2 is disabled", () => {
+    const inserts: BatchGoalInsert[] = [
+      createInsert({ _tempId: "__temp_l1", goal_level: 1 }),
+      createInsert({ _tempId: "__temp_l2a", goal_level: 2, _tempParentId: "__temp_l1" }),
+      createInsert({ _tempId: "__temp_l2b", goal_level: 2, _tempParentId: "__temp_l1" }),
+      createInsert({ _tempId: "__temp_l3a", goal_level: 3, _tempParentId: "__temp_l2a" }),
+      createInsert({ _tempId: "__temp_l3b", goal_level: 3, _tempParentId: "__temp_l2b" }),
+    ]
+    const state = new Map([
+      ["__temp_l1", { enabled: true, targetValue: 1 }],
+      ["__temp_l2a", { enabled: false, targetValue: 1 }],
+      ["__temp_l2b", { enabled: true, targetValue: 1 }],
+      ["__temp_l3a", { enabled: true, targetValue: 100 }],
+      ["__temp_l3b", { enabled: true, targetValue: 100 }],
+    ])
+    const result = applyPreviewState(inserts, state)
+    // L1 always kept, L2a removed, L2b kept, L3a removed (parent L2a disabled), L3b kept
+    expect(result).toHaveLength(3)
+    expect(result.map((r) => r._tempId)).toEqual(["__temp_l1", "__temp_l2b", "__temp_l3b"])
+  })
+
+  test("applies edited milestoneConfig from state", () => {
+    const inserts = [
+      createInsert({
+        _tempId: "__temp_mc",
+        target_value: 1000,
+        milestone_config: { start: 1, target: 1000, steps: 15, curveTension: 5 },
+      }),
+    ]
+    const editedConfig = { start: 1, target: 1000, steps: 8, curveTension: 3 }
+    const state = new Map([["__temp_mc", { enabled: true, targetValue: 1000, milestoneConfig: editedConfig }]])
+    const result = applyPreviewState(inserts, state)
+    const mc = result[0].milestone_config as Record<string, unknown>
+    expect(mc.steps).toBe(8)
+    expect(mc.curveTension).toBe(3)
+    expect(mc.target).toBe(1000)
+  })
+
+  test("applies milestoneConfig with updated target when both change", () => {
+    const inserts = [
+      createInsert({
+        _tempId: "__temp_mc2",
+        target_value: 1000,
+        milestone_config: { start: 1, target: 1000, steps: 15, curveTension: 5 },
+      }),
+    ]
+    const editedConfig = { start: 1, target: 1000, steps: 10, curveTension: 2 }
+    const state = new Map([["__temp_mc2", { enabled: true, targetValue: 500, milestoneConfig: editedConfig }]])
+    const result = applyPreviewState(inserts, state)
+    expect(result[0].target_value).toBe(500)
+    const mc = result[0].milestone_config as Record<string, unknown>
+    expect(mc.target).toBe(500)
+    expect(mc.steps).toBe(10)
+    expect(mc.curveTension).toBe(2)
   })
 
   test("does not mutate original inserts", () => {

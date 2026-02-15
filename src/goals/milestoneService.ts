@@ -84,29 +84,126 @@ export function interpolateWithControlPoints(
  * Uses magnitude-aware rounding: small values round to integers,
  * larger values snap to multiples of 5, 10, 25, 50, etc.
  */
+// Multipliers for magnitude-based rounding (values >= 10)
+const NICE_MULTIPLIERS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10]
+
 export function roundToNiceNumber(value: number): number {
   if (value <= 0) return 0
-  if (value < 1.5) return 1
-  if (value < 3.5) return Math.round(value)
 
-  // For values >= 3.5, use magnitude-based rounding
+  // For small values, snap to human-friendly milestones: 1, 2, 3, 5, 10
+  if (value < 1.5) return 1
+  if (value < 2.5) return 2
+  if (value < 3.5) return 3
+  if (value < 6.5) return 5
+  if (value < 10) return 10
+
+  // For values >= 10, use magnitude-based rounding
   const magnitude = Math.pow(10, Math.floor(Math.log10(value)))
   const normalized = value / magnitude // 1.0 – 9.99
 
-  // Snap to nice fractions within the magnitude
-  const niceValues = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10]
-  let closest = niceValues[0]
+  let closest = NICE_MULTIPLIERS[0]
   let closestDiff = Math.abs(normalized - closest)
 
-  for (const nice of niceValues) {
+  for (const nice of NICE_MULTIPLIERS) {
     const diff = Math.abs(normalized - nice)
-    if (diff < closestDiff) {
+    if (diff <= closestDiff) { // <= prefers rounding up on ties
       closest = nice
       closestDiff = diff
     }
   }
 
   return Math.round(closest * magnitude)
+}
+
+/**
+ * Build a sorted pool of nice numbers in (min, max) for bump resolution.
+ */
+function buildNicePool(min: number, max: number): number[] {
+  const pool = new Set<number>()
+  // Add curated small milestones (no 4, 6, 7, 8, 9)
+  for (const v of [1, 2, 3, 5, 10]) {
+    if (v > min && v < max) pool.add(v)
+  }
+  // Add magnitude-based values for >= 10
+  let mag = 10
+  while (mag <= max * 10) {
+    for (const m of NICE_MULTIPLIERS) {
+      const v = Math.round(m * mag)
+      if (v > min && v < max) pool.add(v)
+    }
+    mag *= 10
+  }
+  return [...pool].sort((a, b) => a - b)
+}
+
+// ============================================================================
+// Pool-Based Milestone Selection
+// ============================================================================
+
+/**
+ * Select N milestones from a pre-computed pool of nice numbers,
+ * using the curve as a selection bias in log-space.
+ *
+ * Guarantees: every milestone is a "nice" number, monotonically increasing,
+ * and the maximum gap between consecutive milestones is bounded by pool density.
+ */
+function selectFromPool(
+  candidates: number[],
+  config: MilestoneLadderConfig
+): GeneratedMilestone[] {
+  const { start, target, steps, curveTension, controlPoints = [] } = config
+  const n = candidates.length
+
+  // Map candidates to log-space positions (0–1)
+  const effStart = Math.max(start, 1)
+  const logStart = Math.log(effStart)
+  const logTarget = Math.log(Math.max(target, effStart + 1))
+  const logRange = logTarget - logStart
+
+  const logPos = candidates.map(v => {
+    if (v <= 0 || logRange <= 0) return 0
+    return Math.max(0, Math.min(1, (Math.log(v) - logStart) / logRange))
+  })
+
+  const milestones: GeneratedMilestone[] = []
+  let lo = 0
+
+  for (let i = 0; i < steps; i++) {
+    if (i === 0) {
+      milestones.push({ step: 0, rawValue: start, value: start })
+      const startIdx = candidates.indexOf(start)
+      lo = (startIdx >= 0 ? startIdx : 0) + 1
+      continue
+    }
+    if (i === steps - 1) {
+      milestones.push({ step: i, rawValue: target, value: target })
+      continue
+    }
+
+    const t = i / (steps - 1)
+    const desired = interpolateWithControlPoints(t, controlPoints, curveTension)
+    const rawValue = logRange > 0
+      ? effStart * Math.pow(target / effStart, desired)
+      : start + (target - start) * desired
+
+    // Must leave enough candidates for remaining steps
+    const hi = n - (steps - i)
+
+    let bestIdx = lo
+    let bestDist = Math.abs(logPos[lo] - desired)
+    for (let j = lo + 1; j <= hi; j++) {
+      const d = Math.abs(logPos[j] - desired)
+      if (d < bestDist) {
+        bestDist = d
+        bestIdx = j
+      }
+    }
+
+    milestones.push({ step: i, rawValue, value: candidates[bestIdx] })
+    lo = bestIdx + 1
+  }
+
+  return milestones
 }
 
 // ============================================================================
@@ -116,8 +213,9 @@ export function roundToNiceNumber(value: number): number {
 /**
  * Generate a milestone ladder from configuration.
  *
- * Takes a start value, target value, number of steps, and curve tension.
- * Returns an array of milestones with both raw and nice-rounded values.
+ * When the nice-number pool has enough candidates, uses pool-based selection
+ * (log-space matching with curve bias). Falls back to curve + rounding for
+ * small ranges where the pool is too sparse.
  *
  * The first milestone is always `start`, the last is always `target`.
  * Intermediate milestones are guaranteed to be monotonically increasing.
@@ -129,13 +227,23 @@ export function generateMilestoneLadder(config: MilestoneLadderConfig): Generate
     return [{ step: 0, rawValue: target, value: target }]
   }
 
+  // Build candidate pool of nice numbers including endpoints
+  const poolValues = buildNicePool(start, target)
+  const candidates = [...new Set([start, ...poolValues, target])].sort((a, b) => a - b)
+
+  // Pool-based selection when enough candidates exist
+  if (candidates.length >= steps) {
+    return selectFromPool(candidates, config)
+  }
+
+  // Fallback: curve + round for small ranges with sparse pools
   const range = target - start
+  const useLog = start > 0 && target / start >= 10
   const milestones: GeneratedMilestone[] = []
 
   for (let i = 0; i < steps; i++) {
     const t = i / (steps - 1)
 
-    // First and last are pinned
     if (i === 0) {
       milestones.push({ step: 0, rawValue: start, value: start })
       continue
@@ -146,17 +254,17 @@ export function generateMilestoneLadder(config: MilestoneLadderConfig): Generate
     }
 
     const curved = interpolateWithControlPoints(t, controlPoints, curveTension)
-    const rawValue = start + range * curved
-    const value = roundToNiceNumber(rawValue)
-
-    milestones.push({ step: i, rawValue, value })
+    const rawValue = useLog
+      ? start * Math.pow(target / start, curved)
+      : start + range * curved
+    milestones.push({ step: i, rawValue, value: roundToNiceNumber(rawValue) })
   }
 
-  // Enforce monotonic increase: if rounding caused a duplicate or decrease,
-  // bump to the next value above the previous milestone.
+  // Enforce monotonic increase
   for (let i = 1; i < milestones.length - 1; i++) {
     if (milestones[i].value <= milestones[i - 1].value) {
-      milestones[i].value = milestones[i - 1].value + 1
+      const nextNice = poolValues.find(v => v > milestones[i - 1].value)
+      milestones[i].value = nextNice ?? milestones[i - 1].value + 1
     }
   }
 

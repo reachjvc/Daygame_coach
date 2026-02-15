@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen } from "lucide-react";
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen, Swords } from "lucide-react";
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
@@ -76,7 +75,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
           <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-              <GoalIcon className="size-10 text-primary" />
+              <Swords className="size-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-foreground">Scenarios</h2>
             <p className="text-muted-foreground leading-relaxed mb-6">

@@ -22,6 +22,7 @@ export {
   searchSimilarEmbeddings,
   searchEmbeddingsByKeyword,
   fetchEmbeddingsBySourceAndConversation,
+  fetchCommentaryForConversation,
   getEmbeddingsCount,
   getEmbeddingSources,
 } from "./embeddingsRepo"

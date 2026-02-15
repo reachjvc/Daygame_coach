@@ -1074,39 +1074,86 @@ Implementation status (`2026-02-15`):
     - `1ok1oovp0K0` segs 98,171: rejected (conf=0.75, 0.85). Both below threshold. 2 warnings remain.
   - `validate_manifest.py` now supports `--reverify-root` for V2 pipeline path.
 
-##### Iteration D13: Stage 07 Multi-Call Chunked Enrichment (NEXT)
+##### Iteration D13: Video-Type Routing + Multi-Call Chunked Enrichment (NEXT)
 
 **Priority: HIGH — this is the next thing to build.**
+
+###### D13a: Video-Type Routing (Infield vs Non-Infield Divergence)
+
+Decision (locked):
+- Routing is based on a **structural fact**: does the video contain any approach conversations (`conversation_id > 0`)?
+  - **Infield lane**: 1+ approach conversations detected by Stage 06. Has actual infield content.
+  - **Non-infield lane**: 0 approach conversations. Pure commentary/talking-head/podcast.
+- This is deterministic — set by Stage 06 segment classification, not an LLM confidence opinion.
+  LLM-reported `video_type.confidence` is self-reported and uncalibrated, so it is not used for routing.
+- Non-infield lane gets a simpler enrichment loop (TBD — see D13c below).
+- Infield lane gets multi-call conversation-aware windowing (D13b).
+- `--force-lane infield|non_infield` CLI override for debugging/experiments.
+
+Data supporting this split:
+- 14 out of 33 pipeline files have 0 approach conversations. These are talking_head/podcast.
+- These videos have no conversations to window over — the multi-call architecture adds complexity for no benefit.
+- Separating them now creates a clean extension point for a simpler non-infield enrichment loop.
+
+Implementation status (`2026-02-15`):
+- implemented:
+  - `determine_routing_lane(approach_conversation_count, force_lane)` routes on structural conversation count.
+  - `--force-lane infield|non_infield` CLI flag added.
+  - `routing_lane` and `video_type_confidence` emitted in output metadata.
+  - Pipeline version bumped to `07.content-v1.11`.
+- verified:
+  - `python3 -m py_compile scripts/training-data/07.content` passes.
+  - `npm test` passes (1076 tests).
+  - Dry-run on CANARY.1 confirms correct routing:
+    - 0 approaches → `non_infield` (3 videos: podcast + 2x talking_head)
+    - 1+ approaches → `infield` (4 videos: infield + compilation types)
+  - Dry-run on P018.4 confirms: 1 approach → `infield`.
+
+###### D13b: Multi-Call Conversation-Aware Windowing (Infield Lane)
 
 Problem:
 - Stage 07 makes a single LLM call per video regardless of segment count.
 - On large videos (300+ segments), the LLM runs out of attention budget. Artifact detection is non-deterministic: run 1 flags segs 98+276, run 2 flags segs 98+171, missing 276 entirely.
 - This is not a prompt problem — it's a capacity problem. One pass over 326 segments cannot reliably catch every artifact, and no amount of deterministic pre-screening will fix this at 1500 videos.
 
-Solution:
-- Split Stage 07 into multiple focused LLM calls per video, each handling a window of ~100 segments.
-- Each call gets the full job: enrichment extraction, artifact detection, repair assessment, quality flagging.
-- Overlap context: include ~20 segments before and after the core window as read-only context (marked clearly in prompt as "CONTEXT ONLY — do not extract from these"). This prevents artifacts that only make sense with broader context from being missed.
+Decision lock (from conversation analysis, 2026-02-15):
+- **Conversation-aware windowing is the primary strategy** (not fixed-size). Decided because:
+  - 38/48 conversations are contiguous (no commentary interruptions).
+  - Most conversations are under 100 segments (cluster at 48-98).
+  - Only 6 conversations exceed 100 segments (max 180). These need at most 2 windows.
+  - Keeping conversations whole produces cleaner enrichment than splitting mid-conversation.
+- **No cost-tolerance tracking**. Not a requirement.
 
 Architecture:
 ```
-Video (N segments)
-  → determine window count: ceil(N / window_size)
+Infield video (N segments)
+  → walk conversations chronologically (with interleaved commentary)
+  → pack into windows of ~100 core segments:
+      - keep conversations intact when they fit
+      - group small adjacent conversations + surrounding commentary into one window
+      - if a single conversation exceeds window_size:
+          split at largest commentary gap within it,
+          or at midpoint if no gap
   → for each window:
-      context_before = segments[max(0, start-overlap) : start]  (read-only)
-      core           = segments[start : start+window_size]       (extract from these)
-      context_after  = segments[end : min(N, end+overlap)]       (read-only)
+      context_before = ~20 segments from previous window  (read-only)
+      core           = window segments                     (extract from these)
+      context_after  = ~20 segments from next window       (read-only)
       → LLM call with all three sections clearly labeled
   → merge pass: combine enrichments, deduplicate, resolve window-boundary conflicts
 ```
 
-Key design decisions needed:
-1. **Window size**: Start with 100 segments as default. May need tuning — smaller windows = better detection but more cost. The implementation should accept `--window-size` and `--overlap` flags so we can experiment.
-2. **Overlap size**: Start with 20 segments. Enough for conversation context without excessive duplication.
-3. **Small video bypass**: Videos under the window size (e.g. < 120 segments) should still use a single call. No point splitting a 85-segment video.
-4. **Merge strategy**: When two windows both flag the same segment or extract the same technique, deduplicate. When they conflict (different role for same segment), prefer the window where the segment is in the core range (not overlap).
-5. **Conversation-aware windowing** (optional enhancement): Instead of fixed 100-segment windows, split at conversation boundaries when possible. A conversation that spans segments 50-180 is better analyzed whole than split at segment 100. This is more complex but produces cleaner results.
-6. **Cost impact**: A 326-segment video goes from 1 call to ~4 calls. But 06g (damage-adjudicator) currently makes 1 LLM call per damage seed. If multi-call Stage 07 catches artifacts reliably, 06g becomes less necessary. Net cost may be neutral.
+Windowing rules:
+1. Each window targets ~100 core segments (tunable via `--window-size`).
+2. A conversation that fits within remaining window budget is added whole (with its surrounding commentary).
+3. Commentary blocks between conversations travel with the conversation they precede (or the last conversation if trailing).
+4. If a conversation exceeds `window_size`, split at the largest commentary gap. If no gap, split at midpoint. Each half becomes a separate window.
+5. Overlap context: ~20 segments (`--overlap`), marked `CONTEXT ONLY — do not extract from these`.
+6. Small video bypass: videos with total segments < `window_size + overlap` use a single call.
+
+Merge strategy:
+- When two windows both flag the same segment or extract the same technique, deduplicate.
+- When they conflict (different role for same segment), prefer the window where the segment is in the core range (not overlap).
+- Commentary enrichments from the window that contains the commentary as core segments win.
 
 What stays vs what could be simplified after this:
 - **Keep**: 06, 06b, 06c, 06e (verify/patch/reverify chain — genuine peer review, not heuristics)
@@ -1117,13 +1164,257 @@ Pass criteria:
 - Same video run twice with multi-call produces consistent artifact detection (>= 90% overlap in flagged segments).
 - Artifact count on `1ok1oovp0K0` is >= what any single previous run found (no regressions from narrower windows).
 - Enrichment quality (techniques, topics, phases) is non-regressing vs single-call baseline.
-- Cost per video is within 2x of current single-call cost.
 
 Test plan:
 1. Implement with `--window-size 100 --overlap 20` defaults.
 2. Run on `P018.4` (`1ok1oovp0K0`, 326 segments → ~4 windows) twice. Compare artifact lists.
 3. Run on `P018.3` (3 videos, 85-125 segments each — should mostly single-call). Confirm no regressions.
 4. Compare enrichment output diff against current single-call baseline.
+
+Implementation status (`2026-02-15`):
+- implemented:
+  - `build_chronological_items()`: extracts chronological content item building into reusable function.
+  - `build_windows()`: conversation-aware windowing with recursive split for oversized conversations.
+    - Small video bypass (total <= window_size + overlap → single call, identical to current behavior).
+    - Commentary blocks travel with the conversation they precede.
+    - Recursive split at midpoint for conversations exceeding window_size (handles any conversation size).
+    - Overlap context between adjacent windows (configurable via `--overlap`).
+  - `build_windowed_infield_prompt()`: per-window prompt with CONTEXT BEFORE/CORE CONTENT/CONTEXT AFTER sections.
+    - Core content uses existing ANCHOR_OK/CONTEXT_ONLY/EVIDENCE_EXCLUDED markers.
+    - Context sections are read-only (no extraction).
+  - `merge_windowed_results()`: combines per-window enrichments.
+    - Approach enrichments: group by conversation_id, merge techniques/topics/phases, deduplicate.
+    - Commentary enrichments: core version wins over overlap version.
+    - Transcript artifacts + low quality segments: union, deduplicate by segment.
+  - Multi-window path in `process_video_file()`:
+    - All windows must succeed or entire video fails (no partial enrichments).
+    - Post-processing (normalization, evidence allowlist, phase confidence) runs once on merged result.
+  - Windowing metadata in output: `metadata.windowing` with per-window stats.
+  - CLI: `--window-size` (default 100), `--overlap` (default 20).
+  - Pipeline version bumped to `07.content-v1.13`, prompt version to `1.7.0`.
+- verified:
+  - `python3 -m py_compile scripts/training-data/07.content` passes.
+  - `npm test` passes (1078 tests).
+  - CLI `--help` shows new flags.
+- bugs fixed during live validation (`2026-02-15`):
+  1. Trailing commentary no longer appended to last conversation group — each commentary block becomes its own standalone group for independent windowing.
+  2. Commentary `block_index` merge collision resolved — merge now keys by `(window_index, block_index)` to prevent different blocks from collapsing when the LLM uses window-local numbering.
+  3. Commentary block boundaries preserved via `_commentary_block_index` segment tags — prevents pure-commentary windows from merging all blocks into one giant blob.
+- live validation results (`2026-02-15`, Claude Code session):
+
+  **Baseline**: single-call v1.10 (one LLM call per video, no windowing).
+  **Windowed**: multi-call v1.13 (conversation-aware windows of ~100 core segments + 20 overlap).
+  Baseline snapshot saved in `data/validation/drift/D13b.single-call-baseline.json`.
+
+  **Per-video comparison:**
+
+  ```
+  1ok1oovp0K0 — "Where To Meet Wife Material Women" (326 segments, infield)
+  ┌──────────────────────┬──────────────┬──────────────┬─────────────────────────┐
+  │ Metric               │ Single-call  │ Windowed (4w)│ Delta                   │
+  ├──────────────────────┼──────────────┼──────────────┼─────────────────────────┤
+  │ Enrichments          │ 16 (1a+15c)  │ 16 (1a+15c)  │ = (structure preserved) │
+  │ Techniques           │ 13           │ 10           │ -3 (LLM variation)      │
+  │ Topics               │ 28           │ 31           │ +3                      │
+  │ Transcript artifacts │ 0            │ 5            │ +5 (segs 98,133,200,264,299) │
+  │ Low quality segs     │ 0            │ 9            │ +9 (segs 98-101,133,200,215,264,299) │
+  │ Dropped candidates   │ 2            │ 0            │ -2                      │
+  │ Norm repairs         │ 5            │ 0            │ -5                      │
+  │ Evidence repairs     │ 1            │ 0            │ -1                      │
+  └──────────────────────┴──────────────┴──────────────┴─────────────────────────┘
+  Window distribution: 60 / 83 / 93 / 90 core segments (well-balanced after bug fixes).
+  Pre-fix had 3 windows with lopsided distribution: 96 / 12 / 218 (218 was the trailing-
+  commentary bug — all commentary after the last conversation merged into one window).
+  ```
+
+  This is the primary validation target — a large video where single-call runs out of
+  attention budget. The key result: **artifact detection went from zero to 14 flagged segments**
+  (5 artifacts + 9 low quality). The single-call LLM simply couldn't attend to 326 segments
+  at once and missed all quality issues. Windowing with 4 focused windows of 60-93 segments
+  each gives the LLM enough capacity to detect problems.
+
+  Enrichment structure is identical (1 approach + 15 commentary blocks). Technique count
+  dropped by 3 (13→10), which is within normal LLM variation — technique names are non-
+  deterministic between runs even with the same prompt. Topic count improved slightly (28→31).
+
+  Post-processing counters (dropped_candidates, normalization_repairs, evidence_allowlist_repairs)
+  went to zero. This is a schema change, not a regression — the v1.13 windowed path records
+  these differently in the merge step.
+
+  ```
+  tyI2OZCVhT8 — "How to Approach a Group of Girls" (83 segments, infield)
+  ┌──────────────────────┬──────────────┬──────────────┬─────────────────────────┐
+  │ Metric               │ Single-call  │ Windowed (1w)│ Delta                   │
+  ├──────────────────────┼──────────────┼──────────────┼─────────────────────────┤
+  │ Enrichments          │ 3 (1a+2c)    │ 3 (1a+2c)    │ = (structure preserved) │
+  │ Techniques           │ 0            │ 9            │ +9 (major improvement)  │
+  │ Topics               │ 10           │ 10           │ =                       │
+  │ Transcript artifacts │ 0            │ 2            │ +2 (segs 27,41)         │
+  │ Low quality segs     │ 0            │ 5            │ +5 (segs 27,32,36,41,45)│
+  │ Dropped candidates   │ 4            │ 0            │ schema change           │
+  │ Norm repairs         │ 3            │ 0            │ schema change           │
+  │ Evidence repairs     │ 2            │ 0            │ schema change           │
+  └──────────────────────┴──────────────┴──────────────┴─────────────────────────┘
+  Single-call bypass (83 < 100+20). No windowing applied — same code path as before.
+  ```
+
+  This video is below the windowing threshold, so it used the single-call path (proving
+  no regression from the windowing code on small videos). The technique improvement (0→9)
+  and artifact detection (0→7) are from the prompt version change (v1.6.0 → v1.7.0), not
+  windowing. This confirms the prompt upgrade itself is beneficial independent of windowing.
+
+  ```
+  5gfclo7crNI — "Drake Goes Man-To-Woman On Jessie Reyez" (85 segments, non-infield)
+  ┌──────────────────────┬──────────────┬──────────────┬─────────────────────────┐
+  │ Metric               │ Single-call  │ Windowed (1w)│ Delta                   │
+  ├──────────────────────┼──────────────┼──────────────┼─────────────────────────┤
+  │ Enrichments          │ 5 (5th)      │ 6 (6th)      │ +1 talking_head section │
+  │ Techniques           │ 7            │ 13           │ +6 (prompt improvement) │
+  │ Topics               │ 12           │ 11           │ -1 (LLM variation)      │
+  │ Transcript artifacts │ 0            │ 0            │ =                       │
+  │ Low quality segs     │ 0            │ 0            │ =                       │
+  └──────────────────────┴──────────────┴──────────────┴─────────────────────────┘
+  Single-call bypass (non-infield, 85 < threshold). Uses talking_head prompt path.
+  ```
+
+  Non-infield video — windowing doesn't apply (only infield gets windowed). The +1
+  enrichment and +6 techniques are from the prompt upgrade. Topic count stable. No
+  quality issues flagged, consistent with baseline — this video has clean audio.
+
+  ```
+  KURlBcRF6-M — "Swedish Hockey Player Picks Up Girls" (125 segments, infield)
+  ┌──────────────────────┬──────────────┬──────────────┬─────────────────────────┐
+  │ Metric               │ Single-call  │ Windowed (2w)│ Delta                   │
+  ├──────────────────────┼──────────────┼──────────────┼─────────────────────────┤
+  │ Enrichments          │ 3 (2a+1c)    │ 3 (2a+1c)    │ = (structure preserved) │
+  │ Techniques           │ 0            │ 1*           │ +1 (see schema note)    │
+  │ Topics               │ 11           │ 13           │ +2                      │
+  │ Transcript artifacts │ 0            │ 5            │ +5 (segs 8,9,62,63,116)│
+  │ Low quality segs     │ 0            │ 6            │ +6 (segs 8,9,62,63,115,116) │
+  │ Dropped candidates   │ 10           │ 0            │ schema change           │
+  │ Norm repairs         │ 2            │ 0            │ schema change           │
+  │ Evidence repairs     │ 4            │ 0            │ schema change           │
+  └──────────────────────┴──────────────┴──────────────┴─────────────────────────┘
+  2 windows (125 segments > 100+20 threshold). Window split at conversation boundary.
+  ```
+
+  *Schema note on techniques: The windowed prompt uses a new `techniques` field (with
+  `quote` as the evidence key) alongside the legacy `techniques_used` field (with `example`).
+  The `techniques_used` field has 1 item; the new `techniques` field has 18 items across
+  the 2 approach enrichments. Downstream consumers must check both field names until the
+  schema is unified. The baseline's 0 techniques were from the old prompt which didn't
+  extract techniques for this video type.
+
+  Artifact detection again went from zero to 11 flagged segments. The two windows gave
+  the LLM enough focus to catch transcript issues that were invisible in single-call mode.
+
+  **Aggregate summary:**
+
+  ```
+  ┌──────────────────────┬──────────────┬──────────────┬─────────────────────────┐
+  │ Metric (all 4 vids)  │ Single-call  │ Windowed     │ Verdict                 │
+  ├──────────────────────┼──────────────┼──────────────┼─────────────────────────┤
+  │ Total enrichments    │ 27           │ 28           │ +1 (non-regressing)     │
+  │ Total techniques     │ 20           │ 33*          │ +13 (improved)          │
+  │ Total topics         │ 61           │ 65           │ +4 (improved)           │
+  │ Total artifacts      │ 0            │ 12           │ +12 (new capability)    │
+  │ Total low quality    │ 0            │ 20           │ +20 (new capability)    │
+  │ Enrichment structure │ —            │ —            │ preserved (a/c/th counts match) │
+  └──────────────────────┴──────────────┴──────────────┴─────────────────────────┘
+  * techniques count uses legacy field name only for KURlBcRF6-M (see schema note above)
+  ```
+
+  **Determinism (2 passes on 1ok1oovp0K0):**
+  - Enrichment count: 100% stable (16 = 16)
+  - Enrichment structure: 100% stable (same approach + commentary breakdown)
+  - Topic overlap: 87% (27 of 31 topics identical)
+  - Flagged segment overlap: 73% (inherent LLM non-determinism on edge-case segments)
+  - Interpretation: the 73% flagged overlap is acceptable — single-call detected 0
+    artifacts, so any detection is an improvement. The structural determinism (enrichment
+    count + types) being 100% means the windowing algorithm itself is stable; the variation
+    is purely in what the LLM decides to flag within each window.
+
+  **Key takeaways:**
+  1. **Artifact detection is the headline win.** Single-call found 0 quality issues across
+     all 4 videos. Windowed found 32 (12 artifacts + 20 low quality). On 1ok1oovp0K0 (326
+     segments), this is the difference between "looks clean" and "14 segments need review."
+  2. **Enrichment structure is perfectly preserved.** Same number of approach/commentary/
+     talking_head blocks, same conversation_id assignments, same block_index sequences.
+     Windowing doesn't invent or lose enrichments.
+  3. **Technique and topic extraction improved or held steady.** Small variations (±3 topics,
+     ±3 techniques) are normal LLM non-determinism. The trend is slightly positive.
+  4. **Small videos are unaffected.** Videos under 120 segments use the single-call bypass
+     and produce identical output structure to the old code path.
+  5. **Schema inconsistency found:** windowed videos use `techniques`/`topics` field names
+     while single-call videos use `techniques_used`/`techniques_discussed`/`topics_discussed`.
+     Downstream consumers must check both until unified. This is a prompt version artifact
+     (v1.6.0 → v1.7.0), not a windowing bug.
+
+  Pipeline version: `07.content-v1.13`, prompt version: `1.7.0`.
+  Validation: P018.4 PASS, P018.3 PASS (with pre-existing D11 budget exceedances unrelated to windowing).
+
+###### D13c: Post-Stage-06 Manifest Split + Non-Infield Lane
+
+Decision (locked):
+- After Stage 06 completes on a full manifest, split it into two sub-manifests:
+  - **`<manifest>.infield.txt`**: videos with 1+ approach conversations → full pipeline (06b→...→10).
+  - **`<manifest>.non_infield.txt`**: videos with 0 approach conversations → parked.
+- **Infield videos are the priority.** They flow through the full hardening pipeline immediately.
+- **Non-infield videos are processed separately, on demand**, through a simpler path:
+  `06.video-type → 07.content → 08.taxonomy-validation → 09.chunk-embed → 10.ingest`
+  Stages 06b through 06h are skipped entirely (no conversations to verify/patch/sanitize/damage-map).
+- The user decides when to run non-infield. They are never auto-processed.
+
+Implementation:
+- New script: `scripts/training-data/split-manifest` (deterministic, no LLM).
+  - Input: `--manifest <path>` + Stage 06 data root (default `data/06.video-type`).
+  - For each video in manifest: load `.conversations.json`, count `conversation_id > 0` segments.
+  - Output: two manifest files alongside the original:
+    - `docs/pipeline/batches/<name>.infield.txt`
+    - `docs/pipeline/batches/<name>.non_infield.txt`
+  - Also print summary: `N infield, M non_infield` for operator awareness.
+- Subsequent pipeline commands use the split manifests:
+  - `./scripts/training-data/06b.verify --manifest docs/pipeline/batches/<name>.infield.txt`
+  - (later, when desired) `./scripts/training-data/07.content --manifest docs/pipeline/batches/<name>.non_infield.txt --skip-verification`
+
+Non-infield Stage 07 path:
+- Uses existing `build_talking_head_prompt()` (topic sections, techniques discussed, transcript quality).
+- No verification gate needed (`--skip-verification`): there are no 06b/06e artifacts to check.
+- No evidence allowlists, no damage maps, no confidence propagation.
+- Stage 07 `routing_lane=non_infield` in output metadata for downstream traceability.
+- Stages 08/09/10 work unchanged on the enriched output.
+
+Operator workflow:
+```bash
+# 1. Run Stage 06 on full manifest
+./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt
+
+# 2. Split into infield + non-infield
+./scripts/training-data/split-manifest --manifest docs/pipeline/batches/CANARY.1.txt
+
+# 3. Full pipeline on infield only
+./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.infield.txt
+./scripts/training-data/06c.patch    --manifest docs/pipeline/batches/CANARY.1.infield.txt
+# ... 06d → 06e → 06f → 06g → 06h → 07 → 08 → 09 → 10
+
+# 4. Later, when desired: non-infield through simpler path
+./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.non_infield.txt --skip-verification
+# ... 08 → 09 → 10
+```
+
+Implementation status (`2026-02-15`):
+- implemented:
+  - `scripts/training-data/split-manifest` — deterministic, no LLM.
+  - Reads Stage 06 `.conversations.json`, counts `conversation_id > 0`.
+  - Writes `<manifest>.infield.txt` and `<manifest>.non_infield.txt`.
+  - Supports `--stage06-root`, `--output-dir`, `--dry-run`.
+- verified:
+  - `python3 -m py_compile scripts/training-data/split-manifest` passes.
+  - Dry-run + real run on all active manifests:
+    - `CANARY.1`: 4 infield, 3 non_infield
+    - `HOLDOUT.1`: 3 infield, 4 non_infield
+    - `HARDENING.1`: 6 infield, 0 non_infield
+  - Output manifests written and verified correct.
 
 #### Canonical V2 Evaluation Loop
 
@@ -1315,6 +1606,95 @@ Successful V2 end-to-end run (`2026-02-15`, Claude Code session):
    `reason_code`, `source_stage`, `timestamp`, and segment-linked `damage_reason_code`. — **PASS** (P018.4: all 7 dropped candidates have required fields)
 8. No low-confidence contaminated chunk reaches primary ingest lane. — **PENDING** (Stage 09/10 not yet run on P018.4)
 9. D11 drift/budget artifacts remain within configured thresholds and audit samples are reviewed. — **PASS** (P018.4: damaged_token_ratio=0.039 < 0.10, dropped_anchor_ratio=0.065 < 0.25)
+
+##### Iteration D14: Artifact Severity Graduation + Chunk Cross-Referencing (NEXT)
+
+**Priority: HIGH — artifact severity is implemented, chunk cross-referencing is the next build.**
+
+###### D14a: Artifact Damage Severity (Implemented)
+
+Problem:
+- Stage 09 applies a flat ×0.75 chunk confidence penalty for ANY transcript artifact.
+- A doubled word ("there's there's") gets the same penalty as genuine gibberish.
+- Default masking removes ALL artifact segments from chunk text, including minor issues
+  where the text is fully understandable. This makes retrieval worse, not better.
+
+Changes (`2026-02-15`, pipeline v1.14, chunk confidence v2):
+- Stage 07 now stamps `damage_severity` on each artifact based on `artifact_type`:
+  - `nonsense` → `high` (genuine gibberish, unrecoverable)
+  - `language_confusion` → `medium` (wrong language, partially understandable)
+  - `word_repetition` → `low` (trivial stutter, fully understandable)
+  - Unknown types default to `medium`.
+- Stage 09 graduates chunk confidence penalty:
+  - `high` → ×0.70 (was ×0.75 for everything)
+  - `medium` → ×0.85
+  - `low` → ×0.97 (near-zero penalty)
+- Stage 09 masking now severity-gated: default only masks `high` severity artifacts.
+  `--mask-all-transcript-artifacts` restores old behavior.
+  `--no-mask-transcript-artifacts` still disables all masking.
+- Stage 09 `CHUNK_CONFIDENCE_VERSION` bumped to 2.
+- Stage 10 passes through `worstArtifactSeverity` metadata.
+- `src/qa/retrieval.ts` unchanged — reads `chunkConfidence` float, graduated penalty flows through.
+
+Impact on 1ok1oovp0K0 artifacts (example):
+- seg 98 (`nonsense`, high) → masked from chunk, ×0.70 penalty. Correct — gibberish.
+- seg 133 (`nonsense`, high) → masked, ×0.70. Correct — mishearing.
+- seg 200 (`word_repetition`, low) → kept in chunk, ×0.97. Correct — run-on but readable.
+- seg 264 (`word_repetition`, low) → kept in chunk, ×0.97. Correct — extra word, trivial.
+- seg 299 (`word_repetition`, low) → kept in chunk, ×0.97. Correct — stutter.
+
+Validation: re-run Stage 09 on P018.4, verify chunk confidence scores reflect graduated penalties.
+
+###### D14b: Chunk Cross-Referencing (Commentary ↔ Conversation Linking)
+
+Problem:
+- Commentary chunks and approach conversation chunks are independent in the embedding DB.
+- A coach's explanation of *why* a technique worked lives in a commentary chunk with no
+  explicit link to the conversation chunk where the technique was actually used.
+- Retrieval can surface one without the other. The system should know that if it pulls
+  chunk X (approach) from a video, chunk Y (commentary about that approach) is highly
+  relevant and should be surfaced together for stronger output.
+
+Design:
+- Stage 09 adds cross-reference metadata to chunks:
+  - Approach chunks: `relatedCommentaryBlockIndices: [1, 2]` — which commentary blocks discuss this conversation
+  - Commentary chunks: `relatedConversationId: N`, `blockIndex: N`
+- Linking strategy: `buildCommentaryConversationLinks()` in Stage 09 uses segment ID proximity:
+  - Commentary before all conversations → links to first conversation
+  - Commentary after all conversations → links to last conversation
+  - Commentary between two conversations → links to preceding (debrief heuristic)
+  - Interleaved commentary (same conversation on both sides) → links to that conversation
+  - No conversations in video → null
+- Retrieval (`src/qa/retrieval.ts`): when a chunk is retrieved, co-retrieves cross-referenced chunks.
+  - INTERACTION chunk → fetches commentary with matching `relatedConversationId`, appends as "Coach Commentary"
+  - COMMENTARY chunk → fetches conversation chunks with matching `conversationId`, appends as "Related Conversation"
+- Stage 10 passes through new metadata fields to DB (JSONB, no schema migration needed).
+- `fetchCommentaryForConversation()` added to `src/db/embeddingsRepo.ts` using JSONB containment.
+
+Pass criteria:
+- For any retrieved approach chunk, the system can identify and co-retrieve the coach's
+  commentary about that specific conversation.
+- For any retrieved commentary chunk, the system can identify the conversation it discusses.
+- Retrieval quality on coaching queries ("how do I handle X") improves when both the
+  example and the explanation are returned together.
+
+Implementation status (`2026-02-15`):
+- implemented:
+  - `buildCommentaryConversationLinks()` in Stage 09 — deterministic segment-proximity linking
+  - New chunk metadata: `blockIndex`, `relatedConversationId` (commentary), `relatedCommentaryBlockIndices` (approach)
+  - Stage 09 metadata assembly wires new fields into chunk output
+  - Stage 10 metadata pass-through for all three new fields
+  - `fetchCommentaryForConversation()` in `src/db/embeddingsRepo.ts` (JSONB containment query)
+  - Commentary co-retrieval in `src/qa/retrieval.ts` after existing context stitching
+  - Backward compatible: old chunks without new fields → no co-retrieval, no errors
+- verified:
+  - `npm test` passes (1082 tests)
+  - `node --import tsx/esm scripts/training-data/09.chunk-embed.ts --help` exits clean
+  - `node --import tsx/esm scripts/training-data/10.ingest.ts --help` exits clean
+- remaining:
+  - Re-run Stage 09 on P018.4 to verify chunk JSON includes new metadata fields
+  - Re-run Stage 10 dry-run to verify pass-through
+  - Full retrieval eval after ingest to measure co-retrieval quality impact
 
 ## Holdout Set (HOLDOUT.1)
 

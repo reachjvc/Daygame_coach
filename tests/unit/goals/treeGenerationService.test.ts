@@ -121,7 +121,7 @@ describe("generateGoalTreeInserts", () => {
       expect(config.start).toBe(1)
       expect(config.target).toBe(1000)
       expect(config.steps).toBe(15)
-      expect(config.curveTension).toBe(5)
+      expect(config.curveTension).toBe(0)
     })
 
     it("habit_ramp goals include ramp_steps from template defaults", () => {

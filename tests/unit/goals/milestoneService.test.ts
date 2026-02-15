@@ -229,7 +229,7 @@ describe("generateMilestoneLadder", () => {
     }
   })
 
-  test("tension=0 produces roughly linear milestones", () => {
+  test("tension=0 produces balanced geometric milestones", () => {
     const config: MilestoneLadderConfig = {
       start: 0,
       target: 100,
@@ -237,9 +237,9 @@ describe("generateMilestoneLadder", () => {
       curveTension: 0,
     }
     const result = generateMilestoneLadder(config)
-    // Middle value should be close to 50
-    const midValue = result[5].rawValue
-    expect(midValue).toBeCloseTo(50, 0)
+    // With log-space pool selection, geometric midpoint: √(1·100) = 10
+    const midRaw = result[5].rawValue
+    expect(midRaw).toBeCloseTo(10, 0)
   })
 
   test("positive tension front-loads milestones (small values early)", () => {
@@ -300,9 +300,9 @@ describe("generateMilestoneLadder", () => {
       controlPoints: [{ x: 0.5, y: 0.5 }],
     }
     const result = generateMilestoneLadder(config)
-    // Step 5 (the midpoint) should be near 500 due to control point
+    // Control point at y=0.5 → geometric midpoint: sqrt(1*1000) ≈ 31.6
     const midRaw = result[5].rawValue
-    expect(midRaw).toBeCloseTo(500.5, 0)
+    expect(midRaw).toBeCloseTo(31.6, 0)
   })
 
   test("works with small target values", () => {
@@ -321,23 +321,24 @@ describe("generateMilestoneLadder", () => {
     }
   })
 
-  test("the default tension ~5 produces approach-like milestones", () => {
+  test("pool selection avoids pathological gaps for large ranges", () => {
     const config: MilestoneLadderConfig = {
       start: 1,
       target: 1000,
       steps: 15,
-      curveTension: 5,
+      curveTension: 0,
     }
     const result = generateMilestoneLadder(config)
     const values = result.map((m) => m.value)
 
-    // First few milestones should be small (under 20)
-    expect(values[1]).toBeLessThanOrEqual(20)
-    expect(values[2]).toBeLessThanOrEqual(40)
+    // Every consecutive pair should have a ratio ≤ 5×
+    for (let i = 1; i < values.length; i++) {
+      const ratio = values[i] / Math.max(values[i - 1], 1)
+      expect(ratio).toBeLessThanOrEqual(5)
+    }
 
-    // Last few milestones should be large (over 400)
-    expect(values[12]).toBeGreaterThanOrEqual(300)
-    expect(values[13]).toBeGreaterThanOrEqual(500)
+    // Second-to-last milestone should be ≥ 300 (no 100→1000 gap)
+    expect(values[13]).toBeGreaterThanOrEqual(300)
   })
 })
 

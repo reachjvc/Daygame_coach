@@ -369,7 +369,8 @@ export function computeProjectedDate(goal: GoalWithProgress): ProjectedDateInfo 
 
 /**
  * Build initial preview state map from generated inserts.
- * L0/L1/L2 goals are always enabled (not user-toggleable).
+ * L0/L1 goals are always enabled (structural root).
+ * L2 goals default to ON but are user-toggleable.
  * L3 dirty_dog goals default to OFF. All other L3 default to ON.
  */
 export function buildPreviewState(
@@ -379,36 +380,61 @@ export function buildPreviewState(
   for (const insert of inserts) {
     const level = insert.goal_level ?? 0
     const isDirtyDog = insert.display_category === "dirty_dog"
-    state.set(insert._tempId, {
+    const entry: PreviewGoalState = {
       enabled: level < 3 || !isDirtyDog,
       targetValue: insert.target_value,
-    })
+    }
+    if (insert.milestone_config && typeof insert.milestone_config === "object") {
+      entry.milestoneConfig = insert.milestone_config as unknown as MilestoneLadderConfig
+    }
+    state.set(insert._tempId, entry)
   }
   return state
 }
 
 /**
  * Filter inserts based on preview state.
- * Removes disabled L3 goals. Keeps all L0/L1/L2 (structural).
+ * L0/L1 always kept (structural root). L2 filtered by enabled state.
+ * L3 filtered by own enabled state AND parent L2 enabled state.
  * Updates target_value and milestone_config.target from state overrides.
  */
 export function applyPreviewState(
   inserts: BatchGoalInsert[],
   state: Map<string, PreviewGoalState>
 ): BatchGoalInsert[] {
+  // Build set of disabled L2 tempIds for cascade filtering
+  const disabledL2s = new Set<string>()
+  for (const insert of inserts) {
+    if ((insert.goal_level ?? 0) === 2) {
+      const s = state.get(insert._tempId)
+      if (s && !s.enabled) disabledL2s.add(insert._tempId)
+    }
+  }
+
   return inserts
     .filter((insert) => {
       const level = insert.goal_level ?? 0
-      if (level < 3) return true
+      if (level < 2) return true // L0/L1 always included
+      if (level === 2) {
+        const s = state.get(insert._tempId)
+        return s ? s.enabled : true
+      }
+      // L3: excluded if parent L2 is disabled
+      if (insert._tempParentId && disabledL2s.has(insert._tempParentId)) return false
       const s = state.get(insert._tempId)
       return s ? s.enabled : true
     })
     .map((insert) => {
       const s = state.get(insert._tempId)
-      if (!s || s.targetValue === insert.target_value) return insert
+      if (!s) return insert
 
-      const updated = { ...insert, target_value: s.targetValue }
-      if (updated.milestone_config && typeof updated.milestone_config === "object") {
+      let updated = insert
+      if (s.targetValue !== insert.target_value) {
+        updated = { ...updated, target_value: s.targetValue }
+      }
+      if (s.milestoneConfig) {
+        updated = { ...updated, milestone_config: { ...s.milestoneConfig, target: updated.target_value } as unknown as Record<string, unknown> }
+      } else if (updated !== insert && updated.milestone_config && typeof updated.milestone_config === "object") {
         updated.milestone_config = { ...updated.milestone_config, target: s.targetValue }
       }
       return updated

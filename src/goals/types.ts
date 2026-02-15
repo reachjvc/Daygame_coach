@@ -236,4 +236,5 @@ export interface HierarchySection {
 export interface PreviewGoalState {
   enabled: boolean
   targetValue: number
+  milestoneConfig?: MilestoneLadderConfig
 }

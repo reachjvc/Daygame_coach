@@ -9,6 +9,7 @@ import { RotateCcw } from "lucide-react"
 import {
   generateMilestoneLadder,
   interpolateWithControlPoints,
+  roundToNiceNumber,
 } from "../milestoneService"
 import type { MilestoneLadderConfig, CurveControlPoint, GeneratedMilestone } from "../types"
 
@@ -36,6 +37,7 @@ export function MilestoneCurveEditor({
   const [editValue, setEditValue] = useState("")
   const svgRef = useRef<SVGSVGElement>(null)
   const [draggingCp, setDraggingCp] = useState<number | null>(null)
+  const [showAdvanced, setShowAdvanced] = useState(false)
 
   const milestones = useMemo(() => generateMilestoneLadder(config), [config])
 
@@ -79,7 +81,7 @@ export function MilestoneCurveEditor({
   }
 
   const handleResetCurve = () => {
-    onChange({ ...config, curveTension: 2, controlPoints: [] })
+    onChange({ ...config, curveTension: 0, controlPoints: [] })
   }
 
   // Control point drag handlers
@@ -151,7 +153,7 @@ export function MilestoneCurveEditor({
 
   // Y-axis labels
   const yLabels = [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-    label: Math.round(config.start + (config.target - config.start) * t),
+    label: t === 0 ? config.start : t === 1 ? config.target : roundToNiceNumber(config.start + (config.target - config.start) * t),
     y: toSvg(0, t).y,
   }))
 
@@ -228,6 +230,17 @@ export function MilestoneCurveEditor({
             strokeOpacity={0.15}
           />
 
+          {/* Linear reference line (faint diagonal) */}
+          <line
+            x1={PAD.left}
+            y1={PAD.top + PLOT_H}
+            x2={PAD.left + PLOT_W}
+            y2={PAD.top}
+            stroke="currentColor"
+            strokeOpacity={0.06}
+            strokeDasharray="4,4"
+          />
+
           {/* Curve line */}
           <path d={pathD} fill="none" stroke={accentColor} strokeWidth={2} strokeOpacity={0.6} />
 
@@ -285,19 +298,22 @@ export function MilestoneCurveEditor({
       <div className="grid grid-cols-2 gap-3">
         {/* Tension slider */}
         <div className="space-y-1.5">
-          <Label className="text-xs">
-            Curve shape
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-xs">Curve shape</Label>
+            <span className="text-[10px] text-muted-foreground tabular-nums">
+              {Math.abs(config.curveTension) < 0.05 ? "Linear" : config.curveTension.toFixed(1)}
+            </span>
+          </div>
           <Slider
             value={[config.curveTension]}
             onValueChange={handleTensionChange}
-            min={-3}
-            max={5}
+            min={-2}
+            max={2}
             step={0.1}
           />
           <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Back-loaded</span>
-            <span>Front-loaded</span>
+            <span>Big early jumps</span>
+            <span>Quick early wins</span>
           </div>
         </div>
 
@@ -328,38 +344,52 @@ export function MilestoneCurveEditor({
         </div>
       </div>
 
-      {/* Control points management */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleAddControlPoint}
-          disabled={(config.controlPoints ?? []).length >= 3}
-          className="text-xs h-7"
+      {/* Advanced controls toggle + reset */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
         >
-          + Control Point
-        </Button>
-        {(config.controlPoints ?? []).map((_, idx) => (
-          <Button
-            key={idx}
-            variant="ghost"
-            size="sm"
-            onClick={() => handleRemoveControlPoint(idx)}
-            className="text-xs h-7 text-muted-foreground"
-          >
-            Remove CP{idx + 1}
-          </Button>
-        ))}
+          {showAdvanced ? "Hide advanced" : "Advanced"}
+        </button>
+        <div className="flex-1" />
         <Button
           variant="ghost"
           size="sm"
           onClick={handleResetCurve}
-          className="text-xs h-7 text-muted-foreground ml-auto"
+          className="text-xs h-7 text-muted-foreground"
         >
           <RotateCcw className="size-3 mr-1" />
           Reset
         </Button>
       </div>
+
+      {/* Control points management (advanced) */}
+      {showAdvanced && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddControlPoint}
+            disabled={(config.controlPoints ?? []).length >= 3}
+            className="text-xs h-7"
+          >
+            + Control Point
+          </Button>
+          {(config.controlPoints ?? []).map((_, idx) => (
+            <Button
+              key={idx}
+              variant="ghost"
+              size="sm"
+              onClick={() => handleRemoveControlPoint(idx)}
+              className="text-xs h-7 text-muted-foreground"
+            >
+              Remove CP{idx + 1}
+            </Button>
+          ))}
+          <span className="text-[10px] text-muted-foreground">Drag points on the chart to reshape the curve</span>
+        </div>
+      )}
 
       {/* Milestone values list */}
       <div className="space-y-1">
@@ -403,16 +433,6 @@ export function MilestoneCurveEditor({
                   >
                     {m.value.toLocaleString()}
                   </button>
-                )}
-                {idx === 0 && (
-                  <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground">
-                    start
-                  </span>
-                )}
-                {idx === milestones.length - 1 && (
-                  <span className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 text-[9px] text-muted-foreground">
-                    goal
-                  </span>
                 )}
               </div>
             )

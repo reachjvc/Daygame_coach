@@ -13,6 +13,7 @@ import {
 const STILL_IMAGE = "/marcus-test/marcus_alive4_01.png"
 const VIDEO_SRC = "/Marcus/liveportrait_output/marcus_loop_01--test7.mp4"
 const VIDEO_SRC_1_2X = "/Marcus/liveportrait_output/marcus_loop_01--default_driver_1.2x.mp4"
+const VIDEO_SRC_JVC = "/Marcus/liveportrait_output/marcus_alive4_01--testJVC.mp4"
 
 const marcus = getRoleModelById("marcus-aurelius")!
 const categoryInfo = ROLE_MODEL_CATEGORIES.find(c => c.id === marcus.category)!
@@ -61,9 +62,11 @@ export default function MarcusLoopPage() {
         {/* Card row — simulating 5 role models */}
         <h2 className="text-white/60 text-sm mb-4">Card Preview (click for video)</h2>
         <div className="flex flex-wrap justify-center gap-5">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <RoleModelCard key={i} videoSrc={i >= 3 ? VIDEO_SRC_1_2X : VIDEO_SRC} label={i >= 3 ? "1.2× speed" : "1× speed"} />
+          {[0, 1, 2].map((i) => (
+            <RoleModelCard key={i} videoSrc={VIDEO_SRC} label="test7 1×" />
           ))}
+          <RoleModelCard key="1.2x" videoSrc={VIDEO_SRC_1_2X} label="1.2× speed" />
+          <RoleModelCard key="jvc" videoSrc={VIDEO_SRC_JVC} label="testJVC" />
         </div>
 
         {/* Effect Controls */}

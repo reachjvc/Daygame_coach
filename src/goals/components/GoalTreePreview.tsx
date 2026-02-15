@@ -1,16 +1,21 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { ArrowLeft, ChevronDown, ChevronRight, Milestone, Repeat } from "lucide-react"
+import { format, parse, isValid, startOfDay } from "date-fns"
+import { ArrowLeft, Calendar, ChevronDown, ChevronRight, ChevronUp, Milestone, Repeat, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Calendar as CalendarWidget } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { buildPreviewState, applyPreviewState } from "../goalsService"
+import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
 import type { BatchGoalInsert } from "../treeGenerationService"
-import type { PreviewGoalState, GoalDisplayCategory } from "../types"
+import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig } from "../types"
 
 const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
   results: "Results",
-  dirty_dog: "Dirty Dog Goals",
+  dirty_dog: "Dirty Dog",
 }
 
 const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog"]
@@ -23,6 +28,10 @@ interface GoalTreePreviewProps {
 }
 
 export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBack }: GoalTreePreviewProps) {
+  const [targetDate, setTargetDate] = useState<Date | null>(null)
+  const [dateText, setDateText] = useState("")
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+
   const [previewState, setPreviewState] = useState<Map<string, PreviewGoalState>>(
     () => {
       const state = buildPreviewState(inserts)
@@ -74,6 +83,15 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
   const rootGoal = structural.find((s) => !s._tempParentId)
   const l2Goals = structural.filter((s) => (s.goal_level ?? 0) === 2)
 
+  const disabledL2Set = useMemo(() => {
+    const set = new Set<string>()
+    for (const g of l2Goals) {
+      const s = previewState.get(g._tempId)
+      if (s && !s.enabled) set.add(g._tempId)
+    }
+    return set
+  }, [l2Goals, previewState])
+
   const toggleGoal = (tempId: string) => {
     setPreviewState((prev) => {
       const next = new Map(prev)
@@ -85,12 +103,43 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
     })
   }
 
+  const toggleL2 = (l2TempId: string) => {
+    setPreviewState((prev) => {
+      const next = new Map(prev)
+      const current = next.get(l2TempId)
+      if (!current) return prev
+      const newEnabled = !current.enabled
+      next.set(l2TempId, { ...current, enabled: newEnabled })
+      // Cascade to all L3 children of this L2
+      for (const insert of inserts) {
+        if (insert._tempParentId === l2TempId && (insert.goal_level ?? 0) === 3) {
+          const childState = next.get(insert._tempId)
+          if (childState) {
+            next.set(insert._tempId, { ...childState, enabled: newEnabled })
+          }
+        }
+      }
+      return next
+    })
+  }
+
   const updateTarget = (tempId: string, value: number) => {
     setPreviewState((prev) => {
       const next = new Map(prev)
       const current = next.get(tempId)
       if (current) {
         next.set(tempId, { ...current, targetValue: value })
+      }
+      return next
+    })
+  }
+
+  const updateMilestoneConfig = (tempId: string, config: MilestoneLadderConfig) => {
+    setPreviewState((prev) => {
+      const next = new Map(prev)
+      const current = next.get(tempId)
+      if (current) {
+        next.set(tempId, { ...current, milestoneConfig: config })
       }
       return next
     })
@@ -112,6 +161,13 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
 
   const handleConfirm = () => {
     const filtered = applyPreviewState(inserts, previewState)
+    // Apply target date to the root (L1) goal
+    if (targetDate && rootGoal) {
+      const idx = filtered.findIndex((i) => i._tempId === rootGoal._tempId)
+      if (idx !== -1) {
+        filtered[idx] = { ...filtered[idx], target_date: format(targetDate, "yyyy-MM-dd") }
+      }
+    }
     onConfirm(filtered)
   }
 
@@ -129,8 +185,18 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
         </button>
         <h2 className="text-xl font-bold">Customize Your Goals</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Toggle goals on or off, and adjust targets before creating.
+          Your big goal breaks into trackable sub-goals. Toggle any off or adjust targets to fit your pace.
         </p>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Milestone className="size-3" />
+            <span><span className="text-foreground font-medium">Milestone</span> — cumulative lifetime target</span>
+          </span>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Repeat className="size-3" />
+            <span><span className="text-foreground font-medium">Habit Ramp</span> — weekly target that grows over time</span>
+          </span>
+        </div>
       </div>
 
       {/* Summary */}
@@ -142,17 +208,102 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
           {enabledCount} {enabledCount === 1 ? "goal" : "goals"} selected
         </p>
         {l2Goals.length > 0 && (
-          <div className="flex gap-2 mt-2">
-            {l2Goals.map((g) => (
-              <span
-                key={g._tempId}
-                className="text-xs bg-primary/10 text-primary rounded-full px-2.5 py-0.5"
-              >
-                {g.title}
-              </span>
-            ))}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {l2Goals.map((g) => {
+              const state = previewState.get(g._tempId)
+              const enabled = state?.enabled ?? true
+              const childCount = inserts.filter(
+                (i) => i._tempParentId === g._tempId && (i.goal_level ?? 0) === 3
+              ).length
+              return (
+                <button
+                  key={g._tempId}
+                  onClick={() => toggleL2(g._tempId)}
+                  className={`text-xs rounded-full px-2.5 py-0.5 transition-colors cursor-pointer ${
+                    enabled
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted/50 text-muted-foreground line-through opacity-60"
+                  }`}
+                >
+                  {g.title}{childCount > 0 ? ` (${childCount})` : ""}
+                </button>
+              )
+            })}
           </div>
         )}
+
+        {/* Target date for the top-level goal */}
+        <div className="mt-3 pt-3 border-t border-border/50">
+          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
+            <Calendar className="size-3" />
+            Achieve by (optional)
+          </p>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Input
+                placeholder="dd/mm/yyyy"
+                value={dateText}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/\D/g, "").slice(0, 8)
+                  let masked = ""
+                  for (let i = 0; i < raw.length; i++) {
+                    if (i === 2 || i === 4) masked += "/"
+                    masked += raw[i]
+                  }
+                  setDateText(masked)
+                  const parsed = parse(masked, "dd/MM/yyyy", new Date())
+                  if (masked.length === 10 && isValid(parsed) && parsed >= startOfDay(new Date())) {
+                    setTargetDate(parsed)
+                  } else {
+                    setTargetDate(null)
+                  }
+                }}
+                className="w-36"
+              />
+              {dateText.length > 0 && dateText.length < 10 && (
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 text-sm pointer-events-none select-none">
+                  {"dd/mm/yyyy".slice(dateText.length)}
+                </span>
+              )}
+            </div>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  className="text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  aria-label="Open calendar"
+                >
+                  <Calendar className="size-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarWidget
+                  mode="single"
+                  captionLayout="dropdown"
+                  selected={targetDate ?? undefined}
+                  onSelect={(d) => {
+                    setTargetDate(d ?? null)
+                    setDateText(d ? format(d, "dd/MM/yyyy") : "")
+                    setDatePickerOpen(false)
+                  }}
+                  defaultMonth={targetDate ?? new Date()}
+                  startMonth={new Date()}
+                  endMonth={new Date(new Date().getFullYear() + 5, 11)}
+                  disabled={{ before: startOfDay(new Date()) }}
+                  autoFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {targetDate && (
+              <button
+                onClick={() => { setTargetDate(null); setDateText("") }}
+                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                aria-label="Clear date"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* L3 Goals by Category */}
@@ -171,6 +322,8 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
               onToggle={toggleGoal}
               onToggleCategory={toggleCategory}
               onUpdateTarget={updateTarget}
+              onUpdateMilestoneConfig={updateMilestoneConfig}
+              disabledL2s={disabledL2Set}
             />
           )
         })}
@@ -209,6 +362,8 @@ interface CategorySectionProps {
   onToggle: (tempId: string) => void
   onToggleCategory: (category: GoalDisplayCategory, enabled: boolean) => void
   onUpdateTarget: (tempId: string, value: number) => void
+  onUpdateMilestoneConfig: (tempId: string, config: MilestoneLadderConfig) => void
+  disabledL2s: Set<string>
 }
 
 function CategorySection({
@@ -220,6 +375,8 @@ function CategorySection({
   onToggle,
   onToggleCategory,
   onUpdateTarget,
+  onUpdateMilestoneConfig,
+  disabledL2s,
 }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const label = CATEGORY_LABELS[category]
@@ -229,6 +386,67 @@ function CategorySection({
   ).length
   const allEnabled = enabledInCategory === goals.length
   const noneEnabled = enabledInCategory === 0
+
+  const isDirtyDog = category === "dirty_dog"
+
+  if (isDirtyDog) {
+    return (
+      <div className="relative">
+        <div className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="font-semibold text-sm">{label}</h3>
+            <span className="text-xs text-muted-foreground">
+              {enabledInCategory}/{goals.length} selected
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground/70">
+            These track intimate outcomes. Opt in if relevant.
+          </p>
+
+          {!collapsed && (
+            <div className="space-y-1.5 mt-3">
+              {goals.map((goal) => {
+                const state = previewState.get(goal._tempId)
+                if (!state) return null
+                const parentOff = !!(goal._tempParentId && disabledL2s.has(goal._tempParentId))
+                return (
+                  <GoalPreviewRow
+                    key={goal._tempId}
+                    goal={goal}
+                    state={state}
+                    isExisting={!!(goal.template_id && existingTemplateIds?.has(goal.template_id))}
+                    parentDisabled={parentOff}
+                    onToggle={() => onToggle(goal._tempId)}
+                    onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
+                    onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
+                  />
+                )
+              })}
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={() => onToggleCategory(category, noneEnabled || !allEnabled)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {allEnabled ? "Deselect all" : "Select all"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-center -mt-4 relative z-10">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="group flex items-center gap-2 pl-4 pr-3 py-1.5 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all hover:scale-105 hover:shadow-xl cursor-pointer"
+          >
+            <span className="text-xs font-medium">
+              {collapsed ? `Show ${goals.length} goals` : "Hide"}
+            </span>
+            {collapsed ? <ChevronDown className="size-3.5" /> : <ChevronUp className="size-3.5" />}
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -256,25 +474,22 @@ function CategorySection({
         </button>
       </div>
 
-      {category === "dirty_dog" && !collapsed && noneEnabled && (
-        <p className="text-xs text-muted-foreground/70 mb-2 ml-5">
-          These track intimate outcomes. Opt in if relevant to your goals.
-        </p>
-      )}
-
       {!collapsed && (
         <div className="space-y-1.5">
           {goals.map((goal) => {
             const state = previewState.get(goal._tempId)
             if (!state) return null
+            const parentOff = !!(goal._tempParentId && disabledL2s.has(goal._tempParentId))
             return (
               <GoalPreviewRow
                 key={goal._tempId}
                 goal={goal}
                 state={state}
                 isExisting={!!(goal.template_id && existingTemplateIds?.has(goal.template_id))}
+                parentDisabled={parentOff}
                 onToggle={() => onToggle(goal._tempId)}
                 onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
+                onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
               />
             )
           })}
@@ -292,41 +507,49 @@ interface GoalPreviewRowProps {
   goal: BatchGoalInsert
   state: PreviewGoalState
   isExisting?: boolean
+  parentDisabled?: boolean
   onToggle: () => void
   onUpdateTarget: (value: number) => void
+  onUpdateMilestoneConfig: (config: MilestoneLadderConfig) => void
 }
 
-function GoalPreviewRow({ goal, state, isExisting = false, onToggle, onUpdateTarget }: GoalPreviewRowProps) {
+function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = false, onToggle, onUpdateTarget, onUpdateMilestoneConfig }: GoalPreviewRowProps) {
+  const [showCurve, setShowCurve] = useState(false)
   const isRamp = goal.goal_type === "habit_ramp"
-  const targetLabel = isRamp ? `${state.targetValue}/wk` : state.targetValue.toLocaleString()
+  const isMilestone = !isRamp && !!state.milestoneConfig
+  const effectivelyOff = parentDisabled || !state.enabled
 
   return (
     <div
-      className={`flex items-center gap-3 rounded-lg border p-3 transition-colors ${
-        state.enabled
-          ? "border-border bg-card"
-          : "border-border/50 bg-muted/30 opacity-60"
+      className={`rounded-lg border p-3 transition-colors ${
+        effectivelyOff
+          ? "border-border/50 bg-muted/30 opacity-60"
+          : "border-border bg-card"
       }`}
     >
+      <div className="flex items-center gap-3">
       {/* Toggle */}
       <button
-        onClick={onToggle}
-        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 cursor-pointer ${
-          state.enabled ? "bg-primary" : "bg-muted"
+        onClick={parentDisabled ? undefined : onToggle}
+        disabled={parentDisabled}
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
+          parentDisabled ? "cursor-not-allowed" : "cursor-pointer"
+        } ${
+          state.enabled && !parentDisabled ? "bg-primary" : "bg-muted"
         }`}
         role="switch"
-        aria-checked={state.enabled}
+        aria-checked={state.enabled && !parentDisabled}
       >
         <span
           className={`inline-block size-3.5 rounded-full bg-white transition-transform shadow-sm ${
-            state.enabled ? "translate-x-[18px]" : "translate-x-[3px]"
+            state.enabled && !parentDisabled ? "translate-x-[18px]" : "translate-x-[3px]"
           }`}
         />
       </button>
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{goal.title}</p>
+        <p className={`text-sm font-medium truncate ${parentDisabled ? "line-through" : ""}`}>{goal.title}</p>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           {isRamp ? (
             <span className="flex items-center gap-1">
@@ -345,11 +568,14 @@ function GoalPreviewRow({ goal, state, isExisting = false, onToggle, onUpdateTar
           {isExisting && (
             <span className="text-amber-400">Already tracking</span>
           )}
+          {parentDisabled && (
+            <span className="text-muted-foreground/70 italic">Parent goal disabled</span>
+          )}
         </div>
       </div>
 
       {/* Target editor */}
-      {state.enabled && (
+      {state.enabled && !parentDisabled && (
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-muted-foreground">Target:</span>
           <input
@@ -359,10 +585,32 @@ function GoalPreviewRow({ goal, state, isExisting = false, onToggle, onUpdateTar
               const v = parseInt(e.target.value, 10)
               if (!isNaN(v) && v > 0) onUpdateTarget(v)
             }}
-            className="w-16 text-right text-sm font-medium bg-transparent border border-border/50 rounded px-1.5 py-0.5 focus:outline-none focus:border-primary"
+            className="w-16 text-right text-sm font-medium bg-muted/50 border border-border rounded px-1.5 py-0.5 focus:outline-none focus:border-primary"
             min={1}
           />
           {isRamp && <span className="text-xs text-muted-foreground">/wk</span>}
+        </div>
+      )}
+      </div>
+
+      {/* Milestone curve editor */}
+      {isMilestone && state.enabled && !parentDisabled && (
+        <div className="mt-2">
+          <button
+            onClick={() => setShowCurve(!showCurve)}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
+            {showCurve ? "Hide curve" : "Customize curve"}
+          </button>
+          {showCurve && state.milestoneConfig && (
+            <div className="mt-2">
+              <MilestoneCurveEditor
+                config={{ ...state.milestoneConfig, target: state.targetValue }}
+                onChange={onUpdateMilestoneConfig}
+                allowDirectEdit
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

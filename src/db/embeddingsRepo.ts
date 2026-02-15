@@ -124,6 +124,33 @@ export async function fetchEmbeddingsBySourceAndConversation(
 }
 
 /**
+ * Fetch commentary chunks related to a specific conversation from the same source.
+ * Uses JSONB containment to match relatedConversationId in metadata.
+ * Part of D14b cross-referencing.
+ */
+export async function fetchCommentaryForConversation(
+  source: string,
+  conversationId: number
+): Promise<Array<Pick<EmbeddingRow, "id" | "content" | "source" | "metadata">>> {
+  const supabase = createAdminSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("embeddings")
+    .select("id, content, source, metadata")
+    .eq("source", source)
+    .contains("metadata", { relatedConversationId: conversationId })
+    .limit(20)
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch commentary for source '${source}', conversationId ${conversationId}: ${error.message}`
+    )
+  }
+
+  return (data ?? []) as Array<Pick<EmbeddingRow, "id" | "content" | "source" | "metadata">>
+}
+
+/**
  * Get total count of embeddings (for stats/diagnostics).
  */
 export async function getEmbeddingsCount(): Promise<number> {

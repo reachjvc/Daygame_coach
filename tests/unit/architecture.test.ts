@@ -14,7 +14,7 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
-import { UTILITY_ICONS, SEMANTIC_ICON_ROLES } from '../../src/shared/iconRoles'
+import { UTILITY_ICONS, SEMANTIC_ICON_ROLES, CUSTOM_ICON_COMPONENTS } from '../../src/shared/iconRoles'
 
 const projectRoot = path.resolve(__dirname, '../..')
 
@@ -316,6 +316,45 @@ describe('Architecture Compliance', () => {
       expect(
         violations,
         `Unregistered icons used in multiple files (add to src/shared/iconRoles.ts):\n${violations.join('\n\n')}`
+      ).toHaveLength(0)
+    })
+
+    test('Custom icon components must only be used in allowed contexts', () => {
+      const dirsToScan = [
+        path.join(projectRoot, 'src'),
+        path.join(projectRoot, 'components'),
+        path.join(projectRoot, 'app'),
+      ]
+
+      const violations: string[] = []
+
+      for (const [iconName, config] of Object.entries(CUSTOM_ICON_COMPONENTS)) {
+        const importRegex = new RegExp(`import.*\\b${config.importPattern}\\b`)
+
+        for (const dir of dirsToScan) {
+          const files = getAllFiles(dir, /\.tsx?$/)
+            .filter(f => !f.includes('iconRoles.ts') && !f.endsWith('GoalIcon.tsx'))
+
+          for (const file of files) {
+            const content = fs.readFileSync(file, 'utf-8')
+            const relativePath = path.relative(projectRoot, file)
+
+            if (!importRegex.test(content)) continue
+
+            const isAllowed = config.allowedPathPatterns.some(p => p.test(relativePath))
+            if (!isAllowed) {
+              violations.push(
+                `${iconName} imported in ${relativePath} but not in allowed paths.\n` +
+                `  Allowed: ${config.allowedPathPatterns.map(p => p.source).join(', ')}`
+              )
+            }
+          }
+        }
+      }
+
+      expect(
+        violations,
+        `Custom icon components used outside allowed contexts (update CUSTOM_ICON_COMPONENTS in iconRoles.ts):\n${violations.join('\n\n')}`
       ).toHaveLength(0)
     })
   })

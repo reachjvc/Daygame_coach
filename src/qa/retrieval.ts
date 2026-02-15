@@ -1,4 +1,4 @@
-import { searchSimilarEmbeddings, searchEmbeddingsByKeyword, fetchEmbeddingsBySourceAndConversation } from "@/src/db/server"
+import { searchSimilarEmbeddings, searchEmbeddingsByKeyword, fetchEmbeddingsBySourceAndConversation, fetchCommentaryForConversation } from "@/src/db/server"
 import type { EmbeddingMetadata } from "@/src/db/types"
 import { QA_CONFIG } from "./config"
 import type { RetrievalOptions, RetrievedChunk } from "./types"
@@ -527,6 +527,73 @@ export async function retrieveRelevantChunks(
 
   await Promise.all(stitchTasks)
 
+  // D14b: Commentary co-retrieval — when a conversation chunk is retrieved,
+  // also fetch related commentary from the same source (and vice versa).
+  const commentaryCache = new Map<string, Array<{ id: string; content: string; source: string; metadata: EmbeddingMetadata | null }>>()
+
+  async function getCommentaryForConversation(source: string, convId: number) {
+    const key = `${source}|commentary|${convId}`
+    const cached = commentaryCache.get(key)
+    if (cached) return cached
+    try {
+      const rows = await fetchCommentaryForConversation(source, convId)
+      const normalized = rows.map((r) => ({
+        id: r.id,
+        content: r.content,
+        source: r.source,
+        metadata: (r.metadata ?? null) as EmbeddingMetadata | null,
+      }))
+      commentaryCache.set(key, normalized)
+      return normalized
+    } catch {
+      commentaryCache.set(key, [])
+      return []
+    }
+  }
+
+  const crossRefContentById = new Map<string, { text: string; type: "commentary" | "conversation" }>()
+
+  const crossRefTasks = selectedMatches.map(async (match) => {
+    const sourceKey = normalizeSourcePath(match.source) || ""
+    if (!sourceKey) return
+    const meta = match.metadata as Record<string, unknown> | null
+    if (!meta) return
+
+    const segmentType = String(meta.segmentType ?? "").toUpperCase()
+    const convId = asFiniteNumber(meta.conversationId as unknown)
+    const relatedConvId = asFiniteNumber(meta.relatedConversationId as unknown)
+
+    if (segmentType === "INTERACTION" && convId !== null) {
+      // Conversation chunk → co-retrieve related commentary
+      const commentary = await getCommentaryForConversation(sourceKey, convId)
+      if (commentary.length > 0) {
+        const sorted = [...commentary].sort((a, b) => {
+          const aIdx = asFiniteNumber((a.metadata as Record<string, unknown> | null)?.blockIndex as unknown) ?? 999
+          const bIdx = asFiniteNumber((b.metadata as Record<string, unknown> | null)?.blockIndex as unknown) ?? 999
+          return aIdx - bIdx
+        })
+        const topCommentary = sorted.slice(0, 3)
+        const commentaryText = topCommentary.map((c) => c.content).join("\n\n---\n\n")
+        if (commentaryText.trim()) {
+          crossRefContentById.set(match.id, { text: commentaryText, type: "commentary" })
+        }
+      }
+    } else if ((segmentType === "COMMENTARY" || segmentType === "EXPLANATION") && relatedConvId !== null && relatedConvId > 0) {
+      // Commentary chunk → co-retrieve the related conversation
+      const convChunks = await getConversationChunks(sourceKey, relatedConvId)
+      if (convChunks.length > 0) {
+        const sorted = sortConversationChunks(convChunks)
+        const selected = sorted.length <= 4 ? sorted : sorted.slice(0, 3)
+        const convText = selected.map((r) => r.content).join("\n\n---\n\n")
+        if (convText.trim()) {
+          crossRefContentById.set(match.id, { text: convText, type: "conversation" })
+        }
+      }
+    }
+  })
+
+  await Promise.all(crossRefTasks)
+
   // Transform to RetrievedChunk format, truncating if needed
   const chunks: RetrievedChunk[] = selectedMatches.map((match) => {
     const rawCoach = match.metadata?.coach ?? match.metadata?.channel ?? deriveCoachFromSource(match.source)
@@ -534,7 +601,16 @@ export async function retrieveRelevantChunks(
       (typeof match.metadata?.video_title === "string" ? match.metadata.video_title : undefined) ??
       deriveTopicFromSource(match.source)
 
-    const content = stitchedContentById.get(match.id) ?? match.content
+    let content = stitchedContentById.get(match.id) ?? match.content
+
+    // D14b: append cross-referenced commentary or conversation context
+    const crossRef = crossRefContentById.get(match.id)
+    if (crossRef) {
+      const separator = crossRef.type === "commentary"
+        ? "\n\n=== Coach Commentary ===\n\n"
+        : "\n\n=== Related Conversation ===\n\n"
+      content = content + separator + crossRef.text
+    }
 
     return {
       chunkId: match.id,

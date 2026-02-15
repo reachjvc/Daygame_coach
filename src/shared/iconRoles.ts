@@ -104,6 +104,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Rocket: ["onboarding"],
   Sparkles: ["AI/magic features", "sparkle decoration"],
   Star: ["favorites", "dream goals", "primary mission", "suggestion highlight"],
+  Swords: ["scenarios module", "practice/sparring"],
   Sun: ["daily view"],
   Sunrise: ["inner-game aspiration", "value prioritization"],
   Target: ["icon preview"],
@@ -119,3 +120,24 @@ export const ALL_REGISTERED_ICONS = new Set([
   ...UTILITY_ICONS,
   ...Object.keys(SEMANTIC_ICON_ROLES),
 ])
+
+// ---------------------------------------------------------------------------
+// Custom icon components — project-specific SVG components that act as icons.
+// Each entry maps an import path fragment to the file patterns allowed to use it.
+// Enforced by tests/unit/architecture.test.ts.
+//
+// CLAUDE: Do NOT add entries or expand allowed patterns without explicit user approval.
+// ---------------------------------------------------------------------------
+export const CUSTOM_ICON_COMPONENTS: Record<string, { importPattern: string; allowedPathPatterns: RegExp[] }> = {
+  GoalIcon: {
+    importPattern: "GoalIcon",
+    allowedPathPatterns: [
+      /src\/goals\//,
+      /src\/tracking\//,
+      /src\/inner-game\//,
+      /src\/home\//,
+      /components\/AppHeader/,
+      /app\/test\//,
+    ],
+  },
+}

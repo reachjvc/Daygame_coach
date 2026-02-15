@@ -60,6 +60,7 @@ type Args = {
   source: string | null
   manifest: string | null
   maskTranscriptArtifacts: boolean
+  maskAllTranscriptArtifacts: boolean
   maskLowQuality: boolean
 }
 
@@ -99,6 +100,7 @@ type ChunkMetadata = {
   asrLowQualitySegmentCount?: number
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
+  worstArtifactSeverity?: string
   // Deterministic heuristic score for retrieval downranking (0.0-1.0).
   chunkConfidence?: number
   chunkConfidenceScore?: number
@@ -110,6 +112,10 @@ type ChunkMetadata = {
   damaged_segment_ids?: number[]
   containsRepairedText?: boolean
   contains_repaired_text?: boolean
+  // Cross-reference fields (D14b: commentary ↔ conversation linking)
+  blockIndex?: number
+  relatedConversationId?: number | null
+  relatedCommentaryBlockIndices?: number[]
 }
 
 type Chunk = {
@@ -221,6 +227,7 @@ type EnrichedFile = {
     segment_index?: number
     artifact_type?: string
     description?: string
+    damage_severity?: string
   }>
   speaker_labels?: SpeakerLabels
   segments?: ContentSegment[]
@@ -250,6 +257,7 @@ type InternalChunk = {
   asrLowQualitySegmentCount?: number
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
+  worstArtifactSeverity?: string
   chunkConfidence?: number
   chunkConfidenceScore?: number
   chunkConfidenceVersion?: number
@@ -257,6 +265,10 @@ type InternalChunk = {
   problematicReason?: string[]
   damagedSegmentIds?: number[]
   containsRepairedText?: boolean
+  // Cross-reference fields (D14b)
+  blockIndex?: number
+  relatedConversationId?: number | null
+  relatedCommentaryBlockIndices?: number[]
 }
 
 // ---------------------------------------------------------------------------
@@ -273,7 +285,8 @@ function printUsage() {
   console.log("  --dry-run                        Build chunks without writing/embedding")
   console.log("  --full, --force                  Force re-chunk of all eligible files")
   console.log("  --mask-low-quality               Also mask low-quality segments")
-  console.log("  --no-mask-transcript-artifacts   Keep transcript artifacts in chunk text")
+  console.log("  --no-mask-transcript-artifacts   Keep ALL transcript artifacts in chunk text")
+  console.log("  --mask-all-transcript-artifacts  Mask all artifacts (not just high-severity)")
   console.log("  -h, --help                       Show this help")
 }
 
@@ -304,9 +317,11 @@ function parseArgs(argv: string[]): Args {
     help: flags.has("-h") || flags.has("--help"),
     source,
     manifest,
-    // Default: mask transcript_artifacts (usually egregious nonsense / repeated garbage).
-    // Low-quality segment flags are more subjective, so keep them unless explicitly enabled.
+    // Default: mask only high-severity transcript artifacts (genuine nonsense/gibberish).
+    // Low-severity artifacts (word repetition, minor grammar) are kept in chunk text.
+    // --mask-all-transcript-artifacts restores old behavior of masking everything.
     maskTranscriptArtifacts: !flags.has("--no-mask-transcript-artifacts"),
+    maskAllTranscriptArtifacts: flags.has("--mask-all-transcript-artifacts"),
     maskLowQuality: flags.has("--mask-low-quality"),
   }
 }
@@ -427,16 +442,21 @@ function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
 const PROBLEMATIC_SPEAKER_ROLES = ["collapsed", "mixed/unclear", "unknown"]
 const MIN_SPEAKER_CONFIDENCE = 0.7
 
+// Severity ordering for worst-wins comparison
+const ARTIFACT_SEVERITY_ORDER: Record<string, number> = { low: 1, medium: 2, high: 3 }
+
 type AsrQualityIndex = {
   lowQualityIds: Set<number>
   transcriptArtifactIds: Set<number>
   transcriptArtifactTypesById: Map<number, Set<string>>
+  transcriptArtifactSeveritiesById: Map<number, string>
 }
 
 function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
   const lowQualityIds = new Set<number>()
   const transcriptArtifactIds = new Set<number>()
   const transcriptArtifactTypesById = new Map<number, Set<string>>()
+  const transcriptArtifactSeveritiesById = new Map<number, string>()
 
   for (const lq of file.low_quality_segments ?? []) {
     const segId = lq?.segment
@@ -449,13 +469,21 @@ function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
     transcriptArtifactIds.add(segId)
 
     const t = typeof art?.artifact_type === "string" ? art.artifact_type.trim() : ""
-    if (!t) continue
-    const set = transcriptArtifactTypesById.get(segId) ?? new Set<string>()
-    set.add(t)
-    transcriptArtifactTypesById.set(segId, set)
+    if (t) {
+      const set = transcriptArtifactTypesById.get(segId) ?? new Set<string>()
+      set.add(t)
+      transcriptArtifactTypesById.set(segId, set)
+    }
+
+    // Track worst severity per segment (default "medium" if not stamped by Stage 07)
+    const severity = typeof art?.damage_severity === "string" ? art.damage_severity : "medium"
+    const existing = transcriptArtifactSeveritiesById.get(segId)
+    if (!existing || (ARTIFACT_SEVERITY_ORDER[severity] ?? 2) > (ARTIFACT_SEVERITY_ORDER[existing] ?? 2)) {
+      transcriptArtifactSeveritiesById.set(segId, severity)
+    }
   }
 
-  return { lowQualityIds, transcriptArtifactIds, transcriptArtifactTypesById }
+  return { lowQualityIds, transcriptArtifactIds, transcriptArtifactTypesById, transcriptArtifactSeveritiesById }
 }
 
 function collectAsrStats(
@@ -465,12 +493,14 @@ function collectAsrStats(
   lowQualityCount: number
   transcriptArtifactCount: number
   transcriptArtifactTypes: string[]
+  worstArtifactSeverity: string | null
 } {
-  if (!asr) return { lowQualityCount: 0, transcriptArtifactCount: 0, transcriptArtifactTypes: [] }
+  if (!asr) return { lowQualityCount: 0, transcriptArtifactCount: 0, transcriptArtifactTypes: [], worstArtifactSeverity: null }
 
   let lowQualityCount = 0
   let transcriptArtifactCount = 0
   const types = new Set<string>()
+  let worstSeverity: string | null = null
 
   for (const seg of segments) {
     const segId = seg.id
@@ -482,6 +512,10 @@ function collectAsrStats(
       if (segTypes) {
         for (const t of segTypes) types.add(t)
       }
+      const segSeverity = asr.transcriptArtifactSeveritiesById.get(segId)
+      if (segSeverity && (!worstSeverity || (ARTIFACT_SEVERITY_ORDER[segSeverity] ?? 2) > (ARTIFACT_SEVERITY_ORDER[worstSeverity] ?? 2))) {
+        worstSeverity = segSeverity
+      }
     }
   }
 
@@ -489,6 +523,7 @@ function collectAsrStats(
     lowQualityCount,
     transcriptArtifactCount,
     transcriptArtifactTypes: Array.from(types).sort((a, b) => a.localeCompare(b)),
+    worstArtifactSeverity: worstSeverity,
   }
 }
 
@@ -530,7 +565,7 @@ function collectConfidenceDamageStats(
   }
 }
 
-const CHUNK_CONFIDENCE_VERSION = 1
+const CHUNK_CONFIDENCE_VERSION = 2  // v2: graduated artifact severity penalty (was flat x0.75)
 
 function clamp01(n: number): number {
   if (!Number.isFinite(n)) return 0
@@ -555,7 +590,12 @@ function computeChunkConfidence(chunk: InternalChunk): number {
   if (probs.some((r) => r === "confidence_tier:medium")) conf *= 0.90
   if (probs.some((r) => r === "contamination_sources_present")) conf *= 0.82
 
-  if ((chunk.asrTranscriptArtifactCount ?? 0) > 0) conf *= 0.75
+  // Graduated artifact penalty based on worst severity in chunk
+  const artSeverity = chunk.worstArtifactSeverity
+  if (artSeverity === "high") conf *= 0.70
+  else if (artSeverity === "medium") conf *= 0.85
+  else if (artSeverity === "low") conf *= 0.97
+
   if ((chunk.asrLowQualitySegmentCount ?? 0) > 0) conf *= 0.85
   if ((chunk.damagedSegmentIds ?? []).length > 0) conf *= 0.82
 
@@ -761,6 +801,7 @@ function chunkInteractionByPhase(
             asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
             asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
             asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+            worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
             problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
             damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
             containsRepairedText: confStats.containsRepairedText || undefined,
@@ -824,6 +865,7 @@ function chunkInteractionByPhase(
         asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
         asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
         asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+        worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
         problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
         damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
         containsRepairedText: confStats.containsRepairedText || undefined,
@@ -855,6 +897,123 @@ function groupCommentaryBlocks(segs: ContentSegment[]): ContentSegment[][] {
     blocks.push(current)
   }
   return blocks
+}
+
+type CrossReferenceMap = {
+  /** blockIndex (1-indexed) → linked conversation_id (null if no conversations) */
+  commentaryToConversation: Map<number, number | null>
+  /** conversation_id → blockIndex[] (1-indexed) */
+  conversationToCommentary: Map<number, number[]>
+}
+
+/**
+ * Build cross-reference links between commentary blocks and approach conversations.
+ * Uses segment ID proximity to determine which commentary discusses which conversation.
+ *
+ * Heuristic:
+ * - Commentary before all conversations → links to first conversation
+ * - Commentary after all conversations → links to last conversation
+ * - Commentary between two conversations → links to preceding conversation (debrief)
+ * - Same conversation on both sides (interleaved) → links to that conversation
+ * - No conversations in video → null
+ */
+function buildCommentaryConversationLinks(
+  commentaryBlocks: ContentSegment[][],
+  segments: ContentSegment[]
+): CrossReferenceMap {
+  const result: CrossReferenceMap = {
+    commentaryToConversation: new Map(),
+    conversationToCommentary: new Map(),
+  }
+
+  if (commentaryBlocks.length === 0) return result
+
+  // Build conversation ranges: for each conversation_id > 0, find min/max segment.id
+  const convRanges = new Map<number, { minSegId: number; maxSegId: number }>()
+  for (const seg of segments) {
+    const convId = seg.conversation_id ?? 0
+    if (convId <= 0) continue
+    const segId = seg.id ?? 0
+    const existing = convRanges.get(convId)
+    if (existing) {
+      existing.minSegId = Math.min(existing.minSegId, segId)
+      existing.maxSegId = Math.max(existing.maxSegId, segId)
+    } else {
+      convRanges.set(convId, { minSegId: segId, maxSegId: segId })
+    }
+  }
+
+  // Sort conversations by their first segment ID
+  const sortedConvs = [...convRanges.entries()]
+    .map(([convId, range]) => ({ convId, ...range }))
+    .sort((a, b) => a.minSegId - b.minSegId)
+
+  if (sortedConvs.length === 0) {
+    // No conversations — all blocks get null
+    for (let i = 0; i < commentaryBlocks.length; i++) {
+      result.commentaryToConversation.set(i + 1, null)
+    }
+    return result
+  }
+
+  for (let blockIdx = 0; blockIdx < commentaryBlocks.length; blockIdx++) {
+    const block = commentaryBlocks[blockIdx]
+    const blockMinSeg = block[0]?.id ?? 0
+    const blockMaxSeg = block[block.length - 1]?.id ?? 0
+    const blockMid = (blockMinSeg + blockMaxSeg) / 2
+
+    // Find preceding conversation (last conv whose maxSegId < blockMinSeg)
+    let preceding: { convId: number } | null = null
+    for (const conv of sortedConvs) {
+      if (conv.maxSegId < blockMinSeg) preceding = conv
+      else break
+    }
+
+    // Find following conversation (first conv whose minSegId > blockMaxSeg)
+    let following: { convId: number } | null = null
+    for (const conv of sortedConvs) {
+      if (conv.minSegId > blockMaxSeg) {
+        following = conv
+        break
+      }
+    }
+
+    let linkedConvId: number
+    if (!preceding && !following) {
+      // Block overlaps with a conversation range — find nearest by midpoint
+      let bestDist = Infinity
+      linkedConvId = sortedConvs[0].convId
+      for (const conv of sortedConvs) {
+        const convMid = (conv.minSegId + conv.maxSegId) / 2
+        const dist = Math.abs(blockMid - convMid)
+        if (dist < bestDist) {
+          bestDist = dist
+          linkedConvId = conv.convId
+        }
+      }
+    } else if (!preceding) {
+      // Before all conversations → link to first
+      linkedConvId = following!.convId
+    } else if (!following) {
+      // After all conversations → link to last
+      linkedConvId = preceding.convId
+    } else if (preceding.convId === following.convId) {
+      // Same conversation on both sides (interleaved)
+      linkedConvId = preceding.convId
+    } else {
+      // Between two different conversations → link to preceding (debrief)
+      linkedConvId = preceding.convId
+    }
+
+    const bIdx = blockIdx + 1 // 1-indexed
+    result.commentaryToConversation.set(bIdx, linkedConvId)
+
+    const existing = result.conversationToCommentary.get(linkedConvId) ?? []
+    existing.push(bIdx)
+    result.conversationToCommentary.set(linkedConvId, existing)
+  }
+
+  return result
 }
 
 /**
@@ -943,6 +1102,7 @@ function chunkCommentaryText(
     asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
     asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
     asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+    worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
     problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
     damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
     containsRepairedText: confStats.containsRepairedText || undefined,
@@ -1401,7 +1561,15 @@ async function main() {
     const asrIndex = buildAsrQualityIndex(parsedFile)
     const maskedSegmentIds = new Set<number>()
     if (args.maskTranscriptArtifacts) {
-      for (const id of asrIndex.transcriptArtifactIds) maskedSegmentIds.add(id)
+      if (args.maskAllTranscriptArtifacts) {
+        // Legacy behavior: mask all artifact segments regardless of severity
+        for (const id of asrIndex.transcriptArtifactIds) maskedSegmentIds.add(id)
+      } else {
+        // Default: only mask high-severity artifacts (genuine nonsense/gibberish)
+        for (const [id, severity] of asrIndex.transcriptArtifactSeveritiesById) {
+          if (severity === "high") maskedSegmentIds.add(id)
+        }
+      }
     }
     if (args.maskLowQuality) {
       for (const id of asrIndex.lowQualityIds) maskedSegmentIds.add(id)
@@ -1456,6 +1624,7 @@ async function main() {
     }
 
     // Process approach enrichments via phase-based chunking
+    const approachChunksByConvId = new Map<number, InternalChunk[]>()
     const approachEnrichments = fileEnrichments.filter((e) => e.type === "approach")
     for (const enrichment of approachEnrichments) {
       const convId = enrichment.conversation_id
@@ -1542,12 +1711,14 @@ async function main() {
           phaseChunks[i].conversationChunkIndex = i + 1
           phaseChunks[i].conversationChunkTotal = phaseChunks.length
         }
+        approachChunksByConvId.set(convId, phaseChunks)
         internalChunks.push(...phaseChunks)
       }
     }
 
     // Process commentary blocks via simple text chunking
     const commentaryBlocks = groupCommentaryBlocks(fileSegments)
+    const crossRefMap = buildCommentaryConversationLinks(commentaryBlocks, fileSegments)
     const commentaryEnrichments = fileEnrichments.filter((e) => e.type === "commentary")
     const speakerLabelsForCommentary = parsedFile.speaker_labels ?? {}
 
@@ -1577,7 +1748,28 @@ async function main() {
         speakerLabelsForCommentary,
         asrIndex
       )
+
+      // D14b: stamp cross-reference metadata on commentary chunks
+      const bIdx = blockIdx + 1
+      const relatedConvId = crossRefMap.commentaryToConversation.get(bIdx)
+      for (const chunk of commentaryChunks) {
+        chunk.blockIndex = bIdx
+        if (relatedConvId !== undefined) {
+          chunk.relatedConversationId = relatedConvId
+        }
+      }
+
       internalChunks.push(...commentaryChunks)
+    }
+
+    // D14b: stamp relatedCommentaryBlockIndices on approach chunks (second pass)
+    for (const [convId, chunks] of approachChunksByConvId) {
+      const relatedBlocks = crossRefMap.conversationToCommentary.get(convId)
+      if (relatedBlocks && relatedBlocks.length > 0) {
+        for (const chunk of chunks) {
+          chunk.relatedCommentaryBlockIndices = relatedBlocks
+        }
+      }
     }
 
     // Process talking_head sections via simple text chunking
@@ -1697,6 +1889,9 @@ async function main() {
       if (chunk.asrTranscriptArtifactTypes && chunk.asrTranscriptArtifactTypes.length > 0) {
         metadata.asrTranscriptArtifactTypes = chunk.asrTranscriptArtifactTypes
       }
+      if (chunk.worstArtifactSeverity) {
+        metadata.worstArtifactSeverity = chunk.worstArtifactSeverity
+      }
       if (chunk.chunkConfidence !== undefined) {
         metadata.chunkConfidence = chunk.chunkConfidence
         metadata.chunkConfidenceScore = chunk.chunkConfidence
@@ -1715,6 +1910,16 @@ async function main() {
       if (chunk.containsRepairedText !== undefined) {
         metadata.containsRepairedText = chunk.containsRepairedText
         metadata.contains_repaired_text = chunk.containsRepairedText
+      }
+      // D14b: cross-reference metadata
+      if (typeof chunk.blockIndex === "number") {
+        metadata.blockIndex = chunk.blockIndex
+      }
+      if (chunk.relatedConversationId !== undefined) {
+        metadata.relatedConversationId = chunk.relatedConversationId
+      }
+      if (chunk.relatedCommentaryBlockIndices && chunk.relatedCommentaryBlockIndices.length > 0) {
+        metadata.relatedCommentaryBlockIndices = chunk.relatedCommentaryBlockIndices
       }
 
       chunks.push({

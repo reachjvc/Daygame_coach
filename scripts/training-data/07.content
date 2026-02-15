@@ -25,9 +25,11 @@ The enrichment adds:
     - unlisted_concepts: taxonomy gap detection on all enrichments
 
 Architecture:
-  - Single Claude CLI call per VIDEO (not per interaction)
+  - Multi-call conversation-aware windowing for large infield videos (D13b)
+  - Small videos (< window_size + overlap segments): single Claude CLI call per video
+  - Large videos: split into ~100-segment windows, each gets a separate call, results merged
   - Two prompt variants: infield (approaches + commentary) vs talking_head (topic sections)
-  - Taxonomy sent once, outputs JSON
+  - Taxonomy sent once per call, outputs JSON
 
 Use:
 
@@ -167,9 +169,17 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.6.0"  # v1.6.0: High-confidence transcript artifact repair
+PROMPT_VERSION = "1.7.0"  # v1.7.0: Multi-call conversation-aware windowing (D13b)
 PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.content-v1.10"  # v1.10: Accept high-confidence LLM repairs for ASR artifacts
+PIPELINE_VERSION = "07.content-v1.14"  # v1.14: Add damage_severity to transcript artifacts (graduated chunk confidence)
+
+# Artifact damage severity mapping: how much does this artifact type hurt comprehension?
+# Used by Stage 09 to graduate chunk confidence penalties instead of a flat penalty.
+ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
+    "nonsense": "high",           # genuine gibberish, unrecoverable meaning
+    "language_confusion": "medium",  # wrong language mixed in, still partially understandable
+    "word_repetition": "low",     # trivial stutter/doubled word, fully understandable
+}
 
 # Transcript artifact repair
 REPAIR_ACCEPT_THRESHOLD = 0.90
@@ -193,6 +203,81 @@ KNOWN_DROPPED_CANDIDATE_REASONS: Set[str] = {
     "low_confidence_anchor",
 }
 VIDEO_ID_BRACKET_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+# ---------------------------
+# Video-Type Routing (D13a)
+# ---------------------------
+
+
+def get_video_type_confidence(data: Dict) -> float:
+    """Extract video type confidence from stage 06 output."""
+    vt = data.get("video_type", {})
+    if isinstance(vt, dict):
+        conf = vt.get("confidence")
+        if isinstance(conf, (int, float)):
+            return float(conf)
+    return 0.0
+
+
+def count_approach_conversations(segments: List[Dict]) -> int:
+    """Count distinct approach conversations (conversation_id > 0) in segments."""
+    return len({seg.get("conversation_id") for seg in segments if isinstance(seg.get("conversation_id"), int) and seg["conversation_id"] > 0})
+
+
+def determine_routing_lane(
+    approach_conversation_count: int,
+    force_lane: Optional[str] = None,
+) -> str:
+    """Determine whether a video goes through infield or non-infield enrichment lane.
+
+    Routing is based on a structural fact: does the video contain any approach
+    conversations (conversation_id > 0)? This is deterministic — set by Stage 06
+    segment classification — not an LLM confidence opinion.
+
+    Returns "infield" or "non_infield".
+    """
+    if force_lane in ("infield", "non_infield"):
+        return force_lane
+
+    if approach_conversation_count > 0:
+        return "infield"
+
+    return "non_infield"
+
+
+# ---------------------------
+# Multi-Call Windowing (D13b)
+# ---------------------------
+
+
+@dataclass
+class ChronoItem:
+    """A chronological content item (conversation or commentary block)."""
+    sort_key: float          # start timestamp for ordering
+    item_type: str           # "conversation" or "commentary"
+    conversation_id: Optional[int]       # set when item_type == "conversation"
+    commentary_block_index: Optional[int]  # 1-based, set when item_type == "commentary"
+    segments: List[Dict[str, Any]]
+
+
+@dataclass
+class Window:
+    """One LLM call's worth of content."""
+    index: int
+    core_segments: List[Dict[str, Any]]
+    context_before: List[Dict[str, Any]]
+    context_after: List[Dict[str, Any]]
+    core_conversation_ids: Set[int]
+    core_commentary_block_indices: Set[int]
+
+
+@dataclass
+class WindowedCallResult:
+    """Result from a single windowed LLM call."""
+    window_index: int
+    parsed: "ParsedEnrichmentResponse"
+    core_segment_ids: Set[int]
+    elapsed_seconds: float
 
 
 # ---------------------------
@@ -2611,6 +2696,243 @@ def add_phase_confidence_to_enrichments(
             enrichment["phase_confidence"] = phase_conf
 
 
+def build_chronological_items(
+    conversations: Dict[int, List[Dict]],
+    commentary_blocks: List[Dict],
+) -> List[ChronoItem]:
+    """Walk conversations and commentary blocks in chronological order.
+
+    Returns a sorted list of ChronoItem objects representing either
+    approach conversations (conversation_id > 0) or commentary blocks.
+    """
+    items: List[ChronoItem] = []
+
+    for i, block in enumerate(commentary_blocks):
+        segs = block["segments"]
+        if segs:
+            items.append(ChronoItem(
+                sort_key=block["start"],
+                item_type="commentary",
+                conversation_id=None,
+                commentary_block_index=i + 1,
+                segments=segs,
+            ))
+
+    for conv_id in sorted(conversations.keys()):
+        if conv_id == 0:
+            continue
+        segs = conversations[conv_id]
+        if segs:
+            items.append(ChronoItem(
+                sort_key=segs[0].get("start", 0),
+                item_type="conversation",
+                conversation_id=conv_id,
+                commentary_block_index=None,
+                segments=segs,
+            ))
+
+    items.sort(key=lambda x: x.sort_key)
+    return items
+
+
+def build_windows(
+    chrono_items: List[ChronoItem],
+    total_segment_count: int,
+    window_size: int = 100,
+    overlap: int = 20,
+) -> List[Window]:
+    """Build conversation-aware windows for multi-call enrichment.
+
+    Algorithm:
+    1. Small video bypass: single window if total <= window_size + overlap.
+    2. Attach commentary to the conversation it precedes (or last conv if trailing).
+    3. Pack groups into windows, keeping conversations whole when possible.
+    4. Recursively split oversized conversations at largest commentary gap or midpoint.
+    5. Add overlap context between adjacent windows.
+    """
+    all_segments: List[Dict[str, Any]] = []
+    for item in chrono_items:
+        all_segments.extend(item.segments)
+
+    # Small video bypass
+    if total_segment_count <= window_size + overlap:
+        conv_ids: Set[int] = set()
+        block_indices: Set[int] = set()
+        for item in chrono_items:
+            if item.item_type == "conversation" and item.conversation_id is not None:
+                conv_ids.add(item.conversation_id)
+            elif item.item_type == "commentary" and item.commentary_block_index is not None:
+                block_indices.add(item.commentary_block_index)
+        return [Window(
+            index=0,
+            core_segments=all_segments,
+            context_before=[],
+            context_after=[],
+            core_conversation_ids=conv_ids,
+            core_commentary_block_indices=block_indices,
+        )]
+
+    # Build groups: each group is (preceding commentary + conversation)
+    # or standalone commentary if no conversation follows.
+    groups: List[List[ChronoItem]] = []
+    pending_commentary: List[ChronoItem] = []
+
+    for item in chrono_items:
+        if item.item_type == "commentary":
+            pending_commentary.append(item)
+        elif item.item_type == "conversation":
+            # Commentary before this conversation travels with it
+            group = pending_commentary + [item]
+            pending_commentary = []
+            groups.append(group)
+
+    # Trailing commentary: each block becomes its own standalone group
+    # so that the packing loop can window them independently.
+    # (Attaching all trailing commentary to the last conversation group
+    # caused oversized final windows — e.g. 1 approach + 228 commentary = 229 segs.)
+    if pending_commentary:
+        if groups:
+            for tc in pending_commentary:
+                groups.append([tc])
+        else:
+            # All commentary, no conversations — each block is its own group
+            for tc in pending_commentary:
+                groups.append([tc])
+        pending_commentary = []
+
+    def _group_segment_count(group: List[ChronoItem]) -> int:
+        return sum(len(item.segments) for item in group)
+
+    def _split_oversized_group(group: List[ChronoItem], max_size: int) -> List[List[ChronoItem]]:
+        """Recursively split a group that exceeds max_size.
+
+        Strategy:
+        - Find the largest commentary gap within the group and split there.
+        - If no commentary gap, split the conversation at its midpoint.
+        - Recurse on each half if still oversized.
+        """
+        total = _group_segment_count(group)
+        if total <= max_size:
+            return [group]
+
+        # Find the conversation item (there should be exactly one per group)
+        conv_item = None
+        conv_idx = -1
+        for idx, item in enumerate(group):
+            if item.item_type == "conversation":
+                conv_item = item
+                conv_idx = idx
+                break
+
+        if conv_item is None:
+            # All commentary — cannot meaningfully split, keep as one chunk
+            return [group]
+
+        conv_segs = conv_item.segments
+
+        # Strategy 1: split at largest commentary gap within the conversation's time range
+        # A "commentary gap" is commentary items that are between conversation segments
+        # (interleaved commentary within the conversation time range).
+        # For our data model, commentary is separate from conversation segments,
+        # so we split the conversation segment list itself.
+
+        # Strategy 2: split conversation segments at midpoint
+        mid = len(conv_segs) // 2
+        if mid == 0:
+            return [group]  # Cannot split further
+
+        first_half_segs = conv_segs[:mid]
+        second_half_segs = conv_segs[mid:]
+
+        # Preceding commentary stays with first half
+        first_half_conv = ChronoItem(
+            sort_key=conv_item.sort_key,
+            item_type="conversation",
+            conversation_id=conv_item.conversation_id,
+            commentary_block_index=None,
+            segments=first_half_segs,
+        )
+        first_group = group[:conv_idx] + [first_half_conv]
+
+        second_half_conv = ChronoItem(
+            sort_key=second_half_segs[0].get("start", 0) if second_half_segs else conv_item.sort_key,
+            item_type="conversation",
+            conversation_id=conv_item.conversation_id,
+            commentary_block_index=None,
+            segments=second_half_segs,
+        )
+        # Trailing commentary (after conv_idx) goes with second half
+        second_group = [second_half_conv] + group[conv_idx + 1:]
+
+        # Recurse on each half
+        result = _split_oversized_group(first_group, max_size)
+        result.extend(_split_oversized_group(second_group, max_size))
+        return result
+
+    # Split oversized groups and pack into windows
+    expanded_groups: List[List[ChronoItem]] = []
+    for group in groups:
+        expanded_groups.extend(_split_oversized_group(group, window_size))
+
+    # Pack expanded groups into windows
+    raw_windows: List[List[Dict[str, Any]]] = []  # Each is a list of core segments
+    window_meta: List[Tuple[Set[int], Set[int]]] = []  # (conv_ids, block_indices)
+    current_segs: List[Dict[str, Any]] = []
+    current_conv_ids: Set[int] = set()
+    current_block_indices: Set[int] = set()
+
+    for group in expanded_groups:
+        group_seg_count = _group_segment_count(group)
+
+        # If adding this group exceeds window_size and current window is non-empty, finalize
+        if current_segs and len(current_segs) + group_seg_count > window_size:
+            raw_windows.append(current_segs)
+            window_meta.append((current_conv_ids, current_block_indices))
+            current_segs = []
+            current_conv_ids = set()
+            current_block_indices = set()
+
+        for item in group:
+            if item.item_type == "commentary" and item.commentary_block_index is not None:
+                # Tag segments with their original block index so the prompt builder
+                # can reconstruct block boundaries (not just group consecutive segs)
+                for seg in item.segments:
+                    seg["_commentary_block_index"] = item.commentary_block_index
+                current_block_indices.add(item.commentary_block_index)
+            current_segs.extend(item.segments)
+            if item.item_type == "conversation" and item.conversation_id is not None:
+                current_conv_ids.add(item.conversation_id)
+
+    # Finalize last window
+    if current_segs:
+        raw_windows.append(current_segs)
+        window_meta.append((current_conv_ids, current_block_indices))
+
+    # Build Window objects with overlap context
+    windows: List[Window] = []
+    for i, (core_segs, (conv_ids, block_idxs)) in enumerate(zip(raw_windows, window_meta)):
+        ctx_before: List[Dict[str, Any]] = []
+        if i > 0:
+            prev_core = raw_windows[i - 1]
+            ctx_before = prev_core[-min(overlap, len(prev_core)):]
+
+        ctx_after: List[Dict[str, Any]] = []
+        if i < len(raw_windows) - 1:
+            next_core = raw_windows[i + 1]
+            ctx_after = next_core[:min(overlap, len(next_core))]
+
+        windows.append(Window(
+            index=i,
+            core_segments=core_segs,
+            context_before=ctx_before,
+            context_after=ctx_after,
+            core_conversation_ids=conv_ids,
+            core_commentary_block_indices=block_idxs,
+        ))
+
+    return windows
+
+
 def build_infield_prompt(
     conversations: Dict[int, List[Dict]],
     commentary_blocks: List[Dict],
@@ -2911,6 +3233,569 @@ YOUR JSON RESPONSE:"""
     return prompt
 
 
+def _format_segments_for_prompt(
+    segments: List[Dict[str, Any]],
+    allow_ids: Optional[Set[int]] = None,
+    anchor_ids: Optional[Set[int]] = None,
+    show_markers: bool = True,
+) -> List[str]:
+    """Format a list of segments into prompt lines with optional evidence markers."""
+    lines: List[str] = []
+    for seg in segments:
+        seg_id = seg.get("id", 0)
+        speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
+        text = seg.get("text", "").strip()
+        marker = ""
+        if show_markers and isinstance(allow_ids, set):
+            if isinstance(anchor_ids, set) and seg_id in anchor_ids:
+                marker = " (ANCHOR_OK)"
+            elif seg_id in allow_ids:
+                marker = " (CONTEXT_ONLY)"
+            else:
+                marker = " (EVIDENCE_EXCLUDED)"
+        synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
+        lines.append(f"  [{seg_id}]{marker}{synthetic_marker} {speaker.upper()}: {text}")
+    return lines
+
+
+def build_windowed_infield_prompt(
+    window: Window,
+    video_id: str,
+    window_count: int,
+    stage07_evidence_allowlist: Optional[Dict[int, Set[int]]] = None,
+    stage07_anchor_allowlist: Optional[Dict[int, Set[int]]] = None,
+) -> str:
+    """Build prompt for a single window of an infield video (D13b multi-call windowing).
+
+    Like build_infield_prompt() but scoped to a window's core segments,
+    with read-only context sections from adjacent windows.
+    """
+    technique_list = "\n".join([f"  - {k}: {v}" for k, v in TECHNIQUE_TAXONOMY.items()])
+    topic_list = ", ".join(TOPIC_TAXONOMY.keys())
+
+    # Group core segments by conversation_id for structured display
+    core_conversations: Dict[int, List[Dict]] = {}
+    core_commentary_segs: List[Dict] = []
+    for seg in window.core_segments:
+        conv_id = seg.get("conversation_id", 0)
+        if conv_id > 0:
+            core_conversations.setdefault(conv_id, []).append(seg)
+        else:
+            core_commentary_segs.append(seg)
+
+    # Build commentary blocks using original block boundaries (from _commentary_block_index
+    # tags set during window packing) rather than just consecutive segments. This prevents
+    # multiple distinct commentary blocks from collapsing into one when no conversation
+    # segments separate them (e.g. in commentary-only windows).
+    core_commentary_blocks: List[Dict] = []
+    current_block: List[Dict] = []
+    current_block_idx: Optional[int] = None
+    for seg in window.core_segments:
+        if seg.get("conversation_id", 0) == 0:
+            seg_block_idx = seg.get("_commentary_block_index")
+            if current_block and seg_block_idx is not None and seg_block_idx != current_block_idx:
+                # New original block — finalize current
+                core_commentary_blocks.append({
+                    "segments": current_block,
+                    "start": current_block[0].get("start", 0),
+                    "end": current_block[-1].get("end", 0),
+                    "block_index": current_block_idx,
+                })
+                current_block = []
+            current_block.append(seg)
+            if seg_block_idx is not None:
+                current_block_idx = seg_block_idx
+        else:
+            if current_block:
+                core_commentary_blocks.append({
+                    "segments": current_block,
+                    "start": current_block[0].get("start", 0),
+                    "end": current_block[-1].get("end", 0),
+                    "block_index": current_block_idx,
+                })
+                current_block = []
+                current_block_idx = None
+    if current_block:
+        core_commentary_blocks.append({
+            "segments": current_block,
+            "start": current_block[0].get("start", 0),
+            "end": current_block[-1].get("end", 0),
+            "block_index": current_block_idx,
+        })
+
+    # Build chronological content items (same structure as build_infield_prompt)
+    content_items: List[Dict[str, Any]] = []
+
+    for block in core_commentary_blocks:
+        segs = block["segments"]
+        turns = _format_segments_for_prompt(segs, show_markers=False)
+        if turns:
+            block_idx = block.get("block_index")
+            block_label = f" #{block_idx}" if block_idx is not None else ""
+            content_items.append({
+                "sort_key": block["start"],
+                "text": f"""COMMENTARY BLOCK{block_label}
+Start: {block['start']:.1f}s
+End: {block['end']:.1f}s
+
+{chr(10).join(turns)}"""
+            })
+
+    for conv_id in sorted(core_conversations.keys()):
+        segments = core_conversations[conv_id]
+        allow_ids = (
+            (stage07_evidence_allowlist or {}).get(conv_id)
+            if isinstance(stage07_evidence_allowlist, dict)
+            else None
+        )
+        anchor_ids = (
+            (stage07_anchor_allowlist or {}).get(conv_id)
+            if isinstance(stage07_anchor_allowlist, dict)
+            else None
+        )
+        turns = _format_segments_for_prompt(segments, allow_ids, anchor_ids, show_markers=True)
+
+        allow_ids_line = ""
+        if isinstance(allow_ids, set):
+            # Only show IDs that are in this window's core segments
+            core_seg_ids = {s.get("id") for s in segments if isinstance(s.get("id"), int)}
+            relevant_allow = sorted(sid for sid in allow_ids if sid in core_seg_ids)
+            allow_ids_line = f"Allowed evidence SEG_IDs: {', '.join(str(s) for s in relevant_allow) or 'none'}\n"
+        anchor_ids_line = ""
+        if isinstance(anchor_ids, set):
+            core_seg_ids = {s.get("id") for s in segments if isinstance(s.get("id"), int)}
+            relevant_anchor = sorted(sid for sid in anchor_ids if sid in core_seg_ids)
+            anchor_ids_line = f"Allowed anchor SEG_IDs (high-confidence only): {', '.join(str(s) for s in relevant_anchor) or 'none'}\n"
+
+        is_split = conv_id in window.core_conversation_ids and any(
+            conv_id in w_other_conv_ids
+            for w_idx, w_other_conv_ids in []  # We don't have access to other windows here
+        )
+
+        content_items.append({
+            "sort_key": segments[0].get("start", 0),
+            "text": f"""APPROACH CONVERSATION #{conv_id}
+Segments: {len(segments)}
+Start: {segments[0].get('start', 0):.1f}s
+End: {segments[-1].get('end', 0):.1f}s
+
+{allow_ids_line}{anchor_ids_line}Legend: (ANCHOR_OK)=allowed for Stage 07 technique/hook/phase anchors.
+Legend: (CONTEXT_ONLY)=usable for narrative context only (not anchors).
+Legend: (EVIDENCE_EXCLUDED)=exclude from Stage 07 evidence.
+Legend: (SYNTHETIC)=deterministically generated split helper segment (not raw ASR).
+
+{chr(10).join(turns)}"""
+        })
+
+    content_items.sort(key=lambda x: x["sort_key"])
+    core_content = "\n---\n".join(item["text"] for item in content_items)
+
+    # Build context sections (read-only overlap)
+    ctx_before_text = ""
+    if window.context_before:
+        ctx_lines = _format_segments_for_prompt(window.context_before, show_markers=False)
+        ctx_before_text = f"""
+=== CONTEXT BEFORE (read-only — do NOT extract enrichments from these segments) ===
+{chr(10).join(ctx_lines)}
+---
+"""
+
+    ctx_after_text = ""
+    if window.context_after:
+        ctx_lines = _format_segments_for_prompt(window.context_after, show_markers=False)
+        ctx_after_text = f"""
+---
+=== CONTEXT AFTER (read-only — do NOT extract enrichments from these segments) ===
+{chr(10).join(ctx_lines)}
+"""
+
+    approach_count = len(core_conversations)
+
+    prompt = f"""You are an expert daygame analyst. Analyze the CORE CONTENT section of this infield coaching video.
+
+NOTE: This is window {window.index + 1} of {window_count} for this video.
+CRITICAL: Only extract enrichments from segments in the CORE CONTENT section below.
+Context sections (BEFORE/AFTER) are provided for continuity only — do NOT create enrichments for them.
+
+VIDEO: {video_id}
+VIDEO TYPE: infield
+APPROACH CONVERSATIONS IN THIS WINDOW: {approach_count}
+
+TECHNIQUE REFERENCE (31 techniques):
+{technique_list}
+
+TOPIC REFERENCE: {topic_list}
+{ctx_before_text}
+=== CORE CONTENT (extract enrichments ONLY from these segments) ===
+{core_content}
+{ctx_after_text}
+=== ANALYSIS INSTRUCTIONS ===
+
+FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
+
+1. TYPE: "approach"
+2. CONVERSATION_ID: The conversation number
+3. DESCRIPTION: Concise 10-20 word summary
+   IMPORTANT: Do not claim a number/Instagram close happened unless it is explicitly shown in the transcript.
+4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
+   CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
+   If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
+   Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
+   IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
+   If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
+   COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
+   Be conservative: if you are not confident the technique is present, omit it.
+   IMPORTANT: Do not use obviously garbled / low-quality transcript segments as technique evidence. If the line is unclear,
+   either anchor to an adjacent clean segment or omit the technique.
+   Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
+   Common confusions to avoid:
+   - cold_read: must be an inference ABOUT HER ("you seem..."), not your personal backstory.
+   - tease: a playful jab ABOUT HER; not you describing yourself or your history.
+   - callback_humor: must reference an earlier joke/theme; a random funny line is not callback_humor.
+   - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
+   - statement_of_intent: must be sincere romantic/sexual intent. If it's clearly absurdist comedy or role-play, tag role_play/tease instead (or omit).
+   - number_close/instagram_close: only if you actually ask/exchange contact info.
+   - logistics_check: asking about schedule/availability does NOT start close unless it is part of an explicit invite/contact exchange.
+5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
+   CRITICAL: Only use topic names from the TOPIC REFERENCE above.
+   If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
+6. TURN PHASES: Label each turn with its interaction phase.
+   CRITICAL: Only include phase labels for SEG_IDs marked (ANCHOR_OK).
+   Phases (in order of progression):
+   - "open": The approach. Coach introducing himself and the interaction.
+     Can be multiple turns if he's stacking assumptions or extending his opening bit.
+     Her responses (if any) are pure acknowledgment.
+   - "pre_hook": Coach building attraction. Still doing most of the talking,
+     running game — teasing, cold reading, push-pull, being entertaining.
+     She's still mostly passive.
+   - "post_hook": She's flipped. Actively participating — asking questions back,
+     sharing information voluntarily, initiating topics, longer responses.
+   - "close": Logistics and closing — number, Instagram, instant date, time bridge.
+     IMPORTANT: Close begins at the first explicit attempt to exchange contact info (number/Instagram/etc)
+     OR an explicit invite to meet/hang out (now or later): "let's grab a drink", "come with me", "let's go to X", "we should meet tomorrow".
+     IMPORTANT: Do NOT start close on "fishing" / info-gathering questions alone (including schedule probes like "what are you doing later?").
+     IMPORTANT: Non-dating CTAs like "subscribe to my channel" are NOT a dating close attempt and should NOT start close phase.
+     Once close begins, ALL remaining segments are "close" phase — even if rapport/banter continues or the first close attempt doesn't land.
+     The close phase often includes continued rapport-building alongside logistics discussion.
+     Don't flip back to post_hook just because there's playful banter after he's started closing.
+   Rules:
+   - Phases always progress forward: open -> pre_hook -> post_hook -> close
+   - A turn's phase must NEVER go backwards
+   - Once close begins, it continues until the end (no regression to earlier phases)
+   - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
+   - Use the SEG_ID shown in the transcript lines (the number in brackets) to identify each turn
+7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
+   Provide a brief "signal".
+   CRITICAL: hook_point.segment (if provided) must be an (ANCHOR_OK) SEG_ID.
+   IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
+   If no post_hook phase is present, set hook_point to null and investment_level to null.
+   If no hook point, set to null.
+8. INVESTMENT LEVEL: "low"/"medium"/"high" if post_hook reached, else null.
+   - "low": Barely crossed — asked one polite question back, still mostly reactive
+   - "medium": Engaged, asking questions, responsive, but he's still somewhat leading
+   - "high": Fully in — initiating topics, sharing unprompted, her turns match or exceed his
+9. UNLISTED CONCEPTS: Techniques or topics you observe that don't fit the taxonomy.
+   Format: {{"techniques": ["name: description"], "topics": ["name: description"]}}
+   Empty arrays if all concepts fit.
+
+FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
+
+1. TYPE: "commentary"
+2. BLOCK INDEX: Sequential starting at 1
+3. DESCRIPTION: 10-20 word summary of what the coach is teaching/explaining
+4. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+6. UNLISTED CONCEPTS: Same format as above
+
+TRANSCRIPT QUALITY ASSESSMENT:
+Evaluate the transcription quality of each segment in the CORE CONTENT section only. Flag segments where the ASR (Whisper)
+appears to have produced inaccurate or garbage output. Look for:
+- Text that doesn't make sense in the conversational context
+- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
+- Garbled or nonsensical phrases
+- Language confusion (random foreign words that don't fit)
+- Multiple sentences incorrectly merged without punctuation
+
+Do NOT flag:
+- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
+- Run-on sentences that still make sense (fast speech accurately transcribed)
+- Foreign words/names that fit the context
+- Segments marked (SYNTHETIC): these are deterministic pipeline split helpers, not raw ASR output
+- Segments in CONTEXT BEFORE or CONTEXT AFTER sections
+
+Output a "low_quality_segments" array listing segments with poor transcription:
+{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
+IMPORTANT: SEG_ID must be the segment id shown in brackets in the transcript lines.
+
+Also flag specific artifact types with "transcript_artifact" entries:
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
+IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
+
+For each artifact, also assess whether you can confidently reconstruct what was actually said
+from the surrounding context. If so, include:
+  "repair_text": "what was likely actually said",
+  "repair_confidence": 0.0-1.0
+
+Rules for repair:
+- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
+- The surrounding segments must make the intended meaning unambiguous
+- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
+- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
+- Complete nonsense with no clear context is NOT repairable
+- Do not guess — if unsure, leave repair_text out entirely
+
+Return empty arrays if transcript quality is good.
+
+OUTPUT FORMAT: Return a JSON object with this structure:
+{{
+  "enrichments": [...],  // array of approach/commentary enrichments
+  "low_quality_segments": [...],  // segments with poor transcription
+  "transcript_artifacts": [...]  // specific artifact entries
+}}
+
+The enrichments array should contain one object for each approach conversation
+AND each commentary block in the CORE CONTENT, in chronological order.
+CRITICAL: Do NOT include enrichments for segments in CONTEXT BEFORE or CONTEXT AFTER.
+Output ONLY valid JSON.
+
+YOUR JSON RESPONSE:"""
+
+    return prompt
+
+
+def merge_windowed_results(
+    results: List[WindowedCallResult],
+    windows: List[Window],
+) -> ParsedEnrichmentResponse:
+    """Merge enrichments from multiple windowed LLM calls.
+
+    Strategy:
+    - Approach enrichments: group by conversation_id. If a conversation appears in
+      multiple windows (split conversation), merge techniques/topics/phases.
+    - Commentary enrichments: group by block_index. Core version wins.
+    - transcript_artifacts + low_quality_segments: union, deduplicate.
+    - On conflict, prefer the window where the segment is in core range.
+    """
+    all_enrichments: List[Dict] = []
+    all_artifacts: List[Dict] = []
+    all_low_quality: List[Dict] = []
+
+    for wr in results:
+        all_enrichments.extend(wr.parsed.enrichments)
+        all_artifacts.extend(wr.parsed.transcript_artifacts)
+        all_low_quality.extend(wr.parsed.low_quality_segments)
+
+    # --- Merge approach enrichments ---
+    approach_by_conv: Dict[int, List[Tuple[Dict, WindowedCallResult]]] = {}
+    commentary_by_block: Dict[Tuple[int, int], List[Tuple[Dict, WindowedCallResult]]] = {}
+    other_enrichments: List[Dict] = []
+
+    for wr in results:
+        for e in wr.parsed.enrichments:
+            etype = e.get("type", "")
+            if etype == "approach":
+                conv_id = e.get("conversation_id")
+                if isinstance(conv_id, int):
+                    approach_by_conv.setdefault(conv_id, []).append((e, wr))
+                else:
+                    other_enrichments.append(e)
+            elif etype == "commentary":
+                block_idx = e.get("block_index")
+                if isinstance(block_idx, int):
+                    # Key by (window_index, block_index) to avoid collapsing
+                    # commentary from different windows that share the same
+                    # LLM-assigned block_index (each window starts at 1).
+                    key = (wr.window_index, block_idx)
+                    commentary_by_block.setdefault(key, []).append((e, wr))
+                else:
+                    other_enrichments.append(e)
+            else:
+                other_enrichments.append(e)
+
+    merged_enrichments: List[Dict] = []
+
+    # Merge approach enrichments per conversation
+    for conv_id in sorted(approach_by_conv.keys()):
+        entries = approach_by_conv[conv_id]
+        if len(entries) == 1:
+            merged_enrichments.append(entries[0][0])
+            continue
+
+        # Split conversation — merge from multiple windows
+        merged = _merge_approach_enrichments(conv_id, entries)
+        merged_enrichments.append(merged)
+
+    # Merge commentary enrichments per (window, block) key
+    # Sort by window index then block index for stable ordering
+    global_block_idx = 1
+    for key in sorted(commentary_by_block.keys()):
+        entries = commentary_by_block[key]
+        if len(entries) == 1:
+            entry = entries[0][0].copy()
+            entry["block_index"] = global_block_idx
+            merged_enrichments.append(entry)
+        else:
+            # Multiple windows have this block — prefer the one where it's in core
+            best_entry = entries[0][0]
+            for e, wr in entries:
+                segs_in_core = any(
+                    isinstance(s, int) and s in wr.core_segment_ids
+                    for s in [e.get("start_segment_id"), e.get("end_segment_id")]
+                )
+                if segs_in_core:
+                    best_entry = e
+                    break
+            best_copy = best_entry.copy()
+            best_copy["block_index"] = global_block_idx
+            merged_enrichments.append(best_copy)
+        global_block_idx += 1
+
+    merged_enrichments.extend(other_enrichments)
+
+    # --- Deduplicate transcript artifacts ---
+    seen_artifacts: Set[int] = set()
+    deduped_artifacts: List[Dict] = []
+    for a in all_artifacts:
+        if not isinstance(a, dict):
+            continue
+        sid = a.get("segment_index")
+        if isinstance(sid, int):
+            if sid in seen_artifacts:
+                continue
+            seen_artifacts.add(sid)
+        deduped_artifacts.append(a)
+
+    # --- Deduplicate low quality segments ---
+    seen_lq: Set[int] = set()
+    deduped_lq: List[Dict] = []
+    for lq in all_low_quality:
+        if not isinstance(lq, dict):
+            continue
+        sid = lq.get("segment")
+        if isinstance(sid, int):
+            if sid in seen_lq:
+                continue
+            seen_lq.add(sid)
+        deduped_lq.append(lq)
+
+    # Stamp damage_severity on merged artifacts
+    for artifact in deduped_artifacts:
+        if isinstance(artifact, dict) and "damage_severity" not in artifact:
+            atype = artifact.get("artifact_type", "")
+            artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
+
+    return ParsedEnrichmentResponse(
+        enrichments=merged_enrichments,
+        transcript_artifacts=deduped_artifacts,
+        low_quality_segments=deduped_lq,
+    )
+
+
+def _merge_approach_enrichments(
+    conv_id: int,
+    entries: List[Tuple[Dict, WindowedCallResult]],
+) -> Dict:
+    """Merge approach enrichments for a split conversation from multiple windows."""
+    # Start with the entry that has the most techniques
+    base = max(entries, key=lambda x: len(x[0].get("techniques_used", [])))[0]
+    merged = dict(base)
+    merged["conversation_id"] = conv_id
+
+    # Merge techniques: union by (technique, segment) key
+    seen_techniques: Set[Tuple[str, int]] = set()
+    merged_techniques: List[Dict] = []
+    for e, wr in entries:
+        for t in e.get("techniques_used", []):
+            tech_name = t.get("technique", "")
+            seg = t.get("segment", -1)
+            key = (tech_name, seg)
+            if key not in seen_techniques:
+                seen_techniques.add(key)
+                merged_techniques.append(t)
+    merged["techniques_used"] = merged_techniques
+
+    # Merge topics: union
+    all_topics: List[str] = []
+    seen_topics: Set[str] = set()
+    for e, _ in entries:
+        for topic in e.get("topics_discussed", []):
+            if isinstance(topic, str) and topic not in seen_topics:
+                seen_topics.add(topic)
+                all_topics.append(topic)
+    merged["topics_discussed"] = all_topics
+
+    # Merge turn phases: union by segment, prefer core-range on conflict
+    phase_by_seg: Dict[int, Tuple[str, bool]] = {}  # seg -> (phase, is_core)
+    for e, wr in entries:
+        for tp in e.get("turn_phases", []):
+            seg = tp.get("segment")
+            phase = tp.get("phase")
+            if not isinstance(seg, int) or not isinstance(phase, str):
+                continue
+            is_core = seg in wr.core_segment_ids
+            existing = phase_by_seg.get(seg)
+            if existing is None:
+                phase_by_seg[seg] = (phase, is_core)
+            elif is_core and not existing[1]:
+                # Prefer core over overlap
+                phase_by_seg[seg] = (phase, is_core)
+    merged["turn_phases"] = [
+        {"segment": seg, "phase": phase}
+        for seg, (phase, _) in sorted(phase_by_seg.items())
+    ]
+
+    # Hook point: prefer the entry where the hook segment is in core
+    best_hook = None
+    best_investment = None
+    for e, wr in entries:
+        hp = e.get("hook_point")
+        if hp and isinstance(hp, dict):
+            hook_seg = hp.get("segment")
+            if isinstance(hook_seg, int) and hook_seg in wr.core_segment_ids:
+                best_hook = hp
+                best_investment = e.get("investment_level")
+                break
+    if best_hook is None:
+        # Fallback: use any non-null hook_point
+        for e, _ in entries:
+            if e.get("hook_point"):
+                best_hook = e["hook_point"]
+                best_investment = e.get("investment_level")
+                break
+    merged["hook_point"] = best_hook
+    merged["investment_level"] = best_investment
+
+    # Merge unlisted concepts: union
+    merged_unlisted: Dict[str, List[str]] = {"techniques": [], "topics": []}
+    seen_unlisted_t: Set[str] = set()
+    seen_unlisted_tp: Set[str] = set()
+    for e, _ in entries:
+        unlisted = e.get("unlisted_concepts", {})
+        if isinstance(unlisted, dict):
+            for t in unlisted.get("techniques", []) or []:
+                if isinstance(t, str) and t not in seen_unlisted_t:
+                    seen_unlisted_t.add(t)
+                    merged_unlisted["techniques"].append(t)
+            for t in unlisted.get("topics", []) or []:
+                if isinstance(t, str) and t not in seen_unlisted_tp:
+                    seen_unlisted_tp.add(t)
+                    merged_unlisted["topics"].append(t)
+    merged["unlisted_concepts"] = merged_unlisted
+
+    # Description: use longest
+    best_desc = ""
+    for e, _ in entries:
+        desc = e.get("description", "")
+        if isinstance(desc, str) and len(desc) > len(best_desc):
+            best_desc = desc
+    if best_desc:
+        merged["description"] = best_desc
+
+    return merged
+
+
 def build_talking_head_prompt(segments: List[Dict], video_id: str) -> str:
     """Build prompt for talking_head/podcast videos: identify topic sections."""
 
@@ -3176,6 +4061,9 @@ def process_video_file(
     claude_model: Optional[str] = None,
     llm_timeout_seconds: int = 600,
     llm_retries: int = 3,
+    force_lane: Optional[str] = None,
+    window_size: int = 100,
+    overlap: int = 20,
 ) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
@@ -3205,6 +4093,7 @@ def process_video_file(
         video_title = extract_video_title_from_stem(input_path.stem)
 
     video_type = get_video_type_str(data)
+    video_type_confidence = get_video_type_confidence(data)
 
     if not segments:
         print(f"[07.content] No segments found")
@@ -3213,6 +4102,7 @@ def process_video_file(
     # Group by conversation
     conversations = group_segments_by_conversation(segments)
     approach_convs = {k: v for k, v in conversations.items() if k > 0}
+    routing_lane = determine_routing_lane(len(approach_convs), force_lane)
     commentary_blocks = group_commentary_blocks(segments)
     conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
     confident_target_convs = sum(
@@ -3231,8 +4121,13 @@ def process_video_file(
     allowlisted_segments_total = sum(len(v) for v in stage07_evidence_allowlist.values())
     anchored_segments_total = sum(len(v) for v in stage07_anchor_allowlist.values())
 
+    lane_reason = (
+        f"forced={force_lane}" if force_lane
+        else f"approaches={len(approach_convs)}"
+    )
     print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
+    print(f"[07.content]   Routing lane: {routing_lane} ({lane_reason})")
     print(
         f"[07.content]   Stage07 evidence allowlist: "
         f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
@@ -3242,46 +4137,136 @@ def process_video_file(
         f"{len(stage07_anchor_allowlist)} convs, {anchored_segments_total} segment ids"
     )
 
-    if dry_run:
-        print(f"[07.content]   [DRY RUN] Would call Claude CLI ({video_type} prompt)")
-        return {"conversations": len(approach_convs), "enriched": 0}
-
-    # Build prompt based on video type
-    if video_type in ("infield", "compilation"):
-        prompt = build_infield_prompt(
-            conversations,
-            commentary_blocks,
-            video_id,
-            stage07_evidence_allowlist=stage07_evidence_allowlist,
-            stage07_anchor_allowlist=stage07_anchor_allowlist,
-        )
-    else:
-        prompt = build_talking_head_prompt(segments, video_id)
-
-    print(f"[07.content]   Calling Claude CLI ({video_type} prompt)...")
-
-    start_time = time.time()
-    response = call_claude(
-        prompt,
-        retries=max(1, int(llm_retries)),
-        timeout=max(1, int(llm_timeout_seconds)),
-        model=claude_model,
+    # Determine if windowing applies (D13b: infield lane with enough segments)
+    use_windowing = (
+        routing_lane != "non_infield"
+        and video_type in ("infield", "compilation")
+        and len(segments) > window_size + overlap
     )
-    elapsed = time.time() - start_time
+    windows: Optional[List[Window]] = None
+    if use_windowing:
+        chrono_items = build_chronological_items(conversations, commentary_blocks)
+        windows = build_windows(chrono_items, len(segments), window_size, overlap)
+        if len(windows) <= 1:
+            use_windowing = False
+            windows = None
 
+    if dry_run:
+        if use_windowing and windows:
+            print(f"{LOG_PREFIX}   [DRY RUN] Would use {len(windows)} windows "
+                  f"(window_size={window_size}, overlap={overlap}, lane={routing_lane})")
+            for w in windows:
+                print(f"{LOG_PREFIX}     Window {w.index + 1}: {len(w.core_segments)} core, "
+                      f"{len(w.context_before)} ctx_before, {len(w.context_after)} ctx_after, "
+                      f"convs={sorted(w.core_conversation_ids)}")
+        else:
+            print(f"{LOG_PREFIX}   [DRY RUN] Would call Claude CLI ({video_type} prompt, lane={routing_lane})")
+        return {"conversations": len(approach_convs), "enriched": 0, "routing_lane": routing_lane}
+
+    prompt_variant = "talking_head" if routing_lane == "non_infield" or video_type not in ("infield", "compilation") else "infield"
     enrichments: List[Dict] = []
     transcript_artifacts: List[Dict] = []
     low_quality_segments: List[Dict] = []
-    if response:
-        parsed = parse_enrichment_response(response)
-        enrichments = parsed.enrichments
-        transcript_artifacts = parsed.transcript_artifacts
-        low_quality_segments = parsed.low_quality_segments
-        quality_msg = f", {len(low_quality_segments)} low-quality segs" if low_quality_segments else ""
-        artifact_msg = f", {len(transcript_artifacts)} artifacts" if transcript_artifacts else ""
-        print(f"[07.content]   Got {len(enrichments)} enrichments{quality_msg}{artifact_msg} in {elapsed:.1f}s")
+    window_results: Optional[List[WindowedCallResult]] = None
+
+    if use_windowing and windows:
+        # --- Multi-window path (D13b) ---
+        print(f"{LOG_PREFIX}   Windowing: {len(windows)} windows "
+              f"(window_size={window_size}, overlap={overlap})")
+        for w in windows:
+            print(f"{LOG_PREFIX}     Window {w.index + 1}: {len(w.core_segments)} core, "
+                  f"{len(w.context_before)} ctx_before, {len(w.context_after)} ctx_after, "
+                  f"convs={sorted(w.core_conversation_ids)}")
+
+        window_results = []
+        elapsed = 0.0
+        all_windows_ok = True
+
+        for w in windows:
+            prompt = build_windowed_infield_prompt(
+                w, video_id, len(windows),
+                stage07_evidence_allowlist=stage07_evidence_allowlist,
+                stage07_anchor_allowlist=stage07_anchor_allowlist,
+            )
+            print(f"{LOG_PREFIX}   Calling Claude CLI (window {w.index + 1}/{len(windows)})...")
+            w_start = time.time()
+            response = call_claude(
+                prompt,
+                retries=max(1, int(llm_retries)),
+                timeout=max(1, int(llm_timeout_seconds)),
+                model=claude_model,
+            )
+            w_elapsed = time.time() - w_start
+            elapsed += w_elapsed
+
+            if not response:
+                print(f"{LOG_PREFIX}   Window {w.index + 1}/{len(windows)} failed — aborting video")
+                all_windows_ok = False
+                break
+
+            w_parsed = parse_enrichment_response(response)
+            core_seg_ids = {
+                s.get("id") for s in w.core_segments
+                if isinstance(s, dict) and isinstance(s.get("id"), int)
+            }
+            window_results.append(WindowedCallResult(
+                window_index=w.index,
+                parsed=w_parsed,
+                core_segment_ids=core_seg_ids,
+                elapsed_seconds=w_elapsed,
+            ))
+            quality_msg = f", {len(w_parsed.low_quality_segments)} lq" if w_parsed.low_quality_segments else ""
+            artifact_msg = f", {len(w_parsed.transcript_artifacts)} artifacts" if w_parsed.transcript_artifacts else ""
+            print(f"{LOG_PREFIX}     Window {w.index + 1}: "
+                  f"{len(w_parsed.enrichments)} enrichments{quality_msg}{artifact_msg} in {w_elapsed:.1f}s")
+
+        if all_windows_ok:
+            merged = merge_windowed_results(window_results, windows)
+            enrichments = merged.enrichments
+            transcript_artifacts = merged.transcript_artifacts
+            low_quality_segments = merged.low_quality_segments
+            total_e = sum(len(wr.parsed.enrichments) for wr in window_results)
+            print(f"{LOG_PREFIX}   Merged: {len(enrichments)} enrichments "
+                  f"(from {total_e} pre-merge) in {elapsed:.1f}s total")
+        else:
+            print(f"{LOG_PREFIX}   Claude call failed on window, using empty enrichments")
+
     else:
-        print(f"[07.content]   Claude call failed, using empty enrichments")
+        # --- Single-call path (unchanged for small videos / non-infield / talking_head) ---
+        if routing_lane == "non_infield":
+            prompt = build_talking_head_prompt(segments, video_id)
+        elif video_type in ("infield", "compilation"):
+            prompt = build_infield_prompt(
+                conversations,
+                commentary_blocks,
+                video_id,
+                stage07_evidence_allowlist=stage07_evidence_allowlist,
+                stage07_anchor_allowlist=stage07_anchor_allowlist,
+            )
+        else:
+            prompt = build_talking_head_prompt(segments, video_id)
+
+        print(f"{LOG_PREFIX}   Calling Claude CLI ({prompt_variant} prompt, lane={routing_lane})...")
+
+        start_time = time.time()
+        response = call_claude(
+            prompt,
+            retries=max(1, int(llm_retries)),
+            timeout=max(1, int(llm_timeout_seconds)),
+            model=claude_model,
+        )
+        elapsed = time.time() - start_time
+
+        if response:
+            parsed = parse_enrichment_response(response)
+            enrichments = parsed.enrichments
+            transcript_artifacts = parsed.transcript_artifacts
+            low_quality_segments = parsed.low_quality_segments
+            quality_msg = f", {len(low_quality_segments)} low-quality segs" if low_quality_segments else ""
+            artifact_msg = f", {len(transcript_artifacts)} artifacts" if transcript_artifacts else ""
+            print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments{quality_msg}{artifact_msg} in {elapsed:.1f}s")
+        else:
+            print(f"{LOG_PREFIX}   Claude call failed, using empty enrichments")
 
     # Remap segment references only when the prompt uses per-conversation relative indices.
     if not PROMPT_USES_GLOBAL_SEG_IDS:
@@ -3327,6 +4312,13 @@ def process_video_file(
                 f"{LOG_PREFIX}   Dropped synthetic quality signals: "
                 f"low_quality={dropped_synthetic_quality}, artifacts={dropped_synthetic_artifacts}"
             )
+
+    # --- Stamp damage_severity on each artifact ---
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        atype = artifact.get("artifact_type", "")
+        artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
 
     # --- Transcript artifact repair acceptance ---
     repairs_accepted = 0
@@ -3435,7 +4427,9 @@ def process_video_file(
             "source_file": str(input_path),
             "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "video_type": video_type,
-            "prompt_variant": "infield" if video_type in ("infield", "compilation") else "talking_head",
+            "video_type_confidence": video_type_confidence,
+            "routing_lane": routing_lane,
+            "prompt_variant": prompt_variant,
             "conversations_enriched": len(approach_enrichments),
             "commentary_blocks_enriched": len(commentary_enrichments),
             "sections_enriched": len(section_enrichments),
@@ -3461,6 +4455,20 @@ def process_video_file(
             "synthetic_artifacts_dropped": dropped_synthetic_artifacts,
             "artifact_repairs_accepted": repairs_accepted,
             "artifact_repairs_rejected": repairs_rejected,
+            "windowing": {
+                "window_count": len(windows) if windows else 1,
+                "window_size": window_size,
+                "overlap": overlap,
+                "per_window": [
+                    {
+                        "index": wr.window_index,
+                        "core_segments": len(windows[wr.window_index].core_segments),
+                        "enrichments": len(wr.parsed.enrichments),
+                        "elapsed_seconds": round(wr.elapsed_seconds, 1),
+                    }
+                    for wr in (window_results or [])
+                ],
+            } if (use_windowing and windows and window_results) else None,
         },
         # Version tags (safe additive fields; helps drift detection downstream).
         "pipeline_version": PIPELINE_VERSION,
@@ -3548,6 +4556,7 @@ def process_video_file(
     return {
         "conversations": len(approach_convs),
         "enriched": len(enrichments),
+        "routing_lane": routing_lane,
         "validation_passed": not has_errors,
         "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
         "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
@@ -3715,6 +4724,13 @@ def revalidate_video_file(
             filtered_artifacts.append(row)
         transcript_artifacts = filtered_artifacts
         output["transcript_artifacts"] = transcript_artifacts
+
+    # --- Stamp damage_severity on each artifact ---
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        atype = artifact.get("artifact_type", "")
+        artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
 
     # --- Transcript artifact repair acceptance (revalidate path) ---
     repairs_accepted = 0
@@ -4259,6 +5275,9 @@ def _run_named_source(
                 claude_model=args.model,
                 llm_timeout_seconds=args.timeout_seconds,
                 llm_retries=args.llm_retries,
+                force_lane=args.force_lane,
+                window_size=args.window_size,
+                overlap=args.overlap,
             )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
@@ -4400,6 +5419,24 @@ def main() -> None:
         default=2,
         help="Retry attempts for startup Claude health probe (default: 2).",
     )
+    parser.add_argument(
+        "--force-lane",
+        choices=["infield", "non_infield"],
+        default=None,
+        help="Force all videos into a specific routing lane (default: auto-detect from video_type + confidence).",
+    )
+    parser.add_argument(
+        "--window-size",
+        type=int,
+        default=100,
+        help="Target core segments per LLM window for infield videos (default: 100). D13b.",
+    )
+    parser.add_argument(
+        "--overlap",
+        type=int,
+        default=20,
+        help="Overlap segments between adjacent windows (default: 20). D13b.",
+    )
 
     args = parser.parse_args()
     if args.timeout_seconds <= 0:
@@ -4410,6 +5447,12 @@ def main() -> None:
         raise SystemExit("--preflight-timeout-seconds must be >= 1")
     if args.preflight_retries <= 0:
         raise SystemExit("--preflight-retries must be >= 1")
+    if args.window_size <= 0:
+        raise SystemExit("--window-size must be >= 1")
+    if args.overlap < 0:
+        raise SystemExit("--overlap must be >= 0")
+    if args.overlap >= args.window_size:
+        raise SystemExit("--overlap must be < --window-size")
     verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
     quarantine_ids: Set[str] = set()
     if args.quarantine_file:
@@ -4537,6 +5580,9 @@ def main() -> None:
                     claude_model=args.model,
                     llm_timeout_seconds=args.timeout_seconds,
                     llm_retries=args.llm_retries,
+                    force_lane=args.force_lane,
+                    window_size=args.window_size,
+                    overlap=args.overlap,
                 )
             print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
@@ -4635,6 +5681,9 @@ def main() -> None:
                         claude_model=args.model,
                         llm_timeout_seconds=args.timeout_seconds,
                         llm_retries=args.llm_retries,
+                        force_lane=args.force_lane,
+                        window_size=args.window_size,
+                        overlap=args.overlap,
                     )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
@@ -4712,6 +5761,9 @@ def main() -> None:
                         claude_model=args.model,
                         llm_timeout_seconds=args.timeout_seconds,
                         llm_retries=args.llm_retries,
+                        force_lane=args.force_lane,
+                        window_size=args.window_size,
+                        overlap=args.overlap,
                     )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
@@ -4824,6 +5876,9 @@ def main() -> None:
                     claude_model=args.model,
                     llm_timeout_seconds=args.timeout_seconds,
                     llm_retries=args.llm_retries,
+                    force_lane=args.force_lane,
+                    window_size=args.window_size,
+                    overlap=args.overlap,
                 )
             total_convs += result["conversations"]
             total_enriched += result["enriched"]

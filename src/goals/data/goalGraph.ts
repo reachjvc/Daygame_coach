@@ -80,7 +80,7 @@ const L2_TEMPLATES: GoalTemplate[] = [
 ]
 
 // --- Level 3: Specific Skills & Metrics ---
-const CURVE_TENSION = 5 // default front-loaded curve
+const CURVE_TENSION = 0 // default balanced (geometric) curve
 
 const L3_FIELD_WORK: GoalTemplate[] = [
   template("l3_approach_volume", "Approach Volume", 3, "input", {
@@ -345,5 +345,20 @@ export function getCatalogGroups(): {
   return {
     onePerson: L1_ONE_PERSON,
     abundance: L1_ABUNDANCE,
+  }
+}
+
+/**
+ * Return all daygame goal templates organized by tier for the catalog picker.
+ */
+export function getCatalogTiers(): {
+  tier1: { onePerson: GoalTemplate[]; abundance: GoalTemplate[] }
+  tier2: GoalTemplate[]
+  tier3: Record<GoalDisplayCategory, GoalTemplate[]>
+} {
+  return {
+    tier1: { onePerson: L1_ONE_PERSON, abundance: L1_ABUNDANCE },
+    tier2: L2_TEMPLATES,
+    tier3: { field_work: L3_FIELD_WORK, results: L3_RESULTS, dirty_dog: L3_DIRTY_DOG },
   }
 }

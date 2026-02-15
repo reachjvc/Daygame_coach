@@ -229,8 +229,8 @@ MILESTONE N: "[User-facing capability in plain English]"
 
 **CRITICAL: Never use browser-default controls. Always use project-styled components.**
 
-- `<input type="number">` spinners are hidden globally — use custom increment buttons or the `Set` pattern
-- All inputs, buttons, and form controls must use `components/ui/*` (Button, Input, etc.)
+- All inputs, buttons, and form controls must use `components/ui/*` (Button, Input, etc.) — never raw browser-default controls
+- If a native HTML element opens a browser-chrome popup (date pickers, color pickers, file selects), replace it with the project's styled equivalent. Grep for existing implementations before building.
 - Colors must use CSS variables (`--primary`, `--border`, `--card`, etc.) or Tailwind theme classes — never hardcoded colors that don't match the theme
 - When adding any new interactive element, visually verify it matches the dark theme (charcoal bg, slate cards, orange accent)
 - If a native HTML element has visible browser-default styling (scrollbars, spinners, checkboxes, selects), override it in `globals.css` or use a styled component
