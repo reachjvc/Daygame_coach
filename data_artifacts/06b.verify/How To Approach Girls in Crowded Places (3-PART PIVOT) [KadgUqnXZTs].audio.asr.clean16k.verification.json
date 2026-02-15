@@ -1,0 +1,25 @@
+{
+  "video_id": "KadgUqnXZTs",
+  "verified_at": "2026-02-13T08:12:20Z",
+  "pipeline_version": "06b.verify-v2.0",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 1.0,
+    "reasoning": "Correctly classified as talking_head. 100% monologue instructional content with zero approaches."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [],
+  "summary": "APPROVED. Classification is 100% accurate. This is a talking-head instructional video with zero approaches. SPEAKER_00 correctly identified as Coach Kyle delivering camera-facing monologue teaching pivot techniques through storytelling. UNKNOWN correctly identified as generic outro voice. All 324 segments appropriately classified as commentary. No errors detected.",
+  "metadata": {
+    "input_file": "data/06.video-type/coach_kyle_how_to_approach_a_girl/How To Approach Girls in Crowded Places (3-PART PIVOT) [KadgUqnXZTs].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 23.924493312835693,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "sonnet"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "completed_files": [],
+  "in_progress": null,
+  "failures": [
+    {
+      "file": "4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json",
+      "error": "Internal verification output failed contract validation: schema_invalid at video_id: 'With Examples' does not match '^[A-Za-z0-9_-]{11}$'"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+**Review complete.** Verdict: **FLAG**
+
+Key findings:
+- Video type "infield" and single conversation boundary are both correct
+- 5 segments have role assignments that contradict their speaker's overall role — most likely diarization errors where audio was attributed to the wrong speaker
+- Segment 79 is the clearest fixable misattribution (target's witty comment "Because it picks up chicks" wrongly labeled as coach)
+- Segment 141 is a likely diarization artifact where 28.7s of coach audio was attributed to SPEAKER_02 ("other")
+- Transcription quality degrades in the middle section (segs 111-128) where speech overlaps

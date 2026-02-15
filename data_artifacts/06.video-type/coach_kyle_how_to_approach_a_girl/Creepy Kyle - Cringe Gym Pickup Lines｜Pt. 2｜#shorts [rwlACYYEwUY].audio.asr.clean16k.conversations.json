@@ -1,0 +1,197 @@
+{
+  "video_id": "rwlACYYEwUY",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/coach_kyle_how_to_approach_a_girl/Creepy Kyle - Cringe Gym Pickup Lines｜Pt. 2｜#shorts [rwlACYYEwUY]/Creepy Kyle - Cringe Gym Pickup Lines｜Pt. 2｜#shorts [rwlACYYEwUY].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T22:36:09Z",
+  "video_type": {
+    "type": "compilation",
+    "confidence": 0.9,
+    "reasoning": "Staged gym approach demonstration (0-28s) followed by talking head educational commentary (28-57s) explaining what Kyle did wrong"
+  },
+  "transcript_confidence": {
+    "score": 55,
+    "reasoning": "Speaker diarization has merged multiple speakers into SPEAKER_03 - both the approaching male and female responses appear under same speaker ID. Some ASR errors present (e.g., 'i didn't get my number on the gym'). Overall flow is understandable but speaker attribution is unreliable."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "target",
+      "confidence": 0.7,
+      "reasoning": "Short segment showing rejection/deflection of number request - this is the woman being approached"
+    },
+    "SPEAKER_01": {
+      "role": "target",
+      "confidence": 0.7,
+      "reasoning": "Gives excuses about schedule being crazy - defensive responses typical of target declining"
+    },
+    "SPEAKER_03": {
+      "role": "collapsed",
+      "confidence": 0.3,
+      "reasoning": "mixed_diarization_error: Contains both approach lines ('hey excuse me', 'i'm kyle') AND target responses ('oh i just started actually', 'yes thank you', 'nice to meet you'). Pyannote merged the staged actors into one speaker ID."
+    },
+    "SPEAKER_04": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Educational commentary to camera explaining 'creepy things men do', instructional tone, 'thank me later follow for part three'"
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 4.78,
+      "text": "hey excuse me hey how many more sets do you have left here oh i just started actually",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true,
+      "speaker_role_override": "coach"
+    },
+    {
+      "id": 1,
+      "start": 5.44,
+      "end": 11.58,
+      "text": "oh okay have you been here before yeah yes thank you oh okay what's up i'm kyle by the way",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "coach"
+    },
+    {
+      "id": 2,
+      "start": 11.56,
+      "end": 16.9,
+      "text": "nice to meet you nice to meet you maybe i could work in or you could work out together sometime",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false,
+      "speaker_role_override": "coach"
+    },
+    {
+      "id": 3,
+      "start": 17.32,
+      "end": 23.48,
+      "text": "uh i'm here so randomly honestly okay and my work schedule is crazy okay cool maybe i'll just",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 23.46,
+      "end": 28.46,
+      "text": "actually let me just get your number i'll let you on oh i'm sorry i didn't get my number on the gym",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 28.44,
+      "end": 36.16,
+      "text": "no sorry okay all right take care bye creepy things men do part two trying to ask her out",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 36.14,
+      "end": 40.54,
+      "text": "or get her phone number the first time you interact with her at the gym now the first",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 40.52,
+      "end": 45.6,
+      "text": "time you talk to her it should just be short and sweet and then over time as you continuously see",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 45.58,
+      "end": 50.92,
+      "text": "her you can build up the vibe more and more and baby step your way towards hanging out with her",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 50.9,
+      "end": 54.64,
+      "text": "or getting a workout in with her thank me later follow for part three",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 54.62,
+      "end": 56.64,
+      "text": "Thank you for your time.",
+      "speaker_id": "SPEAKER_04",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "start_time": 0.0,
+      "end_time": 28.46
+    }
+  ],
+  "review_flags": [
+    "speaker_collapse: SPEAKER_03 (3 segs, 100% reassigned, 0 unknown)"
+  ],
+  "speaker_collapse": {
+    "detected": true,
+    "collapsed_speakers": [
+      "SPEAKER_03"
+    ],
+    "total_segments_affected": 3,
+    "reassigned_count": 3,
+    "unknown_count": 0,
+    "reassignment_rate": 1.0
+  },
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "f8ee54a979e847f0",
+    "llm_calls": 1,
+    "processing_time_sec": 20.58720111846924
+  }
+}

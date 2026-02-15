@@ -1,0 +1,93 @@
+{
+  "video_id": "6ImEzB6NhiI",
+  "verified_at": "2026-02-13T08:11:56Z",
+  "pipeline_version": "06b.verify-v2.0",
+  "verdict": "REJECT",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 1.0,
+    "reasoning": "Heavy commentary (306 segments) framing a single extended interaction matches 'compilation' format"
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "ISSUE",
+      "notes": "Single conversation contains TWO different target speakers (SPEAKER_01 and SPEAKER_02), suggesting either merged approaches or misclassified bystander"
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 54,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02 appears sporadically (6 times total) while SPEAKER_01 is primary target. Brief interjection 'I don't know' could be bystander/passerby rather than second target",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 61,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02's 'Yeah, I am' response about height - if this is same woman as SPEAKER_01, diarization failed; if different person, should be 'other'",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 63,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02 answering height question ('No, I'm 5'2'') - inconsistent with SPEAKER_01 being primary conversational partner",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 65,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02's '5'1'' correction - pattern suggests either diarization error or this is bystander/other person",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 121,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02's 'No, over there is finished' - brief navigation comment, possibly bystander",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 122,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02's 'Because in that way, it's out on roll' - fragmented statement suggests either transcription error or bystander speech",
+      "confidence": 0.75
+    },
+    {
+      "segment_id": 326,
+      "current_role": "target",
+      "suggested_role": "other",
+      "evidence": "SPEAKER_02's 'No, but I have to do something' late in conversation - if different from SPEAKER_01, should be 'other'; if same person, indicates diarization failure",
+      "confidence": 0.75
+    }
+  ],
+  "boundary_issues": [
+    {
+      "conversation_id": 1,
+      "issue": "Conv 1 contains two different speakers both labeled 'target' (SPEAKER_01 and SPEAKER_02). If these are two separate women, this represents two merged approaches. Most likely: diarization incorrectly split one woman's voice into two speaker IDs.",
+      "severity": "major",
+      "suggested_fix": null,
+      "confidence": 0.85
+    }
+  ],
+  "collapse_issues": [],
+  "other_flags": [
+    "Critical structural issue: SPEAKER_01 and SPEAKER_02 both assigned role 'target' within same conversation. This violates assumption that each conversation has one target. Either: (1) diarization split one woman into two speaker IDs (most likely given sporadic SPEAKER_02 appearances), or (2) two separate approaches were incorrectly merged. Downstream processing will fail with two targets in one conversation.",
+    "Segment 122: Possible transcription error - 'Because in that way, it's out on roll' is semantically unclear",
+    "Speaker collapse detection reported 'Not detected' but structural evidence suggests SPEAKER_01 and SPEAKER_02 should have been investigated as potential same-speaker"
+  ],
+  "summary": "CRITICAL ISSUE: Conversation 1 contains two different speakers both labeled 'target' (SPEAKER_01 and SPEAKER_02), violating single-target-per-conversation assumption. Most likely cause: diarization incorrectly split one woman's voice into two speaker IDs (SPEAKER_02 appears only 6 times vs SPEAKER_01's 23 times). All SPEAKER_02 segments should likely be collapsed to SPEAKER_01, OR if truly different people, SPEAKER_02 should be reclassified as 'other'. Current output will break downstream processing expecting one target per conversation.",
+  "metadata": {
+    "input_file": "data/06.video-type/coach_kyle_how_to_approach_a_girl/5 Easy Steps to Turn a Hi into an INSTANT Date (LIVE DEMO) [6ImEzB6NhiI].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 49.05208396911621,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "sonnet"
+  }
+}

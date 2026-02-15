@@ -1,0 +1,34 @@
+{
+  "video_id": "6ImEzB6NhiI",
+  "validated_at": "2026-02-13T08:15:59Z",
+  "pipeline_version": "07.content-v1.8",
+  "prompt_version": "1.4.3",
+  "summary": {
+    "errors": 0,
+    "warnings": 3,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "technique_on_non_coach_segment",
+      "message": "Enrichment 1 (conv 1): technique 'cold_read' cites seg 73 spoken by 'target'"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 80: nonsense — Text appears jumbled and incoherent when discussing tattoo meaning"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 164: nonsense — Phrase 'bruise with my bed' appears to be mishearing"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

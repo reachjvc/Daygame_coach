@@ -1,0 +1,159 @@
+{
+  "video_id": "iOSpNACA9VI",
+  "verified_at": "2026-02-05T19:32:52Z",
+  "pipeline_version": "06b.verify-v1.0",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Video type compilation is correct — multiple approaches with commentary between them."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 2,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 3,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 4,
+      "verdict": "ISSUE",
+      "notes": "1-second fragment (533.16-534.14s, 2 segments). Too minimal to be a real conversation."
+    },
+    {
+      "conversation_id": 5,
+      "verdict": "FLAG",
+      "notes": "SPEAKER_09 role flip — labeled as target early then coach later. Seg 182 (SPEAKER_05 as coach) says \"let's exchange Instagrams\" which could be target speech."
+    },
+    {
+      "conversation_id": 6,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 7,
+      "verdict": "ISSUE",
+      "notes": "3 coach-only segments, no target segments. Should be commentary (conversation_id=0), not a standalone conversation."
+    },
+    {
+      "conversation_id": 8,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 9,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 10,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 11,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 12,
+      "verdict": "OK",
+      "notes": ""
+    },
+    {
+      "conversation_id": 13,
+      "verdict": "OK",
+      "notes": ""
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 399,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Text is \"when I'm in Turkey we'll get married we'll have 14 children\" — this is coach-style escalation/humor, not target speech. Marriage joke is a classic coach move."
+    },
+    {
+      "segment_id": 182,
+      "current_role": "coach",
+      "suggested_role": "target",
+      "evidence": "Text is \"I have to go, but let's exchange Instagrams\" — sounds like target initiating departure and offering contact info, not coach behavior."
+    }
+  ],
+  "boundary_issues": [
+    {
+      "conversation_id": 4,
+      "issue": "1-second fragment (533.16-534.14s) with only 2 segments. Too minimal to constitute a real conversation — likely a misdetected boundary.",
+      "severity": "moderate"
+    },
+    {
+      "conversation_id": 7,
+      "issue": "3 coach-only segments (242-244), no target. Should be commentary (conversation_id=0). Only 5.4s duration with no approach behavior.",
+      "severity": "moderate"
+    }
+  ],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_04",
+      "segment_id": 515,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Segs 515-517: \"Just take the leap... allow yourself to be coached\" — this is clearly a student testimonial, not coach speech. SPEAKER_04 is a student giving a testimonial."
+    },
+    {
+      "speaker_id": "SPEAKER_04",
+      "segment_id": 516,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Continuation of student testimonial — \"It sounds corny, but it's like, take the fucking leap and allow yourself\""
+    },
+    {
+      "speaker_id": "SPEAKER_04",
+      "segment_id": 517,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Continuation — \"to be coached.\" Explicitly says they are being coached, not the coach."
+    },
+    {
+      "speaker_id": "SPEAKER_06",
+      "segment_id": 278,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Text \"brazilian monkey this is like\" — student banter, not coaching speech."
+    },
+    {
+      "speaker_id": "SPEAKER_06",
+      "segment_id": 326,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Text \"Yeah!\" — short exclamation, student reaction not coach speech."
+    },
+    {
+      "speaker_id": "SPEAKER_06",
+      "segment_id": 327,
+      "current_override": "coach",
+      "suggested_override": "other",
+      "evidence": "Text \"Woo!\" — short exclamation, student celebration not coach speech."
+    }
+  ],
+  "other_flags": [
+    "SPEAKER_09 role flip in Conv 5: labeled as target early then coach later — inconsistent.",
+    "Multiple students doing approaches in this documentary — consistent policy needed for labeling students-doing-approaches vs coach.",
+    "This verification was manually constructed from consistent LLM text analysis (6+ attempts) — the LLM consistently identified these issues but failed to produce valid JSON due to prompt length (65938 chars)."
+  ],
+  "summary": "The classification is mostly correct — video type, speaker roles, and conversation boundaries are largely accurate. Main issues: seg 399 misattributed coach escalation as target, SPEAKER_04 segs 515-517 are student testimonial mislabeled as coach, Conv 4 is a 1s fragment not a real conversation, Conv 7 should be commentary. SPEAKER_06 has several segments incorrectly overridden as coach that are student banter. The output needs fixes but is structurally sound.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.video-type/Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 0,
+    "llm_calls": 6,
+    "note": "Manually constructed from consistent LLM text analysis — JSON parsing failed across 6+ attempts due to prompt length"
+  }
+}

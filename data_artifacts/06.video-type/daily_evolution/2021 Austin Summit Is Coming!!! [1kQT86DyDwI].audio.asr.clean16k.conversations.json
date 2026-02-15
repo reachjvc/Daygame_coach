@@ -1,0 +1,320 @@
+{
+  "video_id": "1kQT86DyDwI",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/daily_evolution/2021 Austin Summit Is Coming!!! [1kQT86DyDwI]/2021 Austin Summit Is Coming!!! [1kQT86DyDwI].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T21:26:05Z",
+  "video_type": {
+    "type": "talking_head",
+    "confidence": 0.95,
+    "reasoning": "Single speaker addressing camera directly with promotional/motivational content about an upcoming event. No live interactions, no back-and-forth dialogue, clean prepared speech."
+  },
+  "transcript_confidence": {
+    "score": 92,
+    "reasoning": "Excellent transcript quality - coherent flow, complete sentences, clear speaker (only one), no ASR artifacts or garbled text. Minor segmentation breaks mid-sentence but content is fully understandable."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Identifies himself as Aaron Alexander, speaks with authority about 'gaming with me', hosting seminars and podcasts. Promotional tone addressing potential attendees directly."
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 1.233,
+      "text": "Hey, what's going on, man?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 1,
+      "start": 1.253,
+      "end": 3.82,
+      "text": "It's me, Aaron Alexander, and I would like to invite you",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 3.8,
+      "end": 9.34,
+      "text": "to the Evolution Daily Summit happening in Austin, Texas, October 1st through the 3rd.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 9.38,
+      "end": 14.86,
+      "text": "When you come to an Evolution Daily Summit, this is an event like you've never experienced before,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 15.08,
+      "end": 17.723,
+      "text": "and right now in your life, you need adventure.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 18.188,
+      "end": 19.6,
+      "text": "When you attend the Evolution Daily Summit,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 19.7,
+      "end": 23.824,
+      "text": "you will be able to game with me all weekend long.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 24.126,
+      "end": 26.48,
+      "text": "Not only me, but the other 50 or so",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 26.46,
+      "end": 28.995,
+      "text": "savages that are going to be attending.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 29.297,
+      "end": 33.34,
+      "text": "You will be able to attend a live seminar with me and a live",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 33.32,
+      "end": 34.77,
+      "text": "podcast recording.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 35.314,
+      "end": 38.012,
+      "text": "All of this when you attend the Evolution Daily Summit.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 12,
+      "start": 38.354,
+      "end": 39.22,
+      "text": "It's time to surround",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 13,
+      "start": 39.2,
+      "end": 40.653,
+      "text": "yourself with winners.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 14,
+      "start": 41.016,
+      "end": 43.74,
+      "text": "The guys that come to the Evolution Daily Summit, that's what they are.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 15,
+      "start": 43.78,
+      "end": 44.447,
+      "text": "They're winners.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 16,
+      "start": 44.669,
+      "end": 46.164,
+      "text": "They're men that want more out of life.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 17,
+      "start": 46.407,
+      "end": 47.74,
+      "text": "They're men that are ready for adventure.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 18,
+      "start": 47.92,
+      "end": 53.135,
+      "text": "They're men that are ready to step it up and stop living in the matrix.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 19,
+      "start": 53.155,
+      "end": 53.98,
+      "text": "This event is going",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 20,
+      "start": 53.96,
+      "end": 55.061,
+      "text": "going to be insane.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 21,
+      "start": 55.34,
+      "end": 59.08,
+      "text": "Click the link here on this video, and I will see you in",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 22,
+      "start": 59.06,
+      "end": 59.981,
+      "text": "Austin, Texas.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 23,
+      "start": 60.06,
+      "end": 61.161,
+      "text": "Sign up immediately.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 24,
+      "start": 61.4,
+      "end": 63.68,
+      "text": "We are closing this down September 1.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 25,
+      "start": 63.8,
+      "end": 66.88,
+      "text": "You will not be able to sign up anymore, so act now.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "1da3d7bb909d8578",
+    "llm_calls": 1,
+    "processing_time_sec": 18.292027711868286
+  }
+}

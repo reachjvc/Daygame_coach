@@ -1,0 +1,21 @@
+{
+  "video_id": "IZX3a0tLuAg",
+  "verified_at": "2026-02-06T12:24:45Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Video is instructional monologue with brief audience participation, matching talking_head classification. No infield approaches or conversations present."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [],
+  "summary": "This is a correctly classified talking_head video featuring a dating coach giving instructional content about self-worth and attraction. SPEAKER_01 (coach) dominates with 156 segments of teaching material, referencing 15+ years of experience and promoting coaching services. SPEAKER_00 and SPEAKER_02 are correctly labeled as 'other' - they are workshop participants who briefly contribute thoughts when the coach asks questions (segments 54-58, 68-70). All segments are appropriately marked as commentary (conversation_id=0) since there are no actual daygame approaches in this video. No errors detected.",
+  "metadata": {
+    "input_file": "data/06.video-type/How To Feel Worthy Around Hot Women (by Understanding What They REALLY Want) [IZX3a0tLuAg].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 23.746432304382324,
+    "llm_calls": 1
+  }
+}

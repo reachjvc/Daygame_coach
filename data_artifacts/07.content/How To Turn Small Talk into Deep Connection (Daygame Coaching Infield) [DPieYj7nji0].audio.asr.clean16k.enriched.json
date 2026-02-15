@@ -1,0 +1,3764 @@
+{
+  "metadata": {
+    "source_file": "data/06c.patched/How To Turn Small Talk into Deep Connection (Daygame Coaching Infield) [DPieYj7nji0].audio.asr.clean16k.conversations.json",
+    "processed_at": "2026-02-06T16:19:06Z",
+    "video_type": "compilation",
+    "prompt_variant": "infield",
+    "conversations_enriched": 1,
+    "commentary_blocks_enriched": 10,
+    "sections_enriched": 0,
+    "processing_time_sec": 52.85142374038696,
+    "model": "claude-cli",
+    "upstream_verification_verdict": "APPROVE",
+    "upstream_fixes_applied": 0,
+    "upstream_flags_unfixed": 0
+  },
+  "video_id": "DPieYj7nji0",
+  "video_type": {
+    "type": "compilation",
+    "confidence": 0.95,
+    "reasoning": "Video interleaves live infield approach footage with coaching commentary and breakdowns. Coach introduces student MJ, then we see approach clips followed by analysis segments."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "target",
+      "confidence": 0.95,
+      "reasoning": "Gives short responses, answers personal questions (does marketing, Polish, does art), reacts to compliments about nails. Classic target speech patterns."
+    },
+    "SPEAKER_01": {
+      "role": "coach",
+      "confidence": 0.85,
+      "reasoning": "Secondary coach named Eddie. Gives tactical advice ('you can challenge her on that', 'give her an option'). Only speaks during commentary sections. Referenced by SPEAKER_02 as 'Eddie'."
+    },
+    "SPEAKER_02": {
+      "role": "coach",
+      "confidence": 0.97,
+      "reasoning": "Adam from Social Stoic. Opens with intro to camera, provides all coaching commentary and breakdowns ('she said she does marketing', 'dig deep', 'really important to expand'). Most segments, most words. Primary coach."
+    },
+    "SPEAKER_03": {
+      "role": "coach",
+      "confidence": 0.9,
+      "reasoning": "Student MJ doing the live approaches. Delivers openers ('excuse me'), asks personal questions, gives compliments ('I'm actually liking them'), introduces himself as MJ, attempts number close. Acts as coach-in-training during infield, participates in commentary sections."
+    },
+    "UNKNOWN": {
+      "role": "unknown",
+      "confidence": 0.3,
+      "reasoning": "Single segment at the very end saying 'Thank you' - likely the target or a passerby. Insufficient context to determine."
+    }
+  },
+  "speaker_corrections": [],
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.84,
+      "end": 3.86,
+      "text": "Hey guys, it's Adam here from Social Stoic.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 1,
+      "start": 4,
+      "end": 7.6,
+      "text": "Over the past 11 years, I've mastered the Art of Cold approach,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 7.82,
+      "end": 11.44,
+      "text": "dating hundreds of women and gaining valuable insights along the way.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 11.54,
+      "end": 14.86,
+      "text": "Since 2018, I've coached countless men worldwide,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 15.26,
+      "end": 17.44,
+      "text": "helping transform loners into Lotharios,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 17.76,
+      "end": 21.72,
+      "text": "virgins into studs, and introverts into social butterflies.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 22.14,
+      "end": 25.54,
+      "text": "In this video, you'll get an inside look at a student's infield,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 25.54,
+      "end": 27.34,
+      "text": "along with highlights from my coaching.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 27.32,
+      "end": 32.7,
+      "text": "You'll meet MJ, a cool guy from Leeds in the UK, who's an MMA fighter and has his own business",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 32.68,
+      "end": 33.601,
+      "text": "consulting firm.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 33.72,
+      "end": 39.3,
+      "text": "There will be a whole series of these coaching videos with MJ covering various topics, but",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 39.28,
+      "end": 43.9,
+      "text": "to keep things short and to the point, in this video, we're going to focus on turning",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 12,
+      "start": 43.88,
+      "end": 49.18,
+      "text": "the often boring topics of work and hobbies into genuine connections with women.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 13,
+      "start": 49.28,
+      "end": 51.58,
+      "text": "So get ready, it's going to be a good one.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 14,
+      "start": 53.84,
+      "end": 54.641,
+      "text": "Excuse me.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true
+    },
+    {
+      "id": 15,
+      "start": 54.62,
+      "end": 61.64,
+      "text": "this is like really random and spontaneous but what what's life with a bit of spontaneity you",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 16,
+      "start": 61.62,
+      "end": 67.08,
+      "text": "know um i saw you the way you dressed is like really hip-hop style and you look like a dancer",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 17,
+      "start": 67.06,
+      "end": 74,
+      "text": "are you a dancer no i'm not oh that's so what what is it that you do then what is that because",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 18,
+      "start": 73.98,
+      "end": 81.94,
+      "text": "you look kind of like creative like that right and yeah um no i i just do marketing okay but like",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 19,
+      "start": 81.92,
+      "end": 83.221,
+      "text": "Like, that's not it, yeah.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 20,
+      "start": 83.34,
+      "end": 83.842,
+      "text": "It's boring.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 21,
+      "start": 84.44,
+      "end": 86.24,
+      "text": "Oh, but you surely do something away",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 22,
+      "start": 86.22,
+      "end": 87.341,
+      "text": "from the marketing though, right?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 23,
+      "start": 87.68,
+      "end": 89.321,
+      "text": "Yeah, but I do a bit of art.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 24,
+      "start": 89.46,
+      "end": 89.942,
+      "text": "Oh yeah?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 25,
+      "start": 90.04,
+      "end": 91.461,
+      "text": "You definitely get creative.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 26,
+      "start": 91.6,
+      "end": 92.321,
+      "text": "For sure.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 27,
+      "start": 92.52,
+      "end": 94.44,
+      "text": "And I'm just looking at your nails right now.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 28,
+      "start": 94.62,
+      "end": 95.541,
+      "text": "Oh no, don't even.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 29,
+      "start": 95.68,
+      "end": 96.26,
+      "text": "Cause they're like, all like broken.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 30,
+      "start": 96.66,
+      "end": 97.861,
+      "text": "I'm actually liking them.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 31,
+      "start": 98.04,
+      "end": 98.721,
+      "text": "Show me again.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 32,
+      "start": 98.9,
+      "end": 100.061,
+      "text": "She said she does marketing.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 33,
+      "start": 100.74,
+      "end": 103.74,
+      "text": "I think you were a bit too quick to kind of diss that.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 34,
+      "start": 104.32,
+      "end": 106.48,
+      "text": "Like, cause she didn't necessarily,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 35,
+      "start": 107,
+      "end": 108.561,
+      "text": "later in the set she even said,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 36,
+      "start": 108.58,
+      "end": 109.421,
+      "text": "oh, there's some like good bits.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 37,
+      "start": 109.56,
+      "end": 110.641,
+      "text": "It's a little bit fun.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 38,
+      "start": 110.62,
+      "end": 116.98,
+      "text": "it can be fun yeah yeah definitely if it's a topic like her hobby her work these this is her life",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 39,
+      "start": 116.96,
+      "end": 121.68,
+      "text": "yeah right so you don't know she might love her job she might love marketing yeah depends what",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 40,
+      "start": 121.66,
+      "end": 126.62,
+      "text": "sort of marketing she does some marketing can be genuinely interesting yeah right so always",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 41,
+      "start": 126.6,
+      "end": 131.98,
+      "text": "ask the question like do you enjoy that yeah are you passionate about it i see because if she does",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 42,
+      "start": 131.96,
+      "end": 138.62,
+      "text": "enjoy it and you're bringing it down it's just it's leaving connection on the table true right",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 43,
+      "start": 138.6,
+      "end": 140.94,
+      "text": "Like, let's say you do MMA and I'm like, fuck MMA.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 44,
+      "start": 142.36,
+      "end": 143.881,
+      "text": "It's like Adam's the bicker.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 45,
+      "start": 144.64,
+      "end": 147.96,
+      "text": "Whereas everyone loves talking about what they're passionate about.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 46,
+      "start": 147.96,
+      "end": 148.881,
+      "text": "I love cars.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 47,
+      "start": 149.32,
+      "end": 151.02,
+      "text": "Cars are like a massive passion of mine.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 48,
+      "start": 151.06,
+      "end": 152.101,
+      "text": "So I could talk about it all day.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 49,
+      "start": 152.2,
+      "end": 155.8,
+      "text": "And anyone who is warm to that topic, I will connect with.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 50,
+      "start": 155.9,
+      "end": 157.201,
+      "text": "You can challenge her on that.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 51,
+      "start": 157.38,
+      "end": 160.7,
+      "text": "You can say, cool, so what sort of marketer are you?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 52,
+      "start": 160.96,
+      "end": 163.94,
+      "text": "And then give her an option.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 53,
+      "start": 164.06,
+      "end": 165.421,
+      "text": "One where she's the devil.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 54,
+      "start": 165.4,
+      "end": 170.96,
+      "text": "and another one where she's trying to do genuine good maybe marketing health foods",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 55,
+      "start": 170.94,
+      "end": 177.96,
+      "text": "you know marketing fitness sure so a good way to respond to a job that she does is oh are you just",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 56,
+      "start": 177.94,
+      "end": 183.08,
+      "text": "in it for the money or are you actually in it with a greater good of humanity yeah money or",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 57,
+      "start": 183.06,
+      "end": 188.72,
+      "text": "you're in it for the fame that way you're still keeping it respectful yeah but you're sort of",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 58,
+      "start": 188.7,
+      "end": 193.78,
+      "text": "challenging her yeah like it takes a bit more to impress you when it comes to her work exactly",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 59,
+      "start": 193.76,
+      "end": 199.66,
+      "text": "what Eddie said like ask more questions dig a bit deeper what exactly does she do does she enjoy it",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 60,
+      "start": 199.64,
+      "end": 204.28,
+      "text": "what are her motivations how long she's been doing it is that does she have any other greater",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 61,
+      "start": 204.26,
+      "end": 209.14,
+      "text": "ambitions within marketing does she want to start up her own marketing agency at some point or does",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 62,
+      "start": 209.12,
+      "end": 212.96,
+      "text": "she want to get out of it and do something else yeah with those questions finding out some of",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 63,
+      "start": 212.94,
+      "end": 217.64,
+      "text": "those things you start forming a much deeper connection sure sure and I'm just looking at",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 64,
+      "start": 217.62,
+      "end": 221.76,
+      "text": "your nails right now oh no don't burn because they're like broken I'm actually liking them",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 65,
+      "start": 221.74,
+      "end": 221.901,
+      "text": "them.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 66,
+      "start": 222.325,
+      "end": 222.809,
+      "text": "Show me again.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 67,
+      "start": 223.192,
+      "end": 226.298,
+      "text": "No, because literally I got them read, like, see these ones?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 68,
+      "start": 226.419,
+      "end": 226.52,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 69,
+      "start": 226.56,
+      "end": 230.614,
+      "text": "Like I went to a woman to get a bi-app and she just broke all of my nails.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 70,
+      "start": 231.017,
+      "end": 231.279,
+      "text": "Oh shit.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 71,
+      "start": 231.299,
+      "end": 231.42,
+      "text": "Yeah,",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 72,
+      "start": 231.42,
+      "end": 232.818,
+      "text": "when she was like filing them off.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 73,
+      "start": 232.838,
+      "end": 234.62,
+      "text": "You see, if you were my girlfriend, I'd make sure that",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 74,
+      "start": 234.6,
+      "end": 236.268,
+      "text": "we got those done regularly.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 75,
+      "start": 236.87,
+      "end": 239.382,
+      "text": "So, yeah, so anyway, I'm MJ.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 76,
+      "start": 242.074,
+      "end": 242.797,
+      "text": "Okay, nice.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 77,
+      "start": 242.818,
+      "end": 243.38,
+      "text": "What nationality",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 78,
+      "start": 243.36,
+      "end": 243.743,
+      "text": "is that?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 79,
+      "start": 244.025,
+      "end": 244.811,
+      "text": "Polish.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 80,
+      "start": 244.832,
+      "end": 245.638,
+      "text": "Oh, okay.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 81,
+      "start": 245.658,
+      "end": 246.505,
+      "text": "Do you know any Polish?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 82,
+      "start": 246.928,
+      "end": 247.613,
+      "text": "Yeah, I do.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 83,
+      "start": 247.876,
+      "end": 248.218,
+      "text": "Yeah, yeah.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 84,
+      "start": 248.279,
+      "end": 248.46,
+      "text": "So I know",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 85,
+      "start": 248.44,
+      "end": 253.04,
+      "text": "i know a little bit of polish because my cousin married a polish girl i went to a polish wedding",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 86,
+      "start": 253.02,
+      "end": 257.7,
+      "text": "it was just amazing polish weddings are the ones they are the best it's literally like all day",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 87,
+      "start": 257.68,
+      "end": 263.54,
+      "text": "drink all day food i think we went through maybe like 120 bottles of vodka i'm not surprised",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 88,
+      "start": 263.52,
+      "end": 270.62,
+      "text": "amazing yeah you know so do you go back to poland very much or like once a year yeah because you",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 89,
+      "start": 270.6,
+      "end": 274.96,
+      "text": "want to kind of build these bubbles of connection right i think you did a really good job connecting",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 90,
+      "start": 274.94,
+      "end": 279.72,
+      "text": "thing on poland there right so that's one thing you yeah you're really vibing on the whole poland",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 91,
+      "start": 279.7,
+      "end": 284.68,
+      "text": "thing talking about polish weddings talking about you having polish friends that's bang on you know",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 92,
+      "start": 284.66,
+      "end": 289.48,
+      "text": "you build a bubble and then you can kind of burst it and kind of teaser on poland and yeah sure how",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 93,
+      "start": 289.46,
+      "end": 295.24,
+      "text": "are they like kind of a little bit too rowdy or whatever it might be yeah a little bit too much",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 94,
+      "start": 295.22,
+      "end": 301.7,
+      "text": "into their plumbing yes yeah because you've got like really like london accent right we were born",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 95,
+      "start": 301.68,
+      "end": 303.58,
+      "text": "No, I moved here when I was seven.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 96,
+      "start": 303.94,
+      "end": 305.161,
+      "text": "Okay, nice.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 97,
+      "start": 306,
+      "end": 308.5,
+      "text": "And do you remember it from when you were younger?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 98,
+      "start": 308.72,
+      "end": 309.481,
+      "text": "A bit, yeah.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 99,
+      "start": 310.48,
+      "end": 313.8,
+      "text": "Because once you've been in London, you just get that London kind of feeling.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 100,
+      "start": 313.78,
+      "end": 315.081,
+      "text": "You just feel like a Londoner, right?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 101,
+      "start": 315.12,
+      "end": 316.84,
+      "text": "Yeah, it's been a while.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 102,
+      "start": 318.04,
+      "end": 319.401,
+      "text": "She mentioned she does art.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 103,
+      "start": 319.56,
+      "end": 320.501,
+      "text": "Just like dig deep.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 104,
+      "start": 320.54,
+      "end": 321.461,
+      "text": "Yeah, for sure.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 105,
+      "start": 321.66,
+      "end": 323.82,
+      "text": "Do you prefer drawing people or places?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 106,
+      "start": 325,
+      "end": 327.22,
+      "text": "And then you can get a little bit philosophical.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 107,
+      "start": 328.04,
+      "end": 330.56,
+      "text": "London's an awesome city for an artist, right?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 108,
+      "start": 330.54,
+      "end": 331.981,
+      "text": "You're just surrounded by inspiration.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 109,
+      "start": 332.44,
+      "end": 333.741,
+      "text": "I don't know if you know, but Denmark street,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 110,
+      "start": 333.82,
+      "end": 335.9,
+      "text": "this is literally a street for artists, for musicians.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 111,
+      "start": 336.44,
+      "end": 336.5,
+      "text": "Right?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 112,
+      "start": 336.5,
+      "end": 337.441,
+      "text": "Denmark street's lovely.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 113,
+      "start": 337.64,
+      "end": 339.141,
+      "text": "Some of the nicest looking pigeons.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 114,
+      "start": 340.6,
+      "end": 342.201,
+      "text": "So you look like you've been shopping today.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 115,
+      "start": 342.34,
+      "end": 343.121,
+      "text": "Have you bought a lot?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 116,
+      "start": 343.34,
+      "end": 345.001,
+      "text": "A couple of things.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 117,
+      "start": 345.02,
+      "end": 347.34,
+      "text": "Like I was looking for one particular shirt,",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 118,
+      "start": 347.44,
+      "end": 349.28,
+      "text": "but I couldn't find anything like that, so.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 119,
+      "start": 349.5,
+      "end": 350.981,
+      "text": "Yeah, I thought it might've been for like,",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 120,
+      "start": 350.98,
+      "end": 352.501,
+      "text": "your going outfit for tonight.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 121,
+      "start": 352.76,
+      "end": 354.84,
+      "text": "No, no, it's more like office wear.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 122,
+      "start": 355.12,
+      "end": 355.741,
+      "text": "Oh, okay.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 123,
+      "start": 356.3,
+      "end": 358.34,
+      "text": "God, it's all office and marketing.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 124,
+      "start": 358.5,
+      "end": 359.941,
+      "text": "We need to take you out of that.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 125,
+      "start": 359.92,
+      "end": 362.08,
+      "text": "We need to introduce some more fun, you know?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 126,
+      "start": 362.24,
+      "end": 362.583,
+      "text": "No.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 127,
+      "start": 363.96,
+      "end": 365.261,
+      "text": "Marketing is fun.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 128,
+      "start": 365.6,
+      "end": 366.401,
+      "text": "There's a lot going on.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 129,
+      "start": 366.38,
+      "end": 368.22,
+      "text": "Yeah, I guess there's a little bit of fun in there.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 130,
+      "start": 368.62,
+      "end": 370.92,
+      "text": "Think like, okay, how can you link marketing to what you do?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 131,
+      "start": 371.04,
+      "end": 371.383,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 132,
+      "start": 371.84,
+      "end": 374.46,
+      "text": "You need fucking marketers for what you do,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 133,
+      "start": 374.46,
+      "end": 376.081,
+      "text": "or you probably do a bit of marketing for your business.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 134,
+      "start": 376.28,
+      "end": 379.16,
+      "text": "So always, like, maybe try to link that to what you do",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 135,
+      "start": 379.14,
+      "end": 382.04,
+      "text": "and even throw in a subtle DHV, like, oh, like, yeah,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 136,
+      "start": 382.04,
+      "end": 384.02,
+      "text": "to be honest with me, like, I hate marketing.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 137,
+      "start": 384.08,
+      "end": 384.861,
+      "text": "You love it?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 138,
+      "start": 385.36,
+      "end": 387.24,
+      "text": "Personally, like, I outsource all my marketing",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 139,
+      "start": 387.22,
+      "end": 388.441,
+      "text": "for my business, you know?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 140,
+      "start": 388.58,
+      "end": 388.923,
+      "text": "Nice, nice.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 141,
+      "start": 388.9,
+      "end": 390.461,
+      "text": "And then you've mentioned you have a business,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 142,
+      "start": 390.64,
+      "end": 392.161,
+      "text": "you mentioned you outsource marketing,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 143,
+      "start": 392.4,
+      "end": 393.581,
+      "text": "and then boom, back to her.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 144,
+      "start": 393.72,
+      "end": 393.945,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 145,
+      "start": 394.02,
+      "end": 395.121,
+      "text": "So it's a mystery there.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 146,
+      "start": 395.16,
+      "end": 395.801,
+      "text": "He's got a business.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 147,
+      "start": 395.86,
+      "end": 396.641,
+      "text": "What is the business?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 148,
+      "start": 396.84,
+      "end": 397.104,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 149,
+      "start": 397.08,
+      "end": 397.383,
+      "text": "Right?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 150,
+      "start": 397.48,
+      "end": 397.764,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 151,
+      "start": 397.78,
+      "end": 399.62,
+      "text": "So that is your subtle DHV,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 152,
+      "start": 399.62,
+      "end": 400.641,
+      "text": "and that's just how you want to know.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 153,
+      "start": 400.62,
+      "end": 402.101,
+      "text": "At least she's got that bit of information.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 154,
+      "start": 402.08,
+      "end": 403.401,
+      "text": "You don't need to tell her everything.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 155,
+      "start": 403.5,
+      "end": 404.161,
+      "text": "She's got it.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 156,
+      "start": 404.2,
+      "end": 405.681,
+      "text": "And if she wants to ask more, she can.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 157,
+      "start": 405.8,
+      "end": 406.183,
+      "text": "Exactly.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 158,
+      "start": 406.16,
+      "end": 406.424,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 159,
+      "start": 406.84,
+      "end": 408.121,
+      "text": "Always see, okay,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 160,
+      "start": 408.18,
+      "end": 410.3,
+      "text": "how can I link what she does to what I do?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 161,
+      "start": 410.36,
+      "end": 410.566,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 162,
+      "start": 410.58,
+      "end": 411.381,
+      "text": "So tonight, though,",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 163,
+      "start": 411.4,
+      "end": 412.461,
+      "text": "are you going out or anything?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 164,
+      "start": 412.6,
+      "end": 413.381,
+      "text": "What's the plans?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 165,
+      "start": 413.42,
+      "end": 414.981,
+      "text": "Yeah, I'm going to see my mate",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 166,
+      "start": 414.96,
+      "end": 416.84,
+      "text": "because he's finishing work in Mayfair.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 167,
+      "start": 417.16,
+      "end": 417.542,
+      "text": "Okay.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 168,
+      "start": 417.52,
+      "end": 422.6,
+      "text": "we're just gonna go for a drink and then with friends with friends yeah i don't know i'm like",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 169,
+      "start": 422.58,
+      "end": 426.92,
+      "text": "i feel like i went out yesterday so i'm kind of like i'm not that fussed about going yeah",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 170,
+      "start": 426.9,
+      "end": 432.54,
+      "text": "but like i told them that i'm gonna meet them and then i'll probably just do it yeah so like",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 171,
+      "start": 432.52,
+      "end": 437.06,
+      "text": "last night it was supposed to be a really quiet one because i live in leeds but i come down to",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 172,
+      "start": 437.04,
+      "end": 441.06,
+      "text": "london my friend's got an apartment in covent garden i stay there for like four or five days",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 173,
+      "start": 441.04,
+      "end": 445.14,
+      "text": "a month and um it was just supposed to be like a quiet night in we got invited to this party",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 174,
+      "start": 445.12,
+      "end": 450.2,
+      "text": "and my friend's got like an amazing apartment where it opens up you can open up the balcony",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 175,
+      "start": 450.18,
+      "end": 454.48,
+      "text": "and you can just see everyone and we're playing music out there and it went on to like 6am",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 176,
+      "start": 454.46,
+      "end": 461.22,
+      "text": "and like this yeah like yeah i mean like as the set progresses slow things down just a little bit",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 177,
+      "start": 461.2,
+      "end": 465.52,
+      "text": "as it's progressing for sure after she's hooked yeah right because then it goes into more of that",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 178,
+      "start": 465.5,
+      "end": 470.68,
+      "text": "seductive sexual energy i'm a business consultant and so like i have client i have single like",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 179,
+      "start": 470.66,
+      "end": 475.22,
+      "text": "individual client calls but I have like group calls as well and guess what time",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 180,
+      "start": 475.2,
+      "end": 481.24,
+      "text": "my group call is on a Saturday morning yeah I mean when you're in your own",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 181,
+      "start": 481.22,
+      "end": 484.92,
+      "text": "business you have to kind of work as and when you know but like the rest of the",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 182,
+      "start": 484.9,
+      "end": 490.3,
+      "text": "time like Monday I don't really work very much that no it was like it was",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 183,
+      "start": 490.28,
+      "end": 494.94,
+      "text": "like 9 a.m. but the party finished at 6 a.m. so I'm trying to get to sleep I'm",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 184,
+      "start": 494.92,
+      "end": 499.36,
+      "text": "just like from the music and he's bumping you know the main things you",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 185,
+      "start": 499.34,
+      "end": 503.48,
+      "text": "you didn't expand on were the marketing and the art yeah for sure so really important to expand",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 186,
+      "start": 503.46,
+      "end": 508.88,
+      "text": "on stuff that she's passionate about stuff that she's doing because if it's her hobby you have to",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 187,
+      "start": 508.86,
+      "end": 515.38,
+      "text": "really dig deep because that is how you really solidify connection for sure you're not going",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 188,
+      "start": 515.36,
+      "end": 519.64,
+      "text": "to connect with her on mma because she doesn't give a shit about it right you want to be connecting",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 189,
+      "start": 519.62,
+      "end": 524.3,
+      "text": "with her on things that she's passionate but yeah but um no we're me and my friends we're going out",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 190,
+      "start": 524.28,
+      "end": 529.84,
+      "text": "tonight there's like 10 12 of us um why don't you take my whatsapp in fact no let me get your",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 191,
+      "start": 529.82,
+      "end": 536.8,
+      "text": "whatsapp yeah and i'll message you or insta you got insta um i'm gonna give you more no you give",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 192,
+      "start": 536.78,
+      "end": 540.86,
+      "text": "me your phone number and i'll message you now because i have two different numbers okay that's",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 193,
+      "start": 540.84,
+      "end": 546.76,
+      "text": "cool yeah let me type it in so um i actually don't know my old phone number that's what's up",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 194,
+      "start": 546.74,
+      "end": 553.58,
+      "text": "the clothes was just a bit premature okay i think you hadn't connected with her enough okay before",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 195,
+      "start": 553.56,
+      "end": 557.8,
+      "text": "before going for the clothes yeah and I think they're like if you'd maybe expanded a bit on",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 196,
+      "start": 557.78,
+      "end": 564.72,
+      "text": "marketing on art then brought in a little bit about what you do the MMA yeah the business yeah",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 197,
+      "start": 564.7,
+      "end": 570.16,
+      "text": "and then like a few teases like Eddie said yeah that would have been bang on so that was basically",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 198,
+      "start": 570.14,
+      "end": 578.94,
+      "text": "what was missing are you charging right now yeah yeah yeah yeah yeah yeah yeah yeah yeah yeah",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 199,
+      "start": 578.92,
+      "end": 579.06,
+      "text": "Yeah, yeah.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 200,
+      "start": 579.36,
+      "end": 580.121,
+      "text": "What's my name?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 201,
+      "start": 581.14,
+      "end": 582.481,
+      "text": "Did you tell me your name?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 202,
+      "start": 582.72,
+      "end": 583.282,
+      "text": "I think so.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 203,
+      "start": 583.82,
+      "end": 586.28,
+      "text": "Have we not exchanged names yet?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 204,
+      "start": 586.4,
+      "end": 587.521,
+      "text": "We have, we have.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 205,
+      "start": 587.82,
+      "end": 589.52,
+      "text": "It's over J, isn't it?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 206,
+      "start": 589.6,
+      "end": 589.998,
+      "text": "MJ.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 207,
+      "start": 590.019,
+      "end": 590.521,
+      "text": "MJ.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 208,
+      "start": 590.92,
+      "end": 593.1,
+      "text": "Yeah, and you've got a really funky name though,",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 209,
+      "start": 593.14,
+      "end": 594.201,
+      "text": "so you've got to forgive me for not.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 210,
+      "start": 594.86,
+      "end": 595.36,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 211,
+      "start": 595.381,
+      "end": 595.861,
+      "text": "What is it?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 212,
+      "start": 595.98,
+      "end": 597.66,
+      "text": "One thing that was really missing in that set",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 213,
+      "start": 597.64,
+      "end": 599.86,
+      "text": "was she didn't really know much about you",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 214,
+      "start": 599.84,
+      "end": 601.021,
+      "text": "other than the fact that you're from Leeds",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 215,
+      "start": 601,
+      "end": 601.821,
+      "text": "and you're here visiting Leeds.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 216,
+      "start": 601.84,
+      "end": 602.223,
+      "text": "Yes.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 217,
+      "start": 602.2,
+      "end": 603.481,
+      "text": "Dig a little bit deeper",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 218,
+      "start": 603.46,
+      "end": 605.14,
+      "text": "when it comes to the topic of her work.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 219,
+      "start": 605.28,
+      "end": 607.88,
+      "text": "So this is why the intrigue is so fucking important,",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 220,
+      "start": 607.86,
+      "end": 613.1,
+      "text": "because then it allows you to then also talk about what you do as well and demonstrate value",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 221,
+      "start": 613.08,
+      "end": 618.22,
+      "text": "you want to show as many sides to your personality and your character as possible yeah right you want",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 222,
+      "start": 618.2,
+      "end": 625.02,
+      "text": "to show a serious business side driven motivated ambitious a playful side mr playful mr jokey and",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 223,
+      "start": 625,
+      "end": 629.66,
+      "text": "then you want to show your fucking brutal mma side yeah you want to show as many sides to your",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 224,
+      "start": 629.64,
+      "end": 635.42,
+      "text": "personality as possible for sure right yeah so we're matching with the m's i'll try and remember",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 225,
+      "start": 635.4,
+      "end": 645.08,
+      "text": "that so i'm just gonna put mj and then i will call and then yeah just um i'll send you a message see",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 226,
+      "start": 645.06,
+      "end": 650.24,
+      "text": "where you are come join us but if not you know we could always kind of meet up separate time and go",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 227,
+      "start": 650.22,
+      "end": 656,
+      "text": "for a coffee or something that'd be good okay awesome nice nice to talk to you have a nice",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 228,
+      "start": 655.98,
+      "end": 661.88,
+      "text": "saturday speak to you soon really important to start off warm and end really warm so really",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 229,
+      "start": 661.86,
+      "end": 667.02,
+      "text": "really strong start really strong end sure so just prolong that ending a little bit more don't eject",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 230,
+      "start": 667,
+      "end": 671.32,
+      "text": "immediately after getting the number sure just stay in for at least one little point you've",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 231,
+      "start": 671.3,
+      "end": 675.64,
+      "text": "already mentioned that you might need her right so you can say oh like what's your poison by the",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 232,
+      "start": 675.62,
+      "end": 680.18,
+      "text": "way like what's your favorite drink what's your go-to your favorite cocktail or your polish right",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 233,
+      "start": 680.16,
+      "end": 684.58,
+      "text": "your vodka girl that will just solidify the ending a little bit you don't want to just number close",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 234,
+      "start": 684.56,
+      "end": 688.44,
+      "text": "and then leave the reason you don't want to number close and leave it could just seem like you're",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 235,
+      "start": 688.42,
+      "end": 692.38,
+      "text": "number farming like you're literally collecting yeah you feel like okay i've got a number now",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 236,
+      "start": 692.36,
+      "end": 697.82,
+      "text": "my work is done yes i could just get out yes so you don't want to seem like that guy it's really",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 237,
+      "start": 697.8,
+      "end": 701.9,
+      "text": "good to just stay in a little bit especially with her she's not in a hurry to get anywhere",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 238,
+      "start": 701.88,
+      "end": 706.32,
+      "text": "it's different if she's like really time constraining you yeah she wasn't no i think",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 239,
+      "start": 706.3,
+      "end": 710.82,
+      "text": "the main thing there she just didn't know enough about yeah basically yeah right that was one of",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 240,
+      "start": 710.8,
+      "end": 715.04,
+      "text": "the main main issues with that set yeah but you did a lot right in that set thank you man yeah",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 241,
+      "start": 715.02,
+      "end": 717.08,
+      "text": "You did a lot right and you've got some flow now, so yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 242,
+      "start": 717.18,
+      "end": 718.381,
+      "text": "I really enjoyed that set.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 243,
+      "start": 718.54,
+      "end": 721.1,
+      "text": "I just felt like she was enjoying it as well.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 244,
+      "start": 721.64,
+      "end": 722.801,
+      "text": "She was very receptive.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 245,
+      "start": 723.24,
+      "end": 725.08,
+      "text": "And so, yeah, it was just really enjoyable",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 246,
+      "start": 725.06,
+      "end": 726.241,
+      "text": "and we were going back and forth.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 247,
+      "start": 726.4,
+      "end": 728.16,
+      "text": "I didn't feel like it was just all me.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 248,
+      "start": 728.3,
+      "end": 729.361,
+      "text": "The way I feel right now,",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 249,
+      "start": 729.4,
+      "end": 732.46,
+      "text": "I just feel like no one does this shit, you know?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 250,
+      "start": 732.5,
+      "end": 734.66,
+      "text": "So it's like, it's G shit, right?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 251,
+      "start": 734.98,
+      "end": 737.44,
+      "text": "Like how many guys in the world are doing this right now?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 252,
+      "start": 737.54,
+      "end": 739.141,
+      "text": "So it just gives me that extra push",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 253,
+      "start": 739.12,
+      "end": 741.02,
+      "text": "just to keep going and doing what",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 254,
+      "start": 741.56,
+      "end": 743.181,
+      "text": "hardly any other man does, you know?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 255,
+      "start": 743.16,
+      "end": 749.02,
+      "text": "It's definitely more empowering as a man because you feel like you're out there in the big bad world",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 256,
+      "start": 749.66,
+      "end": 753.4,
+      "text": "approaching big bad women, you know scary women and",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 257,
+      "start": 753.38,
+      "end": 756.46,
+      "text": "You're stopping them and you're having interactions and they're enjoying it",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 258,
+      "start": 756.44,
+      "end": 762.5,
+      "text": "So it just makes you feel that much more masculine, you know, your balls grow a little bit each time",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 259,
+      "start": 773.56,
+      "end": 776.18,
+      "text": "Thank you.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "unknown",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "enrichments": [
+    {
+      "type": "commentary",
+      "block_index": 1,
+      "description": "Coach introduces himself, his credentials, and previews the video focus on turning work/hobby topics into genuine connections",
+      "techniques_discussed": [],
+      "topics_discussed": [
+        "career",
+        "hobby"
+      ],
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "conversation_id": 1,
+      "type": "approach",
+      "description": "Observation opener on hip-hop style, discusses marketing/art, connects on Polish heritage, number close for potential meetup",
+      "techniques_used": [
+        {
+          "technique": "observation_opener",
+          "segment": 2,
+          "example": "the way you dressed is like really hip-hop style and you look like a dancer"
+        },
+        {
+          "technique": "cold_read",
+          "segment": 2,
+          "example": "you look like a dancer"
+        },
+        {
+          "technique": "cold_read",
+          "segment": 4,
+          "example": "you look kind of like creative like that"
+        },
+        {
+          "technique": "qualification",
+          "segment": 7,
+          "example": "you surely do something away from the marketing though, right?"
+        },
+        {
+          "technique": "push_pull",
+          "segment": 16,
+          "example": "I'm actually liking them"
+        },
+        {
+          "technique": "compliance",
+          "segment": 17,
+          "example": "Show me again"
+        },
+        {
+          "technique": "role_play",
+          "segment": 27,
+          "example": "if you were my girlfriend, I'd make sure that we got those done regularly"
+        },
+        {
+          "technique": "grounding",
+          "segment": 39,
+          "example": "my cousin married a polish girl i went to a polish wedding"
+        },
+        {
+          "technique": "tease",
+          "segment": 60,
+          "example": "God, it's all office and marketing. We need to take you out of that"
+        },
+        {
+          "technique": "logistics_check",
+          "segment": 67,
+          "example": "tonight, though, are you going out or anything? What's the plans?"
+        },
+        {
+          "technique": "storytelling",
+          "segment": 76,
+          "example": "last night it was supposed to be a really quiet one... we got invited to this party... it went on to like 6am"
+        },
+        {
+          "technique": "DHV",
+          "segment": 81,
+          "example": "I'm a business consultant and so like i have client... individual client calls but I have like group calls as well"
+        },
+        {
+          "technique": "number_close",
+          "segment": 89,
+          "example": "why don't you take my whatsapp in fact no let me get your whatsapp"
+        },
+        {
+          "technique": "instagram_close",
+          "segment": 90,
+          "example": "or insta you got insta"
+        },
+        {
+          "technique": "soft_close",
+          "segment": 109,
+          "example": "we could always kind of meet up separate time and go for a coffee or something"
+        }
+      ],
+      "topics_discussed": [
+        "appearance",
+        "career",
+        "hobby",
+        "origin",
+        "travel",
+        "name",
+        "living_situation",
+        "plans",
+        "contact",
+        "logistics"
+      ],
+      "turn_phases": [
+        {
+          "segment": 0,
+          "phase": "open"
+        },
+        {
+          "segment": 1,
+          "phase": "open"
+        },
+        {
+          "segment": 2,
+          "phase": "open"
+        },
+        {
+          "segment": 3,
+          "phase": "open"
+        },
+        {
+          "segment": 4,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 5,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 6,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 7,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 8,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 9,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 10,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 11,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 12,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 13,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 14,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 15,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 16,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 17,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 18,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 19,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 20,
+          "phase": "pre_hook"
+        },
+        {
+          "segment": 21,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 22,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 23,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 24,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 25,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 26,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 27,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 28,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 29,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 30,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 31,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 32,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 33,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 34,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 35,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 36,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 37,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 38,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 39,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 40,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 41,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 42,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 43,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 44,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 45,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 46,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 47,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 48,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 49,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 50,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 51,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 52,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 53,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 54,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 55,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 56,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 57,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 58,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 59,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 60,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 61,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 62,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 63,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 64,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 65,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 66,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 67,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 68,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 69,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 70,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 71,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 72,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 73,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 74,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 75,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 76,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 77,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 78,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 79,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 80,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 81,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 82,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 83,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 84,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 85,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 86,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 87,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 88,
+          "phase": "post_hook"
+        },
+        {
+          "segment": 89,
+          "phase": "close"
+        },
+        {
+          "segment": 90,
+          "phase": "close"
+        },
+        {
+          "segment": 91,
+          "phase": "close"
+        },
+        {
+          "segment": 92,
+          "phase": "close"
+        },
+        {
+          "segment": 93,
+          "phase": "close"
+        },
+        {
+          "segment": 94,
+          "phase": "close"
+        },
+        {
+          "segment": 95,
+          "phase": "close"
+        },
+        {
+          "segment": 96,
+          "phase": "close"
+        },
+        {
+          "segment": 97,
+          "phase": "close"
+        },
+        {
+          "segment": 98,
+          "phase": "close"
+        },
+        {
+          "segment": 99,
+          "phase": "close"
+        },
+        {
+          "segment": 100,
+          "phase": "close"
+        },
+        {
+          "segment": 101,
+          "phase": "close"
+        },
+        {
+          "segment": 102,
+          "phase": "close"
+        },
+        {
+          "segment": 103,
+          "phase": "close"
+        },
+        {
+          "segment": 104,
+          "phase": "close"
+        },
+        {
+          "segment": 105,
+          "phase": "close"
+        },
+        {
+          "segment": 106,
+          "phase": "close"
+        },
+        {
+          "segment": 107,
+          "phase": "close"
+        },
+        {
+          "segment": 108,
+          "phase": "close"
+        },
+        {
+          "segment": 109,
+          "phase": "close"
+        },
+        {
+          "segment": 110,
+          "phase": "close"
+        }
+      ],
+      "hook_point": {
+        "signal": "She started elaborating on her nail situation unprompted and engaged in back-and-forth about the manicurist breaking her nails"
+      },
+      "investment_level": "medium",
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 2,
+      "description": "Coach explains not to dismiss her job/passions too quickly; dig deeper into what she's passionate about to build connection",
+      "techniques_discussed": [
+        {
+          "technique": "qualification",
+          "example": "ask the question like do you enjoy that, are you passionate about it"
+        },
+        {
+          "technique": "tease",
+          "example": "are you just in it for the money or are you actually in it with a greater good of humanity"
+        }
+      ],
+      "topics_discussed": [
+        "career",
+        "ambitions"
+      ],
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 3,
+      "description": "Coach praises connecting on Poland topic, suggests building 'bubbles of connection' then teasing",
+      "techniques_discussed": [
+        {
+          "technique": "grounding",
+          "example": "vibing on the whole poland thing talking about polish weddings"
+        },
+        {
+          "technique": "tease",
+          "example": "burst it and kind of teaser on poland... a little bit too rowdy"
+        }
+      ],
+      "topics_discussed": [
+        "origin",
+        "travel"
+      ],
+      "unlisted_concepts": {
+        "techniques": [
+          "connection_bubble: building rapport on a shared topic before playfully challenging it"
+        ],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 4,
+      "description": "Coach advises digging deeper on her art hobby, suggests philosophical angles and local knowledge",
+      "techniques_discussed": [
+        {
+          "technique": "qualification",
+          "example": "Do you prefer drawing people or places?"
+        },
+        {
+          "technique": "cold_read",
+          "example": "London's an awesome city for an artist... surrounded by inspiration"
+        }
+      ],
+      "topics_discussed": [
+        "hobby",
+        "location"
+      ],
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 5,
+      "description": "Coach teaches linking her topic (marketing) to your own life with subtle DHV about having a business",
+      "techniques_discussed": [
+        {
+          "technique": "DHV",
+          "example": "I outsource all my marketing for my business"
+        },
+        {
+          "technique": "grounding",
+          "example": "link what she does to what I do"
+        }
+      ],
+      "topics_discussed": [
+        "career"
+      ],
+      "unlisted_concepts": {
+        "techniques": [
+          "topic_linking: connecting her interests to your own life to create relevance and demonstrate value"
+        ],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 6,
+      "description": "Coach advises slowing down pace as the set progresses after she's hooked for seductive energy",
+      "techniques_discussed": [
+        {
+          "technique": "frame_control",
+          "example": "slow things down just a little bit as it's progressing"
+        }
+      ],
+      "topics_discussed": [],
+      "unlisted_concepts": {
+        "techniques": [
+          "pacing: adjusting conversational tempo to build sexual tension"
+        ],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 7,
+      "description": "Coach emphasizes expanding on her passions (marketing/art) to solidify connection rather than his interests",
+      "techniques_discussed": [
+        {
+          "technique": "qualification",
+          "example": "expand on stuff that she's passionate about"
+        },
+        {
+          "technique": "grounding",
+          "example": "really dig deep because that is how you really solidify connection"
+        }
+      ],
+      "topics_discussed": [
+        "career",
+        "hobby"
+      ],
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 8,
+      "description": "Coach notes the close was premature; needed more connection on marketing/art plus teases before closing",
+      "techniques_discussed": [
+        {
+          "technique": "qualification",
+          "example": "expanded a bit on marketing on art"
+        },
+        {
+          "technique": "DHV",
+          "example": "brought in a little bit about what you do the MMA, the business"
+        },
+        {
+          "technique": "tease",
+          "example": "a few teases like Eddie said"
+        }
+      ],
+      "topics_discussed": [
+        "career",
+        "hobby"
+      ],
+      "unlisted_concepts": {
+        "techniques": [],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 9,
+      "description": "Coach stresses showing multiple sides of personality (business, playful, MMA) to create intrigue and demonstrate value",
+      "techniques_discussed": [
+        {
+          "technique": "DHV",
+          "example": "show a serious business side driven motivated ambitious"
+        },
+        {
+          "technique": "grounding",
+          "example": "talk about what you do as well and demonstrate value"
+        }
+      ],
+      "topics_discussed": [
+        "career",
+        "personality"
+      ],
+      "unlisted_concepts": {
+        "techniques": [
+          "multi-dimensional_identity: showing various facets of personality to create depth and intrigue"
+        ],
+        "topics": []
+      }
+    },
+    {
+      "type": "commentary",
+      "block_index": 10,
+      "description": "Coach advises staying in set after number close to avoid seeming like a number farmer; end warm with callback",
+      "techniques_discussed": [
+        {
+          "technique": "callback_humor",
+          "example": "your polish right your vodka girl"
+        },
+        {
+          "technique": "time_bridge",
+          "example": "you might need her... what's your poison... what's your favorite drink"
+        }
+      ],
+      "topics_discussed": [
+        "food_drinks",
+        "contact"
+      ],
+      "unlisted_concepts": {
+        "techniques": [
+          "post_close_investment: staying in conversation after getting contact info to solidify connection"
+        ],
+        "topics": []
+      }
+    }
+  ],
+  "transcript_artifacts": [
+    {
+      "type": "transcript_artifact",
+      "segment_index": 93,
+      "artifact_type": "word_repetition",
+      "description": "Excessive 'yeah' repetition: 'yeah yeah yeah yeah yeah yeah yeah yeah yeah yeah' appears to be transcription artifact filling audio gap"
+    }
+  ],
+  "summary": {
+    "total_conversations": 1,
+    "enriched_conversations": 1,
+    "commentary_blocks_enriched": 10,
+    "sections_enriched": 0,
+    "techniques_found": [
+      "DHV",
+      "callback_humor",
+      "cold_read",
+      "compliance",
+      "frame_control",
+      "grounding",
+      "instagram_close",
+      "logistics_check",
+      "number_close",
+      "observation_opener",
+      "push_pull",
+      "qualification",
+      "role_play",
+      "soft_close",
+      "storytelling",
+      "tease",
+      "time_bridge"
+    ],
+    "topics_found": [
+      "ambitions",
+      "appearance",
+      "career",
+      "contact",
+      "food_drinks",
+      "hobby",
+      "living_situation",
+      "location",
+      "logistics",
+      "name",
+      "origin",
+      "personality",
+      "plans",
+      "travel"
+    ],
+    "phases_found": [
+      "close",
+      "open",
+      "post_hook",
+      "pre_hook"
+    ],
+    "unlisted_concepts": {
+      "techniques": [
+        "connection_bubble: building rapport on a shared topic before playfully challenging it",
+        "multi-dimensional_identity: showing various facets of personality to create depth and intrigue",
+        "pacing: adjusting conversational tempo to build sexual tension",
+        "post_close_investment: staying in conversation after getting contact info to solidify connection",
+        "topic_linking: connecting her interests to your own life to create relevance and demonstrate value"
+      ],
+      "topics": []
+    },
+    "hook_rate": 1,
+    "investment_levels": {
+      "low": 0,
+      "medium": 1,
+      "high": 0
+    }
+  },
+  "transcript_confidence": {
+    "score": 82,
+    "reasoning": "Good quality: coherent segment text, high speaker attribution confidence (0.85-0.97 for main speakers), upstream APPROVED. Minor issues: 1 word repetition artifact (segment 198), 1 UNKNOWN speaker (0.3 confidence). 260 segments processed successfully with 17 techniques and 14 topics identified."
+  }
+}

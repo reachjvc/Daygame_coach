@@ -1,0 +1,24 @@
+{
+  "video_id": "zi8EvOdRQiI",
+  "validated_at": "2026-02-06T22:07:05Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 1,
+    "warnings": 0,
+    "info": 1,
+    "passed": false
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "error",
+      "check": "video_type_segment_mismatch",
+      "message": "talking_head video has 6 non-commentary segments (should all be commentary with conversation_id=0)"
+    }
+  ]
+}

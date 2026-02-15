@@ -1,0 +1,139 @@
+{
+  "video_id": "IS2SoUgqDLE",
+  "verified_at": "2026-02-05T16:01:38Z",
+  "pipeline_version": "06b.verify-v1.0",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Multiple approaches with commentary segments between them clearly matches compilation format"
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Cold-open teaser that duplicates content from Conv 2 (compare segs 0,3-4,5,8-11,15 with segs 108,111-112,113,115-116,178-179). Will double-count approach data downstream."
+    },
+    {
+      "conversation_id": 2,
+      "verdict": "FLAG",
+      "notes": "Generally coherent long approach with Mongolian girl. Seg 160 ('I do') likely target speech misattributed to coach. Seg 490 issue is in conv 7 not here."
+    },
+    {
+      "conversation_id": 3,
+      "verdict": "FLAG",
+      "notes": "Segs 267-272 role assignments questionable — 'Good. Cool. All right.' sounds like coach wrap-up language, not target speech."
+    },
+    {
+      "conversation_id": 4,
+      "verdict": "OK",
+      "notes": "Coherent approach with limited-English Hungarian girl. Coach adapts speech appropriately. Number exchange at end."
+    },
+    {
+      "conversation_id": 5,
+      "verdict": "OK",
+      "notes": "Quick blowout with headphones girl. Zero target segments explained by non-verbal/quiet responses."
+    },
+    {
+      "conversation_id": 6,
+      "verdict": "OK",
+      "notes": "Clean approach. Bystander photo interruption correctly labeled as 'other'. Seg 442 coach override correct."
+    },
+    {
+      "conversation_id": 7,
+      "verdict": "FLAG",
+      "notes": "Seg 490 SPEAKER_01 labeled target says 'Hey, I'm James' — this is the coach's self-introduction misattributed."
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 490,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Segment says 'Hey, I'm James.' — James Marshall is the coach. This is his self-introduction, not the target speaking. Diarization error assigned coach's voice to SPEAKER_01."
+    },
+    {
+      "segment_id": 160,
+      "current_role": "coach",
+      "suggested_role": "target",
+      "evidence": "Seg 160 says 'I do.' in response to 'Do you not worry that AI is going to take your job?' (seg 159). The target (backend developer) would say 'I do' worry, then coach echoes 'You do worry' in segs 161-162. Likely target speech absorbed into coach."
+    },
+    {
+      "segment_id": 270,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Seg 270 'Good.' and seg 271 'Cool.' and seg 272 'All right.' — these are classic coach wrap-up phrases, not target speech. Compare with identical coach patterns at segs 259,265,293."
+    },
+    {
+      "segment_id": 271,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "See seg 270 note — 'Cool.' is part of coach's wrap-up sequence."
+    },
+    {
+      "segment_id": 272,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "See seg 270 note — 'All right.' is part of coach's wrap-up sequence."
+    },
+    {
+      "segment_id": 82,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Seg 82 SPEAKER_03 says 'Really?' after target says she can make more money at home (segs 80-81). This sounds like the coach's surprised reaction, not the target questioning herself."
+    }
+  ],
+  "boundary_issues": [
+    {
+      "conversation_id": 1,
+      "issue": "Conv 1 is a cold-open teaser clip duplicating content from Conv 2. Segs 0,3-5,8-11,15 closely match segs 108,111-113,115-116,178-179. This will cause the same dialogue to appear in two different conversations, inflating approach count and duplicating training data.",
+      "severity": "moderate"
+    },
+    {
+      "conversation_id": 3,
+      "issue": "Conv 3 ends at 639.1s (seg 276 'Bye') and Conv 4 starts at 639.9s (seg 277 'Hello') — only 0.8s gap. While these are clearly different people/approaches, the near-zero gap is unusual and worth noting. Boundary placement is technically correct.",
+      "severity": "minor"
+    }
+  ],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 490,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "evidence": "Says 'Hey, I'm James.' — James Marshall is the coach. SPEAKER_01 captured the coach's voice here. This is a self-introduction by the coach, not target speech."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 270,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "evidence": "'Good.' is coach wrap-up language in context of ending Conv 3. Compare with coach patterns elsewhere."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 271,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "evidence": "'Cool.' — same wrap-up sequence as seg 270."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 272,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "evidence": "'All right.' — same wrap-up sequence as segs 270-271."
+    }
+  ],
+  "other_flags": [
+    "Conv 1 teaser duplication: downstream processing should either merge Conv 1 into Conv 2 or mark Conv 1 as type 'teaser' to avoid double-counting this approach.",
+    "Segs 184-185 in Conv 2 appear garbled/unclear: 'family tree from grandparents onwards that's me uh-huh 99 name?' — possible transcription artifact during number exchange.",
+    "Seg 255 appears to contain both target and coach speech merged: 'Actually, I met with my boyfriend, so... You met with him or you will meet with him?' — the second sentence ('You met with him...') sounds like the coach's follow-up question.",
+    "Segs 580-581 labeled UNKNOWN with 'unknown' override — minor end-of-video artifacts, no impact on approach data."
+  ],
+  "summary": "The classification is largely correct — video type, coach identification, and most role assignments are accurate. The main issues are: (1) Seg 490 in Conv 7 where the coach's self-introduction 'I'm James' is misattributed to the target — this is a clear error; (2) Conv 1 is a teaser/cold-open duplicating Conv 2 content, which will cause double-counting; (3) Segs 270-272 in Conv 3 appear to be coach wrap-up speech misattributed to the target; (4) Seg 160 likely captures a target response misattributed to coach. None of these individually corrupt the dataset catastrophically, but seg 490 is a definite misattribution and the Conv 1 duplication should be addressed before downstream processing. Flagging for review rather than rejecting because the core structure and majority of assignments are sound.",
+  "metadata": {
+    "input_file": "data/06.video-type/James Marshall picks up 3 shy girls (how to relax, connect & seduce them) [IS2SoUgqDLE].audio.asr.raw16k.conversations.json",
+    "processing_time_sec": 244.7060055732727,
+    "llm_calls": 1
+  }
+}

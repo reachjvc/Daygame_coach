@@ -1,0 +1,29 @@
+{
+  "video_id": "DPieYj7nji0",
+  "verified_at": "2026-02-06T12:24:52Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Video has intro, single extended approach with interspersed coaching breakdowns, and closing reflections - matches compilation format for coaching content"
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "OK",
+      "notes": "Natural open with 'Excuse me', sustained dialogue about marketing/Poland/art, natural close with number exchange and goodbye"
+    }
+  ],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segment [114] assigned to SPEAKER_01 (Eddie) with text 'So you look like you've been shopping today' - this appears to be MJ (SPEAKER_03) continuing the approach, not Eddie. However, this is a minor transcription/diarization error rather than a classification error, as the role is still 'coach' which is correct for either speaker."
+  ],
+  "summary": "The classification output is accurate. Role assignments correctly identify Adam (SPEAKER_02) as the main coach providing commentary, MJ (SPEAKER_03) as the student doing the approach, and SPEAKER_00 as the target. The single conversation boundary is appropriate for this format where one extended approach is interspersed with coaching breakdowns. Video type 'compilation' is correct for this coaching infield content. One minor observation: segment [114] may be misattributed to SPEAKER_01 instead of SPEAKER_03, but since both are labeled 'coach' this doesn't affect downstream processing.",
+  "metadata": {
+    "input_file": "data/06.video-type/How To Turn Small Talk into Deep Connection (Daygame Coaching Infield) [DPieYj7nji0].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 28.894128799438477,
+    "llm_calls": 1
+  }
+}

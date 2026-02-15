@@ -1,0 +1,19 @@
+{
+  "video_id": "fbRpUOxqWcs",
+  "validated_at": "2026-02-06T21:51:26Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 1,
+    "warnings": 0,
+    "info": 0,
+    "passed": false
+  },
+  "results": [
+    {
+      "severity": "error",
+      "check": "schema_invalid",
+      "message": "Schema validation failed at segments.117.segment_type: 'other' is not one of ['approach', 'commentary', 'transition']"
+    }
+  ]
+}

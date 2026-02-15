@@ -1,0 +1,118 @@
+{
+  "video_id": "KtmnHDVbmss",
+  "verified_at": "2026-02-13T15:33:50Z",
+  "pipeline_version": "06b.verify-v1.5",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "confidence": 0.85,
+    "reasoning": "3 approaches filmed in one session with outro commentary. 'infield' is appropriate, though 'compilation' would also be defensible."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Segment 11 has 'I'm James' attributed to target — this is the coach's self-introduction misattributed to SPEAKER_01"
+    },
+    {
+      "conversation_id": 2,
+      "verdict": "FLAG",
+      "notes": "Segment 99 is tail of coach's question split across speakers; segment 149 may be coach not target"
+    },
+    {
+      "conversation_id": 3,
+      "verdict": "FLAG",
+      "notes": "Segment 172 'Right, right' sounds like coach acknowledgment; segment 191 is tail of coach's sentence from seg 190"
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 11,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.92,
+      "evidence": "Says 'I'm James' — James is the coach (confirmed at segs 100, 127, 137). Coach asked 'What is your name?' at seg 9, then 'How do you do?' at seg 10, then introduces himself. Target's name was likely said but mis-transcribed or missed."
+    },
+    {
+      "segment_id": 99,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.9,
+      "evidence": "Text is 'your name?' — continuation of coach's question from seg 98 'What's your'. Diarization split the coach's single question across two speakers."
+    },
+    {
+      "segment_id": 149,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.75,
+      "evidence": "Says 'Good idea' after target says 'I'm going for a walk' (seg 148). Coach typically affirms target's responses. Next seg 150 is coach saying 'Perfect spring day' — 'Good idea' fits as coach's response."
+    },
+    {
+      "segment_id": 172,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.78,
+      "evidence": "Says 'Right, right' — acknowledgment filler more typical of coach listening to target explain something. Follows target's explanation about religious name at seg 171."
+    },
+    {
+      "segment_id": 191,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.93,
+      "evidence": "Text is 'you again' — clearly the tail end of coach's sentence from seg 190: '...75% chance that I'll see you' + 'you again'. Diarization split."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_02",
+      "segment_id": 99,
+      "current_override": null,
+      "suggested_override": "coach",
+      "confidence": 0.9,
+      "evidence": "SPEAKER_02 has no override (native label 'target'), but this segment is the tail of the coach's question from seg 98. Should be coach."
+    },
+    {
+      "speaker_id": "SPEAKER_02",
+      "segment_id": 149,
+      "current_override": null,
+      "suggested_override": "coach",
+      "confidence": 0.75,
+      "evidence": "'Good idea' is more likely the coach responding to target saying she's going for a walk."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 172,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "confidence": 0.78,
+      "evidence": "'Right, right' is acknowledgment speech typical of coach, not target."
+    },
+    {
+      "speaker_id": "SPEAKER_02",
+      "segment_id": 191,
+      "current_override": null,
+      "suggested_override": "coach",
+      "confidence": 0.93,
+      "evidence": "Continuation of coach's sentence from seg 190 — '...I'll see you' → 'you again'."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 11,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "confidence": 0.92,
+      "evidence": "Says 'I'm James' — James is the coach's name. This is the coach introducing himself, misattributed to SPEAKER_01."
+    }
+  ],
+  "other_flags": [
+    "Segment 233 (UNKNOWN, 538.8s, 'We'll see you next time') is likely the coach's outro but labeled UNKNOWN — low confidence (0.6) so not adding as a fix, but worth noting.",
+    "Segments 136-138 in Conv 3 are long run-on transcription blocks suggesting the whisper segmentation was poor for the Conv 3 opener — the target's early responses may be embedded in these coach segments rather than captured separately."
+  ],
+  "summary": "Mostly correct classification. Key issues: (1) Seg 11 'I'm James' is coach's self-intro misattributed to target (high confidence). (2) Two diarization splits where coach sentences got split across speakers (segs 99, 191). (3) Two probable misattributions where coach acknowledgments labeled as target (segs 149, 172). No boundary issues found — all 3 conversations have clean opens and closes.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.video-type/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 131.72555112838745,
+    "llm_calls": 3
+  }
+}

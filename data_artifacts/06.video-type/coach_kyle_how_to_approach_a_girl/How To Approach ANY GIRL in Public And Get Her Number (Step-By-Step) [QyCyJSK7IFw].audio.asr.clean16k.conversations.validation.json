@@ -1,0 +1,24 @@
+{
+  "video_id": "QyCyJSK7IFw",
+  "validated_at": "2026-02-06T22:57:29Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "warning",
+      "check": "no_target_in_infield",
+      "message": "No target speaker in compilation video. Roles found: ['coach']"
+    }
+  ]
+}

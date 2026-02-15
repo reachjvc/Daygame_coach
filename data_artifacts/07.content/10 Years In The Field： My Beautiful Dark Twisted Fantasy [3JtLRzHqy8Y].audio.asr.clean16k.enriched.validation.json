@@ -1,0 +1,19 @@
+{
+  "video_id": "3JtLRzHqy8Y",
+  "validated_at": "2026-02-13T09:39:40Z",
+  "pipeline_version": "07.content-v1.8",
+  "prompt_version": "1.4.3",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

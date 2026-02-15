@@ -1,0 +1,171 @@
+{
+  "video_id": "JOcglovL3IA",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/daily_evolution/10 Years In The Field： My Legacy [JOcglovL3IA]/10 Years In The Field： My Legacy [JOcglovL3IA].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T21:27:34Z",
+  "video_type": {
+    "type": "talking_head",
+    "confidence": 0.95,
+    "reasoning": "Single speaker delivering inspirational monologue about 10 years of coaching experience. No dialogue with targets, no approach sequences - purely promotional/reflective content directed at audience."
+  },
+  "transcript_confidence": {
+    "score": 92,
+    "reasoning": "Clear, coherent sentences that flow logically. No ASR artifacts or garbled text. Minor issue: segment 8 has slight repetition ('love so that') suggesting a minor transcription hiccup, but overall excellent quality."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Delivers motivational monologue about teaching success to men, references 'my legacy', 'my life's work' - clearly the daygame coach/content creator."
+    },
+    "UNKNOWN": {
+      "role": "other",
+      "confidence": 0.6,
+      "reasoning": "Brief 'Thank you' at end (0.1s) - likely closing credit voice, audience sound, or video outro. Not meaningful content."
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 2.74,
+      "end": 6.22,
+      "text": "Ten years in the field.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 1,
+      "start": 8.76,
+      "end": 12.08,
+      "text": "Ten thousand hours.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 16.08,
+      "end": 20.66,
+      "text": "Failures, lessons, triumphs.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 22.68,
+      "end": 24.76,
+      "text": "I've given everything",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 26.48,
+      "end": 29.8,
+      "text": "I've sacrificed everything",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 29.78,
+      "end": 32.48,
+      "text": "for a legacy",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 34.78,
+      "end": 40.08,
+      "text": "so that every man can experience success",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 40.58,
+      "end": 46.32,
+      "text": "so that every man can experience love",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 46.3,
+      "end": 53.38,
+      "text": "love so that every man can experience greatness.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 55.26,
+      "end": 68.64,
+      "text": "My life's work, my blood, my sweat, my tears, everything I have to give.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 71.4,
+      "end": 77.64,
+      "text": "This is my legacy.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 99.46,
+      "end": 99.52,
+      "text": "Thank you.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "4f879775503d2adf",
+    "llm_calls": 1,
+    "processing_time_sec": 16.603504419326782
+  }
+}

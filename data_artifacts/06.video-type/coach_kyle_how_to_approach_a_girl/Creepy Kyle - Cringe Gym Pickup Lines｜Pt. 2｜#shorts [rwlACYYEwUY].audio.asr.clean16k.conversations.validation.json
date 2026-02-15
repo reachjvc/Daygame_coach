@@ -1,0 +1,24 @@
+{
+  "video_id": "rwlACYYEwUY",
+  "validated_at": "2026-02-06T22:36:09Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 2,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "info",
+      "check": "speaker_collapse_resolved",
+      "message": "Speaker collapse: 3/3 segments reassigned (100%), 0 remain unknown."
+    }
+  ]
+}

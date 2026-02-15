@@ -1,0 +1,33 @@
+{
+  "video_id": "LftMFDMrfAQ",
+  "verified_at": "2026-02-13T15:36:50Z",
+  "pipeline_version": "06b.verify-v1.5",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "confidence": 0.8,
+    "reasoning": "SPEAKER_00 dominates ~95% of segments. SPEAKER_01/02 are co-hosts but contribute only brief echoes and comments, not sustained back-and-forth discussion. Talking_head is acceptable, though 'podcast' would also be defensible given the multi-speaker format."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [
+    {
+      "segment_id": 124,
+      "current_role": "other",
+      "suggested_role": "coach",
+      "confidence": 0.55,
+      "evidence": "SPEAKER_02 says 'So I don't recommend doing that one' — this is prescriptive coaching language ('I don't recommend'), not a co-host echo. However, a co-host could plausibly say this too, so confidence is low."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "SPEAKER_01 and SPEAKER_02 are likely the same person (diarization split). Both labeled 'other' so no functional impact, but noted for downstream deduplication if needed.",
+    "Segment [99] SPEAKER_02 says 'Just because you open from the side' which flows directly into SPEAKER_00's continuation at [100] 'does not mean the girl is obligated' — this may be a diarization error where SPEAKER_00's speech was briefly attributed to SPEAKER_02, but since both are commentary it has minimal impact."
+  ],
+  "summary": "Video is correctly classified as talking_head with no conversations. All segments are appropriately marked as commentary. Minor flags: segment 124 has co-host using coaching language, and segments 99-100 may have a brief diarization error. No issues that would corrupt downstream processing.",
+  "metadata": {
+    "input_file": "data/06.video-type/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 30.557353019714355,
+    "llm_calls": 1
+  }
+}

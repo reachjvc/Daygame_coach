@@ -1,0 +1,39 @@
+{
+  "video_id": "nFjdyAHcTgA",
+  "validated_at": "2026-02-13T09:39:39Z",
+  "pipeline_version": "07.content-v1.8",
+  "prompt_version": "1.4.3",
+  "summary": {
+    "errors": 0,
+    "warnings": 4,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "technique_on_non_coach_segment",
+      "message": "Enrichment 0 (conv 1): technique 'qualification' cites seg 111 spoken by 'mixed/unclear'"
+    },
+    {
+      "severity": "warning",
+      "check": "technique_on_non_coach_segment",
+      "message": "Enrichment 0 (conv 1): technique 'instant_date' cites seg 119 spoken by 'target'"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 111: language_confusion — Multiple speakers merged into single segment, unclear speaker attribution"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 116: language_confusion — Multiple speakers merged, conversation fragments run together"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

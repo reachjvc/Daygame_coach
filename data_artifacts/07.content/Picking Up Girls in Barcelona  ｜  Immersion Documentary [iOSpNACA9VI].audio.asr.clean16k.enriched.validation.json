@@ -1,0 +1,29 @@
+{
+  "video_id": "iOSpNACA9VI",
+  "validated_at": "2026-02-13T09:39:39Z",
+  "pipeline_version": "07.content-v1.8",
+  "prompt_version": "1.4.3",
+  "summary": {
+    "errors": 0,
+    "warnings": 2,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "enrichment_count_mismatch",
+      "message": "Stage 07 has 0 approach enrichments but segment data has 12 conversations"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 1: nonsense — Segment appears to be a nonsensical word game warmup exercise, not actual coaching content: 'I love cheese with my balls in your mouth sucking fucking and ducking'"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

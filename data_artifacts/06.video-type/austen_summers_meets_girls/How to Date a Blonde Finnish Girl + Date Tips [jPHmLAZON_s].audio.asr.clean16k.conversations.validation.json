@@ -1,0 +1,29 @@
+{
+  "video_id": "jPHmLAZON_s",
+  "validated_at": "2026-02-06T21:55:42Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 2,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "warning",
+      "check": "conversation_not_contiguous",
+      "message": "Conversation 2 has non-contiguous segment IDs: [93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133]"
+    },
+    {
+      "severity": "info",
+      "check": "speaker_collapse_resolved",
+      "message": "Speaker collapse: 39/39 segments reassigned (100%), 0 remain unknown."
+    }
+  ]
+}

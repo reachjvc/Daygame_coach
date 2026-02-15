@@ -1,0 +1,55 @@
+{
+  "video_id": "nFjdyAHcTgA",
+  "verified_at": "2026-02-13T21:50:01Z",
+  "pipeline_version": "06b.verify-v1.5",
+  "verdict": "REJECT",
+  "video_type_check": {
+    "agrees": false,
+    "suggested_type": "infield",
+    "confidence": 0.95,
+    "reasoning": "Single continuous approach with one conversation (segs 0-160) plus voiceover outro. Voiceover (seg 161) explicitly says 'it's actually a 14 minute video from the time I leave my house to when I bring a girl back.' A compilation requires multiple separate approaches — this has exactly one."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Conversation is mostly coherent as a single continuous approach. Segments 0-2 are pre-approach chatter (coach to wingman about 'socially lubricated'), not part of the approach itself. Segments 111-125 have severe diarization issues with both speakers mashed into single segments."
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 108,
+      "current_role": "coach",
+      "suggested_role": "target",
+      "confidence": 0.93,
+      "evidence": "Coach asks 'Are you wasted? I hope you're not.' (segs 106-107), then seg 108 'I'm sober' is the target's answer, followed by coach's reaction 'Oh my god, I love sober girls' (seg 109). Classic question-answer-reaction flow — seg 108 is the target responding."
+    },
+    {
+      "segment_id": 50,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.82,
+      "evidence": "Seg 49 SPEAKER_05 says 'I didn't tell you this, guys.' Seg 50 'Tell us' encourages disclosure — this is the coach prompting, confirmed by seg 51-52 coach saying 'This is a safe zone. Safe zone.' Target wouldn't say 'tell us' to herself."
+    },
+    {
+      "segment_id": 37,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "confidence": 0.65,
+      "evidence": "Follows coach's statement about staged photos (seg 36). 'You know what I mean?' is a rhetorical tag that typically follows the speaker's own point. However, could also be target agreeing, so uncertain."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segments 111-125 have severely degraded diarization: multiple speakers' dialogue is mashed into single segments (e.g., seg 111 contains target answering + coach saying 'what's your name'; seg 113 contains coach wheelchair joke + target response; seg 115-116 contain target asking height, coach answering, target discussing heels — all in wrong segments). These cannot be fixed by role reassignment alone — they need re-segmentation at the audio level.",
+    "Segment 141 (SPEAKER_02, collapsed→coach) is 28.7 seconds of fragmented phrases ('I love you too, wait, wait, come back to me...push me, 007...'). This is likely multiple rapid exchanges collapsed into one segment — anomalous diarization that cannot be fixed without re-segmentation.",
+    "Segments 0-2 appear to be pre-approach conversation between coach and wingman/cameraman ('you need to get socially lubricated', 'like a small one?', 'yeah') before the approach begins at seg 3-5. Could be reclassified as commentary or a separate pre-approach segment."
+  ],
+  "summary": "Video type is wrong — classified as 'compilation' but is clearly a single continuous infield pull (confirmed by voiceover). Segment 108 ('I'm sober') is misattributed to coach when it's the target answering 'are you wasted?'. Segment 50 ('Tell us') is likely coach, not target. Critical: segments 111-125 have severe diarization failures with both speakers in single segments — needs audio-level re-segmentation, not patchable via role fixes alone.",
+  "metadata": {
+    "input_file": "/home/jonaswsl/projects/daygame-coach/data/06.video-type/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 201.10033440589905,
+    "llm_calls": 1
+  }
+}

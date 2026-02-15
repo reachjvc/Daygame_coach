@@ -1,0 +1,29 @@
+{
+  "video_id": "DPieYj7nji0",
+  "validated_at": "2026-02-06T16:19:06Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.1.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 2,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "evidence_mismatch",
+      "message": "Enrichment 1: technique 'storytelling' evidence not found in transcript: \"last night it was supposed to be a really quiet one... we got invited to this pa...\""
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 93: word_repetition — Excessive 'yeah' repetition: 'yeah yeah yeah yeah yeah yeah yeah yeah yeah yeah' appears to be transcription artifact filling audio gap"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

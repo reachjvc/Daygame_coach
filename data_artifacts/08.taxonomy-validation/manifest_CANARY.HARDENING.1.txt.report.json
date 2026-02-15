@@ -1,0 +1,345 @@
+{
+  "version": 1,
+  "stage": "08.taxonomy-validation",
+  "generated_at": "2026-02-13T14:39:50.639628+00:00",
+  "source": "manifest:CANARY.HARDENING.1.txt",
+  "validation": {
+    "status": "FAIL",
+    "reason": "High-frequency unlisted concepts (>= 3 occurrences)",
+    "threshold": 3,
+    "strict_mode": false,
+    "high_frequency_unlisted": {
+      "techniques": [
+        "vibe"
+      ],
+      "topics": []
+    },
+    "total_unlisted": {
+      "techniques": 20,
+      "topics": 12
+    }
+  },
+  "details": {
+    "files_processed": 6,
+    "files_with_unlisted": 6,
+    "total_enrichments": 27,
+    "enrichments_with_unlisted": 24,
+    "techniques": {
+      "vibe": {
+        "count": 3,
+        "examples": [
+          "Overall energy and presence when approaching",
+          "The overall energy, demeanor and nonverbal communication when approaching",
+          "The overall energy and nonverbal communication that determines interaction success"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "shoulder_tap": {
+        "count": 2,
+        "examples": [
+          "Physical tap on shoulder to get attention, primarily for crowded nightclub environments",
+          "Tapping a girl on the shoulder to get her attention and open an interaction"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "hard_stop": {
+        "count": 2,
+        "examples": [
+          "Positioning yourself in front of a walking woman to stop her movement",
+          "Stepping in front of a moving girl to stop her and begin an interaction"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "side_approach": {
+        "count": 2,
+        "examples": [
+          "Walking alongside target slightly ahead while opening conversation",
+          "Walking up alongside a girl from the side rather than stopping her head-on"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "hand_of_god": {
+        "count": 2,
+        "examples": [
+          "Extending hand palm-up for woman to take, signaling confidence and leading",
+          "Extending your hand palm-up for the girl to take as an opener or early escalation"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "the_claw": {
+        "count": 2,
+        "examples": [
+          "Side-hug motion to physically bring woman closer",
+          "Putting your arm out assuming a side hug to pull the girl in"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "high_five_opener": {
+        "count": 2,
+        "examples": [
+          "Using high five as indirect physical opener that can escalate to hand-holding",
+          "Using a casual high five to initiate physical contact and calibrate interest"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "With Examples"
+        ]
+      },
+      "physical_escalation": {
+        "count": 2,
+        "examples": [
+          "Getting her to sit on his lap in wheelchair",
+          "Initiating cheek kisses at the end"
+        ],
+        "videos": [
+          "KtmnHDVbmss",
+          "nFjdyAHcTgA"
+        ]
+      },
+      "reframe": {
+        "count": 2,
+        "examples": [
+          "Turning her question about his voice into a compliment about hers",
+          "Turns her potentially negative observation about his voice into a compliment about hers"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "persistence": {
+        "count": 2,
+        "examples": [
+          "Continuing to ask for multiple contact methods despite soft resistance",
+          "Coach doesn't accept 50% chance on WhatsApp, insists on multiple contact channels to increase odds"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "kino_escalation": {
+        "count": 2,
+        "examples": [
+          "Progressive physical contact from handshake to her sitting on his lap",
+          "Progressively increasing physical touch based on compliance signals"
+        ],
+        "videos": [
+          "LftMFDMrfAQ",
+          "nFjdyAHcTgA"
+        ]
+      },
+      "prop_game": {
+        "count": 1,
+        "examples": [
+          "Using wheelchair as conversation piece and compliance tool"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "group_dynamics": {
+        "count": 1,
+        "examples": [
+          "Engaging multiple targets and their friends simultaneously"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "language_barrier_handling": {
+        "count": 1,
+        "examples": [
+          "Adapting communication style when target has limited English"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "social_warm_up": {
+        "count": 1,
+        "examples": [
+          "Getting socially lubricated/warmed up before approaching"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "group_approach": {
+        "count": 1,
+        "examples": [
+          "Opening a group of people rather than a solo target"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "physical_comedy": {
+        "count": 1,
+        "examples": [
+          "Using the wheelchair as a prop for humor and compliance"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "social_proof_building": {
+        "count": 1,
+        "examples": [
+          "Engaging the entire friend group to build comfort with the target"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "language_barrier_navigation": {
+        "count": 1,
+        "examples": [
+          "Coach adapts to her limited English, simplifies language, and maintains positive frame despite communication difficulties"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "natural_game": {
+        "count": 1,
+        "examples": [
+          "Coach emphasizes 'natural style seduction' as his overall methodology"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      }
+    },
+    "topics": {
+      "content_promotion": {
+        "count": 2,
+        "examples": [
+          "Asking for likes to unlock analysis video",
+          "Coach promoting analysis video behind like-gate"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "religion": {
+        "count": 2,
+        "examples": [
+          "Discussion of her religious name and whether she's religious"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "dating_apps": {
+        "count": 2,
+        "examples": [
+          "Criticism of online dating as soul-sucking and ineffective",
+          "Coach critiques apps as designed to extract money and waste time"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "workshop_promotion": {
+        "count": 2,
+        "examples": [
+          "Coach advertising his upcoming training events",
+          "Coach promotes upcoming Lisbon workshop for summer 2025"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      },
+      "physical_proximity": {
+        "count": 2,
+        "examples": [
+          "Managing distance when initiating contact"
+        ],
+        "videos": [
+          "LftMFDMrfAQ"
+        ]
+      },
+      "calibration": {
+        "count": 2,
+        "examples": [
+          "Reading and adjusting to her body language and walking pace in real time",
+          "Reading and adjusting to her physical response within seconds of contact"
+        ],
+        "videos": [
+          "LftMFDMrfAQ"
+        ]
+      },
+      "photography": {
+        "count": 1,
+        "examples": [
+          "Taking photos together as social glue"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "nightlife_safety": {
+        "count": 1,
+        "examples": [
+          "Discussion about harassment at previous venue"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "meditation": {
+        "count": 1,
+        "examples": [
+          "Cold reading her as someone who meditates"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "disability_humor": {
+        "count": 1,
+        "examples": [
+          "Using wheelchair as conversational prop and humor device"
+        ],
+        "videos": [
+          "nFjdyAHcTgA"
+        ]
+      },
+      "indicators_of_interest": {
+        "count": 1,
+        "examples": [
+          "Recognizing signs of attraction through body language and eye contact before approaching"
+        ],
+        "videos": [
+          "LftMFDMrfAQ"
+        ]
+      },
+      "language_barrier": {
+        "count": 1,
+        "examples": [
+          "Significant language barrier shapes the entire interaction"
+        ],
+        "videos": [
+          "KtmnHDVbmss"
+        ]
+      }
+    }
+  }
+}

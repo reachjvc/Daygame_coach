@@ -1,0 +1,189 @@
+{
+  "video_id": "NAxBxOFNUbQ",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/coach_kyle_how_to_approach_a_girl/Creepy Kyle - Pickup Artist Cringe｜Pt. 1｜#shorts [NAxBxOFNUbQ]/Creepy Kyle - Pickup Artist Cringe｜Pt. 1｜#shorts [NAxBxOFNUbQ].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T22:36:27Z",
+  "video_type": {
+    "type": "compilation",
+    "confidence": 0.95,
+    "reasoning": "Brief infield approach (segments 0-4) followed by educational commentary critique (segments 5-11). Title confirms this is a 'cringe' analysis format."
+  },
+  "transcript_confidence": {
+    "score": 85,
+    "reasoning": "Clear and coherent transcript. Speaker changes are distinct. Minor issue: segment 3 'Sure, I guess awesome' may be slightly garbled but understandable. Overall easy to follow."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "other",
+      "confidence": 0.85,
+      "reasoning": "Delivers pickup opener and asks for Instagram - this is 'Kyle' being critiqued, not the teaching coach. He's the example of what NOT to do."
+    },
+    "SPEAKER_01": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Educational voiceover explaining 'creepy things men do', instructional tone, addresses 'you guys', provides teaching content on proper approach structure."
+    },
+    "SPEAKER_02": {
+      "role": "target",
+      "confidence": 0.8,
+      "reasoning": "Brief response to the approach - agrees to give Instagram. Short turn, responding to questions, typical target pattern."
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 0.746,
+      "text": "Excuse me.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true
+    },
+    {
+      "id": 1,
+      "start": 0.787,
+      "end": 3.167,
+      "text": "I just thought you looked really cute.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 3.248,
+      "end": 4.72,
+      "text": "I was wondering if I could get your Instagram",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 6.34,
+      "end": 8.44,
+      "text": "Sure, I guess awesome",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 8.42,
+      "end": 13.9,
+      "text": "Oh, I mean I could follow you I'll follow you",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 16.12,
+      "end": 16.702,
+      "text": "Kyle",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 18.44,
+      "end": 23.44,
+      "text": "Creepy things men do part one opening the conversation with a close",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 23.42,
+      "end": 29.84,
+      "text": "Do not start the conversation by asking for her Instagram or getting her phone number and then right after that",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 29.82,
+      "end": 34.24,
+      "text": "leaving the conversation instead you want to have a back-and-forth dialogue",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 34.22,
+      "end": 38.44,
+      "text": "to get to know the girl to show her a sample of your personality and if you",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 38.42,
+      "end": 43.28,
+      "text": "guys vibe well then you go for the contact info that's how it's done follow",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 43.26,
+      "end": 43.702,
+      "text": "for more",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "start_time": 0.0,
+      "end_time": 13.9
+    }
+  ],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "7e939de9d1dde0b1",
+    "llm_calls": 1,
+    "processing_time_sec": 17.666595935821533
+  }
+}

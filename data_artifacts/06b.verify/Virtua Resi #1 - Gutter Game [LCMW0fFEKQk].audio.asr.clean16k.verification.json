@@ -1,0 +1,23 @@
+{
+  "video_id": "LCMW0fFEKQk",
+  "verified_at": "2026-02-06T12:24:53Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Content is clearly a podcast/discussion format with one main speaker delivering theory on 'gutter game' while co-hosts ask clarifying questions. No infield footage or approaches present."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "UNKNOWN segment [343] is a 0.4s fragment ('from') - negligible impact but could be attributed to SPEAKER_00 based on surrounding context"
+  ],
+  "summary": "This is a well-classified podcast episode. SPEAKER_00 correctly identified as coach delivers an extended instructional monologue on gutter game theory, eye-dating strategies, and escalation techniques. SPEAKER_01 and SPEAKER_02 are appropriately labeled as 'other' serving as co-hosts who ask questions and make brief supplementary comments. All 433 segments being marked as commentary (conversation_id=0) is correct since there are no actual daygame approaches in this video - it's purely theoretical discussion. The classification pipeline handled this podcast format accurately.",
+  "metadata": {
+    "input_file": "data/06.video-type/Virtua Resi #1 - Gutter Game [LCMW0fFEKQk].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 24.510616540908813,
+    "llm_calls": 1
+  }
+}

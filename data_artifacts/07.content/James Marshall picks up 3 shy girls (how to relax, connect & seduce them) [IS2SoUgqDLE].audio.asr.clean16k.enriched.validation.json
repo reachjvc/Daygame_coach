@@ -1,0 +1,24 @@
+{
+  "video_id": "IS2SoUgqDLE",
+  "validated_at": "2026-02-06T20:13:57Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.2.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 155: nonsense — Segment about 'family tree from grandparents onwards' appears to be transcription confusion, doesn't fit conversation context about exchanging contact info"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

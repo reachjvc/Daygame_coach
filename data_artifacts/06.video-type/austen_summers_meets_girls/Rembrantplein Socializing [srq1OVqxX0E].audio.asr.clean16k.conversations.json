@@ -1,0 +1,342 @@
+{
+  "video_id": "srq1OVqxX0E",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/austen_summers_meets_girls/Rembrantplein Socializing [srq1OVqxX0E]/Rembrantplein Socializing [srq1OVqxX0E].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T22:05:50Z",
+  "video_type": {
+    "type": "infield",
+    "confidence": 0.92,
+    "reasoning": "Live street approaches with openers, compliments, and number close attempts in Amsterdam"
+  },
+  "transcript_confidence": {
+    "score": 55,
+    "reasoning": "Fragmented segments, time gaps suggesting missing audio, segment 16 appears misattributed or captures different speaker, some utterances lack context"
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Delivers all openers, introduces as Austin, asks for number, initiates both approaches"
+    },
+    "SPEAKER_01": {
+      "role": "target",
+      "confidence": 0.6,
+      "reasoning": "Limited segments, one conditional response about promise, segment 16 content unclear but likely target or misattributed"
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 1.22,
+      "end": 2.549,
+      "text": "Hi, excuse me.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true
+    },
+    {
+      "id": 1,
+      "start": 2.972,
+      "end": 6.637,
+      "text": "Hi, it's like such a beautiful day out, but then you're like on your phone.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 6.678,
+      "end": 7.04,
+      "text": "What's going on?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 7.14,
+      "end": 10.04,
+      "text": "You like sending some fucking business emails?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 4,
+      "start": 11.84,
+      "end": 13.82,
+      "text": "Okay, my name is Austin by the way",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 15.9,
+      "end": 17.121,
+      "text": "Are you like",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 21.16,
+      "end": 25.92,
+      "text": "Okay, I'm gonna take your German number",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 25.9,
+      "end": 26.601,
+      "text": "but",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 27.92,
+      "end": 29.64,
+      "text": "But, you have to promise me.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 29.62,
+      "end": 30.202,
+      "text": "Are you using WhatsApp?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 30.6,
+      "end": 31.002,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 44.94,
+      "end": 46.201,
+      "text": "Excuse me, hi.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": true
+    },
+    {
+      "id": 12,
+      "start": 46.44,
+      "end": 46.822,
+      "text": "Hi.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 13,
+      "start": 46.9,
+      "end": 50.3,
+      "text": "I was back there and I saw your very, very colorful backpack.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 14,
+      "start": 50.64,
+      "end": 54.38,
+      "text": "It almost looks like you'd be selling it here like an art festival backpack or something.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 15,
+      "start": 54.66,
+      "end": 55.102,
+      "text": "Alright.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 16,
+      "start": 55.08,
+      "end": 57.96,
+      "text": "You look quite adorable, but Brazilian",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 17,
+      "start": 67.4,
+      "end": 68.021,
+      "text": "Eventually",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 18,
+      "start": 72.26,
+      "end": 74.512,
+      "text": "What's your purpose?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 19,
+      "start": 74.532,
+      "end": 75.08,
+      "text": "Just to remember it?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 20,
+      "start": 75.44,
+      "end": 77.48,
+      "text": "As they drink vodka and play chess",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 21,
+      "start": 77.46,
+      "end": 82.24,
+      "text": "All right",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 22,
+      "start": 82.22,
+      "end": 83.281,
+      "text": "Is it where you live?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    },
+    {
+      "id": 23,
+      "start": 83.94,
+      "end": 85.96,
+      "text": "This is where I'm staying but not where I live",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "start_time": 1.22,
+      "end_time": 31.002
+    },
+    {
+      "conversation_id": 2,
+      "segment_ids": [
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23
+      ],
+      "start_time": 44.94,
+      "end_time": 85.96
+    }
+  ],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "cfdd7ce7820f73f2",
+    "llm_calls": 1,
+    "processing_time_sec": 19.189308881759644
+  }
+}

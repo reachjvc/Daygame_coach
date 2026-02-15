@@ -108,6 +108,8 @@ function GoalWithChain({
           node={treeNode}
           allGoals={allGoals}
           onIncrement={onIncrement}
+          onSetValue={onSetValue}
+          onComplete={onComplete}
           onReset={onReset}
           onEdit={onEdit}
           onAddChild={onAddChild}

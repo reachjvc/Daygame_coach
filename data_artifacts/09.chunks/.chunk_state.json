@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "embeddingModel": "nomic-embed-text",
+  "chunkSize": 1500,
+  "chunkOverlap": 150,
+  "sources": {
+    "austen_summers_meets_girls/nFjdyAHcTgA.txt": {
+      "enrichedHash": "6574eb90bbaca08bf2293172c3fb5fe7e9631036d7cde8173650e6adeccfc48b",
+      "chunkCount": 8,
+      "updatedAt": "2026-02-13T14:40:10.692Z"
+    },
+    "coach_kyle_how_to_approach_a_girl/LftMFDMrfAQ.txt": {
+      "enrichedHash": "2aad6a85833a5635bdbce40a1a1e5aa25cacc81e8526b8c67ecb1dd094bd04e9",
+      "chunkCount": 28,
+      "updatedAt": "2026-02-13T14:40:39.321Z"
+    },
+    "natural_lifestyles_meetingGirlsIRL/KtmnHDVbmss.txt": {
+      "enrichedHash": "61f0b621993f3d22e8fe665427caa89b86c887f9405a1b52f6babcd130db9b3c",
+      "chunkCount": 14,
+      "updatedAt": "2026-02-13T14:40:45.256Z"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "video_id": "rE1b1SFoa4A",
+  "validated_at": "2026-02-06T22:30:15Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "warning",
+      "check": "conversation_not_contiguous",
+      "message": "Conversation 1 has non-contiguous segment IDs: [33, 70, 71, 72, 73, 74, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 156, 157, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 193, 194, 195, 196, 197, 198, 199, 200, 201]"
+    }
+  ]
+}

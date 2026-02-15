@@ -1,0 +1,75 @@
+{
+  "video_id": "KtmnHDVbmss",
+  "verified_at": "2026-02-06T12:26:17Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Three distinct approaches with commentary outro matches 'compilation' type perfectly"
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Segment 11 has target saying 'I'm James' but James is the coach's name - likely transcription error of target's actual name"
+    },
+    {
+      "conversation_id": 2,
+      "verdict": "FLAG",
+      "notes": "Segments 120-121 assigned to SPEAKER_01 (Conv 1 target) but should be Conv 2 target - speaker diarization confusion"
+    },
+    {
+      "conversation_id": 3,
+      "verdict": "OK",
+      "notes": "Clean interaction, roles correct throughout"
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 11,
+      "current_role": "target",
+      "suggested_role": "target",
+      "evidence": "Role is correct (target responding to name question), but transcription is wrong - target says 'I'm James' but James is the coach's name (see segments 100, 127, 137). This is a TRANSCRIPTION ERROR not a role error."
+    }
+  ],
+  "boundary_issues": [
+    {
+      "conversation_id": 3,
+      "issue": "Conversation starts at 261.2s with mid-sentence fragment 'here in that way and I saw you' - the actual opener appears to be cut off or started slightly before the boundary",
+      "severity": "minor"
+    }
+  ],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 120,
+      "current_override": "none (raw label)",
+      "suggested_override": "should be SPEAKER_02 or override to target from conv 2",
+      "evidence": "SPEAKER_01 is the Hungarian target from Conv 1, but segments 120-121 ('Here is the QR code. Maybe it's easier.') occur during Conv 2 at 211-213s. This is clearly the Conv 2 target showing her QR code, not the Conv 1 target."
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 121,
+      "current_override": "none (raw label)",
+      "suggested_override": "should be SPEAKER_02 or override to target from conv 2",
+      "evidence": "Same issue as segment 120 - continuation of QR code offer during Conv 2"
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 169,
+      "current_override": "none (raw label)",
+      "suggested_override": "verify this is correct speaker",
+      "evidence": "SPEAKER_01 appears in Conv 3 at segments 169, 171-172, 189 - should verify if this is actually SPEAKER_02 (Conv 3 target) or if diarization is confused"
+    }
+  ],
+  "other_flags": [
+    "Segment 11 transcription error: target's name transcribed as 'James' which is the coach's name - downstream processing should not use this as the target's actual name",
+    "SPEAKER_01 appears in multiple conversations (Conv 1, Conv 2 segments 120-121, Conv 3 segments 169-172, 189) suggesting diarization struggles to distinguish between different female targets"
+  ],
+  "summary": "The classification is largely correct - video type, conversation boundaries, and coach identification are accurate. However, there are two notable issues: (1) A transcription error at segment 11 where the target's name was incorrectly transcribed as 'James' (the coach's name), and (2) SPEAKER_01 bleeds across multiple conversations when it should be distinct targets, particularly segments 120-121 in Conv 2 and several segments in Conv 3. These are diarization artifacts where the system couldn't reliably distinguish between different female voices. The collapse override system correctly identified SPEAKER_00 as the coach, but the target speaker separation needs review. Flagging rather than rejecting because the core structure (3 approaches + commentary) and coach identification are correct - the issues are with target speaker disambiguation.",
+  "metadata": {
+    "input_file": "data/06.video-type/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 43.30345892906189,
+    "llm_calls": 1
+  }
+}

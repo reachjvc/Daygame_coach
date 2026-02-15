@@ -1,0 +1,1163 @@
+{
+  "video_id": "wHQW1s5FzkY",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/austen_summers_meets_girls/Pickup Motivation - Watch This Before Picking Up Girls [wHQW1s5FzkY]/Pickup Motivation - Watch This Before Picking Up Girls [wHQW1s5FzkY].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T22:05:31Z",
+  "video_type": {
+    "type": "compilation",
+    "confidence": 0.9,
+    "reasoning": "Multiple short approach clips edited together with music overlay, transitions between infield moments, ends with coach commentary requesting engagement"
+  },
+  "transcript_confidence": {
+    "score": 35,
+    "reasoning": "Heavy music/singing throughout makes it very difficult to distinguish speech from lyrics. Many segments are song lyrics not actual dialogue. Speaker diarization struggled with overlapping audio. Actual approach conversations are fragmentary and hard to follow."
+  },
+  "speaker_labels": {
+    "SPEAKER_00": {
+      "role": "other",
+      "confidence": 0.5,
+      "reasoning": "Mix of song lyrics and what appears to be external media clip about 'negging' - not a consistent participant"
+    },
+    "SPEAKER_01": {
+      "role": "coach",
+      "confidence": 0.95,
+      "reasoning": "Introduces himself as Austin, delivers openers, gives compliments, does end-of-video call-to-action asking for likes/subscribers"
+    },
+    "SPEAKER_02": {
+      "role": "target",
+      "confidence": 0.6,
+      "reasoning": "Brief responses like 'Okay', 'We're gaming', appears to be responding to coach in approach situations"
+    },
+    "SPEAKER_03": {
+      "role": "other",
+      "confidence": 0.5,
+      "reasoning": "Mostly song lyrics, though some segments may be brief target responses - too mixed with music to determine reliably"
+    },
+    "UNKNOWN": {
+      "role": "other",
+      "confidence": 0.4,
+      "reasoning": "Almost entirely song lyrics from background music, not actual conversation participants"
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 4.56,
+      "text": "Get up out on the floor, dancing all night long",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 1,
+      "start": 4.54,
+      "end": 8.56,
+      "text": "Get up out on the floor, dancing till the break of dawn",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 2,
+      "start": 8.54,
+      "end": 12.16,
+      "text": "Get up out on the floor, dancing till the break of dawn",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 3,
+      "start": 12.14,
+      "end": 13.021,
+      "text": "My name's Austin",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true
+    },
+    {
+      "id": 4,
+      "start": 13.0,
+      "end": 13.442,
+      "text": "What's your name?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 13.58,
+      "end": 15.021,
+      "text": "Austin, 925",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 15.0,
+      "end": 17.76,
+      "text": "Baby, all the time",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 17.74,
+      "end": 19.92,
+      "text": "My baby, you on my mind",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 19.9,
+      "end": 21.68,
+      "text": "And I don't know why",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 21.66,
+      "end": 23.8,
+      "text": "But the feeling is fine",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 24.5,
+      "end": 26.46,
+      "text": "Can't you see your heart out there?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 26.74,
+      "end": 28.54,
+      "text": "Are you on drugs too?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": true
+    },
+    {
+      "id": 12,
+      "start": 45.04,
+      "end": 47.28,
+      "text": "Are you going to look me up in the KGB?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 3,
+      "is_conversation_start": true
+    },
+    {
+      "id": 13,
+      "start": 47.56,
+      "end": 47.923,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 3,
+      "is_conversation_start": false
+    },
+    {
+      "id": 14,
+      "start": 48.24,
+      "end": 49.201,
+      "text": "Punch it in there, girl.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 3,
+      "is_conversation_start": false
+    },
+    {
+      "id": 15,
+      "start": 60.52,
+      "end": 62.7,
+      "text": "Just hold my hand, we'll be like an average couple on the street.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 4,
+      "is_conversation_start": true
+    },
+    {
+      "id": 16,
+      "start": 71.4,
+      "end": 74.24,
+      "text": "Sunflower Girl, we're going to get boba, so you have to come with us.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 5,
+      "is_conversation_start": true
+    },
+    {
+      "id": 17,
+      "start": 74.38,
+      "end": 74.683,
+      "text": "Okay.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 5,
+      "is_conversation_start": false
+    },
+    {
+      "id": 18,
+      "start": 77.96,
+      "end": 78.542,
+      "text": "Dale duro.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 19,
+      "start": 100.42,
+      "end": 104.9,
+      "text": "What did you wish for?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 6,
+      "is_conversation_start": true
+    },
+    {
+      "id": 20,
+      "start": 106.42,
+      "end": 107.641,
+      "text": "True love.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 6,
+      "is_conversation_start": false
+    },
+    {
+      "id": 21,
+      "start": 107.62,
+      "end": 108.461,
+      "text": "True love.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 6,
+      "is_conversation_start": false
+    },
+    {
+      "id": 22,
+      "start": 110.88,
+      "end": 113.46,
+      "text": "Go rush along, Russian girl.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 7,
+      "is_conversation_start": true
+    },
+    {
+      "id": 23,
+      "start": 128.78,
+      "end": 132.14,
+      "text": "You're pretty attractive, 8 out of 10.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": true
+    },
+    {
+      "id": 24,
+      "start": 132.68,
+      "end": 133.601,
+      "text": "High five.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 25,
+      "start": 134.52,
+      "end": 136.84,
+      "text": "8 out of 10 is good, what are you talking about?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 26,
+      "start": 136.82,
+      "end": 139.731,
+      "text": "Average is five out of ten.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 27,
+      "start": 139.852,
+      "end": 140.62,
+      "text": "You're way above average.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 28,
+      "start": 142.92,
+      "end": 147.08,
+      "text": "Techniques are ridiculous and the one that really comes to mind is what they",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 29,
+      "start": 147.06,
+      "end": 148.001,
+      "text": "call negging.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 30,
+      "start": 166.82,
+      "end": 174.54,
+      "text": "When I look in your eyes, I smile with pride, happy that you were mine, joy and love.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 31,
+      "start": 174.52,
+      "end": 176.82,
+      "text": "We take shrooms right now to see the world as it is.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": true
+    },
+    {
+      "id": 32,
+      "start": 176.9,
+      "end": 177.661,
+      "text": "You down?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 33,
+      "start": 177.86,
+      "end": 178.243,
+      "text": "Right?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 34,
+      "start": 178.64,
+      "end": 179.281,
+      "text": "Let's do it.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 35,
+      "start": 181.3,
+      "end": 184.2,
+      "text": "You are a little bit down though, I can see that.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 36,
+      "start": 196.84,
+      "end": 204.68,
+      "text": "The thing is what to do, the things what make of you, the things what clears my soul, the things what makes me fool.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 37,
+      "start": 205.02,
+      "end": 212.8,
+      "text": "The thing is what to do, the things what make of you, the things what clears my soul, the things what makes me fool.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 38,
+      "start": 213.06,
+      "end": 215.96,
+      "text": "The thing is what to do, the things what makes me fool.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 39,
+      "start": 215.96,
+      "end": 218.14,
+      "text": "Guys, we have a Lexus taxi in the house.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": true
+    },
+    {
+      "id": 40,
+      "start": 218.24,
+      "end": 218.682,
+      "text": "Dude!",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 41,
+      "start": 218.78,
+      "end": 219.641,
+      "text": "I thought it looked like a porn star!",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 42,
+      "start": 219.62,
+      "end": 220.281,
+      "text": "It's okay, we'll-",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 43,
+      "start": 220.82,
+      "end": 226.82,
+      "text": "The thing is what to do, the things what make of you, the things what clears my soul, the things what makes me fool.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 44,
+      "start": 226.8,
+      "end": 228.86,
+      "text": "Dancing's what makes me whole",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 45,
+      "start": 228.84,
+      "end": 230.441,
+      "text": "Dancing is what I do",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 46,
+      "start": 231.28,
+      "end": 232.94,
+      "text": "Dancing's what I think of you",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 47,
+      "start": 232.92,
+      "end": 234.82,
+      "text": "Dancing's what makes my soul",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 48,
+      "start": 234.8,
+      "end": 236.96,
+      "text": "Dancing's what makes me whole",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 49,
+      "start": 236.94,
+      "end": 238.441,
+      "text": "Dancing is what I do",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 50,
+      "start": 239.24,
+      "end": 240.541,
+      "text": "Dancing's what I think of you",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 51,
+      "start": 240.52,
+      "end": 242.98,
+      "text": "I stopped at the border, the guy went through all my pictures",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": true
+    },
+    {
+      "id": 52,
+      "start": 242.96,
+      "end": 244.301,
+      "text": "so he definitely saw my dick",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 53,
+      "start": 244.88,
+      "end": 246.82,
+      "text": "Get up on the floor",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 54,
+      "start": 246.8,
+      "end": 248.84,
+      "text": "Dancing on the low",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 55,
+      "start": 248.82,
+      "end": 250.94,
+      "text": "Get up on the floor",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 56,
+      "start": 250.92,
+      "end": 252.84,
+      "text": "Dancing to the rick and roll",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 57,
+      "start": 252.82,
+      "end": 254.62,
+      "text": "Get up on the floor",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "other",
+      "segment_type": "transition",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 58,
+      "start": 255.06,
+      "end": 256.882,
+      "text": "Would you ever do a threesome?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": true
+    },
+    {
+      "id": 59,
+      "start": 257.348,
+      "end": 258.32,
+      "text": "Yeah, we have.",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": false
+    },
+    {
+      "id": 60,
+      "start": 261.68,
+      "end": 263.84,
+      "text": "Wait, this is so weird, but cool.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": true
+    },
+    {
+      "id": 61,
+      "start": 264.18,
+      "end": 265.359,
+      "text": "Feel the tomato.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": false
+    },
+    {
+      "id": 62,
+      "start": 266.01,
+      "end": 266.66,
+      "text": "How good does it feel?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": false
+    },
+    {
+      "id": 63,
+      "start": 272.58,
+      "end": 274.181,
+      "text": "My name is Austin, by the way.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": true
+    },
+    {
+      "id": 64,
+      "start": 274.78,
+      "end": 276.261,
+      "text": "Have you ever skipped in the streets?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": false
+    },
+    {
+      "id": 65,
+      "start": 286.42,
+      "end": 287.581,
+      "text": "Guys, say we're gaming.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 15,
+      "is_conversation_start": true
+    },
+    {
+      "id": 66,
+      "start": 287.92,
+      "end": 288.681,
+      "text": "We're gaming.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 15,
+      "is_conversation_start": false
+    },
+    {
+      "id": 67,
+      "start": 293.84,
+      "end": 296.3,
+      "text": "We're both from Colombia and we're just enjoying our time.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 16,
+      "is_conversation_start": true
+    },
+    {
+      "id": 68,
+      "start": 296.74,
+      "end": 297.541,
+      "text": "Hola, como estas?",
+      "speaker_id": "SPEAKER_03",
+      "speaker_role": "other",
+      "segment_type": "approach",
+      "conversation_id": 16,
+      "is_conversation_start": false
+    },
+    {
+      "id": 69,
+      "start": 297.88,
+      "end": 299.261,
+      "text": "Hola, me llamo Austin.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 16,
+      "is_conversation_start": false
+    },
+    {
+      "id": 70,
+      "start": 303.0,
+      "end": 304.261,
+      "text": "I'm down for the belt.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 17,
+      "is_conversation_start": true
+    },
+    {
+      "id": 71,
+      "start": 304.52,
+      "end": 305.421,
+      "text": "Let's get that bird.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 17,
+      "is_conversation_start": false
+    },
+    {
+      "id": 72,
+      "start": 305.74,
+      "end": 306.242,
+      "text": "Gentlemen.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 17,
+      "is_conversation_start": false
+    },
+    {
+      "id": 73,
+      "start": 323.94,
+      "end": 325.78,
+      "text": "We should watch them lose clothes when we go in.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 18,
+      "is_conversation_start": true
+    },
+    {
+      "id": 74,
+      "start": 338.24,
+      "end": 339.96,
+      "text": "Give me your fucking number, man.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": true
+    },
+    {
+      "id": 75,
+      "start": 340.06,
+      "end": 340.901,
+      "text": "So she...",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": false
+    },
+    {
+      "id": 76,
+      "start": 340.88,
+      "end": 341.105,
+      "text": "Go.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": false
+    },
+    {
+      "id": 77,
+      "start": 341.94,
+      "end": 342.362,
+      "text": "Go.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": false
+    },
+    {
+      "id": 78,
+      "start": 342.86,
+      "end": 343.282,
+      "text": "Stop.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": false
+    },
+    {
+      "id": 79,
+      "start": 345.16,
+      "end": 350.1,
+      "text": "stop I can't do this right now I'm gonna molest you right now there's no way",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 19,
+      "is_conversation_start": false
+    },
+    {
+      "id": 80,
+      "start": 350.08,
+      "end": 358.62,
+      "text": "you're escaping me fuck this is some old footage if you want to see some new",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 81,
+      "start": 358.6,
+      "end": 362.98,
+      "text": "footage in a compilation get this video to a thousand likes and I'll drop it and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 82,
+      "start": 362.96,
+      "end": 366.38,
+      "text": "make sure you subscribe to get more videos like this and hit the bell",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 83,
+      "start": 366.36,
+      "end": 368.54,
+      "text": "button to be a part of the notification squad.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        3,
+        4
+      ],
+      "start_time": 12.14,
+      "end_time": 13.442
+    },
+    {
+      "conversation_id": 2,
+      "segment_ids": [
+        11
+      ],
+      "start_time": 26.74,
+      "end_time": 28.54
+    },
+    {
+      "conversation_id": 3,
+      "segment_ids": [
+        12,
+        13,
+        14
+      ],
+      "start_time": 45.04,
+      "end_time": 49.201
+    },
+    {
+      "conversation_id": 4,
+      "segment_ids": [
+        15
+      ],
+      "start_time": 60.52,
+      "end_time": 62.7
+    },
+    {
+      "conversation_id": 5,
+      "segment_ids": [
+        16,
+        17
+      ],
+      "start_time": 71.4,
+      "end_time": 74.683
+    },
+    {
+      "conversation_id": 6,
+      "segment_ids": [
+        19,
+        20,
+        21
+      ],
+      "start_time": 100.42,
+      "end_time": 108.461
+    },
+    {
+      "conversation_id": 7,
+      "segment_ids": [
+        22
+      ],
+      "start_time": 110.88,
+      "end_time": 113.46
+    },
+    {
+      "conversation_id": 8,
+      "segment_ids": [
+        23,
+        24,
+        25,
+        26,
+        27
+      ],
+      "start_time": 128.78,
+      "end_time": 140.62
+    },
+    {
+      "conversation_id": 9,
+      "segment_ids": [
+        31,
+        32,
+        33,
+        34,
+        35
+      ],
+      "start_time": 174.52,
+      "end_time": 184.2
+    },
+    {
+      "conversation_id": 10,
+      "segment_ids": [
+        39,
+        40,
+        41,
+        42
+      ],
+      "start_time": 215.96,
+      "end_time": 220.281
+    },
+    {
+      "conversation_id": 11,
+      "segment_ids": [
+        51,
+        52
+      ],
+      "start_time": 240.52,
+      "end_time": 244.301
+    },
+    {
+      "conversation_id": 12,
+      "segment_ids": [
+        58,
+        59
+      ],
+      "start_time": 255.06,
+      "end_time": 258.32
+    },
+    {
+      "conversation_id": 13,
+      "segment_ids": [
+        60,
+        61,
+        62
+      ],
+      "start_time": 261.68,
+      "end_time": 266.66
+    },
+    {
+      "conversation_id": 14,
+      "segment_ids": [
+        63,
+        64
+      ],
+      "start_time": 272.58,
+      "end_time": 276.261
+    },
+    {
+      "conversation_id": 15,
+      "segment_ids": [
+        65,
+        66
+      ],
+      "start_time": 286.42,
+      "end_time": 288.681
+    },
+    {
+      "conversation_id": 16,
+      "segment_ids": [
+        67,
+        68,
+        69
+      ],
+      "start_time": 293.84,
+      "end_time": 299.261
+    },
+    {
+      "conversation_id": 17,
+      "segment_ids": [
+        70,
+        71,
+        72
+      ],
+      "start_time": 303.0,
+      "end_time": 306.242
+    },
+    {
+      "conversation_id": 18,
+      "segment_ids": [
+        73
+      ],
+      "start_time": 323.94,
+      "end_time": 325.78
+    },
+    {
+      "conversation_id": 19,
+      "segment_ids": [
+        74,
+        75,
+        76,
+        77,
+        78,
+        79
+      ],
+      "start_time": 338.24,
+      "end_time": 350.1
+    }
+  ],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "8b317a33df496092",
+    "llm_calls": 1,
+    "processing_time_sec": 36.77730321884155
+  }
+}

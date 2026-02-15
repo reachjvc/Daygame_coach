@@ -1,0 +1,534 @@
+{
+  "generated_at": "2026-02-13T14:43:54.207344+00:00",
+  "manifest": "docs/pipeline/batches/CANARY.HARDENING.1.txt",
+  "video_count": 3,
+  "summary": {
+    "01": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "02": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "03": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "04": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "05": {
+      "PASS": 0,
+      "WARN": 0,
+      "FAIL": 3
+    },
+    "06": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "06b": {
+      "PASS": 0,
+      "WARN": 3,
+      "FAIL": 0
+    },
+    "06c": {
+      "PASS": 0,
+      "WARN": 3,
+      "FAIL": 0
+    },
+    "07": {
+      "PASS": 0,
+      "WARN": 3,
+      "FAIL": 0
+    },
+    "08": {
+      "PASS": 0,
+      "WARN": 0,
+      "FAIL": 1
+    },
+    "09": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    },
+    "10": {
+      "PASS": 3,
+      "WARN": 0,
+      "FAIL": 0
+    }
+  },
+  "results": [
+    {
+      "stage": "01",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/01.download/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.raw16k.wav"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "02",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/02.transcribe/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "seg 0: In this video, we're going to be discussing with you guys how to approach women, how to begin",
+        "seg 95: The handholds.",
+        "seg 189: later guys peace out"
+      ]
+    },
+    {
+      "stage": "03",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/03.align/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].full.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "04",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/04.diarize/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "SPEAKER_00: In this video, we're going to be discussing with you guys how to approach women, how to begin interactions in a bunch of",
+        "SPEAKER_00: We have a bunch of different techniques laid out here.",
+        "SPEAKER_00: We're going to be going through these, the do's and the don'ts to all of these.",
+        "SPEAKER_00: It's all going down in this video.",
+        "SPEAKER_00: So without further ado, let's get into it.",
+        "SPEAKER_00: it so let's jump into this before we actually go through the techniques the first thing i wanted",
+        "SPEAKER_00: to point out is that there's an asterisk next to each one of these because i think the prerequisite",
+        "SPEAKER_00: to actually approaching an opening is the fact that it's all in your vibe when you're actually"
+      ]
+    },
+    {
+      "stage": "05",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "FAIL",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ]/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.audio_features.json"
+      ],
+      "errors": [
+        "schema_invalid at segments.0.features: 'quality' is a required property"
+      ],
+      "warnings": []
+    },
+    {
+      "stage": "06",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json",
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.validation.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "06b",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06b.verify/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.verification.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "verdict=FLAG"
+      ],
+      "verdict": "FLAG"
+    },
+    {
+      "stage": "06c",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06c.patched/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "flags_not_fixed_count=3"
+      ]
+    },
+    {
+      "stage": "07",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.enriched.json",
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/coach_kyle_how_to_approach_a_girl/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.enriched.validation.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "validation sidecar warnings=2"
+      ],
+      "manual_review": []
+    },
+    {
+      "stage": "09",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/09.chunks/coach_kyle_how_to_approach_a_girl/LftMFDMrfAQ.chunks.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "10",
+      "video_id": "LftMFDMrfAQ",
+      "source": "coach_kyle_how_to_approach_a_girl",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/.ingest_state.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "01",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/01.download/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA]/7 Minute Pull [nFjdyAHcTgA].audio.asr.raw16k.wav"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "02",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/02.transcribe/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA]/7 Minute Pull [nFjdyAHcTgA].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "seg 0: No, you need to get socially lubricated.",
+        "seg 98: Thursday night wedges. I want to see you on Friday night with your little stilettos. Come out tomorrow then.",
+        "seg 195: this video as soon as this video hits 2 000 likes i'm dropping the analysis video talk to you soon"
+      ]
+    },
+    {
+      "stage": "03",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/03.align/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA]/7 Minute Pull [nFjdyAHcTgA].full.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "04",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/04.diarize/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA]/7 Minute Pull [nFjdyAHcTgA].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "SPEAKER_03: No, you need to get socially lubricated.",
+        "SPEAKER_03: Like a small one?",
+        "SPEAKER_03: Yeah.",
+        "SPEAKER_05: A what one?",
+        "SPEAKER_02: A stabilizer.",
+        "SPEAKER_03: Guys, do you happen to have a stabilizer for our camera?",
+        "SPEAKER_03: We're filming infield, we need like a little bit of stabilizer.",
+        "SPEAKER_05: I have a film camera."
+      ]
+    },
+    {
+      "stage": "05",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "FAIL",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA]/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.audio_features.json"
+      ],
+      "errors": [
+        "schema_invalid at segments.0.features: 'quality' is a required property"
+      ],
+      "warnings": []
+    },
+    {
+      "stage": "06",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json",
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.validation.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "06b",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06b.verify/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.verification.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "verdict=FLAG"
+      ],
+      "verdict": "FLAG"
+    },
+    {
+      "stage": "06c",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06c.patched/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "flags_not_fixed_count=3"
+      ]
+    },
+    {
+      "stage": "07",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.enriched.json",
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/austen_summers_meets_girls/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.enriched.validation.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "validation sidecar warnings=7"
+      ],
+      "manual_review": [
+        "conversation_id=1",
+        "hook_point={'signal': \"Target shares her dad is 6'5 and plays along with Viking roleplay, then initiates banter about the wheelchair at segment 72-76\"}",
+        "techniques=[{\"technique\": \"indirect_opener\", \"segment\": 5, \"example\": \"Guys, do you happen to have a stabilizer for our camera?\"}, {\"technique\": \"tease\", \"segment\": 13, \"example\": \"You have some massive hands, y",
+        "topics=[\"name\", \"origin\", \"appearance\", \"humor\", \"flirting\", \"living_situation\", \"age\", \"personality\", \"logistics\", \"plans\", \"location\", \"behavior\", \"education\"]"
+      ]
+    },
+    {
+      "stage": "09",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/09.chunks/austen_summers_meets_girls/nFjdyAHcTgA.chunks.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "10",
+      "video_id": "nFjdyAHcTgA",
+      "source": "austen_summers_meets_girls",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/.ingest_state.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "01",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/01.download/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.raw16k.wav"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "02",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/02.transcribe/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "seg 0: Excuse me. Hello.",
+        "seg 67: Yeah, what's your name?",
+        "seg 133: We'll be right back."
+      ]
+    },
+    {
+      "stage": "03",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/03.align/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].full.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "04",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/04.diarize/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].full.json"
+      ],
+      "errors": [],
+      "warnings": [],
+      "manual_review": [
+        "SPEAKER_00: Excuse me.",
+        "SPEAKER_00: Hello.",
+        "SPEAKER_01: How are you?",
+        "SPEAKER_01: Good.",
+        "SPEAKER_00: You look very sexy today.",
+        "SPEAKER_00: I'm not selling anything.",
+        "SPEAKER_00: I just thought I'd come and say hi.",
+        "SPEAKER_00: Little English?"
+      ]
+    },
+    {
+      "stage": "05",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "FAIL",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss]/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.audio_features.json"
+      ],
+      "errors": [
+        "schema_invalid at segments.0.features: 'quality' is a required property"
+      ],
+      "warnings": []
+    },
+    {
+      "stage": "06",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.conversations.json",
+        "/home/jonaswsl/projects/daygame-coach/data/06.video-type/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.conversations.validation.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "06b",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06b.verify/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.verification.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "verdict=FLAG"
+      ],
+      "verdict": "FLAG"
+    },
+    {
+      "stage": "06c",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/06c.patched/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.conversations.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "flags_not_fixed_count=4"
+      ]
+    },
+    {
+      "stage": "07",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "WARN",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.enriched.json",
+        "/home/jonaswsl/projects/daygame-coach/data/07.content/natural_lifestyles_meetingGirlsIRL/Picking Up 3 Girls In 10 minutes (the busy man’s dating method) [KtmnHDVbmss].audio.asr.clean16k.enriched.validation.json"
+      ],
+      "errors": [],
+      "warnings": [
+        "validation sidecar warnings=6"
+      ],
+      "manual_review": [
+        "conversation_id=1",
+        "hook_point={'signal': \"She asked 'No work?' showing curiosity about his lifestyle, then asked about his job unprompted\"}",
+        "techniques=[{\"technique\": \"direct_opener\", \"segment\": 4, \"example\": \"You look very sexy today\"}, {\"technique\": \"false_time_constraint\", \"segment\": 5, \"example\": \"I'm not selling anything, I just thought I'd come",
+        "topics=[\"name\", \"origin\", \"career\", \"plans\", \"personality\", \"contact\"]"
+      ]
+    },
+    {
+      "stage": "09",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/09.chunks/natural_lifestyles_meetingGirlsIRL/KtmnHDVbmss.chunks.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "10",
+      "video_id": "KtmnHDVbmss",
+      "source": "natural_lifestyles_meetingGirlsIRL",
+      "status": "PASS",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/.ingest_state.json"
+      ],
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "stage": "08",
+      "status": "FAIL",
+      "files": [
+        "/home/jonaswsl/projects/daygame-coach/data/08.taxonomy-validation/manifest_CANARY.HARDENING.1.txt.report.json"
+      ],
+      "errors": [
+        "taxonomy report status=FAIL"
+      ],
+      "warnings": []
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "video_id": "ahoVmyOGls4",
+  "validated_at": "2026-02-06T21:44:09Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    }
+  ]
+}

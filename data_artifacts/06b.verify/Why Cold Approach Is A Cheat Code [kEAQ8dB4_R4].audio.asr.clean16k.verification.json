@@ -1,0 +1,30 @@
+{
+  "video_id": "kEAQ8dB4_R4",
+  "verified_at": "2026-02-06T12:24:58Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Continuous monologue with single speaker addressing camera, no approaches or interactions - classic talking_head format"
+  },
+  "conversation_verdicts": [],
+  "misattributions": [
+    {
+      "segment_id": 248,
+      "current_role": "unknown",
+      "suggested_role": "other",
+      "evidence": "Text 'So yeah, you know I'm only just too good to be true' sounds like song lyrics from outro music, not speech. The ~20s gap before this segment and the different speaking style suggest audio bleed from background music rather than a human speaker."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segment 248 (UNKNOWN) appears after a 20-second gap and contains what sounds like song lyrics. This is likely outro music bleeding into transcription rather than actual speech. Consider marking as 'music' or filtering out entirely."
+  ],
+  "summary": "This talking_head video is correctly classified. Todd (SPEAKER_00) delivers a continuous 13+ minute monologue about cold approach philosophy without any live approaches or interactions. All 248 segments from SPEAKER_00 are correctly labeled as coach commentary. The only minor anomaly is segment 248 from UNKNOWN, which appears to be song lyrics from outro music captured in transcription after a 20-second gap - this doesn't affect the core classification but could be filtered as non-speech content.",
+  "metadata": {
+    "input_file": "data/06.video-type/Why Cold Approach Is A Cheat Code [kEAQ8dB4_R4].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 25.58090901374817,
+    "llm_calls": 1
+  }
+}

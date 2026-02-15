@@ -1,0 +1,84 @@
+{
+  "video_id": "mv2X8Yhg9M0",
+  "verified_at": "2026-02-06T12:25:08Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Single extended approach with voiceover commentary matches compilation format, though 'infield' would also be accurate"
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Multiple coach-override segments on SPEAKER_01 contain blended dialogue from diarization errors; role boundaries unclear in rapid exchanges"
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 1,
+      "current_role": "other",
+      "suggested_role": "coach",
+      "evidence": "'Hey, excuse me, hi' is a classic daygame opener - this is the coach initiating, not 'other'"
+    },
+    {
+      "segment_id": 2,
+      "current_role": "other",
+      "suggested_role": "coach",
+      "evidence": "'Hey, what's up?' follows the opener - continuation of coach's approach"
+    },
+    {
+      "segment_id": 4,
+      "current_role": "other",
+      "suggested_role": "target",
+      "evidence": "'Okay?' sounds like confused target response to being stopped"
+    },
+    {
+      "segment_id": 5,
+      "current_role": "other",
+      "suggested_role": "target",
+      "evidence": "'Yeah' is short affirmative response typical of target"
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 65,
+      "current_override": "coach",
+      "suggested_override": "mixed",
+      "evidence": "\"you're tiny yeah I am what are you 411 no I'm 5'2 no you're not 5'2\" contains both coach teasing and target responding - diarization failed to separate speakers"
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 91,
+      "current_override": "coach",
+      "suggested_override": "mixed",
+      "evidence": "\"my dog what does this say they passed away my dog puppies no it's uh oh\" - coach asking about tattoo and target explaining, blended into one segment"
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 153,
+      "current_override": "coach",
+      "suggested_override": "coach",
+      "evidence": "'You're way too late' is coach teasing about Trader Joe's - this override is correct"
+    },
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 164,
+      "current_override": "coach",
+      "suggested_override": "coach",
+      "evidence": "'Yeah, me too' responding to target saying she likes to cook - this is coach, override correct"
+    }
+  ],
+  "other_flags": [
+    "SPEAKER_00 segments [0-5, 25, 118, 120, 165] appear to be coach audio captured on a different channel - these should likely be reassigned to coach or merged",
+    "Several SPEAKER_01 coach-override segments contain blended rapid dialogue that couldn't be cleanly separated - downstream processing should treat these as potentially containing both speakers"
+  ],
+  "summary": "This is a single extended daygame approach correctly identified as a compilation due to voiceover structure. The main issue is SPEAKER_00 and some SPEAKER_01 segments where diarization failed to properly separate speakers during rapid exchanges. Segments [1-2] are clearly the coach's opener but assigned to 'other'. Several coach-override segments on SPEAKER_01 contain blended dialogue from both speakers. The core role assignments (SPEAKER_03=coach, SPEAKER_02=voiceover) are correct, and the conversation boundary is appropriate. Flagging for review of the misattributed opener segments and blended dialogue segments, but overall structure is sound.",
+  "metadata": {
+    "input_file": "data/06.video-type/Approach ANY GIRL in Public LIKE a PRO! (INFIELD) [mv2X8Yhg9M0].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 48.715410470962524,
+    "llm_calls": 1
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "video_id": "nFjdyAHcTgA",
+  "verified_at": "2026-02-06T12:24:58Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": false,
+    "reasoning": "Classified as 'compilation' but content shows single continuous group interaction leading to a pull, not multiple approaches with commentary. Should be 'infield' type."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Role attribution confusion in segments 111-122 where target/coach speech patterns are mixed within segments. Transcription quality issues may be contributing."
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 111,
+      "current_role": "target",
+      "suggested_role": "mixed/unclear",
+      "evidence": "Segment contains 'what's your name' which is typically coach behavior, but also contains responses. Possible transcription merging issue."
+    },
+    {
+      "segment_id": 116,
+      "current_role": "coach",
+      "suggested_role": "mixed/unclear",
+      "evidence": "Contains 'it so if i wear heels we'll be the same height exactly' - the 'exactly' response pattern suggests target speech merged with coach speech."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Video type misclassification: 'compilation' should likely be 'infield' - single continuous interaction, not multiple approaches",
+    "Segments 111-122 appear to have transcription/diarization issues where multiple speakers' words are merged into single segments, making role attribution unreliable",
+    "SPEAKER_01 (outro coach) is different from SPEAKER_03 (infield coach) - this may be correct if video has different host for outro, or could indicate the main coach's speaker ID changed"
+  ],
+  "summary": "The video shows a single continuous group interaction ('7 Minute Pull') incorrectly classified as 'compilation' when it should be 'infield'. Role assignments are generally correct with SPEAKER_03 as the main coach and SPEAKER_04/05 as targets in a group. However, segments 111-122 show signs of transcription/diarization errors where multiple speakers' dialogue appears merged, making those specific attributions unreliable. The collapsed speaker overrides are appropriate. The main actionable issue is the video type misclassification; the role confusion in the middle section appears to be upstream transcription quality issues rather than classification errors.",
+  "metadata": {
+    "input_file": "data/06.video-type/7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 40.72730565071106,
+    "llm_calls": 1
+  }
+}

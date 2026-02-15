@@ -1,0 +1,25 @@
+{
+  "video_id": "With Examples",
+  "verified_at": "2026-02-05T17:40:38Z",
+  "pipeline_version": "06b.verify-v1.0",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": false,
+    "reasoning": "Classified as 'podcast' but SPEAKER_00 dominates with 215/225 segments (95.6%). SPEAKER_01 and SPEAKER_02 contribute only 10 segments total with brief interjections, not substantive discussion. This is structurally a talking_head with minor co-host color commentary, not a multi-speaker podcast."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Video type 'podcast' at 82% confidence is questionable — 'talking_head' would be more accurate given the 95.6% single-speaker dominance. Downstream processing expecting podcast-style multi-speaker dialogue will find almost none.",
+    "SPEAKER_01 segments [201-202] ('Okay.' / 'So those') at 758.6-758.9s are extremely short (0.2s and 0.1s) and may be diarization artifacts rather than genuine speech from a second speaker.",
+    "SPEAKER_02 segment [124] ('So I don't recommend doing that one.') at 467.6-469.4s sounds like it could be the coach (SPEAKER_00) continuing his thought rather than a distinct other speaker — minor diarization concern."
+  ],
+  "summary": "Role assignments and conversation boundaries are correct — this is entirely instructional commentary with no live approaches, which is accurately reflected by having all segments as conversation_id=0. The primary issue is the video type classification: 'podcast' is inaccurate for what is essentially a single-speaker instructional video (talking_head) with minimal co-host interjections. SPEAKER_01 and SPEAKER_02's contributions are too sparse (10/225 segments) to constitute a podcast. Additionally, a few very short SPEAKER_01 segments and one SPEAKER_02 segment may be diarization artifacts. Recommend reclassifying video type to 'talking_head' before downstream processing.",
+  "metadata": {
+    "input_file": "data/06.video-type/4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 36.738805532455444,
+    "llm_calls": 1
+  }
+}

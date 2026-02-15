@@ -1,0 +1,49 @@
+{
+  "video_id": "KtmnHDVbmss",
+  "validated_at": "2026-02-13T15:39:43Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.2.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 6,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "evidence_mismatch",
+      "message": "Enrichment 1: technique 'frame_control' evidence not found in transcript: \"Your voice is very soft (reframing her comment about having a cold)...\""
+    },
+    {
+      "severity": "warning",
+      "check": "evidence_mismatch",
+      "message": "Enrichment 2: technique 'screening' evidence not found in transcript: \"What are you doing here? Are you new here?...\""
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 42: language_confusion — ASR produced 'Nagyaros' - likely a mangled transcription of a Hungarian profession word"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 0: nonsense — Multiple turns compressed into one segment - missing clear sentence boundaries and interlocutor turns"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 1: nonsense — Multiple turns compressed into one segment - her name and responses are missing from what was clearly a back-and-forth exchange"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 2: nonsense — Multiple questions merged - 'what are you doing here yeah you enjoying it must be are you new here' is several turns collapsed"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

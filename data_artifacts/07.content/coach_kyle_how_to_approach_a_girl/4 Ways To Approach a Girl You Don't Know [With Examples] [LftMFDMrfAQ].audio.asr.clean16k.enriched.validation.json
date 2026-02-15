@@ -1,0 +1,29 @@
+{
+  "video_id": "LftMFDMrfAQ",
+  "validated_at": "2026-02-13T15:38:34Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.2.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 2,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 5: word_repetition — Begins with orphaned 'it so' from previous segment's 'let's get into it'"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 83: word_repetition — 'from this side' likely should be 'from the side' — minor ASR artifact"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

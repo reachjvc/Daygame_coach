@@ -1,0 +1,24 @@
+{
+  "video_id": "KtmnHDVbmss",
+  "validated_at": "2026-02-06T16:39:30Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.2.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 44: language_confusion — Segments 44-47 and 52-54 contain Hungarian speech ('Nemtom, hogy kell mondani' meaning 'I don't know how to say it') that Whisper transcribed phonetically but are repeated multiple times, likely indicating transcription struggling with non-English speech"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

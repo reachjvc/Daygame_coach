@@ -269,7 +269,7 @@ export function GoalCard({
                   goal={goal}
                   isLoading={isIncrementing}
                   onIncrement={handleIncrement}
-                  onSetValue={handleSetValue}
+                  onSetValue={onSetValue ? handleSetValue : undefined}
                   onComplete={onComplete ? () => onComplete(goal) : undefined}
                 />
               )

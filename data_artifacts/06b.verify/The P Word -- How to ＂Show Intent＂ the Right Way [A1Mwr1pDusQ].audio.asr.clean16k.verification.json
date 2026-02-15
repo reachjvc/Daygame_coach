@@ -1,0 +1,23 @@
+{
+  "video_id": "A1Mwr1pDusQ",
+  "verified_at": "2026-02-06T12:24:50Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Pure educational monologue with no approaches or interactions - classic talking_head format"
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segment 50 (SPEAKER_01) could arguably be SPEAKER_00 continuing the hypothetical - likely a diarization artifact where brief pitch change was detected as new speaker. Not an error, just a minor artifact."
+  ],
+  "summary": "This is a correctly classified talking_head video. A dating coach delivers a 20-minute educational monologue explaining the concept of 'premise' as an alternative to 'showing intent' in pickup/dating contexts. All 388 segments are appropriately marked as commentary with no conversations, since there are no actual approaches or target interactions in this video. The single SPEAKER_01 segment (50) and UNKNOWN segment (387) are minor diarization artifacts that don't affect the classification - one is part of a hypothetical scenario the coach is voicing, the other is an automated outro after a long pause. No corrections needed.",
+  "metadata": {
+    "input_file": "data/06.video-type/The P Word -- How to ＂Show Intent＂ the Right Way [A1Mwr1pDusQ].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 23.97923469543457,
+    "llm_calls": 1
+  }
+}

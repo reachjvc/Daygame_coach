@@ -1,0 +1,25 @@
+{
+  "video_id": "3JtLRzHqy8Y",
+  "verified_at": "2026-02-13T08:11:07Z",
+  "pipeline_version": "06b.verify-v2.0",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "suggested_type": null,
+    "confidence": 0.95,
+    "reasoning": "Correctly classified as talking_head. Single speaker monologue promoting training programs, no infield content or conversations."
+  },
+  "conversation_verdicts": [],
+  "misattributions": [],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [],
+  "summary": "Perfect classification. This is a pure talking-head promotional video with no conversations or approaches. SPEAKER_00 (coach) delivers a continuous monologue about his game journey and promotes the Holy Grail Pickup Collection. The two UNKNOWN segments are minor (likely rhetorical/background). No errors detected.",
+  "metadata": {
+    "input_file": "data/06.video-type/daily_evolution/10 Years In The Field： My Beautiful Dark Twisted Fantasy [3JtLRzHqy8Y].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 20.313877820968628,
+    "llm_calls": 1,
+    "model": "claude-cli",
+    "claude_model": "sonnet"
+  }
+}

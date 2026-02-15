@@ -1,0 +1,1953 @@
+{
+  "video_id": "sxChP6EIJHo",
+  "source_file": "/home/jonaswsl/projects/daygame-coach/data/05.audio-features/coach_kyle_how_to_approach_a_girl/5 Simple Steps to Make Your Approach More FLIRTY! [sxChP6EIJHo]/5 Simple Steps to Make Your Approach More FLIRTY! [sxChP6EIJHo].audio.asr.clean16k.audio_features.json",
+  "processed_at": "2026-02-06T22:25:00Z",
+  "video_type": {
+    "type": "compilation",
+    "confidence": 0.95,
+    "reasoning": "Mix of talking head instruction (steps 1-5 explanation) with brief infield clips demonstrating each step. Coach explains concept then shows example approaches."
+  },
+  "transcript_confidence": {
+    "score": 78,
+    "reasoning": "Good overall quality - instructional content is clear and coherent. Some run-on sentences where punctuation was missed (segments 15-26, 68-71). Speaker attribution mostly accurate. Minor issues don't obscure meaning."
+  },
+  "speaker_labels": {
+    "SPEAKER_01": {
+      "role": "coach",
+      "confidence": 0.98,
+      "reasoning": "Delivers all instructional content, performs approach openers, gives compliments, addresses audience as 'guys', longest speaking time by far"
+    },
+    "SPEAKER_02": {
+      "role": "target",
+      "confidence": 0.85,
+      "reasoning": "Short responses to coach's approaches - 'No I can't', 'Oh thank you', 'You too'. Responds to compliments and questions."
+    },
+    "SPEAKER_00": {
+      "role": "target",
+      "confidence": 0.8,
+      "reasoning": "Gives directions when asked, short responses. Some confusion in segment 68 with run-on transcription but clearly responding to coach's questions."
+    },
+    "UNKNOWN": {
+      "role": "target",
+      "confidence": 0.7,
+      "reasoning": "Single short response 'Not really' to coach asking if familiar with area - typical target response pattern"
+    }
+  },
+  "segments": [
+    {
+      "id": 0,
+      "start": 0.0,
+      "end": 1.061,
+      "text": "Can I get your phone number?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 0,
+      "is_conversation_start": true,
+      "is_teaser": true,
+      "teaser_of_conversation_id": null
+    },
+    {
+      "id": 1,
+      "start": 1.46,
+      "end": 2.221,
+      "text": "No, I can't.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "is_teaser": true,
+      "teaser_of_conversation_id": null
+    },
+    {
+      "id": 2,
+      "start": 2.34,
+      "end": 3.161,
+      "text": "Do you have a boyfriend?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "is_teaser": true,
+      "teaser_of_conversation_id": null
+    },
+    {
+      "id": 3,
+      "start": 3.44,
+      "end": 3.59,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 0,
+      "is_conversation_start": false,
+      "is_teaser": true,
+      "teaser_of_conversation_id": null
+    },
+    {
+      "id": 4,
+      "start": 4.22,
+      "end": 6.92,
+      "text": "If you're somebody who's having interactions like that,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 5,
+      "start": 6.96,
+      "end": 9.28,
+      "text": "where the girl doesn't even have a boyfriend,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 6,
+      "start": 9.36,
+      "end": 10.941,
+      "text": "but she's saying, I have a boyfriend,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 7,
+      "start": 11.08,
+      "end": 13.44,
+      "text": "or she's saying, nice to meet you, take care,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 8,
+      "start": 13.58,
+      "end": 15.94,
+      "text": "have a good day, you're a really nice guy,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 9,
+      "start": 16.04,
+      "end": 18.64,
+      "text": "it's because you're not bringing in that man-to-woman vibe.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 10,
+      "start": 18.94,
+      "end": 20.74,
+      "text": "And so in this video, I wanna show you the process,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 11,
+      "start": 20.88,
+      "end": 22.8,
+      "text": "step-by-step that you need to go through",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 12,
+      "start": 22.78,
+      "end": 25.14,
+      "text": "to confidently start flirting with women.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 13,
+      "start": 25.24,
+      "end": 25.981,
+      "text": "Let's get into it.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 14,
+      "start": 26.04,
+      "end": 28.56,
+      "text": "So the very first step is off of the initial open,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 15,
+      "start": 28.54,
+      "end": 33.5,
+      "text": "just make the interaction about her you don't need to do a very high pressured",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 16,
+      "start": 33.48,
+      "end": 37.12,
+      "text": "approach right now we're gonna work up to that but to get started just say",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 17,
+      "start": 37.1,
+      "end": 42.54,
+      "text": "something very simple and basic like hey I really like blank thing right so it's",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 18,
+      "start": 42.52,
+      "end": 45.96,
+      "text": "just a compliment of what you notice about the woman I really like your style",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 19,
+      "start": 45.94,
+      "end": 51.22,
+      "text": "I really like your look I like your fashion I like your blank thing jacket",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 20,
+      "start": 51.2,
+      "end": 56.32,
+      "text": "shoe whatever it is start getting comfortable making it about her I",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 21,
+      "start": 56.3,
+      "end": 61.0,
+      "text": "really like your style thank you yeah it looks very nice just wanted to let you know that have",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 1,
+      "is_conversation_start": true
+    },
+    {
+      "id": 22,
+      "start": 60.98,
+      "end": 65.68,
+      "text": "a good night okay i really like your jean jacket by the way yeah it looks nice have a good night",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 2,
+      "is_conversation_start": true
+    },
+    {
+      "id": 23,
+      "start": 65.66,
+      "end": 72.3,
+      "text": "okay bye bye hey excuse me can i just say i really like your fashion i think you have a very",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 3,
+      "is_conversation_start": true
+    },
+    {
+      "id": 24,
+      "start": 72.28,
+      "end": 77.6,
+      "text": "interesting look bye bye okay can i just say i really like your outfit thank you have a good",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 4,
+      "is_conversation_start": true
+    },
+    {
+      "id": 25,
+      "start": 77.58,
+      "end": 84.7,
+      "text": "night okay hey excuse me can i can i i gotta go too i just wanted to say really quickly i i thought",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 5,
+      "is_conversation_start": true
+    },
+    {
+      "id": 26,
+      "start": 84.68,
+      "end": 89.22,
+      "text": "you had a nice outfit i like your pink shorts that's all bye-bye so after you start getting",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 6,
+      "is_conversation_start": true
+    },
+    {
+      "id": 27,
+      "start": 89.2,
+      "end": 94.36,
+      "text": "comfortable complimenting women on accessories that you notice about them the next step would",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 28,
+      "start": 94.34,
+      "end": 100.22,
+      "text": "be to now comment strictly on their look so you have an interesting look i was intrigued by your",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 29,
+      "start": 100.2,
+      "end": 105.92,
+      "text": "look i like your look something like that we're not yet displaying intent saying i think you look",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 30,
+      "start": 105.9,
+      "end": 111.9,
+      "text": "cute but you can see how we're starting to shift the interaction from accessory to now being about",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 31,
+      "start": 111.88,
+      "end": 116.24,
+      "text": "about her look by the way guys you should take a little bit of time on each one of these steps",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 32,
+      "start": 116.22,
+      "end": 120.46,
+      "text": "do not just do it one time you're gonna have to rep this out get comfortable at each level before",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 33,
+      "start": 120.44,
+      "end": 126.22,
+      "text": "baby stepping into the next level hey excuse me can I just say I thought you had a very interesting",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 7,
+      "is_conversation_start": true
+    },
+    {
+      "id": 34,
+      "start": 126.2,
+      "end": 132.76,
+      "text": "look with the all black yeah yeah I guess we're matching cut I doesn't I'd even notice that but",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 7,
+      "is_conversation_start": false
+    },
+    {
+      "id": 35,
+      "start": 132.74,
+      "end": 136.76,
+      "text": "just wanted to let you know that okay all right have a good night bye-bye now once you start",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 7,
+      "is_conversation_start": false
+    },
+    {
+      "id": 36,
+      "start": 136.74,
+      "end": 140.72,
+      "text": "getting comfortable making the interaction about her look we're now in a position where we can",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 37,
+      "start": 140.7,
+      "end": 142.715,
+      "text": "can start to display intent.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 38,
+      "start": 142.735,
+      "end": 146.2,
+      "text": "The easiest way to do this, in my opinion, is to stop the woman and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 39,
+      "start": 146.18,
+      "end": 147.308,
+      "text": "ask for directions.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 40,
+      "start": 147.751,
+      "end": 151.377,
+      "text": "And then before you leave, just say, I think you look cute today.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 41,
+      "start": 151.639,
+      "end": 151.78,
+      "text": "Have a",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 42,
+      "start": 151.76,
+      "end": 152.326,
+      "text": "great day.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 43,
+      "start": 152.65,
+      "end": 154.288,
+      "text": "All right, you don't need to carry the conversation.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 44,
+      "start": 154.329,
+      "end": 155.36,
+      "text": "You just want to start to get",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 45,
+      "start": 155.34,
+      "end": 158.059,
+      "text": "desensitized to calling women cute.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 46,
+      "start": 158.099,
+      "end": 158.985,
+      "text": "And that is okay.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 47,
+      "start": 159.428,
+      "end": 160.214,
+      "text": "Trust me, it's okay.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 48,
+      "start": 160.234,
+      "end": 161.1,
+      "text": "I've done it thousands",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 49,
+      "start": 161.08,
+      "end": 162.372,
+      "text": "of times, literally.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 50,
+      "start": 162.856,
+      "end": 164.592,
+      "text": "A lot of these women will respond positively.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 51,
+      "start": 164.976,
+      "end": 165.46,
+      "text": "It's about you getting",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 52,
+      "start": 165.44,
+      "end": 167.54,
+      "text": "getting comfortable and confident in your own skin,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 53,
+      "start": 167.96,
+      "end": 168.941,
+      "text": "saying that line.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 54,
+      "start": 169.06,
+      "end": 171.64,
+      "text": "And so the best first step is to just ask for directions.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 55,
+      "start": 171.9,
+      "end": 174.08,
+      "text": "And then before you leave, just say,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 56,
+      "start": 174.18,
+      "end": 175.9,
+      "text": "by the way, I think you look cute today.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 57,
+      "start": 176.08,
+      "end": 177.96,
+      "text": "And walk away celebrating,",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 58,
+      "start": 178.26,
+      "end": 179.601,
+      "text": "because that is a massive step.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 59,
+      "start": 180.18,
+      "end": 181.041,
+      "text": "This is how it's done.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 60,
+      "start": 181.26,
+      "end": 182.821,
+      "text": "Excuse me, do you know where Starbucks is?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": true
+    },
+    {
+      "id": 61,
+      "start": 183.9,
+      "end": 184.821,
+      "text": "Is it around here?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 62,
+      "start": 185.02,
+      "end": 185.383,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 63,
+      "start": 186.16,
+      "end": 187.9,
+      "text": "It's around here, but on the other side.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 64,
+      "start": 188.6,
+      "end": 188.963,
+      "text": "Okay.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 65,
+      "start": 189.88,
+      "end": 191.521,
+      "text": "It's okay, you don't have to do all that.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 66,
+      "start": 191.54,
+      "end": 192.281,
+      "text": "I just thought maybe-",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 67,
+      "start": 192.26,
+      "end": 193.281,
+      "text": "It should be on the other side though.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 68,
+      "start": 193.26,
+      "end": 200.26,
+      "text": "like yeah I don't remember okay all right thank you it's all good okay by",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 69,
+      "start": 201.64,
+      "end": 205.86,
+      "text": "the way you look cute today all right take care do you know where Starbucks is",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 8,
+      "is_conversation_start": false
+    },
+    {
+      "id": 70,
+      "start": 206.44,
+      "end": 215.18,
+      "text": "you know where Starbucks is Starbucks over there maybe two blocks okay here",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": true
+    },
+    {
+      "id": 71,
+      "start": 215.16,
+      "end": 222.02,
+      "text": "in line okay okay all right thank you you look really cute today I said you",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 72,
+      "start": 222.0,
+      "end": 223.341,
+      "text": "You look really cute today, by the way.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 73,
+      "start": 224.44,
+      "end": 224.823,
+      "text": "Looky?",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 74,
+      "start": 225.26,
+      "end": 225.842,
+      "text": "You understand?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 75,
+      "start": 226.28,
+      "end": 227.581,
+      "text": "I don't understand, sorry.",
+      "speaker_id": "SPEAKER_00",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 76,
+      "start": 227.88,
+      "end": 228.581,
+      "text": "It's okay, it's okay.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 9,
+      "is_conversation_start": false
+    },
+    {
+      "id": 77,
+      "start": 228.64,
+      "end": 230.44,
+      "text": "Excuse me, are you familiar with the area?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": true
+    },
+    {
+      "id": 78,
+      "start": 231.2,
+      "end": 231.941,
+      "text": "Not really.",
+      "speaker_id": "UNKNOWN",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 79,
+      "start": 232.24,
+      "end": 234.22,
+      "text": "No, is there a Starbucks or something?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 80,
+      "start": 234.36,
+      "end": 235.801,
+      "text": "Yeah, it's actually down the street this way.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 81,
+      "start": 236.0,
+      "end": 237.8,
+      "text": "I thought there was one on the other side too, no?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 82,
+      "start": 238.28,
+      "end": 240.26,
+      "text": "I'm not sure, I only know this one right here.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 83,
+      "start": 240.5,
+      "end": 242.001,
+      "text": "Okay, all right, thank you.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 84,
+      "start": 242.08,
+      "end": 243.541,
+      "text": "You look really cute today, by the way.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 85,
+      "start": 243.58,
+      "end": 244.122,
+      "text": "No, thank you.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 86,
+      "start": 244.26,
+      "end": 244.623,
+      "text": "Take care.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 10,
+      "is_conversation_start": false
+    },
+    {
+      "id": 87,
+      "start": 244.72,
+      "end": 246.58,
+      "text": "Now, the thing to understand with this step is",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 88,
+      "start": 246.56,
+      "end": 249.22,
+      "text": "you're not going to get these women, okay?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 89,
+      "start": 249.6,
+      "end": 250.881,
+      "text": "She's just gonna say thank you",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 90,
+      "start": 250.86,
+      "end": 256.56,
+      "text": "and you're gonna walk away but that is a massive step because you need to start to get desensitized",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 91,
+      "start": 256.54,
+      "end": 260.88,
+      "text": "you need to start to get comfortable you need to start to get confident displaying intent and that",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 92,
+      "start": 260.86,
+      "end": 265.58,
+      "text": "takes repetition so this is by far the easiest way to do you ask for directions they tell you",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 93,
+      "start": 265.56,
+      "end": 270.26,
+      "text": "and then you simply say by the way you look cute today have a great day and then you leave",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 94,
+      "start": 270.72,
+      "end": 274.7,
+      "text": "and you congratulate yourself because that's how we're going to start to baby step this thing and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 95,
+      "start": 274.68,
+      "end": 279.78,
+      "text": "honestly guys i recommend staying at this step for at least a week you need to really practice",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 96,
+      "start": 279.76,
+      "end": 284.84,
+      "text": "this this step like 30 times 30 different women you're going to go up to you're going to ask them",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 97,
+      "start": 284.82,
+      "end": 290.04,
+      "text": "and then you're going to deliver this line nice and slow holding eye contact with a smile on your",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 98,
+      "start": 290.02,
+      "end": 293.58,
+      "text": "face that's how you're going to get more comfortable with this now before we get into the",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 99,
+      "start": 293.56,
+      "end": 298.16,
+      "text": "more advanced steps in this video i just want to say really quickly if you're not already approaching",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 100,
+      "start": 298.14,
+      "end": 303.52,
+      "text": "that much and you need more accountability coaching structure and that push needed to actually break",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 101,
+      "start": 303.5,
+      "end": 308.04,
+      "text": "through to the next level i'd love to help you with that personally click the link down below and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 102,
+      "start": 308.02,
+      "end": 312.82,
+      "text": "apply to work with me one-on-one so i can help you build the social confidence and the dating life",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 103,
+      "start": 312.8,
+      "end": 317.72,
+      "text": "you've always wanted links down below let's keep going this is where we separate the boys",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 104,
+      "start": 318.34,
+      "end": 323.64,
+      "text": "from the men now we're going to remove directions from the equation and you're simply going to give",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 105,
+      "start": 323.62,
+      "end": 327.86,
+      "text": "a time constraint so you're going to say hey excuse me i got to get going but i just wanted",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 106,
+      "start": 327.84,
+      "end": 332.76,
+      "text": "to say i thought you look cute today have a great day here's how it's done hey excuse me",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 107,
+      "start": 333.7,
+      "end": 338.04,
+      "text": "Hi, I actually have to get going that way, but I just wanted to say I thought you looked cute.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": true
+    },
+    {
+      "id": 108,
+      "start": 338.22,
+      "end": 338.802,
+      "text": "Thank you.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 109,
+      "start": 338.9,
+      "end": 340.121,
+      "text": "Yeah, have a great day, okay?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 110,
+      "start": 340.34,
+      "end": 340.722,
+      "text": "You too.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 111,
+      "start": 340.8,
+      "end": 343.62,
+      "text": "I love your response, by the way.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 112,
+      "start": 343.62,
+      "end": 345.061,
+      "text": "You're very bubbly.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 113,
+      "start": 345.48,
+      "end": 345.942,
+      "text": "Am I?",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 114,
+      "start": 346.06,
+      "end": 346.403,
+      "text": "Yeah.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 115,
+      "start": 346.98,
+      "end": 348.561,
+      "text": "Bubbly, maybe because I'm on vacation.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 116,
+      "start": 349.06,
+      "end": 350.261,
+      "text": "Enjoy your vacation, okay?",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 117,
+      "start": 350.62,
+      "end": 351.241,
+      "text": "Take care.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 11,
+      "is_conversation_start": false
+    },
+    {
+      "id": 118,
+      "start": 351.54,
+      "end": 352.401,
+      "text": "Hey, excuse me.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": true
+    },
+    {
+      "id": 119,
+      "start": 353.22,
+      "end": 356.6,
+      "text": "I actually got to get going, but I just wanted to say I thought you looked really cute.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": false
+    },
+    {
+      "id": 120,
+      "start": 356.66,
+      "end": 357.142,
+      "text": "Oh, thank you.",
+      "speaker_id": "SPEAKER_02",
+      "speaker_role": "target",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": false
+    },
+    {
+      "id": 121,
+      "start": 357.28,
+      "end": 357.941,
+      "text": "Have a good night.",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 12,
+      "is_conversation_start": false
+    },
+    {
+      "id": 122,
+      "start": 357.92,
+      "end": 361.76,
+      "text": "is as you start doing this step what you're gonna realize is that a lot of",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 123,
+      "start": 361.74,
+      "end": 366.34,
+      "text": "women actually respond pretty positively to this compliment and it's an important",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 124,
+      "start": 366.32,
+      "end": 370.1,
+      "text": "step you need to go out and experience this because right now you're not",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 125,
+      "start": 370.08,
+      "end": 374.28,
+      "text": "comfortable doing it and it's not until you go out there and get positive",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 126,
+      "start": 374.26,
+      "end": 379.04,
+      "text": "reference experiences your brain then starts to realize it's okay to do this",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 127,
+      "start": 379.02,
+      "end": 383.44,
+      "text": "thing let's do it a couple more times excuse me hi I was I was actually headed",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": true
+    },
+    {
+      "id": 128,
+      "start": 383.42,
+      "end": 386.36,
+      "text": "that way I got a I got a go but I just wanted to say I thought you looked",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": false
+    },
+    {
+      "id": 129,
+      "start": 386.34,
+      "end": 391.86,
+      "text": "really cute thank you yeah no problem that's all okay have a good day all right bye bye that girl",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 13,
+      "is_conversation_start": false
+    },
+    {
+      "id": 130,
+      "start": 391.84,
+      "end": 397.22,
+      "text": "was actually ready to have a conversation like i said the thing and she was like thank you she was",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 131,
+      "start": 397.2,
+      "end": 401.74,
+      "text": "just waiting there which is another important part just because she was ready to have more",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 132,
+      "start": 401.72,
+      "end": 406.78,
+      "text": "conversation does not mean you need to do that you need to stick to the step that you're on because",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 133,
+      "start": 406.76,
+      "end": 410.46,
+      "text": "some guys they'll do something like that then they'll beat themselves up saying she was ready",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 134,
+      "start": 410.44,
+      "end": 414.9,
+      "text": "to take it further i ejected no that's literally the step we're on it's just displaying the intent",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 135,
+      "start": 414.88,
+      "end": 418.68,
+      "text": "nice and slow you get a positive response sometimes you get negative",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 136,
+      "start": 418.66,
+      "end": 422.52,
+      "text": "response you walk away and you congratulate yourself because now we are",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 137,
+      "start": 422.5,
+      "end": 426.1,
+      "text": "building the skill set of getting more comfortable and confident displaying",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 138,
+      "start": 426.08,
+      "end": 430.32,
+      "text": "intent and now we're moving into the final step which is just extending the",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 139,
+      "start": 430.3,
+      "end": 433.88,
+      "text": "interaction by saying one more thing you don't need to carry a full conversation",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 140,
+      "start": 433.86,
+      "end": 437.46,
+      "text": "right now you just want to get comfortable displaying intent and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 141,
+      "start": 437.44,
+      "end": 442.26,
+      "text": "sitting in the fire because if you're new to this every cell in your body is",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 142,
+      "start": 442.24,
+      "end": 446.8,
+      "text": "gonna want to eject out you're gonna feel uncomfortable but for right now at this level",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 143,
+      "start": 446.78,
+      "end": 452.08,
+      "text": "i challenge you to just stay in and say one more thing you can ask her how's your day going by the",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 144,
+      "start": 452.06,
+      "end": 456.56,
+      "text": "way or what's your ethnicity by the way let her respond if you want to carry it from there you",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 145,
+      "start": 456.54,
+      "end": 461.68,
+      "text": "can or you could just eject right then and there let me show you how it's done hey excuse me hi i",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": true
+    },
+    {
+      "id": 146,
+      "start": 461.66,
+      "end": 467.04,
+      "text": "actually have to get going but i just want to say i thought you i said i have to get going but i just",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": false
+    },
+    {
+      "id": 147,
+      "start": 467.02,
+      "end": 472.26,
+      "text": "want to say i thought you looked really cute thank you yeah what ethnicity are you what ethnicity are",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": false
+    },
+    {
+      "id": 148,
+      "start": 472.24,
+      "end": 480.54,
+      "text": "you ethnicity like like what uh what are you hispanic or european argentinian oh argentinian",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": false
+    },
+    {
+      "id": 149,
+      "start": 480.52,
+      "end": 484.92,
+      "text": "okay nice nice okay well anyway have a good night all right bye-bye eventually you're going to get",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "approach",
+      "conversation_id": 14,
+      "is_conversation_start": false
+    },
+    {
+      "id": 150,
+      "start": 484.9,
+      "end": 488.98,
+      "text": "to a place where you can run a full-blown conversation that could lead to a phone number",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 151,
+      "start": 488.96,
+      "end": 493.3,
+      "text": "where you could actually set up a date now this is the process you need to go through to get more",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 152,
+      "start": 493.28,
+      "end": 497.48,
+      "text": "comfortable and confident making your interactions more man to woman now if you're wondering where",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 153,
+      "start": 497.46,
+      "end": 502.68,
+      "text": "do you take the interaction after this point you can check out this video right here or if you're",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 154,
+      "start": 502.66,
+      "end": 507.16,
+      "text": "done watching content and you actually need accountability structure coaching and the push",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 155,
+      "start": 507.14,
+      "end": 511.88,
+      "text": "needed to take you to that next level i'd love to help you you can click the link down below and",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 156,
+      "start": 511.86,
+      "end": 515.84,
+      "text": "apply to work with me one-on-one so i can help you make a true transformation that's all for this",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    },
+    {
+      "id": 157,
+      "start": 515.82,
+      "end": 516.901,
+      "text": "video guys peace out",
+      "speaker_id": "SPEAKER_01",
+      "speaker_role": "coach",
+      "segment_type": "commentary",
+      "conversation_id": 0,
+      "is_conversation_start": false
+    }
+  ],
+  "conversations": [
+    {
+      "conversation_id": 1,
+      "segment_ids": [
+        21
+      ],
+      "start_time": 56.3,
+      "end_time": 61.0
+    },
+    {
+      "conversation_id": 2,
+      "segment_ids": [
+        22
+      ],
+      "start_time": 60.98,
+      "end_time": 65.68
+    },
+    {
+      "conversation_id": 3,
+      "segment_ids": [
+        23
+      ],
+      "start_time": 65.66,
+      "end_time": 72.3
+    },
+    {
+      "conversation_id": 4,
+      "segment_ids": [
+        24
+      ],
+      "start_time": 72.28,
+      "end_time": 77.6
+    },
+    {
+      "conversation_id": 5,
+      "segment_ids": [
+        25
+      ],
+      "start_time": 77.58,
+      "end_time": 84.7
+    },
+    {
+      "conversation_id": 6,
+      "segment_ids": [
+        26
+      ],
+      "start_time": 84.68,
+      "end_time": 89.22
+    },
+    {
+      "conversation_id": 7,
+      "segment_ids": [
+        33,
+        34,
+        35
+      ],
+      "start_time": 120.44,
+      "end_time": 136.76
+    },
+    {
+      "conversation_id": 8,
+      "segment_ids": [
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "start_time": 181.26,
+      "end_time": 205.86
+    },
+    {
+      "conversation_id": 9,
+      "segment_ids": [
+        70,
+        71,
+        72,
+        73,
+        74,
+        75,
+        76
+      ],
+      "start_time": 206.44,
+      "end_time": 228.581
+    },
+    {
+      "conversation_id": 10,
+      "segment_ids": [
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86
+      ],
+      "start_time": 228.64,
+      "end_time": 244.623
+    },
+    {
+      "conversation_id": 11,
+      "segment_ids": [
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117
+      ],
+      "start_time": 333.7,
+      "end_time": 351.241
+    },
+    {
+      "conversation_id": 12,
+      "segment_ids": [
+        118,
+        119,
+        120,
+        121
+      ],
+      "start_time": 351.54,
+      "end_time": 357.941
+    },
+    {
+      "conversation_id": 13,
+      "segment_ids": [
+        127,
+        128,
+        129
+      ],
+      "start_time": 379.02,
+      "end_time": 391.86
+    },
+    {
+      "conversation_id": 14,
+      "segment_ids": [
+        145,
+        146,
+        147,
+        148,
+        149
+      ],
+      "start_time": 456.54,
+      "end_time": 484.92
+    }
+  ],
+  "review_flags": null,
+  "speaker_collapse": null,
+  "metadata": {
+    "pipeline_version": "06.video-type-v3.3",
+    "prompt_version": "3.3.0",
+    "schema_version": "3.3.0",
+    "input_checksum": "fcaef67551a78cc8",
+    "llm_calls": 1,
+    "processing_time_sec": 53.024733781814575
+  }
+}

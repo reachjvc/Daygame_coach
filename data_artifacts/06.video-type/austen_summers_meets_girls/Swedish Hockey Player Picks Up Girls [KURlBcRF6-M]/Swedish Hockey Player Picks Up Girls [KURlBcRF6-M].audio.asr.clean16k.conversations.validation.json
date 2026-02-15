@@ -1,0 +1,19 @@
+{
+  "video_id": "KURlBcRF6-M",
+  "validated_at": "2026-02-15T04:12:33Z",
+  "pipeline_version": "06.video-type-v3.5.2",
+  "prompt_version": "3.5.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 0,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    }
+  ]
+}

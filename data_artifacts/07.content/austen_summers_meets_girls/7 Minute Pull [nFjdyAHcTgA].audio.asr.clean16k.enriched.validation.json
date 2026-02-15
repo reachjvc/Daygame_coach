@@ -1,0 +1,54 @@
+{
+  "video_id": "nFjdyAHcTgA",
+  "validated_at": "2026-02-13T15:38:05Z",
+  "pipeline_version": "07.content-v1.1",
+  "prompt_version": "1.2.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 7,
+    "info": 1,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 8: word_repetition — 'you have you have' - repeated phrase likely from ASR merging overlapping speech"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 13: nonsense — 'I'm going to body like that' - grammatically broken, likely misheard"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 89: nonsense — 'Roll nish' - unclear what was actually said, possible mishearing of a name or phrase"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 112: nonsense — 'need a donation wedges' - likely misheard, context suggests discussion about shoes/wedges"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 119: nonsense — 'go polish like this' - unclear transcription, likely misheard instruction about positioning"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 122: nonsense — 'what kind of is this' - missing word, likely 'what kind of [shit/place] is this'"
+    },
+    {
+      "severity": "warning",
+      "check": "transcript_artifact",
+      "message": "Seg 152: language_confusion — 'hit it ranch me mulatto' - appears to be ASR hallucination; likely a reference to Eric Andre's 'Ranch it up' sketch but 'mulatto' is likely misheard"
+    },
+    {
+      "severity": "info",
+      "check": "validation_passed",
+      "message": "All checks passed"
+    }
+  ]
+}

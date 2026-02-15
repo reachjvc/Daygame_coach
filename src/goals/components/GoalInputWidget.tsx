@@ -11,7 +11,7 @@ interface GoalInputWidgetProps {
   goal: GoalWithProgress
   isLoading: boolean
   onIncrement: (amount: number) => void
-  onSetValue: (value: number) => void
+  onSetValue?: (value: number) => void
   onComplete?: () => void
 }
 
@@ -70,7 +70,7 @@ export function GoalInputWidget({
   }
 
   // Direct entry for high-target goals (>50)
-  if (inputMode === "direct-entry") {
+  if (inputMode === "direct-entry" && onSetValue) {
     const remaining = Math.max(0, goal.target_value - goal.current_value)
 
     const handleSet = () => {

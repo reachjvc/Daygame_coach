@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "completed_files": [
+    "7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json"
+  ],
+  "in_progress": null,
+  "failures": [
+    {
+      "file": "7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json",
+      "error": "Verification report schema invalid for 7 Minute Pull [nFjdyAHcTgA].audio.asr.clean16k.conversations.json: Verification schema invalid at video_type_check: 'suggested_type' is a required property. Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+    },
+    {
+      "file": "Picking Up Girls in Barcelona  \uff5c  Immersion Documentary [iOSpNACA9VI].audio.asr.clean16k.conversations.json",
+      "error": "Verification report schema invalid for Picking Up Girls in Barcelona  \uff5c  Immersion Documentary [iOSpNACA9VI].audio.asr.clean16k.conversations.json: Verification schema invalid at video_type_check: 'suggested_type' is a required property. Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+    }
+  ]
+}

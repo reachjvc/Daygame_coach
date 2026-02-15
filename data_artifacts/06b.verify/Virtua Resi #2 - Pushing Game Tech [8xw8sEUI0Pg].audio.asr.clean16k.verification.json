@@ -1,0 +1,31 @@
+{
+  "video_id": "8xw8sEUI0Pg",
+  "verified_at": "2026-02-06T12:25:00Z",
+  "pipeline_version": "06b.verify-v1.1",
+  "verdict": "APPROVE",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Content is clearly a podcast/discussion between two coaches about daygame philosophy with no infield approaches"
+  },
+  "conversation_verdicts": [],
+  "misattributions": [
+    {
+      "segment_id": 128,
+      "current_role": "other",
+      "suggested_role": "coach",
+      "evidence": "SPEAKER_00's segment 'and now it's just' directly continues SPEAKER_02's thought from segment 127 ('is she going to call the police'). This appears to be a diarization error where SPEAKER_02's speech was briefly misattributed. The 'other' label is technically safe but this is likely SPEAKER_02."
+    }
+  ],
+  "boundary_issues": [],
+  "collapse_issues": [],
+  "other_flags": [
+    "Segments 0-1 are duplicates: both contain 'We shall see.' at 11.1-12.0s and 12.1-12.6s - likely a transcription/segmentation artifact",
+    "Segment 160 also contains 'We shall see.' suggesting the video may loop or have repeated content"
+  ],
+  "summary": "This is a correctly classified podcast featuring two daygame coaches discussing technique evolution, night game vs day game, and skill development analogies. All 161 segments are appropriately labeled as commentary since there are no live approaches or target interactions. The role assignments (SPEAKER_02 as primary coach, SPEAKER_01 as secondary coach) are accurate based on speaking patterns and content. One minor issue: SPEAKER_00 (segment 128) appears to be a diarization artifact where SPEAKER_02's speech was briefly misattributed, but the 'other' classification is harmless. Duplicate segments at the beginning and end suggest minor transcription artifacts but don't affect downstream processing.",
+  "metadata": {
+    "input_file": "data/06.video-type/Virtua Resi #2 - Pushing Game Tech [8xw8sEUI0Pg].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 30.23745822906494,
+    "llm_calls": 1
+  }
+}

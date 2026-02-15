@@ -1,0 +1,29 @@
+{
+  "video_id": "-iCf6UX3ZMg",
+  "validated_at": "2026-02-06T22:50:46Z",
+  "pipeline_version": "06.video-type-v3.3",
+  "prompt_version": "3.3.0",
+  "summary": {
+    "errors": 0,
+    "warnings": 1,
+    "info": 2,
+    "passed": true
+  },
+  "results": [
+    {
+      "severity": "info",
+      "check": "schema_valid",
+      "message": "Output matches JSON schema"
+    },
+    {
+      "severity": "warning",
+      "check": "conversation_not_contiguous",
+      "message": "Conversation 1 has non-contiguous segment IDs: [11, 12, 13, 14, 15, 16, 17, 18, 29, 30, 31, 32, 33, 34, 35]"
+    },
+    {
+      "severity": "info",
+      "check": "speaker_collapse_resolved",
+      "message": "Speaker collapse: 7/7 segments reassigned (100%), 0 remain unknown."
+    }
+  ]
+}

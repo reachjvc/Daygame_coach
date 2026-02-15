@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "completed_files": [],
+  "in_progress": "Virtua Resi #6 - Happy Dog Face [Lhg-ycvVSro].audio.asr.clean16k.conversations.json",
+  "failures": [
+    {
+      "file": "Virtua Resi #1 - Gutter Game [LCMW0fFEKQk].audio.asr.clean16k.conversations.json",
+      "error": "Verification report schema invalid for Virtua Resi #1 - Gutter Game [LCMW0fFEKQk].audio.asr.clean16k.conversations.json: Verification schema invalid at video_type_check: 'suggested_type' is a required property. Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+    }
+  ]
+}

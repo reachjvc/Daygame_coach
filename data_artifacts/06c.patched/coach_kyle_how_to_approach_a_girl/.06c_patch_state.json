@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "completed_files": [
+    "4 Ways To Approach a Girl You Don't Know [With Examples] [LftMFDMrfAQ].audio.asr.clean16k.conversations.json"
+  ],
+  "in_progress": null,
+  "failures": [
+    {
+      "file": "5 Easy Steps to Turn a Hi into an INSTANT Date (LIVE DEMO) [6ImEzB6NhiI].audio.asr.clean16k.conversations.json",
+      "error": "Verification verdict is REJECT for 5 Easy Steps to Turn a Hi into an INSTANT Date (LIVE DEMO) [6ImEzB6NhiI].audio.asr.clean16k.conversations.json. By default 06c refuses to patch REJECT outputs. Re-run with --allow-reject if you want to apply high-confidence deterministic fixes anyway (useful for iteration / salvage)."
+    },
+    {
+      "file": "Approach ANY GIRL in Public LIKE a PRO! (INFIELD) [mv2X8Yhg9M0].audio.asr.clean16k.conversations.json",
+      "error": "Verification report schema invalid for Approach ANY GIRL in Public LIKE a PRO! (INFIELD) [mv2X8Yhg9M0].audio.asr.clean16k.conversations.json: Verification schema invalid at video_type_check: 'suggested_type' is a required property. Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+    }
+  ]
+}

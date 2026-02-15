@@ -1,0 +1,95 @@
+{
+  "video_id": "IS2SoUgqDLE",
+  "verified_at": "2026-02-05T17:44:39Z",
+  "pipeline_version": "06b.verify-v1.0",
+  "verdict": "FLAG",
+  "video_type_check": {
+    "agrees": true,
+    "reasoning": "Multiple approaches with commentary between them, intro and outro — classic compilation format."
+  },
+  "conversation_verdicts": [
+    {
+      "conversation_id": 1,
+      "verdict": "FLAG",
+      "notes": "Segments [0-15] are a cold-open teaser duplicating content from later in conv 1 (~segments 108-179). These should be separated as commentary/teaser or removed to avoid inflating conv 1 duration and segment count. The real approach starts at segment [29] (81s)."
+    },
+    {
+      "conversation_id": 2,
+      "verdict": "OK",
+      "notes": "Clean approach with boyfriend mention. Natural start and end."
+    },
+    {
+      "conversation_id": 3,
+      "verdict": "OK",
+      "notes": "Approach with language barrier. Natural flow despite limited English. Number close achieved."
+    },
+    {
+      "conversation_id": 4,
+      "verdict": "OK",
+      "notes": "Quick blowoff — girl had headphones. Zero target segments explained by non-verbal/inaudible responses."
+    },
+    {
+      "conversation_id": 5,
+      "verdict": "OK",
+      "notes": "Clean approach with book festival girl. Photo interruption correctly tagged as 'other'. Natural exit."
+    },
+    {
+      "conversation_id": 6,
+      "verdict": "FLAG",
+      "notes": "Segment [490] 'Hey, I'm James' is tagged as target but is clearly the coach introducing himself. Otherwise clean."
+    }
+  ],
+  "misattributions": [
+    {
+      "segment_id": 490,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Segment says 'Hey, I'm James.' The coach's name is James Marshall (per video title and self-introductions at [45], [239], [295]). This is the coach introducing himself, not the target."
+    },
+    {
+      "segment_id": 149,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Segment [148] (coach) says 'Do' and [149] (target) says 'you have any time?' — this is a single coach sentence split across two speakers by diarization error. The coach is asking 'Do you have any time?' as a follow-up to discussing her busy schedule."
+    },
+    {
+      "segment_id": 160,
+      "current_role": "coach",
+      "suggested_role": "target",
+      "evidence": "Coach asks [159] 'Do you not worry that AI is going to take your job?' Then [160] says 'I do.' followed by coach [161-162] 'You do worry.' The 'I do' at [160] is likely the target's response, with the coach echoing it back. However, diarization assigned it to SPEAKER_00 (coach), so this may be the coach paraphrasing — confidence is moderate."
+    },
+    {
+      "segment_id": 82,
+      "current_role": "target",
+      "suggested_role": "coach",
+      "evidence": "Target [80-81] says 'I think I can make more money at home over here, so.' Then [82] says 'Really?' — this sounds like the coach's surprised reaction, not the target reacting to her own statement. The coach's follow-up at [83] 'That's saying something' confirms he's responding to her claim."
+    }
+  ],
+  "boundary_issues": [
+    {
+      "conversation_id": 1,
+      "issue": "Segments [0-15] are a cold-open teaser/preview clip that duplicates content from the end of conv 1 (segments ~108-179). Text overlaps: [0]≈[108] (not common to be talked to), [3-4]≈[111-112] (Mongolia talking), [5]≈[113] (only in the bar), [11]≈[178-179] (get a drink/WhatsApp). This inflates conv 1's start time to 0.0s when the real approach begins at 81.0s (segment [29]).",
+      "severity": "moderate"
+    }
+  ],
+  "collapse_issues": [
+    {
+      "speaker_id": "SPEAKER_01",
+      "segment_id": 490,
+      "current_override": "target",
+      "suggested_override": "coach",
+      "evidence": "Says 'Hey, I'm James' — James is the coach (James Marshall per video title). This is the coach's self-introduction in conv 6, not the target speaking."
+    }
+  ],
+  "other_flags": [
+    "Segment [255] contains both target and coach speech merged: 'Actually, I met with my boyfriend, so... You met with him or you will meet with him?' — the first part is the target, the second part ('You met with him or you will meet with him?') sounds like the coach's clarifying question. Diarization merged two speakers into one segment.",
+    "Segment [532] 'Yeah, it's fun sometimes, right?' is tagged as target but has a coach-like tone (leading question with 'right?'). Could be either party — low confidence flag.",
+    "Segments [261-262] and [267] in conv 2 are tagged as coach but say 'Yes' and 'Yes' — these may be the coach echoing the target's responses or could be target speech misattributed. Context is ambiguous."
+  ],
+  "summary": "The classification is largely correct — video type, speaker roles, and conversation boundaries are mostly accurate. The main issues are: (1) segments [0-15] are a cold-open teaser that duplicates content from late in conv 1 and should be separated or marked as teaser/commentary rather than being part of conv 1; (2) segment [490] 'Hey, I'm James' is clearly the coach introducing himself but is tagged as target; (3) segment [149] is the second half of a coach sentence incorrectly attributed to the target; (4) segment [82] 'Really?' appears to be the coach's reaction misattributed to the target. None of these are catastrophic but the cold-open teaser issue and segment [490] misattribution should be corrected before downstream processing.",
+  "metadata": {
+    "input_file": "data/06.video-type/James Marshall picks up 3 shy girls (how to relax, connect & seduce them) [IS2SoUgqDLE].audio.asr.clean16k.conversations.json",
+    "processing_time_sec": 277.7034456729889,
+    "llm_calls": 1
+  }
+}
