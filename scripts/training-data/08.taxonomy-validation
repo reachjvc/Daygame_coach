@@ -160,6 +160,27 @@ def normalize_concept(raw: str) -> Tuple[str, str]:
     return raw.strip().lower(), ""
 
 
+def enrichment_context_bucket(enrichment: Dict[str, Any]) -> str:
+    """Map enrichment type to taxonomy context bucket."""
+    etype = str(enrichment.get("type", "")).strip().lower()
+    if etype == "approach":
+        return "approach"
+    if etype == "commentary":
+        return "commentary"
+    if etype == "talking_head_section":
+        return "talking_head_section"
+    return "other"
+
+
+def is_commentary_only_context_counts(context_counts: Dict[str, int]) -> bool:
+    """True when concept appears only in commentary-like contexts."""
+    approach_count = int(context_counts.get("approach", 0) or 0)
+    non_interaction = int(context_counts.get("commentary", 0) or 0) + int(
+        context_counts.get("talking_head_section", 0) or 0
+    )
+    return approach_count == 0 and non_interaction > 0
+
+
 def process_files(files: List[Path]) -> Dict[str, Any]:
     """Process all enriched files and aggregate unlisted concepts."""
 
@@ -169,6 +190,8 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
     topic_examples: Dict[str, List[str]] = {}
     technique_sources: Dict[str, List[str]] = {}
     topic_sources: Dict[str, List[str]] = {}
+    technique_contexts: Dict[str, Counter] = {}
+    topic_contexts: Dict[str, Counter] = {}
     unreadable_video_ids: Set[str] = set()
 
     # Per-video aggregation for quarantine-aware gating.
@@ -227,6 +250,7 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
 
             total_enrichments += 1
             video_entry["enrichments_total"] += 1
+            context_bucket = enrichment_context_bucket(enrichment)
             tech_list, topic_list = parse_unlisted_from_enrichment(enrichment)
 
             if tech_list or topic_list:
@@ -237,6 +261,7 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
             for raw_tech in tech_list:
                 name, desc = normalize_concept(raw_tech)
                 technique_counter[name] += 1
+                technique_contexts.setdefault(name, Counter())[context_bucket] += 1
                 if desc and name not in technique_examples:
                     technique_examples[name] = []
                 if desc and desc not in technique_examples.get(name, []):
@@ -247,6 +272,7 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
             for raw_topic in topic_list:
                 name, desc = normalize_concept(raw_topic)
                 topic_counter[name] += 1
+                topic_contexts.setdefault(name, Counter())[context_bucket] += 1
                 if desc and name not in topic_examples:
                     topic_examples[name] = []
                 if desc and desc not in topic_examples.get(name, []):
@@ -288,6 +314,10 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "examples": technique_examples.get(name, [])[:3],
                 "videos": sorted(set(technique_sources.get(name, [])))[:5],
                 "video_ids": sorted(set(technique_sources.get(name, []))),
+                "context_counts": dict(technique_contexts.get(name, Counter())),
+                "commentary_only": is_commentary_only_context_counts(
+                    dict(technique_contexts.get(name, Counter()))
+                ),
             }
             for name, count in technique_counter.most_common()
         },
@@ -297,6 +327,10 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "examples": topic_examples.get(name, [])[:3],
                 "videos": sorted(set(topic_sources.get(name, [])))[:5],
                 "video_ids": sorted(set(topic_sources.get(name, []))),
+                "context_counts": dict(topic_contexts.get(name, Counter())),
+                "commentary_only": is_commentary_only_context_counts(
+                    dict(topic_contexts.get(name, Counter()))
+                ),
             }
             for name, count in topic_counter.most_common()
         },
@@ -317,10 +351,35 @@ def evaluate_validation(
     techniques = report["techniques"]
     topics = report["topics"]
 
-    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= threshold_techniques]
-    high_freq_topics = [n for n, i in topics.items() if i["count"] >= threshold_topics]
+    high_freq_techniques_all = [n for n, i in techniques.items() if i["count"] >= threshold_techniques]
+    high_freq_topics_all = [n for n, i in topics.items() if i["count"] >= threshold_topics]
+
+    commentary_only_techniques = [
+        n for n, i in techniques.items()
+        if isinstance(i, dict) and bool(i.get("commentary_only"))
+    ]
+    commentary_only_topics = [
+        n for n, i in topics.items()
+        if isinstance(i, dict) and bool(i.get("commentary_only"))
+    ]
+
+    high_freq_techniques = [
+        n for n in high_freq_techniques_all
+        if not bool((techniques.get(n) or {}).get("commentary_only"))
+    ]
+    high_freq_topics = [
+        n for n in high_freq_topics_all
+        if not bool((topics.get(n) or {}).get("commentary_only"))
+    ]
 
     any_unlisted = bool(techniques) or bool(topics)
+    any_non_commentary_unlisted = any(
+        not bool((i or {}).get("commentary_only"))
+        for i in techniques.values()
+    ) or any(
+        not bool((i or {}).get("commentary_only"))
+        for i in topics.values()
+    )
     high_freq_unlisted = bool(high_freq_techniques) or bool(high_freq_topics)
 
     unreadable_files = int(report.get("files_unreadable", 0) or 0)
@@ -395,6 +454,24 @@ def evaluate_validation(
 
         high_tech = sorted(set(high_freq_tech_by_video.get(video_id, [])))
         high_topic = sorted(set(high_freq_topics_by_video.get(video_id, [])))
+        commentary_only_video_tech = sorted(
+            [
+                name for name in unlisted_techniques
+                if bool((techniques.get(name) or {}).get("commentary_only"))
+            ]
+        )
+        commentary_only_video_topics = sorted(
+            [
+                name for name in unlisted_topics
+                if bool((topics.get(name) or {}).get("commentary_only"))
+            ]
+        )
+        non_commentary_video_tech = sorted(
+            [name for name in unlisted_techniques if name not in commentary_only_video_tech]
+        )
+        non_commentary_video_topics = sorted(
+            [name for name in unlisted_topics if name not in commentary_only_video_topics]
+        )
         has_unlisted = bool(unlisted_techniques or unlisted_topics)
         is_missing = video_id in missing_video_ids
         is_unreadable = video_id in unreadable_video_ids
@@ -423,7 +500,10 @@ def evaluate_validation(
                 blocking_reasons.append("high_frequency_unlisted_topics")
         elif has_unlisted:
             status = "WARNING"
-            reason = "unlisted_below_threshold"
+            if non_commentary_video_tech or non_commentary_video_topics:
+                reason = "unlisted_below_threshold"
+            else:
+                reason = "commentary_only_unlisted_non_blocking"
 
         if status == "FAIL":
             blocked_video_ids.append(video_id)
@@ -439,6 +519,10 @@ def evaluate_validation(
                 "high_frequency_unlisted_topics": high_topic,
                 "unlisted_techniques": unlisted_techniques,
                 "unlisted_topics": unlisted_topics,
+                "commentary_only_unlisted_techniques": commentary_only_video_tech,
+                "commentary_only_unlisted_topics": commentary_only_video_topics,
+                "non_commentary_unlisted_techniques": non_commentary_video_tech,
+                "non_commentary_unlisted_topics": non_commentary_video_topics,
                 "enrichments_total": int(stats.get("enrichments_total", 0) or 0),
                 "enrichments_with_unlisted": int(stats.get("enrichments_with_unlisted", 0) or 0),
                 "files": stats.get("files") if isinstance(stats.get("files"), list) else [],
@@ -464,10 +548,13 @@ def evaluate_validation(
         )
     elif any_unlisted:
         status = "WARNING"
-        reason = (
-            "Unlisted concepts found but below threshold "
-            f"(techniques<{threshold_techniques}, topics<{threshold_topics})"
-        )
+        if any_non_commentary_unlisted:
+            reason = (
+                "Unlisted concepts found but below threshold "
+                f"(techniques<{threshold_techniques}, topics<{threshold_topics})"
+            )
+        else:
+            reason = "Only commentary-only unlisted concepts detected (non-blocking bucket)"
     else:
         status = "PASS"
         reason = "No unlisted concepts"
@@ -481,6 +568,24 @@ def evaluate_validation(
         "high_frequency_unlisted": {
             "techniques": high_freq_techniques,
             "topics": high_freq_topics,
+            "all_detected": {
+                "techniques": high_freq_techniques_all,
+                "topics": high_freq_topics_all,
+            },
+            "commentary_only_excluded": {
+                "techniques": sorted(
+                    [n for n in high_freq_techniques_all if n not in high_freq_techniques]
+                ),
+                "topics": sorted(
+                    [n for n in high_freq_topics_all if n not in high_freq_topics]
+                ),
+            },
+        },
+        "commentary_only_bucket": {
+            "techniques": sorted(commentary_only_techniques),
+            "topics": sorted(commentary_only_topics),
+            "total_techniques": len(commentary_only_techniques),
+            "total_topics": len(commentary_only_topics),
         },
         "total_unlisted": {
             "techniques": len(techniques),
@@ -552,6 +657,15 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
     topics = report["topics"]
     high_tech = validation["high_frequency_unlisted"]["techniques"]
     high_topics = validation["high_frequency_unlisted"]["topics"]
+    commentary_bucket = validation.get("commentary_only_bucket", {})
+    commentary_tech = set(
+        x for x in (commentary_bucket.get("techniques") or [])
+        if isinstance(x, str)
+    )
+    commentary_topics = set(
+        x for x in (commentary_bucket.get("topics") or [])
+        if isinstance(x, str)
+    )
 
     if not techniques and not topics:
         print("  No unlisted concepts found. Taxonomy covers all detected concepts.")
@@ -567,13 +681,31 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
             print(f"\n  Topics:     {', '.join(high_topics)}")
         print()
 
+    excluded = validation.get("high_frequency_unlisted", {}).get("commentary_only_excluded", {})
+    if isinstance(excluded, dict):
+        ex_tech = [x for x in (excluded.get("techniques") or []) if isinstance(x, str)]
+        ex_topics = [x for x in (excluded.get("topics") or []) if isinstance(x, str)]
+        if ex_tech or ex_topics:
+            print("-" * 60)
+            print("  COMMENTARY-ONLY HIGH-FREQUENCY (non-blocking)")
+            print("-" * 60)
+            if ex_tech:
+                print(f"\n  Techniques: {', '.join(ex_tech)}")
+            if ex_topics:
+                print(f"\n  Topics:     {', '.join(ex_topics)}")
+            print()
+
     if techniques:
         print("-" * 60)
         print("  ALL UNLISTED TECHNIQUES (sorted by frequency)")
         print("-" * 60)
         for name, info in techniques.items():
             count = info["count"]
-            marker = " [BLOCKING]" if name in high_tech else ""
+            marker = ""
+            if name in high_tech:
+                marker = " [BLOCKING]"
+            elif name in commentary_tech:
+                marker = " [COMMENTARY-ONLY]"
             print(f"\n  {name} ({count}x){marker}")
             if info["examples"]:
                 print(f"    Description: {info['examples'][0]}")
@@ -587,7 +719,11 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print("-" * 60)
         for name, info in topics.items():
             count = info["count"]
-            marker = " [BLOCKING]" if name in high_topics else ""
+            marker = ""
+            if name in high_topics:
+                marker = " [BLOCKING]"
+            elif name in commentary_topics:
+                marker = " [COMMENTARY-ONLY]"
             print(f"\n  {name} ({count}x){marker}")
             if info["examples"]:
                 print(f"    Description: {info['examples'][0]}")

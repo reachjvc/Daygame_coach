@@ -5,8 +5,10 @@ scripts/training-data/07.content
 Content Enrichment using Claude Code CLI
 
 Reads:
-  - Conversation files (from Stage 06c patched output):
+  - Conversation files (default: Stage 06c patched output):
       data/06c.patched/<source>/<video>/*.conversations.json
+    For hardened runs, pass --input-root data/06d.sanitized so Stage 07 consumes
+    deterministic sanitization metadata (stage07_evidence_segment_ids).
 
 Writes:
   - Enriched conversation files:
@@ -165,9 +167,9 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.4.3"  # v1.4.3: close starts only on explicit invite/contact (not logistics fishing)
+PROMPT_VERSION = "1.5.0"  # v1.5.0: Stage07 evidence allowlist markers + stricter evidence contract
 PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.content-v1.8"  # v1.8: Populate top-level source + video_title deterministically
+PIPELINE_VERSION = "07.content-v1.9"  # v1.9: Hard-filter evidence to Stage07 allowlist + dropped_candidates audit trail
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -225,11 +227,39 @@ def fuzzy_evidence_match(evidence: str, transcript_text: str, threshold: float =
     return best_ratio >= threshold
 
 
+def build_conversation_meta_index(conversations_meta: Any) -> Dict[int, Dict[str, Any]]:
+    """Index conversation metadata by conversation_id."""
+    out: Dict[int, Dict[str, Any]] = {}
+    if not isinstance(conversations_meta, list):
+        return out
+    for conv in conversations_meta:
+        if not isinstance(conv, dict):
+            continue
+        conv_id = conv.get("conversation_id")
+        if isinstance(conv_id, int) and conv_id > 0:
+            out[conv_id] = conv
+    return out
+
+
+def get_confident_target_ids_from_meta(conv_meta: Optional[Dict[str, Any]]) -> Set[str]:
+    """Read conservative target speaker subset from conversation metadata."""
+    if not isinstance(conv_meta, dict):
+        return set()
+    tp = conv_meta.get("target_participation")
+    if not isinstance(tp, dict):
+        return set()
+    ids = tp.get("target_speaker_ids_confident")
+    if not isinstance(ids, list):
+        return set()
+    return {sid for sid in ids if isinstance(sid, str) and sid.strip()}
+
+
 def normalize_enrichments(
     enrichments: List[Dict[str, Any]],
     seg_by_id: Optional[Dict[int, Dict[str, Any]]] = None,
     conversations: Optional[Dict[int, List[Dict[str, Any]]]] = None,
     commentary_blocks: Optional[List[Dict[str, Any]]] = None,
+    conversation_meta_by_id: Optional[Dict[int, Dict[str, Any]]] = None,
 ) -> List[str]:
     """Normalize known LLM drift patterns before validation.
 
@@ -1048,10 +1078,24 @@ def normalize_enrichments(
                         s for s in (conversations.get(conv_id) or [])
                         if isinstance(s, dict)
                     ]
+                    conv_meta = (
+                        (conversation_meta_by_id or {}).get(conv_id)
+                        if isinstance(conversation_meta_by_id, dict)
+                        else None
+                    )
+                    confident_target_ids = get_confident_target_ids_from_meta(conv_meta)
                     target_texts: List[str] = []
                     for s in conv_segs:
-                        if (s.get("speaker_role") or "").lower() != "target":
-                            continue
+                        role = (s.get("speaker_role") or "").lower()
+                        speaker_id = s.get("speaker_id")
+                        if confident_target_ids:
+                            if not (isinstance(speaker_id, str) and speaker_id in confident_target_ids):
+                                continue
+                            if role in ("coach", "student", "voiceover"):
+                                continue
+                        else:
+                            if role != "target":
+                                continue
                         txt = (s.get("text") or "")
                         if isinstance(txt, str) and txt.strip():
                             target_texts.append(txt.strip())
@@ -1075,6 +1119,45 @@ def normalize_enrichments(
                             repairs.append(
                                 f"conv {conv_id}: downgraded post_hook -> {fallback} (minimal target engagement)"
                             )
+
+                    # If we have confident target IDs from sanitized metadata, require post_hook
+                    # to include at least one segment tied to that confident subset.
+                    if confident_target_ids:
+                        post_hook_seg_ids = {
+                            sid for sid, ph in tp_map.items()
+                            if ph == "post_hook" and isinstance(sid, int)
+                        }
+                        has_confident_target_post_hook = False
+                        if post_hook_seg_ids:
+                            segs_by_id = {
+                                int(s.get("id")): s
+                                for s in conv_segs
+                                if isinstance(s.get("id"), int)
+                            }
+                            for sid in post_hook_seg_ids:
+                                seg = segs_by_id.get(sid)
+                                if not isinstance(seg, dict):
+                                    continue
+                                sid_speaker = seg.get("speaker_id")
+                                sid_role = (seg.get("speaker_role") or "").lower()
+                                if (
+                                    isinstance(sid_speaker, str)
+                                    and sid_speaker in confident_target_ids
+                                    and sid_role not in ("coach", "student", "voiceover")
+                                ):
+                                    has_confident_target_post_hook = True
+                                    break
+                        if not has_confident_target_post_hook:
+                            fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
+                            for sid, ph in list(tp_map.items()):
+                                if ph == "post_hook":
+                                    tp_map[sid] = fallback
+                                    tp_changed = True
+                            if tp_changed:
+                                repairs.append(
+                                    f"conv {conv_id}: downgraded post_hook -> {fallback} "
+                                    f"(no confident target speaker support)"
+                                )
 
                 # --- Close start normalization based on close-technique evidence ---
                 CLOSE_TECHS = {
@@ -1411,6 +1494,25 @@ def validate_enrichment_output(
         for s in segments
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
+    stage07_allowlist: Dict[int, Set[int]] = {}
+    conversation_meta_by_id: Dict[int, Dict[str, Any]] = {}
+    if stage06_data and isinstance(stage06_data, dict):
+        stage07_allowlist = build_stage07_evidence_allowlist(
+            stage06_data.get("conversations"),
+            stage06_data.get("segments", segments) or segments,
+        )
+        conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
+
+    low_quality_ids: Set[int] = {
+        int(item.get("segment"))
+        for item in (output.get("low_quality_segments") or [])
+        if isinstance(item, dict) and isinstance(item.get("segment"), int)
+    }
+    transcript_artifact_ids: Set[int] = {
+        int(item.get("segment_index"))
+        for item in (output.get("transcript_artifacts") or [])
+        if isinstance(item, dict) and isinstance(item.get("segment_index"), int)
+    }
 
     # --- 1. Technique taxonomy enforcement ---
     valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
@@ -1522,11 +1624,26 @@ def validate_enrichment_output(
     for i, enrichment in enumerate(enrichments):
         if enrichment.get("type") != "approach":
             continue
+        conv_id = enrichment.get("conversation_id")
         for tech in enrichment.get("techniques_used", []) or []:
             if not isinstance(tech, dict):
                 continue
             seg_id = tech.get("segment")
-            if not isinstance(seg_id, int):
+            reason, detail = evidence_block_reason_for_segment(
+                seg_id,
+                conv_id,
+                seg_by_id,
+                stage07_allowlist=stage07_allowlist,
+                low_quality_ids=low_quality_ids,
+                transcript_artifact_ids=transcript_artifact_ids,
+            )
+            if reason:
+                detail_msg = f" ({detail})" if detail else ""
+                results.append(ValidationResult(
+                    "error", "technique_invalid_evidence_segment",
+                    f"Enrichment {i} (conv {conv_id if conv_id is not None else '?'}): "
+                    f"technique '{tech.get('technique', '?')}' cites invalid segment {seg_id}: {reason}{detail_msg}"
+                ))
                 continue
             seg = seg_by_id.get(seg_id)
             if not seg:
@@ -1597,6 +1714,7 @@ def validate_enrichment_output(
         if enrichment.get("type") != "approach":
             continue
 
+        conv_id = enrichment.get("conversation_id")
         phases_present = {tp.get("phase") for tp in enrichment.get("turn_phases", [])}
 
         if enrichment.get("hook_point") and "post_hook" not in phases_present:
@@ -1612,6 +1730,36 @@ def validate_enrichment_output(
                 f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
                 f"investment_level is set but post_hook phase not found in turn_phases"
             ))
+
+        confident_target_ids = get_confident_target_ids_from_meta(
+            conversation_meta_by_id.get(conv_id) if isinstance(conv_id, int) else None
+        )
+        if "post_hook" in phases_present and confident_target_ids:
+            post_hook_seg_ids = {
+                tp.get("segment")
+                for tp in (enrichment.get("turn_phases") or [])
+                if isinstance(tp, dict) and tp.get("phase") == "post_hook" and isinstance(tp.get("segment"), int)
+            }
+            has_confident_target_support = False
+            for sid in post_hook_seg_ids:
+                seg = seg_by_id.get(sid)
+                if not isinstance(seg, dict):
+                    continue
+                speaker_id = seg.get("speaker_id")
+                role = (seg.get("speaker_role") or "").lower()
+                if (
+                    isinstance(speaker_id, str)
+                    and speaker_id in confident_target_ids
+                    and role not in ("coach", "student", "voiceover")
+                ):
+                    has_confident_target_support = True
+                    break
+            if not has_confident_target_support:
+                results.append(ValidationResult(
+                    "error", "post_hook_without_confident_target_support",
+                    f"Enrichment {i} (conv {conv_id if conv_id is not None else '?'}): "
+                    f"post_hook/hook/investment lacks confident target speaker support"
+                ))
 
     # --- 7. Transcript artifact reporting ---
     artifacts = output.get("transcript_artifacts", [])
@@ -1822,6 +1970,277 @@ def group_commentary_blocks(segments: List[Dict]) -> List[Dict]:
     return blocks
 
 
+def build_stage07_evidence_allowlist(
+    conversations_meta: Any,
+    segments: List[Dict[str, Any]],
+) -> Dict[int, Set[int]]:
+    """Build per-conversation allowlist of segment IDs for Stage 07 evidence.
+
+    Preferred source is Stage 06d/06e conversation metadata field
+    ``stage07_evidence_segment_ids``. For backward compatibility with older
+    Stage 06c inputs, we derive a conservative fallback from segment fields.
+    """
+    allow_by_conv: Dict[int, Set[int]] = {}
+
+    if isinstance(conversations_meta, list):
+        for conv in conversations_meta:
+            if not isinstance(conv, dict):
+                continue
+            conv_id = conv.get("conversation_id")
+            allow_ids = conv.get("stage07_evidence_segment_ids")
+            if not isinstance(conv_id, int) or conv_id <= 0:
+                continue
+            if not isinstance(allow_ids, list):
+                continue
+            clean_ids = {sid for sid in allow_ids if isinstance(sid, int)}
+            allow_by_conv[conv_id] = clean_ids
+
+    if allow_by_conv:
+        return allow_by_conv
+
+    # Backward-compatible fallback for pre-06d artifacts.
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        conv_id = seg.get("conversation_id")
+        if not isinstance(conv_id, int) or conv_id <= 0:
+            continue
+        seg_id = seg.get("id")
+        if not isinstance(seg_id, int):
+            continue
+        if str(seg.get("segment_type", "")).strip().lower() != "approach":
+            continue
+        if bool(seg.get("exclude_from_stage07_evidence")):
+            continue
+        allow_by_conv.setdefault(conv_id, set()).add(seg_id)
+
+    return allow_by_conv
+
+
+def evidence_block_reason_for_segment(
+    seg_id: Any,
+    conv_id: Any,
+    seg_by_id: Dict[int, Dict[str, Any]],
+    *,
+    stage07_allowlist: Optional[Dict[int, Set[int]]] = None,
+    low_quality_ids: Optional[Set[int]] = None,
+    transcript_artifact_ids: Optional[Set[int]] = None,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Return deterministic reason code when a segment is invalid as evidence."""
+    if not isinstance(seg_id, int):
+        return "missing_evidence_segment", None
+
+    seg = seg_by_id.get(seg_id)
+    if not isinstance(seg, dict):
+        return "unknown_evidence_segment", None
+
+    flags = [f for f in (seg.get("segment_flags") or []) if isinstance(f, str)]
+    if flags:
+        return "flagged_evidence_segment", ",".join(sorted(set(flags)))
+
+    if bool(seg.get("exclude_from_stage07_evidence")):
+        reason = seg.get("exclude_from_stage07_reason")
+        reason_detail = str(reason).strip() if isinstance(reason, str) and str(reason).strip() else None
+        return "excluded_by_sanitizer", reason_detail
+
+    if str(seg.get("segment_type", "")).strip().lower() != "approach":
+        return "non_approach_segment", None
+
+    if transcript_artifact_ids and seg_id in transcript_artifact_ids:
+        return "transcript_artifact", None
+
+    if low_quality_ids and seg_id in low_quality_ids:
+        return "low_quality_evidence_segment", None
+
+    if (
+        stage07_allowlist is not None
+        and isinstance(conv_id, int)
+        and conv_id > 0
+        and conv_id in stage07_allowlist
+    ):
+        allowed = stage07_allowlist.get(conv_id) or set()
+        if seg_id not in allowed:
+            return "segment_not_in_evidence_allowlist", None
+
+    return None, None
+
+
+def enforce_stage07_evidence_allowlist(
+    enrichments: List[Dict[str, Any]],
+    seg_by_id: Dict[int, Dict[str, Any]],
+    stage07_allowlist: Dict[int, Set[int]],
+    *,
+    low_quality_segments: Optional[List[Dict[str, Any]]] = None,
+    transcript_artifacts: Optional[List[Dict[str, Any]]] = None,
+) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """Hard-filter approach evidence to Stage 07 allowlisted segment IDs."""
+    dropped_candidates: List[Dict[str, Any]] = []
+    repairs: List[str] = []
+
+    low_quality_ids: Set[int] = set()
+    for item in low_quality_segments or []:
+        if isinstance(item, dict) and isinstance(item.get("segment"), int):
+            low_quality_ids.add(int(item["segment"]))
+
+    transcript_artifact_ids: Set[int] = set()
+    for item in transcript_artifacts or []:
+        if isinstance(item, dict) and isinstance(item.get("segment_index"), int):
+            transcript_artifact_ids.add(int(item["segment_index"]))
+
+    for e in enrichments:
+        if not isinstance(e, dict) or e.get("type") != "approach":
+            continue
+
+        conv_id = e.get("conversation_id")
+        if not isinstance(conv_id, int) or conv_id <= 0:
+            continue
+        if conv_id not in stage07_allowlist:
+            # Legacy inputs may not have explicit conversation allowlist.
+            continue
+
+        allow_ids = stage07_allowlist.get(conv_id) or set()
+
+        techniques = e.get("techniques_used")
+        if isinstance(techniques, list):
+            kept_techniques: List[Dict[str, Any]] = []
+            dropped_count = 0
+            for tech in techniques:
+                if not isinstance(tech, dict):
+                    continue
+                seg_id = tech.get("segment")
+                reason, detail = evidence_block_reason_for_segment(
+                    seg_id,
+                    conv_id,
+                    seg_by_id,
+                    stage07_allowlist=stage07_allowlist,
+                    low_quality_ids=low_quality_ids,
+                    transcript_artifact_ids=transcript_artifact_ids,
+                )
+                if reason:
+                    dropped_count += 1
+                    rec: Dict[str, Any] = {
+                        "candidate_type": "technique_used",
+                        "conversation_id": conv_id,
+                        "reason": reason,
+                        "technique": tech.get("technique"),
+                        "segment": seg_id,
+                    }
+                    if detail:
+                        rec["reason_detail"] = detail
+                    example = tech.get("example")
+                    if isinstance(example, str) and example.strip():
+                        rec["example_preview"] = example.strip()[:140]
+                    dropped_candidates.append(rec)
+                    continue
+                if isinstance(seg_id, int) and seg_id in allow_ids:
+                    kept_techniques.append(tech)
+                    continue
+                # Defensive fallback (should be covered by reason function).
+                dropped_count += 1
+                dropped_candidates.append(
+                    {
+                        "candidate_type": "technique_used",
+                        "conversation_id": conv_id,
+                        "reason": "segment_not_in_evidence_allowlist",
+                        "technique": tech.get("technique"),
+                        "segment": seg_id,
+                    }
+                )
+            if dropped_count > 0:
+                e["techniques_used"] = kept_techniques
+                repairs.append(
+                    f"conv {conv_id}: dropped {dropped_count} technique(s) outside Stage07 evidence allowlist"
+                )
+
+        turn_phases = e.get("turn_phases")
+        if isinstance(turn_phases, list):
+            kept_phases: List[Dict[str, Any]] = []
+            dropped_phase_count = 0
+            for tp in turn_phases:
+                if not isinstance(tp, dict):
+                    continue
+                seg_id = tp.get("segment")
+                reason, detail = evidence_block_reason_for_segment(
+                    seg_id,
+                    conv_id,
+                    seg_by_id,
+                    stage07_allowlist=stage07_allowlist,
+                    low_quality_ids=low_quality_ids,
+                    transcript_artifact_ids=transcript_artifact_ids,
+                )
+                if reason:
+                    dropped_phase_count += 1
+                    rec: Dict[str, Any] = {
+                        "candidate_type": "turn_phase",
+                        "conversation_id": conv_id,
+                        "reason": reason,
+                        "segment": seg_id,
+                        "phase": tp.get("phase"),
+                    }
+                    if detail:
+                        rec["reason_detail"] = detail
+                    dropped_candidates.append(rec)
+                    continue
+                kept_phases.append(tp)
+            if dropped_phase_count > 0:
+                e["turn_phases"] = kept_phases
+                repairs.append(
+                    f"conv {conv_id}: dropped {dropped_phase_count} turn_phase annotation(s) outside Stage07 evidence allowlist"
+                )
+
+        hook = e.get("hook_point")
+        if isinstance(hook, dict):
+            hook_seg = hook.get("segment")
+            if hook_seg is not None:
+                reason, detail = evidence_block_reason_for_segment(
+                    hook_seg,
+                    conv_id,
+                    seg_by_id,
+                    stage07_allowlist=stage07_allowlist,
+                    low_quality_ids=low_quality_ids,
+                    transcript_artifact_ids=transcript_artifact_ids,
+                )
+                if reason:
+                    rec: Dict[str, Any] = {
+                        "candidate_type": "hook_point",
+                        "conversation_id": conv_id,
+                        "reason": reason,
+                        "segment": hook_seg,
+                    }
+                    if detail:
+                        rec["reason_detail"] = detail
+                    dropped_candidates.append(rec)
+                    e["hook_point"] = None
+                    e["investment_level"] = None
+                    repairs.append(
+                        f"conv {conv_id}: removed hook_point/investment_level outside Stage07 evidence allowlist"
+                    )
+
+        # If post_hook evidence was removed, investment must be null.
+        phases_present = {
+            tp.get("phase")
+            for tp in (e.get("turn_phases") or [])
+            if isinstance(tp, dict)
+        }
+        if e.get("investment_level") and "post_hook" not in phases_present:
+            dropped_candidates.append(
+                {
+                    "candidate_type": "investment_level",
+                    "conversation_id": conv_id,
+                    "reason": "insufficient_post_hook_evidence",
+                    "segment": None,
+                }
+            )
+            e["investment_level"] = None
+            if e.get("hook_point") and isinstance(e.get("hook_point"), dict):
+                e["hook_point"] = None
+            repairs.append(
+                f"conv {conv_id}: removed investment_level without post_hook evidence after allowlist filtering"
+            )
+
+    return dropped_candidates, repairs
+
+
 def remap_enrichment_segment_indices(
     enrichments: List[Dict],
     conversations: Dict[int, List[Dict]],
@@ -1986,6 +2405,7 @@ def build_infield_prompt(
     conversations: Dict[int, List[Dict]],
     commentary_blocks: List[Dict],
     video_id: str,
+    stage07_evidence_allowlist: Optional[Dict[int, Set[int]]] = None,
 ) -> str:
     """Build prompt for infield/compilation videos: approaches + interleaved commentary."""
 
@@ -2003,8 +2423,9 @@ def build_infield_prompt(
             seg_id = seg.get("id", j)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
+            synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
             if text:
-                turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
+                turns.append(f"  [{seg_id}]{synthetic_marker} {speaker.upper()}: {text}")
 
         if turns:
             content_items.append({
@@ -2022,12 +2443,26 @@ End: {block['end']:.1f}s
             continue
 
         segments = conversations[conv_id]
+        allow_ids = (
+            (stage07_evidence_allowlist or {}).get(conv_id)
+            if isinstance(stage07_evidence_allowlist, dict)
+            else None
+        )
         turns = []
         for i, seg in enumerate(segments):
             seg_id = seg.get("id", i)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
-            turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
+            marker = ""
+            if isinstance(allow_ids, set):
+                marker = " (EVIDENCE_OK)" if seg_id in allow_ids else " (EVIDENCE_EXCLUDED)"
+            synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
+            turns.append(f"  [{seg_id}]{marker}{synthetic_marker} {speaker.upper()}: {text}")
+
+        allow_ids_line = ""
+        if isinstance(allow_ids, set):
+            allow_ids_sorted = ", ".join(str(sid) for sid in sorted(allow_ids))
+            allow_ids_line = f"Allowed evidence SEG_IDs: {allow_ids_sorted or 'none'}\n"
 
         content_items.append({
             "sort_key": segments[0].get("start", 0),
@@ -2035,6 +2470,9 @@ End: {block['end']:.1f}s
 Segments: {len(segments)}
 Start: {segments[0].get('start', 0):.1f}s
 End: {segments[-1].get('end', 0):.1f}s
+
+{allow_ids_line}Legend: (EVIDENCE_OK)=allowed for Stage 07 technique/hook evidence; (EVIDENCE_EXCLUDED)=context only.
+Legend: (SYNTHETIC)=deterministically generated split helper segment (not raw ASR).
 
 {chr(10).join(turns)}"""
         })
@@ -2071,6 +2509,8 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (EVIDENCE_OK).
+   Never cite (EVIDENCE_EXCLUDED) turns as technique evidence.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
@@ -2091,6 +2531,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
 6. TURN PHASES: Label each turn with its interaction phase.
+   CRITICAL: Only include phase labels for SEG_IDs marked (EVIDENCE_OK).
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
      Can be multiple turns if he's stacking assumptions or extending his opening bit.
@@ -2116,6 +2557,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - Use the SEG_ID shown in the transcript lines (the number in brackets) to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
    Provide a brief "signal".
+   CRITICAL: hook_point.segment (if provided) must be an (EVIDENCE_OK) SEG_ID.
    IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
    If no post_hook phase is present, set hook_point to null and investment_level to null.
    If no hook point, set to null.
@@ -2149,6 +2591,7 @@ Do NOT flag:
 - Natural speech patterns (fillers like "um", "like", short responses like "yeah")
 - Run-on sentences that still make sense (fast speech accurately transcribed)
 - Foreign words/names that fit the context
+- Segments marked (SYNTHETIC): these are deterministic pipeline split helpers, not raw ASR output
 
 Output a "low_quality_segments" array listing segments with poor transcription:
 {{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
@@ -2506,9 +2949,24 @@ def process_video_file(
     conversations = group_segments_by_conversation(segments)
     approach_convs = {k: v for k, v in conversations.items() if k > 0}
     commentary_blocks = group_commentary_blocks(segments)
+    conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
+    confident_target_convs = sum(
+        1
+        for conv_meta in conversation_meta_by_id.values()
+        if get_confident_target_ids_from_meta(conv_meta)
+    )
+    stage07_evidence_allowlist = build_stage07_evidence_allowlist(
+        data.get("conversations"),
+        segments,
+    )
+    allowlisted_segments_total = sum(len(v) for v in stage07_evidence_allowlist.values())
 
     print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
+    print(
+        f"[07.content]   Stage07 evidence allowlist: "
+        f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
+    )
 
     if dry_run:
         print(f"[07.content]   [DRY RUN] Would call Claude CLI ({video_type} prompt)")
@@ -2516,7 +2974,12 @@ def process_video_file(
 
     # Build prompt based on video type
     if video_type in ("infield", "compilation"):
-        prompt = build_infield_prompt(conversations, commentary_blocks, video_id)
+        prompt = build_infield_prompt(
+            conversations,
+            commentary_blocks,
+            video_id,
+            stage07_evidence_allowlist=stage07_evidence_allowlist,
+        )
     else:
         prompt = build_talking_head_prompt(segments, video_id)
 
@@ -2549,16 +3012,64 @@ def process_video_file(
         for s in segments
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
+    synthetic_segment_ids: Set[int] = {
+        int(sid)
+        for sid, seg in seg_by_id.items()
+        if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
+    }
+    dropped_synthetic_quality = 0
+    dropped_synthetic_artifacts = 0
+    if synthetic_segment_ids:
+        filtered_lq: List[Dict[str, Any]] = []
+        for row in low_quality_segments:
+            if not isinstance(row, dict):
+                continue
+            sid = row.get("segment")
+            if isinstance(sid, int) and sid in synthetic_segment_ids:
+                dropped_synthetic_quality += 1
+                continue
+            filtered_lq.append(row)
+        low_quality_segments = filtered_lq
+
+        filtered_artifacts: List[Dict[str, Any]] = []
+        for row in transcript_artifacts:
+            if not isinstance(row, dict):
+                continue
+            sid = row.get("segment_index")
+            if isinstance(sid, int) and sid in synthetic_segment_ids:
+                dropped_synthetic_artifacts += 1
+                continue
+            filtered_artifacts.append(row)
+        transcript_artifacts = filtered_artifacts
+
+        if dropped_synthetic_quality or dropped_synthetic_artifacts:
+            print(
+                f"{LOG_PREFIX}   Dropped synthetic quality signals: "
+                f"low_quality={dropped_synthetic_quality}, artifacts={dropped_synthetic_artifacts}"
+            )
+
     normalization_repairs = normalize_enrichments(
         enrichments,
         seg_by_id=seg_by_id,
         conversations=conversations,
         commentary_blocks=commentary_blocks,
+        conversation_meta_by_id=conversation_meta_by_id,
+    )
+    dropped_candidates, evidence_allowlist_repairs = enforce_stage07_evidence_allowlist(
+        enrichments,
+        seg_by_id,
+        stage07_evidence_allowlist,
+        low_quality_segments=low_quality_segments,
+        transcript_artifacts=transcript_artifacts,
     )
     if normalization_repairs:
         preview = "; ".join(normalization_repairs[:3])
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
+    if evidence_allowlist_repairs:
+        preview = "; ".join(evidence_allowlist_repairs[:3])
+        suffix = "" if len(evidence_allowlist_repairs) <= 3 else f" (+{len(evidence_allowlist_repairs) - 3} more)"
+        print(f"{LOG_PREFIX}   Evidence allowlist filtered {len(evidence_allowlist_repairs)} issue(s): {preview}{suffix}")
 
     # Compute phase confidence for each approach enrichment (after normalization, since conv ids may have been remapped)
     speaker_labels = data.get("speaker_labels", {})
@@ -2619,6 +3130,15 @@ def process_video_file(
             # LLM drift normalization (best-effort repairs) applied before validation.
             "normalization_repairs_count": len(normalization_repairs),
             "normalization_repairs_preview": normalization_repairs[:5],
+            "evidence_allowlist_repairs_count": len(evidence_allowlist_repairs),
+            "evidence_allowlist_repairs_preview": evidence_allowlist_repairs[:5],
+            "dropped_candidates_count": len(dropped_candidates),
+            "stage07_evidence_allowlist_conversations": len(stage07_evidence_allowlist),
+            "stage07_evidence_allowlist_segments": allowlisted_segments_total,
+            "target_confident_conversations": confident_target_convs,
+            "synthetic_segment_count": len(synthetic_segment_ids),
+            "synthetic_low_quality_dropped": dropped_synthetic_quality,
+            "synthetic_artifacts_dropped": dropped_synthetic_artifacts,
         },
         # Version tags (safe additive fields; helps drift detection downstream).
         "pipeline_version": PIPELINE_VERSION,
@@ -2631,6 +3151,7 @@ def process_video_file(
         "speaker_corrections": data.get("speaker_corrections", []),
         "segments": segments,
         "enrichments": enrichments,
+        "dropped_candidates": dropped_candidates,
         "low_quality_segments": low_quality_segments,
         "transcript_artifacts": transcript_artifacts,
         "summary": {
@@ -2649,6 +3170,18 @@ def process_video_file(
             "unlisted_concepts": {
                 "techniques": sorted(set(all_unlisted_techniques)),
                 "topics": sorted(set(all_unlisted_topics)),
+            },
+            "dropped_candidates": {
+                "count": len(dropped_candidates),
+                "by_reason": dict(
+                    sorted(
+                        Counter(
+                            c.get("reason")
+                            for c in dropped_candidates
+                            if isinstance(c, dict) and isinstance(c.get("reason"), str)
+                        ).items()
+                    )
+                ),
             },
         },
     }
@@ -2785,6 +3318,16 @@ def revalidate_video_file(
 
     conversations = group_segments_by_conversation(segments)
     commentary_blocks = group_commentary_blocks(segments)
+    conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
+    confident_target_convs = sum(
+        1
+        for conv_meta in conversation_meta_by_id.values()
+        if get_confident_target_ids_from_meta(conv_meta)
+    )
+    stage07_evidence_allowlist = build_stage07_evidence_allowlist(
+        stage06_data.get("conversations"),
+        segments,
+    )
 
     # Load existing Stage 07 output.
     if not output_path.exists():
@@ -2809,18 +3352,58 @@ def revalidate_video_file(
 
     enrichments: List[Dict[str, Any]] = output.get("enrichments", []) or []
     low_quality_segments: List[Dict[str, Any]] = output.get("low_quality_segments", []) or []
-
-    # Apply normalization (deterministic repairs before validation).
+    transcript_artifacts: List[Dict[str, Any]] = output.get("transcript_artifacts", []) or []
     seg_by_id = {
         s.get("id"): s
         for s in segments
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
+    synthetic_segment_ids: Set[int] = {
+        int(sid)
+        for sid, seg in seg_by_id.items()
+        if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
+    }
+    dropped_synthetic_quality = 0
+    dropped_synthetic_artifacts = 0
+    if synthetic_segment_ids:
+        filtered_lq: List[Dict[str, Any]] = []
+        for row in low_quality_segments:
+            if not isinstance(row, dict):
+                continue
+            sid = row.get("segment")
+            if isinstance(sid, int) and sid in synthetic_segment_ids:
+                dropped_synthetic_quality += 1
+                continue
+            filtered_lq.append(row)
+        low_quality_segments = filtered_lq
+        output["low_quality_segments"] = low_quality_segments
+
+        filtered_artifacts: List[Dict[str, Any]] = []
+        for row in transcript_artifacts:
+            if not isinstance(row, dict):
+                continue
+            sid = row.get("segment_index")
+            if isinstance(sid, int) and sid in synthetic_segment_ids:
+                dropped_synthetic_artifacts += 1
+                continue
+            filtered_artifacts.append(row)
+        transcript_artifacts = filtered_artifacts
+        output["transcript_artifacts"] = transcript_artifacts
+
+    # Apply normalization (deterministic repairs before validation).
     normalization_repairs = normalize_enrichments(
         enrichments,
         seg_by_id=seg_by_id,
         conversations=conversations,
         commentary_blocks=commentary_blocks,
+        conversation_meta_by_id=conversation_meta_by_id,
+    )
+    dropped_candidates, evidence_allowlist_repairs = enforce_stage07_evidence_allowlist(
+        enrichments,
+        seg_by_id,
+        stage07_evidence_allowlist,
+        low_quality_segments=low_quality_segments,
+        transcript_artifacts=transcript_artifacts,
     )
 
     # Recompute phase confidence (deterministic) after normalization, since conv ids may have been remapped.
@@ -2838,6 +3421,15 @@ def revalidate_video_file(
     meta["revalidated_prompt_version"] = PROMPT_VERSION
     meta["normalization_repairs_count"] = len(normalization_repairs)
     meta["normalization_repairs_preview"] = normalization_repairs[:5]
+    meta["evidence_allowlist_repairs_count"] = len(evidence_allowlist_repairs)
+    meta["evidence_allowlist_repairs_preview"] = evidence_allowlist_repairs[:5]
+    meta["dropped_candidates_count"] = len(dropped_candidates)
+    meta["stage07_evidence_allowlist_conversations"] = len(stage07_evidence_allowlist)
+    meta["stage07_evidence_allowlist_segments"] = sum(len(v) for v in stage07_evidence_allowlist.values())
+    meta["target_confident_conversations"] = confident_target_convs
+    meta["synthetic_segment_count"] = len(synthetic_segment_ids)
+    meta["synthetic_low_quality_dropped"] = dropped_synthetic_quality
+    meta["synthetic_artifacts_dropped"] = dropped_synthetic_artifacts
 
     summary = output.get("summary")
     if not isinstance(summary, dict):
@@ -2845,6 +3437,19 @@ def revalidate_video_file(
         output["summary"] = summary
     summary.update(_summarize_enrichments(enrichments))
     summary["total_conversations"] = len([c for c in conversations.keys() if c > 0])
+    summary["dropped_candidates"] = {
+        "count": len(dropped_candidates),
+        "by_reason": dict(
+            sorted(
+                Counter(
+                    c.get("reason")
+                    for c in dropped_candidates
+                    if isinstance(c, dict) and isinstance(c.get("reason"), str)
+                ).items()
+            )
+        ),
+    }
+    output["dropped_candidates"] = dropped_candidates
 
     # Top-level version tags (helps downstream drift detection; safe additive fields).
     output["pipeline_version"] = PIPELINE_VERSION
