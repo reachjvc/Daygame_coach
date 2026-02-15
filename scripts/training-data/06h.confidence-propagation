@@ -1,0 +1,936 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/06h.confidence-propagation
+
+Merge deterministic damage seeds (06f) + LLM adjudication (06g) into confidence-aware
+conversation payloads for downstream Stage 07/09/10 behavior.
+
+Reads:
+  - data/06d.sanitized/<source>/<video>/*.conversations.json
+  - data/06f.damage-map/<source>/<video>/*.damage-map.json
+  - data/06g.damage-adjudicator/<source>/<video>/*.damage-adjudication.json (optional)
+
+Writes:
+  - data/06h.confidence-propagation/<source>/<video>/*.conversations.json
+  - data/06h.confidence-propagation/<source>/<video>/*.confidence.report.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import re
+import shlex
+import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from batch.manifest_parser import load_manifest_sources, manifest_filter_files
+
+
+LOG_PREFIX = "[06h.confidence-propagation]"
+PIPELINE_VERSION = "06h.confidence-propagation-v1.0"
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def input_root() -> Path:
+    return repo_root() / "data" / "06d.sanitized"
+
+
+def damage_root() -> Path:
+    return repo_root() / "data" / "06f.damage-map"
+
+
+def adjudication_root() -> Path:
+    return repo_root() / "data" / "06g.damage-adjudicator"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "06h.confidence-propagation"
+
+
+def test_input_root() -> Path:
+    return repo_root() / "data" / "test" / "06d.sanitized"
+
+
+def test_damage_root() -> Path:
+    return repo_root() / "data" / "test" / "06f.damage-map"
+
+
+def test_adjudication_root() -> Path:
+    return repo_root() / "data" / "test" / "06g.damage-adjudicator"
+
+
+def test_output_root() -> Path:
+    return repo_root() / "data" / "test" / "06h.confidence-propagation"
+
+
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            sources.append((name.strip(), url.strip()))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def find_input_files(in_dir: Path) -> List[Path]:
+    return sorted(in_dir.rglob("*.conversations.json"))
+
+
+def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+    stem = input_path.stem
+    if stem.endswith(".conversations"):
+        filename = f"{stem}.json"
+    else:
+        filename = f"{stem}.conversations.json"
+    return output_dir / filename
+
+
+def compute_output_path_with_layout(
+    input_path: Path,
+    output_dir: Path,
+    input_root_dir: Optional[Path] = None,
+) -> Path:
+    canonical = compute_output_path(input_path, output_dir)
+    if input_root_dir is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root_dir)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / canonical.name
+        except ValueError:
+            pass
+    return canonical
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root_dir: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path_with_layout(
+        input_path,
+        preferred_output_dir,
+        input_root_dir=input_root_dir,
+    )
+    if preferred.exists():
+        return preferred
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
+
+
+def _safe_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return None
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        out = float(value)
+    except Exception:
+        return float(default)
+    if out != out:  # NaN
+        return float(default)
+    return out
+
+
+def _read_json(path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _extract_video_id_from_name(name: str) -> Optional[str]:
+    m = re.search(r"\[([A-Za-z0-9_-]{11})\]", name)
+    return m.group(1) if m else None
+
+
+def _find_sidecar_path(
+    *,
+    input_path: Path,
+    input_root_dir: Path,
+    sidecar_root_dir: Path,
+    from_suffix: str,
+    to_suffix: str,
+    glob_name: str,
+    video_id_hint: Optional[str],
+) -> Optional[Path]:
+    try:
+        rel = input_path.relative_to(input_root_dir)
+        candidate = sidecar_root_dir / rel.parent / rel.name.replace(from_suffix, to_suffix)
+        if candidate.exists():
+            return candidate
+    except Exception:
+        pass
+
+    base_candidate = sidecar_root_dir / input_path.name.replace(from_suffix, to_suffix)
+    if base_candidate.exists():
+        return base_candidate
+
+    if video_id_hint:
+        matches = sorted(
+            [p for p in sidecar_root_dir.rglob(glob_name) if video_id_hint in p.name],
+            key=lambda p: str(p),
+        )
+        if matches:
+            return matches[0]
+    return None
+
+
+def _clamp01(value: float) -> float:
+    return max(0.0, min(1.0, float(value)))
+
+
+def _confidence_tier(overall: float) -> str:
+    if overall >= 0.80:
+        return "high"
+    if overall >= 0.60:
+        return "medium"
+    return "low"
+
+
+def _token_count(text: Any) -> int:
+    if not isinstance(text, str):
+        return 0
+    return len([t for t in re.split(r"\s+", text.strip()) if t])
+
+
+def _damage_multiplier(damage_types: Set[str]) -> Tuple[float, float, float]:
+    transcript = 1.0
+    speaker = 1.0
+    phase = 1.0
+    if "transcript_artifact" in damage_types:
+        transcript *= 0.30
+        phase *= 0.70
+    if "low_quality" in damage_types:
+        transcript *= 0.62
+    if "mixed_mode" in damage_types:
+        phase *= 0.55
+    if "speaker_ambiguity" in damage_types:
+        speaker *= 0.48
+    if "boundary_uncertain" in damage_types:
+        phase *= 0.65
+    return transcript, speaker, phase
+
+
+def _apply_propagation_penalties(
+    base_conf_by_id: Dict[int, Dict[str, float]],
+    propagation_by_seg: Dict[int, float],
+) -> None:
+    for sid, penalty in propagation_by_seg.items():
+        if sid not in base_conf_by_id:
+            continue
+        row = base_conf_by_id[sid]
+        penalty = _clamp01(penalty)
+        for key in ("transcript", "speaker", "phase"):
+            row[key] = _clamp01(row[key] * penalty)
+        row["overall"] = _clamp01((row["transcript"] + row["speaker"] + row["phase"]) / 3.0)
+
+
+def propagate_confidence(
+    data_06d: Dict[str, Any],
+    damage_map: Optional[Dict[str, Any]],
+    adjudication: Optional[Dict[str, Any]],
+    *,
+    conversation_block_threshold: float,
+    apply_repairs: bool,
+) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+    out = copy.deepcopy(data_06d)
+    segments_raw = out.get("segments")
+    if not isinstance(segments_raw, list):
+        raise RuntimeError("Invalid 06d payload: missing segments[]")
+    segments: List[Dict[str, Any]] = [s for s in segments_raw if isinstance(s, dict)]
+    segments.sort(key=lambda s: _safe_int(s.get("id")) or 0)
+    out["segments"] = segments
+
+    global_transcript_score = 0.70
+    tc = out.get("transcript_confidence")
+    if isinstance(tc, dict):
+        score = tc.get("score")
+        if isinstance(score, (int, float)):
+            global_transcript_score = _clamp01(float(score) / 100.0)
+
+    speaker_labels = out.get("speaker_labels") if isinstance(out.get("speaker_labels"), dict) else {}
+    seg_ids = [_safe_int(seg.get("id")) for seg in segments]
+    seg_ids = [sid for sid in seg_ids if isinstance(sid, int)]
+
+    damage_by_seg: Dict[int, Dict[str, Any]] = {}
+    if isinstance(damage_map, dict):
+        for row in damage_map.get("segments", []) or []:
+            if not isinstance(row, dict):
+                continue
+            sid = _safe_int(row.get("segment_id"))
+            if sid is None:
+                continue
+            damage_by_seg[sid] = row
+
+    adjudication_by_seed: Dict[int, Dict[str, Any]] = {}
+    if isinstance(adjudication, dict):
+        for row in adjudication.get("seeds", []) or []:
+            if not isinstance(row, dict):
+                continue
+            sid = _safe_int(row.get("seed_segment_id"))
+            if sid is None:
+                continue
+            adjudication_by_seed[sid] = row
+
+    base_conf_by_id: Dict[int, Dict[str, float]] = {}
+    contamination_sources_by_seg: Dict[int, Set[str]] = {}
+    contains_repaired_text: Set[int] = set()
+    propagation_penalty_by_seg: Dict[int, float] = {}
+
+    # First pass: deterministic + local adjudication merge.
+    for seg in segments:
+        sid = _safe_int(seg.get("id"))
+        if sid is None:
+            continue
+        speaker_id = seg.get("speaker_id")
+        role = str(seg.get("speaker_role", "")).strip().lower()
+        segment_type = str(seg.get("segment_type", "")).strip().lower()
+
+        speaker_conf = 0.85
+        if isinstance(speaker_id, str):
+            lbl = speaker_labels.get(speaker_id, {})
+            if isinstance(lbl, dict):
+                speaker_conf = _clamp01(_safe_float(lbl.get("confidence"), 0.85))
+        if role in {"unknown"}:
+            speaker_conf = min(speaker_conf, 0.45)
+
+        phase_conf = 0.86 if segment_type == "approach" else 0.74
+        transcript_conf = global_transcript_score
+
+        dmg = damage_by_seg.get(sid, {})
+        dmg_types = {
+            str(t).strip()
+            for t in (dmg.get("damage_types") or [])
+            if isinstance(t, str) and str(t).strip()
+        }
+        damage_reason_codes = [
+            str(r).strip()
+            for r in (dmg.get("damage_reason_codes") or [])
+            if isinstance(r, str) and str(r).strip()
+        ]
+        contamination_sources_by_seg[sid] = set(damage_reason_codes)
+
+        t_mult, s_mult, p_mult = _damage_multiplier(dmg_types)
+        transcript_conf = _clamp01(transcript_conf * t_mult)
+        speaker_conf = _clamp01(speaker_conf * s_mult)
+        phase_conf = _clamp01(phase_conf * p_mult)
+
+        adj = adjudication_by_seed.get(sid, {})
+        adj_payload = adj.get("adjudication") if isinstance(adj.get("adjudication"), dict) else {}
+        if isinstance(adj_payload, dict) and adj_payload:
+            transcript_conf = _clamp01(
+                (transcript_conf + _safe_float(adj_payload.get("transcript_confidence"), transcript_conf)) / 2.0
+            )
+            speaker_conf = _clamp01(
+                (speaker_conf + _safe_float(adj_payload.get("speaker_confidence"), speaker_conf)) / 2.0
+            )
+            phase_conf = _clamp01(
+                (phase_conf + _safe_float(adj_payload.get("phase_confidence"), phase_conf)) / 2.0
+            )
+
+        overall = _clamp01((transcript_conf + speaker_conf + phase_conf) / 3.0)
+        base_conf_by_id[sid] = {
+            "transcript": transcript_conf,
+            "speaker": speaker_conf,
+            "phase": phase_conf,
+            "overall": overall,
+        }
+
+        if isinstance(adj_payload, dict) and adj_payload:
+            start = _safe_int(adj_payload.get("contamination_start_segment_id"))
+            end = _safe_int(adj_payload.get("contamination_end_segment_id"))
+            if start is not None and end is not None:
+                lo = min(start, end)
+                hi = max(start, end)
+                for target_sid in seg_ids:
+                    if target_sid < lo or target_sid > hi:
+                        continue
+                    existing = propagation_penalty_by_seg.get(target_sid, 1.0)
+                    # Deterministic tie-break: keep strongest penalty.
+                    propagation_penalty_by_seg[target_sid] = min(existing, 0.84)
+                    contamination_sources_by_seg.setdefault(target_sid, set()).add(f"adjudicated_seed:{sid}")
+
+            if bool(adj.get("repair_accepted")):
+                repaired_text = adj_payload.get("repaired_text")
+                if isinstance(repaired_text, str) and repaired_text.strip():
+                    if apply_repairs:
+                        original_text = seg.get("text", "")
+                        if original_text != repaired_text.strip():
+                            seg["original_text_before_repair"] = original_text
+                            seg["text"] = repaired_text.strip()
+                            seg["repair_metadata"] = {
+                                "source_stage": "06g.damage-adjudicator",
+                                "seed_segment_id": sid,
+                                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                            }
+                    contains_repaired_text.add(sid)
+
+    # Second pass: propagate contamination penalties across adjudicated spans.
+    _apply_propagation_penalties(base_conf_by_id, propagation_penalty_by_seg)
+
+    # Attach per-segment confidence metadata.
+    by_tier: Dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    for seg in segments:
+        sid = _safe_int(seg.get("id"))
+        if sid is None:
+            continue
+        conf = base_conf_by_id.get(sid, {"transcript": 0.5, "speaker": 0.5, "phase": 0.5, "overall": 0.5})
+        tier = _confidence_tier(conf["overall"])
+        by_tier[tier] = by_tier.get(tier, 0) + 1
+        seg["segment_confidence"] = {
+            "transcript": round(conf["transcript"], 4),
+            "speaker": round(conf["speaker"], 4),
+            "phase": round(conf["phase"], 4),
+            "overall": round(conf["overall"], 4),
+        }
+        seg["confidence_tier"] = tier
+        seg["contamination_sources"] = sorted(contamination_sources_by_seg.get(sid, set()))
+        seg["contains_repaired_text"] = sid in contains_repaired_text
+
+    # Conversation-level confidence + anchor allowlist.
+    conversations = out.get("conversations")
+    if not isinstance(conversations, list):
+        conversations = []
+        out["conversations"] = conversations
+
+    conversation_summary: List[Dict[str, Any]] = []
+    for conv in conversations:
+        if not isinstance(conv, dict):
+            continue
+        conv_id = _safe_int(conv.get("conversation_id"))
+        if conv_id is None or conv_id <= 0:
+            continue
+        seg_ids_conv = [
+            sid for sid in (conv.get("segment_ids") or [])
+            if isinstance(sid, int)
+        ]
+        if not seg_ids_conv:
+            seg_ids_conv = [
+                _safe_int(seg.get("id"))
+                for seg in segments
+                if (_safe_int(seg.get("conversation_id")) or 0) == conv_id
+            ]
+            seg_ids_conv = [sid for sid in seg_ids_conv if isinstance(sid, int)]
+            conv["segment_ids"] = seg_ids_conv
+
+        scores = [base_conf_by_id[sid]["overall"] for sid in seg_ids_conv if sid in base_conf_by_id]
+        conv_score = _clamp01(sum(scores) / len(scores)) if scores else 0.0
+        conv["conversation_confidence_score"] = round(conv_score, 4)
+        if conv_score < conversation_block_threshold:
+            conv["confidence_block_reason"] = "low_conversation_confidence"
+        else:
+            conv["confidence_block_reason"] = None
+
+        anchor_ids: List[int] = []
+        for sid in seg_ids_conv:
+            seg = next((s for s in segments if _safe_int(s.get("id")) == sid), None)
+            if not isinstance(seg, dict):
+                continue
+            if str(seg.get("segment_type", "")).strip().lower() != "approach":
+                continue
+            if bool(seg.get("exclude_from_stage07_evidence")):
+                continue
+            if str(seg.get("confidence_tier", "")).strip().lower() != "high":
+                continue
+            anchor_ids.append(sid)
+        conv["stage07_anchor_segment_ids"] = anchor_ids
+        conv["stage07_anchor_policy"] = {
+            "source_stage": PIPELINE_VERSION,
+            "anchor_confidence_tier": "high",
+        }
+        conversation_summary.append(
+            {
+                "conversation_id": conv_id,
+                "segment_count": len(seg_ids_conv),
+                "anchor_segment_count": len(anchor_ids),
+                "conversation_confidence_score": round(conv_score, 4),
+                "confidence_block_reason": conv.get("confidence_block_reason"),
+            }
+        )
+
+    meta = out.get("metadata")
+    if not isinstance(meta, dict):
+        meta = {}
+        out["metadata"] = meta
+    meta["confidence_propagated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    meta["confidence_pipeline_version"] = PIPELINE_VERSION
+
+    out["confidence_metadata"] = {
+        "pipeline_version": PIPELINE_VERSION,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "conversation_block_threshold": conversation_block_threshold,
+        "tier_counts": by_tier,
+        "segments_with_repairs": len(contains_repaired_text),
+        "damage_map_present": bool(damage_map),
+        "adjudication_present": bool(adjudication),
+    }
+
+    report = {
+        "video_id": out.get("video_id"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "pipeline_version": PIPELINE_VERSION,
+        "summary": {
+            "segments_total": len(seg_ids),
+            "tier_counts": by_tier,
+            "segments_with_repairs": len(contains_repaired_text),
+            "conversations_total": len(conversation_summary),
+            "conversations_blocked": sum(
+                1 for row in conversation_summary if row.get("confidence_block_reason")
+            ),
+        },
+        "conversation_summaries": conversation_summary,
+    }
+    return out, report
+
+
+def process_file(
+    input_path: Path,
+    output_path: Path,
+    *,
+    input_root_dir: Path,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+    conversation_block_threshold: float,
+    apply_repairs: bool,
+    dry_run: bool = False,
+) -> Dict[str, int]:
+    data_06d = _read_json(input_path)
+    if not data_06d:
+        raise RuntimeError(f"Could not read 06d input: {input_path}")
+
+    vid_hint = data_06d.get("video_id")
+    if not isinstance(vid_hint, str) or not vid_hint.strip():
+        vid_hint = _extract_video_id_from_name(input_path.name)
+
+    damage_path = _find_sidecar_path(
+        input_path=input_path,
+        input_root_dir=input_root_dir,
+        sidecar_root_dir=damage_root_dir,
+        from_suffix=".conversations.json",
+        to_suffix=".damage-map.json",
+        glob_name="*.damage-map.json",
+        video_id_hint=vid_hint if isinstance(vid_hint, str) else None,
+    )
+    adjud_path = _find_sidecar_path(
+        input_path=input_path,
+        input_root_dir=input_root_dir,
+        sidecar_root_dir=adjudication_root_dir,
+        from_suffix=".conversations.json",
+        to_suffix=".damage-adjudication.json",
+        glob_name="*.damage-adjudication.json",
+        video_id_hint=vid_hint if isinstance(vid_hint, str) else None,
+    )
+
+    damage_data = _read_json(damage_path) if damage_path else None
+    adjud_data = _read_json(adjud_path) if adjud_path else None
+
+    propagated, report = propagate_confidence(
+        data_06d,
+        damage_data,
+        adjud_data,
+        conversation_block_threshold=conversation_block_threshold,
+        apply_repairs=apply_repairs,
+    )
+    report["inputs"] = {
+        "stage06d": str(input_path),
+        "damage_map": str(damage_path) if damage_path else None,
+        "damage_adjudication": str(adjud_path) if adjud_path else None,
+    }
+
+    report_path = output_path.with_suffix(".confidence.report.json")
+    tier_counts = report.get("summary", {}).get("tier_counts", {}) if isinstance(report.get("summary"), dict) else {}
+    blocked_convs = int(report.get("summary", {}).get("conversations_blocked", 0)) if isinstance(report.get("summary"), dict) else 0
+
+    if dry_run:
+        print(
+            f"{LOG_PREFIX} [DRY RUN] {input_path.name}: "
+            f"tiers={tier_counts}, blocked_conversations={blocked_convs}"
+        )
+        return {
+            "blocked_conversations": blocked_convs,
+            "segments_total": int(report.get("summary", {}).get("segments_total", 0) or 0),
+        }
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(propagated, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"{LOG_PREFIX} {input_path.name}: tiers={tier_counts}, blocked_conversations={blocked_convs}")
+    print(f"{LOG_PREFIX}   Output: {output_path}")
+    print(f"{LOG_PREFIX}   Report: {report_path}")
+    return {
+        "blocked_conversations": blocked_convs,
+        "segments_total": int(report.get("summary", {}).get("segments_total", 0) or 0),
+    }
+
+
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    output_root_dir: Optional[Path] = None,
+    input_root_dir: Path,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    if not files:
+        return
+    print(f"{LOG_PREFIX} Input : {in_dir}")
+    print(f"{LOG_PREFIX} Output: {out_dir}")
+    print(f"{LOG_PREFIX} Files : {len(files)}")
+
+    processed = 0
+    skipped = 0
+    failed = 0
+    totals = {"segments_total": 0, "blocked_conversations": 0}
+
+    for input_file in files:
+        preferred_output = compute_output_path_with_layout(
+            input_file,
+            out_dir,
+            input_root_dir=in_dir,
+        )
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root_dir=in_dir,
+        )
+        if existing_output and not args.overwrite:
+            skipped += 1
+            continue
+        try:
+            counts = process_file(
+                input_file,
+                preferred_output,
+                input_root_dir=input_root_dir,
+                damage_root_dir=damage_root_dir,
+                adjudication_root_dir=adjudication_root_dir,
+                conversation_block_threshold=args.conversation_block_threshold,
+                apply_repairs=args.apply_repairs,
+                dry_run=args.dry_run,
+            )
+            processed += 1
+            for key in totals:
+                totals[key] += int(counts.get(key, 0))
+        except Exception as exc:
+            failed += 1
+            print(f"{LOG_PREFIX} ERROR: {input_file} -> {exc}")
+
+    print(f"\n{LOG_PREFIX} Done.")
+    print(f"  Processed: {processed}")
+    print(f"  Skipped:   {skipped}")
+    print(f"  Failed:    {failed}")
+    print(f"  Segments:  {totals['segments_total']}")
+    print(f"  Blocked conversations: {totals['blocked_conversations']}")
+    if failed > 0:
+        sys.exit(1)
+
+
+def _run_directory(
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    input_root_dir: Path,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"{LOG_PREFIX} No .conversations.json files found in: {in_dir}")
+        return
+    _run_directory_with_files(
+        files,
+        in_dir,
+        out_dir,
+        args,
+        input_root_dir=input_root_dir,
+        damage_root_dir=damage_root_dir,
+        adjudication_root_dir=adjudication_root_dir,
+    )
+
+
+def _run_input(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    input_path = Path(args.input)
+    if not input_path.exists():
+        input_path = repo_root() / args.input
+    if not input_path.exists():
+        raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
+
+    if input_path.is_file():
+        out_dir = Path(args.output) if args.output else out_base
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root_dir=in_base)
+        if output_path.exists() and not args.overwrite:
+            print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
+            return
+        process_file(
+            input_path,
+            output_path,
+            input_root_dir=in_base,
+            damage_root_dir=damage_root_dir,
+            adjudication_root_dir=adjudication_root_dir,
+            conversation_block_threshold=args.conversation_block_threshold,
+            apply_repairs=args.apply_repairs,
+            dry_run=args.dry_run,
+        )
+        return
+
+    out_dir = Path(args.output) if args.output else out_base
+    _run_directory(
+        input_path,
+        out_dir,
+        args,
+        input_root_dir=in_base,
+        damage_root_dir=damage_root_dir,
+        adjudication_root_dir=adjudication_root_dir,
+    )
+
+
+def _run_sources(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    sources_path = repo_root() / args.sources
+    if not sources_path.exists():
+        raise SystemExit(f"Sources file not found: {sources_path}")
+    for src_name, _ in parse_sources_file(sources_path):
+        src_in_dir = in_base / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            continue
+        src_out_dir = out_base / src_name
+        files = find_input_files(src_in_dir)
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+            input_root_dir=in_base,
+            damage_root_dir=damage_root_dir,
+            adjudication_root_dir=adjudication_root_dir,
+        )
+
+
+def _run_manifest(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    manifest_path = Path(args.manifest)
+    if not manifest_path.is_absolute():
+        manifest_path = repo_root() / manifest_path
+    if not manifest_path.exists():
+        raise SystemExit(f"Manifest file not found: {manifest_path}")
+
+    sources_map = load_manifest_sources(manifest_path)
+    for src_name, vid_ids in sorted(sources_map.items()):
+        src_in_dir = in_base / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            continue
+        src_out_dir = out_base / src_name
+        files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+        if not files:
+            print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
+            continue
+        print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+            input_root_dir=in_base,
+            damage_root_dir=damage_root_dir,
+            adjudication_root_dir=adjudication_root_dir,
+        )
+
+
+def _run_named_source(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    damage_root_dir: Path,
+    adjudication_root_dir: Path,
+) -> None:
+    name = args.name
+    in_dir = in_base / name
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+    out_dir = Path(args.output) if args.output else out_base / name
+    _run_directory(
+        in_dir,
+        out_dir,
+        args,
+        input_root_dir=in_base,
+        damage_root_dir=damage_root_dir,
+        adjudication_root_dir=adjudication_root_dir,
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Stage 06h confidence propagation merge")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.sanitized/)")
+    parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
+    parser.add_argument("--input", help="Input .conversations.json file or directory")
+    parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06d.sanitized, or data/test/06d.sanitized with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--damage-root",
+        help=(
+            "Root directory for 06f damage-map artifacts "
+            "(default: data/06f.damage-map, or data/test/06f.damage-map with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--adjudication-root",
+        help=(
+            "Root directory for 06g adjudication artifacts "
+            "(default: data/06g.damage-adjudicator, or data/test/06g.damage-adjudicator with --test)"
+        ),
+    )
+    parser.add_argument("--output", help="Output directory (default: data/06h.confidence-propagation/)")
+    parser.add_argument(
+        "--conversation-block-threshold",
+        type=float,
+        default=0.60,
+        help="Conversation confidence threshold below which confidence_block_reason is set",
+    )
+    parser.add_argument(
+        "--apply-repairs",
+        action="store_true",
+        help="Apply accepted 06g repaired_text back into segment text",
+    )
+    parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/pipeline/sources.txt",
+        help="Process all sources from sources.txt file",
+    )
+    parser.add_argument("--manifest", help="Manifest file: process listed videos only")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
+    args = parser.parse_args()
+
+    args.conversation_block_threshold = _clamp01(args.conversation_block_threshold)
+
+    if args.test:
+        in_root = resolve_root_path(args.input_root, test_input_root())
+        dmg_root = resolve_root_path(args.damage_root, test_damage_root())
+        adj_root = resolve_root_path(args.adjudication_root, test_adjudication_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+    else:
+        in_root = resolve_root_path(args.input_root, input_root())
+        dmg_root = resolve_root_path(args.damage_root, damage_root())
+        adj_root = resolve_root_path(args.adjudication_root, adjudication_root())
+        out_root = Path(args.output) if args.output else output_root()
+
+    if args.test:
+        _run_directory(
+            in_root,
+            out_root,
+            args,
+            input_root_dir=in_root,
+            damage_root_dir=dmg_root,
+            adjudication_root_dir=adj_root,
+        )
+    elif args.manifest:
+        _run_manifest(
+            args,
+            in_root,
+            out_root,
+            damage_root_dir=dmg_root,
+            adjudication_root_dir=adj_root,
+        )
+    elif args.input:
+        _run_input(
+            args,
+            in_root,
+            out_root,
+            damage_root_dir=dmg_root,
+            adjudication_root_dir=adj_root,
+        )
+    elif args.sources:
+        _run_sources(
+            args,
+            in_root,
+            out_root,
+            damage_root_dir=dmg_root,
+            adjudication_root_dir=adj_root,
+        )
+    elif args.name:
+        _run_named_source(
+            args,
+            in_root,
+            out_root,
+            damage_root_dir=dmg_root,
+            adjudication_root_dir=adj_root,
+        )
+    else:
+        raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Goal icon: flag with curved arc - feels dynamic/in-motion -->
+  <!-- Pole with slight lean -->
+  <line x1="9" y1="5" x2="8" y2="28" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  <!-- Flag - single flowing curve -->
+  <path d="M9 5 C15 3, 22 6, 25 10 C22 12, 15 9, 9 14"
+        fill="#ff6b35" fill-opacity="0.2" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Ground dot -->
+  <circle cx="8" cy="28" r="2" fill="#ff6b35"/>
+</svg>

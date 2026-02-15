@@ -2,7 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Target, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import Link from "next/link"
 
 interface GoalsTabProps {
@@ -14,7 +15,7 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
     return (
       <Card className="border-dashed">
         <CardContent className="py-12 text-center">
-          <Target className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <GoalIcon className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
           <h3 className="font-semibold text-lg mb-2">Strategic Goal Setting</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
             Define what you want to achieve. Your goals here connect to your daily
@@ -29,7 +30,7 @@ export function GoalsTab({ isPreviewMode = false }: GoalsTabProps) {
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card">
       <CardContent className="py-12 text-center">
         <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-          <Target className="h-8 w-8 text-primary" />
+          <GoalIcon className="h-8 w-8 text-primary" />
         </div>
         <h3 className="font-semibold text-xl mb-2">Goals have moved to their own page!</h3>
         <p className="text-muted-foreground max-w-md mx-auto mb-6">

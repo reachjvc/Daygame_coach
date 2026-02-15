@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useMemo, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -10,18 +10,23 @@ import {
   CreditCard,
   Trophy,
   TrendingUp,
-  Target,
+  CircleDot,
   Mic,
   RotateCcw,
   ExternalLink,
   AlertCircle,
   CheckCircle2,
   ChevronLeft,
+  Globe,
+  LocateFixed,
+  Search,
+  Check,
 } from "lucide-react"
 import { AppHeader } from "@/components/AppHeader"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -44,6 +49,7 @@ interface SettingsPageClientProps extends SettingsPageProps {
   onResetSandboxSettings: () => Promise<void>
   onUpdateDifficulty: (difficulty: string) => Promise<void>
   onUpdateVoiceLanguage: (language: string) => Promise<void>
+  onUpdateTimezone: (timezone: string) => Promise<void>
   onCancelSubscription: () => Promise<{ success: boolean }>
   onReactivateSubscription: () => Promise<{ success: boolean }>
   onOpenBillingPortal: () => Promise<{ url: string } | null>
@@ -58,6 +64,7 @@ export function SettingsPage({
   onResetSandboxSettings,
   onUpdateDifficulty,
   onUpdateVoiceLanguage,
+  onUpdateTimezone,
   onCancelSubscription,
   onReactivateSubscription,
   onOpenBillingPortal,
@@ -75,6 +82,12 @@ export function SettingsPage({
   const [currentVoiceLanguage, setCurrentVoiceLanguage] = useState(
     profile.voice_language || DEFAULT_VOICE_LANGUAGE
   )
+  const [currentTimezone, setCurrentTimezone] = useState(
+    profile.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone
+  )
+  const [timezoneSearch, setTimezoneSearch] = useState("")
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
+  const timezoneDropdownRef = useRef<HTMLDivElement>(null)
 
   const handleSandboxToggle = (
     category: keyof SandboxSettings,
@@ -141,6 +154,44 @@ export function SettingsPage({
     })
   }
 
+  const handleTimezoneChange = (timezone: string) => {
+    setCurrentTimezone(timezone)
+    setShowTimezoneDropdown(false)
+    setTimezoneSearch("")
+    startTransition(async () => {
+      await onUpdateTimezone(timezone)
+    })
+  }
+
+  const handleDetectTimezone = () => {
+    const detected = Intl.DateTimeFormat().resolvedOptions().timeZone
+    handleTimezoneChange(detected)
+  }
+
+  const allTimezones = useMemo(() => {
+    try {
+      return Intl.supportedValuesOf("timeZone")
+    } catch {
+      return ["UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles", "Europe/London", "Europe/Berlin", "Europe/Paris", "Asia/Tokyo", "Asia/Shanghai", "Australia/Sydney"]
+    }
+  }, [])
+
+  const filteredTimezones = useMemo(() => {
+    if (!timezoneSearch) return allTimezones.slice(0, 50)
+    const query = timezoneSearch.toLowerCase()
+    return allTimezones.filter((tz) => tz.toLowerCase().includes(query)).slice(0, 50)
+  }, [allTimezones, timezoneSearch])
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (timezoneDropdownRef.current && !timezoneDropdownRef.current.contains(event.target as Node)) {
+        setShowTimezoneDropdown(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
   const product = subscription
     ? PRODUCTS.find((p) => p.id === subscription.productId)
     : null
@@ -173,7 +224,7 @@ export function SettingsPage({
               <span className="hidden sm:inline">Sandbox</span>
             </TabsTrigger>
             <TabsTrigger value="game" className="gap-2">
-              <Target className="h-4 w-4" />
+              <CircleDot className="h-4 w-4" />
               <span className="hidden sm:inline">Game</span>
             </TabsTrigger>
             <TabsTrigger value="subscription" className="gap-2">
@@ -247,7 +298,7 @@ export function SettingsPage({
                     <p className="text-sm text-muted-foreground">Total Scenarios</p>
                   </div>
                   <div className="rounded-lg bg-muted/50 p-4 text-center">
-                    <Target className="mx-auto mb-2 h-6 w-6 text-primary" />
+                    <CircleDot className="mx-auto mb-2 h-6 w-6 text-primary" />
                     <p className="text-2xl font-bold">{stats.averageScore}%</p>
                     <p className="text-sm text-muted-foreground">Avg Score (Last 10)</p>
                   </div>
@@ -315,6 +366,77 @@ export function SettingsPage({
                       Edit Preferences
                     </Button>
                   </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Timezone */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="h-5 w-5" />
+                  Timezone
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Used for goal reset timing (e.g., weekly goals reset Sunday at midnight in your timezone)
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Label className="text-muted-foreground">Current Timezone</Label>
+                    <p className="mt-1 font-medium">{currentTimezone.replace(/_/g, " ")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date().toLocaleString("en-US", { timeZone: currentTimezone, timeZoneName: "long" }).split(", ").pop()}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDetectTimezone}
+                    disabled={isPending}
+                    className="shrink-0"
+                  >
+                    <LocateFixed className="mr-2 h-4 w-4" />
+                    Detect
+                  </Button>
+                </div>
+
+                <div className="relative" ref={timezoneDropdownRef}>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search timezones..."
+                      value={timezoneSearch}
+                      onChange={(e) => {
+                        setTimezoneSearch(e.target.value)
+                        setShowTimezoneDropdown(true)
+                      }}
+                      onFocus={() => setShowTimezoneDropdown(true)}
+                      className="pl-9"
+                    />
+                  </div>
+                  {showTimezoneDropdown && (
+                    <div className="absolute z-50 mt-1 w-full max-h-60 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+                      {filteredTimezones.length === 0 ? (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">No timezones found</div>
+                      ) : (
+                        filteredTimezones.map((tz) => (
+                          <button
+                            key={tz}
+                            type="button"
+                            onClick={() => handleTimezoneChange(tz)}
+                            className={`flex w-full items-center justify-between px-3 py-2 text-sm text-left transition-colors hover:bg-muted ${
+                              tz === currentTimezone ? "bg-primary/10 text-primary" : ""
+                            }`}
+                          >
+                            <span>{tz.replace(/_/g, " ")}</span>
+                            {tz === currentTimezone && <Check className="h-4 w-4 text-primary" />}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -553,7 +675,7 @@ export function SettingsPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5" />
+                  <CircleDot className="h-5 w-5" />
                   Difficulty Level
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">

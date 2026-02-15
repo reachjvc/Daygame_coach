@@ -80,6 +80,7 @@ export interface ProfileRow {
   preferred_region?: string | null
   secondary_region?: string | null
   primary_goal?: string | null
+  timezone?: string | null
 }
 
 export interface ProfileUpdate {
@@ -101,6 +102,7 @@ export interface ProfileUpdate {
   subscription_cancelled_at?: string | null
   voice_language?: string | null
   preferred_language?: string | null
+  timezone?: string | null
 }
 
 // ============================================

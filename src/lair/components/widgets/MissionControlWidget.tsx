@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Plus, RotateCcw, Flame, ChevronDown, ChevronUp, Target, TrendingUp, Zap, GripVertical, Star, Layers, ArrowRight } from "lucide-react"
+import { Plus, RotateCcw, Flame, ChevronDown, ChevronUp, CircleDot, TrendingUp, Zap, GripVertical, Star, Layers, ArrowRight } from "lucide-react"
 import {
   DndContext,
   pointerWithin,
@@ -372,7 +372,7 @@ function StatsPanel({ goals }: { goals: GoalWithProgress[] }) {
   const lifeAreasActive = new Set(goals.map(g => g.life_area || g.category)).size
 
   const stats = [
-    { label: "Complete", value: `${completedToday}/${totalGoals}`, icon: Target, color: "#22c55e" },
+    { label: "Complete", value: `${completedToday}/${totalGoals}`, icon: CircleDot, color: "#22c55e" },
     { label: "Avg Progress", value: `${avgProgress}%`, icon: TrendingUp, color: "#3b82f6" },
     { label: "Total Streaks", value: totalStreaks, icon: Flame, color: "#f97316" },
     { label: "Life Areas", value: lifeAreasActive, icon: Layers, color: "#8b5cf6" },
@@ -528,7 +528,7 @@ export function MissionControlWidget({ collapsed }: WidgetProps) {
       <>
         <div className="text-center py-12 border border-dashed border-muted rounded-xl">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <Target className="h-8 w-8 text-primary" />
+            <CircleDot className="h-8 w-8 text-primary" />
           </div>
           <h3 className="font-semibold mb-1">No missions active</h3>
           <p className="text-sm text-muted-foreground mb-4">

@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckCircle2, Sparkles, Star } from "lucide-react"
+import { CheckCircle2, Sunrise, Star } from "lucide-react"
 import type { ValueSource } from "../../types"
 import { VALUE_SOURCE_CONFIG } from "../../config"
 
@@ -110,7 +110,7 @@ export function AspirationalCheck({
           )}
 
           <div className="w-10 h-10 mx-auto rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
-            <Sparkles className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <Sunrise className="w-5 h-5 text-blue-600 dark:text-blue-400" />
           </div>
           <div className="space-y-1">
             <span className="text-base sm:text-lg font-semibold text-foreground block group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">

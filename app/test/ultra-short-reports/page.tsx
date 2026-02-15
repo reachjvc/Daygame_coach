@@ -28,7 +28,7 @@ import {
   Activity,
   HelpCircle,
   Trophy,
-  Target,
+  CircleDot,
   // Icons for research-backed templates
   Mic,
   ListChecks,
@@ -176,7 +176,7 @@ const ULTRA_SHORT_TEMPLATES: UltraShortTemplate[] = [
     name: "The Intention Check",
     description: "Compare intended vs actual",
     tagline: "AAR style accountability",
-    icon: <Target className="size-5" />,
+    icon: <CircleDot className="size-5" />,
     time: "~20s",
     color: {
       bg: "bg-violet-500/10",

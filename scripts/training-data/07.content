@@ -177,6 +177,18 @@ MAX_FAILURE_RATE = 0.20
 
 # Phase progression order (must go forward only)
 PHASE_ORDER = ["open", "pre_hook", "post_hook", "close"]
+KNOWN_DROPPED_CANDIDATE_REASONS: Set[str] = {
+    "missing_evidence_segment",
+    "unknown_evidence_segment",
+    "flagged_evidence_segment",
+    "excluded_by_sanitizer",
+    "non_approach_segment",
+    "transcript_artifact",
+    "low_quality_evidence_segment",
+    "segment_not_in_evidence_allowlist",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+}
 VIDEO_ID_BRACKET_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 
 
@@ -1495,11 +1507,16 @@ def validate_enrichment_output(
         if isinstance(s, dict) and isinstance(s.get("id"), int)
     }
     stage07_allowlist: Dict[int, Set[int]] = {}
+    stage07_anchor_allowlist: Dict[int, Set[int]] = {}
     conversation_meta_by_id: Dict[int, Dict[str, Any]] = {}
     if stage06_data and isinstance(stage06_data, dict):
         stage07_allowlist = build_stage07_evidence_allowlist(
             stage06_data.get("conversations"),
             stage06_data.get("segments", segments) or segments,
+        )
+        stage07_anchor_allowlist = build_stage07_anchor_allowlist(
+            stage06_data.get("conversations"),
+            stage07_allowlist,
         )
         conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
 
@@ -1634,6 +1651,7 @@ def validate_enrichment_output(
                 conv_id,
                 seg_by_id,
                 stage07_allowlist=stage07_allowlist,
+                stage07_anchor_allowlist=stage07_anchor_allowlist,
                 low_quality_ids=low_quality_ids,
                 transcript_artifact_ids=transcript_artifact_ids,
             )
@@ -1772,6 +1790,43 @@ def validate_enrichment_output(
                 f"{artifact.get('description', 'no description')}"
             ))
 
+    # --- 8. Dropped-candidate reason-code contract ---
+    dropped_candidates = output.get("dropped_candidates", [])
+    if isinstance(dropped_candidates, list):
+        for idx, rec in enumerate(dropped_candidates):
+            if not isinstance(rec, dict):
+                results.append(ValidationResult(
+                    "error", "dropped_candidate_invalid_shape",
+                    f"dropped_candidates[{idx}] must be an object"
+                ))
+                continue
+            reason_code_raw = rec.get("reason_code")
+            reason_fallback_raw = rec.get("reason")
+            reason_code: Optional[str] = None
+            if isinstance(reason_code_raw, str) and reason_code_raw.strip():
+                reason_code = reason_code_raw.strip()
+            elif isinstance(reason_fallback_raw, str) and reason_fallback_raw.strip():
+                reason_code = reason_fallback_raw.strip()
+            if not reason_code:
+                results.append(ValidationResult(
+                    "error", "dropped_candidate_missing_reason_code",
+                    f"dropped_candidates[{idx}] is missing reason_code/reason"
+                ))
+                continue
+            if reason_code not in KNOWN_DROPPED_CANDIDATE_REASONS:
+                results.append(ValidationResult(
+                    "error", "dropped_candidate_unknown_reason_code",
+                    f"dropped_candidates[{idx}] has unknown reason_code '{reason_code}'"
+                ))
+            seg_id = rec.get("segment")
+            if isinstance(seg_id, int):
+                damage_reason = rec.get("damage_reason_code")
+                if not isinstance(damage_reason, str) or not damage_reason.strip():
+                    results.append(ValidationResult(
+                        "warning", "dropped_candidate_missing_damage_reason_code",
+                        f"dropped_candidates[{idx}] (segment {seg_id}) missing damage_reason_code"
+                    ))
+
     # --- Summary ---
     if not any(r.severity == "error" for r in results):
         results.append(ValidationResult("info", "validation_passed", "All checks passed"))
@@ -1874,6 +1929,46 @@ def find_claude_binary() -> Optional[str]:
             except Exception:
                 pass
     return None
+
+
+def run_claude_preflight(
+    claude_bin: str,
+    *,
+    model: Optional[str],
+    timeout_seconds: int,
+    retries: int,
+) -> Tuple[bool, str]:
+    """Probe Claude health with a tiny deterministic request."""
+    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
+    last_reason = "unknown"
+    for attempt in range(max(1, int(retries))):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=max(1, int(timeout_seconds)),
+            )
+            stdout = (result.stdout or "").strip().lower()
+            if result.returncode == 0 and stdout == "ok":
+                return True, "ok"
+            stderr = (result.stderr or "").strip()
+            if result.returncode != 0:
+                last_reason = f"non_zero_exit={result.returncode} stderr={stderr[:200]}"
+            else:
+                last_reason = f"unexpected_output={stdout[:80]!r}"
+        except subprocess.TimeoutExpired:
+            last_reason = f"timeout_after_{int(timeout_seconds)}s"
+        except FileNotFoundError:
+            return False, "claude_binary_not_found"
+
+        if attempt < max(1, int(retries)) - 1:
+            time.sleep(min(5, 2 ** attempt))
+
+    return False, last_reason
 
 
 def call_claude(
@@ -2017,12 +2112,49 @@ def build_stage07_evidence_allowlist(
     return allow_by_conv
 
 
+def build_stage07_anchor_allowlist(
+    conversations_meta: Any,
+    stage07_evidence_allowlist: Dict[int, Set[int]],
+) -> Dict[int, Set[int]]:
+    """Build high-confidence anchor allowlist.
+
+    Preferred source is conversation metadata field ``stage07_anchor_segment_ids``
+    produced by 06h.confidence-propagation. When absent, fallback to the
+    broader Stage 07 evidence allowlist for backward compatibility.
+    """
+    anchor_by_conv: Dict[int, Set[int]] = {}
+
+    if isinstance(conversations_meta, list):
+        for conv in conversations_meta:
+            if not isinstance(conv, dict):
+                continue
+            conv_id = conv.get("conversation_id")
+            anchor_ids = conv.get("stage07_anchor_segment_ids")
+            if not isinstance(conv_id, int) or conv_id <= 0:
+                continue
+            if not isinstance(anchor_ids, list):
+                continue
+            clean = {sid for sid in anchor_ids if isinstance(sid, int)}
+            if conv_id in stage07_evidence_allowlist:
+                clean = clean & set(stage07_evidence_allowlist.get(conv_id) or set())
+            anchor_by_conv[conv_id] = clean
+
+    if anchor_by_conv:
+        for conv_id, allow_ids in stage07_evidence_allowlist.items():
+            if conv_id not in anchor_by_conv:
+                anchor_by_conv[conv_id] = set(allow_ids)
+        return anchor_by_conv
+
+    return {conv_id: set(ids) for conv_id, ids in stage07_evidence_allowlist.items()}
+
+
 def evidence_block_reason_for_segment(
     seg_id: Any,
     conv_id: Any,
     seg_by_id: Dict[int, Dict[str, Any]],
     *,
     stage07_allowlist: Optional[Dict[int, Set[int]]] = None,
+    stage07_anchor_allowlist: Optional[Dict[int, Set[int]]] = None,
     low_quality_ids: Optional[Set[int]] = None,
     transcript_artifact_ids: Optional[Set[int]] = None,
 ) -> Tuple[Optional[str], Optional[str]]:
@@ -2046,11 +2178,27 @@ def evidence_block_reason_for_segment(
     if str(seg.get("segment_type", "")).strip().lower() != "approach":
         return "non_approach_segment", None
 
+    conf_tier = seg.get("confidence_tier")
+    if isinstance(conf_tier, str) and conf_tier.strip():
+        tier = conf_tier.strip().lower()
+        if tier != "high":
+            return "low_confidence_anchor", tier
+
     if transcript_artifact_ids and seg_id in transcript_artifact_ids:
         return "transcript_artifact", None
 
     if low_quality_ids and seg_id in low_quality_ids:
         return "low_quality_evidence_segment", None
+
+    if (
+        stage07_anchor_allowlist is not None
+        and isinstance(conv_id, int)
+        and conv_id > 0
+        and conv_id in stage07_anchor_allowlist
+    ):
+        anchor_allowed = stage07_anchor_allowlist.get(conv_id) or set()
+        if seg_id not in anchor_allowed:
+            return "segment_not_in_evidence_allowlist", None
 
     if (
         stage07_allowlist is not None
@@ -2069,6 +2217,7 @@ def enforce_stage07_evidence_allowlist(
     enrichments: List[Dict[str, Any]],
     seg_by_id: Dict[int, Dict[str, Any]],
     stage07_allowlist: Dict[int, Set[int]],
+    stage07_anchor_allowlist: Optional[Dict[int, Set[int]]] = None,
     *,
     low_quality_segments: Optional[List[Dict[str, Any]]] = None,
     transcript_artifacts: Optional[List[Dict[str, Any]]] = None,
@@ -2076,6 +2225,53 @@ def enforce_stage07_evidence_allowlist(
     """Hard-filter approach evidence to Stage 07 allowlisted segment IDs."""
     dropped_candidates: List[Dict[str, Any]] = []
     repairs: List[str] = []
+    drop_timestamp = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    def _damage_reason_code_for_drop(seg_id: Optional[int], reason: Optional[str]) -> Optional[str]:
+        if isinstance(seg_id, int):
+            seg = seg_by_id.get(seg_id)
+            if isinstance(seg, dict):
+                direct = seg.get("damage_reason_codes")
+                if isinstance(direct, list):
+                    clean = [r for r in direct if isinstance(r, str) and r.strip()]
+                    if clean:
+                        return clean[0].strip()
+
+        if not isinstance(reason, str):
+            return None
+        code = reason.strip()
+        if not code:
+            return None
+
+        mapped = {
+            "transcript_artifact": "seed_transcript_artifact",
+            "low_quality_evidence_segment": "seed_low_quality_segment",
+            "excluded_by_sanitizer": "seed_excluded_from_stage07_evidence",
+            "flagged_evidence_segment": "seed_segment_flagged",
+            "segment_not_in_evidence_allowlist": "seed_not_in_stage07_evidence_allowlist",
+            "non_approach_segment": "seed_non_approach_segment",
+            "missing_evidence_segment": "seed_missing_evidence_segment",
+            "unknown_evidence_segment": "seed_unknown_evidence_segment",
+            "insufficient_post_hook_evidence": "seed_insufficient_post_hook_evidence",
+            "low_confidence_anchor": "seed_low_confidence_anchor",
+        }
+        return mapped.get(code)
+
+    def _record_drop(rec: Dict[str, Any]) -> None:
+        reason = rec.get("reason")
+        if isinstance(reason, str) and reason.strip():
+            rec.setdefault("reason_code", reason.strip())
+        seg_id = rec.get("segment")
+        seg_int = seg_id if isinstance(seg_id, int) else None
+        damage_reason = _damage_reason_code_for_drop(
+            seg_int,
+            rec.get("reason_code") if isinstance(rec.get("reason_code"), str) else reason,  # type: ignore[arg-type]
+        )
+        if isinstance(damage_reason, str) and damage_reason.strip():
+            rec.setdefault("damage_reason_code", damage_reason.strip())
+        rec.setdefault("source_stage", "07.content")
+        rec.setdefault("timestamp", drop_timestamp)
+        dropped_candidates.append(rec)
 
     low_quality_ids: Set[int] = set()
     for item in low_quality_segments or []:
@@ -2113,6 +2309,7 @@ def enforce_stage07_evidence_allowlist(
                     conv_id,
                     seg_by_id,
                     stage07_allowlist=stage07_allowlist,
+                    stage07_anchor_allowlist=stage07_anchor_allowlist,
                     low_quality_ids=low_quality_ids,
                     transcript_artifact_ids=transcript_artifact_ids,
                 )
@@ -2130,14 +2327,14 @@ def enforce_stage07_evidence_allowlist(
                     example = tech.get("example")
                     if isinstance(example, str) and example.strip():
                         rec["example_preview"] = example.strip()[:140]
-                    dropped_candidates.append(rec)
+                    _record_drop(rec)
                     continue
                 if isinstance(seg_id, int) and seg_id in allow_ids:
                     kept_techniques.append(tech)
                     continue
                 # Defensive fallback (should be covered by reason function).
                 dropped_count += 1
-                dropped_candidates.append(
+                _record_drop(
                     {
                         "candidate_type": "technique_used",
                         "conversation_id": conv_id,
@@ -2165,6 +2362,7 @@ def enforce_stage07_evidence_allowlist(
                     conv_id,
                     seg_by_id,
                     stage07_allowlist=stage07_allowlist,
+                    stage07_anchor_allowlist=stage07_anchor_allowlist,
                     low_quality_ids=low_quality_ids,
                     transcript_artifact_ids=transcript_artifact_ids,
                 )
@@ -2179,7 +2377,7 @@ def enforce_stage07_evidence_allowlist(
                     }
                     if detail:
                         rec["reason_detail"] = detail
-                    dropped_candidates.append(rec)
+                    _record_drop(rec)
                     continue
                 kept_phases.append(tp)
             if dropped_phase_count > 0:
@@ -2197,6 +2395,7 @@ def enforce_stage07_evidence_allowlist(
                     conv_id,
                     seg_by_id,
                     stage07_allowlist=stage07_allowlist,
+                    stage07_anchor_allowlist=stage07_anchor_allowlist,
                     low_quality_ids=low_quality_ids,
                     transcript_artifact_ids=transcript_artifact_ids,
                 )
@@ -2209,7 +2408,7 @@ def enforce_stage07_evidence_allowlist(
                     }
                     if detail:
                         rec["reason_detail"] = detail
-                    dropped_candidates.append(rec)
+                    _record_drop(rec)
                     e["hook_point"] = None
                     e["investment_level"] = None
                     repairs.append(
@@ -2223,7 +2422,7 @@ def enforce_stage07_evidence_allowlist(
             if isinstance(tp, dict)
         }
         if e.get("investment_level") and "post_hook" not in phases_present:
-            dropped_candidates.append(
+            _record_drop(
                 {
                     "candidate_type": "investment_level",
                     "conversation_id": conv_id,
@@ -2406,6 +2605,7 @@ def build_infield_prompt(
     commentary_blocks: List[Dict],
     video_id: str,
     stage07_evidence_allowlist: Optional[Dict[int, Set[int]]] = None,
+    stage07_anchor_allowlist: Optional[Dict[int, Set[int]]] = None,
 ) -> str:
     """Build prompt for infield/compilation videos: approaches + interleaved commentary."""
 
@@ -2448,6 +2648,11 @@ End: {block['end']:.1f}s
             if isinstance(stage07_evidence_allowlist, dict)
             else None
         )
+        anchor_ids = (
+            (stage07_anchor_allowlist or {}).get(conv_id)
+            if isinstance(stage07_anchor_allowlist, dict)
+            else None
+        )
         turns = []
         for i, seg in enumerate(segments):
             seg_id = seg.get("id", i)
@@ -2455,7 +2660,12 @@ End: {block['end']:.1f}s
             text = seg.get("text", "").strip()
             marker = ""
             if isinstance(allow_ids, set):
-                marker = " (EVIDENCE_OK)" if seg_id in allow_ids else " (EVIDENCE_EXCLUDED)"
+                if isinstance(anchor_ids, set) and seg_id in anchor_ids:
+                    marker = " (ANCHOR_OK)"
+                elif seg_id in allow_ids:
+                    marker = " (CONTEXT_ONLY)"
+                else:
+                    marker = " (EVIDENCE_EXCLUDED)"
             synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
             turns.append(f"  [{seg_id}]{marker}{synthetic_marker} {speaker.upper()}: {text}")
 
@@ -2463,6 +2673,10 @@ End: {block['end']:.1f}s
         if isinstance(allow_ids, set):
             allow_ids_sorted = ", ".join(str(sid) for sid in sorted(allow_ids))
             allow_ids_line = f"Allowed evidence SEG_IDs: {allow_ids_sorted or 'none'}\n"
+        anchor_ids_line = ""
+        if isinstance(anchor_ids, set):
+            anchor_ids_sorted = ", ".join(str(sid) for sid in sorted(anchor_ids))
+            anchor_ids_line = f"Allowed anchor SEG_IDs (high-confidence only): {anchor_ids_sorted or 'none'}\n"
 
         content_items.append({
             "sort_key": segments[0].get("start", 0),
@@ -2471,7 +2685,9 @@ Segments: {len(segments)}
 Start: {segments[0].get('start', 0):.1f}s
 End: {segments[-1].get('end', 0):.1f}s
 
-{allow_ids_line}Legend: (EVIDENCE_OK)=allowed for Stage 07 technique/hook evidence; (EVIDENCE_EXCLUDED)=context only.
+{allow_ids_line}{anchor_ids_line}Legend: (ANCHOR_OK)=allowed for Stage 07 technique/hook/phase anchors.
+Legend: (CONTEXT_ONLY)=usable for narrative context only (not anchors).
+Legend: (EVIDENCE_EXCLUDED)=exclude from Stage 07 evidence.
 Legend: (SYNTHETIC)=deterministically generated split helper segment (not raw ASR).
 
 {chr(10).join(turns)}"""
@@ -2509,8 +2725,8 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (EVIDENCE_OK).
-   Never cite (EVIDENCE_EXCLUDED) turns as technique evidence.
+   CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
+   Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
@@ -2531,7 +2747,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
 6. TURN PHASES: Label each turn with its interaction phase.
-   CRITICAL: Only include phase labels for SEG_IDs marked (EVIDENCE_OK).
+   CRITICAL: Only include phase labels for SEG_IDs marked (ANCHOR_OK).
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
      Can be multiple turns if he's stacking assumptions or extending his opening bit.
@@ -2557,7 +2773,7 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - Use the SEG_ID shown in the transcript lines (the number in brackets) to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
    Provide a brief "signal".
-   CRITICAL: hook_point.segment (if provided) must be an (EVIDENCE_OK) SEG_ID.
+   CRITICAL: hook_point.segment (if provided) must be an (ANCHOR_OK) SEG_ID.
    IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
    If no post_hook phase is present, set hook_point to null and investment_level to null.
    If no hook point, set to null.
@@ -2911,6 +3127,8 @@ def process_video_file(
     output_path: Path,
     dry_run: bool = False,
     claude_model: Optional[str] = None,
+    llm_timeout_seconds: int = 600,
+    llm_retries: int = 3,
 ) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
@@ -2959,13 +3177,22 @@ def process_video_file(
         data.get("conversations"),
         segments,
     )
+    stage07_anchor_allowlist = build_stage07_anchor_allowlist(
+        data.get("conversations"),
+        stage07_evidence_allowlist,
+    )
     allowlisted_segments_total = sum(len(v) for v in stage07_evidence_allowlist.values())
+    anchored_segments_total = sum(len(v) for v in stage07_anchor_allowlist.values())
 
     print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
     print(
         f"[07.content]   Stage07 evidence allowlist: "
         f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
+    )
+    print(
+        f"[07.content]   Stage07 anchor allowlist: "
+        f"{len(stage07_anchor_allowlist)} convs, {anchored_segments_total} segment ids"
     )
 
     if dry_run:
@@ -2979,6 +3206,7 @@ def process_video_file(
             commentary_blocks,
             video_id,
             stage07_evidence_allowlist=stage07_evidence_allowlist,
+            stage07_anchor_allowlist=stage07_anchor_allowlist,
         )
     else:
         prompt = build_talking_head_prompt(segments, video_id)
@@ -2986,7 +3214,12 @@ def process_video_file(
     print(f"[07.content]   Calling Claude CLI ({video_type} prompt)...")
 
     start_time = time.time()
-    response = call_claude(prompt, timeout=600, model=claude_model)
+    response = call_claude(
+        prompt,
+        retries=max(1, int(llm_retries)),
+        timeout=max(1, int(llm_timeout_seconds)),
+        model=claude_model,
+    )
     elapsed = time.time() - start_time
 
     enrichments: List[Dict] = []
@@ -3059,6 +3292,7 @@ def process_video_file(
         enrichments,
         seg_by_id,
         stage07_evidence_allowlist,
+        stage07_anchor_allowlist=stage07_anchor_allowlist,
         low_quality_segments=low_quality_segments,
         transcript_artifacts=transcript_artifacts,
     )
@@ -3135,6 +3369,8 @@ def process_video_file(
             "dropped_candidates_count": len(dropped_candidates),
             "stage07_evidence_allowlist_conversations": len(stage07_evidence_allowlist),
             "stage07_evidence_allowlist_segments": allowlisted_segments_total,
+            "stage07_anchor_allowlist_conversations": len(stage07_anchor_allowlist),
+            "stage07_anchor_allowlist_segments": anchored_segments_total,
             "target_confident_conversations": confident_target_convs,
             "synthetic_segment_count": len(synthetic_segment_ids),
             "synthetic_low_quality_dropped": dropped_synthetic_quality,
@@ -3328,6 +3564,10 @@ def revalidate_video_file(
         stage06_data.get("conversations"),
         segments,
     )
+    stage07_anchor_allowlist = build_stage07_anchor_allowlist(
+        stage06_data.get("conversations"),
+        stage07_evidence_allowlist,
+    )
 
     # Load existing Stage 07 output.
     if not output_path.exists():
@@ -3402,6 +3642,7 @@ def revalidate_video_file(
         enrichments,
         seg_by_id,
         stage07_evidence_allowlist,
+        stage07_anchor_allowlist=stage07_anchor_allowlist,
         low_quality_segments=low_quality_segments,
         transcript_artifacts=transcript_artifacts,
     )
@@ -3426,6 +3667,8 @@ def revalidate_video_file(
     meta["dropped_candidates_count"] = len(dropped_candidates)
     meta["stage07_evidence_allowlist_conversations"] = len(stage07_evidence_allowlist)
     meta["stage07_evidence_allowlist_segments"] = sum(len(v) for v in stage07_evidence_allowlist.values())
+    meta["stage07_anchor_allowlist_conversations"] = len(stage07_anchor_allowlist)
+    meta["stage07_anchor_allowlist_segments"] = sum(len(v) for v in stage07_anchor_allowlist.values())
     meta["target_confident_conversations"] = confident_target_convs
     meta["synthetic_segment_count"] = len(synthetic_segment_ids)
     meta["synthetic_low_quality_dropped"] = dropped_synthetic_quality
@@ -3904,6 +4147,8 @@ def _run_named_source(
                 output_file,
                 dry_run=args.dry_run,
                 claude_model=args.model,
+                llm_timeout_seconds=args.timeout_seconds,
+                llm_retries=args.llm_retries,
             )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
@@ -4016,8 +4261,45 @@ def main() -> None:
         default="opus",
         help="Claude model alias or full name (default: opus)."
     )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=600,
+        help="Per-LLM-call timeout in seconds (default: 600).",
+    )
+    parser.add_argument(
+        "--llm-retries",
+        type=int,
+        default=3,
+        help="Retry attempts per Claude call (default: 3).",
+    )
+    parser.add_argument(
+        "--skip-llm-preflight",
+        action="store_true",
+        help="Skip startup Claude health probe (not recommended).",
+    )
+    parser.add_argument(
+        "--preflight-timeout-seconds",
+        type=int,
+        default=20,
+        help="Per-attempt timeout for startup Claude health probe (default: 20).",
+    )
+    parser.add_argument(
+        "--preflight-retries",
+        type=int,
+        default=2,
+        help="Retry attempts for startup Claude health probe (default: 2).",
+    )
 
     args = parser.parse_args()
+    if args.timeout_seconds <= 0:
+        raise SystemExit("--timeout-seconds must be >= 1")
+    if args.llm_retries <= 0:
+        raise SystemExit("--llm-retries must be >= 1")
+    if args.preflight_timeout_seconds <= 0:
+        raise SystemExit("--preflight-timeout-seconds must be >= 1")
+    if args.preflight_retries <= 0:
+        raise SystemExit("--preflight-retries must be >= 1")
     verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
     quarantine_ids: Set[str] = set()
     if args.quarantine_file:
@@ -4051,8 +4333,29 @@ def main() -> None:
                 print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
                 if isinstance(args.model, str) and args.model.strip():
                     print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
+                    print(f"{LOG_PREFIX} LLM timeout seconds: {args.timeout_seconds}")
+                    print(f"{LOG_PREFIX} LLM retries: {args.llm_retries}")
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
+
+        if not args.skip_llm_preflight:
+            ok, reason = run_claude_preflight(
+                claude_bin,
+                model=args.model,
+                timeout_seconds=args.preflight_timeout_seconds,
+                retries=args.preflight_retries,
+            )
+            if not ok:
+                print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
+                print(
+                    f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
+                    f"--skip-llm-preflight only for controlled debugging."
+                )
+                raise SystemExit(2)
+            print(
+                f"{LOG_PREFIX} Claude preflight: ok "
+                f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+            )
 
     # Determine input/output paths and verification roots.
     default_input_root = test_input_root() if args.test else input_root()
@@ -4122,6 +4425,8 @@ def main() -> None:
                     output_path,
                     dry_run=args.dry_run,
                     claude_model=args.model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
                 )
             print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
@@ -4218,6 +4523,8 @@ def main() -> None:
                         output_file,
                         dry_run=args.dry_run,
                         claude_model=args.model,
+                        llm_timeout_seconds=args.timeout_seconds,
+                        llm_retries=args.llm_retries,
                     )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
@@ -4293,6 +4600,8 @@ def main() -> None:
                         output_file,
                         dry_run=args.dry_run,
                         claude_model=args.model,
+                        llm_timeout_seconds=args.timeout_seconds,
+                        llm_retries=args.llm_retries,
                     )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
@@ -4403,6 +4712,8 @@ def main() -> None:
                     output_file,
                     dry_run=args.dry_run,
                     claude_model=args.model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
                 )
             total_convs += result["conversations"]
             total_enriched += result["enriched"]

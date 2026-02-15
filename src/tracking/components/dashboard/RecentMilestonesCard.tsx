@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Award, Trophy, ChevronDown, ChevronUp } from "lucide-react"
+import { Award, Medal, ChevronDown, ChevronUp } from "lucide-react"
 import type { MilestoneRow } from "@/src/db/trackingTypes"
 import { getMilestoneInfo, getTierColor, getTierBg } from "../../data/milestones"
 
@@ -26,7 +26,7 @@ export function RecentMilestonesCard({ milestones, onViewAll }: RecentMilestones
             onClick={onViewAll}
             className="gap-1"
           >
-            <Trophy className="size-4" />
+            <Medal className="size-4" />
             View All
           </Button>
         </div>

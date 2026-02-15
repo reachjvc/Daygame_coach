@@ -143,6 +143,17 @@
     scrollbar-color: var(--border) transparent;
   }
 
+  /* Hide default number input spinners — use project-styled controls instead */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
   /* Webkit browsers (Chrome, Safari, Edge) */
   *::-webkit-scrollbar {
     width: 8px;

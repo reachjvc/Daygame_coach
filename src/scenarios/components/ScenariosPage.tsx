@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { ArrowLeft, Target } from "lucide-react"
+import { ArrowLeft, CircleDot } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { createServerSupabaseClient } from "@/src/db/server"
@@ -30,7 +30,7 @@ export async function ScenariosPage() {
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <Target className="size-6 text-primary" />
+              <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
             </div>
             <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ export async function ScenariosPage() {
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <Target className="size-6 text-primary" />
+              <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
             </div>
             <div className="flex items-center gap-3">
@@ -121,7 +121,7 @@ export async function ScenariosPage() {
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
           <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-              <Target className="size-6 text-primary" />
+              <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
             </div>
             <Button asChild variant="outline">
@@ -153,7 +153,7 @@ export async function ScenariosPage() {
       <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
         <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
           <div className="flex items-center gap-2 font-bold text-xl text-foreground">
-            <Target className="size-6 text-primary" />
+            <CircleDot className="size-6 text-primary" />
             <span>Scenarios</span>
           </div>
           <Button asChild variant="outline">

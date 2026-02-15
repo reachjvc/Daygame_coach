@@ -223,3 +223,17 @@ export type SectionStatusResult = {
   status: SectionStatus
   detail?: string
 }
+
+// ============================================================================
+// Ambient Effect Types
+// ============================================================================
+
+/** Intensity levels for portrait ambient effects (0=off, 1=low, 2=med, 3=high) */
+export type EffectIntensities = {
+  spotlight: number
+  flicker: number
+  embers: number
+  breathing: number
+  vignette: number
+  rimLight: number
+}

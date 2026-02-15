@@ -11,6 +11,7 @@ import {
   updateDifficulty as repoUpdateDifficulty,
   updateVoiceLanguage as repoUpdateVoiceLanguage,
   updatePreferredLanguage as repoUpdatePreferredLanguage,
+  updateTimezone as repoUpdateTimezone,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
   updateSubscriptionCancelledAt,
@@ -106,6 +107,36 @@ export async function handleUpdateVoiceLanguage(
   }
 
   await repoUpdateVoiceLanguage(userId, language)
+}
+
+// ============================================
+// Timezone
+// ============================================
+
+/**
+ * Validate that a string is a valid IANA timezone identifier.
+ */
+function isValidTimezone(tz: string): boolean {
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz })
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Update timezone for a user.
+ */
+export async function handleUpdateTimezone(
+  userId: string,
+  timezone: string
+): Promise<void> {
+  if (!isValidTimezone(timezone)) {
+    throw createSettingsError("Invalid timezone", "INVALID_INPUT")
+  }
+
+  await repoUpdateTimezone(userId, timezone)
 }
 
 // ============================================
@@ -302,6 +333,7 @@ export async function getSettingsPageData(
     primary_goal: profile?.primary_goal ?? null,
     sandbox_settings: sandboxSettings,
     voice_language: profile?.voice_language ?? null,
+    timezone: profile?.timezone ?? null,
   }
 
   const stats: UserStats = {

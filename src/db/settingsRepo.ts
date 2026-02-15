@@ -141,6 +141,22 @@ export async function updateVoiceLanguage(userId: string, language: string): Pro
 }
 
 /**
+ * Update timezone for a user.
+ */
+export async function updateTimezone(userId: string, timezone: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ timezone })
+    .eq("id", userId)
+
+  if (error) {
+    throw new Error(`Failed to update timezone: ${error.message}`)
+  }
+}
+
+/**
  * Get preferred language for scenarios (content language).
  */
 export async function getPreferredLanguage(userId: string): Promise<string | null> {

@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Trophy, Calendar, Loader2 } from "lucide-react"
+import { Medal, Calendar, Loader2 } from "lucide-react"
 import { deriveTimeHorizon } from "../goalsService"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import type { GoalWithProgress } from "../types"
@@ -32,7 +32,7 @@ export function MilestoneCompleteDialog({
           className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4"
           style={{ backgroundColor: `${areaConfig.hex}20`, color: areaConfig.hex }}
         >
-          <Trophy className="size-7" />
+          <Medal className="size-7" />
         </div>
 
         <h3 className="text-lg font-bold mb-1">Complete this goal?</h3>
@@ -67,7 +67,7 @@ export function MilestoneCompleteDialog({
             {isLoading ? (
               <Loader2 className="size-4 animate-spin mr-1" />
             ) : (
-              <Trophy className="size-4 mr-1" />
+              <Medal className="size-4 mr-1" />
             )}
             Complete
           </Button>

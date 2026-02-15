@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { X, Check, Compass, Target, Eye, Flame, Sparkles, Lock } from "lucide-react"
+import { X, Check, Compass, CircleDot, Eye, Flame, Sunrise, Lock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { InnerGameStep, type InnerGameProgress } from "../types"
 import { TIME_ESTIMATES, CATEGORIES } from "../config"
@@ -49,14 +49,14 @@ export function WelcomeCard({
       step: InnerGameStep.HURDLES,
       label: "Face Your Growth Edges",
       completed: progress.hurdlesCompleted,
-      icon: Target,
+      icon: CircleDot,
       time: "~2 min",
     },
     {
       step: InnerGameStep.CUTTING,
       label: "Prioritize What Matters",
       completed: progress.cuttingCompleted,
-      icon: Sparkles,
+      icon: Sunrise,
       time: "~4 min",
     },
   ]

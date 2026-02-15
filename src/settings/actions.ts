@@ -10,6 +10,7 @@ import {
   handleUpdateDifficulty,
   handleUpdateVoiceLanguage,
   handleUpdatePreferredLanguage,
+  handleUpdateTimezone,
   handleCancelSubscription,
   handleReactivateSubscription,
   createBillingPortalSession,
@@ -70,6 +71,16 @@ export async function updateDifficulty(difficulty: string): Promise<void> {
 export async function updateVoiceLanguage(language: string): Promise<void> {
   const userId = await requireAuth()
   await handleUpdateVoiceLanguage(userId, language)
+  revalidatePath(SETTINGS_CONFIG.paths.settings)
+  revalidatePath(SETTINGS_CONFIG.paths.dashboard)
+}
+
+/**
+ * Update timezone
+ */
+export async function updateTimezone(timezone: string): Promise<void> {
+  const userId = await requireAuth()
+  await handleUpdateTimezone(userId, timezone)
   revalidatePath(SETTINGS_CONFIG.paths.settings)
   revalidatePath(SETTINGS_CONFIG.paths.dashboard)
 }

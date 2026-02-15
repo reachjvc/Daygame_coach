@@ -23,17 +23,23 @@ import { getISOWeekString } from "../tracking/trackingService"
 // ============================================
 
 /**
- * Get all active (non-archived) goals for a user
+ * Get all active (non-archived) goals for a user.
+ * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getUserGoals(userId: string): Promise<GoalWithProgress[]> {
+export async function getUserGoals(userId: string, includeArchived = false): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("user_goals")
     .select("*")
     .eq("user_id", userId)
-    .eq("is_archived", false)
     .order("position", { ascending: true })
+
+  if (!includeArchived) {
+    query = query.eq("is_archived", false)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     throw new Error(`Failed to get goals: ${error.message}`)
@@ -572,10 +578,11 @@ function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
 }
 
 /**
- * Get full goal tree for a user (all active goals as hierarchy)
+ * Get full goal tree for a user (all active goals as hierarchy).
+ * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getGoalTree(userId: string): Promise<GoalTreeNode[]> {
-  const goals = await getUserGoals(userId)
+export async function getGoalTree(userId: string, includeArchived = false): Promise<GoalTreeNode[]> {
+  const goals = await getUserGoals(userId, includeArchived)
   return buildTree(goals)
 }
 

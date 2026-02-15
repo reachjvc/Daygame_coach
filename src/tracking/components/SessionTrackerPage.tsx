@@ -21,7 +21,7 @@ import {
   Play,
   Square,
   Plus,
-  Target,
+  Footprints,
   Clock,
   TrendingUp,
   MapPin,
@@ -550,7 +550,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Target className="size-4 text-muted-foreground" />
+                  <Footprints className="size-4 text-muted-foreground" />
                   <Input
                     id="goal"
                     type="number"

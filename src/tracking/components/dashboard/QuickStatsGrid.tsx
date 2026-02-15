@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Target, TrendingUp, Flame, Calendar } from "lucide-react"
+import { Footprints, TrendingUp, Flame, Calendar } from "lucide-react"
 import type { UserTrackingStatsRow } from "@/src/db/trackingTypes"
 
 interface QuickStatsGridProps {
@@ -14,7 +14,7 @@ export function QuickStatsGrid({ stats }: QuickStatsGridProps) {
       <Card className="p-4" data-testid="total-approaches">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">
-            <Target className="size-5 text-primary" />
+            <Footprints className="size-5 text-primary" />
           </div>
           <div>
             <div className="text-2xl font-bold">{stats?.total_approaches || 0}</div>

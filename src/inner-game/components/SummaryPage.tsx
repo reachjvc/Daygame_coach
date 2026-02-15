@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ArrowLeft, Trophy, Sparkles, RotateCcw, LayoutGrid } from "lucide-react"
+import { ArrowLeft, PartyPopper, Sunrise, RotateCcw, LayoutGrid } from "lucide-react"
 import { InnerGameStep, type CoreValue } from "../types"
 import { StepProgress } from "./shared/StepProgress"
 
@@ -37,7 +37,7 @@ export function SummaryPage({
       {/* Celebration header */}
       <div className="text-center space-y-4">
         <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-yellow-500/20 to-primary/20 flex items-center justify-center shadow-lg shadow-primary/10">
-          <Trophy className="w-10 h-10 text-primary" />
+          <PartyPopper className="w-10 h-10 text-primary" />
         </div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
           Your Core Values
@@ -91,7 +91,7 @@ export function SummaryPage({
       {aspirationalValues.length > 0 && (
         <div className="space-y-3 pt-4 border-t border-border/50">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-blue-500" />
+            <Sunrise className="w-5 h-5 text-blue-500" />
             <h2 className="text-base font-semibold text-foreground">
               Aspirational Values
             </h2>

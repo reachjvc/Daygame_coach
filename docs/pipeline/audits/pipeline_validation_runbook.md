@@ -26,6 +26,161 @@ Optional:
 2. A lightweight scorecard that tracks Stage 06/07 outputs over time (drift + warnings + normalization).
 3. A semantic quality eval loop (small canary + rotating holdout + optional “gold” labels / LLM judge).
 
+## Pipeline ASCII (Current, 2026-02-15)
+
+Legend:
+- `[LLM]`: Claude-dependent stage (network/auth required).
+- `[DET]`: deterministic local stage (no LLM).
+- `[EXT]`: external local/remote service dependency (`ollama`, `supabase`).
+- `GATE(HARD)`: blocks downstream processing/ingest for that video/scope.
+- `GATE(SOFT)`: does not block alone; emits control metadata consumed by later hard gates.
+
+Canonical data path:
+
+```text
+Optional setup
+  00.reset-embeddings [DET, destructive DB helper]
+         |
+         v
+Media + transcript preparation
+  01.download [DET/EXT]
+    -> 02.transcribe [DET/EXT]
+    -> 03.align [DET]
+    -> 04.diarize [DET]
+    -> 05.audio-features [DET]
+         |
+         v
+Conversation + quality hardening
+  06.video-type [LLM]  (speaker roles, conversation boundaries, video type)
+    -> 06b.verify [LLM] (quality verdict + fix suggestions on Stage 06 output)
+    -> 06c.patch [DET]  (apply deterministic subset of verifier fixes)
+    -> 06d.sanitize [DET] (teaser/mixed-mode/target-hygiene + Stage07 evidence allowlist)
+    -> 06e.reverify [LLM] GATE(HARD input) (reverify verdict on sanitized output)
+    -> 06f.damage-map [DET] GATE(SOFT input) (segment-level damage map + trace contract)
+    -> 06g.damage-adjudicator [LLM, seed-only] GATE(SOFT input) (targeted adjudication for risky seeds)
+    -> 06h.confidence-propagation [DET] GATE(SOFT input) (confidence tiers + anchor allowlist metadata)
+         |
+         v
+Enrichment + ingest preparation
+  07.content [LLM]  GATE(HARD): verification policy (`reverify_patched` default in hardening)
+    -> 08.taxonomy-validation [DET] GATE(HARD): taxonomy drift + per-video quarantine details
+    -> 09.chunk-embed [DET/EXT: ollama] (chunking + embeddings + confidence metadata)
+    -> 10.ingest [DET/EXT: supabase] GATE(HARD): taxonomy + readiness + optional semantic
+    -> 11.retrieval-smoke [DET/EXT] (post-ingest retrieval sanity check)
+```
+
+06d-07 gate detail (actual dependency shape):
+
+```text
+Baseline path                                Sanitized path
+-------------                                --------------
+06.video-type
+   |
+   +--> 06b.verify ---------------------+
+                                        |
+06c.patch -> 06d.sanitize -> 06e.reverify -----------+
+                                        |            |
+                                        |            v
+                                        |      07.content GATE(HARD)
+                                        |      policy=reverify_patched requires:
+                                        |        - baseline 06b.verify exists
+                                        |        - 06e.reverify verdict in {APPROVE, FLAG}
+                                        |
+06d.sanitize -> 06f.damage-map -> 06g.damage-adjudicator -> 06h.confidence-propagation
+                                                           (GATE(SOFT) control metadata)
+                                                                      |
+                                                                      v
+                                                      07.content / 09.chunk-embed / 10.ingest
+                                                      consume confidence + contamination metadata
+```
+
+Control/gating path (what blocks what):
+
+```text
+07.content outputs
+   |
+   +--> validate_manifest.py [DET]
+   |      - checks stage presence/consistency/contracts
+   |      - enforces D11 budgets:
+   |          max_damaged_token_ratio
+   |          max_dropped_anchor_ratio
+   |      - emits stage reports + optional quarantine + drift json
+   |
+   +--> validate_stage_report.py [DET]
+   |      - consumes stage reports
+   |      - emits readiness-summary.json (READY / REVIEW / BLOCKED)
+   |
+   +--> 08.taxonomy-validation [DET]
+          - emits manifest-scoped report with per-video status
+          - FAIL can still carry per-video quarantine-safe details
+                 |
+                 v
+            10.ingest [DET/EXT]
+              requires:
+                1) Stage 08 report integrity/scope match
+                2) readiness-summary coverage/scope match
+                3) chunk preflight validity
+              optional:
+                semantic gate thresholds
+              outcome:
+                primary lane ingest (confidence >= threshold)
+                optional review lane ingest (`#review` source suffix)
+```
+
+Stage notes (what each stage is for):
+- `00.reset-embeddings`: utility to inspect/wipe embeddings table before a clean retrieval test.
+- `01.download`: fetch raw source media and stage download artifacts.
+- `02.transcribe`: generate transcript JSON from audio.
+- `03.align`: align transcript text to timeline segments.
+- `04.diarize`: assign speaker tracks.
+- `05.audio-features`: compute ASR/audio metadata used by Stage 06.
+- `06.video-type`: infer conversation structure + roles + type from Stage 05.
+- `06b.verify`: independent LLM QA pass over Stage 06 artifacts.
+- `06c.patch`: deterministic patch pass from verifier output.
+- `06d.sanitize`: deterministic contamination handling and Stage 07 evidence allowlists.
+- `06e.reverify`: re-run verifier on sanitized outputs for strict gating.
+- `06b.reverify`: legacy reverify path retained for compatibility; `06e.reverify` is the current wrapper used in this hardening loop.
+- `06f.damage-map`: normalize segment damage reasons and coverage metrics.
+- `06g.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments.
+- `06h.confidence-propagation`: turn damage/adjudication into per-segment/per-conversation confidence.
+- `07.content`: produce enrichments; enforces evidence/anchor constraints and writes validation.
+- `08.taxonomy-validation`: deterministic taxonomy drift gate with per-video quarantine semantics.
+- `09.chunk-embed`: convert enrichments to retrieval chunks + embeddings (Ollama).
+- `10.ingest`: ingest eligible chunks to DB with readiness/taxonomy/semantic gates.
+- `11.retrieval-smoke`: quick end-to-end retrieval check against ingested data.
+
+06d/06e/06f/06g/06h (how they work together):
+- `06d.sanitize` `[DET]`:
+  - rewrites Stage 06c output into a Stage 07-safe shape (teaser/mixed-mode/target-hygiene handling),
+  - emits `stage07_evidence_segment_ids` and related metadata.
+  - Not a gate by itself; it prepares trustworthy evidence boundaries.
+- `06e.reverify` `[LLM]`:
+  - thin wrapper that runs verifier logic on sanitized output (`06d`),
+  - writes `data/06e.reverify/...*.verification.json`.
+  - This is the strict gate input for Stage 07 in `reverify_patched` mode.
+- `06f.damage-map` `[DET]`:
+  - emits deterministic segment damage seeds + reason codes and coverage metrics.
+  - Not a gate; it feeds traceability and downstream confidence logic.
+- `06g.damage-adjudicator` `[LLM]`:
+  - runs only on `06f` seeds to adjudicate recoverability/contamination spans.
+  - Not a direct gate; quality signal input to `06h`.
+- `06h.confidence-propagation` `[DET]`:
+  - merges `06f` + `06g` into per-segment/per-conversation confidence tiers.
+  - Not a hard stop by itself; Stage 07/09/10 enforce behavior using this confidence metadata.
+
+Where strict reverify gate happens:
+- Gate decision is enforced in `07.content` when `--verification-gate-policy reverify_patched` is used.
+- In that mode, Stage 07 requires:
+  1) baseline `06b.verify` artifact exists, and
+  2) `06e.reverify` verdict is `APPROVE` or `FLAG`.
+- If either condition fails, Stage 07 blocks that video before enrichment.
+
+Current operational rails:
+- `06.video-type`, `06b.verify`, and `07.content` now run startup Claude preflight checks by default and fail fast with exit code `2` when Claude is unhealthy.
+- Use `--preflight-timeout-seconds` and `--preflight-retries` to tune sensitivity.
+- `--skip-llm-preflight` exists for controlled debugging only (not normal runs).
+- `sub-batch-pipeline --stage` currently orchestrates `06`, `06b`, `06c`, and `07`; stages `06d`-`11` are run via explicit commands in this runbook.
+
 ## Current Baseline (CANARY.1)
 
 `CANARY.1` is a 7-video diverse canary set meant to be cheap and fast.
@@ -36,6 +191,13 @@ Expected right now (after a successful run):
 - 07 outputs:  `data/07.content/<source>/<video_dir>/<stem>.enriched.json` and `.enriched.validation.json`
 - 09 outputs:  `data/09.chunks/<source>/*.chunks.json` and `data/09.chunks/.chunk_state.json`
 - Harness: `scripts/training-data/validation/validate_manifest.py` returns PASS (may still surface Stage 07 warning summaries)
+
+V2 hardening loop additionally expects:
+- 06d outputs: `data/06d.sanitized/<source>/<video_dir>/<stem>.conversations.json` + `.sanitize.report.json`
+- 06e outputs: `data/06e.reverify/<source>/<video_dir>/<stem>.verification.json`
+- 06f outputs: `data/06f.damage-map/<source>/<video_dir>/<stem>.damage-map.json`
+- 06g outputs: `data/06g.damage-adjudicator/<source>/<video_dir>/<stem>.damage-adjudication.json`
+- 06h outputs: `data/06h.confidence-propagation/<source>/<video_dir>/<stem>.conversations.json` + `.confidence.report.json`
 
 Observed baseline (as of 2026-02-08, after a Stage 07 `--revalidate` pass):
 - 06b verdicts: `APPROVE=2`, `FLAG=5` (no `REJECT`)
@@ -262,7 +424,10 @@ Current likely candidates from unseen stress runs:
 Pass criteria:
 - Stage 08 blocking frequency drops on `P018.3` without suppressing genuinely novel concepts
 
-### Canonical Evaluation Script (Run After Each Iteration)
+### Historical Evaluation Script (A/B/C Iterations, Pre-D7)
+
+This command sequence is preserved for historical comparability with the earlier A/B/C queue.
+For active hardening and handoff, use the `Canonical V2 Evaluation Loop` section below.
 
 Use the same command sequence every loop:
 
@@ -308,7 +473,7 @@ python3 scripts/training-data/08.taxonomy-validation --manifest docs/pipeline/ba
 python3 scripts/training-data/08.taxonomy-validation --manifest docs/pipeline/batches/P018.3.txt
 ```
 
-### Iteration Exit Criteria (Must All Hold Before Broad Rollout)
+### Historical Iteration Exit Criteria (A/B/C Queue)
 
 1. Zero impossible coach/target assignments in `P018.3`.
 2. No `06b.reverify REJECT` regressions on `P018.2` and `P018.3`.
@@ -680,6 +845,18 @@ AI-implementable steps:
 4. Add summary metrics for conversation-level damage coverage.
 5. Add validator check: fail if downstream drop references unknown reason.
 
+Implementation status (`2026-02-15`, codex checkpoint):
+- implemented:
+  - new stage `scripts/training-data/06f.damage-map`.
+  - schema `scripts/training-data/schemas/damage_map.schema.json`.
+  - deterministic per-segment damage records + conversation damage summaries.
+  - dropped-candidate trace summary with `passes_trace_contract`.
+- integrated downstream:
+  - Stage 07 now stamps dropped candidates with `reason_code`, `damage_reason_code`, `source_stage`, `timestamp`.
+  - validator enforces missing/unknown reason contracts.
+- remaining:
+  - expand deterministic seed coverage as additional upstream damage signals are formalized (for example stronger speaker/boundary detectors).
+
 ##### Iteration D8: LLM Damage Adjudicator (New `06g.damage-adjudicator`)
 
 Objective:
@@ -713,6 +890,19 @@ AI-implementable steps:
 4. Emit adjudication artifact + stage report metrics (`seeds_total`, `repairs_accepted`, `contamination_spans`).
 5. Add timeout/retry budget controls for batch scale.
 
+Implementation status (`2026-02-15`, codex checkpoint):
+- implemented:
+  - new stage `scripts/training-data/06g.damage-adjudicator`.
+  - prompt + schema:
+    - `scripts/training-data/prompts/06g.damage-adjudicator.prompt.md`
+    - `scripts/training-data/prompts/06g.damage-adjudicator.schema.json`
+  - strict JSON extraction/validation, timeout+retry controls, deterministic replay mode (`--determinism-n`), and threshold flags.
+  - CLI compatibility: `--llm-retries` alias (maps to `--retries`) for cross-stage flag consistency.
+- validated:
+  - deterministic dry-run path passes and emits stable artifact structure.
+- remaining:
+  - run full live-LLM determinism checks (`n=2`) on `P018.3` + `P018.4` and calibrate thresholds with observed false-negative/false-positive tradeoffs.
+
 ##### Iteration D9: Confidence Propagation Merge (New `06h.confidence-propagation`)
 
 Objective:
@@ -742,6 +932,14 @@ AI-implementable steps:
 3. Emit conversation-level confidence summary and thresholds hit.
 4. Add validator checks for missing confidence fields and illegal anchor use.
 
+Implementation status (`2026-02-15`, codex checkpoint):
+- implemented:
+  - new stage `scripts/training-data/06h.confidence-propagation`.
+  - merges deterministic seeds + optional adjudication into per-segment confidence metadata and conversation confidence summary.
+  - emits Stage 07 anchor allowlist metadata and supports optional repair application.
+- remaining:
+  - tune `conversation_block_threshold` on larger hardening batches once adjudicator live runs are complete.
+
 ##### Iteration D10: Confidence-Aware Stage 07/09/10 (Behavioral Integration)
 
 Objective:
@@ -769,6 +967,21 @@ Pass criteria:
 - retrieval eval on canary set shows non-regressing precision with reduced noisy recalls.
 - no chunk reaches primary index without explicit confidence metadata.
 
+Implementation status (`2026-02-15`, codex checkpoint):
+- implemented in Stage 07:
+  - anchor allowlist from confidence metadata.
+  - low-confidence anchors blocked (`low_confidence_anchor`) while retaining context visibility.
+  - prompt contract split into `ANCHOR_OK` vs context-only/excluded segments.
+- implemented in Stage 09:
+  - chunk confidence scoring + contamination-aware masking.
+  - output metadata includes `chunk_confidence_score`, `damaged_segment_ids`, `contains_repaired_text`.
+- implemented in Stage 10:
+  - primary vs review ingest lanes (`--primary-confidence-threshold`, `--ingest-review-lane`).
+  - review lane uses source suffix isolation (`#review`) to avoid polluting primary retrieval.
+  - manifest ingest now hard-fails when expected `09.chunks` artifacts are missing (prevents false-success dry runs).
+- remaining:
+  - run retrieval regression eval after full D7-D11 path runs on `P018.3` + `P018.4`.
+
 ##### Iteration D11: Recurrence Prevention Rails (1500-Video Safety)
 
 Objective:
@@ -790,7 +1003,92 @@ Pass criteria:
 - pipeline fails fast on threshold breaches instead of silently degrading output quality.
 - runbook checklist remains green across at least one 100+ video batch before full 1500 rollout.
 
+Implementation status (`2026-02-15`, codex checkpoint):
+- implemented in `validate_manifest.py`:
+  - hard budgets:
+    - `--max-damaged-token-ratio`
+    - `--max-dropped-anchor-ratio`
+  - drift output:
+    - manifest histograms for damage types, contamination sources, anchor-drop reasons
+    - optional `--damage-drift-out <path>`
+  - no-silent-suppression checks:
+    - enforce dropped-candidate `reason_code`, `source_stage`, `timestamp`
+    - unknown reason codes fail validation
+  - explicit audit sampling policy:
+    - deterministic fixed-random sample + worst-case sample (`videos_per_100`) included in drift report.
+- implemented in stage executors (reliability rails):
+  - `06.video-type`: `--timeout-seconds` and `--llm-retries` to bound Stage 06 analysis latency.
+  - `06b.verify`: `--timeout-seconds` and `--llm-retries` to prevent silent long hangs.
+  - `06e.reverify`: `--verify-timeout-seconds` pass-through to control inner verifier call timeout independently of wrapper timeout.
+  - `07.content`: `--timeout-seconds` and `--llm-retries` with explicit fail-fast behavior.
+  - startup Claude health probes now fail fast by default on `06.video-type`, `06b.verify`, and `07.content`:
+    - `--preflight-timeout-seconds` / `--preflight-retries`
+    - `--skip-llm-preflight` (debug override only)
+- implemented in `08.taxonomy-validation` (quality rail):
+  - zero Stage 07 enrichments now yields blocking `FAIL` (`no_stage07_enrichments`) instead of vacuous `PASS`.
+- implemented in Stage 08/10 report compatibility rails:
+  - Stage 08 now emits a manifest-scoped `FAIL` report even when no Stage 07 `.enriched.json` files exist (instead of exiting without report).
+  - Stage 10 now accepts `details.files_processed=0` only for manifest-scoped Stage 08 `FAIL` reports where all manifest videos are missing Stage 07 outputs, enabling explicit quarantine decisions instead of “invalid report” failures.
+- remaining:
+  - run 100+ video hardening batch and lock production thresholds from empirical drift envelopes.
+
+Verification snapshot (`2026-02-15`):
+- passed:
+  - `python3 -m py_compile scripts/training-data/06.video-type scripts/training-data/06b.verify scripts/training-data/06f.damage-map scripts/training-data/06g.damage-adjudicator scripts/training-data/06h.confidence-propagation scripts/training-data/07.content scripts/training-data/08.taxonomy-validation scripts/training-data/validation/validate_manifest.py`
+  - `./scripts/training-data/06.video-type --help` / `./scripts/training-data/06b.verify --help` / `./scripts/training-data/07.content --help` expose timeout/retry controls for fail-fast operations.
+  - `python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/CANARY.1.txt --source coach_kyle_how_to_approach_a_girl --stage07-gate-policy reverify_patched --skip-stage01-presence --max-damaged-token-ratio 0.95 --max-dropped-anchor-ratio 0.95 --damage-drift-out /tmp/canary.coach.damage-drift.json`
+  - `node --import tsx/esm scripts/training-data/09.chunk-embed.ts --help` (now prints usage and exits cleanly)
+  - `node --import tsx/esm scripts/training-data/10.ingest.ts --help` (CLI and gate options parse cleanly)
+- expected blockers in current local environment:
+  - `scripts/training-data/09.chunk-embed.ts` requires local Ollama availability (`http://localhost:11434`) even for quick execution checks.
+
 #### Canonical V2 Evaluation Loop
+
+Preflight checks (run before any LLM stage):
+```bash
+# 1) Confirm every manifest video has Stage 06 input
+python3 - <<'PY'
+from pathlib import Path
+import re
+
+repo = Path(".").resolve()
+for m in ["P018.3.txt", "P018.4.txt"]:
+    p = repo / "docs/pipeline/batches" / m
+    entries = []
+    for line in p.read_text(encoding="utf-8").splitlines():
+        s = line.strip()
+        if not s or s.startswith("#") or "|" not in s:
+            continue
+        src, folder = [x.strip() for x in s.split("|", 1)]
+        vid = re.search(r"\[([A-Za-z0-9_-]{11})\]", folder)
+        if not vid:
+            continue
+        entries.append((src, vid.group(1)))
+    missing = []
+    for src, vid in entries:
+        root = repo / "data/06.video-type" / src
+        if not root.exists():
+            missing.append((src, vid))
+            continue
+        hit = [
+            p for p in root.rglob("*.conversations.json")
+            if f"[{vid}]" in p.name or f"[{vid}]" in p.parent.name
+        ]
+        if not hit:
+            missing.append((src, vid))
+    if missing:
+        print(m, "MISSING", missing)
+    else:
+        print(m, "OK")
+PY
+
+# 2) Confirm verification + reverify artifacts exist for reverify gate mode
+python3 scripts/training-data/validation/validate_manifest.py \
+  --manifest docs/pipeline/batches/P018.3.txt \
+  --stage07-gate-policy reverify_patched \
+  --skip-stage01-presence \
+  --show 5
+```
 
 ```bash
 # Stage execution
@@ -798,24 +1096,21 @@ Pass criteria:
 ./scripts/training-data/06c.patch    --manifest docs/pipeline/batches/P018.3.txt --allow-reject
 ./scripts/training-data/06d.sanitize --manifest docs/pipeline/batches/P018.3.txt --overwrite
 ./scripts/training-data/06e.reverify --manifest docs/pipeline/batches/P018.3.txt --timeout-seconds 600
-./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.3.txt --verification-gate-policy reverify_patched --input-root data/06d.sanitized --reverify-root data/06e.reverify
+./scripts/training-data/06f.damage-map --manifest docs/pipeline/batches/P018.3.txt --input-root data/06d.sanitized
+./scripts/training-data/06g.damage-adjudicator --manifest docs/pipeline/batches/P018.3.txt --input-root data/06f.damage-map --timeout-seconds 600
+./scripts/training-data/06h.confidence-propagation --manifest docs/pipeline/batches/P018.3.txt --input-root data/06d.sanitized --damage-root data/06f.damage-map --adjudication-root data/06g.damage-adjudicator
+./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.3.txt --input-root data/06h.confidence-propagation --verification-gate-policy reverify_patched --reverify-root data/06e.reverify
 
+# If P018.4 preflight reports missing Stage 06 input, generate it first:
+# python3 -u scripts/training-data/06.video-type --manifest docs/pipeline/batches/P018.4.txt --model sonnet --timeout-seconds 90 --llm-retries 1 --overwrite
 ./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/P018.4.txt --allow-reject-verdicts
 ./scripts/training-data/06c.patch    --manifest docs/pipeline/batches/P018.4.txt --allow-reject
 ./scripts/training-data/06d.sanitize --manifest docs/pipeline/batches/P018.4.txt --overwrite
 ./scripts/training-data/06e.reverify --manifest docs/pipeline/batches/P018.4.txt --timeout-seconds 600
-./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.4.txt --verification-gate-policy reverify_patched --input-root data/06d.sanitized --reverify-root data/06e.reverify
-
-# D7-D10 path (enable once implemented)
-# ./scripts/training-data/06f.damage-map          --manifest docs/pipeline/batches/P018.3.txt --input-root data/06d.sanitized
-# ./scripts/training-data/06g.damage-adjudicator  --manifest docs/pipeline/batches/P018.3.txt --input-root data/06f.damage-map --timeout-seconds 600
-# ./scripts/training-data/06h.confidence-propagation --manifest docs/pipeline/batches/P018.3.txt --damage-root data/06f.damage-map --adjudication-root data/06g.damage-adjudicator
-# ./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.3.txt --input-root data/06h.confidence-propagation --verification-gate-policy reverify_patched --reverify-root data/06e.reverify
-
-# ./scripts/training-data/06f.damage-map          --manifest docs/pipeline/batches/P018.4.txt --input-root data/06d.sanitized
-# ./scripts/training-data/06g.damage-adjudicator  --manifest docs/pipeline/batches/P018.4.txt --input-root data/06f.damage-map --timeout-seconds 600
-# ./scripts/training-data/06h.confidence-propagation --manifest docs/pipeline/batches/P018.4.txt --damage-root data/06f.damage-map --adjudication-root data/06g.damage-adjudicator
-# ./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.4.txt --input-root data/06h.confidence-propagation --verification-gate-policy reverify_patched --reverify-root data/06e.reverify
+./scripts/training-data/06f.damage-map --manifest docs/pipeline/batches/P018.4.txt --input-root data/06d.sanitized
+./scripts/training-data/06g.damage-adjudicator --manifest docs/pipeline/batches/P018.4.txt --input-root data/06f.damage-map --timeout-seconds 600
+./scripts/training-data/06h.confidence-propagation --manifest docs/pipeline/batches/P018.4.txt --input-root data/06d.sanitized --damage-root data/06f.damage-map --adjudication-root data/06g.damage-adjudicator
+./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.4.txt --input-root data/06h.confidence-propagation --verification-gate-policy reverify_patched --reverify-root data/06e.reverify
 
 # Optional sentinel set for music/lyrics contamination checks only
 ./scripts/training-data/07.content   --manifest docs/pipeline/batches/P018.2.txt --verification-gate-policy reverify_patched
@@ -824,6 +1119,9 @@ Pass criteria:
 python3 scripts/training-data/validation/validate_manifest.py \
   --manifest docs/pipeline/batches/P018.3.txt \
   --stage07-gate-policy reverify_patched \
+  --max-damaged-token-ratio 0.10 \
+  --max-dropped-anchor-ratio 0.25 \
+  --damage-drift-out data/validation/drift/P018.3.v2.damage-drift.json \
   --skip-stage01-presence \
   --emit-stage-reports \
   --stage-reports-dir data/validation/stage_reports/P018.3.v2
@@ -831,6 +1129,9 @@ python3 scripts/training-data/validation/validate_manifest.py \
 python3 scripts/training-data/validation/validate_manifest.py \
   --manifest docs/pipeline/batches/P018.4.txt \
   --stage07-gate-policy reverify_patched \
+  --max-damaged-token-ratio 0.10 \
+  --max-dropped-anchor-ratio 0.25 \
+  --damage-drift-out data/validation/drift/P018.4.v2.damage-drift.json \
   --skip-stage01-presence \
   --emit-stage-reports \
   --stage-reports-dir data/validation/stage_reports/P018.4.v2
@@ -851,7 +1152,65 @@ python3 scripts/training-data/08.taxonomy-validation --manifest docs/pipeline/ba
 
 # Optional D6 sanity check (commentary-only bucket should stay non-blocking)
 python3 scripts/training-data/08.taxonomy-validation --source coach_kyle_infield --threshold 1
+
+# Stage 09/10 gate checks (dry-run; no DB writes)
+node --import tsx/esm scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/P018.3.txt --dry-run
+node --import tsx/esm scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/P018.4.txt --dry-run
+node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P018.3.txt --dry-run
+node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/P018.4.txt --dry-run
+
+# Optional fail-fast controls for unstable LLM/runtime environments
+# (do not change quality policy; only reduce hang windows)
+# python3 -u scripts/training-data/06.video-type --manifest docs/pipeline/batches/P018.4.txt --model sonnet --timeout-seconds 90 --llm-retries 1
+# ./scripts/training-data/06e.reverify --manifest docs/pipeline/batches/P018.3.txt --timeout-seconds 600 --verify-timeout-seconds 90 --llm-retries 1 --model sonnet
+# python3 -u scripts/training-data/07.content --manifest docs/pipeline/batches/P018.3.txt --input-root data/06h.confidence-propagation --verification-gate-policy reverify_patched --reverify-root data/06e.reverify --model sonnet --timeout-seconds 90 --llm-retries 1
+# Preflight tuning (default is enabled): add --preflight-timeout-seconds 5 --preflight-retries 1 for faster aborts.
+# Debug-only override: add --skip-llm-preflight to force execution when preflight is failing.
 ```
+
+Latest execution checkpoint (`2026-02-15`, codex live run):
+- `P018.3`:
+  - bounded LLM stages:
+    - `06b.verify --timeout-seconds 90 --llm-retries 1` timed out on all 3 videos (no `06b.verify` artifacts written).
+    - direct reverify pass (`06b.verify` over `data/06d.sanitized` -> `data/06e.reverify`) also timed out on all 3.
+  - deterministic stages:
+    - `06c.patch` copied unchanged (no baseline verification reports found).
+    - `06d.sanitize`, `06f.damage-map`, `06g.damage-adjudicator`, `06h.confidence-propagation` all produced artifacts.
+    - `06f/06g` summaries showed `damaged_segments=0`, `seeds=0`.
+  - Stage 07 gate behavior:
+    - strict `reverify_patched` run blocks all videos immediately due missing baseline `06b.verify` artifacts.
+  - validation/gate outcomes:
+    - `validate_manifest` fails (`missing_stage06b_reverify` + `stage07_gate_policy_violation` on existing Stage 07 outputs).
+    - `validate_stage_report` marks all 3 videos `BLOCKED` (`reason=missing_stage06b_reverify`).
+    - `08.taxonomy-validation` FAIL: `Zero Stage 07 enrichments detected for 3 video(s)`.
+    - `09.chunk-embed --dry-run` found `To process=0` and `Skipped=3 file(s) with no content`.
+    - `10.ingest --dry-run` quarantined all 3 videos from Stage 08 fail reasons (`no_stage07_enrichments`).
+- `P018.4`:
+  - preflight correction:
+    - Stage 06 artifact is actually missing for `1ok1oovp0K0`; earlier preflight matcher gave a false-positive due `glob` bracket semantics.
+  - bounded LLM stage:
+    - `06.video-type --model sonnet --timeout-seconds 90 --llm-retries 1 --overwrite` times out on the single video.
+  - downstream effects:
+    - `06b/06c/06d/06e/06f/06g/06h/07` skip with “no manifest videos found in input” or missing upstream outputs.
+    - `validate_manifest` fails (`missing_stage06b_reverify`; `missing_stage06b`, `missing_stage06c`, `missing_stage07` present).
+    - `validate_stage_report` marks the video `BLOCKED` (`reason=missing_stage06b_reverify`).
+    - `08.taxonomy-validation` now writes `P018.4.report.json` even with zero files; status is `FAIL` with reason `Manifest coverage incomplete: 1 video(s) missing Stage 07 enriched outputs`.
+    - `09.chunk-embed --dry-run` found `To process=0` (no in-scope Stage 07 files).
+    - `10.ingest --dry-run` now consumes that Stage 08 fail report and quarantines `1ok1oovp0K0` (`missing_stage07_enriched`) instead of failing with “invalid details.files_processed”.
+- operational note:
+  - use unbuffered + bounded LLM commands during execution to avoid opaque hangs:
+    - `timeout <sec> python3 -u scripts/training-data/06b.verify ...`
+    - `timeout <sec> python3 -u scripts/training-data/07.content ...`
+  - startup health probes now abort early (`exit 2`) when Claude is unreachable, instead of timing out one video at a time.
+    - validated on `2026-02-15` with `--preflight-timeout-seconds 5 --preflight-retries 1` for:
+      - `06.video-type`
+      - `06b.verify`
+      - `07.content`
+  - environment health check:
+    - `timeout 40 claude -p "Respond exactly: ok" --output-format text --model opus` timed out (`exit 124`), consistent with observed Stage 06/06b/07 call timeouts.
+  - Stage 08/10 recurrence rails:
+    - Stage 08 emits a structured manifest fail report even when zero Stage 07 files are present.
+    - Stage 10 accepts that report shape for quarantine decisions when `files_processed=0` and all manifest videos are missing Stage 07 outputs.
 
 #### V2 Exit Criteria (Before Expanding Rollout)
 
@@ -861,9 +1220,10 @@ python3 scripts/training-data/08.taxonomy-validation --source coach_kyle_infield
 4. No `REJECT` in `06e.reverify` on `P018.3` and `P018.4`.
 5. Stage 07 artifact warnings non-increasing on `P018.3` and reduced or stable on `P018.4`.
 6. Stage 08 status non-regressing on `P018.3` and no `FAIL` on `P018.4`.
-7. (When D7-D10 land) Every Stage 07 dropped anchor has a traceable `06f`/`06g` reason code.
-8. (When D7-D10 land) No low-confidence contaminated chunk reaches primary ingest lane.
-9. (When D7-D10 land) Confidence/drift dashboards stay within configured warning/error budgets.
+7. Every Stage 07 dropped anchor has a traceable reason contract:
+   `reason_code`, `source_stage`, `timestamp`, and segment-linked `damage_reason_code`.
+8. No low-confidence contaminated chunk reaches primary ingest lane.
+9. D11 drift/budget artifacts remain within configured thresholds and audit samples are reviewed.
 
 ## Holdout Set (HOLDOUT.1)
 
@@ -1009,13 +1369,17 @@ Objectives:
 
 ## Repeatable Canary Loop
 
+Note:
+- This is the lightweight legacy canary loop.
+- For current hardening (D7-D11, confidence-aware path), use `Canonical V2 Evaluation Loop` above.
+
 ### 0) Optional: reset embeddings table (DB destructive)
 
 If you want a clean slate for retrieval testing, wipe the `embeddings` table first:
 
 ```bash
-node node_modules/tsx/dist/cli.mjs scripts/training-data/00.reset-embeddings.ts --count
-node node_modules/tsx/dist/cli.mjs scripts/training-data/00.reset-embeddings.ts --wipe-all --yes
+node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --count
+node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --wipe-all --yes
 ```
 
 ### 1) Run LLM stages (writes under `data/`)
@@ -1205,7 +1569,7 @@ python3 scripts/training-data/08.taxonomy-validation \
 This stage calls Ollama at `QA_CONFIG.ollama.baseUrl` (default `http://localhost:11434`) and requires the embedding model to exist.
 
 ```bash
-node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts \
+node --import tsx/esm scripts/training-data/09.chunk-embed.ts \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```
 
@@ -1221,7 +1585,7 @@ python3 scripts/training-data/validation/validate_chunks.py \
 Start with a dry run on the canary:
 
 ```bash
-node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts \
+node --import tsx/esm scripts/training-data/10.ingest.ts \
   --dry-run \
   --manifest docs/pipeline/batches/CANARY.1.txt
 ```
@@ -1243,9 +1607,9 @@ Stage 10 also requires a readiness summary at `data/validation/stage_reports/<ma
 By default readiness policy is READY-only. To allow REVIEW ingest, generate readiness summaries with `--allow-review-ingest`.
 Stage 10 can optionally run a semantic-quality gate for the same manifest scope when `--semantic-*` flags are provided (native gate logic aligned with `batch_report.py`).
 Example:
-`node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
+`node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale`
 Shortcut:
-`node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --quality-gate`
+`node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --dry-run --quality-gate`
 If semantic judgements use a different directory label than the manifest stem, pass `--semantic-batch-id <id>`.
 Stage 10 writes a semantic gate report to `data/validation/semantic_gate/<manifest>[.<source>].<batch_id>.report.json` by default (override with `--semantic-report-out <path>`).
 Stage 10 also writes a manifest quarantine decision report to `data/validation/ingest_quarantine/<manifest>[.<source>].<run>.report.json` (override with `--quarantine-report-out <path>`).
@@ -1260,7 +1624,7 @@ Stage 10 now performs chunk preflight validation (non-empty content, consistent 
 This calls Ollama + Supabase retrieval and prints the top matches:
 
 ```bash
-node node_modules/tsx/dist/cli.mjs scripts/training-data/11.retrieval-smoke.ts \
+node --import tsx/esm scripts/training-data/11.retrieval-smoke.ts \
   "approach a girl in public"
 ```
 

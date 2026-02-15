@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Flame, Trophy } from "lucide-react"
+import { Flame, Medal } from "lucide-react"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { getCategoryConfig } from "../../data/goalCategories"
@@ -152,7 +152,7 @@ export function GoalStreaksWidget({ collapsed }: WidgetProps) {
                 <span className="text-sm font-medium truncate">{goal.title}</span>
                 {/* Milestone badge */}
                 {tier >= 2 && (
-                  <Trophy className={`h-3 w-3 ${tier >= 3 ? "text-yellow-500" : "text-orange-400"}`} />
+                  <Medal className={`h-3 w-3 ${tier >= 3 ? "text-yellow-500" : "text-orange-400"}`} />
                 )}
               </div>
             </div>

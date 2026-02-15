@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Goal icon: flowing flag with rounded pole -->
+  <!-- Pole -->
+  <line x1="8" y1="4" x2="8" y2="28" stroke="#ff6b35" stroke-width="2" stroke-linecap="round"/>
+  <!-- Flag body - soft wave shape -->
+  <path d="M8 5 Q14 3, 20 7 Q26 11, 24 15 Q18 13, 12 16 Q8 18, 8 14"
+        fill="#ff6b35" fill-opacity="0.2" stroke="#ff6b35" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Ground dot -->
+  <circle cx="8" cy="28" r="2" fill="#ff6b35"/>
+</svg>

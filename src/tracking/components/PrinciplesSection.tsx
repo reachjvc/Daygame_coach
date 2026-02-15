@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles, ChevronDown } from "lucide-react"
+import { Compass, ChevronDown } from "lucide-react"
 import { PRINCIPLES, PRINCIPLE_CATEGORIES } from "../data/principles"
 
 /**
@@ -35,7 +35,7 @@ export function PrinciplesSection() {
         <div className="relative">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-              <Sparkles className="size-7" />
+              <Compass className="size-7" />
             </div>
             <div>
               <p className="text-primary font-semibold text-sm uppercase tracking-wider">The Science</p>

@@ -11,7 +11,7 @@ import {
   Loader2,
   ArrowLeft,
   Calendar,
-  Target,
+  Footprints,
   TrendingUp,
   Flame,
   Check,
@@ -324,7 +324,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
-                <Target className="size-5 text-primary" />
+                <Footprints className="size-5 text-primary" />
                 <div>
                   <div className="text-2xl font-bold">{weeklyStats.approaches}</div>
                   <div className="text-xs text-muted-foreground">Approaches</div>

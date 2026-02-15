@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo } from "react"
-import { Target, Clock, Plus, Star } from "lucide-react"
+import { CircleDot, Clock, Plus, Star, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AchievementBadge } from "./AchievementBadge"
 import { GoalCategorySection } from "./GoalCategorySection"
@@ -23,6 +23,9 @@ interface GoalHierarchyViewProps {
   onAddChild?: (parentGoal: GoalWithProgress) => void
   isCustomizeMode?: boolean
   onGoalToggle?: (goalId: string, active: boolean) => Promise<void>
+  onDeleteGoal?: (goalId: string) => Promise<void>
+  onDeleteAllGoals?: () => Promise<void>
+  onReorder?: (goalIds: string[]) => Promise<void>
   onAddDirtyDogGoals?: () => void
   isAddingDirtyDog?: boolean
 }
@@ -37,6 +40,9 @@ export function GoalHierarchyView({
   onAddChild,
   isCustomizeMode = false,
   onGoalToggle,
+  onDeleteGoal,
+  onDeleteAllGoals,
+  onReorder,
   onAddDirtyDogGoals,
   isAddingDirtyDog = false,
 }: GoalHierarchyViewProps) {
@@ -70,6 +76,24 @@ export function GoalHierarchyView({
 
   return (
     <div className="space-y-8">
+      {/* Delete All button — only in customize mode */}
+      {isCustomizeMode && onDeleteAllGoals && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            Drag to reorder. Toggle to show/hide. Trash to permanently delete.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => onDeleteAllGoals()}
+          >
+            <Trash2 className="size-4 mr-1" />
+            Delete All
+          </Button>
+        </div>
+      )}
+
       {/* L0 dream goal context banner */}
       {goals.filter(g => g.goal_level === 0).map(dream => (
         <div key={dream.id} className="flex items-center gap-2 text-sm text-muted-foreground italic">
@@ -95,7 +119,7 @@ export function GoalHierarchyView({
             {/* L1 Goal Header */}
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-primary/10 p-2">
-                <Target className="size-5 text-primary" />
+                <CircleDot className="size-5 text-primary" />
               </div>
               <div>
                 <h2 className="text-lg font-bold">{section.l1Goal.title}</h2>
@@ -146,6 +170,8 @@ export function GoalHierarchyView({
                       onEdit={onEdit}
                       onAddChild={onAddChild}
                       onGoalToggle={onGoalToggle}
+                      onDeleteGoal={onDeleteGoal}
+                      onReorder={onReorder}
                     />
 
                     {/* Projected timeline summary */}

@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Compass, Eye, Flame, Target, Sparkles, Trophy, ChevronLeft, ChevronRight } from "lucide-react"
+import { Check, Compass, Eye, Flame, CircleDot, Sunrise, Trophy, ChevronLeft, ChevronRight } from "lucide-react"
 import { InnerGameStep } from "../../types"
 
 type StepProgressProps = {
@@ -13,8 +13,8 @@ const STEPS = [
   { step: InnerGameStep.VALUES, label: "Values", icon: Compass },
   { step: InnerGameStep.SHADOW, label: "Shadow", icon: Eye },
   { step: InnerGameStep.PEAK_EXPERIENCE, label: "Peak", icon: Flame },
-  { step: InnerGameStep.HURDLES, label: "Hurdles", icon: Target },
-  { step: InnerGameStep.CUTTING, label: "Prioritize", icon: Sparkles },
+  { step: InnerGameStep.HURDLES, label: "Hurdles", icon: CircleDot },
+  { step: InnerGameStep.CUTTING, label: "Prioritize", icon: Sunrise },
   { step: InnerGameStep.COMPLETE, label: "Complete", icon: Trophy },
 ]
 

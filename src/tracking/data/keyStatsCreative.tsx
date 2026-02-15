@@ -1,6 +1,6 @@
 import {
   Zap,
-  Target,
+  Footprints,
   Brain,
   Flame,
   Heart,
@@ -47,7 +47,7 @@ export const KEY_STATS_CREATIVE: KeyStat[] = [
     detail: "from simply watching yourself",
     hoverPreview: "What gets measured gets done. What gets ignored gets forgotten.",
     fullDescription: "Here's a weird truth: you don't need to analyze your data. Just COLLECTING it makes you 40% more consistent. The act of observation changes the behavior. Write down 'approached: yes/no' and watch yourself approach more. No willpower required—just visibility.",
-    icon: <Target className="size-5" />,
+    icon: <Footprints className="size-5" />,
     nerdBox: {
       primaryStudy: "Hawthorne Effect meets habit science: Self-monitoring creates behavior change independent of analysis",
       keyQuote: "Participants who merely recorded eating—without any diet changes—lost weight. Observation IS intervention.",

@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { Target } from "lucide-react"
+import { Crosshair } from "lucide-react"
 
 const POST_LOGIN_KEY = "postLoginNext"
 
@@ -60,7 +60,7 @@ export default function LoginPageClient() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-center gap-2 font-semibold text-xl mb-4">
-            <Target className="size-6 text-primary" />
+            <Crosshair className="size-6 text-primary" />
             <span>DayGame Coach</span>
           </div>
           <Card>

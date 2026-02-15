@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, Target, Brain, Lightbulb, MessageSquare, Users, Mic } from "lucide-react"
+import { ChevronDown, Footprints, Brain, Dumbbell, MessageSquare, Users, Mic } from "lucide-react"
 import { MOOD_OPTIONS } from "../config"
 import {
   getMoodEmoji,
@@ -40,7 +40,7 @@ export function SessionImportSection({
             className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors"
           >
             <div className="flex items-center gap-2">
-              <Target className="size-4 text-muted-foreground" />
+              <Footprints className="size-4 text-muted-foreground" />
               <span className="text-sm font-medium">Session Context</span>
               {!isExpanded && sessionData && (
                 <Badge variant="secondary" className="ml-2">
@@ -79,7 +79,7 @@ export function SessionImportSection({
                 {sessionData.goal !== null && sessionData.approachCount === 0 && (
                   <div className="flex items-center gap-3">
                     <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <Target className="size-3 text-primary" />
+                      <Footprints className="size-3 text-primary" />
                     </div>
                     <div className="text-sm">
                       <span className="text-muted-foreground">Goal:</span>
@@ -120,7 +120,7 @@ export function SessionImportSection({
                 {sessionData.techniqueFocus && (
                   <div className="flex items-start gap-3">
                     <div className="w-6 h-6 rounded-full bg-purple-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                      <Lightbulb className="size-3 text-purple-500" />
+                      <Dumbbell className="size-3 text-purple-500" />
                     </div>
                     <div className="text-sm">
                       <span className="text-muted-foreground">Technique:</span>

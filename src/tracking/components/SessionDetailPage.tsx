@@ -11,7 +11,7 @@ import {
   ArrowLeft,
   Clock,
   MapPin,
-  Target,
+  Footprints,
   Play,
   FileText,
   Pencil,
@@ -462,7 +462,7 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
             <div>
               <Label htmlFor="edit-goal" className="text-sm">Goal</Label>
               <div className="flex items-center gap-2 mt-1">
-                <Target className="size-4 text-muted-foreground shrink-0" />
+                <Footprints className="size-4 text-muted-foreground shrink-0" />
                 <Input
                   id="edit-goal"
                   type="number"
@@ -482,7 +482,7 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
               <span>{session.primary_location || "No location"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Target className="size-4 text-muted-foreground" />
+              <Footprints className="size-4 text-muted-foreground" />
               <span>{session.goal !== null ? `Goal: ${session.goal}` : "No goal set"}</span>
             </div>
             <div className="flex items-center gap-2">

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Slider } from "@/components/ui/slider"
-import { ChevronRight, ChevronLeft, Target, TrendingUp, MapPin } from "lucide-react"
+import { ChevronRight, ChevronLeft, CircleDot, Rocket, MapPin } from "lucide-react"
 import { completeOnboarding } from "@/src/profile/actions"
 import { getArchetypes } from "@/src/profile/data/archetypes"
 import { InteractiveWorldMap } from "./InteractiveWorldMap"
@@ -51,6 +51,11 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
   // Step 5: Primary Goal
   const [primaryGoal, setPrimaryGoal] = useState<string | null>(null);
+
+  // Auto-detect timezone
+  const [detectedTimezone] = useState(() =>
+    Intl.DateTimeFormat().resolvedOptions().timeZone
+  );
 
   // Get archetypes based on age and region
   const archetypes = getArchetypes(ageRange, selectedRegion ?? undefined);
@@ -152,6 +157,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           <input type="hidden" name="tertiaryArchetype" value={selectedArchetypes[2] || ""} />
           <input type="hidden" name="experienceLevel" value={experienceLevel || ""} />
           <input type="hidden" name="primaryGoal" value={primaryGoal || ""} />
+          <input type="hidden" name="timezone" value={detectedTimezone} />
 
           {/* Step Content Container */}
           <div className="min-h-[500px]">
@@ -344,7 +350,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           {step === 4 && (
             <Card className="p-8 bg-card border-border">
               <div className="flex items-center gap-3 mb-4">
-                <TrendingUp className="size-8 text-primary" />
+                <Rocket className="size-8 text-primary" />
                 <h2 className="text-3xl font-bold text-foreground">
                   What's your experience level?
                 </h2>
@@ -374,7 +380,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           {step === 5 && (
             <Card className="p-8 bg-card border-border">
               <div className="flex items-center gap-3 mb-4">
-                <Target className="size-8 text-primary" />
+                <CircleDot className="size-8 text-primary" />
                 <h2 className="text-3xl font-bold text-foreground">
                   What's your primary goal?
                 </h2>

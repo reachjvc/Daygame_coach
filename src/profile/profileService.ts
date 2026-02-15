@@ -30,6 +30,7 @@ export interface OnboardingData {
   tertiaryArchetype: string | null
   experienceLevel: string
   primaryGoal: string
+  timezone: string | null
 }
 
 export interface ArchetypeData {
@@ -172,6 +173,7 @@ export async function completeOnboardingForUser(
     primary_goal: data.primaryGoal,
     level: initialLevel,
     onboarding_completed: true,
+    ...(data.timezone ? { timezone: data.timezone } : {}),
   })
 }
 

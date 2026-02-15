@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
-import { Plus, RotateCcw, Target, Flame, Check, Sparkles } from "lucide-react"
+import { Plus, RotateCcw, CircleDot, Flame, Check, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress, GoalPeriod } from "@/src/db/goalTypes"
@@ -185,7 +185,7 @@ export function GoalProgressWidget({ collapsed }: WidgetProps) {
     return (
       <>
         <div className="text-center py-4">
-          <Target className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+          <CircleDot className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground mb-3">
             No goals yet. Set your first goal!
           </p>

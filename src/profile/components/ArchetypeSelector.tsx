@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
-import { Target } from "lucide-react"
+import { CircleDot } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -72,7 +72,7 @@ export function ArchetypeSelector({
       <div className="w-full max-w-5xl">
         <Card className="p-8 bg-card border-border">
           <div className="flex items-center gap-3 mb-4">
-            <Target className="size-8 text-primary" />
+            <CircleDot className="size-8 text-primary" />
             <div>
               <h2 className="text-3xl font-bold text-foreground">Choose your archetypes</h2>
               <p className="text-sm text-muted-foreground">

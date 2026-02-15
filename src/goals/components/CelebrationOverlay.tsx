@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from "react"
 import confetti from "canvas-confetti"
-import { Trophy, Star, Sparkles } from "lucide-react"
+import { PartyPopper, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { CelebrationTier } from "../types"
 
@@ -86,7 +86,7 @@ export function CelebrationOverlay({ tier, goalTitle, onDismiss }: CelebrationOv
     return (
       <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center gap-2 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-lg px-4 py-3 shadow-lg">
-          <Star className="size-4" />
+          <PartyPopper className="size-4" />
           <span className="text-sm font-medium">Goal complete: {goalTitle}</span>
         </div>
       </div>
@@ -98,7 +98,7 @@ export function CelebrationOverlay({ tier, goalTitle, onDismiss }: CelebrationOv
     return (
       <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center gap-2 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-lg px-4 py-3 shadow-lg">
-          <Trophy className="size-4" />
+          <PartyPopper className="size-4" />
           <span className="text-sm font-medium">Goal complete: {goalTitle}</span>
         </div>
       </div>
@@ -110,7 +110,7 @@ export function CelebrationOverlay({ tier, goalTitle, onDismiss }: CelebrationOv
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-300">
       <div className="relative bg-card border border-border rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-500">
         <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/15 flex items-center justify-center mb-4">
-          <Trophy className="size-8 text-amber-400" />
+          <PartyPopper className="size-8 text-amber-400" />
         </div>
 
         <h2 className="text-2xl font-bold mb-2">

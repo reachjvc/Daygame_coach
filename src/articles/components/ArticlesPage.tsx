@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, Brain, Zap, Target, FileText, Clock, Sparkles } from "lucide-react"
+import { BookOpen, Brain, Zap, CircleDot, FileText, Clock, Library } from "lucide-react"
 import { CONTENT_PILLARS, ARTICLE_TIERS, SCALABLE_FORMATS } from "../config"
 import type { ContentPillar } from "../types"
 
@@ -10,7 +10,7 @@ const pillarIcons: Record<string, React.ReactNode> = {
   BookOpen: <BookOpen className="size-6 text-primary" />,
   Brain: <Brain className="size-6 text-primary" />,
   Zap: <Zap className="size-6 text-primary" />,
-  Target: <Target className="size-6 text-primary" />,
+  Target: <CircleDot className="size-6 text-primary" />,
 }
 
 const breadthColors: Record<string, string> = {
@@ -64,7 +64,7 @@ export function ArticlesPage() {
       <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
         <CardContent className="flex items-center gap-4 py-6">
           <div className="size-14 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-            <Sparkles className="size-7 text-primary" />
+            <Library className="size-7 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-1">

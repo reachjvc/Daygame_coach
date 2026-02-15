@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
-import { Target, MessageCircle, Brain, HelpCircle, ArrowRight, Lock, TrendingUp, BookOpen } from "lucide-react";
+import { MessageCircle, Brain, HelpCircle, ArrowRight, Lock, BarChart3, BookOpen } from "lucide-react";
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import { UserPreferences, LevelProgressBar } from "@/src/profile/components";
 import type { DashboardProfileData } from "../types";
 
@@ -75,7 +76,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
           <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-              <Target className="size-10 text-primary" />
+              <GoalIcon className="size-10 text-primary" />
             </div>
             <h2 className="text-2xl font-bold mb-4 text-foreground">Scenarios</h2>
             <p className="text-muted-foreground leading-relaxed mb-6">
@@ -162,7 +163,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="size-14 rounded-full bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors shrink-0">
-                <TrendingUp className="size-7 text-green-500" />
+                <BarChart3 className="size-7 text-green-500" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-foreground mb-1">Progress Tracking</h3>

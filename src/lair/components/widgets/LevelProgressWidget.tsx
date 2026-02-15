@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Star } from "lucide-react"
+import { Crown } from "lucide-react"
 import type { WidgetProps } from "../../types"
 
 interface ProfileData {
@@ -74,7 +74,7 @@ export function LevelProgressWidget({ collapsed }: WidgetProps) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-yellow-500/10 text-yellow-500">
-            <Star className="h-5 w-5" />
+            <Crown className="h-5 w-5" />
           </div>
           <div>
             <div className="font-bold">Level {profile.level}</div>

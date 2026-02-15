@@ -44,6 +44,7 @@ export interface ProfileInfo {
   primary_goal: string | null
   sandbox_settings: SandboxSettings
   voice_language: string | null
+  timezone: string | null
 }
 
 export interface SubscriptionInfo {

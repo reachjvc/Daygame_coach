@@ -43,6 +43,7 @@ export async function completeOnboarding(formData: FormData) {
     tertiaryArchetype: (formData.get("tertiaryArchetype") as string) || null,
     experienceLevel: formData.get("experienceLevel") as string,
     primaryGoal: formData.get("primaryGoal") as string,
+    timezone: (formData.get("timezone") as string) || null,
   }
 
   await completeOnboardingForUser(userId, data)

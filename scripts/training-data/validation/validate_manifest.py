@@ -17,6 +17,7 @@ It does not call the LLM. By default it is read-only; optional stage-report emis
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import re
@@ -39,6 +40,18 @@ _WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 _STAGE07_GATE_POLICIES = {"approve_only", "allow_flag", "reverify_patched"}
+_KNOWN_STAGE07_DROP_REASONS: Set[str] = {
+    "missing_evidence_segment",
+    "unknown_evidence_segment",
+    "flagged_evidence_segment",
+    "excluded_by_sanitizer",
+    "non_approach_segment",
+    "transcript_artifact",
+    "low_quality_evidence_segment",
+    "segment_not_in_evidence_allowlist",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+}
 
 
 @dataclass(frozen=True)
@@ -679,6 +692,257 @@ def _validate_audio_features_payload(audio_features_path: Path) -> List[str]:
     return errs
 
 
+def _validate_stage07_drop_reason_contract(s07_data: Dict[str, Any]) -> Dict[str, Any]:
+    dropped = s07_data.get("dropped_candidates")
+    if not isinstance(dropped, list):
+        return {
+            "present": False,
+            "missing_reason_code": 0,
+            "unknown_reason_code": [],
+            "missing_damage_reason_for_segment": 0,
+            "missing_source_stage": 0,
+            "missing_timestamp": 0,
+            "anchor_drop_total": 0,
+            "anchor_drop_reason_counts": {},
+        }
+
+    missing_reason_code = 0
+    unknown_reason_code: Set[str] = set()
+    missing_damage_reason_for_segment = 0
+    missing_source_stage = 0
+    missing_timestamp = 0
+    anchor_drop_total = 0
+    anchor_drop_reason_counts: Counter = Counter()
+    anchor_candidate_types = {"technique_used", "turn_phase", "hook_point", "investment_level"}
+    for rec in dropped:
+        if not isinstance(rec, dict):
+            missing_reason_code += 1
+            continue
+        source_stage = rec.get("source_stage")
+        if not isinstance(source_stage, str) or not source_stage.strip():
+            missing_source_stage += 1
+        ts = rec.get("timestamp")
+        if not isinstance(ts, str) or not ts.strip():
+            missing_timestamp += 1
+
+        reason_code_raw = rec.get("reason_code")
+        reason_raw = rec.get("reason")
+        reason_code: Optional[str] = None
+        if isinstance(reason_code_raw, str) and reason_code_raw.strip():
+            reason_code = reason_code_raw.strip()
+        elif isinstance(reason_raw, str) and reason_raw.strip():
+            reason_code = reason_raw.strip()
+        if not reason_code:
+            missing_reason_code += 1
+        elif reason_code not in _KNOWN_STAGE07_DROP_REASONS:
+            unknown_reason_code.add(reason_code)
+
+        candidate_type = rec.get("candidate_type")
+        if isinstance(candidate_type, str) and candidate_type in anchor_candidate_types:
+            anchor_drop_total += 1
+            if reason_code:
+                anchor_drop_reason_counts[reason_code] += 1
+
+        seg = rec.get("segment")
+        if isinstance(seg, int):
+            damage_reason = rec.get("damage_reason_code")
+            if not isinstance(damage_reason, str) or not damage_reason.strip():
+                missing_damage_reason_for_segment += 1
+
+    return {
+        "present": True,
+        "missing_reason_code": missing_reason_code,
+        "unknown_reason_code": sorted(unknown_reason_code),
+        "missing_damage_reason_for_segment": missing_damage_reason_for_segment,
+        "missing_source_stage": missing_source_stage,
+        "missing_timestamp": missing_timestamp,
+        "anchor_drop_total": anchor_drop_total,
+        "anchor_drop_reason_counts": dict(anchor_drop_reason_counts),
+    }
+
+
+def _compute_stage07_damage_metrics(s07_data: Dict[str, Any]) -> Dict[str, Any]:
+    segments = s07_data.get("segments")
+    if not isinstance(segments, list):
+        return {
+            "video_damaged_token_ratio": 0.0,
+            "video_damaged_segment_ratio": 0.0,
+            "max_conversation_damaged_token_ratio": 0.0,
+            "max_conversation_damaged_segment_ratio": 0.0,
+            "damage_type_hist": {},
+            "contamination_source_hist": {},
+            "damaged_segments_total": 0,
+            "segments_total": 0,
+            "token_total": 0,
+            "damaged_token_total": 0,
+        }
+
+    low_quality_ids: Set[int] = set()
+    for row in s07_data.get("low_quality_segments", []) or []:
+        if isinstance(row, dict):
+            sid = row.get("segment")
+            if isinstance(sid, int):
+                low_quality_ids.add(sid)
+    artifact_ids: Set[int] = set()
+    for row in s07_data.get("transcript_artifacts", []) or []:
+        if isinstance(row, dict):
+            sid = row.get("segment_index")
+            if isinstance(sid, int):
+                artifact_ids.add(sid)
+
+    damage_type_hist: Counter = Counter()
+    contamination_source_hist: Counter = Counter()
+    by_conv_tokens: Dict[int, int] = defaultdict(int)
+    by_conv_damaged_tokens: Dict[int, int] = defaultdict(int)
+    by_conv_segments: Dict[int, int] = defaultdict(int)
+    by_conv_damaged_segments: Dict[int, int] = defaultdict(int)
+
+    token_total = 0
+    damaged_token_total = 0
+    damaged_segments_total = 0
+    segments_total = 0
+
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        sid = seg.get("id")
+        if not isinstance(sid, int):
+            continue
+        segments_total += 1
+        conv_id = seg.get("conversation_id")
+        if not isinstance(conv_id, int):
+            conv_id = 0
+        text = seg.get("text")
+        tokens = len([t for t in str(text).strip().split() if t]) if isinstance(text, str) else 0
+        token_total += tokens
+        by_conv_tokens[conv_id] += tokens
+        by_conv_segments[conv_id] += 1
+
+        tier = str(seg.get("confidence_tier", "")).strip().lower()
+        contamination_sources = [
+            str(x).strip()
+            for x in (seg.get("contamination_sources") or [])
+            if isinstance(x, str) and str(x).strip()
+        ]
+        damaged = False
+        if tier == "low":
+            damaged = True
+            damage_type_hist["low_confidence_tier"] += 1
+        if sid in low_quality_ids:
+            damaged = True
+            damage_type_hist["low_quality"] += 1
+        if sid in artifact_ids:
+            damaged = True
+            damage_type_hist["transcript_artifact"] += 1
+        if contamination_sources:
+            damaged = True
+            for src in contamination_sources:
+                contamination_source_hist[src] += 1
+
+        if damaged:
+            damaged_segments_total += 1
+            damaged_token_total += tokens
+            by_conv_damaged_segments[conv_id] += 1
+            by_conv_damaged_tokens[conv_id] += tokens
+
+    max_conv_token_ratio = 0.0
+    max_conv_segment_ratio = 0.0
+    for conv_id in set(by_conv_segments.keys()) | set(by_conv_tokens.keys()):
+        conv_tokens = by_conv_tokens.get(conv_id, 0)
+        conv_damaged_tokens = by_conv_damaged_tokens.get(conv_id, 0)
+        conv_segments = by_conv_segments.get(conv_id, 0)
+        conv_damaged_segments = by_conv_damaged_segments.get(conv_id, 0)
+        if conv_tokens > 0:
+            max_conv_token_ratio = max(max_conv_token_ratio, conv_damaged_tokens / conv_tokens)
+        if conv_segments > 0:
+            max_conv_segment_ratio = max(max_conv_segment_ratio, conv_damaged_segments / conv_segments)
+
+    return {
+        "video_damaged_token_ratio": (damaged_token_total / token_total) if token_total > 0 else 0.0,
+        "video_damaged_segment_ratio": (damaged_segments_total / segments_total) if segments_total > 0 else 0.0,
+        "max_conversation_damaged_token_ratio": max_conv_token_ratio,
+        "max_conversation_damaged_segment_ratio": max_conv_segment_ratio,
+        "damage_type_hist": dict(damage_type_hist),
+        "contamination_source_hist": dict(contamination_source_hist),
+        "damaged_segments_total": damaged_segments_total,
+        "segments_total": segments_total,
+        "token_total": token_total,
+        "damaged_token_total": damaged_token_total,
+    }
+
+
+def _compute_stage07_anchor_drop_ratio(s07_data: Dict[str, Any]) -> Dict[str, Any]:
+    enrichments = s07_data.get("enrichments")
+    if not isinstance(enrichments, list):
+        enrichments = []
+    dropped = s07_data.get("dropped_candidates")
+    if not isinstance(dropped, list):
+        dropped = []
+
+    kept_anchors = 0
+    for enrichment in enrichments:
+        if not isinstance(enrichment, dict):
+            continue
+        if enrichment.get("type") != "approach":
+            continue
+        techniques = enrichment.get("techniques_used")
+        if isinstance(techniques, list):
+            kept_anchors += len([t for t in techniques if isinstance(t, dict)])
+        phases = enrichment.get("turn_phases")
+        if isinstance(phases, list):
+            kept_anchors += len([p for p in phases if isinstance(p, dict)])
+        hook = enrichment.get("hook_point")
+        if isinstance(hook, dict) and isinstance(hook.get("segment"), int):
+            kept_anchors += 1
+        inv = enrichment.get("investment_level")
+        if isinstance(inv, str) and inv.strip():
+            kept_anchors += 1
+
+    dropped_anchor_total = 0
+    anchor_drop_reason_counts: Counter = Counter()
+    for row in dropped:
+        if not isinstance(row, dict):
+            continue
+        ctype = row.get("candidate_type")
+        if ctype not in {"technique_used", "turn_phase", "hook_point", "investment_level"}:
+            continue
+        dropped_anchor_total += 1
+        reason = row.get("reason_code")
+        if not isinstance(reason, str) or not reason.strip():
+            reason = row.get("reason")
+        if isinstance(reason, str) and reason.strip():
+            anchor_drop_reason_counts[reason.strip()] += 1
+
+    denom = kept_anchors + dropped_anchor_total
+    ratio = (dropped_anchor_total / denom) if denom > 0 else 0.0
+    return {
+        "kept_anchor_total": kept_anchors,
+        "dropped_anchor_total": dropped_anchor_total,
+        "dropped_anchor_ratio": ratio,
+        "anchor_drop_reason_counts": dict(anchor_drop_reason_counts),
+    }
+
+
+def _merge_string_int_hist(dst: Counter, src: Any) -> None:
+    if not isinstance(src, dict):
+        return
+    for raw_key, raw_val in src.items():
+        if not isinstance(raw_key, str):
+            continue
+        key = raw_key.strip()
+        if not key:
+            continue
+        if isinstance(raw_val, bool):
+            val = int(raw_val)
+        elif isinstance(raw_val, (int, float)) and math.isfinite(float(raw_val)):
+            val = int(raw_val)
+        else:
+            continue
+        if val <= 0:
+            continue
+        dst[key] += val
+
+
 def _issue_to_stage_check(issue: Dict[str, Any]) -> Dict[str, str]:
     sev_raw = str(issue.get("severity", "info")).strip().lower()
     sev = sev_raw if sev_raw in {"error", "warning", "info"} else "info"
@@ -841,6 +1105,27 @@ def main() -> None:
         default="error",
         help="Severity threshold for quarantine entries: error or warning (default: error)",
     )
+    parser.add_argument(
+        "--max-damaged-token-ratio",
+        type=float,
+        help=(
+            "Optional hard budget: block when Stage 07 video_damaged_token_ratio exceeds this value (0..1)"
+        ),
+    )
+    parser.add_argument(
+        "--max-dropped-anchor-ratio",
+        type=float,
+        help=(
+            "Optional hard budget: block when Stage 07 dropped_anchor_ratio exceeds this value (0..1)"
+        ),
+    )
+    parser.add_argument(
+        "--damage-drift-out",
+        help=(
+            "Optional JSON output path for manifest-level damage drift histograms "
+            "(damage types, contamination sources, anchor drop reasons)"
+        ),
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -848,6 +1133,13 @@ def main() -> None:
     args = parser.parse_args()
     stage07_gate_policy = "allow_flag" if args.allow_flag else args.stage07_gate_policy
     emit_quarantine = bool(args.emit_quarantine or args.quarantine_out)
+
+    if args.max_damaged_token_ratio is not None and not (0.0 <= float(args.max_damaged_token_ratio) <= 1.0):
+        print(f"{LOG_PREFIX} ERROR: --max-damaged-token-ratio must be within [0,1]", file=sys.stderr)
+        sys.exit(2)
+    if args.max_dropped_anchor_ratio is not None and not (0.0 <= float(args.max_dropped_anchor_ratio) <= 1.0):
+        print(f"{LOG_PREFIX} ERROR: --max-dropped-anchor-ratio must be within [0,1]", file=sys.stderr)
+        sys.exit(2)
 
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -953,6 +1245,24 @@ def main() -> None:
     stage07_warning_types: Counter = Counter()
     stage07_normalization_repairs_total = 0
     stage07_videos_with_repairs = 0
+    stage07_metrics_videos = 0
+
+    stage07_segments_total = 0
+    stage07_damaged_segments_total = 0
+    stage07_token_total = 0
+    stage07_damaged_token_total = 0
+    stage07_kept_anchor_total = 0
+    stage07_dropped_anchor_total = 0
+
+    stage07_damage_type_hist: Counter = Counter()
+    stage07_contamination_source_hist: Counter = Counter()
+    stage07_anchor_drop_reason_hist: Counter = Counter()
+    stage07_max_video_damaged_token_ratio = 0.0
+    stage07_max_video_dropped_anchor_ratio = 0.0
+    stage07_damage_ratio_by_video: List[Dict[str, Any]] = []
+    stage07_anchor_ratio_by_video: List[Dict[str, Any]] = []
+    damage_budget_violations: List[Dict[str, Any]] = []
+    anchor_budget_violations: List[Dict[str, Any]] = []
 
     blocked_by_gate = 0
     gate_blocked_video_ids: Set[str] = set()
@@ -1683,24 +1993,224 @@ def main() -> None:
             else:
                 blocked_by_gate += 1
 
+        s07_data: Optional[Dict[str, Any]] = None
+        stage07_content_unreadable = False
+        if s07_path:
+            s07_loaded = _load_json(s07_path)
+            if isinstance(s07_loaded, dict):
+                s07_data = s07_loaded
+                stage07_metrics_videos += 1
+
+                damage_metrics = _compute_stage07_damage_metrics(s07_data)
+                anchor_metrics = _compute_stage07_anchor_drop_ratio(s07_data)
+
+                video_damaged_token_ratio = float(damage_metrics.get("video_damaged_token_ratio", 0.0) or 0.0)
+                video_dropped_anchor_ratio = float(anchor_metrics.get("dropped_anchor_ratio", 0.0) or 0.0)
+                video_max_conv_damaged_token_ratio = float(
+                    damage_metrics.get("max_conversation_damaged_token_ratio", 0.0) or 0.0
+                )
+
+                stage07_max_video_damaged_token_ratio = max(
+                    stage07_max_video_damaged_token_ratio,
+                    video_damaged_token_ratio,
+                )
+                stage07_max_video_dropped_anchor_ratio = max(
+                    stage07_max_video_dropped_anchor_ratio,
+                    video_dropped_anchor_ratio,
+                )
+
+                stage07_segments_total += int(damage_metrics.get("segments_total", 0) or 0)
+                stage07_damaged_segments_total += int(damage_metrics.get("damaged_segments_total", 0) or 0)
+                stage07_token_total += int(damage_metrics.get("token_total", 0) or 0)
+                stage07_damaged_token_total += int(damage_metrics.get("damaged_token_total", 0) or 0)
+                stage07_kept_anchor_total += int(anchor_metrics.get("kept_anchor_total", 0) or 0)
+                stage07_dropped_anchor_total += int(anchor_metrics.get("dropped_anchor_total", 0) or 0)
+
+                _merge_string_int_hist(stage07_damage_type_hist, damage_metrics.get("damage_type_hist"))
+                _merge_string_int_hist(
+                    stage07_contamination_source_hist,
+                    damage_metrics.get("contamination_source_hist"),
+                )
+                _merge_string_int_hist(
+                    stage07_anchor_drop_reason_hist,
+                    anchor_metrics.get("anchor_drop_reason_counts"),
+                )
+
+                stage07_damage_ratio_by_video.append({
+                    "video_id": vid,
+                    "source": src,
+                    "video_damaged_token_ratio": round(video_damaged_token_ratio, 6),
+                    "max_conversation_damaged_token_ratio": round(video_max_conv_damaged_token_ratio, 6),
+                })
+                stage07_anchor_ratio_by_video.append({
+                    "video_id": vid,
+                    "source": src,
+                    "dropped_anchor_ratio": round(video_dropped_anchor_ratio, 6),
+                    "dropped_anchor_total": int(anchor_metrics.get("dropped_anchor_total", 0) or 0),
+                    "kept_anchor_total": int(anchor_metrics.get("kept_anchor_total", 0) or 0),
+                })
+
+                if (
+                    args.max_damaged_token_ratio is not None
+                    and video_damaged_token_ratio > float(args.max_damaged_token_ratio)
+                ):
+                    damage_budget_violations.append({
+                        "video_id": vid,
+                        "source": src,
+                        "video_damaged_token_ratio": round(video_damaged_token_ratio, 6),
+                        "threshold": float(args.max_damaged_token_ratio),
+                    })
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "stage07_damaged_token_ratio_budget_exceeded",
+                        "message": (
+                            "Stage 07 damaged-token ratio budget exceeded: "
+                            f"{video_damaged_token_ratio:.3f} > {float(args.max_damaged_token_ratio):.3f}"
+                        ),
+                        "s07": str(s07_path),
+                    })
+                    check_counts["error:stage07_damaged_token_ratio_budget_exceeded"] += 1
+
+                if (
+                    args.max_dropped_anchor_ratio is not None
+                    and video_dropped_anchor_ratio > float(args.max_dropped_anchor_ratio)
+                ):
+                    anchor_budget_violations.append({
+                        "video_id": vid,
+                        "source": src,
+                        "dropped_anchor_ratio": round(video_dropped_anchor_ratio, 6),
+                        "threshold": float(args.max_dropped_anchor_ratio),
+                    })
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "stage07_dropped_anchor_ratio_budget_exceeded",
+                        "message": (
+                            "Stage 07 dropped-anchor ratio budget exceeded: "
+                            f"{video_dropped_anchor_ratio:.3f} > {float(args.max_dropped_anchor_ratio):.3f}"
+                        ),
+                        "s07": str(s07_path),
+                    })
+                    check_counts["error:stage07_dropped_anchor_ratio_budget_exceeded"] += 1
+
+                drop_contract = _validate_stage07_drop_reason_contract(s07_data)
+                if drop_contract.get("present"):
+                    missing_reason = int(drop_contract.get("missing_reason_code", 0) or 0)
+                    if missing_reason > 0:
+                        issues.append({
+                            "video_id": vid,
+                            "source": src,
+                            "severity": "error",
+                            "check": "stage07_drop_reason_code_missing",
+                            "message": (
+                                "Stage 07 dropped_candidates missing reason_code/reason in "
+                                f"{missing_reason} item(s)"
+                            ),
+                            "s07": str(s07_path),
+                        })
+                        check_counts["error:stage07_drop_reason_code_missing"] += 1
+                    unknown_reasons = drop_contract.get("unknown_reason_code", [])
+                    if isinstance(unknown_reasons, list) and unknown_reasons:
+                        issues.append({
+                            "video_id": vid,
+                            "source": src,
+                            "severity": "error",
+                            "check": "stage07_drop_reason_code_unknown",
+                            "message": f"Stage 07 dropped_candidates has unknown reason_code(s): {unknown_reasons}",
+                            "s07": str(s07_path),
+                        })
+                        check_counts["error:stage07_drop_reason_code_unknown"] += 1
+                    missing_damage = int(drop_contract.get("missing_damage_reason_for_segment", 0) or 0)
+                    if missing_damage > 0:
+                        issues.append({
+                            "video_id": vid,
+                            "source": src,
+                            "severity": "warning",
+                            "check": "stage07_drop_damage_reason_missing",
+                            "message": (
+                                "Stage 07 dropped segment candidates missing damage_reason_code: "
+                                f"{missing_damage}"
+                            ),
+                            "s07": str(s07_path),
+                        })
+                        check_counts["warning:stage07_drop_damage_reason_missing"] += 1
+                    missing_source_stage = int(drop_contract.get("missing_source_stage", 0) or 0)
+                    if missing_source_stage > 0:
+                        issues.append({
+                            "video_id": vid,
+                            "source": src,
+                            "severity": "error",
+                            "check": "stage07_drop_source_stage_missing",
+                            "message": (
+                                "Stage 07 dropped_candidates missing source_stage in "
+                                f"{missing_source_stage} item(s)"
+                            ),
+                            "s07": str(s07_path),
+                        })
+                        check_counts["error:stage07_drop_source_stage_missing"] += 1
+                    missing_timestamp = int(drop_contract.get("missing_timestamp", 0) or 0)
+                    if missing_timestamp > 0:
+                        issues.append({
+                            "video_id": vid,
+                            "source": src,
+                            "severity": "error",
+                            "check": "stage07_drop_timestamp_missing",
+                            "message": (
+                                "Stage 07 dropped_candidates missing timestamp in "
+                                f"{missing_timestamp} item(s)"
+                            ),
+                            "s07": str(s07_path),
+                        })
+                        check_counts["error:stage07_drop_timestamp_missing"] += 1
+
+                # Stage 07 normalization metadata (best-effort drift repairs)
+                meta = s07_data.get("metadata", {}) if isinstance(s07_data, dict) else {}
+                repairs = meta.get("normalization_repairs_count", 0)
+                if isinstance(repairs, int) and repairs > 0:
+                    stage07_videos_with_repairs += 1
+                    stage07_normalization_repairs_total += repairs
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "warning",
+                        "check": "stage07_normalization_repairs",
+                        "message": f"Stage 07 applied {repairs} normalization repair(s) before validation",
+                        "s07": str(s07_path),
+                    })
+                    check_counts["warning:stage07_normalization_repairs"] += 1
+            else:
+                stage07_content_unreadable = True
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "error",
+                    "check": "unreadable_stage07_content",
+                    "message": "Could not read Stage 07 enriched JSON",
+                    "s07": str(s07_path),
+                })
+                check_counts["error:unreadable_stage07_content"] += 1
+
         # Run cross-stage validation when we have both sides.
         # Prefer 06c.patched, fall back to 06.video-type if needed.
         s06_for_cross = s06c_path or s06_path
         if s06_for_cross and s07_path:
             s06_data = _load_json(s06_for_cross)
-            s07_data = _load_json(s07_path)
             if not s06_data or not s07_data:
-                issues.append({
-                    "video_id": vid,
-                    "source": src,
-                    "severity": "error",
-                    "check": "unreadable_json",
-                    "message": "Could not read stage JSON for cross-stage validation",
-                    "s06": str(s06_for_cross),
-                    "s07": str(s07_path),
-                })
-                check_counts["unreadable_json"] += 1
-                cross_stage_errors += 1
+                if (not s06_data) or (not stage07_content_unreadable):
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "unreadable_json",
+                        "message": "Could not read stage JSON for cross-stage validation",
+                        "s06": str(s06_for_cross),
+                        "s07": str(s07_path),
+                    })
+                    check_counts["error:unreadable_json"] += 1
+                    cross_stage_errors += 1
                 continue
 
             validated_pairs += 1
@@ -1722,22 +2232,6 @@ def main() -> None:
                     cross_stage_errors += 1
                 elif r.severity == "warning":
                     cross_stage_warnings += 1
-
-            # Stage 07 normalization metadata (best-effort drift repairs)
-            meta = s07_data.get("metadata", {}) if isinstance(s07_data, dict) else {}
-            repairs = meta.get("normalization_repairs_count", 0)
-            if isinstance(repairs, int) and repairs > 0:
-                stage07_videos_with_repairs += 1
-                stage07_normalization_repairs_total += repairs
-                issues.append({
-                    "video_id": vid,
-                    "source": src,
-                    "severity": "warning",
-                    "check": "stage07_normalization_repairs",
-                    "message": f"Stage 07 applied {repairs} normalization repair(s) before validation",
-                    "s07": str(s07_path),
-                })
-                check_counts["warning:stage07_normalization_repairs"] += 1
 
         if s07_path and not gate_allowed:
             gate_policy_violations += 1
@@ -1940,6 +2434,111 @@ def main() -> None:
     )
     passed = complete and errors == 0 and (warnings == 0 if args.strict else True)
 
+    stage07_manifest_damaged_token_ratio = (
+        (stage07_damaged_token_total / stage07_token_total) if stage07_token_total > 0 else 0.0
+    )
+    stage07_manifest_damaged_segment_ratio = (
+        (stage07_damaged_segments_total / stage07_segments_total) if stage07_segments_total > 0 else 0.0
+    )
+    stage07_manifest_dropped_anchor_ratio = (
+        (stage07_dropped_anchor_total / (stage07_kept_anchor_total + stage07_dropped_anchor_total))
+        if (stage07_kept_anchor_total + stage07_dropped_anchor_total) > 0
+        else 0.0
+    )
+
+    worst_damaged_videos = sorted(
+        stage07_damage_ratio_by_video,
+        key=lambda row: float(row.get("video_damaged_token_ratio", 0.0) or 0.0),
+        reverse=True,
+    )[:10]
+    worst_anchor_videos = sorted(
+        stage07_anchor_ratio_by_video,
+        key=lambda row: float(row.get("dropped_anchor_ratio", 0.0) or 0.0),
+        reverse=True,
+    )[:10]
+
+    audit_sample_size = max(1, math.ceil(len(manifest_ids) / 100))
+    fixed_random_sample_video_ids = sorted(
+        manifest_ids,
+        key=lambda video_id: hashlib.sha1(
+            f"{manifest_path.name}|{args.source or 'all'}|{video_id}".encode("utf-8")
+        ).hexdigest(),
+    )[:audit_sample_size]
+    damage_ratio_lookup: Dict[str, float] = {}
+    for row in stage07_damage_ratio_by_video:
+        video_id = str(row.get("video_id", "")).strip()
+        if not video_id:
+            continue
+        damage_ratio_lookup[video_id] = float(row.get("video_damaged_token_ratio", 0.0) or 0.0)
+    anchor_ratio_lookup: Dict[str, float] = {}
+    for row in stage07_anchor_ratio_by_video:
+        video_id = str(row.get("video_id", "")).strip()
+        if not video_id:
+            continue
+        anchor_ratio_lookup[video_id] = float(row.get("dropped_anchor_ratio", 0.0) or 0.0)
+    worst_case_candidates = sorted(
+        manifest_ids,
+        key=lambda video_id: (
+            max(damage_ratio_lookup.get(video_id, 0.0), anchor_ratio_lookup.get(video_id, 0.0)),
+            damage_ratio_lookup.get(video_id, 0.0),
+            anchor_ratio_lookup.get(video_id, 0.0),
+            video_id,
+        ),
+        reverse=True,
+    )[:audit_sample_size]
+    worst_case_samples = [
+        {
+            "video_id": video_id,
+            "risk_score": round(max(damage_ratio_lookup.get(video_id, 0.0), anchor_ratio_lookup.get(video_id, 0.0)), 6),
+            "video_damaged_token_ratio": round(damage_ratio_lookup.get(video_id, 0.0), 6),
+            "dropped_anchor_ratio": round(anchor_ratio_lookup.get(video_id, 0.0), 6),
+        }
+        for video_id in worst_case_candidates
+    ]
+
+    stage07_drift_summary = {
+        "videos_with_metrics": stage07_metrics_videos,
+        "damage": {
+            "segments_total": stage07_segments_total,
+            "damaged_segments_total": stage07_damaged_segments_total,
+            "video_damaged_segment_ratio": round(stage07_manifest_damaged_segment_ratio, 6),
+            "tokens_total": stage07_token_total,
+            "damaged_tokens_total": stage07_damaged_token_total,
+            "video_damaged_token_ratio": round(stage07_manifest_damaged_token_ratio, 6),
+            "max_video_damaged_token_ratio": round(stage07_max_video_damaged_token_ratio, 6),
+            "worst_videos": worst_damaged_videos,
+        },
+        "anchors": {
+            "kept_total": stage07_kept_anchor_total,
+            "dropped_total": stage07_dropped_anchor_total,
+            "dropped_anchor_ratio": round(stage07_manifest_dropped_anchor_ratio, 6),
+            "max_video_dropped_anchor_ratio": round(stage07_max_video_dropped_anchor_ratio, 6),
+            "worst_videos": worst_anchor_videos,
+        },
+        "histograms": {
+            "damage_types": dict(stage07_damage_type_hist),
+            "contamination_sources": dict(stage07_contamination_source_hist),
+            "anchor_drop_reasons": dict(stage07_anchor_drop_reason_hist),
+        },
+        "budgets": {
+            "max_damaged_token_ratio": args.max_damaged_token_ratio,
+            "max_dropped_anchor_ratio": args.max_dropped_anchor_ratio,
+            "damaged_token_ratio_violations": damage_budget_violations,
+            "dropped_anchor_ratio_violations": anchor_budget_violations,
+        },
+        "audit_sampling": {
+            "videos_per_100": audit_sample_size,
+            "fixed_random_sample_video_ids": fixed_random_sample_video_ids,
+            "worst_case_samples": worst_case_samples,
+        },
+    }
+
+    damage_drift_out_path: Optional[Path] = None
+    if args.damage_drift_out:
+        damage_drift_out_path = Path(args.damage_drift_out)
+        if not damage_drift_out_path.is_absolute():
+            damage_drift_out_path = repo_root() / damage_drift_out_path
+
     report = {
         "validated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "manifest": str(manifest_path),
@@ -2056,12 +2655,31 @@ def main() -> None:
             "errors": errors,
             "warnings": warnings,
         },
+        "stage07_drift": stage07_drift_summary,
         "check_counts": dict(check_counts),
         "passed": passed,
         "strict": bool(args.strict),
         "elapsed_sec": round(elapsed, 2),
         "issues": issues,
     }
+
+    if damage_drift_out_path is not None:
+        try:
+            damage_drift_out_path.parent.mkdir(parents=True, exist_ok=True)
+            drift_payload = {
+                "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "manifest": str(manifest_path),
+                "source_filter": args.source or None,
+                "video_count": len(manifest_ids),
+                "stage07_drift": stage07_drift_summary,
+            }
+            damage_drift_out_path.write_text(json.dumps(drift_payload, indent=2) + "\n", encoding="utf-8")
+        except Exception as exc:
+            print(
+                f"{LOG_PREFIX} ERROR: Could not emit damage drift report {damage_drift_out_path}: {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
 
     if args.json:
         print(json.dumps(report, indent=2))
@@ -2172,6 +2790,26 @@ def main() -> None:
                 f"{LOG_PREFIX} Stage07 validation: errors={stage07_val_errors}, warnings={stage07_val_warnings}, "
                 f"normalization_repairs={stage07_normalization_repairs_total}"
             )
+        if stage07_metrics_videos:
+            print(
+                f"{LOG_PREFIX} Stage07 drift: videos={stage07_metrics_videos}, "
+                f"damaged_token_ratio={stage07_manifest_damaged_token_ratio:.3f}, "
+                f"dropped_anchor_ratio={stage07_manifest_dropped_anchor_ratio:.3f}, "
+                f"max_video_damaged_token_ratio={stage07_max_video_damaged_token_ratio:.3f}, "
+                f"max_video_dropped_anchor_ratio={stage07_max_video_dropped_anchor_ratio:.3f}"
+            )
+        if args.max_damaged_token_ratio is not None:
+            print(
+                f"{LOG_PREFIX} Stage07 budget (damaged_token_ratio): threshold={float(args.max_damaged_token_ratio):.3f}, "
+                f"violations={len(damage_budget_violations)}"
+            )
+        if args.max_dropped_anchor_ratio is not None:
+            print(
+                f"{LOG_PREFIX} Stage07 budget (dropped_anchor_ratio): threshold={float(args.max_dropped_anchor_ratio):.3f}, "
+                f"violations={len(anchor_budget_violations)}"
+            )
+        if damage_drift_out_path is not None:
+            print(f"{LOG_PREFIX} Damage drift report: {damage_drift_out_path}")
         print(f"{LOG_PREFIX} Issues total: errors={errors}, warnings={warnings}")
         print(f"{LOG_PREFIX} Result: {'PASS' if passed else 'FAIL'} ({elapsed:.1f}s)")
 

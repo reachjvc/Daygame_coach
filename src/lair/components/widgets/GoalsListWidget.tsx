@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
-import { Plus, Pencil, Archive, RotateCcw, Flame, Target, ArrowUpDown } from "lucide-react"
+import { Plus, Pencil, Archive, RotateCcw, Flame, CircleDot, ArrowUpDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -186,7 +186,7 @@ export function GoalsListWidget({ collapsed }: WidgetProps) {
         {/* Goals List */}
         {sortedGoals.length === 0 ? (
           <div className="text-center py-6">
-            <Target className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+            <CircleDot className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-3">
               {filter === "all"
                 ? "No goals yet. Start tracking your progress!"

@@ -19,7 +19,8 @@ Writes:
 
 Exit codes:
   0 - PASS/WARNING: Non-blocking taxonomy outcome
-  1 - FAIL: Blocking issues (high-frequency unlisted concepts, incomplete manifest coverage, unreadable enriched files)
+  1 - FAIL: Blocking issues (high-frequency unlisted concepts, incomplete manifest coverage,
+      unreadable enriched files, or zero Stage 07 enrichments)
 
 Use:
 
@@ -434,9 +435,11 @@ def evaluate_validation(
     per_video_status: List[Dict[str, Any]] = []
     per_video_counts: Counter = Counter()
     blocked_video_ids: List[str] = []
+    zero_enrichment_videos = 0
     for video_id in candidate_video_ids:
         stats = per_video_stats.get(video_id)
         stats = stats if isinstance(stats, dict) else {}
+        enrichments_total = int(stats.get("enrichments_total", 0) or 0)
 
         unlisted_techniques = stats.get("unlisted_techniques")
         if not isinstance(unlisted_techniques, list):
@@ -487,6 +490,10 @@ def evaluate_validation(
             status = "FAIL"
             reason = "unreadable_stage07_enriched"
             blocking_reasons.append("unreadable_stage07_enriched")
+        elif enrichments_total == 0:
+            status = "FAIL"
+            reason = "no_stage07_enrichments"
+            blocking_reasons.append("no_stage07_enrichments")
         elif strict and has_unlisted:
             status = "FAIL"
             reason = "strict_mode_unlisted_detected"
@@ -507,6 +514,8 @@ def evaluate_validation(
 
         if status == "FAIL":
             blocked_video_ids.append(video_id)
+        if enrichments_total == 0:
+            zero_enrichment_videos += 1
         per_video_counts[status] += 1
         per_video_status.append(
             {
@@ -523,7 +532,7 @@ def evaluate_validation(
                 "commentary_only_unlisted_topics": commentary_only_video_topics,
                 "non_commentary_unlisted_techniques": non_commentary_video_tech,
                 "non_commentary_unlisted_topics": non_commentary_video_topics,
-                "enrichments_total": int(stats.get("enrichments_total", 0) or 0),
+                "enrichments_total": enrichments_total,
                 "enrichments_with_unlisted": int(stats.get("enrichments_with_unlisted", 0) or 0),
                 "files": stats.get("files") if isinstance(stats.get("files"), list) else [],
             }
@@ -534,6 +543,9 @@ def evaluate_validation(
     if manifest_missing_videos > 0:
         status = "FAIL"
         reason = f"Manifest coverage incomplete: {manifest_missing_videos} video(s) missing Stage 07 enriched outputs"
+    elif zero_enrichment_videos > 0:
+        status = "FAIL"
+        reason = f"Zero Stage 07 enrichments detected for {zero_enrichment_videos} video(s)"
     elif unreadable_files > 0:
         status = "FAIL"
         reason = f"Unreadable Stage 07 enriched files: {unreadable_files}"
@@ -592,6 +604,7 @@ def evaluate_validation(
             "topics": len(topics),
         },
         "manifest_missing_videos": manifest_missing_videos,
+        "zero_enrichment_videos": zero_enrichment_videos,
         "files_unreadable": unreadable_files,
         "video_status_counts": {
             "PASS": int(per_video_counts.get("PASS", 0)),
@@ -737,13 +750,27 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print("-" * 60)
         print()
         print("  Pipeline blocked. Options:")
+        option_idx = 0
         if validation.get("manifest_missing_videos", 0):
-            print("    0. Re-run Stage 07 so all manifest videos have .enriched.json outputs")
+            print(f"    {option_idx}. Re-run Stage 07 so all manifest videos have .enriched.json outputs")
+            option_idx += 1
+        if validation.get("zero_enrichment_videos", 0):
+            print(
+                f"    {option_idx}. Re-run Stage 07 with healthy LLM responses; "
+                "zero-enrichment artifacts are non-usable"
+            )
+            option_idx += 1
         if validation.get("files_unreadable", 0):
-            print("    0. Fix/replace unreadable Stage 07 .enriched.json files and re-run")
-        print("    1. Add the unlisted concepts to the taxonomy in 07.content")
-        print("    2. Re-run with higher --threshold (both) or --threshold-topics/--threshold-techniques")
-        print("    3. Manually verify and exclude problematic files")
+            print(f"    {option_idx}. Fix/replace unreadable Stage 07 .enriched.json files and re-run")
+            option_idx += 1
+        print(f"    {option_idx}. Add the unlisted concepts to the taxonomy in 07.content")
+        option_idx += 1
+        print(
+            f"    {option_idx}. Re-run with higher --threshold (both) "
+            "or --threshold-topics/--threshold-techniques"
+        )
+        option_idx += 1
+        print(f"    {option_idx}. Manually verify and exclude problematic files")
         print()
 
     video_results = validation.get("video_results", [])
@@ -894,8 +921,63 @@ def main() -> int:
         report_name = "test" if args.test else "all"
 
     if not files:
-        print(f"[08.taxonomy-validation] Error: No .enriched.json files found in: {label}", file=sys.stderr)
-        return 1
+        if manifest_video_ids is None:
+            print(f"[08.taxonomy-validation] Error: No .enriched.json files found in: {label}", file=sys.stderr)
+            return 1
+
+        print(
+            f"[08.taxonomy-validation] Warning: No .enriched.json files found in: {label}; "
+            "emitting FAIL report from manifest coverage.",
+            file=sys.stderr,
+        )
+        report = process_files([])
+        report["manifest_coverage"] = {
+            "manifest_videos": len(manifest_video_ids),
+            "matched_video_ids": len(matched_manifest_video_ids),
+            "matched_files": 0,
+            "missing_videos": len(manifest_missing_video_ids),
+            "missing_video_ids": manifest_missing_video_ids[:50],
+        }
+
+        threshold_techniques = args.threshold_techniques
+        threshold_topics = args.threshold_topics
+        if args.threshold is not None:
+            threshold_techniques = args.threshold
+            threshold_topics = args.threshold
+
+        validation = evaluate_validation(
+            report,
+            threshold_techniques=threshold_techniques,
+            threshold_topics=threshold_topics,
+            strict=args.strict,
+            manifest_video_ids=manifest_video_ids,
+            manifest_missing_video_ids=manifest_missing_video_ids,
+        )
+        scope = {
+            "manifest": manifest_path.name if manifest_path else None,
+            "source_filter": args.source or None,
+            "file_count": 0,
+            "manifest_videos": len(manifest_video_ids),
+            "manifest_matched_videos": len(matched_manifest_video_ids),
+            "manifest_missing_videos": len(manifest_missing_video_ids),
+            "blocked_videos": len(validation.get("blocked_video_ids", []) or []),
+        }
+
+        if args.json:
+            output_data = {
+                "scope": scope,
+                "validation": validation,
+                "details": report,
+            }
+            print(json.dumps(output_data, indent=2, ensure_ascii=False))
+        else:
+            print_report(report, validation)
+
+        if not args.no_report:
+            report_path = save_report(report, validation, output_dir, label, report_name, scope=scope)
+            print(f"[08.taxonomy-validation] Report saved: {report_path}")
+
+        return 1 if validation["status"] == "FAIL" else 0
 
     print(f"[08.taxonomy-validation] Scanning {len(files)} enriched files ({label})")
 

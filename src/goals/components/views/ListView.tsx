@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, Flame, Calendar, Plus, Target } from "lucide-react"
+import { ArrowUpDown, Flame, Calendar, Plus } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import { getLifeAreaConfig } from "../../data/lifeAreas"
 import { deriveTimeHorizon } from "../../goalsService"
 import type { GoalWithProgress } from "../../types"
@@ -75,7 +76,7 @@ export function ListView({ goals, allGoals, onIncrement, onReset, onEdit, onCrea
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Target className="size-7 text-primary" />
+          <GoalIcon className="size-7 text-primary" />
         </div>
         <h3 className="text-lg font-semibold mb-2">
           {filterAreaName ? `No ${filterAreaName} goals` : "No goals yet"}

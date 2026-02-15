@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useMemo } from "react"
-import { TrendingUp, Target, Flame, Trophy, Calendar, AlertTriangle } from "lucide-react"
+import { TrendingUp, CircleDot, Flame, Trophy, Calendar, AlertTriangle } from "lucide-react"
 import type { WidgetProps } from "../../types"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { getCategoryConfig } from "../../data/goalCategories"
@@ -129,7 +129,7 @@ export function WeeklySummaryWidget({ collapsed }: WidgetProps) {
         {/* Completion Rate */}
         <div className="p-3 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/5 border border-green-500/20">
           <div className="flex items-center gap-2 mb-1">
-            <Target className="h-4 w-4 text-green-500" />
+            <CircleDot className="h-4 w-4 text-green-500" />
             <span className="text-xs text-muted-foreground">Weekly Goals</span>
           </div>
           <div className="text-2xl font-bold text-green-500">{summary.completionRate}%</div>

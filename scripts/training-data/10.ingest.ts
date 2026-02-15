@@ -80,6 +80,8 @@ type Args = {
   semanticMaxHallucinationRate: number | null
   semanticFailOnStale: boolean
   allowUnstableSourceKey: boolean
+  primaryConfidenceThreshold: number
+  ingestReviewLane: boolean
 }
 
 type ChunkMetadata = {
@@ -101,8 +103,14 @@ type ChunkMetadata = {
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
   chunkConfidence?: number
+  chunkConfidenceScore?: number
+  chunk_confidence_score?: number
   chunkConfidenceVersion?: number
   problematicReason?: string[]
+  damagedSegmentIds?: number[]
+  damaged_segment_ids?: number[]
+  containsRepairedText?: boolean
+  contains_repaired_text?: boolean
 }
 
 type Chunk = {
@@ -170,6 +178,9 @@ Semantic Gate:
 
 Other:
   --allow-unstable-source-key    Allow legacy/unstable source keys (manifest mode)
+  --primary-confidence-threshold <n>
+                            Primary ingest lane threshold for chunk confidence score (0..1, default: 0.7)
+  --ingest-review-lane      Also ingest review-lane chunks using source suffix '#review'
   -h, --help                     Show this help
 `)
 }
@@ -185,6 +196,7 @@ function validateKnownArgs(argv: string[]): void {
     "--quality-gate",
     "--semantic-fail-on-stale",
     "--allow-unstable-source-key",
+    "--ingest-review-lane",
     "-h",
     "--help",
   ])
@@ -199,6 +211,7 @@ function validateKnownArgs(argv: string[]): void {
     "--semantic-min-mean-overall",
     "--semantic-max-major-error-rate",
     "--semantic-max-hallucination-rate",
+    "--primary-confidence-threshold",
   ])
 
   for (let i = 0; i < argv.length; i++) {
@@ -252,6 +265,7 @@ function parseArgs(argv: string[]): Args {
   let semanticMinMeanOverall: number | null = null
   let semanticMaxMajorErrorRate: number | null = null
   let semanticMaxHallucinationRate: number | null = null
+  let primaryConfidenceThreshold: number | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -315,6 +329,12 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--semantic-max-hallucination-rate=")) {
       semanticMaxHallucinationRate = Number(arg.split("=", 2)[1])
     }
+    if (arg === "--primary-confidence-threshold" && argv[i + 1]) {
+      primaryConfidenceThreshold = Number(argv[++i])
+    }
+    if (arg.startsWith("--primary-confidence-threshold=")) {
+      primaryConfidenceThreshold = Number(arg.split("=", 2)[1])
+    }
   }
 
   return {
@@ -336,6 +356,11 @@ function parseArgs(argv: string[]): Args {
     semanticMaxHallucinationRate,
     semanticFailOnStale: flags.has("--semantic-fail-on-stale"),
     allowUnstableSourceKey: flags.has("--allow-unstable-source-key"),
+    primaryConfidenceThreshold:
+      typeof primaryConfidenceThreshold === "number" && Number.isFinite(primaryConfidenceThreshold)
+        ? Math.max(0, Math.min(1, primaryConfidenceThreshold))
+        : 0.7,
+    ingestReviewLane: flags.has("--ingest-review-lane"),
   }
 }
 
@@ -1679,8 +1704,29 @@ function checkTaxonomyGate(
   }
 
   const details = data.details
+  const manifestCoverage = isObject(details) ? details.manifest_coverage : undefined
+  if (!isObject(manifestCoverage)) {
+    console.error(`❌ Stage 08 report missing details.manifest_coverage (${reportPath})`)
+    process.exit(1)
+  }
+  const manifestVideos = manifestCoverage.manifest_videos
+  const matchedVideoIds = manifestCoverage.matched_video_ids
+  const missingVideos = manifestCoverage.missing_videos
   const filesProcessed = isObject(details) ? details.files_processed : undefined
-  if (typeof filesProcessed !== "number" || !Number.isFinite(filesProcessed) || filesProcessed <= 0) {
+  const allowZeroFilesProcessed =
+    typeof filesProcessed === "number"
+    && Number.isFinite(filesProcessed)
+    && filesProcessed === 0
+    && status === "FAIL"
+    && typeof missingVideos === "number"
+    && Number.isFinite(missingVideos)
+    && missingVideos === expectedManifestVideos
+  if (
+    typeof filesProcessed !== "number"
+    || !Number.isFinite(filesProcessed)
+    || filesProcessed < 0
+    || (!allowZeroFilesProcessed && filesProcessed <= 0)
+  ) {
     console.error(`❌ Stage 08 report has invalid details.files_processed=${String(filesProcessed)} (${reportPath})`)
     process.exit(1)
   }
@@ -1690,14 +1736,6 @@ function checkTaxonomyGate(
     process.exit(1)
   }
 
-  const manifestCoverage = isObject(details) ? details.manifest_coverage : undefined
-  if (!isObject(manifestCoverage)) {
-    console.error(`❌ Stage 08 report missing details.manifest_coverage (${reportPath})`)
-    process.exit(1)
-  }
-  const manifestVideos = manifestCoverage.manifest_videos
-  const matchedVideoIds = manifestCoverage.matched_video_ids
-  const missingVideos = manifestCoverage.missing_videos
   if (
     typeof manifestVideos !== "number"
     || !Number.isFinite(manifestVideos)
@@ -2077,7 +2115,12 @@ async function main() {
       if (missingFromManifest > 0) {
         console.log(`Missing expected chunk files: ${missingFromManifest}`)
       }
-      return
+      process.exit(1)
+    }
+    if (missingFromManifest > 0) {
+      console.error(`❌ Missing expected chunk files for manifest scope: ${missingFromManifest}`)
+      console.error(`   Run Stage 09 (chunk-embed) to produce all required .chunks.json files before ingest.`)
+      process.exit(1)
     }
   } else {
     const scanDir = args.source ? path.join(chunksDir, args.source) : chunksDir
@@ -2190,6 +2233,8 @@ async function main() {
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
   console.log(`State file:   ${statePath}`)
+  console.log(`Primary lane: chunk_confidence_score >= ${args.primaryConfidenceThreshold.toFixed(2)}`)
+  console.log(`Review lane:  ${args.ingestReviewLane ? "ingest (#review source suffix)" : "skip"}`)
 
   if (invalidChunkFiles > 0 && args.manifest) {
     console.error("")
@@ -2236,7 +2281,22 @@ async function main() {
     console.log("")
     console.log(`🔁 Ingesting: ${sourceKey} (${chunks.length} chunks)`)
 
-    const rows = chunks.map((chunk) => {
+    const reviewSourceKey = `${sourceKey}#review`
+    const rowsPrimary: Array<{
+      content: string
+      source: string
+      embedding: number[]
+      metadata: Record<string, unknown>
+    }> = []
+    const rowsReview: Array<{
+      content: string
+      source: string
+      embedding: number[]
+      metadata: Record<string, unknown>
+    }> = []
+    let missingConfidenceMetadata = 0
+
+    for (const chunk of chunks) {
       const metadata: Record<string, unknown> = {
         channel,
         coach: channel,
@@ -2296,28 +2356,91 @@ async function main() {
       if (typeof chunk.metadata.chunkConfidence === "number") {
         metadata.chunkConfidence = chunk.metadata.chunkConfidence
       }
+      const chunkConfidenceScore =
+        (typeof chunk.metadata.chunk_confidence_score === "number" && Number.isFinite(chunk.metadata.chunk_confidence_score))
+          ? chunk.metadata.chunk_confidence_score
+          : (typeof chunk.metadata.chunkConfidenceScore === "number" && Number.isFinite(chunk.metadata.chunkConfidenceScore))
+          ? chunk.metadata.chunkConfidenceScore
+          : (typeof chunk.metadata.chunkConfidence === "number" && Number.isFinite(chunk.metadata.chunkConfidence))
+          ? chunk.metadata.chunkConfidence
+          : null
+      const hasConfidenceScore = typeof chunkConfidenceScore === "number"
+      if (!hasConfidenceScore) {
+        missingConfidenceMetadata += 1
+      } else {
+        metadata.chunkConfidenceScore = chunkConfidenceScore
+        metadata.chunk_confidence_score = chunkConfidenceScore
+      }
       if (typeof chunk.metadata.chunkConfidenceVersion === "number") {
         metadata.chunkConfidenceVersion = chunk.metadata.chunkConfidenceVersion
       }
       if (chunk.metadata.problematicReason && chunk.metadata.problematicReason.length > 0) {
         metadata.problematicReason = chunk.metadata.problematicReason
       }
+      const damagedSegmentIds = Array.isArray(chunk.metadata.damaged_segment_ids)
+        ? chunk.metadata.damaged_segment_ids.filter((x): x is number => typeof x === "number")
+        : Array.isArray(chunk.metadata.damagedSegmentIds)
+        ? chunk.metadata.damagedSegmentIds.filter((x): x is number => typeof x === "number")
+        : []
+      if (damagedSegmentIds.length > 0) {
+        metadata.damagedSegmentIds = damagedSegmentIds
+        metadata.damaged_segment_ids = damagedSegmentIds
+      }
+      const containsRepairedText =
+        chunk.metadata.contains_repaired_text === true || chunk.metadata.containsRepairedText === true
+      if (containsRepairedText) {
+        metadata.containsRepairedText = true
+        metadata.contains_repaired_text = true
+      }
 
-      return {
+      const lane: "primary" | "review" =
+        hasConfidenceScore && (chunkConfidenceScore as number) >= args.primaryConfidenceThreshold
+          ? "primary"
+          : "review"
+      metadata.ingestLane = lane
+      metadata.ingest_lane = lane
+
+      const row = {
         content: chunk.content,
-        source: sourceKey,
+        source: lane === "primary" ? sourceKey : reviewSourceKey,
         embedding: chunk.embedding,
         metadata,
       }
-    })
+
+      if (lane === "primary") {
+        rowsPrimary.push(row)
+      } else {
+        rowsReview.push(row)
+      }
+    }
+
+    const rows = args.ingestReviewLane
+      ? [...rowsPrimary, ...rowsReview]
+      : rowsPrimary
+
+    console.log(
+      `   📊 Lane split: primary=${rowsPrimary.length}, review=${rowsReview.length}, `
+      + `missing_confidence=${missingConfidenceMetadata}`
+    )
+    if (!args.ingestReviewLane && rowsReview.length > 0) {
+      console.log(`   ⏭️  Skipping ${rowsReview.length} review-lane chunk(s)`)
+    }
 
     console.log(`   💾 Replacing embeddings for source: ${sourceKey}`)
     await deleteEmbeddingsBySource(sourceKey)
-    await storeEmbeddings(rows)
+    if (args.ingestReviewLane) {
+      console.log(`   💾 Replacing embeddings for review lane source: ${reviewSourceKey}`)
+      await deleteEmbeddingsBySource(reviewSourceKey)
+    }
+    if (rows.length > 0) {
+      await storeEmbeddings(rows)
+    } else {
+      console.log("   ℹ️  No rows selected for ingest after lane gating")
+    }
 
     state.sources[sourceKey] = {
       chunksHash: fileHash,
-      ingestedCount: chunks.length,
+      ingestedCount: rows.length,
       ingestedAt: new Date().toISOString(),
     }
     await saveState(statePath, state)

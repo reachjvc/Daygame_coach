@@ -2,10 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Target, Settings2, Sparkles } from "lucide-react"
+import { Plus, Loader2, Settings2, Library } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
+import { ConfirmDeleteAllDialog } from "./ConfirmDeleteAllDialog"
 import { GoalCatalogPicker } from "./GoalCatalogPicker"
 import { GoalHierarchyView } from "./GoalHierarchyView"
 import { DailyActionView } from "./DailyActionView"
@@ -30,6 +32,8 @@ export function GoalsHubContent() {
   const [viewMode, setViewMode] = useState<GoalViewMode>("daily")
   const [showCatalog, setShowCatalog] = useState(false)
   const [isAddingDirtyDog, setIsAddingDirtyDog] = useState(false)
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
+  const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
   const toastId = useRef(0)
   const showToast = useCallback((message: string, variant: "error" | "success") => {
@@ -42,7 +46,7 @@ export function GoalsHubContent() {
 
   const fetchGoals = useCallback(async () => {
     try {
-      const response = await fetch("/api/goals/tree")
+      const response = await fetch("/api/goals/tree?includeArchived=true")
       if (!response.ok) throw new Error("Failed to fetch goals")
       const data = await response.json()
       const treeData: GoalTreeNode[] = Array.isArray(data) ? data : []
@@ -217,6 +221,52 @@ export function GoalsHubContent() {
     }
   }
 
+  const handleDeleteGoal = async (goalId: string) => {
+    try {
+      const response = await fetch(`/api/goals/${goalId}?permanent=true`, { method: "DELETE" })
+      if (!response.ok) throw new Error("Failed to delete goal")
+      await fetchGoals()
+    } catch {
+      showToast("Failed to delete goal", "error")
+    }
+  }
+
+  const handleDeleteAllGoals = async () => {
+    setShowDeleteAllConfirm(true)
+  }
+
+  const handleConfirmDeleteAll = async () => {
+    setIsDeletingAll(true)
+    try {
+      const results = await Promise.all(
+        goals.map(g => fetch(`/api/goals/${g.id}?permanent=true`, { method: "DELETE" }))
+      )
+      const failed = results.filter(r => !r.ok).length
+      if (failed > 0) showToast(`${failed} goal(s) failed to delete`, "error")
+      setShowDeleteAllConfirm(false)
+      setIsCustomizeMode(false)
+      await fetchGoals()
+    } catch {
+      showToast("Failed to delete goals", "error")
+    } finally {
+      setIsDeletingAll(false)
+    }
+  }
+
+  const handleReorder = async (goalIds: string[]) => {
+    try {
+      const response = await fetch("/api/goals/reorder", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goalIds }),
+      })
+      if (!response.ok) throw new Error("Failed to reorder")
+    } catch {
+      showToast("Failed to reorder goals", "error")
+      fetchGoals()
+    }
+  }
+
   const handleFormSuccess = () => { fetchGoals() }
 
   const handleFormClose = (open: boolean) => {
@@ -249,7 +299,7 @@ export function GoalsHubContent() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Target className="size-7 text-primary" />
+          <GoalIcon className="size-7 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Goals</h1>
             <p className="text-sm text-muted-foreground hidden sm:block">
@@ -260,19 +310,17 @@ export function GoalsHubContent() {
         <div className="flex items-center gap-2 flex-wrap">
           {goals.length > 0 && (
             <>
-              <ViewSwitcher activeView={viewMode} onViewChange={setViewMode} />
-              {viewMode === "strategic" && (
-                <Button
-                  variant={isCustomizeMode ? "secondary" : "ghost"}
-                  size="sm"
-                  onClick={() => setIsCustomizeMode(!isCustomizeMode)}
-                >
-                  <Settings2 className="size-4 mr-1" />
-                  {isCustomizeMode ? "Done" : "Customize"}
-                </Button>
-              )}
+              <ViewSwitcher activeView={viewMode} onViewChange={(v) => { setViewMode(v); setIsCustomizeMode(false) }} />
+              <Button
+                variant={isCustomizeMode ? "secondary" : "ghost"}
+                size="sm"
+                onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+              >
+                <Settings2 className="size-4 mr-1" />
+                {isCustomizeMode ? "Done" : "Customize"}
+              </Button>
               <Button variant="outline" onClick={() => setShowCatalog(true)}>
-                <Sparkles className="size-4 mr-1" />
+                <Library className="size-4 mr-1" />
                 Browse Catalog
               </Button>
             </>
@@ -289,12 +337,17 @@ export function GoalsHubContent() {
       ) : viewMode === "daily" ? (
         <DailyActionView
           goals={goals}
+          isCustomizeMode={isCustomizeMode}
           onIncrement={handleIncrement}
           onSetValue={handleSetValue}
           onComplete={handleComplete}
           onReset={handleReset}
           onEdit={handleEdit}
           onAddChild={handleAddChild}
+          onGoalToggle={handleGoalToggle}
+          onDeleteGoal={handleDeleteGoal}
+          onDeleteAllGoals={handleDeleteAllGoals}
+          onReorder={handleReorder}
           onSwitchView={setViewMode}
           onCreateGoal={handleCreateGoal}
         />
@@ -309,6 +362,9 @@ export function GoalsHubContent() {
           onEdit={handleEdit}
           onAddChild={handleAddChild}
           onGoalToggle={handleGoalToggle}
+          onDeleteGoal={handleDeleteGoal}
+          onDeleteAllGoals={handleDeleteAllGoals}
+          onReorder={handleReorder}
           onAddDirtyDogGoals={handleAddDirtyDogGoals}
           isAddingDirtyDog={isAddingDirtyDog}
         />
@@ -330,6 +386,16 @@ export function GoalsHubContent() {
           isLoading={isCompleting}
           onConfirm={handleConfirmComplete}
           onCancel={() => setCompletingGoal(null)}
+        />
+      )}
+
+      {/* Delete all confirmation */}
+      {showDeleteAllConfirm && (
+        <ConfirmDeleteAllDialog
+          goalCount={goals.length}
+          isDeleting={isDeletingAll}
+          onConfirm={handleConfirmDeleteAll}
+          onCancel={() => setShowDeleteAllConfirm(false)}
         />
       )}
 

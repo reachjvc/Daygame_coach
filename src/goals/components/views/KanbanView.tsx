@@ -2,7 +2,8 @@
 
 import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Target } from "lucide-react"
+import { Plus } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import { GoalCard } from "../GoalCard"
 import { groupGoalsByTimeHorizon } from "../../goalsService"
 import { TIME_HORIZONS } from "../../config"
@@ -39,7 +40,7 @@ export function KanbanView({ goals, allGoals, onIncrement, onReset, onEdit, onCr
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <Target className="size-7 text-primary" />
+          <GoalIcon className="size-7 text-primary" />
         </div>
         <h3 className="text-lg font-semibold mb-2">
           {filterAreaName ? `No ${filterAreaName} goals` : "No goals yet"}

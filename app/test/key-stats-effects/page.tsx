@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { ArrowLeft, ChevronDown, Brain } from "lucide-react"
+import { ArrowLeft, ChevronDown, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 // ============================================================================
@@ -927,7 +927,7 @@ function DemoCard({ variation }: { variation: EffectVariation }) {
           {/* Header */}
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 rounded-lg bg-primary text-primary-foreground">
-              <Brain className="size-4" />
+              <TrendingUp className="size-4" />
             </div>
             <div>
               <span className="text-2xl font-bold text-primary">3x</span>

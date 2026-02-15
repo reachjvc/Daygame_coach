@@ -6,22 +6,8 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import {
-  Loader2,
-  FileText,
-  ArrowLeft,
-  Clock,
-  MapPin,
-  TrendingUp,
-  Check,
-  Settings2,
-  ArrowRight,
-  Lock,
-  Star,
-  X,
-  Heart,
-  Target,
-} from "lucide-react"
+import { Loader2, FileText, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ArrowRight, Lock, Star, X, Heart } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import Link from "next/link"
 import type { FieldReportTemplateRow, FieldReportRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
@@ -1334,7 +1320,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
           {!isEditMode && affectedGoals.length > 0 && (
             <div className="mt-6 p-4 rounded-xl bg-orange-500/5 border border-orange-500/20">
               <div className="flex items-center gap-2 mb-2">
-                <Target className="size-4 text-orange-500" />
+                <GoalIcon className="size-4 text-orange-500" />
                 <span className="text-sm font-medium text-orange-700 dark:text-orange-400">
                   Goals Affected
                 </span>

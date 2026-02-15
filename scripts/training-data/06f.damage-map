@@ -1,0 +1,1032 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/06f.damage-map
+
+Deterministic damage-map stage between 06d.sanitize and 07.content.
+
+Reads:
+  - data/06d.sanitized/<source>/<video>/*.conversations.json
+  - optional Stage 07 output:
+      data/07.content/<source>/<video>/*.enriched.json
+
+Writes:
+  - data/06f.damage-map/<source>/<video>/*.damage-map.json
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shlex
+import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from batch.manifest_parser import load_manifest_sources, manifest_filter_files
+
+try:
+    import jsonschema  # type: ignore
+except Exception:  # pragma: no cover
+    jsonschema = None
+
+
+LOG_PREFIX = "[06f.damage-map]"
+PIPELINE_VERSION = "06f.damage-map-v1.0"
+SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "damage_map.schema.json"
+
+SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3}
+KNOWN_STAGE07_DROP_REASONS: Set[str] = {
+    "missing_evidence_segment",
+    "unknown_evidence_segment",
+    "flagged_evidence_segment",
+    "excluded_by_sanitizer",
+    "non_approach_segment",
+    "transcript_artifact",
+    "low_quality_evidence_segment",
+    "segment_not_in_evidence_allowlist",
+    "insufficient_post_hook_evidence",
+    "low_confidence_anchor",
+}
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def input_root() -> Path:
+    return repo_root() / "data" / "06d.sanitized"
+
+
+def stage07_root() -> Path:
+    return repo_root() / "data" / "07.content"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "06f.damage-map"
+
+
+def test_input_root() -> Path:
+    return repo_root() / "data" / "test" / "06d.sanitized"
+
+
+def test_stage07_root() -> Path:
+    return repo_root() / "data" / "test" / "07.content"
+
+
+def test_output_root() -> Path:
+    return repo_root() / "data" / "test" / "06f.damage-map"
+
+
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    sources: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            sources.append((name.strip(), url.strip()))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            sources.append((parts[0], parts[1]))
+    return sources
+
+
+def find_input_files(in_dir: Path) -> List[Path]:
+    return sorted(in_dir.rglob("*.conversations.json"))
+
+
+def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+    stem = input_path.stem
+    if stem.endswith(".conversations"):
+        base = stem[: -len(".conversations")]
+    else:
+        base = stem
+    return output_dir / f"{base}.damage-map.json"
+
+
+def compute_output_path_with_layout(
+    input_path: Path,
+    output_dir: Path,
+    input_root_dir: Optional[Path] = None,
+) -> Path:
+    canonical = compute_output_path(input_path, output_dir)
+    if input_root_dir is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root_dir)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / canonical.name
+        except ValueError:
+            pass
+    return canonical
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root_dir: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path_with_layout(
+        input_path,
+        preferred_output_dir,
+        input_root_dir=input_root_dir,
+    )
+    if preferred.exists():
+        return preferred
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
+
+
+def _read_json(path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _validate_damage_map_schema(payload: Dict[str, Any]) -> None:
+    if jsonschema is None:
+        return
+    if not SCHEMA_PATH.exists():
+        return
+    try:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+        jsonschema.validate(instance=payload, schema=schema)
+    except Exception as exc:
+        raise RuntimeError(f"Damage-map schema validation failed: {exc}") from exc
+
+
+def _safe_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    return None
+
+
+def _token_count(text: Any) -> int:
+    if not isinstance(text, str):
+        return 0
+    return len([t for t in re.split(r"\s+", text.strip()) if t])
+
+
+def _extract_video_id_from_name(name: str) -> Optional[str]:
+    m = re.search(r"\[([A-Za-z0-9_-]{11})\]", name)
+    return m.group(1) if m else None
+
+
+def _build_stage07_candidates(
+    input_path: Path,
+    input_root_dir: Path,
+    stage07_root_dir: Path,
+) -> List[Path]:
+    candidates: List[Path] = []
+    in_name = input_path.name
+    enriched_name = in_name.replace(".conversations.json", ".enriched.json")
+    if enriched_name == in_name:
+        enriched_name = f"{input_path.stem}.enriched.json"
+
+    try:
+        rel_parent = input_path.parent.relative_to(input_root_dir)
+    except ValueError:
+        rel_parent = None
+
+    if rel_parent is not None and rel_parent != Path("."):
+        candidates.append(stage07_root_dir / rel_parent / enriched_name)
+
+    candidates.append(stage07_root_dir / enriched_name)
+
+    video_id = _extract_video_id_from_name(in_name) or _extract_video_id_from_name(str(input_path))
+    if video_id:
+        candidates.append(stage07_root_dir / f"{video_id}.enriched.json")
+        for p in stage07_root_dir.rglob("*.enriched.json"):
+            if video_id in p.name:
+                candidates.append(p)
+
+    out: List[Path] = []
+    seen: Set[str] = set()
+    for c in candidates:
+        key = str(c)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(c)
+    return out
+
+
+def _resolve_stage07_path(
+    input_path: Path,
+    input_root_dir: Path,
+    stage07_root_dir: Path,
+) -> Optional[Path]:
+    for cand in _build_stage07_candidates(input_path, input_root_dir, stage07_root_dir):
+        if cand.exists():
+            return cand
+    return None
+
+
+def _update_damage_entry(
+    damage_by_seg: Dict[int, Dict[str, Any]],
+    *,
+    seg_id: int,
+    conv_id: int,
+    damage_type: str,
+    reason_code: str,
+    severity: str,
+    seed_confidence: float,
+    detail: Optional[str] = None,
+) -> None:
+    row = damage_by_seg.setdefault(
+        seg_id,
+        {
+            "segment_id": seg_id,
+            "conversation_id": conv_id if conv_id > 0 else 0,
+            "damage_types": set(),
+            "damage_reason_codes": set(),
+            "severity": "low",
+            "seed_confidence": 0.0,
+            "details": [],
+        },
+    )
+    row["damage_types"].add(damage_type)
+    row["damage_reason_codes"].add(reason_code)
+    if SEVERITY_RANK.get(severity, 0) > SEVERITY_RANK.get(str(row["severity"]), 0):
+        row["severity"] = severity
+    row["seed_confidence"] = max(float(row["seed_confidence"]), float(seed_confidence))
+    if detail:
+        details = row.get("details")
+        if isinstance(details, list):
+            details.append(detail)
+
+
+def _contamination_window(
+    seg_id: int,
+    ordered_ids: List[int],
+    severity: str,
+) -> Dict[str, int]:
+    if not ordered_ids:
+        return {"start_segment_id": seg_id, "end_segment_id": seg_id}
+    try:
+        idx = ordered_ids.index(seg_id)
+    except ValueError:
+        return {"start_segment_id": seg_id, "end_segment_id": seg_id}
+    left = 2 if severity == "high" else 1
+    right = 3 if severity == "high" else 2
+    start_idx = max(0, idx - left)
+    end_idx = min(len(ordered_ids) - 1, idx + right)
+    return {
+        "start_segment_id": ordered_ids[start_idx],
+        "end_segment_id": ordered_ids[end_idx],
+    }
+
+
+def _summarize_conversations(
+    *,
+    segments: List[Dict[str, Any]],
+    damage_rows: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    by_conv: Dict[int, List[Dict[str, Any]]] = {}
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        cid = _safe_int(seg.get("conversation_id")) or 0
+        if cid <= 0:
+            continue
+        by_conv.setdefault(cid, []).append(seg)
+
+    damage_by_conv: Dict[int, List[Dict[str, Any]]] = {}
+    for row in damage_rows:
+        cid = _safe_int(row.get("conversation_id")) or 0
+        if cid <= 0:
+            continue
+        damage_by_conv.setdefault(cid, []).append(row)
+
+    out: List[Dict[str, Any]] = []
+    for cid in sorted(by_conv.keys()):
+        conv_segs = by_conv[cid]
+        seg_ids = {
+            _safe_int(seg.get("id"))
+            for seg in conv_segs
+            if _safe_int(seg.get("id")) is not None
+        }
+        seg_ids = {sid for sid in seg_ids if isinstance(sid, int)}
+        total_segments = len(seg_ids)
+        total_tokens = sum(_token_count(seg.get("text")) for seg in conv_segs)
+
+        damaged_rows = [
+            row for row in damage_by_conv.get(cid, [])
+            if isinstance(_safe_int(row.get("segment_id")), int)
+            and _safe_int(row.get("segment_id")) in seg_ids
+        ]
+        damaged_ids = {
+            _safe_int(row.get("segment_id"))
+            for row in damaged_rows
+            if _safe_int(row.get("segment_id")) is not None
+        }
+        damaged_ids = {sid for sid in damaged_ids if isinstance(sid, int)}
+
+        damaged_tokens = 0
+        for seg in conv_segs:
+            sid = _safe_int(seg.get("id"))
+            if sid in damaged_ids:
+                damaged_tokens += _token_count(seg.get("text"))
+
+        high_severity = sum(1 for row in damaged_rows if row.get("severity") == "high")
+        out.append(
+            {
+                "conversation_id": cid,
+                "segment_count": total_segments,
+                "damaged_segment_count": len(damaged_ids),
+                "damaged_segment_ratio": round(
+                    (len(damaged_ids) / total_segments) if total_segments > 0 else 0.0, 4
+                ),
+                "token_count": total_tokens,
+                "damaged_token_count": damaged_tokens,
+                "damaged_token_ratio": round(
+                    (damaged_tokens / total_tokens) if total_tokens > 0 else 0.0, 4
+                ),
+                "high_severity_seed_count": high_severity,
+                "damaged_segment_ids": sorted(damaged_ids),
+            }
+        )
+    return out
+
+
+def _drop_trace_summary(
+    *,
+    stage07_data: Optional[Dict[str, Any]],
+    damage_by_seg: Dict[int, Dict[str, Any]],
+) -> Dict[str, Any]:
+    dropped = stage07_data.get("dropped_candidates") if isinstance(stage07_data, dict) else None
+    if not isinstance(dropped, list):
+        return {
+            "present": False,
+            "dropped_candidates_total": 0,
+            "segment_drops_total": 0,
+            "segment_drops_traced": 0,
+            "segment_drops_untraced": 0,
+            "unknown_drop_reason_count": 0,
+            "unknown_drop_reason_samples": [],
+            "untraced_segment_ids": [],
+            "passes_trace_contract": True,
+        }
+
+    segment_total = 0
+    traced = 0
+    untraced: Set[int] = set()
+    unknown_reasons: List[str] = []
+
+    for row in dropped:
+        if not isinstance(row, dict):
+            continue
+        raw_reason = row.get("reason")
+        reason = str(raw_reason).strip() if isinstance(raw_reason, str) else ""
+        if reason and reason not in KNOWN_STAGE07_DROP_REASONS:
+            unknown_reasons.append(reason)
+
+        seg_id = _safe_int(row.get("segment"))
+        if seg_id is None:
+            continue
+        segment_total += 1
+        damage = damage_by_seg.get(seg_id)
+        if damage and damage.get("damage_reason_codes"):
+            traced += 1
+        else:
+            untraced.add(seg_id)
+
+    unknown_unique = sorted(set(unknown_reasons))
+    return {
+        "present": True,
+        "dropped_candidates_total": len(dropped),
+        "segment_drops_total": segment_total,
+        "segment_drops_traced": traced,
+        "segment_drops_untraced": len(untraced),
+        "unknown_drop_reason_count": len(unknown_unique),
+        "unknown_drop_reason_samples": unknown_unique[:10],
+        "untraced_segment_ids": sorted(untraced),
+        "passes_trace_contract": len(untraced) == 0 and len(unknown_unique) == 0,
+    }
+
+
+def build_damage_map(
+    data_06d: Dict[str, Any],
+    stage07_data: Optional[Dict[str, Any]],
+    *,
+    source_file: str,
+    stage07_file: Optional[str],
+) -> Dict[str, Any]:
+    segments_raw = data_06d.get("segments")
+    if not isinstance(segments_raw, list):
+        raise RuntimeError("Invalid 06d JSON: missing 'segments' list")
+
+    segments: List[Dict[str, Any]] = [
+        seg for seg in segments_raw if isinstance(seg, dict)
+    ]
+    segments.sort(key=lambda s: _safe_int(s.get("id")) or 0)
+
+    id_to_seg: Dict[int, Dict[str, Any]] = {}
+    ordered_ids: List[int] = []
+    for seg in segments:
+        sid = _safe_int(seg.get("id"))
+        if sid is None:
+            continue
+        id_to_seg[sid] = seg
+        ordered_ids.append(sid)
+
+    low_quality_ids: Set[int] = set()
+    artifact_types_by_seg: Dict[int, Set[str]] = {}
+    if isinstance(stage07_data, dict):
+        for item in stage07_data.get("low_quality_segments", []) or []:
+            if not isinstance(item, dict):
+                continue
+            sid = _safe_int(item.get("segment"))
+            if sid is not None:
+                low_quality_ids.add(sid)
+        for item in stage07_data.get("transcript_artifacts", []) or []:
+            if not isinstance(item, dict):
+                continue
+            sid = _safe_int(item.get("segment_index"))
+            if sid is None:
+                continue
+            t = str(item.get("artifact_type", "")).strip() or "unknown"
+            artifact_types_by_seg.setdefault(sid, set()).add(t)
+
+    fixed_coach_ids: Set[str] = set()
+    for conv in data_06d.get("conversations", []) or []:
+        if not isinstance(conv, dict):
+            continue
+        tp = conv.get("target_participation")
+        if not isinstance(tp, dict):
+            continue
+        raw = tp.get("fixed_coach_speaker_ids")
+        if not isinstance(raw, list):
+            continue
+        for sid in raw:
+            if isinstance(sid, str) and sid.strip():
+                fixed_coach_ids.add(sid)
+
+    speaker_labels = data_06d.get("speaker_labels") if isinstance(data_06d.get("speaker_labels"), dict) else {}
+    damage_by_seg: Dict[int, Dict[str, Any]] = {}
+
+    for sid in ordered_ids:
+        seg = id_to_seg.get(sid, {})
+        conv_id = _safe_int(seg.get("conversation_id")) or 0
+        flags = {
+            str(f).strip()
+            for f in (seg.get("segment_flags") or [])
+            if isinstance(f, str) and str(f).strip()
+        }
+        role = str(seg.get("speaker_role", "")).strip().lower()
+        speaker_id = seg.get("speaker_id")
+        label_role = ""
+        if isinstance(speaker_id, str):
+            label = speaker_labels.get(speaker_id, {})
+            if isinstance(label, dict):
+                label_role = str(label.get("role", "")).strip().lower()
+
+        if sid in artifact_types_by_seg:
+            detail = ",".join(sorted(artifact_types_by_seg[sid]))
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="transcript_artifact",
+                reason_code="seed_transcript_artifact",
+                severity="high",
+                seed_confidence=0.97,
+                detail=detail,
+            )
+        if sid in low_quality_ids:
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="low_quality",
+                reason_code="seed_low_quality_segment",
+                severity="medium",
+                seed_confidence=0.88,
+            )
+
+        if "mixed_mode" in flags:
+            split_materialized = "mixed_mode_split_materialized" in flags
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="mixed_mode",
+                reason_code=(
+                    "seed_mixed_mode_split_materialized"
+                    if split_materialized
+                    else "seed_mixed_mode_unsplit"
+                ),
+                severity="medium" if split_materialized else "high",
+                seed_confidence=0.93 if split_materialized else 0.97,
+            )
+            if not split_materialized:
+                _update_damage_entry(
+                    damage_by_seg,
+                    seg_id=sid,
+                    conv_id=conv_id,
+                    damage_type="boundary_uncertain",
+                    reason_code="seed_boundary_uncertain_mixed_mode",
+                    severity="high",
+                    seed_confidence=0.90,
+                )
+
+        if "teaser_duplicate" in flags:
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="boundary_uncertain",
+                reason_code="seed_teaser_duplicate",
+                severity="medium",
+                seed_confidence=0.85,
+            )
+
+        if bool(seg.get("exclude_from_stage07_evidence")):
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="boundary_uncertain",
+                reason_code="seed_excluded_from_stage07_evidence",
+                severity="medium",
+                seed_confidence=0.82,
+                detail=str(seg.get("exclude_from_stage07_reason", "")).strip() or None,
+            )
+
+        if role in {"unknown"} or label_role in {"collapsed", "unknown"}:
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="speaker_ambiguity",
+                reason_code=(
+                    "seed_speaker_collapsed"
+                    if label_role == "collapsed"
+                    else "seed_speaker_unknown"
+                ),
+                severity="high" if label_role == "collapsed" else "medium",
+                seed_confidence=0.86 if label_role == "collapsed" else 0.72,
+            )
+
+        if isinstance(speaker_id, str) and speaker_id in fixed_coach_ids and role == "target":
+            _update_damage_entry(
+                damage_by_seg,
+                seg_id=sid,
+                conv_id=conv_id,
+                damage_type="speaker_ambiguity",
+                reason_code="seed_impossible_target_on_fixed_coach",
+                severity="high",
+                seed_confidence=0.99,
+            )
+
+    damage_rows: List[Dict[str, Any]] = []
+    type_counts: Dict[str, int] = {
+        "transcript_artifact": 0,
+        "low_quality": 0,
+        "mixed_mode": 0,
+        "speaker_ambiguity": 0,
+        "boundary_uncertain": 0,
+    }
+    severity_counts: Dict[str, int] = {"low": 0, "medium": 0, "high": 0}
+
+    for sid in sorted(damage_by_seg.keys()):
+        row = damage_by_seg[sid]
+        damage_types = sorted(
+            t for t in row.get("damage_types", set()) if isinstance(t, str)
+        )
+        reason_codes = sorted(
+            r for r in row.get("damage_reason_codes", set()) if isinstance(r, str)
+        )
+        severity = str(row.get("severity", "low"))
+        for t in damage_types:
+            type_counts[t] = type_counts.get(t, 0) + 1
+        severity_counts[severity] = severity_counts.get(severity, 0) + 1
+
+        out_row = {
+            "segment_id": sid,
+            "conversation_id": int(row.get("conversation_id", 0) or 0),
+            "damage_types": damage_types,
+            "damage_reason_codes": reason_codes,
+            "severity": severity,
+            "seed_confidence": round(float(row.get("seed_confidence", 0.0)), 3),
+            "contamination_window": _contamination_window(sid, ordered_ids, severity),
+        }
+        details = row.get("details")
+        if isinstance(details, list):
+            clean_details = [str(d).strip() for d in details if isinstance(d, str) and str(d).strip()]
+            if clean_details:
+                out_row["details"] = clean_details[:8]
+        damage_rows.append(out_row)
+
+    conv_summaries = _summarize_conversations(segments=segments, damage_rows=damage_rows)
+    drop_trace = _drop_trace_summary(stage07_data=stage07_data, damage_by_seg=damage_by_seg)
+
+    result: Dict[str, Any] = {
+        "video_id": data_06d.get("video_id"),
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "pipeline_version": PIPELINE_VERSION,
+        "source_file": source_file,
+        "input": {
+            "stage06d": source_file,
+            "stage07": stage07_file,
+        },
+        "damage_type_enum": [
+            "transcript_artifact",
+            "low_quality",
+            "mixed_mode",
+            "speaker_ambiguity",
+            "boundary_uncertain",
+        ],
+        "known_stage07_drop_reasons": sorted(KNOWN_STAGE07_DROP_REASONS),
+        "segments": damage_rows,
+        "conversation_summaries": conv_summaries,
+        "dropped_candidate_trace": drop_trace,
+        "summary": {
+            "segments_total": len(ordered_ids),
+            "damaged_segments_total": len(damage_rows),
+            "damage_type_counts": type_counts,
+            "severity_counts": severity_counts,
+            "conversation_count": len(conv_summaries),
+            "trace_contract_passed": bool(drop_trace.get("passes_trace_contract")),
+        },
+    }
+    return result
+
+
+def process_file(
+    input_path: Path,
+    output_path: Path,
+    *,
+    input_root_dir: Path,
+    stage07_root_dir: Path,
+    dry_run: bool = False,
+) -> Dict[str, int]:
+    data_06d = _read_json(input_path)
+    if not data_06d:
+        raise RuntimeError(f"Could not read 06d input JSON: {input_path}")
+
+    stage07_path = _resolve_stage07_path(input_path, input_root_dir, stage07_root_dir)
+    stage07_data = _read_json(stage07_path) if stage07_path else None
+
+    damage_map = build_damage_map(
+        data_06d,
+        stage07_data,
+        source_file=str(input_path),
+        stage07_file=str(stage07_path) if stage07_path else None,
+    )
+    _validate_damage_map_schema(damage_map)
+    counts = damage_map.get("summary", {}) if isinstance(damage_map, dict) else {}
+    damaged_total = int(counts.get("damaged_segments_total", 0)) if isinstance(counts, dict) else 0
+    trace_ok = bool(counts.get("trace_contract_passed")) if isinstance(counts, dict) else False
+
+    if dry_run:
+        print(
+            f"{LOG_PREFIX} [DRY RUN] {input_path.name}: "
+            f"damaged_segments={damaged_total}, trace_contract={'PASS' if trace_ok else 'FAIL'}"
+        )
+        return {
+            "damaged_segments_total": damaged_total,
+            "trace_contract_failed": 0 if trace_ok else 1,
+            "missing_stage07": 1 if stage07_path is None else 0,
+        }
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(damage_map, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    print(
+        f"{LOG_PREFIX} {input_path.name}: damaged_segments={damaged_total}, "
+        f"trace_contract={'PASS' if trace_ok else 'FAIL'}"
+    )
+    print(f"{LOG_PREFIX}   Output: {output_path}")
+    if stage07_path:
+        print(f"{LOG_PREFIX}   Stage07: {stage07_path}")
+    else:
+        print(f"{LOG_PREFIX}   Stage07: (missing; trace contract may fail)")
+    return {
+        "damaged_segments_total": damaged_total,
+        "trace_contract_failed": 0 if trace_ok else 1,
+        "missing_stage07": 1 if stage07_path is None else 0,
+    }
+
+
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    output_root_dir: Optional[Path] = None,
+    input_root_dir: Path,
+    stage07_root_dir: Path,
+) -> None:
+    if not files:
+        return
+    print(f"{LOG_PREFIX} Input : {in_dir}")
+    print(f"{LOG_PREFIX} Output: {out_dir}")
+    print(f"{LOG_PREFIX} Files : {len(files)}")
+
+    processed = 0
+    skipped = 0
+    failed = 0
+    totals = {
+        "damaged_segments_total": 0,
+        "trace_contract_failed": 0,
+        "missing_stage07": 0,
+    }
+
+    for input_file in files:
+        preferred_output = compute_output_path_with_layout(
+            input_file,
+            out_dir,
+            input_root_dir=in_dir,
+        )
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root_dir=in_dir,
+        )
+        if existing_output and not args.overwrite:
+            skipped += 1
+            continue
+
+        try:
+            counts = process_file(
+                input_file,
+                preferred_output,
+                input_root_dir=input_root_dir,
+                stage07_root_dir=stage07_root_dir,
+                dry_run=args.dry_run,
+            )
+            processed += 1
+            for key in totals:
+                totals[key] += int(counts.get(key, 0))
+        except Exception as exc:
+            failed += 1
+            print(f"{LOG_PREFIX} ERROR: {input_file} -> {exc}")
+
+    print(f"\n{LOG_PREFIX} Done.")
+    print(f"  Processed: {processed}")
+    print(f"  Skipped:   {skipped}")
+    print(f"  Failed:    {failed}")
+    print(f"  Damaged segments:     {totals['damaged_segments_total']}")
+    print(f"  Trace contract failed:{totals['trace_contract_failed']}")
+    print(f"  Missing Stage07 refs: {totals['missing_stage07']}")
+    if failed > 0:
+        sys.exit(1)
+
+
+def _run_directory(
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    input_root_dir: Path,
+    stage07_root_dir: Path,
+) -> None:
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"{LOG_PREFIX} No .conversations.json files found in: {in_dir}")
+        return
+    _run_directory_with_files(
+        files,
+        in_dir,
+        out_dir,
+        args,
+        input_root_dir=input_root_dir,
+        stage07_root_dir=stage07_root_dir,
+    )
+
+
+def _run_input(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    stage07_root_dir: Path,
+) -> None:
+    input_path = Path(args.input)
+    if not input_path.exists():
+        input_path = repo_root() / args.input
+    if not input_path.exists():
+        raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
+
+    if input_path.is_file():
+        out_dir = Path(args.output) if args.output else out_base
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root_dir=in_base)
+        if output_path.exists() and not args.overwrite:
+            print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
+            return
+        process_file(
+            input_path,
+            output_path,
+            input_root_dir=in_base,
+            stage07_root_dir=stage07_root_dir,
+            dry_run=args.dry_run,
+        )
+        return
+
+    out_dir = Path(args.output) if args.output else out_base
+    _run_directory(
+        input_path,
+        out_dir,
+        args,
+        input_root_dir=in_base,
+        stage07_root_dir=stage07_root_dir,
+    )
+
+
+def _run_sources(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    stage07_root_dir: Path,
+) -> None:
+    sources_path = repo_root() / args.sources
+    if not sources_path.exists():
+        raise SystemExit(f"Sources file not found: {sources_path}")
+    for src_name, _ in parse_sources_file(sources_path):
+        src_in_dir = in_base / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            continue
+        src_out_dir = out_base / src_name
+        files = find_input_files(src_in_dir)
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+            input_root_dir=in_base,
+            stage07_root_dir=stage07_root_dir,
+        )
+
+
+def _run_manifest(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    stage07_root_dir: Path,
+) -> None:
+    manifest_path = Path(args.manifest)
+    if not manifest_path.is_absolute():
+        manifest_path = repo_root() / manifest_path
+    if not manifest_path.exists():
+        raise SystemExit(f"Manifest file not found: {manifest_path}")
+
+    sources_map = load_manifest_sources(manifest_path)
+    for src_name, vid_ids in sorted(sources_map.items()):
+        src_in_dir = in_base / src_name
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            continue
+        src_out_dir = out_base / src_name
+        files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
+        if not files:
+            print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
+            continue
+        print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+            input_root_dir=in_base,
+            stage07_root_dir=stage07_root_dir,
+        )
+
+
+def _run_named_source(
+    args: argparse.Namespace,
+    in_base: Path,
+    out_base: Path,
+    *,
+    stage07_root_dir: Path,
+) -> None:
+    name = args.name
+    in_dir = in_base / name
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+    out_dir = Path(args.output) if args.output else out_base / name
+    _run_directory(
+        in_dir,
+        out_dir,
+        args,
+        input_root_dir=in_base,
+        stage07_root_dir=stage07_root_dir,
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Deterministic Stage 06f damage-map stage")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.sanitized/)")
+    parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
+    parser.add_argument("--input", help="Input .conversations.json file or directory")
+    parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06d.sanitized, or data/test/06d.sanitized with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--stage07-root",
+        help=(
+            "Root directory for Stage 07 enriched artifacts used for dropped-candidate trace checks "
+            "(default: data/07.content, or data/test/07.content with --test)"
+        ),
+    )
+    parser.add_argument("--output", help="Output directory (default: data/06f.damage-map/)")
+    parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/pipeline/sources.txt",
+        help="Process all sources from sources.txt file",
+    )
+    parser.add_argument("--manifest", help="Manifest file: process listed videos only")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing files")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
+    args = parser.parse_args()
+
+    if args.test:
+        in_root = resolve_root_path(args.input_root, test_input_root())
+        s07_root = resolve_root_path(args.stage07_root, test_stage07_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+    else:
+        in_root = resolve_root_path(args.input_root, input_root())
+        s07_root = resolve_root_path(args.stage07_root, stage07_root())
+        out_root = Path(args.output) if args.output else output_root()
+
+    if args.test:
+        _run_directory(
+            in_root,
+            out_root,
+            args,
+            input_root_dir=in_root,
+            stage07_root_dir=s07_root,
+        )
+    elif args.manifest:
+        _run_manifest(
+            args,
+            in_root,
+            out_root,
+            stage07_root_dir=s07_root,
+        )
+    elif args.input:
+        _run_input(
+            args,
+            in_root,
+            out_root,
+            stage07_root_dir=s07_root,
+        )
+    elif args.sources:
+        _run_sources(
+            args,
+            in_root,
+            out_root,
+            stage07_root_dir=s07_root,
+        )
+    elif args.name:
+        _run_named_source(
+            args,
+            in_root,
+            out_root,
+            stage07_root_dir=s07_root,
+        )
+    else:
+        raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
+
+
+if __name__ == "__main__":
+    main()

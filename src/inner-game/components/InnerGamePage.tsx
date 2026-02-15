@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { X, Loader2, Heart, Target } from "lucide-react"
+import { X, Loader2, Heart } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 
 import {
   InnerGameStep,
@@ -442,7 +443,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
               Values
             </TabsTrigger>
             <TabsTrigger value="goals" className="gap-2">
-              <Target className="h-4 w-4" />
+              <GoalIcon className="h-4 w-4" />
               Goals
             </TabsTrigger>
           </TabsList>

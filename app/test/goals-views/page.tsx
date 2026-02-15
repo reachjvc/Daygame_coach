@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Columns2, Loader2, Target } from "lucide-react"
+import { ArrowLeft, Columns2, Loader2 } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 import { ViewSwitcher } from "@/src/goals/components/views/ViewSwitcher"
 import { DashboardView } from "@/src/goals/components/views/DashboardView"
 import { TimeHorizonView } from "@/src/goals/components/views/TimeHorizonView"
@@ -174,7 +175,7 @@ export default function GoalsViewsTestPage() {
             </Link>
           </Button>
           <div className="flex items-center gap-3 mb-2">
-            <Target className="size-8 text-primary" />
+            <GoalIcon className="size-8 text-primary" />
             <h1 className="text-3xl font-bold">Goals Views Comparison</h1>
           </div>
           <p className="text-muted-foreground">

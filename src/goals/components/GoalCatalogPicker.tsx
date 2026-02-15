@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Loader2, Sparkles, Heart, Flame, Star, X } from "lucide-react"
+import { Loader2, Library, Heart, Flame, Star, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getCatalogGroups } from "../data/goalGraph"
@@ -97,7 +97,7 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
   ) : (
     <div className="space-y-8">
       <div className="text-center">
-        <Sparkles className="size-8 text-primary mx-auto mb-3" />
+        <Library className="size-8 text-primary mx-auto mb-3" />
         <h2 className="text-xl font-bold mb-1">
           {isModalMode ? "Add Goal Tree" : "Just get me started"}
         </h2>

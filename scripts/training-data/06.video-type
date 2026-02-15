@@ -614,6 +614,46 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
+def run_claude_preflight(
+    claude_bin: str,
+    *,
+    model: Optional[str],
+    timeout_seconds: int,
+    retries: int,
+) -> Tuple[bool, str]:
+    """Probe Claude health with a tiny deterministic request."""
+    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
+    last_reason = "unknown"
+    for attempt in range(max(1, int(retries))):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=max(1, int(timeout_seconds)),
+            )
+            stdout = (result.stdout or "").strip().lower()
+            if result.returncode == 0 and stdout == "ok":
+                return True, "ok"
+            stderr = (result.stderr or "").strip()
+            if result.returncode != 0:
+                last_reason = f"non_zero_exit={result.returncode} stderr={stderr[:200]}"
+            else:
+                last_reason = f"unexpected_output={stdout[:80]!r}"
+        except subprocess.TimeoutExpired:
+            last_reason = f"timeout_after_{int(timeout_seconds)}s"
+        except FileNotFoundError:
+            return False, "claude_binary_not_found"
+
+        if attempt < max(1, int(retries)) - 1:
+            time.sleep(min(5, 2 ** attempt))
+
+    return False, last_reason
+
+
 def call_claude(
     prompt: str,
     retries: int = 3,
@@ -716,6 +756,8 @@ def analyze_video(
     title: str,
     segments: List[Dict],
     claude_model: Optional[str] = None,
+    llm_timeout_seconds: int = 300,
+    llm_retries: int = 3,
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """Classify video type, label speakers, assess transcript quality, and detect conversation boundaries in a single LLM call.
 
@@ -765,9 +807,14 @@ def analyze_video(
 
     print(f"{LOG_PREFIX} Analyzing: type + {len(speakers)} speakers + boundaries ({len(segments)} segments)...")
 
-    max_retries = 3
+    max_retries = max(1, int(llm_retries))
     for attempt in range(max_retries):
-        response = call_claude(prompt, timeout=300, model=claude_model)
+        response = call_claude(
+            prompt,
+            retries=1,
+            timeout=max(1, int(llm_timeout_seconds)),
+            model=claude_model,
+        )
         result = parse_json_response(response)
 
         if result and "video_type" in result and "speaker_labels" in result and "segments" in result:
@@ -913,6 +960,8 @@ def process_file(
     output_path: Path,
     dry_run: bool = False,
     claude_model: Optional[str] = None,
+    llm_timeout_seconds: int = 300,
+    llm_retries: int = 3,
 ) -> Dict[str, Any]:
     """Process a single audio_features.json file through single-pass LLM analysis."""
 
@@ -942,6 +991,8 @@ def process_file(
         video_title,
         segments,
         claude_model=claude_model,
+        llm_timeout_seconds=llm_timeout_seconds,
+        llm_retries=llm_retries,
     )
 
     video_type = video_type_info.get("type", "compilation")
@@ -1306,8 +1357,45 @@ def main() -> None:
         default="opus",
         help="Claude model alias or full name (default: opus)."
     )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=300,
+        help="Per-LLM-call timeout in seconds (default: 300).",
+    )
+    parser.add_argument(
+        "--llm-retries",
+        type=int,
+        default=3,
+        help="Retry attempts for Stage 06 analysis calls (default: 3).",
+    )
+    parser.add_argument(
+        "--skip-llm-preflight",
+        action="store_true",
+        help="Skip startup Claude health probe (not recommended).",
+    )
+    parser.add_argument(
+        "--preflight-timeout-seconds",
+        type=int,
+        default=20,
+        help="Per-attempt timeout for startup Claude health probe (default: 20).",
+    )
+    parser.add_argument(
+        "--preflight-retries",
+        type=int,
+        default=2,
+        help="Retry attempts for startup Claude health probe (default: 2).",
+    )
 
     args = parser.parse_args()
+    if args.timeout_seconds <= 0:
+        raise SystemExit("--timeout-seconds must be >= 1")
+    if args.llm_retries <= 0:
+        raise SystemExit("--llm-retries must be >= 1")
+    if args.preflight_timeout_seconds <= 0:
+        raise SystemExit("--preflight-timeout-seconds must be >= 1")
+    if args.preflight_retries <= 0:
+        raise SystemExit("--preflight-retries must be >= 1")
 
     global DEBUG_MODE
     DEBUG_MODE = args.debug
@@ -1334,8 +1422,29 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
+    if not args.dry_run and not args.skip_llm_preflight:
+        ok, reason = run_claude_preflight(
+            claude_bin,
+            model=args.model,
+            timeout_seconds=args.preflight_timeout_seconds,
+            retries=args.preflight_retries,
+        )
+        if not ok:
+            print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
+            print(
+                f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
+                f"--skip-llm-preflight only for controlled debugging."
+            )
+            raise SystemExit(2)
+        print(
+            f"{LOG_PREFIX} Claude preflight: ok "
+            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+        )
+
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
+    print(f"{LOG_PREFIX} LLM timeout seconds: {args.timeout_seconds}")
+    print(f"{LOG_PREFIX} LLM retries: {args.llm_retries}")
 
     # Route to appropriate mode
     if args.test:
@@ -1368,7 +1477,14 @@ def _run_input(args) -> None:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        result = process_file(input_path, output_path, dry_run=args.dry_run, claude_model=args.model)
+        result = process_file(
+            input_path,
+            output_path,
+            dry_run=args.dry_run,
+            claude_model=args.model,
+            llm_timeout_seconds=args.timeout_seconds,
+            llm_retries=args.llm_retries,
+        )
         print(f"\n{LOG_PREFIX} Done. Type: {result.get('video_type')}, Conversations: {result.get('conversations')}")
         return
 
@@ -1405,7 +1521,14 @@ def _run_sources(args) -> None:
             if existing_output and not args.overwrite:
                 continue
             try:
-                result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
+                result = process_file(
+                    input_file,
+                    preferred_output,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
+                )
                 total_convs += result.get("conversations", 0)
                 total_files += 1
             except Exception as e:
@@ -1493,7 +1616,14 @@ def _run_directory_with_files(
         save_state(state_path, state)
 
         try:
-            result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
+            result = process_file(
+                input_file,
+                preferred_output,
+                dry_run=args.dry_run,
+                claude_model=args.model,
+                llm_timeout_seconds=args.timeout_seconds,
+                llm_retries=args.llm_retries,
+            )
             total_convs += result.get("conversations", 0)
             processed += 1
 

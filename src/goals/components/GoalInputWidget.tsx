@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Plus, Check, Loader2, Trophy } from "lucide-react"
+import { Plus, Check, Loader2, Medal } from "lucide-react"
 import { getInputMode, getButtonIncrements } from "../goalsService"
 import type { GoalWithProgress } from "../types"
 
@@ -43,7 +43,7 @@ export function GoalInputWidget({
         {isLoading ? (
           <Loader2 className="size-3 animate-spin mr-1" />
         ) : (
-          <Trophy className="size-3 mr-1" />
+          <Medal className="size-3 mr-1" />
         )}
         Mark Complete
       </Button>
@@ -81,24 +81,24 @@ export function GoalInputWidget({
     }
 
     return (
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2">
+        <div className="flex items-center rounded-md border border-border bg-card overflow-hidden">
           <Input
             type="number"
             min={0}
             value={directValue}
             onChange={(e) => setDirectValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSet()}
-            className="w-24 h-8 text-sm"
+            className="w-20 h-8 text-sm border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0"
           />
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={handleSet}
             disabled={isLoading}
+            className="h-8 rounded-none border-l border-border text-primary hover:bg-primary/10 hover:text-primary px-3"
           >
-            {isLoading ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
-            Set
+            {isLoading ? <Loader2 className="size-3 animate-spin" /> : "Set"}
           </Button>
         </div>
         <span className="text-xs text-muted-foreground">

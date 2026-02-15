@@ -56,6 +56,7 @@ type ChunkStateV1 = {
 type Args = {
   force: boolean
   dryRun: boolean
+  help: boolean
   source: string | null
   manifest: string | null
   maskTranscriptArtifacts: boolean
@@ -100,9 +101,15 @@ type ChunkMetadata = {
   asrTranscriptArtifactTypes?: string[]
   // Deterministic heuristic score for retrieval downranking (0.0-1.0).
   chunkConfidence?: number
+  chunkConfidenceScore?: number
+  chunk_confidence_score?: number
   chunkConfidenceVersion?: number
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
+  damagedSegmentIds?: number[]
+  damaged_segment_ids?: number[]
+  containsRepairedText?: boolean
+  contains_repaired_text?: boolean
 }
 
 type Chunk = {
@@ -171,6 +178,15 @@ type ContentSegment = {
   conversation_id?: number
   is_teaser?: boolean
   teaser_of_conversation_id?: number | null
+  segment_confidence?: {
+    transcript?: number
+    speaker?: number
+    phase?: number
+    overall?: number
+  }
+  confidence_tier?: "high" | "medium" | "low" | string
+  contamination_sources?: string[]
+  contains_repaired_text?: boolean
 }
 
 type ContentEnrichment = {
@@ -235,14 +251,31 @@ type InternalChunk = {
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
   chunkConfidence?: number
+  chunkConfidenceScore?: number
   chunkConfidenceVersion?: number
   // Quality flags
   problematicReason?: string[]
+  damagedSegmentIds?: number[]
+  containsRepairedText?: boolean
 }
 
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
+
+function printUsage() {
+  console.log("Usage:")
+  console.log("  node --import tsx/esm scripts/training-data/09.chunk-embed.ts [options]")
+  console.log("")
+  console.log("Options:")
+  console.log("  --source <name>                  Restrict processing to one source")
+  console.log("  --manifest <path>                Restrict processing to manifest scope")
+  console.log("  --dry-run                        Build chunks without writing/embedding")
+  console.log("  --full, --force                  Force re-chunk of all eligible files")
+  console.log("  --mask-low-quality               Also mask low-quality segments")
+  console.log("  --no-mask-transcript-artifacts   Keep transcript artifacts in chunk text")
+  console.log("  -h, --help                       Show this help")
+}
 
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
@@ -268,6 +301,7 @@ function parseArgs(argv: string[]): Args {
   return {
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
+    help: flags.has("-h") || flags.has("--help"),
     source,
     manifest,
     // Default: mask transcript_artifacts (usually egregious nonsense / repeated garbage).
@@ -458,6 +492,44 @@ function collectAsrStats(
   }
 }
 
+function collectConfidenceDamageStats(
+  segments: ContentSegment[]
+): {
+  damagedSegmentIds: number[]
+  containsRepairedText: boolean
+  lowTierCount: number
+  mediumTierCount: number
+} {
+  const damagedSegmentIds: number[] = []
+  let containsRepairedText = false
+  let lowTierCount = 0
+  let mediumTierCount = 0
+
+  for (const seg of segments) {
+    const sid = seg.id
+    const tier = (seg.confidence_tier ?? "").toLowerCase().trim()
+    const hasContamination = Array.isArray(seg.contamination_sources) && seg.contamination_sources.length > 0
+    if (typeof sid === "number" && (tier === "low" || hasContamination)) {
+      damagedSegmentIds.push(sid)
+    }
+    if (tier === "low") {
+      lowTierCount += 1
+    } else if (tier === "medium") {
+      mediumTierCount += 1
+    }
+    if (seg.contains_repaired_text === true) {
+      containsRepairedText = true
+    }
+  }
+
+  return {
+    damagedSegmentIds: [...new Set(damagedSegmentIds)].sort((a, b) => a - b),
+    containsRepairedText,
+    lowTierCount,
+    mediumTierCount,
+  }
+}
+
 const CHUNK_CONFIDENCE_VERSION = 1
 
 function clamp01(n: number): number {
@@ -479,9 +551,13 @@ function computeChunkConfidence(chunk: InternalChunk): number {
   const probs = chunk.problematicReason ?? []
   if (probs.some((r) => r.startsWith("speaker_role:"))) conf *= 0.85
   if (probs.some((r) => r.startsWith("low_speaker_conf:"))) conf *= 0.9
+  if (probs.some((r) => r === "confidence_tier:low")) conf *= 0.70
+  if (probs.some((r) => r === "confidence_tier:medium")) conf *= 0.90
+  if (probs.some((r) => r === "contamination_sources_present")) conf *= 0.82
 
   if ((chunk.asrTranscriptArtifactCount ?? 0) > 0) conf *= 0.75
   if ((chunk.asrLowQualitySegmentCount ?? 0) > 0) conf *= 0.85
+  if ((chunk.damagedSegmentIds ?? []).length > 0) conf *= 0.82
 
   return clamp01(conf)
 }
@@ -645,6 +721,7 @@ function chunkInteractionByPhase(
             .filter((s): s is ContentSegment => s !== undefined)
           const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
           const asrStats = collectAsrStats(chunkSegments, asrIndex)
+          const confStats = collectConfidenceDamageStats(chunkSegments)
 
           if (asrStats.lowQualityCount > 0) {
             chunkProblems.push("asr_low_quality")
@@ -653,6 +730,14 @@ function chunkInteractionByPhase(
             for (const t of asrStats.transcriptArtifactTypes) {
               chunkProblems.push(`asr_transcript_artifact:${t}`)
             }
+          }
+          if (confStats.lowTierCount > 0) {
+            chunkProblems.push("confidence_tier:low")
+          } else if (confStats.mediumTierCount > 0) {
+            chunkProblems.push("confidence_tier:medium")
+          }
+          if (confStats.damagedSegmentIds.length > 0) {
+            chunkProblems.push("contamination_sources_present")
           }
 
           const startSec = Math.min(
@@ -677,6 +762,8 @@ function chunkInteractionByPhase(
             asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
             asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
             problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
+            damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
+            containsRepairedText: confStats.containsRepairedText || undefined,
           })
           content = ""
           chunkTurnIndices = []
@@ -697,6 +784,7 @@ function chunkInteractionByPhase(
         .filter((s): s is ContentSegment => s !== undefined)
       const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
       const asrStats = collectAsrStats(chunkSegments, asrIndex)
+      const confStats = collectConfidenceDamageStats(chunkSegments)
 
       if (asrStats.lowQualityCount > 0) {
         chunkProblems.push("asr_low_quality")
@@ -705,6 +793,14 @@ function chunkInteractionByPhase(
         for (const t of asrStats.transcriptArtifactTypes) {
           chunkProblems.push(`asr_transcript_artifact:${t}`)
         }
+      }
+      if (confStats.lowTierCount > 0) {
+        chunkProblems.push("confidence_tier:low")
+      } else if (confStats.mediumTierCount > 0) {
+        chunkProblems.push("confidence_tier:medium")
+      }
+      if (confStats.damagedSegmentIds.length > 0) {
+        chunkProblems.push("contamination_sources_present")
       }
 
       const startSec = Math.min(
@@ -729,6 +825,8 @@ function chunkInteractionByPhase(
         asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
         asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
         problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
+        damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
+        containsRepairedText: confStats.containsRepairedText || undefined,
       })
     }
   }
@@ -806,6 +904,7 @@ function chunkCommentaryText(
   // Assess all segments that contributed to this text block
   const problems = assessSegmentsForProblems(segments, speakerLabels)
   const asrStats = collectAsrStats(segments, asrIndex)
+  const confStats = collectConfidenceDamageStats(segments)
 
   if (asrStats.lowQualityCount > 0) {
     problems.push("asr_low_quality")
@@ -814,6 +913,14 @@ function chunkCommentaryText(
     for (const t of asrStats.transcriptArtifactTypes) {
       problems.push(`asr_transcript_artifact:${t}`)
     }
+  }
+  if (confStats.lowTierCount > 0) {
+    problems.push("confidence_tier:low")
+  } else if (confStats.mediumTierCount > 0) {
+    problems.push("confidence_tier:medium")
+  }
+  if (confStats.damagedSegmentIds.length > 0) {
+    problems.push("contamination_sources_present")
   }
 
   const startSec = Math.min(
@@ -837,6 +944,8 @@ function chunkCommentaryText(
     asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
     asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
     problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
+    damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
+    containsRepairedText: confStats.containsRepairedText || undefined,
   }))
 }
 
@@ -1039,6 +1148,10 @@ async function generateEmbeddingWithRetry(
 
 async function main() {
   const args = parseArgs(process.argv.slice(2))
+  if (args.help) {
+    printUsage()
+    return
+  }
 
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
@@ -1325,6 +1438,23 @@ async function main() {
       console.log(`   🧹 Masking ${speakerMaskedCount} speaker-uncertain segment(s) in chunk text`)
     }
 
+    // Confidence-aware masking: keep low-confidence contaminated lines out of
+    // primary interaction chunk text.
+    let confidenceMaskedCount = 0
+    for (const seg of fileSegments) {
+      const segId = seg.id
+      if (typeof segId !== "number") continue
+      const tier = (seg.confidence_tier ?? "").toLowerCase().trim()
+      const hasContamination = Array.isArray(seg.contamination_sources) && seg.contamination_sources.length > 0
+      if (tier === "low" && hasContamination) {
+        if (!maskedSegmentIds.has(segId)) confidenceMaskedCount++
+        maskedSegmentIds.add(segId)
+      }
+    }
+    if (confidenceMaskedCount > 0) {
+      console.log(`   🧹 Masking ${confidenceMaskedCount} low-confidence contaminated segment(s) in chunk text`)
+    }
+
     // Process approach enrichments via phase-based chunking
     const approachEnrichments = fileEnrichments.filter((e) => e.type === "approach")
     for (const enrichment of approachEnrichments) {
@@ -1499,6 +1629,7 @@ async function main() {
         totalChunks: internalChunks.length,
       }
       chunk.chunkConfidence = computeChunkConfidence(chunk)
+      chunk.chunkConfidenceScore = chunk.chunkConfidence
       chunk.chunkConfidenceVersion = CHUNK_CONFIDENCE_VERSION
       return chunk
     })
@@ -1568,12 +1699,22 @@ async function main() {
       }
       if (chunk.chunkConfidence !== undefined) {
         metadata.chunkConfidence = chunk.chunkConfidence
+        metadata.chunkConfidenceScore = chunk.chunkConfidence
+        metadata.chunk_confidence_score = chunk.chunkConfidence
       }
       if (chunk.chunkConfidenceVersion !== undefined) {
         metadata.chunkConfidenceVersion = chunk.chunkConfidenceVersion
       }
       if (chunk.problematicReason && chunk.problematicReason.length > 0) {
         metadata.problematicReason = chunk.problematicReason
+      }
+      if (chunk.damagedSegmentIds && chunk.damagedSegmentIds.length > 0) {
+        metadata.damagedSegmentIds = chunk.damagedSegmentIds
+        metadata.damaged_segment_ids = chunk.damagedSegmentIds
+      }
+      if (chunk.containsRepairedText !== undefined) {
+        metadata.containsRepairedText = chunk.containsRepairedText
+        metadata.contains_repaired_text = chunk.containsRepairedText
       }
 
       chunks.push({

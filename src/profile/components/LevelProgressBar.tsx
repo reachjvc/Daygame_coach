@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/ui/card";
-import { Trophy, TrendingUp } from "lucide-react";
+import { Crown, Gauge } from "lucide-react";
 import { EXPERIENCE_LABELS } from "@/src/profile/data/experience-levels";
 
 interface LevelProgressBarProps {
@@ -43,7 +43,7 @@ export function LevelProgressBar({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="size-12 rounded-full bg-primary/20 flex items-center justify-center border-2 border-primary">
-            <Trophy className="size-6 text-primary" />
+            <Crown className="size-6 text-primary" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export function LevelProgressBar({
 
         <div className="text-right">
           <div className="flex items-center gap-1 text-muted-foreground text-sm">
-            <TrendingUp className="size-4" />
+            <Gauge className="size-4" />
             <span className="font-semibold">{scenariosCompleted}</span>
           </div>
           <p className="text-xs text-muted-foreground">scenarios</p>

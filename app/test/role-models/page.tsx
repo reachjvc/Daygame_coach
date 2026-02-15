@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import Image from "next/image"
 import {
   ROLE_MODELS,
   ROLE_MODEL_CATEGORIES,
@@ -8,24 +9,25 @@ import {
   type RoleModelCategory,
 } from "@/src/inner-game/data/roleModels"
 import { CATEGORIES } from "@/src/inner-game/config"
+import { AmbientEffects, useIsVisible } from "@/src/inner-game/components/AmbientEffects"
+
+const MARCUS_STILL = "/marcus-test/marcus_alive4_01.png"
+const MARCUS_VIDEO = "/Marcus/liveportrait_output/marcus_loop_01--test7.mp4"
 
 // ============================================================================
 // Value Color Lookup
 // ============================================================================
 
-// Build a map of value ID -> category color
 const VALUE_COLOR_MAP: Record<string, string> = {}
 CATEGORIES.forEach((category) => {
   category.values.forEach((valueName) => {
-    // Convert "Hard work" -> "hard-work" to match roleModel value format
     const valueId = valueName.toLowerCase().replace(/\s+/g, "-")
     VALUE_COLOR_MAP[valueId] = category.color
   })
 })
 
-// Get the color for a value, with fallback
 function getValueColor(valueId: string): string {
-  return VALUE_COLOR_MAP[valueId] || "#78909C" // Blue-grey fallback for unmapped values
+  return VALUE_COLOR_MAP[valueId] || "#78909C"
 }
 
 // ============================================================================
@@ -63,15 +65,16 @@ function RoleModelCard({
 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const { ref, isVisible } = useIsVisible()
 
-  // Get placeholder color (slightly lighter version of category color)
+  const isMarcus = roleModel.id === "marcus-aurelius"
   const placeholderBg = `${categoryColor}20`
   const placeholderBorder = `${categoryColor}40`
 
   return (
     <>
-      {/* Card with hover preview */}
       <div
+        ref={ref}
         onClick={() => setIsExpanded(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -87,26 +90,38 @@ function RoleModelCard({
           boxShadow: isHovered ? `0 8px 32px ${categoryColor}20` : undefined,
         }}
       >
-        {/* Image Placeholder */}
+        {/* Image / Placeholder */}
         <div
           className={`relative w-full transition-all duration-300 flex-shrink-0 ${isHovered ? "h-[240px]" : "h-[200px]"}`}
           style={{
-            backgroundColor: placeholderBg,
+            backgroundColor: isMarcus ? undefined : placeholderBg,
             borderBottom: `1px solid ${placeholderBorder}`,
           }}
         >
-          {/* Placeholder content - initials or icon */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span
-              className="text-5xl font-bold opacity-30"
-              style={{ color: categoryColor }}
-            >
-              {roleModel.name.split(" ").map((n) => n[0]).join("")}
-            </span>
-          </div>
+          {isMarcus ? (
+            <Image
+              src={MARCUS_STILL}
+              alt={roleModel.name}
+              fill
+              className="object-cover"
+              style={{ transform: "scale(1.03)" }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span
+                className="text-5xl font-bold opacity-30"
+                style={{ color: categoryColor }}
+              >
+                {roleModel.name.split(" ").map((n) => n[0]).join("")}
+              </span>
+            </div>
+          )}
 
           {/* Gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900" />
+
+          {/* Ambient effects — only render when card is visible */}
+          {isVisible && <AmbientEffects />}
 
           {/* Hover glow */}
           <div
@@ -119,9 +134,8 @@ function RoleModelCard({
           />
         </div>
 
-        {/* Content - use flex-col with fixed structure */}
+        {/* Content */}
         <div className="p-4 -mt-8 relative z-10 flex flex-col flex-1">
-          {/* Name - fixed */}
           <h2
             className={`font-bold transition-colors duration-300 ${
               isHovered ? "text-lg" : "text-base"
@@ -131,12 +145,10 @@ function RoleModelCard({
             {roleModel.name}
           </h2>
 
-          {/* Category label - fixed */}
           <p className="text-white/40 text-xs mt-0.5">
             {ROLE_MODEL_CATEGORIES.find((c) => c.id === roleModel.category)?.label}
           </p>
 
-          {/* Tagline - only visible on hover */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
               isHovered ? "max-h-16 opacity-100 mt-2" : "max-h-0 opacity-0 mt-0"
@@ -147,21 +159,18 @@ function RoleModelCard({
             </p>
           </div>
 
-          {/* Quote - FIXED HEIGHT to prevent misalignment */}
           <div className="h-[40px] mt-2 overflow-hidden">
             <p className="text-white/50 text-xs italic line-clamp-2">
               &ldquo;{roleModel.quote.slice(0, 80)}{roleModel.quote.length > 80 ? "..." : ""}&rdquo;
             </p>
           </div>
 
-          {/* Values - now always at the same position */}
           <div className="flex gap-1.5 mt-2 flex-wrap">
             {roleModel.values.slice(0, 3).map((value) => (
               <ValueTag key={value} valueId={value} />
             ))}
           </div>
 
-          {/* Preview text - only on hover (grows below values) */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
               isHovered ? "max-h-20 opacity-100 mt-3" : "max-h-0 opacity-0 mt-0"
@@ -172,7 +181,6 @@ function RoleModelCard({
             </p>
           </div>
 
-          {/* CTA - only show on hover */}
           <div
             className={`overflow-hidden transition-all duration-300 ${
               isHovered ? "max-h-8 opacity-100 mt-3" : "max-h-0 opacity-0 mt-0"
@@ -195,34 +203,46 @@ function RoleModelCard({
           onClick={() => setIsExpanded(false)}
         >
           <div
-            className="bg-zinc-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto border border-white/10"
+            className="bg-zinc-900 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-auto border border-white/10"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header with placeholder image */}
+            {/* Header with video (Marcus) or placeholder */}
             <div
-              className="relative h-[280px]"
-              style={{ backgroundColor: placeholderBg }}
+              className="relative h-[500px] overflow-hidden"
+              style={{ backgroundColor: isMarcus ? undefined : placeholderBg }}
             >
-              {/* Placeholder content */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span
-                  className="text-8xl font-bold opacity-20"
-                  style={{ color: categoryColor }}
-                >
-                  {roleModel.name.split(" ").map((n) => n[0]).join("")}
-                </span>
-              </div>
+              {isMarcus ? (
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  src={MARCUS_VIDEO}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  style={{ transform: "scale(1.03)", objectPosition: "center 10%" }}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className="text-8xl font-bold opacity-20"
+                    style={{ color: categoryColor }}
+                  >
+                    {roleModel.name.split(" ").map((n) => n[0]).join("")}
+                  </span>
+                </div>
+              )}
 
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900" />
+              <AmbientEffects large />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-zinc-900" style={{ zIndex: 3 }} />
 
               <button
                 onClick={() => setIsExpanded(false)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 flex items-center justify-center transition-all"
+                className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 flex items-center justify-center transition-all z-10"
               >
                 ✕
               </button>
 
-              <div className="absolute bottom-0 left-0 right-0 p-6">
+              <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
                 <p
                   className="text-sm font-medium mb-1"
                   style={{ color: categoryColor }}
@@ -236,7 +256,6 @@ function RoleModelCard({
 
             {/* Content */}
             <div className="p-6 space-y-6">
-              {/* Values - all with proper colors */}
               <div className="flex flex-wrap gap-2">
                 {roleModel.values.map((value) => {
                   const color = getValueColor(value)
@@ -256,7 +275,6 @@ function RoleModelCard({
                 })}
               </div>
 
-              {/* Primary Quote */}
               <blockquote
                 className="border-l-2 pl-4 py-2"
                 style={{ borderColor: `${categoryColor}50` }}
@@ -267,7 +285,6 @@ function RoleModelCard({
                 )}
               </blockquote>
 
-              {/* Why This Person */}
               <div>
                 <h3 className="font-semibold mb-2" style={{ color: categoryColor }}>
                   Why {roleModel.name}?
@@ -275,7 +292,6 @@ function RoleModelCard({
                 <p className="text-white/70 leading-relaxed">{roleModel.whyThisPerson}</p>
               </div>
 
-              {/* Core Philosophy */}
               {roleModel.corePhilosophy && roleModel.corePhilosophy.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3" style={{ color: categoryColor }}>
@@ -292,7 +308,6 @@ function RoleModelCard({
                 </div>
               )}
 
-              {/* Defining Moment */}
               {roleModel.definingMoment && (
                 <div>
                   <h3 className="font-semibold mb-2" style={{ color: categoryColor }}>
@@ -302,7 +317,6 @@ function RoleModelCard({
                 </div>
               )}
 
-              {/* How This Helps You */}
               <div
                 className="rounded-xl p-4"
                 style={{
@@ -317,7 +331,6 @@ function RoleModelCard({
                 <p className="text-white/80 leading-relaxed">{roleModel.howThisHelpsYou}</p>
               </div>
 
-              {/* Additional Quotes */}
               {roleModel.additionalQuotes && roleModel.additionalQuotes.length > 0 && (
                 <div>
                   <h3 className="font-semibold mb-3" style={{ color: categoryColor }}>
@@ -336,7 +349,6 @@ function RoleModelCard({
                 </div>
               )}
 
-              {/* Select Button */}
               <button
                 className="w-full py-4 text-white font-semibold rounded-xl transition-all hover:opacity-90"
                 style={{
@@ -369,7 +381,6 @@ function CategorySection({
 
   return (
     <section className="mb-12">
-      {/* Category Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
           <div
@@ -382,7 +393,6 @@ function CategorySection({
         <p className="text-white/50 ml-4 pl-3">{category.description}</p>
       </div>
 
-      {/* Role Model Cards - use items-stretch for equal heights */}
       <div className="flex flex-wrap gap-4 ml-4 items-start">
         {roleModels.map((roleModel) => (
           <RoleModelCard
@@ -404,7 +414,6 @@ export default function RoleModelsGalleryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<RoleModelCategory | "all">("all")
 
-  // Group role models by category
   const roleModelsByCategory = useMemo(() => {
     const grouped: Record<RoleModelCategory, RoleModel[]> = {
       charisma: [],
@@ -422,7 +431,6 @@ export default function RoleModelsGalleryPage() {
     return grouped
   }, [])
 
-  // Filter role models based on search and category
   const filteredCategories = useMemo(() => {
     const query = searchQuery.toLowerCase()
 
@@ -448,7 +456,6 @@ export default function RoleModelsGalleryPage() {
 
   return (
     <div className="min-h-screen bg-zinc-950 p-6 overflow-auto">
-      {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">Role Models Gallery</h1>
         <p className="text-white/50">
@@ -456,9 +463,7 @@ export default function RoleModelsGalleryPage() {
         </p>
       </div>
 
-      {/* Filters */}
       <div className="max-w-7xl mx-auto mb-8 flex flex-col sm:flex-row gap-4">
-        {/* Search */}
         <div className="flex-1">
           <input
             type="text"
@@ -469,7 +474,6 @@ export default function RoleModelsGalleryPage() {
           />
         </div>
 
-        {/* Category Filter */}
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={() => setSelectedCategory("all")}
@@ -500,7 +504,6 @@ export default function RoleModelsGalleryPage() {
         </div>
       </div>
 
-      {/* Results count */}
       {searchQuery && (
         <div className="max-w-7xl mx-auto mb-6">
           <p className="text-white/40 text-sm">
@@ -509,7 +512,6 @@ export default function RoleModelsGalleryPage() {
         </div>
       )}
 
-      {/* Categories and Cards */}
       <div className="max-w-7xl mx-auto">
         {filteredCategories.length > 0 ? (
           filteredCategories.map(({ category, roleModels }) => (
@@ -535,10 +537,9 @@ export default function RoleModelsGalleryPage() {
         )}
       </div>
 
-      {/* Footer info */}
       <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-white/10">
         <p className="text-white/30 text-sm text-center">
-          Role Models Gallery • Test Page • Images are placeholders
+          Role Models Gallery • Ambient effects active • Marcus has video, others are placeholders
         </p>
       </div>
     </div>

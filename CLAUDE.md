@@ -225,6 +225,54 @@ MILESTONE N: "[User-facing capability in plain English]"
   DONE WHEN: [concrete observable outcome]
 ```
 
+### 14. Use Project Styling for ALL UI Elements (NEVER Browser Defaults)
+
+**CRITICAL: Never use browser-default controls. Always use project-styled components.**
+
+- `<input type="number">` spinners are hidden globally — use custom increment buttons or the `Set` pattern
+- All inputs, buttons, and form controls must use `components/ui/*` (Button, Input, etc.)
+- Colors must use CSS variables (`--primary`, `--border`, `--card`, etc.) or Tailwind theme classes — never hardcoded colors that don't match the theme
+- When adding any new interactive element, visually verify it matches the dark theme (charcoal bg, slate cards, orange accent)
+- If a native HTML element has visible browser-default styling (scrollbars, spinners, checkboxes, selects), override it in `globals.css` or use a styled component
+
+**Test:** Does this element look like it belongs in the app? If it looks like raw browser chrome, fix it.
+
+### 15. Match Existing UI Patterns (NEVER Invent New Styles)
+
+**Before creating ANY new UI element, grep for how similar elements are already built in the codebase.**
+
+```
+WRONG:
+1. Need a collapsible section
+2. Design it from scratch with custom styling
+3. Ship something that looks different from the rest of the page
+
+RIGHT:
+1. Need a collapsible section
+2. Grep: "collapsed|ChevronDown|accordion" in src/
+3. Find GoalCategorySection uses chevron + uppercase label + count + divider line
+4. Copy that exact pattern
+```
+
+- Collapsible sections, cards, list items, badges, form layouts — all have existing patterns
+- Match the **nearest sibling** component's style (same page > same slice > other slices)
+- If no existing pattern fits, flag it to the user before inventing a new one
+
+### 16. Icon Reuse Governance (NEVER Reuse Without Approval)
+
+**CRITICAL: Claude must NEVER use an icon in a new context without checking and getting user approval.**
+
+Before using any lucide-react icon in a component:
+1. Grep for where that icon is already imported
+2. If it's already used in another file:
+   - Check `src/shared/iconRoles.ts` — if it's a `UTILITY_ICON`, proceed freely
+   - If it's a `SEMANTIC_ICON_ROLES` entry, verify your usage fits an existing approved role
+   - If it's NOT registered or your context is a new role → **ASK the user** before proceeding
+3. **Never add an icon to the semantic registry or expand its roles without explicit user approval**
+4. The architecture test enforces this — icons appearing in 2+ files that aren't in the registry will fail tests
+
+See: `src/shared/iconRoles.ts` for the full registry.
+
 ---
 
 ## Architecture (Enforced by tests/unit/architecture.test.ts)

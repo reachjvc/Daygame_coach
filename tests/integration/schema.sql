@@ -42,6 +42,7 @@ CREATE TABLE profiles (
   preferred_region TEXT,
   secondary_region TEXT,
   primary_goal TEXT,
+  timezone TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

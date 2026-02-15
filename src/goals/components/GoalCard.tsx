@@ -104,7 +104,7 @@ export function GoalCard({
   return (
     <div>
     <div
-      className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80"
+      className={`rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80${goal.is_archived ? " opacity-50" : ""}`}
       style={{ borderLeftColor: accentColor, borderLeftWidth: 3 }}
     >
       {/* Header row */}
@@ -258,7 +258,7 @@ export function GoalCard({
           })()}
 
           {/* Actions */}
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="space-y-2">
             {onIncrement && !goal.is_complete && (
               goal.linked_metric ? (
                 <p className="text-xs text-muted-foreground">
@@ -274,48 +274,52 @@ export function GoalCard({
                 />
               )
             )}
-            {onReset && goal.goal_type === "recurring" && (
-              showResetConfirm ? (
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-destructive">Reset progress?</span>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleReset}
-                    disabled={isResetting}
-                  >
-                    {isResetting ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
-                    Confirm
-                  </Button>
+            <div className="flex items-center gap-1">
+              {onReset && goal.goal_type === "recurring" && (
+                showResetConfirm ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-destructive">Reset progress?</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleReset}
+                      disabled={isResetting}
+                    >
+                      {isResetting ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                      Confirm
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowResetConfirm(false)}
+                      disabled={isResetting}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setShowResetConfirm(false)}
-                    disabled={isResetting}
+                    onClick={() => setShowResetConfirm(true)}
+                    className="text-muted-foreground hover:text-foreground h-7 px-2 text-xs"
                   >
-                    Cancel
+                    <RotateCcw className="size-3 mr-1" />
+                    Reset
                   </Button>
-                </div>
-              ) : (
+                )
+              )}
+              {onEdit && (
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
-                  onClick={() => setShowResetConfirm(true)}
+                  onClick={() => onEdit(goal)}
+                  className="text-muted-foreground hover:text-foreground h-7 px-2 text-xs"
                 >
-                  <RotateCcw className="size-3 mr-1" />
-                  Reset
+                  Edit
                 </Button>
-              )
-            )}
-            {onEdit && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onEdit(goal)}
-              >
-                Edit
-              </Button>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}

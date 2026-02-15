@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { CheckCircle2, MessageCircle, TrendingUp, Zap, LayoutDashboard, Target } from "lucide-react"
+import { CheckCircle2, MessageCircle, BarChart3, Zap, LayoutDashboard } from "lucide-react"
+import { GoalIcon } from "@/components/ui/GoalIcon"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -68,7 +69,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
             </Card>
 
             <Card className="p-6 bg-card border-border">
-              <Target className="size-12 text-primary mb-4" />
+              <GoalIcon className="size-12 text-primary mb-4" />
               <h3 className="font-semibold text-xl mb-3 text-foreground">Scenario-Based Training</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Choose from various scenarios: coffee shops, parks, bookstores. Practice different approaches and styles.
@@ -76,7 +77,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
             </Card>
 
             <Card className="p-6 bg-card border-border">
-              <TrendingUp className="size-12 text-primary mb-4" />
+              <BarChart3 className="size-12 text-primary mb-4" />
               <h3 className="font-semibold text-xl mb-3 text-foreground">Instant Feedback</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Get immediate coaching on your openers, conversation flow, and vibe. Learn what works and what doesn't.

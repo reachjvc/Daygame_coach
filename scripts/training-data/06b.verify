@@ -500,6 +500,46 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
+def run_claude_preflight(
+    claude_bin: str,
+    *,
+    model: Optional[str],
+    timeout_seconds: int,
+    retries: int,
+) -> Tuple[bool, str]:
+    """Probe Claude health with a tiny deterministic request."""
+    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
+    last_reason = "unknown"
+    for attempt in range(max(1, int(retries))):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=max(1, int(timeout_seconds)),
+            )
+            stdout = (result.stdout or "").strip().lower()
+            if result.returncode == 0 and stdout == "ok":
+                return True, "ok"
+            stderr = (result.stderr or "").strip()
+            if result.returncode != 0:
+                last_reason = f"non_zero_exit={result.returncode} stderr={stderr[:200]}"
+            else:
+                last_reason = f"unexpected_output={stdout[:80]!r}"
+        except subprocess.TimeoutExpired:
+            last_reason = f"timeout_after_{int(timeout_seconds)}s"
+        except FileNotFoundError:
+            return False, "claude_binary_not_found"
+
+        if attempt < max(1, int(retries)) - 1:
+            time.sleep(min(5, 2 ** attempt))
+
+    return False, last_reason
+
+
 def call_claude(
     prompt: str,
     retries: int = 3,
@@ -1079,6 +1119,8 @@ def verify_file(
     dry_run: bool = False,
     claude_model: Optional[str] = None,
     fallback_model: Optional[str] = None,
+    llm_timeout_seconds: int = 300,
+    llm_retries: int = 3,
 ) -> Dict[str, Any]:
     """Verify a single stage 06 conversations.json file."""
 
@@ -1108,7 +1150,7 @@ def verify_file(
     prompt = build_verification_prompt(data)
     print(f"{LOG_PREFIX}   Sending to LLM for verification ({len(prompt)} chars)...")
 
-    max_retries = 3
+    max_retries = max(1, int(llm_retries))
     result = None
     raw_response = None
     llm_calls = 0
@@ -1138,7 +1180,12 @@ def verify_file(
         for attempt in range(max_retries):
             try:
                 # Keep retries at 1 here; retry/fallback orchestration is managed at verify_file level.
-                raw_response = call_claude(prompt, retries=1, timeout=300, model=active_model)
+                raw_response = call_claude(
+                    prompt,
+                    retries=1,
+                    timeout=max(1, int(llm_timeout_seconds)),
+                    model=active_model,
+                )
                 llm_calls += 1
             except RuntimeError as e:
                 msg = str(e)
@@ -1495,8 +1542,46 @@ def main() -> None:
         default="sonnet",
         help="Fallback Claude model used only if the primary model times out (default: sonnet). Use '' to disable.",
     )
+    parser.add_argument(
+        "--timeout-seconds",
+        type=int,
+        default=300,
+        help="Per-LLM-call timeout in seconds (default: 300).",
+    )
+    parser.add_argument(
+        "--llm-retries",
+        type=int,
+        default=3,
+        help="Retry attempts per model before failing/switching fallback (default: 3).",
+    )
+    parser.add_argument(
+        "--skip-llm-preflight",
+        action="store_true",
+        help="Skip startup Claude health probe (not recommended).",
+    )
+    parser.add_argument(
+        "--preflight-timeout-seconds",
+        type=int,
+        default=20,
+        help="Per-attempt timeout for startup Claude health probe (default: 20).",
+    )
+    parser.add_argument(
+        "--preflight-retries",
+        type=int,
+        default=2,
+        help="Retry attempts for startup Claude health probe (default: 2).",
+    )
 
     args = parser.parse_args()
+
+    if args.timeout_seconds <= 0:
+        raise SystemExit("--timeout-seconds must be >= 1")
+    if args.llm_retries <= 0:
+        raise SystemExit("--llm-retries must be >= 1")
+    if args.preflight_timeout_seconds <= 0:
+        raise SystemExit("--preflight-timeout-seconds must be >= 1")
+    if args.preflight_retries <= 0:
+        raise SystemExit("--preflight-retries must be >= 1")
 
     global DEBUG_MODE
     DEBUG_MODE = args.debug
@@ -1523,10 +1608,51 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
+    if not args.dry_run and not args.skip_llm_preflight:
+        probe_models: List[Optional[str]] = [args.model]
+        if (
+            isinstance(args.fallback_model, str)
+            and args.fallback_model.strip()
+            and args.fallback_model.strip() != (args.model or "").strip()
+        ):
+            probe_models.append(args.fallback_model.strip())
+
+        preflight_ok = False
+        failure_reasons: List[str] = []
+        for probe_model in probe_models:
+            ok, reason = run_claude_preflight(
+                claude_bin,
+                model=probe_model,
+                timeout_seconds=args.preflight_timeout_seconds,
+                retries=args.preflight_retries,
+            )
+            model_label = (probe_model or "").strip() or "default"
+            if ok:
+                preflight_ok = True
+                print(
+                    f"{LOG_PREFIX} Claude preflight: ok on model={model_label} "
+                    f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+                )
+                break
+            failure_reasons.append(f"{model_label}: {reason}")
+
+        if not preflight_ok:
+            print(
+                f"{LOG_PREFIX} Error: Claude preflight failed on all probe models "
+                f"({'; '.join(failure_reasons)})"
+            )
+            print(
+                f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
+                f"--skip-llm-preflight only for controlled debugging."
+            )
+            raise SystemExit(2)
+
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
     if isinstance(args.fallback_model, str) and args.fallback_model.strip():
         print(f"{LOG_PREFIX} Claude fallback model: {args.fallback_model.strip()}")
+    print(f"{LOG_PREFIX} LLM timeout seconds: {args.timeout_seconds}")
+    print(f"{LOG_PREFIX} LLM retries: {args.llm_retries}")
 
     # Route to appropriate mode
     if args.test:
@@ -1568,6 +1694,8 @@ def _run_input(args) -> None:
             dry_run=args.dry_run,
             claude_model=args.model,
             fallback_model=args.fallback_model,
+            llm_timeout_seconds=args.timeout_seconds,
+            llm_retries=args.llm_retries,
         )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, Issues: {result.get('issues', 0)}")
         return
@@ -1612,6 +1740,8 @@ def _run_sources(args) -> None:
                     dry_run=args.dry_run,
                     claude_model=args.model,
                     fallback_model=args.fallback_model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
                 )
                 total_issues += result.get("issues", 0)
                 total_files += 1
@@ -1729,6 +1859,8 @@ def _run_directory_with_files(
                 dry_run=args.dry_run,
                 claude_model=args.model,
                 fallback_model=args.fallback_model,
+                llm_timeout_seconds=args.timeout_seconds,
+                llm_retries=args.llm_retries,
             )
             processed += 1
             consecutive_failures = 0

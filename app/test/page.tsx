@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Target, LayoutGrid, Archive, ImageIcon } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -63,7 +63,7 @@ const testPages = [
     name: "Evaluator Calibration",
     href: "/test/calibration",
     description: "View evaluator diagnostics and identify blind spots",
-    icon: Target,
+    icon: Crosshair,
   },
   {
     name: "Goals Views",
@@ -82,6 +82,12 @@ const testPages = [
     href: "/test/archetypes",
     description: "Compare existing vs new Scandinavian archetype images — pick winners",
     icon: ImageIcon,
+  },
+  {
+    name: "Icon Differentiation",
+    href: "/test/icon-preview",
+    description: "Compare current vs proposed icons for 9 overloaded icon issues",
+    icon: Eye,
   },
 ]
 

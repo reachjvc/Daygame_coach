@@ -6,7 +6,7 @@ import {
   Compass,
   Eye,
   Flame,
-  Target,
+  CircleDot,
   Sparkles,
   Trophy,
   Lock,
@@ -53,7 +53,7 @@ const SECTIONS: SectionDef[] = [
     step: InnerGameStep.HURDLES,
     title: "Growth Edges",
     description: "Discover values through your challenges and aspirations",
-    icon: Target,
+    icon: CircleDot,
   },
   {
     step: InnerGameStep.CUTTING,

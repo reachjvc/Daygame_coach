@@ -14,6 +14,7 @@
 import { describe, test, expect } from 'vitest'
 import * as fs from 'fs'
 import * as path from 'path'
+import { UTILITY_ICONS, SEMANTIC_ICON_ROLES } from '../../src/shared/iconRoles'
 
 const projectRoot = path.resolve(__dirname, '../..')
 
@@ -256,6 +257,66 @@ describe('Architecture Compliance', () => {
 
       // Assert
       expect(violations, `NEW type exports outside types.ts (not in allowlist):\n${violations.join('\n')}`).toHaveLength(0)
+    })
+  })
+
+  describe('Icon Usage - Registry Compliance', () => {
+    test('Icons used in multiple files must be registered in iconRoles.ts', () => {
+      // Scan src/, components/, app/ for lucide-react imports
+      const dirsToScan = [
+        path.join(projectRoot, 'src'),
+        path.join(projectRoot, 'components'),
+        path.join(projectRoot, 'app'),
+      ]
+
+      // Collect all icon imports: icon name → set of files
+      const iconUsage = new Map<string, Set<string>>()
+      const importPattern = /import\s*\{([^}]+)\}\s*from\s*['"]lucide-react['"]/g
+      const iconNamePattern = /\b([A-Z][a-zA-Z0-9]+)\b/g
+
+      for (const dir of dirsToScan) {
+        const files = getAllFiles(dir, /\.tsx?$/)
+          .filter(f => !f.includes('/test/') && !f.includes('/tests/'))
+
+        for (const file of files) {
+          const content = fs.readFileSync(file, 'utf-8')
+          const relativePath = path.relative(projectRoot, file)
+
+          let match
+          importPattern.lastIndex = 0
+          while ((match = importPattern.exec(content)) !== null) {
+            const importBlock = match[1]
+            let iconMatch
+            iconNamePattern.lastIndex = 0
+            while ((iconMatch = iconNamePattern.exec(importBlock)) !== null) {
+              const iconName = iconMatch[1]
+              if (!iconUsage.has(iconName)) {
+                iconUsage.set(iconName, new Set())
+              }
+              iconUsage.get(iconName)!.add(relativePath)
+            }
+          }
+        }
+      }
+
+      // Check: any icon in 2+ files must be in UTILITY_ICONS or SEMANTIC_ICON_ROLES
+      const violations: string[] = []
+
+      for (const [iconName, files] of iconUsage.entries()) {
+        if (files.size < 2) continue
+        if (UTILITY_ICONS.has(iconName)) continue
+        if (iconName in SEMANTIC_ICON_ROLES) continue
+
+        violations.push(
+          `${iconName} used in ${files.size} files but not registered in iconRoles.ts:\n` +
+          `  ${[...files].join('\n  ')}`
+        )
+      }
+
+      expect(
+        violations,
+        `Unregistered icons used in multiple files (add to src/shared/iconRoles.ts):\n${violations.join('\n\n')}`
+      ).toHaveLength(0)
     })
   })
 

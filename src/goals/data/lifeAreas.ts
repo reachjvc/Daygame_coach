@@ -12,7 +12,7 @@ import {
   DollarSign,
   Brain,
   GraduationCap,
-  Star,
+  Puzzle,
 } from "lucide-react"
 import type { LifeAreaConfig } from "../types"
 
@@ -177,7 +177,7 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
   {
     id: "custom",
     name: "Custom",
-    icon: Star,
+    icon: Puzzle,
     hex: "#9ca3af",
     color: "text-gray-400",
     bgColor: "bg-gray-500/10",
