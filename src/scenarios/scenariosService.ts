@@ -57,13 +57,13 @@ import { evaluateShittestResponse } from "@/src/scenarios/shittests/evaluator"
 import {
   generateKeepItGoingScenario,
   generateKeepItGoingIntro,
-  updateContext,
+  evaluateKeepItGoingResponse,
+  getResponseQuality,
+  pickResponse,
+  pickHerQuestion,
+  pickCloseResponse,
   getCloseOutcome,
-  generateAIResponse,
-  generateCloseResponse,
-  evaluateWithAI,
-  generateExitResponse,
-  updateInterestFromRubric,
+  getPhase,
   type Language,
 } from "@/src/scenarios/keepitgoing"
 
@@ -177,9 +177,7 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   const scenario_type = request.scenario_type
   const conversation_history = request.conversation_history || []
-  // For keep-it-going: if context is passed, it's a continuation (not first message)
-  const hasKeepItGoingContext = scenario_type === "keep-it-going" && request.keepItGoingContext
-  const isFirstMessage = conversation_history.length === 0 && !hasKeepItGoingContext
+  const isFirstMessage = conversation_history.length === 0
 
   const scenarioSeed = request.session_id || `${userId}-${scenario_type}`
   const careerScenario =
@@ -188,12 +186,10 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
       : null
 
   // Get language from profile or default to Danish
-  const language: Language = (profile?.preferred_language as Language) || "da"
-
-  // For keep-it-going: use passed context (state persistence) or generate fresh
-  let keepItGoingContext =
+  const language: Language = (profile?.voice_language as Language) || "da"
+  const keepItGoingContext =
     scenario_type === "keep-it-going"
-      ? request.keepItGoingContext ?? generateKeepItGoingScenario(scenarioSeed, language, request.situation_id)
+      ? generateKeepItGoingScenario(scenarioSeed, language)
       : null
 
   const location = "street"
@@ -224,7 +220,6 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
         archetype: archetype.name,
         difficulty,
         isIntroduction: true,
-        keepItGoingContext, // Return initial context for client to store
       }
     }
 
@@ -253,106 +248,32 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
 
   // Handle keep-it-going scenario
   if (scenario_type === "keep-it-going" && keepItGoingContext) {
-    // Sticky end: once she's ended the conversation, don't keep spending tokens evaluating/generating.
-    if (keepItGoingContext.isEnded) {
-      const reason = keepItGoingContext.endReason ? ` (${keepItGoingContext.endReason})` : ""
-      const endedText =
-        keepItGoingContext.language === "da"
-          ? `*Hun er allerede gået${reason}.*`
-          : `*She's already gone${reason}.*`
-      return {
-        text: endedText,
-        archetype: archetype.name,
-        evaluation: {
-          score: 0,
-          feedback: keepItGoingContext.language === "da" ? "Samtalen er allerede slut." : "Conversation already ended.",
-        },
-        keepItGoingContext,
-      }
-    }
-
-    // Build conversation history for AI response generation (with sliding window)
-    const MAX_HISTORY_MESSAGES = 8 // 4 pairs - reduces token usage significantly
-    const aiConversationHistory = (conversation_history || [])
-      .filter((msg) => msg.role === "user" || msg.role === "assistant")
-      .slice(-MAX_HISTORY_MESSAGES)
-      .map((msg) => ({
-        role: msg.role as "user" | "assistant",
-        content: msg.content,
-      }))
-
-    // Use AI to evaluate user's response (contextual; sees recent conversation window)
-    const aiEval = await evaluateWithAI(
-      request.message,
-      aiConversationHistory,
-      keepItGoingContext.language,
-      keepItGoingContext,
-      userId
-    )
-
-    // Apply rubric-based interest/exitRisk updates
-    const interestUpdate = updateInterestFromRubric(keepItGoingContext, {
-      score: aiEval.score,
-      quality: aiEval.quality,
-      tags: aiEval.tags,
-    })
+    const evaluation = evaluateKeepItGoingResponse(request.message, language)
+    const quality = getResponseQuality(evaluation.small.score)
+    const phase = getPhase(currentTurn, request.message, language)
 
     // Generate response based on quality and phase
     let responseText: string
-
-    // Check if conversation should end early
-    if (interestUpdate.isEnded) {
-      // Generate exit response - she's leaving
-      responseText = await generateExitResponse(keepItGoingContext, interestUpdate.endReason, userId)
-    } else if (keepItGoingContext.conversationPhase === "close") {
-      // Use accumulated average score for close outcome
-      const outcome = getCloseOutcome(keepItGoingContext.averageScore)
-      responseText = await generateCloseResponse(keepItGoingContext, outcome, request.message, userId)
+    if (phase === "close") {
+      // Calculate average score from conversation history
+      const avgScore = evaluation.small.score // For now, use current score
+      const outcome = getCloseOutcome(avgScore)
+      responseText = pickCloseResponse(outcome, language)
+    } else if (quality === "positive" && currentTurn >= 3) {
+      // She asks a question back after consecutive high scores
+      responseText = pickHerQuestion(language)
     } else {
-      // Use AI to generate response based on quality (with new interest level in context)
-      const contextWithUpdatedInterest = {
-        ...keepItGoingContext,
-        interestLevel: interestUpdate.interestLevel,
-        exitRisk: interestUpdate.exitRisk,
-      }
-      responseText = await generateAIResponse({
-        context: contextWithUpdatedInterest,
-        userMessage: request.message,
-        quality: aiEval.quality,
-        conversationHistory: aiConversationHistory,
-        userId,
-      })
-    }
-
-    // Update context with new score and interest/exitRisk
-    const baseUpdatedContext = updateContext(
-      keepItGoingContext,
-      request.message,
-      aiEval.score,
-      undefined
-    )
-
-    // Merge interest/exitRisk updates into context
-    const updatedContext = {
-      ...baseUpdatedContext,
-      interestLevel: interestUpdate.interestLevel,
-      exitRisk: interestUpdate.exitRisk,
-      neutralStreak: interestUpdate.neutralStreak,
-      isEnded: interestUpdate.isEnded,
-      endReason: interestUpdate.endReason,
+      responseText = pickResponse(quality, language)
     }
 
     const milestoneEvaluation =
-      updatedContext.turnCount % 5 === 0
-        ? { score: aiEval.score, feedback: aiEval.feedback, strengths: [], improvements: [], turn: updatedContext.turnCount }
-        : undefined
+      currentTurn % 5 === 0 ? { ...evaluation.milestone, turn: currentTurn } : undefined
 
     return {
       text: responseText,
       archetype: archetype.name,
-      evaluation: { score: aiEval.score, feedback: aiEval.feedback },
+      evaluation: evaluation.small,
       milestoneEvaluation,
-      keepItGoingContext: updatedContext,
     }
   }
 

@@ -19,10 +19,19 @@ Writes:
 Auto-applies:
   - misattributions: changes speaker_role on matched segments
   - collapse_issues: changes speaker_role + speaker_role_override
+  - boundary_issues: applies merge/split/reclassify when suggested_fix is present and confidence is high
+    (and recomputes conversations[] summary)
 
-Flags but does NOT fix:
-  - boundary_issues
-  - other_flags
+Can optionally apply limited deterministic `other_flags` fixes:
+  - mixed-speaker / run-on transcript artifacts: demote cited segments to speaker_role=unknown
+    (enabled only with --apply-mixed-speaker-other-flags)
+
+Legacy compatibility:
+  - backfills/normalizes top-level transcript_confidence when missing/invalid
+
+Flags but does NOT fix (yet):
+  - speaker_id-only diarization defects
+  - other free-form notes without deterministic segment targets
 
 Use:
 
@@ -47,12 +56,13 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import re
 import shlex
 import sys
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import jsonschema
 
@@ -63,7 +73,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.3"  # v1.3: enforce schema-safe roles + post-patch schema validation
+PIPELINE_VERSION = "06c.patch-v1.8"  # v1.8: legacy transcript_confidence compatibility normalization
 
 LOG_PREFIX = "[06c.patch]"
 
@@ -78,33 +88,8 @@ MIN_BOUNDARY_CONFIDENCE = 0.90  # Higher threshold - structural changes
 
 SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
 _CACHED_SCHEMA: Optional[Dict[str, Any]] = None
-
-
-def load_conversations_schema() -> Optional[Dict[str, Any]]:
-    if not SCHEMA_PATH.exists():
-        print(f"{LOG_PREFIX} WARNING: conversations schema not found at {SCHEMA_PATH}")
-        return None
-    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
-
-
-def get_conversations_schema() -> Optional[Dict[str, Any]]:
-    global _CACHED_SCHEMA
-    if _CACHED_SCHEMA is None:
-        _CACHED_SCHEMA = load_conversations_schema()
-    return _CACHED_SCHEMA
-
-
-def validate_conversations_output(data: Dict[str, Any]) -> List[str]:
-    """Validate patched output against conversations.schema.json."""
-    schema = get_conversations_schema()
-    if schema is None:
-        return []
-    try:
-        jsonschema.validate(instance=data, schema=schema)
-        return []
-    except jsonschema.ValidationError as exc:
-        path = ".".join(str(p) for p in exc.path) or "<root>"
-        return [f"schema_invalid at {path}: {exc.message}"]
+VERIFICATION_SCHEMA_PATH = Path(__file__).parent / "schemas" / "verification.schema.json"
+_CACHED_VERIFICATION_SCHEMA: Optional[Dict[str, Any]] = None
 
 
 # ---------------------------
@@ -137,6 +122,172 @@ def load_state(state_path: Path) -> ProcessingState:
 def save_state(state_path: Path, state: ProcessingState) -> None:
     state_path.parent.mkdir(parents=True, exist_ok=True)
     state_path.write_text(json.dumps(asdict(state), indent=2))
+
+def _load_schema() -> Optional[Dict[str, Any]]:
+    if not SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: Schema not found at {SCHEMA_PATH}")
+        return None
+    return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _get_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_SCHEMA
+    if _CACHED_SCHEMA is None:
+        _CACHED_SCHEMA = _load_schema()
+    return _CACHED_SCHEMA
+
+
+def _validate_conversations_schema(conversations_data: Dict[str, Any]) -> None:
+    """Validate patched output against conversations.schema.json. Raises on failure."""
+    schema = _get_schema()
+    if not schema:
+        return
+    try:
+        jsonschema.validate(instance=conversations_data, schema=schema)
+    except jsonschema.ValidationError as e:
+        path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+        raise RuntimeError(f"Patched conversations schema invalid at {path}: {e.message[:200]}")
+
+
+def _load_verification_schema() -> Optional[Dict[str, Any]]:
+    if not VERIFICATION_SCHEMA_PATH.exists():
+        print(f"{LOG_PREFIX} WARNING: Verification schema not found at {VERIFICATION_SCHEMA_PATH}")
+        return None
+    return json.loads(VERIFICATION_SCHEMA_PATH.read_text(encoding="utf-8"))
+
+
+def _get_verification_schema() -> Optional[Dict[str, Any]]:
+    global _CACHED_VERIFICATION_SCHEMA
+    if _CACHED_VERIFICATION_SCHEMA is None:
+        _CACHED_VERIFICATION_SCHEMA = _load_verification_schema()
+    return _CACHED_VERIFICATION_SCHEMA
+
+
+def _validate_verification_schema(verification_data: Dict[str, Any]) -> None:
+    """Validate 06b verification report against verification.schema.json. Raises on failure."""
+    schema = _get_verification_schema()
+    if not schema:
+        return
+    try:
+        jsonschema.validate(instance=verification_data, schema=schema)
+    except jsonschema.ValidationError as e:
+        path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
+        raise RuntimeError(f"Verification schema invalid at {path}: {e.message[:200]}")
+
+
+def _recompute_conversations_summary(
+    segments: List[Dict[str, Any]],
+    old_conversations: Any,
+) -> List[Dict[str, Any]]:
+    """Rebuild conversations[] from segments[].conversation_id while preserving extra fields when possible."""
+    old_by_id: Dict[int, Dict[str, Any]] = {}
+    if isinstance(old_conversations, list):
+        for c in old_conversations:
+            if not isinstance(c, dict):
+                continue
+            cid = c.get("conversation_id")
+            if isinstance(cid, int):
+                old_by_id[cid] = c
+
+    conv_segments: Dict[int, List[Dict[str, Any]]] = {}
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        cid = seg.get("conversation_id", 0)
+        if isinstance(cid, int) and cid > 0:
+            conv_segments.setdefault(cid, []).append(seg)
+
+    out: List[Dict[str, Any]] = []
+    for cid, segs in sorted(conv_segments.items()):
+        base = dict(old_by_id.get(cid) or {})
+        target_speaker_ids: Set[str] = set()
+        has_uncertain_roles = False
+        for seg in segs:
+            role = str(seg.get("speaker_role", "")).strip().lower()
+            if role == "target":
+                speaker_id = str(seg.get("speaker_id", "")).strip()
+                if speaker_id:
+                    target_speaker_ids.add(speaker_id)
+            elif role in {"unknown", "collapsed"}:
+                has_uncertain_roles = True
+
+        target_label = "unknown"
+        target_reason = "No reliable target turns detected in this conversation."
+        target_confidence = 0.4
+        if len(target_speaker_ids) >= 2:
+            target_label = "multiple_women"
+            target_reason = (
+                f"Detected target turns from {len(target_speaker_ids)} distinct speaker IDs."
+            )
+            target_confidence = 0.95
+        elif len(target_speaker_ids) == 1:
+            target_label = "single_woman"
+            target_reason = "Detected target turns from one consistent speaker ID."
+            target_confidence = 0.9
+        elif has_uncertain_roles:
+            target_reason = (
+                "Conversation includes unknown/collapsed role segments, so target participation is uncertain."
+            )
+            target_confidence = 0.3
+
+        base["conversation_id"] = cid
+        base["segment_ids"] = [
+            s.get("id") for s in segs if isinstance(s.get("id"), int)
+        ]
+        base["start_time"] = segs[0].get("start", 0)
+        base["end_time"] = segs[-1].get("end", 0)
+        base["target_participation"] = {
+            "label": target_label,
+            "target_speaker_ids": sorted(target_speaker_ids),
+            "confidence": round(target_confidence, 2),
+            "reasoning": target_reason,
+        }
+        out.append(base)
+
+    return out
+
+
+def _normalize_legacy_transcript_confidence(conversations_data: Dict[str, Any]) -> List[str]:
+    """Backfill/normalize transcript_confidence for legacy Stage 06 outputs."""
+    repairs: List[str] = []
+    tc = conversations_data.get("transcript_confidence")
+    default_reason = (
+        "Legacy Stage 06 artifact missing/invalid transcript_confidence; "
+        "backfilled by 06c.patch for schema compatibility."
+    )
+
+    if not isinstance(tc, dict):
+        conversations_data["transcript_confidence"] = {
+            "score": 50,
+            "reasoning": default_reason,
+        }
+        repairs.append("transcript_confidence: backfilled missing object (score=50)")
+        return repairs
+
+    score = tc.get("score")
+    if not isinstance(score, int):
+        try:
+            score = int(score)
+        except (TypeError, ValueError):
+            score = 50
+            repairs.append("transcript_confidence: backfilled non-integer score -> 50")
+    if score < 1:
+        score = 1
+        repairs.append("transcript_confidence: raised score to schema minimum (1)")
+    elif score > 100:
+        score = 100
+        repairs.append("transcript_confidence: lowered score to schema maximum (100)")
+
+    reasoning = tc.get("reasoning")
+    if not isinstance(reasoning, str) or not reasoning.strip():
+        reasoning = default_reason
+        repairs.append("transcript_confidence: backfilled missing reasoning")
+
+    conversations_data["transcript_confidence"] = {
+        "score": score,
+        "reasoning": reasoning.strip(),
+    }
+    return repairs
 
 
 # ---------------------------
@@ -183,9 +334,48 @@ def _get_next_conversation_id(segments: List[Dict]) -> int:
     return max_id + 1
 
 
+def _extract_segment_ids_from_flag(flag_text: str) -> List[int]:
+    """Extract explicit segment IDs/ranges from free-form other_flag text."""
+    ids: Set[int] = set()
+
+    for m in re.finditer(r"\bsegments?\s+(\d+)\s*-\s*(\d+)\b", flag_text, flags=re.IGNORECASE):
+        start = int(m.group(1))
+        end = int(m.group(2))
+        if start > end:
+            start, end = end, start
+        for seg_id in range(start, end + 1):
+            ids.add(seg_id)
+
+    # Parse single "segment N" mentions after ranges so dedupe is automatic.
+    for m in re.finditer(r"\bsegment\s+(\d+)\b", flag_text, flags=re.IGNORECASE):
+        ids.add(int(m.group(1)))
+
+    return sorted(ids)
+
+
+def _is_mixed_speaker_other_flag(flag_text: str) -> bool:
+    """Heuristic: detect run-on / merged transcript flags that mix coach and target speech."""
+    lower = flag_text.lower()
+    has_role_mix = ("coach" in lower and "target" in lower)
+    has_merge_signal = any(
+        token in lower
+        for token in (
+            "run-on",
+            "merged",
+            "mix coach",
+            "mixes coach",
+            "blends",
+            "speaker switch mid-segment",
+            "interleaved",
+        )
+    )
+    return has_role_mix and has_merge_signal
+
+
 def apply_patches(
     conversations_data: Dict[str, Any],
     verification_data: Dict[str, Any],
+    apply_mixed_speaker_other_flags: bool = False,
 ) -> Tuple[List[Dict], List[str]]:
     """Apply high-confidence fixes from verification report to conversations data.
 
@@ -214,8 +404,8 @@ def apply_patches(
             )
             continue
 
-        # Keep patches schema-safe for conversations.schema.json segment-level roles.
-        valid_roles = {"coach", "target", "voiceover", "other", "unknown"}
+        # Skip prose suggested_roles (should be schema-valid role values)
+        valid_roles = {"coach", "student", "target", "other", "voiceover", "unknown"}
         if suggested_role not in valid_roles:
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} suggested_role '{suggested_role}' is not a valid role — skipping"
@@ -234,6 +424,13 @@ def apply_patches(
             flags_not_fixed.append(
                 f"misattribution: segment {seg_id} current_role mismatch "
                 f"(expected '{current_role}', found '{actual_role}') — skipping"
+            )
+            continue
+
+        if suggested_role == actual_role:
+            flags_not_fixed.append(
+                f"misattribution: segment {seg_id} suggested_role '{suggested_role}' "
+                f"matches current role — likely speaker_id-only issue"
             )
             continue
 
@@ -260,6 +457,7 @@ def apply_patches(
     # --- Apply collapse issue fixes ---
     for entry in verification_data.get("collapse_issues", []):
         seg_id = entry.get("segment_id")
+        reported_speaker_id = entry.get("speaker_id")
         suggested_override = entry.get("suggested_override")
         current_override = entry.get("current_override")
         evidence = entry.get("evidence", "")
@@ -271,8 +469,8 @@ def apply_patches(
             )
             continue
 
-        # Keep patches schema-safe for conversations.schema.json override roles.
-        valid_roles = {"coach", "target", "voiceover", "other", "unknown"}
+        # Skip prose suggested_overrides (should be schema-valid role values)
+        valid_roles = {"coach", "student", "target", "other", "voiceover", "unknown"}
         if suggested_override not in valid_roles:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} suggested_override '{suggested_override}' is not a valid role — skipping"
@@ -283,6 +481,30 @@ def apply_patches(
         if seg is None:
             flags_not_fixed.append(
                 f"collapse_issue: segment {seg_id} not found in conversations data"
+            )
+            continue
+
+        # Only apply collapse_issues to segments whose speaker is actually marked as collapsed.
+        seg_speaker_id = seg.get("speaker_id")
+        speaker_labels = conversations_data.get("speaker_labels", {}) or {}
+        collapse_meta = conversations_data.get("speaker_collapse") or {}
+        collapsed_ids = set(collapse_meta.get("collapsed_speakers", [])) if isinstance(collapse_meta, dict) and collapse_meta.get("detected") else set()
+        is_collapsed_speaker = False
+        if seg_speaker_id and seg_speaker_id in collapsed_ids:
+            is_collapsed_speaker = True
+        elif seg_speaker_id and isinstance(speaker_labels, dict):
+            is_collapsed_speaker = speaker_labels.get(seg_speaker_id, {}).get("role") == "collapsed"
+
+        if not is_collapsed_speaker:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} speaker_id '{seg_speaker_id}' is not marked collapsed — skipping"
+            )
+            continue
+
+        if reported_speaker_id and seg_speaker_id and reported_speaker_id != seg_speaker_id:
+            flags_not_fixed.append(
+                f"collapse_issue: segment {seg_id} speaker_id mismatch "
+                f"(expected '{reported_speaker_id}', found '{seg_speaker_id}') — skipping"
             )
             continue
 
@@ -465,9 +687,54 @@ def apply_patches(
                 f"boundary_issue [{severity}]: Conv {conv_id} — unknown fix type '{suggested_fix}'"
             )
 
-    # --- Log other_flags as unfixed ---
-    for flag in verification_data.get("other_flags", []):
-        flags_not_fixed.append(f"other_flag: {str(flag)[:150]}")
+    # --- Apply deterministic other_flags heuristics, log the rest ---
+    for raw_flag in verification_data.get("other_flags", []):
+        flag_text = str(raw_flag)
+        if apply_mixed_speaker_other_flags and _is_mixed_speaker_other_flag(flag_text):
+            seg_ids = _extract_segment_ids_from_flag(flag_text)
+            if not seg_ids:
+                flags_not_fixed.append(
+                    "other_flag: mixed-speaker artifact detected but no segment IDs parsed"
+                )
+                continue
+
+            demoted = 0
+            for seg_id in seg_ids:
+                seg = seg_by_id.get(seg_id)
+                if seg is None:
+                    flags_not_fixed.append(
+                        f"other_flag: mixed-speaker segment {seg_id} not found — skipping"
+                    )
+                    continue
+
+                old_role = seg.get("speaker_role")
+                old_override = seg.get("speaker_role_override")
+                if old_role == "unknown" and (
+                    old_override is None or old_override == "unknown"
+                ):
+                    continue
+
+                seg["speaker_role"] = "unknown"
+                if old_override is not None:
+                    seg["speaker_role_override"] = "unknown"
+
+                demoted += 1
+                fixes_applied.append({
+                    "segment_id": seg_id,
+                    "field": "speaker_role" + ("+speaker_role_override" if old_override is not None else ""),
+                    "old": f"role={old_role}" + (f", override={old_override}" if old_override is not None else ""),
+                    "new": "unknown",
+                    "source": "other_flag_mixed_speaker",
+                    "evidence": flag_text[:200],
+                })
+
+            if demoted == 0:
+                flags_not_fixed.append(
+                    f"other_flag: mixed-speaker segments already unknown ({','.join(str(i) for i in seg_ids)})"
+                )
+            continue
+
+        flags_not_fixed.append(f"other_flag: {flag_text[:150]}")
 
     return fixes_applied, flags_not_fixed
 
@@ -477,6 +744,9 @@ def patch_file(
     verification_path: Optional[Path],
     output_path: Path,
     dry_run: bool = False,
+    allow_reject: bool = False,
+    allow_invalid_verification: bool = False,
+    apply_mixed_speaker_other_flags: bool = False,
 ) -> Dict[str, Any]:
     """Patch a single conversations file using its verification report."""
 
@@ -490,6 +760,11 @@ def patch_file(
 
     # Deep copy so we don't modify original
     patched = copy.deepcopy(conversations_data)
+    compatibility_repairs = _normalize_legacy_transcript_confidence(patched)
+    if compatibility_repairs:
+        print(f"{LOG_PREFIX}   Compatibility repairs: {len(compatibility_repairs)}")
+        for repair in compatibility_repairs:
+            print(f"{LOG_PREFIX}     {repair}")
 
     if verification_path is None or not verification_path.exists():
         # No verification file — copy unchanged
@@ -498,6 +773,8 @@ def patch_file(
         patched["patch_metadata"] = {
             "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "pipeline_version": PIPELINE_VERSION,
+            "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
+            "compatibility_repairs": compatibility_repairs,
             "verification_verdict": None,
             "verification_file": None,
             "fixes_applied": [],
@@ -506,6 +783,9 @@ def patch_file(
             "flags_not_fixed_count": 0,
             "note": "No verification report found — copied unchanged",
         }
+
+        # Even when copying unchanged, ensure the output is schema-valid.
+        _validate_conversations_schema(patched)
 
         if not dry_run:
             output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -520,15 +800,28 @@ def patch_file(
     # Load verification report
     with verification_path.open("r", encoding="utf-8") as f:
         verification_data = json.load(f)
+    verification_schema_valid = True
+    try:
+        _validate_verification_schema(verification_data)
+    except RuntimeError as e:
+        verification_schema_valid = False
+        if not allow_invalid_verification:
+            raise RuntimeError(
+                f"Verification report schema invalid for {conversations_path.name}: {e}. "
+                "Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+            )
+        print(f"{LOG_PREFIX}   WARNING: {e}")
+        print(f"{LOG_PREFIX}   WARNING: Continuing due to --allow-invalid-verification")
 
     verdict = verification_data.get("verdict", "FLAG")
     print(f"{LOG_PREFIX}   Verification verdict: {verdict}")
     print(f"{LOG_PREFIX}   Verification file: {verification_path}")
 
-    if verdict == "REJECT":
+    if verdict == "REJECT" and not allow_reject:
         raise RuntimeError(
             f"Verification verdict is REJECT for {conversations_path.name}. "
-            "06b should have halted the pipeline before reaching 06c."
+            "By default 06c refuses to patch REJECT outputs. Re-run with --allow-reject if you want to apply "
+            "high-confidence deterministic fixes anyway (useful for iteration / salvage)."
         )
 
     if verdict == "APPROVE":
@@ -536,40 +829,76 @@ def patch_file(
         fixes_applied: List[Dict] = []
         flags_not_fixed: List[str] = []
     else:
-        # FLAG — apply patches
-        fixes_applied, flags_not_fixed = apply_patches(patched, verification_data)
+        # FLAG/REJECT — apply patches
+        fixes_applied, flags_not_fixed = apply_patches(
+            patched,
+            verification_data,
+            apply_mixed_speaker_other_flags=apply_mixed_speaker_other_flags,
+        )
+
+    # Always recompute conversations[] from segments after patching to keep semantic consistency,
+    # especially when boundary fixes are auto-applied.
+    patched["conversations"] = _recompute_conversations_summary(
+        patched.get("segments", []),
+        patched.get("conversations"),
+    )
 
     patched["patch_metadata"] = {
         "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "pipeline_version": PIPELINE_VERSION,
+        "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
+        "compatibility_repairs": compatibility_repairs,
         "verification_verdict": verdict,
         "verification_file": str(verification_path),
+        "verification_schema_valid": verification_schema_valid,
         "fixes_applied": fixes_applied,
         "fixes_applied_count": len(fixes_applied),
         "flags_not_fixed": flags_not_fixed,
         "flags_not_fixed_count": len(flags_not_fixed),
     }
 
+    # Fail fast if patched output violates the Stage 06 conversations schema.
+    _validate_conversations_schema(patched)
+
     # Print summary
     if fixes_applied:
         print(f"{LOG_PREFIX}   Fixes applied: {len(fixes_applied)}")
         for fix in fixes_applied:
-            segment_label = f"seg {fix['segment_id']}" if "segment_id" in fix else "non-segment fix"
-            old_value = fix.get("old", fix.get("action", ""))
-            new_value = fix.get("new", fix.get("to_conv", ""))
-            source_value = fix.get("source", "unknown")
-            print(f"{LOG_PREFIX}     {segment_label}: {old_value} → {new_value} ({source_value})")
+            src = fix.get("source", "unknown")
+            if "segment_id" in fix:
+                seg_id = fix.get("segment_id")
+                print(f"{LOG_PREFIX}     seg {seg_id}: {fix.get('old')} → {fix.get('new')} ({src})")
+                continue
+
+            action = fix.get("action")
+            if action == "merge":
+                print(
+                    f"{LOG_PREFIX}     merge conv {fix.get('from_conv')} → {fix.get('to_conv')} "
+                    f"({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+            if action == "split":
+                print(
+                    f"{LOG_PREFIX}     split conv {fix.get('original_conv')} at seg {fix.get('split_at_segment')} "
+                    f"→ conv {fix.get('new_conv_id')} ({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+            if action == "reclassify_as_commentary":
+                print(
+                    f"{LOG_PREFIX}     reclassify conv {fix.get('from_conv')} → commentary "
+                    f"({fix.get('segments_moved')} segs) ({src})"
+                )
+                continue
+
+            field = fix.get("field", "unknown_field")
+            if "old" in fix or "new" in fix:
+                print(f"{LOG_PREFIX}     {field}: {fix.get('old')} → {fix.get('new')} ({src})")
+            else:
+                print(f"{LOG_PREFIX}     {field}: {fix} ({src})")
     if flags_not_fixed:
         print(f"{LOG_PREFIX}   Flags not fixed: {len(flags_not_fixed)}")
         for flag in flags_not_fixed:
             print(f"{LOG_PREFIX}     {flag[:120]}")
-
-    validation_errors = validate_conversations_output(patched)
-    if validation_errors:
-        raise RuntimeError(
-            "Post-patch conversations schema validation failed: "
-            + "; ".join(validation_errors[:3])
-        )
 
     if not dry_run:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -583,7 +912,6 @@ def patch_file(
         "verdict": verdict,
         "fixes": len(fixes_applied),
         "flags": len(flags_not_fixed),
-        "validation_errors": len(validation_errors),
     }
 
 
@@ -619,13 +947,65 @@ def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "06c.patched"
 
 
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
 def compute_output_path(input_path: Path, output_dir: Path) -> Path:
     """Compute output path — same *.conversations.json pattern as stage 06."""
     stem = input_path.stem
     # Ensure the output has .conversations.json extension
     if stem.endswith(".conversations"):
-        return output_dir / f"{stem}.json"
-    return output_dir / f"{stem}.conversations.json"
+        filename = f"{stem}.json"
+    else:
+        filename = f"{stem}.conversations.json"
+    return output_dir / filename
+
+
+def compute_output_path_with_layout(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
+    canonical = compute_output_path(input_path, output_dir)
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / canonical.name
+        except ValueError:
+            pass
+    return canonical
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path_with_layout(
+        input_path,
+        preferred_output_dir,
+        input_root=input_root,
+    )
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
 
 
 def find_verification_for(
@@ -704,6 +1084,20 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
+        "--input-root",
+        help=(
+            "Root directory for source/manifest runs "
+            "(default: data/06.video-type, or data/test/06.video-type with --test)"
+        ),
+    )
+    parser.add_argument(
+        "--verification-root",
+        help=(
+            "Root directory containing Stage 06b verification reports "
+            "(default: data/06b.verify, or data/test/06b.verify with --test)"
+        ),
+    )
+    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/06c.patched/)"
     )
@@ -733,6 +1127,24 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
+        "--allow-reject",
+        action="store_true",
+        help="Allow patching when 06b verdict is REJECT (apply high-confidence deterministic fixes anyway)"
+    )
+    parser.add_argument(
+        "--allow-invalid-verification",
+        action="store_true",
+        help="Allow patching with schema-invalid 06b verification reports (legacy fallback; unsafe)",
+    )
+    parser.add_argument(
+        "--apply-mixed-speaker-other-flags",
+        action="store_true",
+        help=(
+            "Apply deterministic mixed-speaker other_flag demotions "
+            "(set cited run-on/merged segments to speaker_role=unknown)."
+        ),
+    )
+    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging"
@@ -740,49 +1152,77 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    if args.test:
+        in_root = resolve_root_path(args.input_root, test_s06_root())
+        verify_root = resolve_root_path(args.verification_root, test_s06b_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+    else:
+        in_root = resolve_root_path(args.input_root, s06_root())
+        verify_root = resolve_root_path(args.verification_root, s06b_root())
+        out_root = Path(args.output) if args.output else output_root()
+
     # Route to appropriate mode
     if args.test:
         _run_directory(
-            test_s06_root(), test_s06b_root(), test_output_root(), args
+            in_root,
+            verify_root,
+            out_root,
+            args,
+            verification_input_root=in_root,
         )
     elif args.manifest:
-        _run_manifest(args)
+        _run_manifest(args, in_root, verify_root, out_root)
     elif args.input:
-        _run_input(args)
+        _run_input(args, in_root, verify_root, out_root)
     elif args.sources:
-        _run_sources(args)
+        _run_sources(args, in_root, verify_root, out_root)
     elif args.name:
-        _run_named_source(args)
+        _run_named_source(args, in_root, verify_root, out_root)
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
 
 
-def _run_input(args) -> None:
+def _run_input(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     input_path = Path(args.input)
     if not input_path.exists():
         input_path = repo_root() / args.input
     if not input_path.exists():
         raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
 
     if input_path.is_file():
-        out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path(input_path, out_dir)
+        out_dir = Path(args.output) if args.output else out_base
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root=in_base)
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        verification_path = find_verification_for(input_path, s06_root(), s06b_root())
-        result = patch_file(input_path, verification_path, output_path, dry_run=args.dry_run)
+        verification_path = find_verification_for(input_path, in_base, verify_root)
+        result = patch_file(
+            input_path,
+            verification_path,
+            output_path,
+            dry_run=args.dry_run,
+            allow_reject=args.allow_reject,
+            allow_invalid_verification=args.allow_invalid_verification,
+            apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+        )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, "
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
         return
 
-    out_dir = Path(args.output) if args.output else output_root()
-    _run_directory(input_path, s06b_root(), out_dir, args)
+    out_dir = Path(args.output) if args.output else out_base
+    _run_directory(
+        input_path,
+        verify_root,
+        out_dir,
+        args,
+        verification_input_root=in_base,
+    )
 
 
-def _run_sources(args) -> None:
+def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     sources_path = repo_root() / args.sources
     if not sources_path.exists():
         raise SystemExit(f"Sources file not found: {sources_path}")
@@ -791,22 +1231,39 @@ def _run_sources(args) -> None:
     total_files = 0
 
     for src_name, _ in parse_sources_file(sources_path):
-        src_in_dir = s06_root() / src_name
+        src_in_dir = in_base / src_name
         if not src_in_dir.exists():
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
 
-        src_s06b_dir = s06b_root() / src_name
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
 
         for input_file in files:
-            output_file = compute_output_path(input_file, src_out_dir)
-            if output_file.exists() and not args.overwrite:
+            preferred_output = compute_output_path_with_layout(
+                input_file,
+                src_out_dir,
+                input_root=src_in_dir,
+            )
+            existing_output = find_existing_output_path(
+                input_file,
+                src_out_dir,
+                output_root_dir=out_base,
+                input_root=src_in_dir,
+            )
+            if existing_output and not args.overwrite:
                 continue
             try:
-                verification_path = find_verification_for(input_file, s06_root(), s06b_root())
-                result = patch_file(input_file, verification_path, output_file, dry_run=args.dry_run)
+                verification_path = find_verification_for(input_file, in_base, verify_root)
+                result = patch_file(
+                    input_file,
+                    verification_path,
+                    preferred_output,
+                    dry_run=args.dry_run,
+                    allow_reject=args.allow_reject,
+                    allow_invalid_verification=args.allow_invalid_verification,
+                    apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+                )
                 total_fixes += result.get("fixes", 0)
                 total_files += 1
             except Exception as e:
@@ -815,7 +1272,7 @@ def _run_sources(args) -> None:
     print(f"\n{LOG_PREFIX} Done. Patched {total_files} files, {total_fixes} total fixes")
 
 
-def _run_manifest(args) -> None:
+def _run_manifest(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     """Run for videos listed in a manifest file."""
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -826,24 +1283,37 @@ def _run_manifest(args) -> None:
     sources_map = load_manifest_sources(manifest_path)
 
     for src_name, vid_ids in sorted(sources_map.items()):
-        src_in_dir = s06_root() / src_name
+        src_in_dir = in_base / src_name
         if not src_in_dir.exists():
             print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
             continue
 
-        src_s06b_dir = s06b_root() / src_name
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
         if not files:
             print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
             continue
 
         print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
-        _run_directory_with_files(files, src_in_dir, s06b_root(), src_out_dir, args)
+        _run_directory_with_files(
+            files,
+            src_in_dir,
+            verify_root,
+            src_out_dir,
+            args,
+            output_root_dir=out_base,
+            verification_input_root=in_base,
+        )
 
 
 def _run_directory_with_files(
-    files: List[Path], in_dir: Path, verify_dir: Path, out_dir: Path, args
+    files: List[Path],
+    in_dir: Path,
+    verify_dir: Path,
+    out_dir: Path,
+    args,
+    output_root_dir: Optional[Path] = None,
+    verification_input_root: Optional[Path] = None,
 ) -> None:
     """Process a specific list of files."""
     if not files:
@@ -870,9 +1340,19 @@ def _run_directory_with_files(
             skipped += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path_with_layout(
+            input_file,
+            out_dir,
+            input_root=in_dir,
+        )
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root=in_dir,
+        )
 
-        if output_file.exists() and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
@@ -882,8 +1362,20 @@ def _run_directory_with_files(
         save_state(state_path, state)
 
         try:
-            verification_path = find_verification_for(input_file, s06_root(), verify_dir)
-            result = patch_file(input_file, verification_path, output_file, dry_run=args.dry_run)
+            verification_path = find_verification_for(
+                input_file,
+                verification_input_root or in_dir,
+                verify_dir,
+            )
+            result = patch_file(
+                input_file,
+                verification_path,
+                preferred_output,
+                dry_run=args.dry_run,
+                allow_reject=args.allow_reject,
+                allow_invalid_verification=args.allow_invalid_verification,
+                apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+            )
             processed += 1
             consecutive_failures = 0
             total_fixes += result.get("fixes", 0)
@@ -921,24 +1413,42 @@ def _run_directory_with_files(
             sys.exit(1)
 
 
-def _run_named_source(args) -> None:
+def _run_named_source(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     """Run for a named source (from pipeline: ./06c.patch source_name url)."""
     name = args.name
-    in_dir = s06_root() / name
+    in_dir = in_base / name
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 
-    verify_dir = s06b_root() / name
-    out_dir = Path(args.output) if args.output else output_root() / name
-    _run_directory(in_dir, verify_dir, out_dir, args)
+    out_dir = Path(args.output) if args.output else out_base / name
+    _run_directory(
+        in_dir,
+        verify_root,
+        out_dir,
+        args,
+        verification_input_root=in_base,
+    )
 
 
-def _run_directory(in_dir: Path, verify_dir: Path, out_dir: Path, args) -> None:
+def _run_directory(
+    in_dir: Path,
+    verify_dir: Path,
+    out_dir: Path,
+    args,
+    verification_input_root: Optional[Path] = None,
+) -> None:
     files = find_input_files(in_dir)
     if not files:
         print(f"{LOG_PREFIX} No .conversations.json files found in: {in_dir}")
         return
-    _run_directory_with_files(files, in_dir, verify_dir, out_dir, args)
+    _run_directory_with_files(
+        files,
+        in_dir,
+        verify_dir,
+        out_dir,
+        args,
+        verification_input_root=verification_input_root,
+    )
 
 
 if __name__ == "__main__":

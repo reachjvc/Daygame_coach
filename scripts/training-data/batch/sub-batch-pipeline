@@ -19,10 +19,17 @@
 #   D) Create symlink view for browsing:
 #      ./sub-batch-pipeline P001.1 --view
 #
-#   E) Mark sub-batch as approved:
+#   E) Run validations for a sub-batch manifest:
+#      ./sub-batch-pipeline P001.1 --validate
+#      ./sub-batch-pipeline P001.1 --validate --validate-deep
+#      ./sub-batch-pipeline P001.1 --validate --check-stage05-audio --check-stage08-report --check-stage09-chunks
+#      ./sub-batch-pipeline P001.1 --validate --emit-stage-reports
+#      # (also validates emitted stage reports + writes readiness summary)
+#
+#   F) Mark sub-batch as approved:
 #      ./sub-batch-pipeline P001.1 --approve
 #
-#   F) Show batch-level status:
+#   G) Show batch-level status:
 #      ./sub-batch-pipeline P001 --status
 
 set -euo pipefail
@@ -32,6 +39,8 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
 cd "$REPO_ROOT"
 
 BATCHES_DIR="$REPO_ROOT/docs/pipeline/batches"
+WAIVERS_DIR="$REPO_ROOT/docs/pipeline/waivers"
+QUARANTINE_DIR="$REPO_ROOT/data/validation/quarantine"
 DATA_DIR="$REPO_ROOT/data"
 VIEWS_DIR="$REPO_ROOT/batch-views"
 
@@ -49,7 +58,7 @@ declare -A STAGE_DIRS=(
 )
 # Stages with nested source/video folder structure
 NESTED_STAGES=("01" "02" "03" "04" "05")
-# Stages with flat file structure (no source subfolders)
+# Stages that often write source-scoped flat outputs (data/<stage>/<source>/*.json) in --manifest mode
 FLAT_STAGES=("06" "06b" "06c" "07")
 
 declare -A STAGE_SCRIPTS=(
@@ -80,6 +89,32 @@ DRY_RUN=false
 STAGE=""
 SUB_BATCH_ID=""
 BATCH_ID=""
+VALIDATE_STAGE08_REPORT=false
+VALIDATE_STAGE09_CHUNKS=false
+VALIDATE_STAGE05_AUDIO=false
+VALIDATE_CHECK_STAGE10=false
+VALIDATE_QUALITY_GATE=false
+VALIDATE_WAIVER_FILE=""
+VALIDATE_EMIT_STAGE_REPORTS=false
+VALIDATE_STAGE_REPORTS_DIR=""
+VALIDATE_SOURCE=""
+VALIDATE_STAGE07_GATE_POLICY="approve_only"
+VALIDATE_QUARANTINE_FILE=""
+VALIDATE_EMIT_QUARANTINE=false
+VALIDATE_QUARANTINE_OUT=""
+VALIDATE_QUARANTINE_LEVEL="error"
+VALIDATE_READINESS_BLOCK_REVIEW=false
+VALIDATE_READINESS_ALLOW_REVIEW=false
+VALIDATE_READINESS_MAX_WARNING_CHECKS=""
+VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
+VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE=()
+VALIDATE_SEMANTIC_MIN_FRESH=""
+VALIDATE_SEMANTIC_MIN_MEAN_OVERALL=""
+VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE=""
+VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE=""
+VALIDATE_SEMANTIC_FAIL_ON_STALE=false
+RUN_QUARANTINE_FILE=""
+RUN_VERIFICATION_GATE_POLICY="approve_only"
 
 usage() {
   cat <<'EOF'
@@ -89,11 +124,54 @@ Usage:
   ./sub-batch-pipeline P001.1 --stage 06         Run stage 06 only
   ./sub-batch-pipeline P001.1 --stage 06b        Run stage 06b only
   ./sub-batch-pipeline P001.1 --view             Create symlink view in batch-views/P001/P001.1/
+  ./sub-batch-pipeline P001.1 --validate         Run cross-stage validators for this sub-batch
+  ./sub-batch-pipeline P001.1 --validate --validate-deep
+                                                  Validate + require Stage 05 audio, Stage 08 report, and Stage 09 chunks checks
   ./sub-batch-pipeline P001.1 --approve          Mark as approved
   ./sub-batch-pipeline P001 --status             Batch-level status
 
 Options:
-  --dry-run    Preview without running
+  --dry-run                Preview without running
+  --check-stage08-report   With --validate, require Stage 08 manifest report integrity
+  --check-stage09-chunks   With --validate, require Stage 09 chunk payload integrity
+  --check-stage05-audio    With --validate, require Stage 05 audio_features payload integrity
+  --check-stage10          With --validate, run Stage 10 dry-run gate check (no DB writes)
+  --validate-deep          Shortcut: --check-stage05-audio + --check-stage08-report + --check-stage09-chunks
+  --quality-gate           With --validate, apply strict quality gate defaults (deep checks + readiness + semantic)
+  --waiver-file <path>     With --validate, apply manifest-validator waivers file
+                           Default auto-detect: docs/pipeline/waivers/<subbatch>.json
+  --stage07-gate-policy <p>
+                           With --validate, gate policy: approve_only (default), allow_flag, or reverify_patched
+                           reverify_patched requires baseline 06b.verify artifacts plus 06b.reverify verdicts
+  --allow-flag             Alias for --stage07-gate-policy allow_flag
+  --verification-gate-policy <p>
+                           With --stage 07, gate policy for 07.content: approve_only (default), allow_flag, or reverify_patched
+                           reverify_patched still requires baseline 06b.verify artifacts; it adds 06b.reverify gating on top
+  --quarantine-file <path> With --stage 07, skip quarantined videos; with --validate, treat listed videos as quarantined
+                           Default auto-detect: data/validation/quarantine/<subbatch>.json (for both modes)
+                           In --stage 07 + reverify_patched mode, missing auto quarantine is synthesized from 06b.reverify REJECT verdicts
+  --source <name>          With --validate, only validate one source from the manifest
+  --emit-stage-reports     With --validate, emit per-video stage reports and validate contract coverage
+  --stage-reports-dir <p>  Output directory for --emit-stage-reports
+  --emit-quarantine        With --validate, write quarantine list from issues
+  --quarantine-out <p>     Output path for --emit-quarantine
+  --quarantine-level <p>   With --validate, quarantine threshold: error (default) or warning
+  --block-review-ingest    Deprecated alias (READY-only is now the default)
+  --allow-review-ingest    With --validate+--emit-stage-reports, allow REVIEW as ingest-ready
+  --max-warning-checks <n> With --validate+--emit-stage-reports, BLOCKED when warnings exceed n
+  --block-warning-check <c>
+                           With --validate+--emit-stage-reports, escalate this warning check to BLOCKED (repeatable)
+  --max-warning-check <s>  With --validate+--emit-stage-reports, set per-check warning budget
+                           Format: <check>=<n> (or <check>:<n>), repeatable
+  --semantic-min-fresh <n>
+                           With --validate, semantic gate requires at least n fresh semantic judgements
+  --semantic-min-mean-overall <n>
+                           With --validate, semantic gate requires mean overall score >= n (0..100)
+  --semantic-max-major-error-rate <n>
+                           With --validate, semantic gate requires major_error_rate <= n (0..1)
+  --semantic-max-hallucination-rate <n>
+                           With --validate, semantic gate requires hallucination_rate <= n (0..1)
+  --semantic-fail-on-stale With --validate, semantic gate fails if stale semantic judgements exist
 
 View structure:
   batch-views/<batch>/<subbatch>/<stage>/<source>/<video>/
@@ -133,6 +211,127 @@ load_manifest_ids() {
   grep -v "^#" "$manifest" | while read -r line; do
     extract_video_id "$line"
   done
+}
+
+# Build quarantine JSON from Stage 06b.reverify REJECT verdicts for a manifest.
+emit_reverify_quarantine() {
+  local manifest="$1"
+  local out_path="$2"
+  local reverify_root="$REPO_ROOT/data/06b.reverify"
+
+  python3 - "$manifest" "$out_path" "$reverify_root" <<'PYEOF'
+import json
+import re
+import sys
+import time
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
+manifest_path = Path(sys.argv[1])
+out_path = Path(sys.argv[2])
+reverify_root = Path(sys.argv[3])
+
+video_re = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+def parse_manifest(path: Path) -> List[Tuple[str, str]]:
+    entries: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        source = parts[0].strip()
+        folder = parts[1].strip()
+        match = video_re.search(folder)
+        if not match:
+            continue
+        entries.append((source, match.group(1)))
+    return entries
+
+def pick_verification_path(candidates: List[Path], source: str) -> Optional[Path]:
+    if not candidates:
+        return None
+    source_tag = f"/{source}/"
+    for path in candidates:
+        normalized = str(path).replace("\\", "/")
+        if source_tag in normalized:
+            return path
+    return candidates[0]
+
+def index_verification_paths(paths) -> Dict[str, List[Path]]:
+    idx: Dict[str, List[Path]] = {}
+    for path in sorted(paths):
+        match = video_re.search(path.name)
+        if not match:
+            continue
+        idx.setdefault(match.group(1), []).append(path)
+    return idx
+
+entries = parse_manifest(manifest_path)
+source_index: Dict[str, Dict[str, List[Path]]] = {}
+root_flat_index: Dict[str, List[Path]] = {}
+if reverify_root.exists():
+    for source in sorted({src for src, _ in entries}):
+        source_dir = reverify_root / source
+        if source_dir.exists():
+            source_index[source] = index_verification_paths(source_dir.rglob("*.verification.json"))
+        else:
+            source_index[source] = {}
+    root_flat_index = index_verification_paths(reverify_root.glob("*.verification.json"))
+
+reject_video_ids: List[str] = []
+reject_videos: List[Dict[str, object]] = []
+for source, video_id in entries:
+    candidates = source_index.get(source, {}).get(video_id, [])
+    if not candidates:
+        candidates = root_flat_index.get(video_id, [])
+    path = pick_verification_path(candidates, source)
+    if path is None:
+        continue
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        continue
+    verdict_raw = payload.get("verdict") or payload.get("overall_verdict")
+    verdict = str(verdict_raw or "").strip().upper()
+    if verdict == "REJECT":
+        reject_video_ids.append(video_id)
+        reject_videos.append({
+            "video_id": video_id,
+            "source": source,
+            "checks": ["reverify_reject"],
+            "reasons": [{
+                "severity": "error",
+                "check": "reverify_reject",
+                "message": "Stage 06b.reverify verdict is REJECT",
+            }],
+            "verification": str(path),
+        })
+
+reject_video_ids = sorted(set(reject_video_ids))
+reject_videos.sort(key=lambda row: str(row.get("video_id", "")))
+
+payload = {
+    "version": 1,
+    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "manifest": str(manifest_path),
+    "source_filter": None,
+    "quarantine_level": "error",
+    "video_count": len(entries),
+    "quarantined_video_count": len(reject_video_ids),
+    "quarantined_video_ids": reject_video_ids,
+    "videos": reject_videos,
+    "generator": "sub-batch-pipeline:reverify",
+}
+out_path.parent.mkdir(parents=True, exist_ok=True)
+out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(
+    f"[sub-batch-pipeline] Reverify quarantine emitted: {out_path} "
+    f"(rejected={len(reject_video_ids)}, manifest_videos={len(entries)})"
+)
+PYEOF
 }
 
 # List all batches
@@ -226,7 +425,8 @@ show_sub_batch_status() {
         while IFS= read -r -d '' f; do
           found_file=true
           break
-        done < <(find "$DATA_DIR/$stage_dir" -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+        # Follow symlinks when the stage dir itself is a symlink (common in worktree-based experiments).
+        done < <(find -L "$DATA_DIR/$stage_dir" -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
 
       if [[ "$found_file" == true ]]; then
@@ -342,13 +542,41 @@ run_stage() {
   fi
 
   local stage_dir="${STAGE_DIRS[$stage]}"
+  local -a stage_args=(--manifest "$manifest")
+  local run_reverify=false
+  local reverify_script="$REPO_ROOT/scripts/training-data/06b.reverify"
+  local -a reverify_args=(--manifest "$manifest")
+  local quarantine_file=""
+  local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
 
   echo ""
   echo "=== Running Stage $stage for $sub_id ==="
   echo ""
 
+  if [[ "$stage" == "07" ]]; then
+    stage_args+=(--verification-gate-policy "$RUN_VERIFICATION_GATE_POLICY")
+    if [[ "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]]; then
+      run_reverify=true
+    fi
+    quarantine_file="$RUN_QUARANTINE_FILE"
+    if [[ -z "$quarantine_file" ]]; then
+      if [[ -f "$auto_quarantine" ]]; then
+        quarantine_file="$auto_quarantine"
+      fi
+    fi
+  fi
+
   if [[ "$DRY_RUN" == true ]]; then
-    echo "[DRY RUN] Would run: $script --manifest $manifest"
+    if [[ "$run_reverify" == true ]]; then
+      echo "[DRY RUN] Would run pre-gate reverify: $reverify_script ${reverify_args[*]}"
+    fi
+    if [[ "$stage" == "07" && -z "$quarantine_file" && "$run_reverify" == true ]]; then
+      echo "[DRY RUN] Would synthesize quarantine from reverify verdicts: $auto_quarantine"
+      stage_args+=(--quarantine-file "$auto_quarantine")
+    elif [[ "$stage" == "07" && -n "$quarantine_file" ]]; then
+      stage_args+=(--quarantine-file "$quarantine_file")
+    fi
+    echo "[DRY RUN] Would run: $script ${stage_args[*]}"
     return 0
   fi
 
@@ -374,8 +602,40 @@ with open(status_file, "w") as f:
 PYEOF
   fi
 
+  # Optional pre-gate reverify pass
+  if [[ "$run_reverify" == true ]]; then
+    if [[ ! -x "$reverify_script" ]]; then
+      echo "ERROR: Missing executable reverify script: $reverify_script"
+      return 1
+    fi
+    echo "Running Stage 06b.reverify prerequisite (policy=reverify_patched)"
+    if ! "$reverify_script" "${reverify_args[@]}"; then
+      echo "Stage 06b.reverify: FAILED"
+      return 1
+    fi
+    echo "Stage 06b.reverify: COMPLETE"
+
+    if [[ -z "$quarantine_file" ]]; then
+      echo "Synthesizing quarantine file from 06b.reverify REJECT verdicts: $auto_quarantine"
+      if emit_reverify_quarantine "$manifest" "$auto_quarantine"; then
+        quarantine_file="$auto_quarantine"
+      else
+        echo "WARNING: Failed to synthesize reverify quarantine; continuing without quarantine file"
+      fi
+    fi
+  fi
+
+  if [[ "$stage" == "07" ]]; then
+    if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
+      stage_args+=(--quarantine-file "$quarantine_file")
+      echo "Using quarantine file: $quarantine_file"
+    elif [[ -n "$quarantine_file" ]]; then
+      echo "WARNING: Quarantine file not found, ignoring: $quarantine_file"
+    fi
+  fi
+
   # Run the stage
-  if "$script" --manifest "$manifest"; then
+  if "$script" "${stage_args[@]}"; then
     echo ""
     echo "Stage $stage: COMPLETE"
 
@@ -412,6 +672,10 @@ create_stage_view() {
   local pattern="${STAGE_PATTERNS[$stage]}"
   local manifest="$BATCHES_DIR/${sub_id}.txt"
   local view_base="$VIEWS_DIR/$batch_id/$sub_id/$stage_dir"
+  local stage_data_root="$DATA_DIR/$stage_dir"
+  if [[ -L "$stage_data_root" ]]; then
+    stage_data_root=$(realpath "$stage_data_root")
+  fi
 
   # Clear existing view for this stage
   rm -rf "$view_base" 2>/dev/null || true
@@ -437,11 +701,43 @@ create_stage_view() {
 
     local found_file=false
 
-    if is_nested_stage "$stage"; then
-      # Nested stage: data/<stage>/<source>/<video>/
-      local src_video_dir="$DATA_DIR/$stage_dir/$source/$folder"
+	    if is_nested_stage "$stage"; then
+	      # Nested stage: data/<stage>/<source>/<video>/
+	      local src_video_dir="$stage_data_root/$source/$folder"
+	      if [[ ! -d "$src_video_dir" && -d "$stage_data_root/$source" ]]; then
+	        # Folder names in manifests are display-only and can drift (unicode punctuation, title edits).
+	        # Resolve nested stage dirs by video_id when the exact folder is missing.
+	        while IFS= read -r -d '' d; do
+	          local bn
+	          bn=$(basename "$d")
+	          local alt_id
+	          alt_id=$(extract_video_id "$bn")
+	          if [[ -n "$alt_id" && "$alt_id" == "$vid_id" ]]; then
+	            src_video_dir="$d"
+	            break
+	          fi
+	        done < <(find "$stage_data_root/$source" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+	      fi
+	      if [[ -d "$src_video_dir" ]]; then
+	        # Symlink all matching files in the video folder
+	        while IFS= read -r -d '' f; do
+	          found_file=true
+          local link_name=$(basename "$f")
+          local rel_target
+          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
+          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
+          ((++link_count))
+        done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
+      fi
+    else
+      # Source-scoped flat stage (06-07 family):
+      # - Preferred (future/canonical): data/<stage>/<source>/<video>/
+      # - Current (manifest runs):      data/<stage>/<source>/*.json
+      # - Legacy (ad-hoc runs):         data/<stage>/*.json
+
+      # 1) Source-video layout (if present)
+      local src_video_dir="$stage_data_root/$source/$folder"
       if [[ -d "$src_video_dir" ]]; then
-        # Symlink all matching files in the video folder
         while IFS= read -r -d '' f; do
           found_file=true
           local link_name=$(basename "$f")
@@ -451,11 +747,10 @@ create_stage_view() {
           ((++link_count))
         done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
       fi
-    else
-      # Stage 06-07 legacy compatibility:
-      # support source-flat, source-video, and root-flat layouts.
-      local source_stage_dir="$DATA_DIR/$stage_dir/$source"
-      if [[ -d "$source_stage_dir" ]]; then
+
+      # 2) Source-flat layout (if present)
+      local src_source_dir="$stage_data_root/$source"
+      if [[ "$found_file" == false && -d "$src_source_dir" ]]; then
         while IFS= read -r -d '' f; do
           found_file=true
           local link_name=$(basename "$f")
@@ -463,11 +758,11 @@ create_stage_view() {
           rel_target=$(realpath --relative-to="$video_view_dir" "$f")
           ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
           ((++link_count))
-        done < <(find "$source_stage_dir" -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+        done < <(find "$src_source_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
 
-      # Fallback for root-flat outputs.
-      if [[ "$found_file" == false ]]; then
+      # 3) Root-flat fallback
+      if [[ "$found_file" == false && -d "$stage_data_root" ]]; then
         while IFS= read -r -d '' f; do
           found_file=true
           local link_name=$(basename "$f")
@@ -475,7 +770,7 @@ create_stage_view() {
           rel_target=$(realpath --relative-to="$video_view_dir" "$f")
           ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
           ((++link_count))
-        done < <(find "$DATA_DIR/$stage_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
+        done < <(find "$stage_data_root" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
     fi
 
@@ -571,6 +866,228 @@ approve_sub_batch() {
   echo "Approved: $sub_id"
 }
 
+validate_sub_batch() {
+  local sub_id="$1"
+  local manifest="$BATCHES_DIR/${sub_id}.txt"
+  if [[ ! -f "$manifest" ]]; then
+    error "Sub-batch manifest not found: $manifest"
+  fi
+
+  local rc=0
+  local -a validate_args=(--manifest "$manifest")
+  local -a batch_report_args=()
+  local -a stage_report_check_args=()
+  local stage_reports_dir=""
+  local waiver_file="$VALIDATE_WAIVER_FILE"
+  local quarantine_file="$VALIDATE_QUARANTINE_FILE"
+  validate_args+=(--stage07-gate-policy "$VALIDATE_STAGE07_GATE_POLICY")
+  validate_args+=(--quarantine-level "$VALIDATE_QUARANTINE_LEVEL")
+
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    validate_args+=(--source "$VALIDATE_SOURCE")
+    batch_report_args+=(--source "$VALIDATE_SOURCE")
+    stage_report_check_args+=(--source "$VALIDATE_SOURCE")
+  else
+    batch_report_args+=(--all)
+  fi
+
+  if [[ -z "$waiver_file" ]]; then
+    local auto_waiver="$WAIVERS_DIR/${sub_id}.json"
+    if [[ -f "$auto_waiver" ]]; then
+      waiver_file="$auto_waiver"
+      echo "Using auto-detected waiver file: $waiver_file"
+    fi
+  fi
+  if [[ -z "$quarantine_file" ]]; then
+    local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
+    if [[ -f "$auto_quarantine" ]]; then
+      quarantine_file="$auto_quarantine"
+      echo "Using auto-detected quarantine file: $quarantine_file"
+    fi
+  fi
+
+  if [[ "$VALIDATE_STAGE08_REPORT" == true ]]; then
+    validate_args+=(--check-stage08-report)
+  fi
+  if [[ "$VALIDATE_STAGE09_CHUNKS" == true ]]; then
+    validate_args+=(--check-stage09-chunks)
+  fi
+  if [[ "$VALIDATE_STAGE05_AUDIO" == true ]]; then
+    validate_args+=(--check-stage05-audio)
+  fi
+  if [[ -n "$waiver_file" ]]; then
+    validate_args+=(--waiver-file "$waiver_file")
+  fi
+  if [[ -n "$quarantine_file" ]]; then
+    validate_args+=(--quarantine-file "$quarantine_file")
+  fi
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    validate_args+=(--emit-stage-reports)
+    if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
+      if [[ "$VALIDATE_STAGE_REPORTS_DIR" = /* ]]; then
+        stage_reports_dir="$VALIDATE_STAGE_REPORTS_DIR"
+      else
+        stage_reports_dir="$REPO_ROOT/$VALIDATE_STAGE_REPORTS_DIR"
+      fi
+    else
+      if [[ -n "$VALIDATE_SOURCE" ]]; then
+        stage_reports_dir="$REPO_ROOT/data/validation/stage_reports/${sub_id}.${VALIDATE_SOURCE}"
+      else
+        stage_reports_dir="$REPO_ROOT/data/validation/stage_reports/$sub_id"
+      fi
+    fi
+  fi
+  if [[ -n "$VALIDATE_STAGE_REPORTS_DIR" ]]; then
+    validate_args+=(--stage-reports-dir "$VALIDATE_STAGE_REPORTS_DIR")
+  fi
+  if [[ "$VALIDATE_EMIT_QUARANTINE" == true ]]; then
+    validate_args+=(--emit-quarantine)
+  fi
+  if [[ -n "$VALIDATE_QUARANTINE_OUT" ]]; then
+    validate_args+=(--quarantine-out "$VALIDATE_QUARANTINE_OUT")
+  fi
+
+  echo ""
+  echo "=== Validations: $sub_id ==="
+  echo "Stage07 gate policy: $VALIDATE_STAGE07_GATE_POLICY"
+  if [[ -n "$quarantine_file" ]]; then
+    echo "Quarantine input file: $quarantine_file"
+  fi
+  if [[ "$VALIDATE_EMIT_QUARANTINE" == true || -n "$VALIDATE_QUARANTINE_OUT" ]]; then
+    echo "Quarantine: level=$VALIDATE_QUARANTINE_LEVEL out=${VALIDATE_QUARANTINE_OUT:-<default>}"
+  fi
+  if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
+    echo "Quality gate profile: strict"
+  fi
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    local readiness_policy_msg="Readiness policy: READY-only ingest"
+    if [[ "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+      readiness_policy_msg="Readiness policy: allow REVIEW ingest"
+    fi
+    if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+      readiness_policy_msg="$readiness_policy_msg, max_warning_checks=$VALIDATE_READINESS_MAX_WARNING_CHECKS"
+    fi
+    if [[ ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 ]]; then
+      readiness_policy_msg="$readiness_policy_msg, max_warning_checks_by_type=${VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[*]}"
+    fi
+    if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+      readiness_policy_msg="$readiness_policy_msg, block_warning_checks=${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[*]}"
+    fi
+    echo "$readiness_policy_msg"
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" || -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" || -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" || -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" || "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    local semantic_policy_msg="Semantic gate:"
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+      semantic_policy_msg="$semantic_policy_msg min_fresh=$VALIDATE_SEMANTIC_MIN_FRESH"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+      semantic_policy_msg="$semantic_policy_msg min_mean_overall=$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+      semantic_policy_msg="$semantic_policy_msg max_major_error_rate=$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE"
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+      semantic_policy_msg="$semantic_policy_msg max_hallucination_rate=$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE"
+    fi
+    if [[ "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+      semantic_policy_msg="$semantic_policy_msg fail_on_stale=true"
+    fi
+    echo "$semantic_policy_msg"
+  fi
+  if [[ "$VALIDATE_CHECK_STAGE10" == true ]]; then
+    echo "Stage 10 dry-run gate check: enabled"
+  fi
+  echo ""
+
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
+
+  if [[ "$VALIDATE_EMIT_STAGE_REPORTS" == true ]]; then
+    if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true ]]; then
+      stage_report_check_args+=(--block-review-ingest)
+    fi
+    if [[ "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+      stage_report_check_args+=(--allow-review-ingest)
+    fi
+    if [[ -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+      stage_report_check_args+=(--max-warning-checks "$VALIDATE_READINESS_MAX_WARNING_CHECKS")
+    fi
+    for rule in "${VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]}"; do
+      stage_report_check_args+=(--max-warning-check "$rule")
+    done
+    for chk in "${VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]}"; do
+      stage_report_check_args+=(--block-warning-check "$chk")
+    done
+
+    echo ""
+    echo "=== Stage Report Contract Validation ==="
+    echo ""
+    python3 "$REPO_ROOT/scripts/training-data/validation/validate_stage_report.py" \
+      --dir "$stage_reports_dir" \
+      --manifest "$manifest" \
+      "${stage_report_check_args[@]}" \
+      --emit-readiness-summary || rc=$?
+  fi
+
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+    batch_report_args+=(--semantic-min-fresh "$VALIDATE_SEMANTIC_MIN_FRESH")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+    batch_report_args+=(--semantic-min-mean-overall "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+    batch_report_args+=(--semantic-max-major-error-rate "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE")
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+    batch_report_args+=(--semantic-max-hallucination-rate "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE")
+  fi
+  if [[ "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    batch_report_args+=(--semantic-fail-on-stale)
+  fi
+
+  echo ""
+  echo "=== Batch Report (manifest-filtered) ==="
+  echo ""
+  python3 "$REPO_ROOT/scripts/training-data/validation/batch_report.py" "${batch_report_args[@]}" --manifest "$manifest" --batch-id "$sub_id" --no-write || rc=$?
+
+  if [[ "$VALIDATE_CHECK_STAGE10" == true ]]; then
+    local -a stage10_args=(--dry-run --manifest "$manifest")
+    local tsx_loader="$REPO_ROOT/node_modules/tsx/dist/loader.mjs"
+    if [[ -n "$VALIDATE_SOURCE" ]]; then
+      stage10_args+=(--source "$VALIDATE_SOURCE")
+    fi
+    if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
+      stage10_args+=(--quality-gate)
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+      stage10_args+=(--semantic-min-fresh "$VALIDATE_SEMANTIC_MIN_FRESH")
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+      stage10_args+=(--semantic-min-mean-overall "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL")
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+      stage10_args+=(--semantic-max-major-error-rate "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE")
+    fi
+    if [[ -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+      stage10_args+=(--semantic-max-hallucination-rate "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE")
+    fi
+    if [[ "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+      stage10_args+=(--semantic-fail-on-stale)
+    fi
+
+    echo ""
+    echo "=== Stage 10 Dry-Run Gate Check ==="
+    echo ""
+    if [[ ! -f "$tsx_loader" ]]; then
+      echo "ERROR: tsx loader not found: $tsx_loader"
+      rc=1
+    else
+      node --import "$tsx_loader" "$REPO_ROOT/scripts/training-data/10.ingest.ts" "${stage10_args[@]}" || rc=$?
+    fi
+  fi
+
+  return "$rc"
+}
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -596,6 +1113,245 @@ while [[ $# -gt 0 ]]; do
       ;;
     --approve)
       MODE="approve"
+      shift
+      ;;
+    --validate)
+      MODE="validate"
+      shift
+      ;;
+    --check-stage08-report)
+      VALIDATE_STAGE08_REPORT=true
+      shift
+      ;;
+    --check-stage09-chunks)
+      VALIDATE_STAGE09_CHUNKS=true
+      shift
+      ;;
+    --check-stage05-audio)
+      VALIDATE_STAGE05_AUDIO=true
+      shift
+      ;;
+    --check-stage10)
+      VALIDATE_CHECK_STAGE10=true
+      shift
+      ;;
+    --validate-deep)
+      VALIDATE_STAGE05_AUDIO=true
+      VALIDATE_STAGE08_REPORT=true
+      VALIDATE_STAGE09_CHUNKS=true
+      shift
+      ;;
+    --quality-gate)
+      VALIDATE_QUALITY_GATE=true
+      shift
+      ;;
+    --waiver-file)
+      [[ $# -lt 2 ]] && error "--waiver-file requires a path"
+      VALIDATE_WAIVER_FILE="$2"
+      shift 2
+      ;;
+    --waiver-file=*)
+      VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
+      shift
+      ;;
+    --stage07-gate-policy)
+      [[ $# -lt 2 ]] && error "--stage07-gate-policy requires a value"
+      VALIDATE_STAGE07_GATE_POLICY="$2"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" || "$VALIDATE_STAGE07_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
+      shift 2
+      ;;
+    --stage07-gate-policy=*)
+      VALIDATE_STAGE07_GATE_POLICY="${1#--stage07-gate-policy=}"
+      [[ "$VALIDATE_STAGE07_GATE_POLICY" == "approve_only" || "$VALIDATE_STAGE07_GATE_POLICY" == "allow_flag" || "$VALIDATE_STAGE07_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--stage07-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
+      shift
+      ;;
+    --verification-gate-policy)
+      [[ $# -lt 2 ]] && error "--verification-gate-policy requires a value"
+      RUN_VERIFICATION_GATE_POLICY="$2"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" || "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
+      shift 2
+      ;;
+    --verification-gate-policy=*)
+      RUN_VERIFICATION_GATE_POLICY="${1#--verification-gate-policy=}"
+      [[ "$RUN_VERIFICATION_GATE_POLICY" == "approve_only" || "$RUN_VERIFICATION_GATE_POLICY" == "allow_flag" || "$RUN_VERIFICATION_GATE_POLICY" == "reverify_patched" ]] \
+        || error "--verification-gate-policy must be one of: approve_only, allow_flag, reverify_patched"
+      shift
+      ;;
+    --quarantine-file)
+      [[ $# -lt 2 ]] && error "--quarantine-file requires a path"
+      RUN_QUARANTINE_FILE="$2"
+      VALIDATE_QUARANTINE_FILE="$2"
+      shift 2
+      ;;
+    --quarantine-file=*)
+      RUN_QUARANTINE_FILE="${1#--quarantine-file=}"
+      VALIDATE_QUARANTINE_FILE="${1#--quarantine-file=}"
+      shift
+      ;;
+    --allow-flag)
+      VALIDATE_STAGE07_GATE_POLICY="allow_flag"
+      RUN_VERIFICATION_GATE_POLICY="allow_flag"
+      shift
+      ;;
+    --source)
+      [[ $# -lt 2 ]] && error "--source requires a name"
+      VALIDATE_SOURCE="$2"
+      shift 2
+      ;;
+    --source=*)
+      VALIDATE_SOURCE="${1#--source=}"
+      shift
+      ;;
+    --emit-stage-reports)
+      VALIDATE_EMIT_STAGE_REPORTS=true
+      shift
+      ;;
+    --emit-quarantine)
+      VALIDATE_EMIT_QUARANTINE=true
+      shift
+      ;;
+    --stage-reports-dir)
+      [[ $# -lt 2 ]] && error "--stage-reports-dir requires a path"
+      VALIDATE_STAGE_REPORTS_DIR="$2"
+      shift 2
+      ;;
+    --stage-reports-dir=*)
+      VALIDATE_STAGE_REPORTS_DIR="${1#--stage-reports-dir=}"
+      shift
+      ;;
+    --quarantine-out)
+      [[ $# -lt 2 ]] && error "--quarantine-out requires a path"
+      VALIDATE_QUARANTINE_OUT="$2"
+      shift 2
+      ;;
+    --quarantine-out=*)
+      VALIDATE_QUARANTINE_OUT="${1#--quarantine-out=}"
+      shift
+      ;;
+    --quarantine-level)
+      [[ $# -lt 2 ]] && error "--quarantine-level requires a value"
+      VALIDATE_QUARANTINE_LEVEL="$2"
+      [[ "$VALIDATE_QUARANTINE_LEVEL" == "error" || "$VALIDATE_QUARANTINE_LEVEL" == "warning" ]] \
+        || error "--quarantine-level must be one of: error, warning"
+      shift 2
+      ;;
+    --quarantine-level=*)
+      VALIDATE_QUARANTINE_LEVEL="${1#--quarantine-level=}"
+      [[ "$VALIDATE_QUARANTINE_LEVEL" == "error" || "$VALIDATE_QUARANTINE_LEVEL" == "warning" ]] \
+        || error "--quarantine-level must be one of: error, warning"
+      shift
+      ;;
+    --block-review-ingest)
+      VALIDATE_READINESS_BLOCK_REVIEW=true
+      VALIDATE_READINESS_ALLOW_REVIEW=false
+      shift
+      ;;
+    --allow-review-ingest)
+      VALIDATE_READINESS_ALLOW_REVIEW=true
+      VALIDATE_READINESS_BLOCK_REVIEW=false
+      shift
+      ;;
+    --max-warning-checks)
+      [[ $# -lt 2 ]] && error "--max-warning-checks requires a value"
+      VALIDATE_READINESS_MAX_WARNING_CHECKS="$2"
+      [[ "$VALIDATE_READINESS_MAX_WARNING_CHECKS" =~ ^[0-9]+$ ]] \
+        || error "--max-warning-checks must be an integer >= 0"
+      shift 2
+      ;;
+    --max-warning-checks=*)
+      VALIDATE_READINESS_MAX_WARNING_CHECKS="${1#--max-warning-checks=}"
+      [[ "$VALIDATE_READINESS_MAX_WARNING_CHECKS" =~ ^[0-9]+$ ]] \
+        || error "--max-warning-checks must be an integer >= 0"
+      shift
+      ;;
+    --block-warning-check)
+      [[ $# -lt 2 ]] && error "--block-warning-check requires a value"
+      [[ -n "${2//[[:space:]]/}" ]] || error "--block-warning-check requires a non-empty value"
+      VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$2")
+      shift 2
+      ;;
+    --block-warning-check=*)
+      local_check="${1#--block-warning-check=}"
+      [[ -n "${local_check//[[:space:]]/}" ]] || error "--block-warning-check requires a non-empty value"
+      VALIDATE_READINESS_BLOCK_WARNING_CHECKS+=("$local_check")
+      shift
+      ;;
+    --max-warning-check)
+      [[ $# -lt 2 ]] && error "--max-warning-check requires a value"
+      local_rule="$2"
+      [[ -n "${local_rule//[[:space:]]/}" ]] || error "--max-warning-check requires a non-empty value"
+      if [[ ! "$local_rule" =~ .+[:=][0-9]+$ ]]; then
+        error "--max-warning-check must use '<check>=<n>' (or '<check>:<n>') with integer n >= 0"
+      fi
+      VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE+=("$local_rule")
+      shift 2
+      ;;
+    --max-warning-check=*)
+      local_rule="${1#--max-warning-check=}"
+      [[ -n "${local_rule//[[:space:]]/}" ]] || error "--max-warning-check requires a non-empty value"
+      if [[ ! "$local_rule" =~ .+[:=][0-9]+$ ]]; then
+        error "--max-warning-check must use '<check>=<n>' (or '<check>:<n>') with integer n >= 0"
+      fi
+      VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE+=("$local_rule")
+      shift
+      ;;
+    --semantic-min-fresh)
+      [[ $# -lt 2 ]] && error "--semantic-min-fresh requires a value"
+      VALIDATE_SEMANTIC_MIN_FRESH="$2"
+      [[ "$VALIDATE_SEMANTIC_MIN_FRESH" =~ ^[0-9]+$ ]] \
+        || error "--semantic-min-fresh must be an integer >= 0"
+      shift 2
+      ;;
+    --semantic-min-fresh=*)
+      VALIDATE_SEMANTIC_MIN_FRESH="${1#--semantic-min-fresh=}"
+      [[ "$VALIDATE_SEMANTIC_MIN_FRESH" =~ ^[0-9]+$ ]] \
+        || error "--semantic-min-fresh must be an integer >= 0"
+      shift
+      ;;
+    --semantic-min-mean-overall)
+      [[ $# -lt 2 ]] && error "--semantic-min-mean-overall requires a value"
+      VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="$2"
+      [[ "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-min-mean-overall must be numeric"
+      shift 2
+      ;;
+    --semantic-min-mean-overall=*)
+      VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="${1#--semantic-min-mean-overall=}"
+      [[ "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-min-mean-overall must be numeric"
+      shift
+      ;;
+    --semantic-max-major-error-rate)
+      [[ $# -lt 2 ]] && error "--semantic-max-major-error-rate requires a value"
+      VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="$2"
+      [[ "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-major-error-rate must be numeric"
+      shift 2
+      ;;
+    --semantic-max-major-error-rate=*)
+      VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="${1#--semantic-max-major-error-rate=}"
+      [[ "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-major-error-rate must be numeric"
+      shift
+      ;;
+    --semantic-max-hallucination-rate)
+      [[ $# -lt 2 ]] && error "--semantic-max-hallucination-rate requires a value"
+      VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="$2"
+      [[ "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-hallucination-rate must be numeric"
+      shift 2
+      ;;
+    --semantic-max-hallucination-rate=*)
+      VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="${1#--semantic-max-hallucination-rate=}"
+      [[ "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" =~ ^[0-9]+([.][0-9]+)?$ ]] \
+        || error "--semantic-max-hallucination-rate must be numeric"
+      shift
+      ;;
+    --semantic-fail-on-stale)
+      VALIDATE_SEMANTIC_FAIL_ON_STALE=true
       shift
       ;;
     --stage)
@@ -634,6 +1390,68 @@ if [[ -z "$SUB_BATCH_ID" ]]; then
   exit 1
 fi
 
+if [[ "$VALIDATE_CHECK_STAGE10" == true && "$MODE" != "validate" ]]; then
+  error "--check-stage10 requires --validate mode"
+fi
+
+if [[ "$VALIDATE_QUALITY_GATE" == true && "$MODE" != "validate" ]]; then
+  error "--quality-gate requires --validate mode"
+fi
+
+if [[ "$VALIDATE_QUALITY_GATE" == true ]]; then
+  VALIDATE_STAGE05_AUDIO=true
+  VALIDATE_STAGE08_REPORT=true
+  VALIDATE_STAGE09_CHUNKS=true
+  VALIDATE_EMIT_STAGE_REPORTS=true
+  VALIDATE_READINESS_BLOCK_REVIEW=true
+  VALIDATE_READINESS_ALLOW_REVIEW=false
+  if [[ -z "$VALIDATE_READINESS_MAX_WARNING_CHECKS" ]]; then
+    VALIDATE_READINESS_MAX_WARNING_CHECKS="3"
+  fi
+  if [[ ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -eq 0 ]]; then
+    VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE=(
+      "transcript_artifact=1"
+      "evidence_mismatch=0"
+      "evidence_not_on_referenced_segment=0"
+    )
+  fi
+  if [[ ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -eq 0 ]]; then
+    VALIDATE_READINESS_BLOCK_WARNING_CHECKS=()
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MIN_FRESH" ]]; then
+    VALIDATE_SEMANTIC_MIN_FRESH="5"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" ]]; then
+    VALIDATE_SEMANTIC_MIN_MEAN_OVERALL="75"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" ]]; then
+    VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE="0.20"
+  fi
+  if [[ -z "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" ]]; then
+    VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE="0.10"
+  fi
+  VALIDATE_SEMANTIC_FAIL_ON_STALE=true
+fi
+
+if [[ "$MODE" != "validate" ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || "$VALIDATE_READINESS_ALLOW_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+    error "Readiness policy flags require --validate mode"
+  fi
+  if [[ -n "$VALIDATE_SEMANTIC_MIN_FRESH" || -n "$VALIDATE_SEMANTIC_MIN_MEAN_OVERALL" || -n "$VALIDATE_SEMANTIC_MAX_MAJOR_ERROR_RATE" || -n "$VALIDATE_SEMANTIC_MAX_HALLUCINATION_RATE" || "$VALIDATE_SEMANTIC_FAIL_ON_STALE" == true ]]; then
+    error "Semantic gate flags require --validate mode"
+  fi
+fi
+
+if [[ "$MODE" == "validate" && "$VALIDATE_EMIT_STAGE_REPORTS" != true ]]; then
+  if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true || "$VALIDATE_READINESS_ALLOW_REVIEW" == true || -n "$VALIDATE_READINESS_MAX_WARNING_CHECKS" || ${#VALIDATE_READINESS_MAX_WARNING_CHECKS_BY_TYPE[@]} -gt 0 || ${#VALIDATE_READINESS_BLOCK_WARNING_CHECKS[@]} -gt 0 ]]; then
+    error "Readiness policy flags require --emit-stage-reports"
+  fi
+fi
+
+if [[ "$VALIDATE_READINESS_BLOCK_REVIEW" == true && "$VALIDATE_READINESS_ALLOW_REVIEW" == true ]]; then
+  error "--block-review-ingest and --allow-review-ingest are mutually exclusive"
+fi
+
 # Determine if this is a batch ID or sub-batch ID
 if is_sub_batch "$SUB_BATCH_ID"; then
   BATCH_ID=$(get_batch_id "$SUB_BATCH_ID")
@@ -667,6 +1485,12 @@ case "$MODE" in
       error "--approve requires a sub-batch ID (e.g., P001.1)"
     fi
     approve_sub_batch "$SUB_BATCH_ID"
+    ;;
+  validate)
+    if ! is_sub_batch "$SUB_BATCH_ID"; then
+      error "--validate requires a sub-batch ID (e.g., P001.1)"
+    fi
+    validate_sub_batch "$SUB_BATCH_ID"
     ;;
   *)
     # Default: show status

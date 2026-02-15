@@ -56,9 +56,9 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-SCHEMA_VERSION = "3.3.0"
-PIPELINE_VERSION = "06.video-type-v3.3"
-PROMPT_VERSION = "3.3.0"
+SCHEMA_VERSION = "3.5.0"
+PIPELINE_VERSION = "06.video-type-v3.5.2"  # v3.5.2: add conversation-level target participation labels
+PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
 
@@ -181,10 +181,10 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
         # When collapse is detected, check resolved segment roles for coach/target presence
         segment_roles = set(s.get("speaker_role", "unknown") for s in output_segments)
 
-        if "coach" not in roles and "coach" not in segment_roles:
+        if not (("coach" in roles or "student" in roles) or ("coach" in segment_roles or "student" in segment_roles)):
             results.append(ValidationResult(
                 "warning", "no_coach_speaker",
-                f"No speaker labeled as coach (even after collapse resolution). "
+                f"No speaker labeled as coach/student (even after collapse resolution). "
                 f"Global roles: {roles}, Segment roles: {sorted(segment_roles)}"
             ))
 
@@ -214,10 +214,10 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
             ))
     else:
         # Standard checks (no collapse)
-        if "coach" not in roles:
+        if "coach" not in roles and "student" not in roles:
             results.append(ValidationResult(
                 "warning", "no_coach_speaker",
-                f"No speaker labeled as coach. Roles found: {roles}"
+                f"No speaker labeled as coach/student. Roles found: {roles}"
             ))
 
         if video_type in ("infield", "compilation") and "target" not in roles:
@@ -262,6 +262,62 @@ def validate_output(output: Dict, input_segments: List[Dict]) -> List[Validation
         results.append(ValidationResult(
             "warning", "conversation_ids_not_sequential",
             f"Conversation IDs are not sequential 1..N: {conv_ids}"
+        ))
+
+    # --- 8. Fragment conversation sanity ---
+    # Catch common false splits: very short coach-only/student-only fragments.
+    if video_type in ("infield", "compilation"):
+        for conv_id, seg_ids in conv_segment_ids.items():
+            conv_segs = [s for s in output_segments if s.get("conversation_id") == conv_id]
+            if not conv_segs:
+                continue
+            c_start = min(float(s.get("start", 0.0)) for s in conv_segs)
+            c_end = max(float(s.get("end", 0.0)) for s in conv_segs)
+            c_dur = max(0.0, c_end - c_start)
+            c_roles = {str(s.get("speaker_role", "unknown")) for s in conv_segs}
+            has_target = "target" in c_roles
+            has_approacher = ("coach" in c_roles) or ("student" in c_roles)
+
+            if c_dur < 10.0 and (not has_target or not has_approacher):
+                results.append(ValidationResult(
+                    "warning", "fragment_conversation_suspect",
+                    f"Conversation {conv_id} is short ({c_dur:.1f}s) with roles={sorted(c_roles)}; "
+                    f"likely commentary/fragment split error"
+                ))
+
+    # --- 9. Opener attribution sanity ---
+    # If opener-like text is tagged as target, role assignment is likely inverted.
+    opener_re = re.compile(
+        r"\\b(excuse me|hey\\b|hi\\b|hello\\b|quick question|i just saw you|you looked really)\\b",
+        re.IGNORECASE,
+    )
+    for seg in output_segments:
+        if seg.get("conversation_id", 0) <= 0:
+            continue
+        if seg.get("segment_type") != "approach":
+            continue
+        text = str(seg.get("text", "") or "")
+        if not text:
+            continue
+        if opener_re.search(text) and seg.get("speaker_role") == "target":
+            sid = seg.get("id", "?")
+            cid = seg.get("conversation_id", "?")
+            snippet = text.strip().replace("\n", " ")[:80]
+            results.append(ValidationResult(
+                "warning", "opener_labeled_as_target",
+                f"Segment {sid} in conversation {cid} looks like an opener but speaker_role=target: '{snippet}'"
+            ))
+
+    # --- 10. Video type sanity vs conversation count ---
+    if video_type == "compilation" and len(conversations) <= 1:
+        results.append(ValidationResult(
+            "warning", "compilation_with_single_conversation",
+            f"Video labeled compilation but only {len(conversations)} conversation(s); possible infield"
+        ))
+    if video_type == "infield" and len(conversations) >= 2:
+        results.append(ValidationResult(
+            "warning", "infield_with_multiple_conversations",
+            f"Video labeled infield with {len(conversations)} conversations; verify not a compilation"
         ))
 
     return results
@@ -345,6 +401,23 @@ VIDEO TYPES:
    - Multiple approaches with breakdowns between
    - "As you saw..." followed by explanation
 
+VIDEO TYPE DECISION RULES (apply in order):
+1. Count DISTINCT approaches to different targets:
+   - 0 approaches => talking_head OR podcast
+   - 1 approach => infield (even with intro/outro commentary)
+   - 2+ approaches => compilation
+2. For 0-approach videos, use speaker dominance:
+   - One speaker >80% of segments => talking_head
+   - Balanced multi-speaker discussion => podcast
+3. Intro/outro commentary alone does NOT make a video "compilation".
+   - One long approach + short setup/debrief should still be "infield".
+
+CANONICAL EXAMPLES:
+- "7 Minute Pull" (one extended interaction + intro/outro) => infield
+- "10 approaches in one video" => compilation
+- "single-speaker theory breakdown" => talking_head
+- "balanced host/guest discussion" => podcast
+
 SPEAKER ROLES:
 
 1. "coach" - The person teaching/demonstrating
@@ -355,28 +428,33 @@ SPEAKER ROLES:
    - Commentary to camera between approaches
    - May reference teaching ("guys", "as you can see")
 
-2. "target" - Women being approached
+2. "student" - A coached student/participant (immersion program)
+   - May deliver openers and run an approach, but is not the instructor/coach
+   - Often receives feedback, practices drills, or gives student-style field reports
+   - If unsure, label as "other" (do NOT overuse "student")
+
+3. "target" - Women being approached
    - Responds to questions (short answers initially)
    - Asked about herself (not asking)
    - Gives name when asked
    - May laugh, show surprise, hesitation
    - Typically shorter turns than coach
 
-3. "voiceover" - Post-production narration
+4. "voiceover" - Post-production narration
    - Instructional tone disconnected from live action
    - No back-and-forth dialogue
    - Perfect sentences (not fragmented)
    - "Notice how he..." or "Watch what happens..."
 
-4. "other" - Background voices, friends, staff
+5. "other" - Background voices, friends, staff
    - Brief interjections
    - Not involved in approach
 
-5. "unknown" - Cannot determine with confidence
+6. "unknown" - Cannot determine with confidence
    - Mark as unknown if unsure
    - Flag for manual review
 
-6. "collapsed" - Pyannote merged multiple real speakers into this ID
+7. "collapsed" - Pyannote merged multiple real speakers into this ID
    - Shows BOTH coach AND target speech patterns
    - Per-segment roles provided via speaker_role_override in the segments array
 
@@ -402,22 +480,30 @@ CONVERSATION BOUNDARY RULES:
 - When uncertain: default to commentary (safer)
 - conversation_id must be sequential (1, 2, 3...)
 - Segments with same conversation_id must be contiguous
+- A valid conversation must usually be >=10 seconds and include BOTH approacher (coach/student) and target turns.
+- Coach/student-only fragments or ultra-short snippets (<10s, typically 2-3 segments) should default to commentary (conversation_id: 0), unless there is clear multi-turn target participation.
 
 CRITICAL RULES:
-1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the coach, NEVER the target
+1. The person who delivers approach OPENERS ("excuse me", "I just saw you", "you looked really cute") is ALWAYS the APPROACHER (coach OR student), NEVER the target
+   - If a speaker opens with "Hey, excuse me, hi", do NOT label that speaker as target.
 2. The person giving SHORT RESPONSES to questions is typically the target
 3. If unsure about a speaker, mark as "unknown" with low confidence - DO NOT GUESS
 4. Consider speech patterns across ALL segments, not just one or two
-5. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH coach AND target patterns (opens conversations AND gives short responses to questions), this indicates pyannote merged multiple speakers into one ID.
+5. In coaching videos with participants:
+   - Student/participant running the approach = "student" (never target)
+   - Main instructor analysis = "coach" (or "voiceover" if post-production narration)
+   - Do not mislabel students as targets simply because they are not the main instructor
+6. SPEAKER COLLAPSE DETECTION: If one speaker ID shows BOTH approacher patterns (coach/student: opens conversations, leads) AND target patterns (short responses), this indicates pyannote merged multiple speakers into one ID.
    When you detect this:
    a) In speaker_labels: Set that speaker's role to "collapsed" with confidence 0.3 and reasoning starting with "mixed_diarization_error: " followed by a brief description
    b) In segments: For EACH segment from the collapsed speaker, add a "speaker_role_override" field:
       - "coach" if the segment delivers an opener, compliment, cold read, or camera commentary
+      - "student" if the segment is a coached participant running an approach/drill (not the instructor)
       - "target" if the segment is a short response to a question, gives personal info when asked, or reacts to the coach
       - "unknown" if you genuinely cannot determine from context
    c) Only add speaker_role_override to segments from collapsed speakers. Omit it for all other segments.
-6. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
-7. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
+7. If video_type is "talking_head" or "podcast": ALL segments must be "commentary" with conversation_id 0
+8. If video_type is "infield" or "compilation": classify each segment as approach/commentary/transition with sequential conversation_ids
 
 TRANSCRIPT QUALITY ASSESSMENT:
 
@@ -473,7 +559,7 @@ FULL TRANSCRIPT ({segment_count} segments):
 {transcript}
 
 OUTPUT: First, briefly reason about the video type, speaker assignments, transcript quality, and any teasers (3-5 sentences). Then output the JSON object in a ```json code block with this exact structure:
-{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
+{{"video_type": {{"type": "infield|talking_head|podcast|compilation", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}, "transcript_confidence": {{"score": 1-100, "reasoning": "brief explanation of transcript quality issues or strengths"}}, "speaker_labels": {{"SPEAKER_XX": {{"role": "coach|student|target|voiceover|other|unknown|collapsed", "confidence": 0.0-1.0, "reasoning": "brief explanation"}}}}, "segments": [{{"id": 0, "segment_type": "approach|commentary|transition", "conversation_id": 0, "is_conversation_start": false, "speaker_role_override": "coach|student|target|unknown (ONLY for collapsed speakers, omit otherwise)", "is_teaser": true (ONLY if this segment is a teaser/preview, omit otherwise), "teaser_of_conversation_id": N or null (ONLY if is_teaser is true)}}, ...]}}
 """
 
 
@@ -528,15 +614,24 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(prompt: str, retries: int = 3, timeout: int = 300) -> Optional[str]:
+def call_claude(
+    prompt: str,
+    retries: int = 3,
+    timeout: int = 300,
+    model: Optional[str] = None,
+) -> Optional[str]:
     claude_bin = find_claude_binary()
     if not claude_bin:
         raise RuntimeError("Claude CLI binary not found - cannot proceed")
 
+    cmd: List[str] = [claude_bin, "-p", prompt, "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
     for attempt in range(retries):
         try:
             result = subprocess.run(
-                [claude_bin, "-p", prompt, "--output-format", "text"],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=timeout,
@@ -599,10 +694,16 @@ def parse_json_response(response: str) -> Optional[Dict]:
         print(f"{LOG_PREFIX} JSON parse error: {e}")
         print(f"{LOG_PREFIX} Response preview: {response[:500]}...")
 
-    # Save failed response for debugging
-    debug_path = Path(__file__).parent / "debug_failed_response.txt"
-    debug_path.write_text(response)
-    print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
+    # Save failed response for debugging under data/ (avoid polluting scripts/ worktree).
+    try:
+        ts = time.strftime("%Y%m%dT%H%M%SZ")
+        debug_dir = repo_root() / "data" / "06.video-type" / "debug"
+        debug_dir.mkdir(parents=True, exist_ok=True)
+        debug_path = debug_dir / f"claude_parse_failed_{ts}_{int(time.time() * 1000)}.txt"
+        debug_path.write_text(response, encoding="utf-8")
+        print(f"{LOG_PREFIX} DEBUG: Saved full response to {debug_path}")
+    except Exception as e:
+        print(f"{LOG_PREFIX} DEBUG: Failed to save debug response: {e}")
 
     return None
 
@@ -612,7 +713,9 @@ def parse_json_response(response: str) -> Optional[Dict]:
 # ---------------------------
 
 def analyze_video(
-    title: str, segments: List[Dict]
+    title: str,
+    segments: List[Dict],
+    claude_model: Optional[str] = None,
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """Classify video type, label speakers, assess transcript quality, and detect conversation boundaries in a single LLM call.
 
@@ -664,7 +767,7 @@ def analyze_video(
 
     max_retries = 3
     for attempt in range(max_retries):
-        response = call_claude(prompt, timeout=300)
+        response = call_claude(prompt, timeout=300, model=claude_model)
         result = parse_json_response(response)
 
         if result and "video_type" in result and "speaker_labels" in result and "segments" in result:
@@ -763,7 +866,7 @@ def resolve_speaker_roles(
             classification = classifications[i] if i < len(classifications) else {}
             override = classification.get("speaker_role_override", "unknown")
 
-            if override in ("coach", "target", "voiceover", "other"):
+            if override in ("coach", "student", "target", "voiceover", "other"):
                 reassigned += 1
             else:
                 override = "unknown"
@@ -807,7 +910,12 @@ def compute_checksum(data: Any) -> str:
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:16]
 
 
-def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
+def process_file(
+    input_path: Path,
+    output_path: Path,
+    dry_run: bool = False,
+    claude_model: Optional[str] = None,
+) -> Dict[str, Any]:
     """Process a single audio_features.json file through single-pass LLM analysis."""
 
     print(f"\n{LOG_PREFIX} Processing: {input_path.name}")
@@ -832,7 +940,11 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
     start_time = time.time()
 
     # Single-pass analysis: video type + transcript quality + speakers + boundaries
-    video_type_info, transcript_confidence, speaker_labels, classifications, extra_flags = analyze_video(video_title, segments)
+    video_type_info, transcript_confidence, speaker_labels, classifications, extra_flags = analyze_video(
+        video_title,
+        segments,
+        claude_model=claude_model,
+    )
 
     video_type = video_type_info.get("type", "compilation")
 
@@ -906,11 +1018,50 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
             conv_segments[conv_id].append(seg)
 
     for conv_id, segs in sorted(conv_segments.items()):
+        target_speaker_ids: Set[str] = set()
+        has_uncertain_roles = False
+        for s in segs:
+            role = str(s.get("speaker_role", "")).strip().lower()
+            if role == "target":
+                speaker_id = str(s.get("speaker_id", "")).strip()
+                if speaker_id:
+                    target_speaker_ids.add(speaker_id)
+            elif role in {"unknown", "collapsed"}:
+                has_uncertain_roles = True
+
+        target_label = "unknown"
+        target_reason = "No reliable target turns detected in this conversation."
+        target_confidence = 0.4
+        if len(target_speaker_ids) >= 2:
+            target_label = "multiple_women"
+            target_reason = (
+                f"Detected target turns from {len(target_speaker_ids)} distinct speaker IDs."
+            )
+            target_confidence = 0.95
+        elif len(target_speaker_ids) == 1:
+            target_label = "single_woman"
+            target_reason = "Detected target turns from one consistent speaker ID."
+            target_confidence = 0.9
+        elif has_uncertain_roles:
+            target_reason = (
+                "Conversation includes unknown/collapsed role segments, so target participation is uncertain."
+            )
+            target_confidence = 0.3
+
+        if target_label == "unknown":
+            review_flags.append(f"conversation_target_unknown: conv {conv_id}")
+
         conversations.append({
             "conversation_id": conv_id,
             "segment_ids": [s["id"] for s in segs],
             "start_time": segs[0]["start"],
             "end_time": segs[-1]["end"],
+            "target_participation": {
+                "label": target_label,
+                "target_speaker_ids": sorted(target_speaker_ids),
+                "confidence": round(target_confidence, 2),
+                "reasoning": target_reason,
+            },
         })
 
     elapsed = time.time() - start_time
@@ -941,6 +1092,8 @@ def process_file(input_path: Path, output_path: Path, dry_run: bool = False) -> 
             "input_checksum": compute_checksum(data),
             "llm_calls": 1,
             "processing_time_sec": elapsed,
+            "model": "claude-cli",
+            **({"claude_model": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
         },
     }
 
@@ -1010,11 +1163,44 @@ def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "06.video-type"
 
 
-def compute_output_path(input_path: Path, output_dir: Path) -> Path:
+def compute_output_path(
+    input_path: Path,
+    output_dir: Path,
+    input_root: Optional[Path] = None,
+) -> Path:
     stem = input_path.stem
     if stem.endswith(".audio_features"):
         stem = stem[:-len(".audio_features")]
-    return output_dir / f"{stem}.conversations.json"
+    filename = f"{stem}.conversations.json"
+    if input_root is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / filename
+        except ValueError:
+            pass
+    return output_dir / filename
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    output_root_dir: Optional[Path] = None,
+    input_root: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path(input_path, preferred_output_dir, input_root=input_root)
+    if preferred.exists():
+        return preferred
+    # Legacy source-flat fallback.
+    source_flat = compute_output_path(input_path, preferred_output_dir)
+    if source_flat.exists():
+        return source_flat
+    # Legacy root-flat fallback.
+    if output_root_dir is not None:
+        root_flat = compute_output_path(input_path, output_root_dir)
+        if root_flat.exists():
+            return root_flat
+    return None
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
@@ -1117,6 +1303,11 @@ def main() -> None:
         action="store_true",
         help="Enable debug logging for LLM responses"
     )
+    parser.add_argument(
+        "--model",
+        default="opus",
+        help="Claude model alias or full name (default: opus)."
+    )
 
     args = parser.parse_args()
 
@@ -1145,6 +1336,9 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
+    if isinstance(args.model, str) and args.model.strip():
+        print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
+
     # Route to appropriate mode
     if args.test:
         _run_directory(test_input_root(), test_output_root(), args)
@@ -1166,16 +1360,17 @@ def _run_input(args) -> None:
         input_path = repo_root() / args.input
     if not input_path.exists():
         raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
 
     if input_path.is_file():
         out_dir = Path(args.output) if args.output else output_root()
-        output_path = compute_output_path(input_path, out_dir)
+        output_path = compute_output_path(input_path, out_dir, input_root=input_root())
 
         if output_path.exists() and not args.overwrite:
             print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
             return
 
-        result = process_file(input_path, output_path, dry_run=args.dry_run)
+        result = process_file(input_path, output_path, dry_run=args.dry_run, claude_model=args.model)
         print(f"\n{LOG_PREFIX} Done. Type: {result.get('video_type')}, Conversations: {result.get('conversations')}")
         return
 
@@ -1188,6 +1383,7 @@ def _run_sources(args) -> None:
     if not sources_path.exists():
         raise SystemExit(f"Sources file not found: {sources_path}")
 
+    out_base = Path(args.output) if args.output else output_root()
     total_files = 0
     total_convs = 0
 
@@ -1197,15 +1393,21 @@ def _run_sources(args) -> None:
             print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
             continue
 
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
 
         for input_file in files:
-            output_file = compute_output_path(input_file, src_out_dir)
-            if output_file.exists() and not args.overwrite:
+            preferred_output = compute_output_path(input_file, src_out_dir, input_root=src_in_dir)
+            existing_output = find_existing_output_path(
+                input_file,
+                src_out_dir,
+                output_root_dir=out_base,
+                input_root=src_in_dir,
+            )
+            if existing_output and not args.overwrite:
                 continue
             try:
-                result = process_file(input_file, output_file, dry_run=args.dry_run)
+                result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
                 total_convs += result.get("conversations", 0)
                 total_files += 1
             except Exception as e:
@@ -1222,6 +1424,7 @@ def _run_manifest(args) -> None:
     if not manifest_path.exists():
         raise SystemExit(f"Manifest file not found: {manifest_path}")
 
+    out_base = Path(args.output) if args.output else output_root()
     sources_map = load_manifest_sources(manifest_path)
     total_files = 0
     total_convs = 0
@@ -1232,17 +1435,23 @@ def _run_manifest(args) -> None:
             print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
             continue
 
-        src_out_dir = output_root() / src_name
+        src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
         if not files:
             print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in input")
             continue
 
         print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
-        _run_directory_with_files(files, src_in_dir, src_out_dir, args)
+        _run_directory_with_files(files, src_in_dir, src_out_dir, args, output_root_dir=out_base)
 
 
-def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, args) -> None:
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args,
+    output_root_dir: Optional[Path] = None,
+) -> None:
     """Process a specific list of files (used by manifest mode and _run_directory)."""
     if not files:
         return
@@ -1268,9 +1477,15 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
             skipped += 1
             continue
 
-        output_file = compute_output_path(input_file, out_dir)
+        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            output_root_dir=output_root_dir,
+            input_root=in_dir,
+        )
 
-        if output_file.exists() and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
@@ -1280,7 +1495,7 @@ def _run_directory_with_files(files: List[Path], in_dir: Path, out_dir: Path, ar
         save_state(state_path, state)
 
         try:
-            result = process_file(input_file, output_file, dry_run=args.dry_run)
+            result = process_file(input_file, preferred_output, dry_run=args.dry_run, claude_model=args.model)
             total_convs += result.get("conversations", 0)
             processed += 1
 

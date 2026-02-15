@@ -143,6 +143,10 @@ RETRIES="${RETRIES:-8}"
 FRAGMENT_RETRIES="${FRAGMENT_RETRIES:-8}"
 RETRY_SLEEP="${RETRY_SLEEP:-2}"
 
+# Observation flags set by dl_with_backoff (used for post-run integrity checks)
+# NOTE: these are intentionally global (not local) so download_one can branch on them.
+DL_AUTH_GATE_DETECTED=0
+
 # ASR audio standardization
 ASR_SAMPLE_RATE="${ASR_SAMPLE_RATE:-16000}"
 ASR_RESYNC_FILTER="${ASR_RESYNC_FILTER:-aresample=async=1:first_pts=0}"
@@ -205,6 +209,11 @@ build_common_dl_args() {
 
       # Also add sleep for subtitles/metadata requests
       --sleep-requests "$(random_between 1 3)"
+
+      # Avoid cluttering output dirs with playlist-level metadata directories like:
+      #   data/01.download/<source>/<playlist_title> [<playlist_id>]/*.info.json
+      # This is the yt-dlp default when using --write-info-json on playlists.
+      --no-write-playlist-metafiles
     )
     if [[ -n "${LIMIT_RATE// }" ]]; then
       common_dl_args+=( --limit-rate "$LIMIT_RATE" )
@@ -430,7 +439,7 @@ detect_auth_required_in_file() {
   # Age/sign-in gates: skip item but keep going.
   local f="$1"
   grep -Eqi \
-    "sign in to confirm your age|confirm your age|sign in to confirm|this video may be inappropriate for some users|please sign in|age-restricted|age restricted" \
+    "sign in to confirm your age|confirm your age|sign in to confirm|this video may be inappropriate for some users|please sign in|age-restricted|age restricted|private video|cookies are no longer valid" \
     "$f"
 }
 
@@ -452,10 +461,11 @@ dl_with_backoff() {
 
     cat "$tmp" >>"$log_file"
 
+    local auth_gate=0
     if detect_auth_required_in_file "$tmp"; then
-      echo "⚠️ Authentication/age gate detected. Skipping this item and continuing." | tee -a "$log_file"
-      rm -f "$tmp"
-      return 78
+      auth_gate=1
+      DL_AUTH_GATE_DETECTED=1
+      echo "⚠️ Authentication/age gate detected (some items may be skipped). See log for details." | tee -a "$log_file"
     fi
 
     if detect_botcheck_in_file "$tmp"; then
@@ -467,6 +477,12 @@ dl_with_backoff() {
     if [[ "$status" -eq 0 ]]; then
       rm -f "$tmp"
       return 0
+    fi
+
+    # Auth-gated items typically won't succeed with retries. Treat as a structured skip.
+    if [[ "$auth_gate" -eq 1 ]]; then
+      rm -f "$tmp"
+      return 78
     fi
 
     # Backoff before next attempt
@@ -607,6 +623,9 @@ download_one() {
   compute_sleep_range
   build_common_dl_args
 
+  # Reset per-source observation flags.
+  DL_AUTH_GATE_DETECTED=0
+
   local safe_source
   safe_source="$(safe_name "$source_name")"
   local output_dir="$OUTPUT_ROOT/$safe_source"
@@ -663,6 +682,19 @@ download_one() {
   make_asr_files "$output_dir"
   cleanup_orphaned_metadata "$output_dir"
 
+  # Integrity: if we didn't produce any ASR-ready audio, this source is effectively not downloaded.
+  # This commonly happens when a playlist/video is private/age-restricted and cookies are invalid.
+  local asr_raw_count
+  asr_raw_count="$(find "$output_dir" -type f -name "*.audio.asr.raw16k.wav" 2>/dev/null | wc -l | tr -d ' ')"
+  if [[ "${asr_raw_count:-0}" -eq 0 ]]; then
+    echo "❌ No ASR-ready audio produced (0 *.audio.asr.raw16k.wav). Treating as NOT DOWNLOADED." | tee -a "$log_audio"
+    if [[ "${DL_AUTH_GATE_DETECTED:-0}" -eq 1 ]]; then
+      echo "⚠️ Likely auth/age gate. Update cookies (docs/data_docs/www.youtube.com_cookies.txt) and retry." | tee -a "$log_audio"
+      return 78
+    fi
+    return 1
+  fi
+
   # VIDEO (disabled by default - pipeline only uses audio)
   # Enable with: SKIP_VIDEO=0 ./scripts/training-data/01.download ...
   if [[ "${SKIP_VIDEO:-1}" != "1" ]]; then
@@ -700,6 +732,9 @@ download_one() {
   # Anti-detection: increment session counter
   increment_session_count
 
+  if [[ "${DL_AUTH_GATE_DETECTED:-0}" -eq 1 ]]; then
+    echo "⚠️ Note: auth/age-gated items were detected for this source. Some playlist entries may be missing."
+  fi
   echo "✅ Done: $source_name (session: $SESSION_VIDEO_COUNT/$SESSION_MAX_VIDEOS)"
 }
 

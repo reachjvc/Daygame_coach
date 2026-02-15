@@ -1,0 +1,17 @@
+# Sub-batch CANARY.1
+# Created: 2026-02-07
+# Videos: 7
+#
+# Purpose:
+# - Small but diverse canary set for fast end-to-end LLM stage testing (06b.verify -> 06c.patch -> 06b.reverify -> 07.content in strict mode)
+# - Intended to catch regressions early without burning large Claude quota
+# - Not a permanent evaluation set: expand/rotate once the loop is stable
+#
+# Format: source_name | video_folder_name
+austen_summers_meets_girls | Picking Up Girls in Barcelona  ｜  Immersion Documentary [iOSpNACA9VI]
+coach_kyle_how_to_approach_a_girl | 5 Easy Steps to Turn a Hi into an INSTANT Date (LIVE DEMO) [6ImEzB6NhiI]
+austen_summers_meets_girls | 7 Minute Pull [nFjdyAHcTgA]
+coach_kyle_how_to_approach_a_girl | Approach ANY GIRL in Public LIKE a PRO! (INFIELD) [mv2X8Yhg9M0]
+NICK_KRAUSER_VIRTUARESI | Virtua Resi #1 - Gutter Game [LCMW0fFEKQk]
+daily_evolution | 10 Years In The Field： My Beautiful Dark Twisted Fantasy [3JtLRzHqy8Y]
+coach_kyle_how_to_approach_a_girl | How To Approach Girls in Crowded Places (3-PART PIVOT) [KadgUqnXZTs]
