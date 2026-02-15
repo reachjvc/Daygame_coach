@@ -1,35 +1,24 @@
 # Pipeline Validation Runbook (Handoff + Iteration Loop)
 
-**Branch:** `pipeline-validation-hardening`  
-**Worktree (current):** `/tmp/daygame-coach-pipeline-validation-hardening` (temporary location; safe, but `/tmp` can be cleaned)  
+**Branch:** `main`  
+**Checkout (current):** `/home/jonaswsl/projects/daygame-coach`  
 **Canary manifest:** `docs/pipeline/batches/CANARY.1.txt`  
 **Holdout manifest:** `docs/pipeline/batches/HOLDOUT.1.txt`
 **Hardening manifest:** `docs/pipeline/batches/HARDENING.1.txt`
 
 This runbook exists so another agent can pick up work without any chat history.
 
-## Worktree Location (Why `/tmp`?)
+## Execution Location
 
-The worktree is just a second checkout of the same git repo, pointed at the same `.git` history.
-Putting it in `/tmp` is convenient for isolation, but it is not ideal for long-lived work because `/tmp` can be wiped (reboot/cleanup).
+Use the primary checkout on `main` for this runbook.
 
-Best practice for long-running iteration:
-- Keep the branch in git (commit often).
-- Put the worktree in a stable directory (outside the repo root), for example next to the repo.
+Historical note:
+- earlier hardening loops used a separate `/tmp` worktree on `pipeline-validation-hardening`
+- that setup has been retired after selective migration to `main`
 
-Move the existing worktree (safe if no processes are running in it):
-
-```bash
-cd /home/jonaswsl/projects/daygame-coach
-git worktree move /tmp/daygame-coach-pipeline-validation-hardening ../daygame-coach-pipeline-validation-hardening
-```
-
-If the `/tmp` folder disappears, you can recreate the worktree from the branch:
-
-```bash
-cd /home/jonaswsl/projects/daygame-coach
-git worktree add ../daygame-coach-pipeline-validation-hardening pipeline-validation-hardening
-```
+Optional:
+- if you want isolation for experiments, create an ad-hoc worktree from `main`
+- this is optional, not required for normal runbook execution
 
 ## What “Done” Looks Like
 
@@ -529,7 +518,7 @@ Required behavior:
 Pass criteria:
 - no Stage 07 technique evidence references `0-5`, `102`, `121`, `276` on `1ok1oovp0K0`.
 
-Implementation status (`2026-02-14`, current hardening worktree):
+Implementation status (`2026-02-14`, hardening snapshot):
 - implemented:
   - Stage 07 now consumes `stage07_evidence_segment_ids` allowlists from sanitized input.
   - Stage 07 hard-filters approach evidence and writes `dropped_candidates` with reason codes.
@@ -555,7 +544,7 @@ Required behavior:
 Pass criteria:
 - `1ok1oovp0K0` no longer treats collapsed coach speaker identity as confident target identity.
 
-Implementation status (`2026-02-14`, current hardening worktree):
+Implementation status (`2026-02-14`, hardening snapshot):
 - implemented in `06d.sanitize`:
   - populate `target_participation.target_speaker_ids_confident`.
   - populate `target_participation.fixed_coach_speaker_ids`.
@@ -589,7 +578,7 @@ Pass criteria:
 - synthetic commentary child from `102` is excluded from Stage 07 evidence.
 - no synthetic-only segment is surfaced as transcript artifact in Stage 07 validation.
 
-Implementation status (`2026-02-15`, current hardening worktree):
+Implementation status (`2026-02-15`, hardening snapshot):
 - implemented in `06d.sanitize`:
   - detects robust mixed-mode boundary markers.
   - materializes split:
@@ -620,7 +609,7 @@ Pass criteria:
 - no `REJECT` on `P018.3` and `P018.4`.
 - non-increasing misattribution + boundary issue counts versus D0 baseline.
 
-Implementation status (`2026-02-14`, current hardening worktree):
+Implementation status (`2026-02-14`, hardening snapshot):
 - `06e.reverify` wrapper is implemented and supports `--timeout-seconds <N>` (or env `REVERIFY_TIMEOUT_SECONDS`) to prevent indefinite stalls.
 - recommended default in this runbook loop is `--timeout-seconds 600`.
 - observed behavior in this environment:
@@ -646,7 +635,7 @@ Pass criteria:
 - no Stage 08 `FAIL` on `P018.4`.
 - no precision regression on `P018.3`.
 
-Implementation status (`2026-02-14`, current hardening worktree):
+Implementation status (`2026-02-14`, hardening snapshot):
 - implemented in `08.taxonomy-validation`:
   - classify unlisted concepts by enrichment context (`approach`, `commentary`, `talking_head_section`).
   - mark `commentary_only=true` when a concept appears only in commentary-like contexts.
@@ -1320,11 +1309,11 @@ Goal: keep semantic evaluation small (canary + holdout), and only expand once it
 
 ## Handoff Notes (If You Close Codex)
 
-Everything important is in git history on `pipeline-validation-hardening`.
+Everything important is in git history on `main` (pipeline branch changes already migrated).
 
 To continue later:
-1. `git worktree list` (find the validation worktree)
-2. `cd` into that worktree
+1. `cd /home/jonaswsl/projects/daygame-coach`
+2. `git checkout main`
 3. Run the canary loop above
 
 Generated `data/*` artifacts are not committed; they are reproducible from the scripts + manifests.
