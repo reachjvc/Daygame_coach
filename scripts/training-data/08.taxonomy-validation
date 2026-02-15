@@ -13,13 +13,11 @@ Reads:
 
 Writes:
   - Validation report:
-      data/08.taxonomy-validation/<label>.report.json
-    - For `--manifest` + `--source`, report name is source-scoped:
-      data/08.taxonomy-validation/<manifest_stem>.<source>.report.json
+      data/08.taxonomy-validation/<scope>.report.json
 
 Exit codes:
-  0 - PASS/WARNING: Non-blocking taxonomy outcome
-  1 - FAIL: Blocking issues (high-frequency unlisted concepts, incomplete manifest coverage, unreadable enriched files)
+  0 - PASS: No high-frequency unlisted concepts (below threshold)
+  1 - FAIL: High-frequency unlisted concepts detected (at or above threshold)
 
 Use:
 
@@ -28,9 +26,6 @@ Use:
 
   B) Custom threshold:
      ./scripts/training-data/08.taxonomy-validation --threshold 5
-
-  B2) Custom thresholds (separate techniques vs topics):
-     ./scripts/training-data/08.taxonomy-validation --threshold-techniques 10 --threshold-topics 3
 
   C) Strict mode (fail on ANY unlisted):
      ./scripts/training-data/08.taxonomy-validation --strict
@@ -64,15 +59,6 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-_SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
-
-
-def safe_report_name(raw: str) -> str:
-    """Normalize user/manifest labels into safe filenames."""
-    cleaned = _SAFE_NAME_RE.sub("_", (raw or "").strip()).strip("_")
-    return cleaned or "report"
-
-
 def find_enriched_files(root: Path) -> List[Path]:
     """Find all enriched JSON files."""
     return sorted(root.rglob("*.enriched.json"))
@@ -84,52 +70,29 @@ def extract_video_id(name: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
-def infer_source_from_path(file_path: Path) -> Optional[str]:
-    """Infer source name from .../data/07.content/<source>/... path."""
-    parts = file_path.parts
-    try:
-        idx = parts.index("07.content")
-    except ValueError:
-        return None
-    if idx + 1 < len(parts):
-        src = parts[idx + 1].strip()
-        return src or None
-    return None
-
-
-def load_manifest_video_ids(manifest_path: Path, source: Optional[str] = None) -> Set[str]:
-    """Load manifest and return set of video IDs (optionally source-filtered)."""
+def load_manifest_video_ids(manifest_path: Path) -> Set[str]:
+    """Load manifest and return set of video IDs."""
     video_ids = set()
     with open(manifest_path) as f:
         for line in f:
             line = line.strip()
             if not line or line.startswith("#"):
                 continue
-
-            parts = line.split("|", 1)
-            folder_text = line
-            if len(parts) == 2:
-                src = parts[0].strip()
-                folder_text = parts[1].strip()
-                if source and src != source:
-                    continue
-
-            vid_id = extract_video_id(folder_text)
+            vid_id = extract_video_id(line)
             if vid_id:
                 video_ids.add(vid_id)
     return video_ids
 
 
-def filter_files_by_manifest(files: List[Path], video_ids: Set[str]) -> Tuple[List[Path], Set[str]]:
-    """Filter enriched files to only those in the manifest and return matched video ids."""
+def filter_files_by_manifest(files: List[Path], manifest_path: Path) -> List[Path]:
+    """Filter enriched files to only those in the manifest."""
+    video_ids = load_manifest_video_ids(manifest_path)
     filtered = []
-    matched_video_ids: Set[str] = set()
     for f in files:
         vid_id = extract_video_id(f.name) or extract_video_id(f.parent.name)
         if vid_id and vid_id in video_ids:
             filtered.append(f)
-            matched_video_ids.add(vid_id)
-    return filtered, matched_video_ids
+    return filtered
 
 
 def parse_unlisted_from_enrichment(enrichment: Dict) -> Tuple[List[str], List[str]]:
@@ -160,27 +123,6 @@ def normalize_concept(raw: str) -> Tuple[str, str]:
     return raw.strip().lower(), ""
 
 
-def enrichment_context_bucket(enrichment: Dict[str, Any]) -> str:
-    """Map enrichment type to taxonomy context bucket."""
-    etype = str(enrichment.get("type", "")).strip().lower()
-    if etype == "approach":
-        return "approach"
-    if etype == "commentary":
-        return "commentary"
-    if etype == "talking_head_section":
-        return "talking_head_section"
-    return "other"
-
-
-def is_commentary_only_context_counts(context_counts: Dict[str, int]) -> bool:
-    """True when concept appears only in commentary-like contexts."""
-    approach_count = int(context_counts.get("approach", 0) or 0)
-    non_interaction = int(context_counts.get("commentary", 0) or 0) + int(
-        context_counts.get("talking_head_section", 0) or 0
-    )
-    return approach_count == 0 and non_interaction > 0
-
-
 def process_files(files: List[Path]) -> Dict[str, Any]:
     """Process all enriched files and aggregate unlisted concepts."""
 
@@ -190,56 +132,23 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
     topic_examples: Dict[str, List[str]] = {}
     technique_sources: Dict[str, List[str]] = {}
     topic_sources: Dict[str, List[str]] = {}
-    technique_contexts: Dict[str, Counter] = {}
-    topic_contexts: Dict[str, Counter] = {}
-    unreadable_video_ids: Set[str] = set()
-
-    # Per-video aggregation for quarantine-aware gating.
-    # Internal shape uses sets for dedupe; converted to JSON-safe dict at return.
-    per_video: Dict[str, Dict[str, Any]] = {}
 
     files_processed = 0
     files_with_unlisted = 0
     total_enrichments = 0
     enrichments_with_unlisted = 0
-    unreadable_files = 0
 
     for file_path in files:
         try:
             data = json.loads(file_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError) as e:
             print(f"[08.taxonomy-validation] Warning: skipping {file_path.name}: {e}")
-            unreadable_files += 1
-            vid_hint = extract_video_id(file_path.name) or extract_video_id(file_path.parent.name)
-            if vid_hint:
-                unreadable_video_ids.add(vid_hint)
             continue
 
         files_processed += 1
-        raw_vid = data.get("video_id")
-        if isinstance(raw_vid, str) and raw_vid.strip():
-            video_id = raw_vid.strip()
-        else:
-            video_id = extract_video_id(file_path.name) or extract_video_id(file_path.parent.name) or file_path.stem
-        source_name = infer_source_from_path(file_path)
+        video_id = data.get("video_id", file_path.stem)
         enrichments = data.get("enrichments", [])
         file_has_unlisted = False
-
-        video_entry = per_video.setdefault(
-            video_id,
-            {
-                "video_id": video_id,
-                "source": source_name,
-                "files": set(),
-                "enrichments_total": 0,
-                "enrichments_with_unlisted": 0,
-                "unlisted_techniques": set(),
-                "unlisted_topics": set(),
-            },
-        )
-        video_entry["files"].add(str(file_path))
-        if not video_entry.get("source") and source_name:
-            video_entry["source"] = source_name
 
         if not isinstance(enrichments, list):
             continue
@@ -249,63 +158,36 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 continue
 
             total_enrichments += 1
-            video_entry["enrichments_total"] += 1
-            context_bucket = enrichment_context_bucket(enrichment)
             tech_list, topic_list = parse_unlisted_from_enrichment(enrichment)
 
             if tech_list or topic_list:
                 enrichments_with_unlisted += 1
                 file_has_unlisted = True
-                video_entry["enrichments_with_unlisted"] += 1
 
             for raw_tech in tech_list:
                 name, desc = normalize_concept(raw_tech)
                 technique_counter[name] += 1
-                technique_contexts.setdefault(name, Counter())[context_bucket] += 1
                 if desc and name not in technique_examples:
                     technique_examples[name] = []
                 if desc and desc not in technique_examples.get(name, []):
                     technique_examples.setdefault(name, []).append(desc)
                 technique_sources.setdefault(name, []).append(video_id)
-                video_entry["unlisted_techniques"].add(name)
 
             for raw_topic in topic_list:
                 name, desc = normalize_concept(raw_topic)
                 topic_counter[name] += 1
-                topic_contexts.setdefault(name, Counter())[context_bucket] += 1
                 if desc and name not in topic_examples:
                     topic_examples[name] = []
                 if desc and desc not in topic_examples.get(name, []):
                     topic_examples.setdefault(name, []).append(desc)
                 topic_sources.setdefault(name, []).append(video_id)
-                video_entry["unlisted_topics"].add(name)
 
         if file_has_unlisted:
             files_with_unlisted += 1
 
-    video_stats: Dict[str, Dict[str, Any]] = {}
-    for video_id in sorted(per_video.keys()):
-        entry = per_video[video_id]
-        files_list = sorted(str(x) for x in entry.get("files", set()) if isinstance(x, str))
-        techniques = sorted(str(x) for x in entry.get("unlisted_techniques", set()) if isinstance(x, str))
-        topics = sorted(str(x) for x in entry.get("unlisted_topics", set()) if isinstance(x, str))
-        video_stats[video_id] = {
-            "video_id": video_id,
-            "source": entry.get("source"),
-            "files": files_list,
-            "enrichments_total": int(entry.get("enrichments_total", 0) or 0),
-            "enrichments_with_unlisted": int(entry.get("enrichments_with_unlisted", 0) or 0),
-            "unlisted_techniques": techniques,
-            "unlisted_topics": topics,
-            "unlisted_technique_count": len(techniques),
-            "unlisted_topic_count": len(topics),
-        }
-
     return {
         "files_processed": files_processed,
         "files_with_unlisted": files_with_unlisted,
-        "files_unreadable": unreadable_files,
-        "unreadable_video_ids": sorted(unreadable_video_ids),
         "total_enrichments": total_enrichments,
         "enrichments_with_unlisted": enrichments_with_unlisted,
         "techniques": {
@@ -313,11 +195,6 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "count": count,
                 "examples": technique_examples.get(name, [])[:3],
                 "videos": sorted(set(technique_sources.get(name, [])))[:5],
-                "video_ids": sorted(set(technique_sources.get(name, []))),
-                "context_counts": dict(technique_contexts.get(name, Counter())),
-                "commentary_only": is_commentary_only_context_counts(
-                    dict(technique_contexts.get(name, Counter()))
-                ),
             }
             for name, count in technique_counter.most_common()
         },
@@ -326,235 +203,32 @@ def process_files(files: List[Path]) -> Dict[str, Any]:
                 "count": count,
                 "examples": topic_examples.get(name, [])[:3],
                 "videos": sorted(set(topic_sources.get(name, [])))[:5],
-                "video_ids": sorted(set(topic_sources.get(name, []))),
-                "context_counts": dict(topic_contexts.get(name, Counter())),
-                "commentary_only": is_commentary_only_context_counts(
-                    dict(topic_contexts.get(name, Counter()))
-                ),
             }
             for name, count in topic_counter.most_common()
         },
-        "video_stats": video_stats,
     }
 
 
-def evaluate_validation(
-    report: Dict[str, Any],
-    *,
-    threshold_techniques: int,
-    threshold_topics: int,
-    strict: bool,
-    manifest_video_ids: Optional[Set[str]] = None,
-    manifest_missing_video_ids: Optional[List[str]] = None,
-) -> Dict[str, Any]:
-    """Evaluate validation status based on per-domain thresholds and strict mode."""
+def evaluate_validation(report: Dict[str, Any], threshold: int, strict: bool) -> Dict[str, Any]:
+    """Evaluate validation status based on threshold and strict mode."""
     techniques = report["techniques"]
     topics = report["topics"]
 
-    high_freq_techniques_all = [n for n, i in techniques.items() if i["count"] >= threshold_techniques]
-    high_freq_topics_all = [n for n, i in topics.items() if i["count"] >= threshold_topics]
-
-    commentary_only_techniques = [
-        n for n, i in techniques.items()
-        if isinstance(i, dict) and bool(i.get("commentary_only"))
-    ]
-    commentary_only_topics = [
-        n for n, i in topics.items()
-        if isinstance(i, dict) and bool(i.get("commentary_only"))
-    ]
-
-    high_freq_techniques = [
-        n for n in high_freq_techniques_all
-        if not bool((techniques.get(n) or {}).get("commentary_only"))
-    ]
-    high_freq_topics = [
-        n for n in high_freq_topics_all
-        if not bool((topics.get(n) or {}).get("commentary_only"))
-    ]
+    high_freq_techniques = [n for n, i in techniques.items() if i["count"] >= threshold]
+    high_freq_topics = [n for n, i in topics.items() if i["count"] >= threshold]
 
     any_unlisted = bool(techniques) or bool(topics)
-    any_non_commentary_unlisted = any(
-        not bool((i or {}).get("commentary_only"))
-        for i in techniques.values()
-    ) or any(
-        not bool((i or {}).get("commentary_only"))
-        for i in topics.values()
-    )
     high_freq_unlisted = bool(high_freq_techniques) or bool(high_freq_topics)
 
-    unreadable_files = int(report.get("files_unreadable", 0) or 0)
-    unreadable_video_ids: Set[str] = {
-        str(v).strip()
-        for v in (report.get("unreadable_video_ids") or [])
-        if isinstance(v, str) and str(v).strip()
-    }
-    missing_video_ids = {
-        str(v).strip()
-        for v in (manifest_missing_video_ids or [])
-        if isinstance(v, str) and str(v).strip()
-    }
-
-    high_freq_tech_by_video: Dict[str, List[str]] = {}
-    for concept in high_freq_techniques:
-        info = techniques.get(concept, {})
-        vids = info.get("video_ids") if isinstance(info, dict) else None
-        if not isinstance(vids, list):
-            vids = info.get("videos") if isinstance(info, dict) else []
-        if not isinstance(vids, list):
-            continue
-        for vid in vids:
-            if not isinstance(vid, str) or not vid.strip():
-                continue
-            key = vid.strip()
-            high_freq_tech_by_video.setdefault(key, []).append(concept)
-
-    high_freq_topics_by_video: Dict[str, List[str]] = {}
-    for concept in high_freq_topics:
-        info = topics.get(concept, {})
-        vids = info.get("video_ids") if isinstance(info, dict) else None
-        if not isinstance(vids, list):
-            vids = info.get("videos") if isinstance(info, dict) else []
-        if not isinstance(vids, list):
-            continue
-        for vid in vids:
-            if not isinstance(vid, str) or not vid.strip():
-                continue
-            key = vid.strip()
-            high_freq_topics_by_video.setdefault(key, []).append(concept)
-
-    per_video_stats = report.get("video_stats")
-    per_video_stats = per_video_stats if isinstance(per_video_stats, dict) else {}
-    if manifest_video_ids is not None:
-        candidate_video_ids = sorted(manifest_video_ids)
-    else:
-        candidate_video_ids = sorted(
-            set(per_video_stats.keys()) | unreadable_video_ids | missing_video_ids
-        )
-
-    per_video_status: List[Dict[str, Any]] = []
-    per_video_counts: Counter = Counter()
-    blocked_video_ids: List[str] = []
-    for video_id in candidate_video_ids:
-        stats = per_video_stats.get(video_id)
-        stats = stats if isinstance(stats, dict) else {}
-
-        unlisted_techniques = stats.get("unlisted_techniques")
-        if not isinstance(unlisted_techniques, list):
-            unlisted_techniques = []
-        unlisted_techniques = sorted(
-            {str(x).strip() for x in unlisted_techniques if isinstance(x, str) and str(x).strip()}
-        )
-
-        unlisted_topics = stats.get("unlisted_topics")
-        if not isinstance(unlisted_topics, list):
-            unlisted_topics = []
-        unlisted_topics = sorted(
-            {str(x).strip() for x in unlisted_topics if isinstance(x, str) and str(x).strip()}
-        )
-
-        high_tech = sorted(set(high_freq_tech_by_video.get(video_id, [])))
-        high_topic = sorted(set(high_freq_topics_by_video.get(video_id, [])))
-        commentary_only_video_tech = sorted(
-            [
-                name for name in unlisted_techniques
-                if bool((techniques.get(name) or {}).get("commentary_only"))
-            ]
-        )
-        commentary_only_video_topics = sorted(
-            [
-                name for name in unlisted_topics
-                if bool((topics.get(name) or {}).get("commentary_only"))
-            ]
-        )
-        non_commentary_video_tech = sorted(
-            [name for name in unlisted_techniques if name not in commentary_only_video_tech]
-        )
-        non_commentary_video_topics = sorted(
-            [name for name in unlisted_topics if name not in commentary_only_video_topics]
-        )
-        has_unlisted = bool(unlisted_techniques or unlisted_topics)
-        is_missing = video_id in missing_video_ids
-        is_unreadable = video_id in unreadable_video_ids
-
-        status = "PASS"
-        reason = "no_unlisted_concepts"
-        blocking_reasons: List[str] = []
-        if is_missing:
-            status = "FAIL"
-            reason = "missing_stage07_enriched"
-            blocking_reasons.append("missing_stage07_enriched")
-        elif is_unreadable:
-            status = "FAIL"
-            reason = "unreadable_stage07_enriched"
-            blocking_reasons.append("unreadable_stage07_enriched")
-        elif strict and has_unlisted:
-            status = "FAIL"
-            reason = "strict_mode_unlisted_detected"
-            blocking_reasons.append("strict_mode_unlisted_detected")
-        elif high_tech or high_topic:
-            status = "FAIL"
-            reason = "high_frequency_unlisted_concepts"
-            if high_tech:
-                blocking_reasons.append("high_frequency_unlisted_techniques")
-            if high_topic:
-                blocking_reasons.append("high_frequency_unlisted_topics")
-        elif has_unlisted:
-            status = "WARNING"
-            if non_commentary_video_tech or non_commentary_video_topics:
-                reason = "unlisted_below_threshold"
-            else:
-                reason = "commentary_only_unlisted_non_blocking"
-
-        if status == "FAIL":
-            blocked_video_ids.append(video_id)
-        per_video_counts[status] += 1
-        per_video_status.append(
-            {
-                "video_id": video_id,
-                "source": stats.get("source"),
-                "status": status,
-                "reason": reason,
-                "blocking_reasons": blocking_reasons,
-                "high_frequency_unlisted_techniques": high_tech,
-                "high_frequency_unlisted_topics": high_topic,
-                "unlisted_techniques": unlisted_techniques,
-                "unlisted_topics": unlisted_topics,
-                "commentary_only_unlisted_techniques": commentary_only_video_tech,
-                "commentary_only_unlisted_topics": commentary_only_video_topics,
-                "non_commentary_unlisted_techniques": non_commentary_video_tech,
-                "non_commentary_unlisted_topics": non_commentary_video_topics,
-                "enrichments_total": int(stats.get("enrichments_total", 0) or 0),
-                "enrichments_with_unlisted": int(stats.get("enrichments_with_unlisted", 0) or 0),
-                "files": stats.get("files") if isinstance(stats.get("files"), list) else [],
-            }
-        )
-
-    manifest_missing_videos = len(missing_video_ids)
-
-    if manifest_missing_videos > 0:
-        status = "FAIL"
-        reason = f"Manifest coverage incomplete: {manifest_missing_videos} video(s) missing Stage 07 enriched outputs"
-    elif unreadable_files > 0:
-        status = "FAIL"
-        reason = f"Unreadable Stage 07 enriched files: {unreadable_files}"
-    elif strict and any_unlisted:
+    if strict and any_unlisted:
         status = "FAIL"
         reason = "Strict mode: unlisted concepts detected"
     elif high_freq_unlisted:
         status = "FAIL"
-        reason = (
-            "High-frequency unlisted concepts "
-            f"(techniques>={threshold_techniques}, topics>={threshold_topics})"
-        )
+        reason = f"High-frequency unlisted concepts (>= {threshold} occurrences)"
     elif any_unlisted:
         status = "WARNING"
-        if any_non_commentary_unlisted:
-            reason = (
-                "Unlisted concepts found but below threshold "
-                f"(techniques<{threshold_techniques}, topics<{threshold_topics})"
-            )
-        else:
-            reason = "Only commentary-only unlisted concepts detected (non-blocking bucket)"
+        reason = f"Unlisted concepts found but below threshold ({threshold})"
     else:
         status = "PASS"
         reason = "No unlisted concepts"
@@ -562,44 +236,16 @@ def evaluate_validation(
     return {
         "status": status,
         "reason": reason,
-        "threshold_techniques": threshold_techniques,
-        "threshold_topics": threshold_topics,
+        "threshold": threshold,
         "strict_mode": strict,
         "high_frequency_unlisted": {
             "techniques": high_freq_techniques,
             "topics": high_freq_topics,
-            "all_detected": {
-                "techniques": high_freq_techniques_all,
-                "topics": high_freq_topics_all,
-            },
-            "commentary_only_excluded": {
-                "techniques": sorted(
-                    [n for n in high_freq_techniques_all if n not in high_freq_techniques]
-                ),
-                "topics": sorted(
-                    [n for n in high_freq_topics_all if n not in high_freq_topics]
-                ),
-            },
-        },
-        "commentary_only_bucket": {
-            "techniques": sorted(commentary_only_techniques),
-            "topics": sorted(commentary_only_topics),
-            "total_techniques": len(commentary_only_techniques),
-            "total_topics": len(commentary_only_topics),
         },
         "total_unlisted": {
             "techniques": len(techniques),
             "topics": len(topics),
         },
-        "manifest_missing_videos": manifest_missing_videos,
-        "files_unreadable": unreadable_files,
-        "video_status_counts": {
-            "PASS": int(per_video_counts.get("PASS", 0)),
-            "WARNING": int(per_video_counts.get("WARNING", 0)),
-            "FAIL": int(per_video_counts.get("FAIL", 0)),
-        },
-        "blocked_video_ids": sorted(blocked_video_ids),
-        "video_results": per_video_status,
     }
 
 
@@ -614,62 +260,24 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
     print()
     print(f"  Status:                    {status_emoji} {status}")
     print(f"  Reason:                    {validation['reason']}")
-    print(f"  Threshold (techniques):    {validation['threshold_techniques']}")
-    print(f"  Threshold (topics):        {validation['threshold_topics']}")
+    print(f"  Threshold:                 {validation['threshold']}")
     print(f"  Strict mode:               {validation['strict_mode']}")
     print()
     print(f"  Files processed:           {report['files_processed']}")
     print(f"  Files with unlisted:       {report['files_with_unlisted']}")
-    print(f"  Files unreadable:          {report.get('files_unreadable', 0)}")
     print(f"  Total enrichments:         {report['total_enrichments']}")
     print(f"  Enrichments with unlisted: {report['enrichments_with_unlisted']}")
     print()
-
-    manifest_cov = report.get("manifest_coverage")
-    if isinstance(manifest_cov, dict):
-        print(f"  Manifest videos:           {manifest_cov.get('manifest_videos', 0)}")
-        print(f"  Matched video IDs:         {manifest_cov.get('matched_video_ids', 0)}")
-        print(f"  Matched files:             {manifest_cov.get('matched_files', 0)}")
-        print(f"  Missing videos:            {manifest_cov.get('missing_videos', 0)}")
-        missing_ids = manifest_cov.get("missing_video_ids")
-        if isinstance(missing_ids, list) and missing_ids:
-            shown = ", ".join(str(x) for x in missing_ids[:5])
-            suffix = " ..." if len(missing_ids) > 5 else ""
-            print(f"  Missing video IDs:         {shown}{suffix}")
-        print()
-
-    video_status_counts = validation.get("video_status_counts", {})
-    if isinstance(video_status_counts, dict):
-        print(
-            "  Per-video status:          "
-            f"PASS={video_status_counts.get('PASS', 0)} "
-            f"WARNING={video_status_counts.get('WARNING', 0)} "
-            f"FAIL={video_status_counts.get('FAIL', 0)}"
-        )
-        blocked_ids = validation.get("blocked_video_ids", [])
-        if isinstance(blocked_ids, list) and blocked_ids:
-            shown = ", ".join(str(x) for x in blocked_ids[:8])
-            suffix = " ..." if len(blocked_ids) > 8 else ""
-            print(f"  Quarantine candidates:     {shown}{suffix}")
-        print()
 
     techniques = report["techniques"]
     topics = report["topics"]
     high_tech = validation["high_frequency_unlisted"]["techniques"]
     high_topics = validation["high_frequency_unlisted"]["topics"]
-    commentary_bucket = validation.get("commentary_only_bucket", {})
-    commentary_tech = set(
-        x for x in (commentary_bucket.get("techniques") or [])
-        if isinstance(x, str)
-    )
-    commentary_topics = set(
-        x for x in (commentary_bucket.get("topics") or [])
-        if isinstance(x, str)
-    )
 
     if not techniques and not topics:
         print("  No unlisted concepts found. Taxonomy covers all detected concepts.")
         print()
+        return
 
     if high_tech or high_topics:
         print("-" * 60)
@@ -681,31 +289,13 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
             print(f"\n  Topics:     {', '.join(high_topics)}")
         print()
 
-    excluded = validation.get("high_frequency_unlisted", {}).get("commentary_only_excluded", {})
-    if isinstance(excluded, dict):
-        ex_tech = [x for x in (excluded.get("techniques") or []) if isinstance(x, str)]
-        ex_topics = [x for x in (excluded.get("topics") or []) if isinstance(x, str)]
-        if ex_tech or ex_topics:
-            print("-" * 60)
-            print("  COMMENTARY-ONLY HIGH-FREQUENCY (non-blocking)")
-            print("-" * 60)
-            if ex_tech:
-                print(f"\n  Techniques: {', '.join(ex_tech)}")
-            if ex_topics:
-                print(f"\n  Topics:     {', '.join(ex_topics)}")
-            print()
-
     if techniques:
         print("-" * 60)
         print("  ALL UNLISTED TECHNIQUES (sorted by frequency)")
         print("-" * 60)
         for name, info in techniques.items():
             count = info["count"]
-            marker = ""
-            if name in high_tech:
-                marker = " [BLOCKING]"
-            elif name in commentary_tech:
-                marker = " [COMMENTARY-ONLY]"
+            marker = " [BLOCKING]" if name in high_tech else ""
             print(f"\n  {name} ({count}x){marker}")
             if info["examples"]:
                 print(f"    Description: {info['examples'][0]}")
@@ -719,11 +309,7 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print("-" * 60)
         for name, info in topics.items():
             count = info["count"]
-            marker = ""
-            if name in high_topics:
-                marker = " [BLOCKING]"
-            elif name in commentary_topics:
-                marker = " [COMMENTARY-ONLY]"
+            marker = " [BLOCKING]" if name in high_topics else ""
             print(f"\n  {name} ({count}x){marker}")
             if info["examples"]:
                 print(f"    Description: {info['examples'][0]}")
@@ -737,33 +323,10 @@ def print_report(report: Dict[str, Any], validation: Dict[str, Any]) -> None:
         print("-" * 60)
         print()
         print("  Pipeline blocked. Options:")
-        if validation.get("manifest_missing_videos", 0):
-            print("    0. Re-run Stage 07 so all manifest videos have .enriched.json outputs")
-        if validation.get("files_unreadable", 0):
-            print("    0. Fix/replace unreadable Stage 07 .enriched.json files and re-run")
         print("    1. Add the unlisted concepts to the taxonomy in 07.content")
-        print("    2. Re-run with higher --threshold (both) or --threshold-topics/--threshold-techniques")
+        print("    2. Re-run with higher --threshold")
         print("    3. Manually verify and exclude problematic files")
         print()
-
-    video_results = validation.get("video_results", [])
-    if isinstance(video_results, list):
-        fail_rows = [r for r in video_results if isinstance(r, dict) and r.get("status") == "FAIL"]
-        if fail_rows:
-            print("-" * 60)
-            print("  FAILING VIDEOS (per-video quarantine)")
-            print("-" * 60)
-            for row in fail_rows[:12]:
-                vid = row.get("video_id", "?")
-                reason = row.get("reason", "")
-                b_reasons = row.get("blocking_reasons", [])
-                extra = ""
-                if isinstance(b_reasons, list) and b_reasons:
-                    extra = f" ({', '.join(str(x) for x in b_reasons)})"
-                print(f"  {vid}: {reason}{extra}")
-            if len(fail_rows) > 12:
-                print(f"  ... ({len(fail_rows) - 12} more)")
-            print()
 
 
 def save_report(
@@ -771,19 +334,19 @@ def save_report(
     validation: Dict[str, Any],
     output_dir: Path,
     label: str,
-    report_name: str,
-    scope: Optional[Dict[str, Any]] = None,
 ) -> Path:
     """Save validation report to JSON file."""
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{safe_report_name(report_name)}.report.json"
+    safe_label = re.sub(r"[^A-Za-z0-9._-]+", "_", label).strip("_")
+    if not safe_label:
+        safe_label = "all"
+    output_path = output_dir / f"{safe_label[:120]}.report.json"
 
     output_data = {
         "version": 1,
         "stage": "08.taxonomy-validation",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "source": label,
-        "scope": scope or {},
         "validation": validation,
         "details": report,
     }
@@ -807,20 +370,8 @@ def main() -> int:
     parser.add_argument(
         "--threshold",
         type=int,
-        default=None,
-        help="Legacy: set BOTH thresholds to this value (overrides per-domain thresholds)"
-    )
-    parser.add_argument(
-        "--threshold-techniques",
-        type=int,
-        default=10,
-        help="Fail if any unlisted technique has >= this many occurrences (default: 10)"
-    )
-    parser.add_argument(
-        "--threshold-topics",
-        type=int,
         default=3,
-        help="Fail if any unlisted topic has >= this many occurrences (default: 3)"
+        help="Fail if any concept has >= this many occurrences (default: 3)"
     )
     parser.add_argument(
         "--strict",
@@ -861,10 +412,6 @@ def main() -> int:
         return 1
 
     files = find_enriched_files(data_root)
-    manifest_video_ids: Optional[Set[str]] = None
-    matched_manifest_video_ids: Set[str] = set()
-    manifest_missing_video_ids: List[str] = []
-    manifest_path: Optional[Path] = None
 
     # Filter by manifest if provided
     if args.manifest:
@@ -874,24 +421,10 @@ def main() -> int:
         if not manifest_path.exists():
             print(f"[08.taxonomy-validation] Error: Manifest not found: {manifest_path}", file=sys.stderr)
             return 1
-        manifest_video_ids = load_manifest_video_ids(manifest_path, source=args.source)
-        if not manifest_video_ids:
-            print(f"[08.taxonomy-validation] Error: No valid video IDs found in manifest: {manifest_path}", file=sys.stderr)
-            return 1
-        files, matched_manifest_video_ids = filter_files_by_manifest(files, manifest_video_ids)
-        manifest_missing_video_ids = sorted(manifest_video_ids - matched_manifest_video_ids)
-        if args.source:
-            label = f"manifest:{manifest_path.name}|source:{args.source}"
-            report_name = f"{manifest_path.stem}.{args.source}"
-        else:
-            label = f"manifest:{manifest_path.name}"
-            report_name = manifest_path.stem
-    elif args.source:
-        label = f"source:{args.source}"
-        report_name = args.source
+        files = filter_files_by_manifest(files, manifest_path)
+        label = f"manifest:{manifest_path.name}"
     else:
         label = str(data_root)
-        report_name = "test" if args.test else "all"
 
     if not files:
         print(f"[08.taxonomy-validation] Error: No .enriched.json files found in: {label}", file=sys.stderr)
@@ -900,42 +433,10 @@ def main() -> int:
     print(f"[08.taxonomy-validation] Scanning {len(files)} enriched files ({label})")
 
     report = process_files(files)
-    if manifest_video_ids is not None:
-        report["manifest_coverage"] = {
-            "manifest_videos": len(manifest_video_ids),
-            "matched_video_ids": len(matched_manifest_video_ids),
-            "matched_files": len(files),
-            "missing_videos": len(manifest_missing_video_ids),
-            "missing_video_ids": manifest_missing_video_ids[:50],
-        }
-
-    threshold_techniques = args.threshold_techniques
-    threshold_topics = args.threshold_topics
-    if args.threshold is not None:
-        threshold_techniques = args.threshold
-        threshold_topics = args.threshold
-
-    validation = evaluate_validation(
-        report,
-        threshold_techniques=threshold_techniques,
-        threshold_topics=threshold_topics,
-        strict=args.strict,
-        manifest_video_ids=manifest_video_ids,
-        manifest_missing_video_ids=manifest_missing_video_ids,
-    )
-    scope = {
-        "manifest": manifest_path.name if manifest_path else None,
-        "source_filter": args.source or None,
-        "file_count": len(files),
-        "manifest_videos": len(manifest_video_ids) if manifest_video_ids is not None else None,
-        "manifest_matched_videos": len(matched_manifest_video_ids) if manifest_video_ids is not None else None,
-        "manifest_missing_videos": len(manifest_missing_video_ids) if manifest_video_ids is not None else None,
-        "blocked_videos": len(validation.get("blocked_video_ids", []) or []),
-    }
+    validation = evaluate_validation(report, args.threshold, args.strict)
 
     if args.json:
         output_data = {
-            "scope": scope,
             "validation": validation,
             "details": report,
         }
@@ -945,7 +446,7 @@ def main() -> int:
 
     # Save report file
     if not args.no_report:
-        report_path = save_report(report, validation, output_dir, label, report_name, scope=scope)
+        report_path = save_report(report, validation, output_dir, label)
         print(f"[08.taxonomy-validation] Report saved: {report_path}")
 
     # Return exit code based on status

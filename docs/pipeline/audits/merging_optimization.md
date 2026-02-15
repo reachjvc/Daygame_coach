@@ -229,7 +229,7 @@ Both agree: do not add `mixed` to conversations schema.
 | Stable sourceKey | 8.12 | Idempotent ingest |
 | Collapsed speaker contract | 8.6 | Schema enforcement |
 | P0/P1/P2 prioritization | 13 | Sequence work correctly |
-| Stage 07 gate policy | 2.5.3 | `reverify_patched` for production runs (baseline `06b.verify` + `06b.reverify` gate), with `allow_flag` as explicit override |
+| Stage 07 gate policy | 2.5.3 | Allow FLAG after patch |
 
 ### 4.2 Take from Claude (Qualitative)
 
@@ -253,7 +253,7 @@ This section in the Claude draft over-stated “neither has”. Adjusted view:
 
 | Item | Status Across Plans | Rationale |
 |------|---------------------|-----------|
-| Re-verify patched step (06b on 06c output) | Implemented (`scripts/training-data/06b.reverify`, wired in Stage 07/validator/orchestrator) | Enables strict production gating while preserving explicit override paths for iteration |
+| Re-verify patched step (06b on 06c output) | Mentioned as an option; should be made concrete in merged plan | Enables a strict gate without throwing away salvageable FLAG videos; increases cost but improves confidence |
 | Prompt version tracking | Already in Codex (explicit); implied in Claude | Required for drift attribution; needs a single versioning convention across 06/06b/07 |
 | Token telemetry | Present in both (Codex detailed; Claude mentions) | Needed for cost control decisions and regression analysis |
 | Batch stop conditions | Already in Codex | Prevents runaway bad batches; needs to be adopted in merged execution checklist |
@@ -274,14 +274,15 @@ These are “quiet correctness bugs” that can invalidate downstream evaluation
 
 ### 4.5 Merge Mechanics (Practical)
 
-If the goal is a single “master plan” document that can be implemented without re-litigating fundamentals, use this consolidation procedure:
+If the goal is a single “master plan” document that can be implemented without re-litigating fundamentals, use this merge procedure:
 
-1. Use `docs/pipeline/audits/codex_pipeline_validation.md` as the backbone.
-2. Keep planning-only / safety guardrails as the top constraint block.
-3. Keep evidence bundle contract + reason codes + quarantine/waiver + tiered readiness sections as normative spec.
-4. Preserve stage-specific contract items (layout modes + pairing rules; 06b→06c enum/schema alignment and “no mixed”; 06c post-patch validation; 07→09 global segment-id contract).
-5. Keep appendices (stage report schema, verification schema updates) as implementation specs.
-6. Consolidate open questions into one numbered list and resolve contradictions explicitly (Stage 08 gating scope + threshold; Stage 09/10 key stability + migration).
+1. Use `docs/pipeline/audits/claude_pipeline_validation.md` as the narrative backbone (it already contains concrete examples, prompt text, and effort estimates).
+2. Copy Codex’s “planning-only / safety” guardrails and make them the top-of-doc constraint block.
+3. Replace Claude Section 7 (“Validation Strategy”) with Codex Section 7 content (evidence bundle contract + reason codes; quarantine + waivers; tiered RAG-ready computation).
+4. In the stage-by-stage section, keep Claude’s table formatting but inject Codex’s stage-specific contract items (layout modes + pairing rules; 06b → 06c enum/schema alignment and “no mixed”; 06c post-patch validation + recompute `conversations[]` if boundary fixes remain auto-applied; 07 → 09 global segment-id contract).
+5. Add Codex appendices (stage report schema, verification schema v2 drafts) as the “spec layer” so implementation can be unblocked without re-deriving schemas.
+6. Consolidate Open Questions into one numbered list and resolve contradictions explicitly (Stage 07 gate policy; canonical layout + migration; Stage 08 gating scope + threshold; Stage 09/10 key stability + migration).
+7. Keep Claude’s “FLAG video analysis” and “prompt text proposals” as the “evidence layer” (they justify why the specs and validators are needed; they seed threshold calibration and A/B prompt tests).
 
 ---
 
@@ -331,13 +332,13 @@ If the goal is a single “master plan” document that can be implemented witho
 
 | # | Decision | Options | Recommendation |
 |---|----------|---------|----------------|
-| 1 | Stage 07 gate policy | APPROVE-only vs `allow_flag` vs `reverify_patched` | **Resolved:** `reverify_patched` for production-quality gating; `allow_flag` remains an explicit override |
+| 1 | Stage 07 gate policy | APPROVE-only vs REJECT-only vs “two-mode” | **Two-mode**: `production_strict` (APPROVE-only) + `evaluation_permissive` (FLAG-through-after-patch). Default to permissive while fixing pipeline quality, then tighten once APPROVE rate is high. |
 | 2 | RAG-ready tiers | 2-tier vs 3-tier | 3-tier (Codex) |
 | 3 | Canonical layout | source-flat vs source-video | source-video (Codex) |
 | 4 | sourceKey format | title-based vs video_id-based | video_id-based (Codex) |
 | 5 | Mixed speaker handling | new enum vs artifact flag | artifact flag (both agree) |
 | 6 | Stage 08 gating scope | batch-wide vs per-video | **Open decision**. Recommendation: start with batch-scoped reporting + conservative gating, then evolve toward per-video quarantine to avoid “batch hostage” failures. |
-| 7 | Re-verify patched | yes vs no | **Resolved:** yes (implemented as `06b.reverify` + `reverify_patched` policy) |
+| 7 | Re-verify patched | yes (paranoid) vs no | optional (new) |
 
 ---
 

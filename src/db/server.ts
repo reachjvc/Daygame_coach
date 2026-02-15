@@ -21,7 +21,6 @@ export {
   deleteEmbeddingsBySource,
   searchSimilarEmbeddings,
   searchEmbeddingsByKeyword,
-  fetchEmbeddingsBySourceAndConversation,
   getEmbeddingsCount,
   getEmbeddingSources,
 } from "./embeddingsRepo"

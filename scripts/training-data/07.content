@@ -5,10 +5,8 @@ scripts/training-data/07.content
 Content Enrichment using Claude Code CLI
 
 Reads:
-  - Conversation files (default: Stage 06c patched output):
+  - Conversation files (from Stage 06c patched output):
       data/06c.patched/<source>/<video>/*.conversations.json
-    For hardened runs, pass --input-root data/06d.sanitized so Stage 07 consumes
-    deterministic sanitization metadata (stage07_evidence_segment_ids).
 
 Writes:
   - Enriched conversation files:
@@ -47,7 +45,6 @@ Requirements:
 from __future__ import annotations
 
 import argparse
-from collections import Counter
 import difflib
 import hashlib
 import json
@@ -92,7 +89,7 @@ TECHNIQUE_TAXONOMY = {
     "push_pull": "Giving a compliment then taking it away, or vice versa ('You seem cool... for a tourist')",
     "tease": "Playful mocking or joking at her expense in a fun way",
     "cold_read": "Making an assumption about her personality/life ('You look like a yoga teacher')",
-    "role_play": "Creating imaginary scenarios or playing a character/bit together ('Let's pretend...')",
+    "role_play": "Creating imaginary scenarios together ('We'd make terrible dance partners')",
     "disqualification": "Playfully suggesting you two wouldn't work out",
     "DHV": "Demonstration of higher value through stories or behavior",
     "frame_control": "Maintaining your perspective/reality in the interaction",
@@ -101,8 +98,8 @@ TECHNIQUE_TAXONOMY = {
 
     # Connection (8)
     "qualification": "Asking what makes her special beyond looks ('What's your passion?')",
-    "statement_of_intent": "Clearly expressing romantic/sexual interest (sincere; not as a joke/role-play/absurdist bit)",
-    "grounding": "Sharing genuine personal details to build trust and rapport (not absurdist jokes)",
+    "statement_of_intent": "Clearly expressing romantic/sexual interest",
+    "grounding": "Sharing personal details to build trust and rapport",
     "storytelling": "Using engaging stories to convey personality",
     "vulnerability": "Sharing something genuine/personal to create connection",
     "callback_humor": "Referencing something mentioned earlier in conversation",
@@ -120,10 +117,10 @@ TECHNIQUE_TAXONOMY = {
     "instant_date": "Suggesting to continue hanging out right now",
     "bounce": "Moving to a different location together",
     "time_bridge": "Setting up specific future plans",
-    "logistics_check": "Asking about her schedule/availability (does not start close by itself)",
+    "logistics_check": "Asking about her schedule/availability",
 }
 
-# Topics across core interaction + coaching context categories
+# 22 topics across 5 categories
 TOPIC_TAXONOMY = {
     # Personal (8)
     "name": "Her name or introductions",
@@ -156,20 +153,12 @@ TOPIC_TAXONOMY = {
     "location": "The current place, area, city",
     "humor": "Jokes, banter, playful exchanges",
     "flirting": "Romantic/sexual tension, attraction",
-
-    # Recurring taxonomy additions from validation hardening
-    "tattoos": "Discussion of tattoos, their meaning, or appearance",
-    "language_learning": "Learning, practicing, or discussing languages",
-    "language_barrier": "Communication friction due to limited shared language",
-    "breakthrough_moment": "A pivotal realization or turning point in confidence or progress",
-    "coaching_promotion": "Coach promoting programs, workshops, offers, or calls-to-action",
 }
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.5.0"  # v1.5.0: Stage07 evidence allowlist markers + stricter evidence contract
-PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.content-v1.9"  # v1.9: Hard-filter evidence to Stage07 allowlist + dropped_candidates audit trail
+PROMPT_VERSION = "1.2.0"  # v1.2: Stricter taxonomy enforcement, close phase clarification
+PIPELINE_VERSION = "07.content-v1.1"  # v1.1: Fixed cross-ref to use segments, added upstream patch metadata
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -177,7 +166,6 @@ MAX_FAILURE_RATE = 0.20
 
 # Phase progression order (must go forward only)
 PHASE_ORDER = ["open", "pre_hook", "post_hook", "close"]
-VIDEO_ID_BRACKET_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 
 
 # ---------------------------
@@ -227,1251 +215,6 @@ def fuzzy_evidence_match(evidence: str, transcript_text: str, threshold: float =
     return best_ratio >= threshold
 
 
-def build_conversation_meta_index(conversations_meta: Any) -> Dict[int, Dict[str, Any]]:
-    """Index conversation metadata by conversation_id."""
-    out: Dict[int, Dict[str, Any]] = {}
-    if not isinstance(conversations_meta, list):
-        return out
-    for conv in conversations_meta:
-        if not isinstance(conv, dict):
-            continue
-        conv_id = conv.get("conversation_id")
-        if isinstance(conv_id, int) and conv_id > 0:
-            out[conv_id] = conv
-    return out
-
-
-def get_confident_target_ids_from_meta(conv_meta: Optional[Dict[str, Any]]) -> Set[str]:
-    """Read conservative target speaker subset from conversation metadata."""
-    if not isinstance(conv_meta, dict):
-        return set()
-    tp = conv_meta.get("target_participation")
-    if not isinstance(tp, dict):
-        return set()
-    ids = tp.get("target_speaker_ids_confident")
-    if not isinstance(ids, list):
-        return set()
-    return {sid for sid in ids if isinstance(sid, str) and sid.strip()}
-
-
-def normalize_enrichments(
-    enrichments: List[Dict[str, Any]],
-    seg_by_id: Optional[Dict[int, Dict[str, Any]]] = None,
-    conversations: Optional[Dict[int, List[Dict[str, Any]]]] = None,
-    commentary_blocks: Optional[List[Dict[str, Any]]] = None,
-    conversation_meta_by_id: Optional[Dict[int, Dict[str, Any]]] = None,
-) -> List[str]:
-    """Normalize known LLM drift patterns before validation.
-
-    Keep this conservative: only coerce obviously-invalid combinations that
-    otherwise block the pipeline, and prefer dropping derived fields over
-    inventing missing structure.
-    """
-    repairs: List[str] = []
-    valid_topics = set(TOPIC_TAXONOMY.keys())
-    valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
-    topic_canon = {k.lower(): k for k in valid_topics}
-    technique_canon = {k.lower(): k for k in valid_techniques}
-
-    # --- 0) Best-effort conversation_id remap (approach enrichments only) ---
-    # The LLM occasionally emits "conversation_id" values that drift from Stage 06c, even when
-    # segment references are correct. This causes:
-    #   - phantom_enrichments (Stage 07 conv ids not present in Stage 06)
-    #   - technique_wrong_conversation / turn_phase_wrong_conversation warnings
-    #
-    # We can safely remap conversation_id when the referenced segments overwhelmingly belong
-    # to a single Stage 06 conversation. We deliberately do NOT remap to conv 0 (commentary).
-    if seg_by_id is not None and conversations is not None:
-        valid_conv_ids: Set[int] = {c for c in conversations.keys() if isinstance(c, int) and c > 0}
-
-        # Segment id -> commentary block index (1-based). Only populated when we have commentary_blocks.
-        seg_to_commentary_block: Dict[int, int] = {}
-        if isinstance(commentary_blocks, list) and commentary_blocks:
-            for block_index, block in enumerate(commentary_blocks, start=1):
-                if not isinstance(block, dict):
-                    continue
-                segs = block.get("segments", [])
-                if not isinstance(segs, list):
-                    continue
-                for seg in segs:
-                    if not isinstance(seg, dict):
-                        continue
-                    seg_id = seg.get("id")
-                    if isinstance(seg_id, int):
-                        seg_to_commentary_block[seg_id] = block_index
-
-        for i, e in enumerate(enrichments):
-            if not isinstance(e, dict) or e.get("type") != "approach":
-                continue
-
-            def _collect_segment_refs(en: Dict[str, Any]) -> List[int]:
-                refs: List[int] = []
-                for tp in en.get("turn_phases", []) or []:
-                    if isinstance(tp, dict) and isinstance(tp.get("segment"), int):
-                        refs.append(int(tp["segment"]))
-                for tech in en.get("techniques_used", []) or []:
-                    if isinstance(tech, dict) and isinstance(tech.get("segment"), int):
-                        refs.append(int(tech["segment"]))
-                hook = en.get("hook_point")
-                if isinstance(hook, dict) and isinstance(hook.get("segment"), int):
-                    refs.append(int(hook["segment"]))
-                return refs
-
-            refs = _collect_segment_refs(e)
-            if not refs:
-                continue
-
-            conv_counts: Counter = Counter()
-            mapped = 0
-            for seg_id in refs:
-                seg = seg_by_id.get(seg_id)
-                if not isinstance(seg, dict):
-                    continue
-                conv_id = seg.get("conversation_id")
-                if isinstance(conv_id, int):
-                    conv_counts[conv_id] += 1
-                    mapped += 1
-
-            if not conv_counts or mapped == 0:
-                continue
-
-            inferred_conv_id, inferred_count = conv_counts.most_common(1)[0]
-            inferred_ratio = inferred_count / mapped
-
-            # Conservative thresholds:
-            # - for small evidence sets, require unanimity (ratio=1.0)
-            # - for larger sets, allow a little noise
-            if mapped < 8 and inferred_ratio < 1.0:
-                continue
-            if mapped >= 8 and inferred_ratio < 0.6:
-                continue
-
-            # Special case: the LLM sometimes emits an "approach" enrichment whose segment refs
-            # actually point into conversation_id=0 (commentary). In that case, convert the
-            # enrichment to a commentary block enrichment instead of remapping conv_id.
-            if inferred_conv_id == 0:
-                if not seg_to_commentary_block:
-                    continue
-
-                # Choose the most likely block_index by vote over referenced segments.
-                block_counts: Counter = Counter()
-                for seg_id in refs:
-                    bi = seg_to_commentary_block.get(seg_id)
-                    if isinstance(bi, int):
-                        block_counts[bi] += 1
-
-                if not block_counts:
-                    continue
-
-                block_index, block_count = block_counts.most_common(1)[0]
-                # If refs are spread across multiple blocks, avoid guessing.
-                if inferred_count >= 8 and (block_count / max(1, inferred_count)) < 0.6:
-                    continue
-
-                current_conv_id = e.get("conversation_id")
-
-                # Convert approach -> commentary.
-                e["type"] = "commentary"
-                e.pop("conversation_id", None)
-                e["block_index"] = block_index
-
-                # Move techniques_used -> techniques_discussed (drop segment pointers; commentaries are block-level).
-                techniques_discussed: List[Dict[str, Any]] = []
-                existing_discussed = e.get("techniques_discussed")
-                if isinstance(existing_discussed, list):
-                    for t in existing_discussed:
-                        if not isinstance(t, dict):
-                            continue
-                        name = t.get("technique")
-                        if not isinstance(name, str) or not name.strip():
-                            continue
-                        td: Dict[str, Any] = {"technique": name.strip()}
-                        ex = t.get("example")
-                        if isinstance(ex, str) and ex.strip():
-                            td["example"] = ex.strip()
-                        techniques_discussed.append(td)
-
-                for t in e.get("techniques_used", []) or []:
-                    if not isinstance(t, dict):
-                        continue
-                    name = t.get("technique")
-                    if not isinstance(name, str) or not name.strip():
-                        continue
-                    td = {"technique": name.strip()}
-                    ex = t.get("example")
-                    if isinstance(ex, str) and ex.strip():
-                        td["example"] = ex.strip()
-                    techniques_discussed.append(td)
-
-                # Dedupe discussed techniques.
-                seen_discussed: Set[Tuple[Any, Any]] = set()
-                deduped: List[Dict[str, Any]] = []
-                for td in techniques_discussed:
-                    key = (td.get("technique"), td.get("example"))
-                    if key in seen_discussed:
-                        continue
-                    seen_discussed.add(key)
-                    deduped.append(td)
-
-                e["techniques_discussed"] = deduped
-                e.pop("techniques_used", None)
-
-                # Drop approach-only fields.
-                for k in ("turn_phases", "hook_point", "investment_level", "phase_confidence"):
-                    e.pop(k, None)
-
-                repairs.append(
-                    f"enrichment {i}: converted approach conv {current_conv_id!r} -> "
-                    f"commentary block {block_index} (segment refs mostly conv0 {inferred_count}/{mapped})"
-                )
-                continue
-
-            if not (isinstance(inferred_conv_id, int) and inferred_conv_id in valid_conv_ids):
-                continue
-
-            current_conv_id = e.get("conversation_id")
-            if current_conv_id != inferred_conv_id:
-                e["conversation_id"] = inferred_conv_id
-                repairs.append(
-                    f"enrichment {i}: remapped conversation_id {current_conv_id!r} -> {inferred_conv_id} "
-                    f"(segment refs agree {inferred_count}/{mapped})"
-                )
-
-    for i, e in enumerate(enrichments):
-        if not isinstance(e, dict):
-            repairs.append(f"enrichment {i}: non-dict entry ignored")
-            continue
-
-        # Ensure unlisted_concepts is present and writable
-        unlisted = e.get("unlisted_concepts")
-        if not isinstance(unlisted, dict):
-            unlisted = {}
-        unlisted_techniques = unlisted.get("techniques")
-        if not isinstance(unlisted_techniques, list):
-            unlisted_techniques = []
-        unlisted_topics = unlisted.get("topics")
-        if not isinstance(unlisted_topics, list):
-            unlisted_topics = []
-        unlisted["techniques"] = unlisted_techniques
-        unlisted["topics"] = unlisted_topics
-        e["unlisted_concepts"] = unlisted
-
-        # Normalize topics_discussed: keep only taxonomy entries; auto-move invalid ones to unlisted_concepts.
-        topics_discussed = e.get("topics_discussed")
-        if topics_discussed is not None and not isinstance(topics_discussed, list):
-            repairs.append(f"enrichment {i}: topics_discussed not a list -> []")
-            topics_discussed = []
-            e["topics_discussed"] = topics_discussed
-        if isinstance(topics_discussed, list):
-            normalized_topics: List[str] = []
-            for t in topics_discussed:
-                if not isinstance(t, str):
-                    continue
-                raw = t.strip()
-                if not raw:
-                    continue
-                canon = topic_canon.get(raw.lower())
-                if canon:
-                    normalized_topics.append(canon)
-                else:
-                    unlisted_topics.append(
-                        f"{raw}: auto-moved from topics_discussed (not in taxonomy)"
-                    )
-                    repairs.append(
-                        f"enrichment {i}: invalid topic '{raw}' moved to unlisted_concepts"
-                    )
-            e["topics_discussed"] = normalized_topics
-
-        # Promote previously-unlisted topics that are now in taxonomy.
-        topics_discussed = e.get("topics_discussed")
-        if not isinstance(topics_discussed, list):
-            topics_discussed = []
-            e["topics_discussed"] = topics_discussed
-        promoted_topics = 0
-        kept_unlisted_topics: List[str] = []
-        for raw_topic in unlisted_topics:
-            if not isinstance(raw_topic, str):
-                continue
-            raw_text = raw_topic.strip()
-            if not raw_text:
-                continue
-            raw_name = raw_text.split(":", 1)[0].strip()
-            canon = topic_canon.get(raw_name.lower())
-            if canon:
-                topics_discussed.append(canon)
-                promoted_topics += 1
-            else:
-                kept_unlisted_topics.append(raw_text)
-        if promoted_topics:
-            # Preserve order while removing duplicates after promotion.
-            deduped_topics: List[str] = []
-            seen_topics: Set[str] = set()
-            for t in topics_discussed:
-                if not isinstance(t, str):
-                    continue
-                name = t.strip()
-                if not name or name in seen_topics:
-                    continue
-                seen_topics.add(name)
-                deduped_topics.append(name)
-            e["topics_discussed"] = deduped_topics
-            unlisted["topics"] = kept_unlisted_topics
-            repairs.append(
-                f"enrichment {i}: promoted {promoted_topics} unlisted topic(s) into taxonomy"
-            )
-
-        def normalize_technique_list(field_name: str) -> None:
-            items = e.get(field_name)
-            if items is None:
-                return
-            if not isinstance(items, list):
-                repairs.append(f"enrichment {i}: {field_name} not a list -> []")
-                e[field_name] = []
-                return
-
-            kept: List[Dict[str, Any]] = []
-            for item in items:
-                if not isinstance(item, dict):
-                    continue
-                tech_name = item.get("technique")
-                if not isinstance(tech_name, str) or not tech_name.strip():
-                    kept.append(item)
-                    continue
-
-                raw = tech_name.strip()
-                canon = technique_canon.get(raw.lower())
-                if canon:
-                    if raw != canon:
-                        repairs.append(
-                            f"enrichment {i}: normalized technique '{raw}' -> '{canon}'"
-                        )
-                        item["technique"] = canon
-                    kept.append(item)
-                    continue
-
-                unlisted_techniques.append(
-                    f"{raw}: auto-moved from {field_name} (not in taxonomy)"
-                )
-                repairs.append(
-                    f"enrichment {i}: invalid technique '{raw}' moved to unlisted_concepts"
-                )
-                # Drop invalid technique entry
-
-            e[field_name] = kept
-
-        normalize_technique_list("techniques_used")
-        normalize_technique_list("techniques_discussed")
-
-        if e.get("type") != "approach":
-            continue
-
-        # Deterministic close-technique fixes from transcript cues:
-        # - downgrade unsupported number/instagram close tags when the cited segment
-        #   is actually a logistics/bounce invite.
-        # - recover missed target-initiated contact closes (common in failed/chaotic clips).
-        if conversations is not None:
-            conv_id = e.get("conversation_id")
-            if isinstance(conv_id, int) and conv_id in conversations:
-                conv_segments = [
-                    s for s in (conversations.get(conv_id) or [])
-                    if isinstance(s, dict)
-                ]
-                conv_seg_by_id: Dict[int, Dict[str, Any]] = {
-                    int(s.get("id")): s
-                    for s in conv_segments
-                    if isinstance(s.get("id"), int)
-                }
-
-                contact_cue_re = re.compile(
-                    r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
-                    r"|\btext me\b"
-                    r"|\bcall me\b",
-                    re.IGNORECASE,
-                )
-                instagram_cue_re = re.compile(r"\binstagram(?:s)?\b|\big\b", re.IGNORECASE)
-                invite_cue_re = re.compile(
-                    r"\b(grab|get|go for)\b (?:a |some )?(?:drink|coffee|tea|water)\b"
-                    r"|\bhang out\b"
-                    r"|\bmeet up\b"
-                    r"|\bgo (?:out|somewhere)\b"
-                    r"|\bwalk around\b"
-                    r"|\bcome with (?:me|us)\b"
-                    r"|\bjoin (?:me|us)\b"
-                    r"|\bwalk with (?:me|us)\b"
-                    r"|\blet'?s (?:grab|get|go|hang|meet|walk)\b"
-                    r"|\bwhy (?:don't|dont) we\b"
-                    r"|\buber you back\b",
-                    re.IGNORECASE,
-                )
-                close_contact_techs = {"number_close", "instagram_close"}
-
-                def _nearby_text(seg_id: int) -> str:
-                    bits: List[str] = []
-                    for off in (-1, 0, 1):
-                        s = conv_seg_by_id.get(seg_id + off)
-                        if isinstance(s, dict):
-                            bits.append(str(s.get("text") or ""))
-                    return " ".join(bits)
-
-                techniques_used = e.get("techniques_used")
-                if not isinstance(techniques_used, list):
-                    techniques_used = []
-                    e["techniques_used"] = techniques_used
-                if isinstance(techniques_used, list):
-                    for t in techniques_used:
-                        if not isinstance(t, dict):
-                            continue
-                        name = t.get("technique")
-                        seg_id = t.get("segment")
-                        if name not in close_contact_techs or not isinstance(seg_id, int):
-                            continue
-                        ctx = _nearby_text(seg_id)
-                        if contact_cue_re.search(ctx):
-                            continue
-
-                        seg_text = str((conv_seg_by_id.get(seg_id) or {}).get("text") or "")
-                        if invite_cue_re.search(seg_text):
-                            t["technique"] = "bounce"
-                            repairs.append(
-                                f"conv {conv_id}: downgraded unsupported {name} -> bounce at seg {seg_id}"
-                            )
-                        else:
-                            t["technique"] = "soft_close"
-                            repairs.append(
-                                f"conv {conv_id}: downgraded unsupported {name} -> soft_close at seg {seg_id}"
-                            )
-
-                    has_contact_close_tech = any(
-                        isinstance(t, dict) and t.get("technique") in close_contact_techs
-                        for t in techniques_used
-                    )
-                    if not has_contact_close_tech:
-                        for s in conv_segments:
-                            sid = s.get("id")
-                            text = str(s.get("text") or "")
-                            if not isinstance(sid, int) or not text.strip():
-                                continue
-                            if not contact_cue_re.search(text):
-                                continue
-                            inferred = "instagram_close" if instagram_cue_re.search(text) else "number_close"
-                            techniques_used.append({
-                                "technique": inferred,
-                                "segment": sid,
-                                "example": text.strip(),
-                            })
-                            repairs.append(
-                                f"conv {conv_id}: added missing {inferred} from transcript cue at seg {sid}"
-                            )
-                            break
-
-        # If the description claims a contact close (number/Instagram) but we can't find any
-        # contact-exchange evidence in the transcript, soften the wording to avoid misleading summaries.
-        if conversations is not None:
-            conv_id = e.get("conversation_id")
-            if isinstance(conv_id, int) and conv_id in conversations:
-                desc = e.get("description")
-                if isinstance(desc, str) and desc.strip():
-                    contact_cue_re = re.compile(
-                        r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
-                        r"|\btext me\b"
-                        r"|\bcall me\b",
-                        re.IGNORECASE,
-                    )
-                    close_claim_re = re.compile(
-                        r"\b("
-                        r"number close(?:s)?|instagram close(?:s)?|ig close(?:s)?|"
-                        r"got (?:her|his) number|exchanged numbers?"
-                        r")\b",
-                        re.IGNORECASE,
-                    )
-                    if close_claim_re.search(desc):
-                        has_close_technique = any(
-                            isinstance(t, dict)
-                            and t.get("technique") in ("number_close", "instagram_close")
-                            for t in (e.get("techniques_used", []) or [])
-                        )
-                        conv_has_contact_cue = any(
-                            contact_cue_re.search((s.get("text") or ""))
-                            for s in (conversations.get(conv_id) or [])
-                            if isinstance(s, dict)
-                        )
-                        if not has_close_technique and not conv_has_contact_cue:
-                            new_desc = desc
-                            new_desc = re.sub(r"\bnumber close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
-                            new_desc = re.sub(r"\binstagram close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
-                            new_desc = re.sub(r"\big close(?:s)?\b", "soft close attempt", new_desc, flags=re.IGNORECASE)
-                            new_desc = re.sub(r"\bwith solid plans?\b", "", new_desc, flags=re.IGNORECASE)
-                            # Avoid phrasing that implies a successful close when we couldn't find evidence.
-                            new_desc = re.sub(
-                                r"\bsettles for soft close attempt\b",
-                                "attempts a soft close",
-                                new_desc,
-                                flags=re.IGNORECASE,
-                            )
-                            new_desc = re.sub(r"\s{2,}", " ", new_desc).strip()
-                            new_desc = re.sub(r"\s+,", ",", new_desc)
-                            new_desc = re.sub(r"\s+\.", ".", new_desc)
-                            if new_desc != desc:
-                                e["description"] = new_desc
-                                repairs.append(
-                                    f"conv {conv_id}: softened unsupported contact-close claim in description"
-                                )
-
-                    # If summary claims there was "no close" but transcript has explicit
-                    # contact-close evidence, make wording outcome-agnostic and factually aligned.
-                    desc_now = e.get("description")
-                    if not isinstance(desc_now, str):
-                        desc_now = desc
-                    no_close_re = re.compile(r"\bno close\b", re.IGNORECASE)
-                    if no_close_re.search(desc_now):
-                        conv_has_contact_cue = any(
-                            contact_cue_re.search((s.get("text") or ""))
-                            for s in (conversations.get(conv_id) or [])
-                            if isinstance(s, dict)
-                        )
-                        if conv_has_contact_cue:
-                            new_desc = no_close_re.sub("contact close attempt", desc_now)
-                            if new_desc != desc_now:
-                                e["description"] = new_desc
-                                repairs.append(
-                                    f"conv {conv_id}: normalized 'no close' phrasing to contact close attempt"
-                                )
-
-                # If we already softened a claim previously, ensure we don't imply "success" via phrasing.
-                # Keep this deterministic: only rewrite exact patterns we create ourselves.
-                desc2 = e.get("description")
-                if isinstance(desc2, str) and desc2.strip():
-                    has_soft_close_technique = any(
-                        isinstance(t, dict) and t.get("technique") == "soft_close"
-                        for t in (e.get("techniques_used", []) or [])
-                    )
-
-                    fixed = re.sub(
-                        r"\bsettles for (?:a )?soft close attempt\b",
-                        "attempts a soft close",
-                        desc2,
-                        flags=re.IGNORECASE,
-                    )
-                    if not has_soft_close_technique:
-                        # If we don't have a soft_close technique recorded, prefer outcome-agnostic wording.
-                        fixed = re.sub(
-                            r"\battempts a soft close\b",
-                            "attempts to extend the date",
-                            fixed,
-                            flags=re.IGNORECASE,
-                        )
-                    # Remove common inferred venue names unless explicitly present in transcript.
-                    # (We prefer being conservative over implying details that aren't in text.)
-                    conv_text_has_starbucks = any(
-                        "starbucks" in ((s.get("text") or "").lower())
-                        for s in (conversations.get(conv_id) or [])
-                        if isinstance(s, dict)
-                    )
-                    if "starbucks" in fixed.lower() and not conv_text_has_starbucks:
-                        before = fixed
-                        fixed = re.sub(r"\bat starbucks\b", "", fixed, flags=re.IGNORECASE)
-                        fixed = re.sub(r"\bstarbucks\b", "", fixed, flags=re.IGNORECASE)
-                        if fixed != before:
-                            repairs.append(f"conv {conv_id}: removed unsupported venue mention from description")
-
-                    # Fix common awkward phrasing produced by our own normalization transforms.
-                    before2 = fixed
-                    fixed = re.sub(
-                        r"\battempts second venue but attempts to extend the date\b",
-                        "then attempts to extend the date to a second venue",
-                        fixed,
-                        flags=re.IGNORECASE,
-                    )
-                    if fixed != before2:
-                        repairs.append(f"conv {conv_id}: normalized description phrasing")
-                    # Clean up artifacts from removals/replacements like "instant date ,".
-                    fixed = re.sub(r"\s+([,.;:!?])", r"\1", fixed)
-                    fixed = re.sub(r"\s{2,}", " ", fixed).strip()
-                    if fixed != desc2:
-                        e["description"] = fixed
-                        repairs.append(
-                            f"conv {conv_id}: normalized soft close attempt phrasing in description"
-                        )
-
-        # If a technique's evidence doesn't match its referenced segment, try to re-anchor it
-        # to a segment (prefer coach/student) within this conversation where the evidence appears.
-        #
-        # This handles a common drift pattern: the LLM picks the right quote but assigns
-        # the wrong segment id (often far away in the same conversation).
-        if seg_by_id is not None and conversations is not None:
-            conv_id = e.get("conversation_id")
-            if isinstance(conv_id, int) and conv_id in conversations:
-                conv_segs = [
-                    s for s in (conversations.get(conv_id) or [])
-                    if isinstance(s, dict) and isinstance(s.get("id"), int)
-                ]
-                conv_segs.sort(key=lambda s: s.get("id", 0))
-
-                def _norm_text(s: str) -> str:
-                    s = (s or "").lower()
-                    s = re.sub(r"[^a-z0-9]+", " ", s)
-                    s = re.sub(r"\s+", " ", s).strip()
-                    return s
-
-                def _find_evidence_anchor_segment_id(
-                    example: str,
-                    prefer_near: int,
-                    *,
-                    max_window: int = 3,
-                ) -> Optional[int]:
-                    ev = _norm_text(example)
-                    if not ev or len(ev) < 8:
-                        return None
-
-                    def _collect_matches(*, allow_non_approacher: bool) -> List[int]:
-                        matches: List[int] = []
-                        for w in range(1, max_window + 1):
-                            for start in range(0, max(0, len(conv_segs) - w + 1)):
-                                window = conv_segs[start : start + w]
-                                if not allow_non_approacher:
-                                    # Prefer anchoring to coach/student windows when possible.
-                                    if any(seg.get("speaker_role") not in ("coach", "student") for seg in window):
-                                        continue
-                                window_text = " ".join((seg.get("text") or "") for seg in window)
-                                norm_window = _norm_text(window_text)
-                                if ev and ev in norm_window:
-                                    sid = window[0].get("id")
-                                    if isinstance(sid, int):
-                                        matches.append(sid)
-                                    continue
-                                # Fuzzy fallback for segment-boundary duplication and minor ASR drift.
-                                if w >= 2 and window_text and fuzzy_evidence_match(example, window_text, threshold=0.8):
-                                    sid = window[0].get("id")
-                                    if isinstance(sid, int):
-                                        matches.append(sid)
-                        return matches
-
-                    matches = _collect_matches(allow_non_approacher=False)
-                    if not matches:
-                        # Speaker diarization can be wrong (or the target may be quoting the coach).
-                        # If we can't find coach/student evidence, fall back to anchoring on any window.
-                        matches = _collect_matches(allow_non_approacher=True)
-
-                    if not matches:
-                        return None
-
-                    # Prefer the closest match to the original segment id to avoid surprising jumps.
-                    return sorted(matches, key=lambda sid: (abs(sid - prefer_near), sid))[0]
-
-                conv_seg_ids_set: Set[int] = {
-                    int(s.get("id"))
-                    for s in conv_segs
-                    if isinstance(s.get("id"), int)
-                }
-                normalized_techniques: List[Dict[str, Any]] = []
-                for tech in e.get("techniques_used", []) or []:
-                    if not isinstance(tech, dict):
-                        continue
-
-                    seg_id = tech.get("segment")
-                    example = tech.get("example")
-                    if isinstance(seg_id, int) and isinstance(example, str) and example.strip():
-                        new_seg_id = _find_evidence_anchor_segment_id(example, seg_id)
-                        if new_seg_id is not None and new_seg_id != seg_id:
-                            old_seg_id = seg_id
-                            tech["segment"] = new_seg_id
-                            seg_id = new_seg_id
-                            repairs.append(
-                                f"conv {conv_id}: re-anchored technique '{tech.get('technique', '?')}' "
-                                f"segment {old_seg_id} -> {new_seg_id} (evidence match)"
-                            )
-
-                    effective_seg_id = tech.get("segment")
-                    if isinstance(effective_seg_id, int):
-                        # If a technique still points outside this conversation after re-anchoring,
-                        # drop it to avoid cross-conversation leakage/hallucinated evidence.
-                        if effective_seg_id not in conv_seg_ids_set:
-                            repairs.append(
-                                f"conv {conv_id}: dropped technique '{tech.get('technique', '?')}' "
-                                f"(segment {effective_seg_id} not in conversation)"
-                            )
-                            continue
-
-                        seg = seg_by_id.get(effective_seg_id) if seg_by_id else None
-                        role = ((seg or {}).get("speaker_role") or "").lower() if isinstance(seg, dict) else ""
-                        target_allowed_techniques = {
-                            "number_close",
-                            "instagram_close",
-                            "soft_close",
-                            "assumptive_close",
-                            "instant_date",
-                            "bounce",
-                            "time_bridge",
-                            "logistics_check",
-                        }
-                        tech_name = str(tech.get("technique") or "")
-                        if role and role not in ("coach", "student"):
-                            if role == "target" and tech_name in target_allowed_techniques:
-                                pass
-                            else:
-                                repairs.append(
-                                    f"conv {conv_id}: dropped technique '{tech.get('technique', '?')}' "
-                                    f"(segment {effective_seg_id} speaker_role={role})"
-                                )
-                                continue
-                        # Prefer storing the exact transcript line for the referenced segment as the
-                        # example, so evidence is segment-aligned (and we preserve the ability to flag
-                        # hallucinated examples).
-                        seg_text = (seg.get("text") if isinstance(seg, dict) else "") or ""
-                        seg_text = seg_text.strip()
-                        if seg_text:
-                            current_example = tech.get("example")
-                            if not isinstance(current_example, str):
-                                current_example = ""
-                            if not fuzzy_evidence_match(current_example, seg_text, threshold=0.75):
-                                if current_example.strip() and "example_llm" not in tech:
-                                    tech["example_llm"] = current_example
-                                tech["example"] = seg_text
-                                repairs.append(
-                                    f"conv {conv_id}: refreshed technique '{tech.get('technique', '?')}' "
-                                    f"example from segment {effective_seg_id}"
-                                )
-
-                    normalized_techniques.append(tech)
-
-                if isinstance(e.get("techniques_used"), list):
-                    e["techniques_used"] = normalized_techniques
-
-        # Normalize empty-ish fields
-        if e.get("hook_point") in ("", {}, []):
-            e["hook_point"] = None
-        if e.get("investment_level") in ("", {}, []):
-            e["investment_level"] = None
-
-        turn_phases = e.get("turn_phases")
-        if turn_phases is None:
-            e["turn_phases"] = []
-            turn_phases = e["turn_phases"]
-        elif not isinstance(turn_phases, list):
-            repairs.append(
-                f"conv {e.get('conversation_id', '?')}: turn_phases not a list -> []"
-            )
-            e["turn_phases"] = []
-            turn_phases = e["turn_phases"]
-
-        # Normalize phase annotations:
-        # - drop phases that point outside the conversation
-        # - de-dupe: one phase per segment id (prefer later phases if duplicated)
-        # - enforce monotonic phase progression by segment id (no going backwards)
-        if conversations is not None:
-            conv_id = e.get("conversation_id")
-            if isinstance(conv_id, int) and conv_id in conversations:
-                conv_seg_ids: Set[int] = {
-                    int(s.get("id"))
-                    for s in (conversations.get(conv_id) or [])
-                    if isinstance(s, dict) and isinstance(s.get("id"), int)
-                }
-                phase_rank = {p: i for i, p in enumerate(PHASE_ORDER)}
-                by_seg: Dict[int, str] = {}
-
-                for tp in turn_phases:
-                    if not isinstance(tp, dict):
-                        continue
-                    sid = tp.get("segment")
-                    ph = tp.get("phase")
-                    if not isinstance(sid, int) or sid not in conv_seg_ids:
-                        continue
-                    if not isinstance(ph, str) or ph not in phase_rank:
-                        continue
-                    prev = by_seg.get(sid)
-                    if prev is None or phase_rank[ph] > phase_rank.get(prev, 0):
-                        by_seg[sid] = ph
-
-                if conv_seg_ids:
-                    min_conv = min(conv_seg_ids)
-                    if min_conv not in by_seg:
-                        by_seg[min_conv] = "open"
-                        repairs.append(f"conv {conv_id}: added missing open phase for segment {min_conv}")
-
-                if by_seg:
-                    normalized: List[Dict[str, Any]] = []
-                    current_rank = 0
-                    for sid, ph in sorted(by_seg.items()):
-                        r = phase_rank.get(ph, 0)
-                        if r < current_rank:
-                            ph = PHASE_ORDER[current_rank]
-                            repairs.append(f"conv {conv_id}: clamped phase for segment {sid} to {ph}")
-                        else:
-                            current_rank = r
-                        normalized.append({"segment": sid, "phase": ph})
-                    e["turn_phases"] = normalized
-                    turn_phases = normalized
-
-        # Additional deterministic phase repairs to reduce common drift:
-        # - Ensure close starts at the earliest close-technique segment (sticky close).
-        # - If "close" appears but there are no close techniques and the content is a non-dating CTA
-        #   (e.g. "subscribe to my channel"), downgrade "close" to the prior phase.
-        # - If post_hook exists but target engagement is minimal (no questions, very short replies),
-        #   downgrade post_hook to pre_hook to avoid false hooks on one-word corrections.
-        if conversations is not None:
-            conv_id = e.get("conversation_id")
-            if isinstance(conv_id, int) and conv_id in conversations:
-                phase_rank2 = {p: i for i, p in enumerate(PHASE_ORDER)}
-                tp_map: Dict[int, str] = {}
-                for tp in turn_phases:
-                    if not isinstance(tp, dict):
-                        continue
-                    sid = tp.get("segment")
-                    ph = tp.get("phase")
-                    if isinstance(sid, int) and isinstance(ph, str) and ph in phase_rank2:
-                        tp_map[sid] = ph
-
-                tp_changed = False
-
-                # --- Failed/open-only interaction guard ---
-                # Some short language-barrier/rejection interactions are better modeled as
-                # pure "open" (no meaningful pre_hook progression), even when the LLM emits
-                # pre_hook labels by default.
-                if (
-                    not (e.get("techniques_used") or [])
-                    and e.get("hook_point") is None
-                    and e.get("investment_level") is None
-                ):
-                    conv_segs = [
-                        s for s in (conversations.get(conv_id) or [])
-                        if isinstance(s, dict)
-                    ]
-                    conv_seg_ids_all = [
-                        int(s.get("id"))
-                        for s in conv_segs
-                        if isinstance(s.get("id"), int)
-                    ]
-                    phases_now = set(tp_map.values())
-                    if (
-                        conv_seg_ids_all
-                        and len(conv_seg_ids_all) <= 30
-                        and phases_now.issubset({"open", "pre_hook"})
-                    ):
-                        cue_text = " ".join(
-                            str(s.get("text") or "").lower()
-                            for s in conv_segs
-                        )
-                        failed_cue = any(
-                            phrase in cue_text
-                            for phrase in (
-                                "boyfriend",
-                                "no speak english",
-                                "i have to go",
-                                "sorry",
-                                "can't",
-                                "cannot",
-                            )
-                        )
-                        if failed_cue:
-                            for sid in list(tp_map.keys()):
-                                if tp_map[sid] != "open":
-                                    tp_map[sid] = "open"
-                                    tp_changed = True
-                            if tp_changed:
-                                repairs.append(
-                                    f"conv {conv_id}: collapsed phases to open (short failed/language-barrier interaction)"
-                                )
-
-                # --- Post-hook false-positive guard (minimal target engagement) ---
-                if "post_hook" in set(tp_map.values()):
-                    conv_segs = [
-                        s for s in (conversations.get(conv_id) or [])
-                        if isinstance(s, dict)
-                    ]
-                    conv_meta = (
-                        (conversation_meta_by_id or {}).get(conv_id)
-                        if isinstance(conversation_meta_by_id, dict)
-                        else None
-                    )
-                    confident_target_ids = get_confident_target_ids_from_meta(conv_meta)
-                    target_texts: List[str] = []
-                    for s in conv_segs:
-                        role = (s.get("speaker_role") or "").lower()
-                        speaker_id = s.get("speaker_id")
-                        if confident_target_ids:
-                            if not (isinstance(speaker_id, str) and speaker_id in confident_target_ids):
-                                continue
-                            if role in ("coach", "student", "voiceover"):
-                                continue
-                        else:
-                            if role != "target":
-                                continue
-                        txt = (s.get("text") or "")
-                        if isinstance(txt, str) and txt.strip():
-                            target_texts.append(txt.strip())
-
-                    target_turns = len(target_texts)
-                    max_target_len = max((len(t) for t in target_texts), default=0)
-                    questionish = any(
-                        ("?" in t) or re.match(r"^(what|where|why|how|who|when)\\b", t.strip().lower())
-                        for t in target_texts
-                    )
-
-                    # Extremely conservative: only remove post_hook when there is basically
-                    # no evidence of active participation.
-                    if target_turns <= 2 and max_target_len < 30 and not questionish:
-                        fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
-                        for sid, ph in list(tp_map.items()):
-                            if ph == "post_hook":
-                                tp_map[sid] = fallback
-                                tp_changed = True
-                        if tp_changed:
-                            repairs.append(
-                                f"conv {conv_id}: downgraded post_hook -> {fallback} (minimal target engagement)"
-                            )
-
-                    # If we have confident target IDs from sanitized metadata, require post_hook
-                    # to include at least one segment tied to that confident subset.
-                    if confident_target_ids:
-                        post_hook_seg_ids = {
-                            sid for sid, ph in tp_map.items()
-                            if ph == "post_hook" and isinstance(sid, int)
-                        }
-                        has_confident_target_post_hook = False
-                        if post_hook_seg_ids:
-                            segs_by_id = {
-                                int(s.get("id")): s
-                                for s in conv_segs
-                                if isinstance(s.get("id"), int)
-                            }
-                            for sid in post_hook_seg_ids:
-                                seg = segs_by_id.get(sid)
-                                if not isinstance(seg, dict):
-                                    continue
-                                sid_speaker = seg.get("speaker_id")
-                                sid_role = (seg.get("speaker_role") or "").lower()
-                                if (
-                                    isinstance(sid_speaker, str)
-                                    and sid_speaker in confident_target_ids
-                                    and sid_role not in ("coach", "student", "voiceover")
-                                ):
-                                    has_confident_target_post_hook = True
-                                    break
-                        if not has_confident_target_post_hook:
-                            fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
-                            for sid, ph in list(tp_map.items()):
-                                if ph == "post_hook":
-                                    tp_map[sid] = fallback
-                                    tp_changed = True
-                            if tp_changed:
-                                repairs.append(
-                                    f"conv {conv_id}: downgraded post_hook -> {fallback} "
-                                    f"(no confident target speaker support)"
-                                )
-
-                # --- Close start normalization based on close-technique evidence ---
-                CLOSE_TECHS = {
-                    "number_close",
-                    "instagram_close",
-                    "soft_close",
-                    "assumptive_close",
-                    "instant_date",
-                    "bounce",
-                    "time_bridge",
-                }
-                close_segs: List[int] = []
-                for t in e.get("techniques_used", []) or []:
-                    if not isinstance(t, dict):
-                        continue
-                    if t.get("technique") not in CLOSE_TECHS:
-                        continue
-                    sid = t.get("segment")
-                    if isinstance(sid, int):
-                        close_segs.append(int(sid))
-                close_start = min(close_segs) if close_segs else None
-
-                if close_start is not None:
-                    # Pick fallback for any close labels *before* close_start.
-                    pre_phases = [
-                        ph for sid, ph in tp_map.items()
-                        if isinstance(sid, int) and sid < close_start and ph != "close"
-                    ]
-                    fallback_close = "pre_hook"
-                    if pre_phases:
-                        fallback_close = max(pre_phases, key=lambda p: phase_rank2.get(p, 0))
-
-                    for sid, ph in list(tp_map.items()):
-                        if sid >= close_start:
-                            if ph != "close":
-                                tp_map[sid] = "close"
-                                tp_changed = True
-                        else:
-                            if ph == "close":
-                                tp_map[sid] = fallback_close
-                                tp_changed = True
-
-                    if tp_changed:
-                        repairs.append(
-                            f"conv {conv_id}: normalized close phase start to seg {close_start} (close technique present)"
-                        )
-                else:
-                    # If the LLM labeled "close" but there's no explicit close technique at all,
-                    # downgrade close unless we see explicit close cues in the transcript.
-                    if "close" in set(tp_map.values()):
-                        conv_segs = [
-                            s for s in (conversations.get(conv_id) or [])
-                            if isinstance(s, dict)
-                        ]
-                        # Explicit close cues: contact exchange or an actual invite.
-                        # This is intentionally conservative; if we can't find cues, we prefer
-                        # not to claim the interaction reached a close attempt.
-                        close_contact_cue_re = re.compile(
-                            r"\b(number|numbers?|phone|instagram(?:s)?|\big\b|whatsapp|snap(?:chat)?)\b"
-                            r"|\btext me\b"
-                            r"|\bcall me\b",
-                            re.IGNORECASE,
-                        )
-                        close_invite_cue_re = re.compile(
-                            r"\b(grab|get|go for)\b (?:a |some )?(?:drink|coffee|tea|water)\b"
-                            r"|\bhang out\b"
-                            r"|\bmeet up\b"
-                            r"|\bwe should (?:hang|meet)\b"
-                            r"|\bcome with (?:me|us)\b"
-                            r"|\bjoin (?:me|us)\b"
-                            r"|\bwalk with (?:me|us)\b"
-                            r"|\blet'?s (?:grab|get|go|hang|meet|walk)\b"
-                            r"|\bwhy (?:don't|dont) we\b",
-                            re.IGNORECASE,
-                        )
-                        conv_has_close_cue = any(
-                            ((close_contact_cue_re.search((s.get("text") or "")) is not None) or
-                             (close_invite_cue_re.search((s.get("text") or "")) is not None))
-                            for s in conv_segs
-                            if (s.get("speaker_role") or "").lower() in ("coach", "student")
-                            and isinstance(s.get("text"), str)
-                        )
-                        has_cta = False
-                        for s in conv_segs:
-                            role = (s.get("speaker_role") or "").lower()
-                            if role not in ("coach", "student"):
-                                continue
-                            txt = s.get("text") or ""
-                            if not isinstance(txt, str):
-                                continue
-                            low = txt.lower()
-                            if "subscribe" in low or "channel" in low:
-                                has_cta = True
-                                break
-
-                        if has_cta and not conv_has_close_cue:
-                            non_close_phases = [p for p in tp_map.values() if p != "close"]
-                            fallback_close = "pre_hook"
-                            if non_close_phases:
-                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
-                            for sid, ph in list(tp_map.items()):
-                                if ph == "close":
-                                    tp_map[sid] = fallback_close
-                                    tp_changed = True
-                            if tp_changed:
-                                repairs.append(
-                                    f"conv {conv_id}: removed close phase (subscribe/channel CTA; no close techniques)"
-                                )
-                        elif not conv_has_close_cue:
-                            non_close_phases = [p for p in tp_map.values() if p != "close"]
-                            fallback_close = "pre_hook"
-                            if non_close_phases:
-                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
-                            for sid, ph in list(tp_map.items()):
-                                if ph == "close":
-                                    tp_map[sid] = fallback_close
-                                    tp_changed = True
-                            if tp_changed:
-                                repairs.append(
-                                    f"conv {conv_id}: removed close phase (no explicit close cues; no close techniques)"
-                                )
-
-                if tp_changed:
-                    # Rebuild turn_phases list (sorted by segment id) and re-clamp monotonic order.
-                    rebuilt = [{"segment": sid, "phase": tp_map[sid]} for sid in sorted(tp_map.keys())]
-                    current_rank = 0
-                    clamped: List[Dict[str, Any]] = []
-                    for tp in rebuilt:
-                        ph = tp.get("phase")
-                        r = phase_rank2.get(ph, 0)
-                        if r < current_rank:
-                            tp["phase"] = PHASE_ORDER[current_rank]
-                        else:
-                            current_rank = r
-                        clamped.append(tp)
-                    e["turn_phases"] = clamped
-                    turn_phases = clamped
-
-        phases_present = {
-            tp.get("phase")
-            for tp in turn_phases
-            if isinstance(tp, dict) and tp.get("phase")
-        }
-
-        # hook_point + investment_level are only meaningful if post_hook is reached.
-        if "post_hook" not in phases_present:
-            cleared = False
-            if e.get("hook_point") is not None:
-                e["hook_point"] = None
-                cleared = True
-            if e.get("investment_level") is not None:
-                e["investment_level"] = None
-                cleared = True
-            if cleared:
-                repairs.append(
-                    f"conv {e.get('conversation_id', '?')}: cleared hook_point/investment_level (no post_hook phase)"
-                )
-            continue
-
-        # Enforce investment_level vocabulary when post_hook exists.
-        inv = e.get("investment_level")
-        if inv not in (None, "low", "medium", "high"):
-            repairs.append(
-                f"conv {e.get('conversation_id', '?')}: invalid investment_level {inv!r} -> null"
-            )
-            e["investment_level"] = None
-
-    # --- 7) Deduplicate approach enrichments that target the same conversation_id ---
-    # This can happen after conversation_id remapping (or due to LLM duplication). Prefer merging over dropping.
-    def _merge_lists_unique(dst: List[Any], src: List[Any], key_fn) -> List[Any]:
-        seen = {key_fn(x) for x in dst}
-        for x in src:
-            k = key_fn(x)
-            if k in seen:
-                continue
-            dst.append(x)
-            seen.add(k)
-        return dst
-
-    def _as_list(v: Any) -> List[Any]:
-        return v if isinstance(v, list) else []
-
-    by_conv: Dict[int, int] = {}  # conv_id -> index in enrichments
-    to_drop: Set[int] = set()
-    for idx, e in enumerate(enrichments):
-        if not isinstance(e, dict) or e.get("type") != "approach":
-            continue
-        conv_id = e.get("conversation_id")
-        if not isinstance(conv_id, int) or conv_id <= 0:
-            continue
-        if conv_id not in by_conv:
-            by_conv[conv_id] = idx
-            continue
-
-        # Merge into the first occurrence.
-        dst = enrichments[by_conv[conv_id]]
-        if not isinstance(dst, dict):
-            continue
-
-        # Prefer longer, non-empty description.
-        dst_desc = dst.get("description")
-        src_desc = e.get("description")
-        if isinstance(src_desc, str) and src_desc.strip():
-            if not (isinstance(dst_desc, str) and dst_desc.strip()) or len(src_desc) > len(dst_desc):
-                dst["description"] = src_desc
-
-        # Fill missing scalar fields.
-        if dst.get("hook_point") in (None, "", {}, []) and e.get("hook_point") not in (None, "", {}, []):
-            dst["hook_point"] = e.get("hook_point")
-        if dst.get("investment_level") in (None, "", {}, []) and e.get("investment_level") not in (None, "", {}, []):
-            dst["investment_level"] = e.get("investment_level")
-
-        # Merge list fields.
-        dst["topics_discussed"] = list(
-            dict.fromkeys(
-                [t for t in _as_list(dst.get("topics_discussed")) if isinstance(t, str)]
-                + [t for t in _as_list(e.get("topics_discussed")) if isinstance(t, str)]
-            )
-        )
-
-        dst["techniques_used"] = _merge_lists_unique(
-            [x for x in _as_list(dst.get("techniques_used")) if isinstance(x, dict)],
-            [x for x in _as_list(e.get("techniques_used")) if isinstance(x, dict)],
-            key_fn=lambda x: (x.get("technique"), x.get("segment"), x.get("example")),
-        )
-        dst["turn_phases"] = _merge_lists_unique(
-            [x for x in _as_list(dst.get("turn_phases")) if isinstance(x, dict)],
-            [x for x in _as_list(e.get("turn_phases")) if isinstance(x, dict)],
-            key_fn=lambda x: (x.get("segment"), x.get("phase")),
-        )
-
-        # Merge unlisted concepts (strings) if present.
-        dst_unlisted = dst.get("unlisted_concepts")
-        if not isinstance(dst_unlisted, dict):
-            dst_unlisted = {}
-        src_unlisted = e.get("unlisted_concepts")
-        if isinstance(src_unlisted, dict):
-            for k in ("techniques", "topics"):
-                a = [x for x in _as_list(dst_unlisted.get(k)) if isinstance(x, str)]
-                b = [x for x in _as_list(src_unlisted.get(k)) if isinstance(x, str)]
-                dst_unlisted[k] = list(dict.fromkeys(a + b))
-        dst["unlisted_concepts"] = dst_unlisted
-
-        to_drop.add(idx)
-        repairs.append(
-            f"merged duplicate approach enrichment for conv {conv_id} (kept index {by_conv[conv_id]}, dropped index {idx})"
-        )
-
-    if to_drop:
-        enrichments[:] = [e for i, e in enumerate(enrichments) if i not in to_drop]
-
-    # --- 7b) Deduplicate commentary enrichments that target the same block_index ---
-    # This can happen if the LLM duplicates blocks or if an approach was converted to commentary.
-    by_block: Dict[int, int] = {}  # block_index -> index in enrichments
-    to_drop_blocks: Set[int] = set()
-    for idx, e in enumerate(enrichments):
-        if not isinstance(e, dict) or e.get("type") != "commentary":
-            continue
-        block_index = e.get("block_index")
-        if not isinstance(block_index, int) or block_index <= 0:
-            continue
-        if block_index not in by_block:
-            by_block[block_index] = idx
-            continue
-
-        dst = enrichments[by_block[block_index]]
-        if not isinstance(dst, dict):
-            continue
-
-        # Prefer longer, non-empty description.
-        dst_desc = dst.get("description")
-        src_desc = e.get("description")
-        if isinstance(src_desc, str) and src_desc.strip():
-            if not (isinstance(dst_desc, str) and dst_desc.strip()) or len(src_desc) > len(dst_desc):
-                dst["description"] = src_desc
-
-        # Merge list fields.
-        dst["topics_discussed"] = list(
-            dict.fromkeys(
-                [t for t in _as_list(dst.get("topics_discussed")) if isinstance(t, str)]
-                + [t for t in _as_list(e.get("topics_discussed")) if isinstance(t, str)]
-            )
-        )
-
-        dst["techniques_discussed"] = _merge_lists_unique(
-            [x for x in _as_list(dst.get("techniques_discussed")) if isinstance(x, dict)],
-            [x for x in _as_list(e.get("techniques_discussed")) if isinstance(x, dict)],
-            key_fn=lambda x: (x.get("technique"), x.get("example")),
-        )
-
-        # Merge unlisted concepts (strings) if present.
-        dst_unlisted = dst.get("unlisted_concepts")
-        if not isinstance(dst_unlisted, dict):
-            dst_unlisted = {}
-        src_unlisted = e.get("unlisted_concepts")
-        if isinstance(src_unlisted, dict):
-            for k in ("techniques", "topics"):
-                a = [x for x in _as_list(dst_unlisted.get(k)) if isinstance(x, str)]
-                b = [x for x in _as_list(src_unlisted.get(k)) if isinstance(x, str)]
-                dst_unlisted[k] = list(dict.fromkeys(a + b))
-        dst["unlisted_concepts"] = dst_unlisted
-
-        to_drop_blocks.add(idx)
-        repairs.append(
-            f"merged duplicate commentary enrichment for block {block_index} "
-            f"(kept index {by_block[block_index]}, dropped index {idx})"
-        )
-
-    if to_drop_blocks:
-        enrichments[:] = [e for i, e in enumerate(enrichments) if i not in to_drop_blocks]
-
-    return repairs
-
-
 def validate_enrichment_output(
     output: Dict,
     stage06_data: Optional[Dict] = None,
@@ -1489,30 +232,6 @@ def validate_enrichment_output(
     # Build full transcript text for evidence checking
     segments = output.get("segments", [])
     full_transcript = " ".join(s.get("text", "") for s in segments)
-    seg_by_id = {
-        s.get("id"): s
-        for s in segments
-        if isinstance(s, dict) and isinstance(s.get("id"), int)
-    }
-    stage07_allowlist: Dict[int, Set[int]] = {}
-    conversation_meta_by_id: Dict[int, Dict[str, Any]] = {}
-    if stage06_data and isinstance(stage06_data, dict):
-        stage07_allowlist = build_stage07_evidence_allowlist(
-            stage06_data.get("conversations"),
-            stage06_data.get("segments", segments) or segments,
-        )
-        conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
-
-    low_quality_ids: Set[int] = {
-        int(item.get("segment"))
-        for item in (output.get("low_quality_segments") or [])
-        if isinstance(item, dict) and isinstance(item.get("segment"), int)
-    }
-    transcript_artifact_ids: Set[int] = {
-        int(item.get("segment_index"))
-        for item in (output.get("transcript_artifacts") or [])
-        if isinstance(item, dict) and isinstance(item.get("segment_index"), int)
-    }
 
     # --- 1. Technique taxonomy enforcement ---
     valid_techniques = set(TECHNIQUE_TAXONOMY.keys())
@@ -1549,35 +268,18 @@ def validate_enrichment_output(
         evidence_mismatches = 0
         evidence_total = 0
         empty_evidence = 0
-        segment_evidence_mismatches = 0
-        segment_evidence_total = 0
         for i, enrichment in enumerate(enrichments):
             for tech in enrichment.get("techniques_used", []):
-                # "example" may be normalized to the segment's transcript text; keep the original
-                # LLM-provided quote (if any) in example_llm for hallucination detection.
                 example = tech.get("example", "")
-                example_llm = tech.get("example_llm", "")
-                evidence = example_llm if isinstance(example_llm, str) and example_llm.strip() else example
-                if evidence:
+                if example:
                     evidence_total += 1
-                    if not fuzzy_evidence_match(evidence, full_transcript):
+                    if not fuzzy_evidence_match(example, full_transcript):
                         evidence_mismatches += 1
                         results.append(ValidationResult(
                             "warning", "evidence_mismatch",
                             f"Enrichment {i}: technique '{tech.get('technique', '?')}' "
-                            f"evidence not found in transcript: \"{str(evidence)[:80]}...\""
+                            f"evidence not found in transcript: \"{example[:80]}...\""
                         ))
-                    seg_id = tech.get("segment")
-                    if isinstance(seg_id, int) and seg_id in seg_by_id:
-                        segment_evidence_total += 1
-                        seg_text = (seg_by_id.get(seg_id, {}).get("text", "") or "").strip()
-                        if seg_text and isinstance(example, str) and example.strip() and not fuzzy_evidence_match(example, seg_text, threshold=0.75):
-                            segment_evidence_mismatches += 1
-                            results.append(ValidationResult(
-                                "warning", "evidence_not_on_referenced_segment",
-                                f"Enrichment {i}: technique '{tech.get('technique', '?')}' "
-                                f"evidence doesn't match referenced segment {seg_id}"
-                            ))
                 else:
                     empty_evidence += 1
 
@@ -1595,68 +297,11 @@ def validate_enrichment_output(
                     f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
                     f"don't match transcript (threshold: 30%)"
                 ))
-        if segment_evidence_total > 0:
-            seg_mismatch_rate = segment_evidence_mismatches / segment_evidence_total
-            if seg_mismatch_rate > 0.7:
-                results.append(ValidationResult(
-                    "warning", "high_segment_evidence_mismatch_rate",
-                    f"{segment_evidence_mismatches}/{segment_evidence_total} ({seg_mismatch_rate:.0%}) "
-                    f"evidence strings don't match their referenced segments"
-                ))
             elif mismatch_rate > 0.1:
                 results.append(ValidationResult(
                     "warning", "elevated_evidence_mismatch_rate",
                     f"{evidence_mismatches}/{evidence_total} ({mismatch_rate:.0%}) evidence strings "
                     f"don't match transcript"
-                ))
-
-    # --- 3b. Technique evidence should anchor to approacher turns (coach/student) ---
-    target_allowed_techniques = {
-        "number_close",
-        "instagram_close",
-        "soft_close",
-        "assumptive_close",
-        "instant_date",
-        "bounce",
-        "time_bridge",
-        "logistics_check",
-    }
-    for i, enrichment in enumerate(enrichments):
-        if enrichment.get("type") != "approach":
-            continue
-        conv_id = enrichment.get("conversation_id")
-        for tech in enrichment.get("techniques_used", []) or []:
-            if not isinstance(tech, dict):
-                continue
-            seg_id = tech.get("segment")
-            reason, detail = evidence_block_reason_for_segment(
-                seg_id,
-                conv_id,
-                seg_by_id,
-                stage07_allowlist=stage07_allowlist,
-                low_quality_ids=low_quality_ids,
-                transcript_artifact_ids=transcript_artifact_ids,
-            )
-            if reason:
-                detail_msg = f" ({detail})" if detail else ""
-                results.append(ValidationResult(
-                    "error", "technique_invalid_evidence_segment",
-                    f"Enrichment {i} (conv {conv_id if conv_id is not None else '?'}): "
-                    f"technique '{tech.get('technique', '?')}' cites invalid segment {seg_id}: {reason}{detail_msg}"
-                ))
-                continue
-            seg = seg_by_id.get(seg_id)
-            if not seg:
-                continue
-            role = seg.get("speaker_role")
-            tech_name = tech.get("technique")
-            if role == "target" and tech_name in target_allowed_techniques:
-                continue
-            if role and role not in ("coach", "student"):
-                results.append(ValidationResult(
-                    "warning", "technique_on_non_coach_segment",
-                    f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
-                    f"technique '{tech.get('technique', '?')}' cites seg {seg_id} spoken by '{role}'"
                 ))
 
     # --- 4. Turn phase progression ---
@@ -1714,7 +359,6 @@ def validate_enrichment_output(
         if enrichment.get("type") != "approach":
             continue
 
-        conv_id = enrichment.get("conversation_id")
         phases_present = {tp.get("phase") for tp in enrichment.get("turn_phases", [])}
 
         if enrichment.get("hook_point") and "post_hook" not in phases_present:
@@ -1730,36 +374,6 @@ def validate_enrichment_output(
                 f"Enrichment {i} (conv {enrichment.get('conversation_id', '?')}): "
                 f"investment_level is set but post_hook phase not found in turn_phases"
             ))
-
-        confident_target_ids = get_confident_target_ids_from_meta(
-            conversation_meta_by_id.get(conv_id) if isinstance(conv_id, int) else None
-        )
-        if "post_hook" in phases_present and confident_target_ids:
-            post_hook_seg_ids = {
-                tp.get("segment")
-                for tp in (enrichment.get("turn_phases") or [])
-                if isinstance(tp, dict) and tp.get("phase") == "post_hook" and isinstance(tp.get("segment"), int)
-            }
-            has_confident_target_support = False
-            for sid in post_hook_seg_ids:
-                seg = seg_by_id.get(sid)
-                if not isinstance(seg, dict):
-                    continue
-                speaker_id = seg.get("speaker_id")
-                role = (seg.get("speaker_role") or "").lower()
-                if (
-                    isinstance(speaker_id, str)
-                    and speaker_id in confident_target_ids
-                    and role not in ("coach", "student", "voiceover")
-                ):
-                    has_confident_target_support = True
-                    break
-            if not has_confident_target_support:
-                results.append(ValidationResult(
-                    "error", "post_hook_without_confident_target_support",
-                    f"Enrichment {i} (conv {conv_id if conv_id is not None else '?'}): "
-                    f"post_hook/hook/investment lacks confident target speaker support"
-                ))
 
     # --- 7. Transcript artifact reporting ---
     artifacts = output.get("transcript_artifacts", [])
@@ -1876,12 +490,7 @@ def find_claude_binary() -> Optional[str]:
     return None
 
 
-def call_claude(
-    prompt: str,
-    retries: int = 3,
-    timeout: int = 600,
-    model: Optional[str] = None,
-) -> Optional[str]:
+def call_claude(prompt: str, retries: int = 3, timeout: int = 600) -> Optional[str]:
     """Call Claude Code CLI with retry logic."""
     claude_bin = find_claude_binary()
     if not claude_bin:
@@ -1891,12 +500,8 @@ def call_claude(
 
     for attempt in range(retries):
         try:
-            cmd = [claude_bin]
-            if isinstance(model, str) and model.strip():
-                cmd += ["--model", model.strip()]
-            cmd += ["-p", prompt, "--output-format", "text"]
             result = subprocess.run(
-                cmd,
+                [claude_bin, "-p", prompt, "--output-format", "text"],
                 capture_output=True,
                 text=True,
                 timeout=timeout
@@ -1970,286 +575,15 @@ def group_commentary_blocks(segments: List[Dict]) -> List[Dict]:
     return blocks
 
 
-def build_stage07_evidence_allowlist(
-    conversations_meta: Any,
-    segments: List[Dict[str, Any]],
-) -> Dict[int, Set[int]]:
-    """Build per-conversation allowlist of segment IDs for Stage 07 evidence.
-
-    Preferred source is Stage 06d/06e conversation metadata field
-    ``stage07_evidence_segment_ids``. For backward compatibility with older
-    Stage 06c inputs, we derive a conservative fallback from segment fields.
-    """
-    allow_by_conv: Dict[int, Set[int]] = {}
-
-    if isinstance(conversations_meta, list):
-        for conv in conversations_meta:
-            if not isinstance(conv, dict):
-                continue
-            conv_id = conv.get("conversation_id")
-            allow_ids = conv.get("stage07_evidence_segment_ids")
-            if not isinstance(conv_id, int) or conv_id <= 0:
-                continue
-            if not isinstance(allow_ids, list):
-                continue
-            clean_ids = {sid for sid in allow_ids if isinstance(sid, int)}
-            allow_by_conv[conv_id] = clean_ids
-
-    if allow_by_conv:
-        return allow_by_conv
-
-    # Backward-compatible fallback for pre-06d artifacts.
-    for seg in segments:
-        if not isinstance(seg, dict):
-            continue
-        conv_id = seg.get("conversation_id")
-        if not isinstance(conv_id, int) or conv_id <= 0:
-            continue
-        seg_id = seg.get("id")
-        if not isinstance(seg_id, int):
-            continue
-        if str(seg.get("segment_type", "")).strip().lower() != "approach":
-            continue
-        if bool(seg.get("exclude_from_stage07_evidence")):
-            continue
-        allow_by_conv.setdefault(conv_id, set()).add(seg_id)
-
-    return allow_by_conv
-
-
-def evidence_block_reason_for_segment(
-    seg_id: Any,
-    conv_id: Any,
-    seg_by_id: Dict[int, Dict[str, Any]],
-    *,
-    stage07_allowlist: Optional[Dict[int, Set[int]]] = None,
-    low_quality_ids: Optional[Set[int]] = None,
-    transcript_artifact_ids: Optional[Set[int]] = None,
-) -> Tuple[Optional[str], Optional[str]]:
-    """Return deterministic reason code when a segment is invalid as evidence."""
-    if not isinstance(seg_id, int):
-        return "missing_evidence_segment", None
-
-    seg = seg_by_id.get(seg_id)
-    if not isinstance(seg, dict):
-        return "unknown_evidence_segment", None
-
-    flags = [f for f in (seg.get("segment_flags") or []) if isinstance(f, str)]
-    if flags:
-        return "flagged_evidence_segment", ",".join(sorted(set(flags)))
-
-    if bool(seg.get("exclude_from_stage07_evidence")):
-        reason = seg.get("exclude_from_stage07_reason")
-        reason_detail = str(reason).strip() if isinstance(reason, str) and str(reason).strip() else None
-        return "excluded_by_sanitizer", reason_detail
-
-    if str(seg.get("segment_type", "")).strip().lower() != "approach":
-        return "non_approach_segment", None
-
-    if transcript_artifact_ids and seg_id in transcript_artifact_ids:
-        return "transcript_artifact", None
-
-    if low_quality_ids and seg_id in low_quality_ids:
-        return "low_quality_evidence_segment", None
-
-    if (
-        stage07_allowlist is not None
-        and isinstance(conv_id, int)
-        and conv_id > 0
-        and conv_id in stage07_allowlist
-    ):
-        allowed = stage07_allowlist.get(conv_id) or set()
-        if seg_id not in allowed:
-            return "segment_not_in_evidence_allowlist", None
-
-    return None, None
-
-
-def enforce_stage07_evidence_allowlist(
-    enrichments: List[Dict[str, Any]],
-    seg_by_id: Dict[int, Dict[str, Any]],
-    stage07_allowlist: Dict[int, Set[int]],
-    *,
-    low_quality_segments: Optional[List[Dict[str, Any]]] = None,
-    transcript_artifacts: Optional[List[Dict[str, Any]]] = None,
-) -> Tuple[List[Dict[str, Any]], List[str]]:
-    """Hard-filter approach evidence to Stage 07 allowlisted segment IDs."""
-    dropped_candidates: List[Dict[str, Any]] = []
-    repairs: List[str] = []
-
-    low_quality_ids: Set[int] = set()
-    for item in low_quality_segments or []:
-        if isinstance(item, dict) and isinstance(item.get("segment"), int):
-            low_quality_ids.add(int(item["segment"]))
-
-    transcript_artifact_ids: Set[int] = set()
-    for item in transcript_artifacts or []:
-        if isinstance(item, dict) and isinstance(item.get("segment_index"), int):
-            transcript_artifact_ids.add(int(item["segment_index"]))
-
-    for e in enrichments:
-        if not isinstance(e, dict) or e.get("type") != "approach":
-            continue
-
-        conv_id = e.get("conversation_id")
-        if not isinstance(conv_id, int) or conv_id <= 0:
-            continue
-        if conv_id not in stage07_allowlist:
-            # Legacy inputs may not have explicit conversation allowlist.
-            continue
-
-        allow_ids = stage07_allowlist.get(conv_id) or set()
-
-        techniques = e.get("techniques_used")
-        if isinstance(techniques, list):
-            kept_techniques: List[Dict[str, Any]] = []
-            dropped_count = 0
-            for tech in techniques:
-                if not isinstance(tech, dict):
-                    continue
-                seg_id = tech.get("segment")
-                reason, detail = evidence_block_reason_for_segment(
-                    seg_id,
-                    conv_id,
-                    seg_by_id,
-                    stage07_allowlist=stage07_allowlist,
-                    low_quality_ids=low_quality_ids,
-                    transcript_artifact_ids=transcript_artifact_ids,
-                )
-                if reason:
-                    dropped_count += 1
-                    rec: Dict[str, Any] = {
-                        "candidate_type": "technique_used",
-                        "conversation_id": conv_id,
-                        "reason": reason,
-                        "technique": tech.get("technique"),
-                        "segment": seg_id,
-                    }
-                    if detail:
-                        rec["reason_detail"] = detail
-                    example = tech.get("example")
-                    if isinstance(example, str) and example.strip():
-                        rec["example_preview"] = example.strip()[:140]
-                    dropped_candidates.append(rec)
-                    continue
-                if isinstance(seg_id, int) and seg_id in allow_ids:
-                    kept_techniques.append(tech)
-                    continue
-                # Defensive fallback (should be covered by reason function).
-                dropped_count += 1
-                dropped_candidates.append(
-                    {
-                        "candidate_type": "technique_used",
-                        "conversation_id": conv_id,
-                        "reason": "segment_not_in_evidence_allowlist",
-                        "technique": tech.get("technique"),
-                        "segment": seg_id,
-                    }
-                )
-            if dropped_count > 0:
-                e["techniques_used"] = kept_techniques
-                repairs.append(
-                    f"conv {conv_id}: dropped {dropped_count} technique(s) outside Stage07 evidence allowlist"
-                )
-
-        turn_phases = e.get("turn_phases")
-        if isinstance(turn_phases, list):
-            kept_phases: List[Dict[str, Any]] = []
-            dropped_phase_count = 0
-            for tp in turn_phases:
-                if not isinstance(tp, dict):
-                    continue
-                seg_id = tp.get("segment")
-                reason, detail = evidence_block_reason_for_segment(
-                    seg_id,
-                    conv_id,
-                    seg_by_id,
-                    stage07_allowlist=stage07_allowlist,
-                    low_quality_ids=low_quality_ids,
-                    transcript_artifact_ids=transcript_artifact_ids,
-                )
-                if reason:
-                    dropped_phase_count += 1
-                    rec: Dict[str, Any] = {
-                        "candidate_type": "turn_phase",
-                        "conversation_id": conv_id,
-                        "reason": reason,
-                        "segment": seg_id,
-                        "phase": tp.get("phase"),
-                    }
-                    if detail:
-                        rec["reason_detail"] = detail
-                    dropped_candidates.append(rec)
-                    continue
-                kept_phases.append(tp)
-            if dropped_phase_count > 0:
-                e["turn_phases"] = kept_phases
-                repairs.append(
-                    f"conv {conv_id}: dropped {dropped_phase_count} turn_phase annotation(s) outside Stage07 evidence allowlist"
-                )
-
-        hook = e.get("hook_point")
-        if isinstance(hook, dict):
-            hook_seg = hook.get("segment")
-            if hook_seg is not None:
-                reason, detail = evidence_block_reason_for_segment(
-                    hook_seg,
-                    conv_id,
-                    seg_by_id,
-                    stage07_allowlist=stage07_allowlist,
-                    low_quality_ids=low_quality_ids,
-                    transcript_artifact_ids=transcript_artifact_ids,
-                )
-                if reason:
-                    rec: Dict[str, Any] = {
-                        "candidate_type": "hook_point",
-                        "conversation_id": conv_id,
-                        "reason": reason,
-                        "segment": hook_seg,
-                    }
-                    if detail:
-                        rec["reason_detail"] = detail
-                    dropped_candidates.append(rec)
-                    e["hook_point"] = None
-                    e["investment_level"] = None
-                    repairs.append(
-                        f"conv {conv_id}: removed hook_point/investment_level outside Stage07 evidence allowlist"
-                    )
-
-        # If post_hook evidence was removed, investment must be null.
-        phases_present = {
-            tp.get("phase")
-            for tp in (e.get("turn_phases") or [])
-            if isinstance(tp, dict)
-        }
-        if e.get("investment_level") and "post_hook" not in phases_present:
-            dropped_candidates.append(
-                {
-                    "candidate_type": "investment_level",
-                    "conversation_id": conv_id,
-                    "reason": "insufficient_post_hook_evidence",
-                    "segment": None,
-                }
-            )
-            e["investment_level"] = None
-            if e.get("hook_point") and isinstance(e.get("hook_point"), dict):
-                e["hook_point"] = None
-            repairs.append(
-                f"conv {conv_id}: removed investment_level without post_hook evidence after allowlist filtering"
-            )
-
-    return dropped_candidates, repairs
-
-
 def remap_enrichment_segment_indices(
     enrichments: List[Dict],
     conversations: Dict[int, List[Dict]],
 ) -> None:
     """Convert relative segment indices in enrichments to global segment IDs.
 
-    Legacy: when the prompt uses per-conversation relative indices [0], [1], [2]...
-    for each conversation, but the output JSON expects global segment IDs.
-    For PROMPT_USES_GLOBAL_SEG_IDS prompts this function should not be called.
+    The prompt sent to Claude uses relative indices [0], [1], [2]... for each
+    conversation (cleaner for the LLM to read). But the segments in the output
+    JSON use global IDs. This function remaps the enrichment references to match.
 
     Modifies enrichments in place.
     """
@@ -2405,7 +739,6 @@ def build_infield_prompt(
     conversations: Dict[int, List[Dict]],
     commentary_blocks: List[Dict],
     video_id: str,
-    stage07_evidence_allowlist: Optional[Dict[int, Set[int]]] = None,
 ) -> str:
     """Build prompt for infield/compilation videos: approaches + interleaved commentary."""
 
@@ -2420,12 +753,10 @@ def build_infield_prompt(
         segs = block["segments"]
         turns = []
         for j, seg in enumerate(segs):
-            seg_id = seg.get("id", j)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
-            synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
             if text:
-                turns.append(f"  [{seg_id}]{synthetic_marker} {speaker.upper()}: {text}")
+                turns.append(f"  [{j}] {speaker.upper()}: {text}")
 
         if turns:
             content_items.append({
@@ -2443,26 +774,11 @@ End: {block['end']:.1f}s
             continue
 
         segments = conversations[conv_id]
-        allow_ids = (
-            (stage07_evidence_allowlist or {}).get(conv_id)
-            if isinstance(stage07_evidence_allowlist, dict)
-            else None
-        )
         turns = []
         for i, seg in enumerate(segments):
-            seg_id = seg.get("id", i)
             speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
             text = seg.get("text", "").strip()
-            marker = ""
-            if isinstance(allow_ids, set):
-                marker = " (EVIDENCE_OK)" if seg_id in allow_ids else " (EVIDENCE_EXCLUDED)"
-            synthetic_marker = " (SYNTHETIC)" if bool(seg.get("synthetic_segment")) else ""
-            turns.append(f"  [{seg_id}]{marker}{synthetic_marker} {speaker.upper()}: {text}")
-
-        allow_ids_line = ""
-        if isinstance(allow_ids, set):
-            allow_ids_sorted = ", ".join(str(sid) for sid in sorted(allow_ids))
-            allow_ids_line = f"Allowed evidence SEG_IDs: {allow_ids_sorted or 'none'}\n"
+            turns.append(f"  [{i}] {speaker.upper()}: {text}")
 
         content_items.append({
             "sort_key": segments[0].get("start", 0),
@@ -2470,9 +786,6 @@ End: {block['end']:.1f}s
 Segments: {len(segments)}
 Start: {segments[0].get('start', 0):.1f}s
 End: {segments[-1].get('end', 0):.1f}s
-
-{allow_ids_line}Legend: (EVIDENCE_OK)=allowed for Stage 07 technique/hook evidence; (EVIDENCE_EXCLUDED)=context only.
-Legend: (SYNTHETIC)=deterministically generated split helper segment (not raw ASR).
 
 {chr(10).join(turns)}"""
         })
@@ -2505,33 +818,13 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 1. TYPE: "approach"
 2. CONVERSATION_ID: The conversation number
 3. DESCRIPTION: Concise 10-20 word summary
-   IMPORTANT: Do not claim a number/Instagram close happened unless it is explicitly shown in the transcript.
-4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
+4. TECHNIQUES USED: List techniques demonstrated with segment index and brief example quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (EVIDENCE_OK).
-   Never cite (EVIDENCE_EXCLUDED) turns as technique evidence.
-   IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
-   If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
-   COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
-   Be conservative: if you are not confident the technique is present, omit it.
-   IMPORTANT: Do not use obviously garbled / low-quality transcript segments as technique evidence. If the line is unclear,
-   either anchor to an adjacent clean segment or omit the technique.
-   Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
-   Common confusions to avoid:
-   - cold_read: must be an inference ABOUT HER ("you seem..."), not your personal backstory.
-   - tease: a playful jab ABOUT HER; not you describing yourself or your history.
-   - callback_humor: must reference an earlier joke/theme; a random funny line is not callback_humor.
-   - grounding: sharing personal details to build trust/rapport; a joke is not grounding.
-   - statement_of_intent: must be sincere romantic/sexual intent. If it's clearly absurdist comedy or role-play, tag role_play/tease instead (or omit).
-   - number_close/instagram_close: only if you actually ask/exchange contact info.
-   - logistics_check: asking about schedule/availability does NOT start close unless it is part of an explicit invite/contact exchange.
-5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
+5. TOPICS: List topics discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
 6. TURN PHASES: Label each turn with its interaction phase.
-   CRITICAL: Only include phase labels for SEG_IDs marked (EVIDENCE_OK).
    Phases (in order of progression):
    - "open": The approach. Coach introducing himself and the interaction.
      Can be multiple turns if he's stacking assumptions or extending his opening bit.
@@ -2542,11 +835,8 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - "post_hook": She's flipped. Actively participating — asking questions back,
      sharing information voluntarily, initiating topics, longer responses.
    - "close": Logistics and closing — number, Instagram, instant date, time bridge.
-     IMPORTANT: Close begins at the first explicit attempt to exchange contact info (number/Instagram/etc)
-     OR an explicit invite to meet/hang out (now or later): "let's grab a drink", "come with me", "let's go to X", "we should meet tomorrow".
-     IMPORTANT: Do NOT start close on "fishing" / info-gathering questions alone (including schedule probes like "what are you doing later?").
-     IMPORTANT: Non-dating CTAs like "subscribe to my channel" are NOT a dating close attempt and should NOT start close phase.
-     Once close begins, ALL remaining segments are "close" phase — even if rapport/banter continues or the first close attempt doesn't land.
+     IMPORTANT: Once the coach initiates close logistics (asks for number, mentions Instagram,
+     proposes plans), ALL remaining segments are "close" phase — even if banter/teasing continues.
      The close phase often includes continued rapport-building alongside logistics discussion.
      Don't flip back to post_hook just because there's playful banter after he's started closing.
    Rules:
@@ -2554,13 +844,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
    - A turn's phase must NEVER go backwards
    - Once close begins, it continues until the end (no regression to earlier phases)
    - Not all phases are required (e.g. blowout = open only, instant hook = open -> post_hook)
-   - Use the SEG_ID shown in the transcript lines (the number in brackets) to identify each turn
+   - Use the segment index [0], [1], etc. to identify each turn
 7. HOOK POINT: If post_hook is reached, describe the moment she flipped.
-   Provide a brief "signal".
-   CRITICAL: hook_point.segment (if provided) must be an (EVIDENCE_OK) SEG_ID.
-   IMPORTANT: If you set hook_point or investment_level, you MUST label at least one turn as "post_hook" in TURN PHASES.
-   If no post_hook phase is present, set hook_point to null and investment_level to null.
-   If no hook point, set to null.
+   Provide a brief "signal". If no hook point, set to null.
 8. INVESTMENT LEVEL: "low"/"medium"/"high" if post_hook reached, else null.
    - "low": Barely crossed — asked one polite question back, still mostly reactive
    - "medium": Engaged, asking questions, responsive, but he's still somewhat leading
@@ -2591,15 +877,12 @@ Do NOT flag:
 - Natural speech patterns (fillers like "um", "like", short responses like "yeah")
 - Run-on sentences that still make sense (fast speech accurately transcribed)
 - Foreign words/names that fit the context
-- Segments marked (SYNTHETIC): these are deterministic pipeline split helpers, not raw ASR output
 
 Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must be the segment id shown in brackets in the transcript lines.
+{{"segment": N, "reason": "brief explanation of what seems wrong"}}
 
 Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
+{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
 
 Return empty arrays if transcript quality is good.
 
@@ -2630,17 +913,17 @@ EXAMPLE:
       "type": "approach",
       "description": "Direct opener on tourist, builds attraction with cold reads, number close",
       "techniques_used": [
-        {{"technique": "direct_opener", "segment": 123, "example": "Hey, I saw you and had to say hi"}},
-        {{"technique": "cold_read", "segment": 126, "example": "You look like you do yoga"}}
+        {{"technique": "direct_opener", "segment": 0, "example": "Hey, I saw you and had to say hi"}},
+        {{"technique": "cold_read", "segment": 3, "example": "You look like you do yoga"}}
       ],
       "topics_discussed": ["origin", "career", "travel"],
       "turn_phases": [
-        {{"segment": 123, "phase": "open"}},
-        {{"segment": 124, "phase": "open"}},
-        {{"segment": 125, "phase": "pre_hook"}},
-        {{"segment": 126, "phase": "pre_hook"}},
-        {{"segment": 127, "phase": "post_hook"}},
-        {{"segment": 128, "phase": "close"}}
+        {{"segment": 0, "phase": "open"}},
+        {{"segment": 1, "phase": "open"}},
+        {{"segment": 2, "phase": "pre_hook"}},
+        {{"segment": 3, "phase": "pre_hook"}},
+        {{"segment": 4, "phase": "post_hook"}},
+        {{"segment": 5, "phase": "close"}}
       ],
       "hook_point": {{"signal": "she asked where he's from unprompted"}},
       "investment_level": "medium",
@@ -2656,7 +939,7 @@ EXAMPLE:
     }}
   ],
   "low_quality_segments": [
-    {{"segment": 130, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
+    {{"segment": 7, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
   ],
   "transcript_artifacts": []
 }}
@@ -2675,11 +958,10 @@ def build_talking_head_prompt(segments: List[Dict], video_id: str) -> str:
     # Format full transcript
     turns = []
     for i, seg in enumerate(segments):
-        seg_id = seg.get("id", i)
         speaker = seg.get("speaker_role", seg.get("speaker_id", "unknown"))
         text = seg.get("text", "").strip()
         if text:
-            turns.append(f"  [{seg_id}] {speaker.upper()}: {text}")
+            turns.append(f"  [{i}] {speaker.upper()}: {text}")
 
     transcript = chr(10).join(turns)
 
@@ -2706,8 +988,8 @@ FOR EACH SECTION, analyze:
 1. SECTION INDEX: Sequential starting at 1
 2. TYPE: "talking_head_section"
 3. DESCRIPTION: Concise 10-20 word summary of what the coach is teaching
-4. START SEGMENT: Global segment id (seg_id) of first segment in this section
-5. END SEGMENT: Global segment id (seg_id) of last segment in this section
+4. START SEGMENT: Index of first segment in this section
+5. END SEGMENT: Index of last segment in this section
 6. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only.
    CRITICAL: Only use technique names from the list above.
    If a technique is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
@@ -2733,12 +1015,10 @@ Do NOT flag:
 - Foreign words/names that fit the context
 
 Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must match the global segment id shown in the transcript lines.
+{{"segment": N, "reason": "brief explanation of what seems wrong"}}
 
 Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is the global seg_id (despite the name).
+{{"type": "transcript_artifact", "segment_index": N, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
 
 Return empty arrays if transcript quality is good.
 
@@ -2877,41 +1157,7 @@ def _parse_legacy_array(arr: List[Dict]) -> ParsedEnrichmentResponse:
     )
 
 
-_BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
-
-
-def extract_video_id_from_text(text: str) -> Optional[str]:
-    m = _BRACKET_ID_RE.search(text or "")
-    return m.group(1) if m else None
-
-
-def extract_video_title_from_stem(stem: str) -> str:
-    # Mirror Stage 06b's title extraction logic; stems are display-only.
-    name = stem or ""
-    name = re.sub(r"\.(conversations|enriched|verification)$", "", name)
-    name = re.sub(r"\.audio\.asr\.(raw|clean)16k$", "", name)
-    m = re.match(r"^(.+?)\s*\[", name)
-    return m.group(1).strip() if m else name
-
-
-def derive_source_from_path(p: Path) -> Optional[str]:
-    # Prefer extracting from stage folder layout markers when possible.
-    parts = p.parts
-    for marker in ("06c.patched", "06.video-type", "07.content", "05.audio-features", "01.download"):
-        if marker in parts:
-            idx = parts.index(marker)
-            if idx + 1 < len(parts):
-                return parts[idx + 1]
-    # Fallback: assume parent dir is the source.
-    return p.parent.name or None
-
-
-def process_video_file(
-    input_path: Path,
-    output_path: Path,
-    dry_run: bool = False,
-    claude_model: Optional[str] = None,
-) -> Dict[str, Any]:
+def process_video_file(input_path: Path, output_path: Path, dry_run: bool = False) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
     print(f"[07.content] Processing: {input_path.name}")
@@ -2921,24 +1167,7 @@ def process_video_file(
         data = json.load(f)
 
     segments = data.get("segments", [])
-    source = derive_source_from_path(input_path) or "unknown"
-
-    video_id_raw = data.get("video_id")
-    if isinstance(video_id_raw, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id_raw):
-        video_id = video_id_raw
-    else:
-        video_id = (
-            extract_video_id_from_text(input_path.name)
-            or extract_video_id_from_text(input_path.stem)
-            or "unknown"
-        )
-
-    video_title_raw = data.get("video_title")
-    if isinstance(video_title_raw, str) and video_title_raw.strip():
-        video_title = video_title_raw.strip()
-    else:
-        video_title = extract_video_title_from_stem(input_path.stem)
-
+    video_id = data.get("video_id", input_path.stem)
     video_type = get_video_type_str(data)
 
     if not segments:
@@ -2949,24 +1178,9 @@ def process_video_file(
     conversations = group_segments_by_conversation(segments)
     approach_convs = {k: v for k, v in conversations.items() if k > 0}
     commentary_blocks = group_commentary_blocks(segments)
-    conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
-    confident_target_convs = sum(
-        1
-        for conv_meta in conversation_meta_by_id.values()
-        if get_confident_target_ids_from_meta(conv_meta)
-    )
-    stage07_evidence_allowlist = build_stage07_evidence_allowlist(
-        data.get("conversations"),
-        segments,
-    )
-    allowlisted_segments_total = sum(len(v) for v in stage07_evidence_allowlist.values())
 
     print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
-    print(
-        f"[07.content]   Stage07 evidence allowlist: "
-        f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
-    )
 
     if dry_run:
         print(f"[07.content]   [DRY RUN] Would call Claude CLI ({video_type} prompt)")
@@ -2974,19 +1188,14 @@ def process_video_file(
 
     # Build prompt based on video type
     if video_type in ("infield", "compilation"):
-        prompt = build_infield_prompt(
-            conversations,
-            commentary_blocks,
-            video_id,
-            stage07_evidence_allowlist=stage07_evidence_allowlist,
-        )
+        prompt = build_infield_prompt(conversations, commentary_blocks, video_id)
     else:
         prompt = build_talking_head_prompt(segments, video_id)
 
     print(f"[07.content]   Calling Claude CLI ({video_type} prompt)...")
 
     start_time = time.time()
-    response = call_claude(prompt, timeout=600, model=claude_model)
+    response = call_claude(prompt, timeout=600)
     elapsed = time.time() - start_time
 
     enrichments: List[Dict] = []
@@ -3003,93 +1212,28 @@ def process_video_file(
     else:
         print(f"[07.content]   Claude call failed, using empty enrichments")
 
-    # Remap segment references only when the prompt uses per-conversation relative indices.
-    if not PROMPT_USES_GLOBAL_SEG_IDS:
-        remap_enrichment_segment_indices(enrichments, conversations)
-
-    seg_by_id = {
-        s.get("id"): s
-        for s in segments
-        if isinstance(s, dict) and isinstance(s.get("id"), int)
-    }
-    synthetic_segment_ids: Set[int] = {
-        int(sid)
-        for sid, seg in seg_by_id.items()
-        if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
-    }
-    dropped_synthetic_quality = 0
-    dropped_synthetic_artifacts = 0
-    if synthetic_segment_ids:
-        filtered_lq: List[Dict[str, Any]] = []
-        for row in low_quality_segments:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_quality += 1
-                continue
-            filtered_lq.append(row)
-        low_quality_segments = filtered_lq
-
-        filtered_artifacts: List[Dict[str, Any]] = []
-        for row in transcript_artifacts:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment_index")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_artifacts += 1
-                continue
-            filtered_artifacts.append(row)
-        transcript_artifacts = filtered_artifacts
-
-        if dropped_synthetic_quality or dropped_synthetic_artifacts:
-            print(
-                f"{LOG_PREFIX}   Dropped synthetic quality signals: "
-                f"low_quality={dropped_synthetic_quality}, artifacts={dropped_synthetic_artifacts}"
-            )
-
-    normalization_repairs = normalize_enrichments(
-        enrichments,
-        seg_by_id=seg_by_id,
-        conversations=conversations,
-        commentary_blocks=commentary_blocks,
-        conversation_meta_by_id=conversation_meta_by_id,
-    )
-    dropped_candidates, evidence_allowlist_repairs = enforce_stage07_evidence_allowlist(
-        enrichments,
-        seg_by_id,
-        stage07_evidence_allowlist,
-        low_quality_segments=low_quality_segments,
-        transcript_artifacts=transcript_artifacts,
-    )
-    if normalization_repairs:
-        preview = "; ".join(normalization_repairs[:3])
-        suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
-        print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
-    if evidence_allowlist_repairs:
-        preview = "; ".join(evidence_allowlist_repairs[:3])
-        suffix = "" if len(evidence_allowlist_repairs) <= 3 else f" (+{len(evidence_allowlist_repairs) - 3} more)"
-        print(f"{LOG_PREFIX}   Evidence allowlist filtered {len(evidence_allowlist_repairs)} issue(s): {preview}{suffix}")
-
-    # Compute phase confidence for each approach enrichment (after normalization, since conv ids may have been remapped)
-    speaker_labels = data.get("speaker_labels", {})
-    add_phase_confidence_to_enrichments(
-        enrichments, conversations, low_quality_segments, speaker_labels
-    )
-
-    # Categorize enrichments by type (post-normalization, so counts reflect dedupe/remaps)
-    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
-    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
-    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
-
-    # Collect unlisted concepts across all enrichments (post-normalization).
+    # Collect unlisted concepts across all enrichments
     all_unlisted_techniques: List[str] = []
     all_unlisted_topics: List[str] = []
     for e in enrichments:
         unlisted = e.get("unlisted_concepts", {})
         if isinstance(unlisted, dict):
-            all_unlisted_techniques.extend(unlisted.get("techniques", []) or [])
-            all_unlisted_topics.extend(unlisted.get("topics", []) or [])
+            all_unlisted_techniques.extend(unlisted.get("techniques", []))
+            all_unlisted_topics.extend(unlisted.get("topics", []))
+
+    # Categorize enrichments by type
+    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
+    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
+    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
+
+    # Remap relative segment indices to global IDs
+    remap_enrichment_segment_indices(enrichments, conversations)
+
+    # Compute phase confidence for each approach enrichment
+    speaker_labels = data.get("speaker_labels", {})
+    add_phase_confidence_to_enrichments(
+        enrichments, conversations, low_quality_segments, speaker_labels
+    )
 
     # Collect all techniques (from both techniques_used and techniques_discussed)
     all_techniques = set()
@@ -3127,31 +1271,13 @@ def process_video_file(
             "upstream_verification_verdict": upstream_patch.get("verification_verdict"),
             "upstream_fixes_applied": upstream_patch.get("fixes_applied_count", 0),
             "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
-            # LLM drift normalization (best-effort repairs) applied before validation.
-            "normalization_repairs_count": len(normalization_repairs),
-            "normalization_repairs_preview": normalization_repairs[:5],
-            "evidence_allowlist_repairs_count": len(evidence_allowlist_repairs),
-            "evidence_allowlist_repairs_preview": evidence_allowlist_repairs[:5],
-            "dropped_candidates_count": len(dropped_candidates),
-            "stage07_evidence_allowlist_conversations": len(stage07_evidence_allowlist),
-            "stage07_evidence_allowlist_segments": allowlisted_segments_total,
-            "target_confident_conversations": confident_target_convs,
-            "synthetic_segment_count": len(synthetic_segment_ids),
-            "synthetic_low_quality_dropped": dropped_synthetic_quality,
-            "synthetic_artifacts_dropped": dropped_synthetic_artifacts,
         },
-        # Version tags (safe additive fields; helps drift detection downstream).
-        "pipeline_version": PIPELINE_VERSION,
-        "prompt_version": PROMPT_VERSION,
-        "source": source,
-        "video_title": video_title,
         "video_id": video_id,
         "video_type": data.get("video_type"),
         "speaker_labels": data.get("speaker_labels"),
         "speaker_corrections": data.get("speaker_corrections", []),
         "segments": segments,
         "enrichments": enrichments,
-        "dropped_candidates": dropped_candidates,
         "low_quality_segments": low_quality_segments,
         "transcript_artifacts": transcript_artifacts,
         "summary": {
@@ -3171,18 +1297,6 @@ def process_video_file(
                 "techniques": sorted(set(all_unlisted_techniques)),
                 "topics": sorted(set(all_unlisted_topics)),
             },
-            "dropped_candidates": {
-                "count": len(dropped_candidates),
-                "by_reason": dict(
-                    sorted(
-                        Counter(
-                            c.get("reason")
-                            for c in dropped_candidates
-                            if isinstance(c, dict) and isinstance(c.get("reason"), str)
-                        ).items()
-                    )
-                ),
-            },
         },
     }
 
@@ -3199,12 +1313,6 @@ def process_video_file(
 
     # Cross-reference validation uses 06c patched data (segments are ground truth)
     stage06_data = data
-
-    # Record the requested Claude model (if explicitly set) for reproducibility.
-    if isinstance(claude_model, str) and claude_model.strip():
-        meta = output.get("metadata")
-        if isinstance(meta, dict):
-            meta["claude_model"] = claude_model.strip()
 
     # Validate output
     validation_results = validate_enrichment_output(output, stage06_data)
@@ -3232,260 +1340,6 @@ def process_video_file(
     }
 
 
-def _summarize_enrichments(enrichments: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Compute summary fields derived from Stage 07 enrichments (deterministic)."""
-    approach_enrichments = [e for e in enrichments if e.get("type") == "approach"]
-    commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
-    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
-
-    # Collect unlisted concepts across all enrichments.
-    all_unlisted_techniques: List[str] = []
-    all_unlisted_topics: List[str] = []
-    for e in enrichments:
-        unlisted = e.get("unlisted_concepts", {})
-        if isinstance(unlisted, dict):
-            all_unlisted_techniques.extend(unlisted.get("techniques", []) or [])
-            all_unlisted_topics.extend(unlisted.get("topics", []) or [])
-
-    # Collect all techniques (from both techniques_used and techniques_discussed).
-    all_techniques = set()
-    for e in enrichments:
-        for t in e.get("techniques_used", []) or []:
-            if isinstance(t, dict) and t.get("technique"):
-                all_techniques.add(t["technique"])
-        for t in e.get("techniques_discussed", []) or []:
-            if isinstance(t, dict) and t.get("technique"):
-                all_techniques.add(t["technique"])
-
-    # Collect all topics.
-    all_topics = set()
-    for e in enrichments:
-        for topic in e.get("topics_discussed", []) or []:
-            if isinstance(topic, str):
-                all_topics.add(topic)
-
-    phases_found = sorted(
-        set(
-            p.get("phase", "")
-            for e in enrichments
-            for p in (e.get("turn_phases", []) or [])
-            if isinstance(p, dict) and p.get("phase")
-        )
-    )
-
-    summary: Dict[str, Any] = {
-        "enriched_conversations": len(approach_enrichments),
-        "commentary_blocks_enriched": len(commentary_enrichments),
-        "sections_enriched": len(section_enrichments),
-        "techniques_found": sorted(all_techniques),
-        "topics_found": sorted(all_topics),
-        "phases_found": phases_found,
-        "unlisted_concepts": {
-            "techniques": sorted(set(all_unlisted_techniques)),
-            "topics": sorted(set(all_unlisted_topics)),
-        },
-    }
-
-    if approach_enrichments:
-        summary["hook_rate"] = (
-            sum(1 for e in approach_enrichments if e.get("hook_point"))
-            / max(len(approach_enrichments), 1)
-        )
-        summary["investment_levels"] = {
-            level: sum(1 for e in approach_enrichments if e.get("investment_level") == level)
-            for level in ["low", "medium", "high"]
-        }
-
-    return summary
-
-
-def revalidate_video_file(
-    input_path: Path,
-    output_path: Path,
-    dry_run: bool = False,
-) -> Dict[str, Any]:
-    """Re-run deterministic normalization + validation on an existing .enriched.json (no Claude call)."""
-    print(f"[07.content] Revalidating: {input_path.name}")
-
-    # Load Stage 06c input (ground truth for segments + roles).
-    with input_path.open("r", encoding="utf-8") as f:
-        stage06_data = json.load(f)
-
-    segments = stage06_data.get("segments", [])
-    if not segments:
-        print(f"[07.content] No segments found")
-        return {"conversations": 0, "enriched": 0, "validation_passed": False}
-
-    conversations = group_segments_by_conversation(segments)
-    commentary_blocks = group_commentary_blocks(segments)
-    conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
-    confident_target_convs = sum(
-        1
-        for conv_meta in conversation_meta_by_id.values()
-        if get_confident_target_ids_from_meta(conv_meta)
-    )
-    stage07_evidence_allowlist = build_stage07_evidence_allowlist(
-        stage06_data.get("conversations"),
-        segments,
-    )
-
-    # Load existing Stage 07 output.
-    if not output_path.exists():
-        print(f"{LOG_PREFIX}   Missing Stage 07 output (cannot revalidate): {output_path}")
-        return {
-            "conversations": len([c for c in conversations.keys() if c > 0]),
-            "enriched": 0,
-            "validation_passed": False,
-        }
-
-    with output_path.open("r", encoding="utf-8") as f:
-        output = json.load(f)
-
-    # Keep Stage 06c as the source of truth for transcript fields (Stage 07 should mirror it).
-    output["video_id"] = stage06_data.get("video_id", output.get("video_id"))
-    output["source"] = derive_source_from_path(input_path) or output.get("source") or "unknown"
-    output["video_title"] = extract_video_title_from_stem(input_path.stem)
-    output["video_type"] = stage06_data.get("video_type", output.get("video_type"))
-    output["speaker_labels"] = stage06_data.get("speaker_labels", output.get("speaker_labels"))
-    output["speaker_corrections"] = stage06_data.get("speaker_corrections", output.get("speaker_corrections", []))
-    output["segments"] = segments
-
-    enrichments: List[Dict[str, Any]] = output.get("enrichments", []) or []
-    low_quality_segments: List[Dict[str, Any]] = output.get("low_quality_segments", []) or []
-    transcript_artifacts: List[Dict[str, Any]] = output.get("transcript_artifacts", []) or []
-    seg_by_id = {
-        s.get("id"): s
-        for s in segments
-        if isinstance(s, dict) and isinstance(s.get("id"), int)
-    }
-    synthetic_segment_ids: Set[int] = {
-        int(sid)
-        for sid, seg in seg_by_id.items()
-        if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
-    }
-    dropped_synthetic_quality = 0
-    dropped_synthetic_artifacts = 0
-    if synthetic_segment_ids:
-        filtered_lq: List[Dict[str, Any]] = []
-        for row in low_quality_segments:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_quality += 1
-                continue
-            filtered_lq.append(row)
-        low_quality_segments = filtered_lq
-        output["low_quality_segments"] = low_quality_segments
-
-        filtered_artifacts: List[Dict[str, Any]] = []
-        for row in transcript_artifacts:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment_index")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_artifacts += 1
-                continue
-            filtered_artifacts.append(row)
-        transcript_artifacts = filtered_artifacts
-        output["transcript_artifacts"] = transcript_artifacts
-
-    # Apply normalization (deterministic repairs before validation).
-    normalization_repairs = normalize_enrichments(
-        enrichments,
-        seg_by_id=seg_by_id,
-        conversations=conversations,
-        commentary_blocks=commentary_blocks,
-        conversation_meta_by_id=conversation_meta_by_id,
-    )
-    dropped_candidates, evidence_allowlist_repairs = enforce_stage07_evidence_allowlist(
-        enrichments,
-        seg_by_id,
-        stage07_evidence_allowlist,
-        low_quality_segments=low_quality_segments,
-        transcript_artifacts=transcript_artifacts,
-    )
-
-    # Recompute phase confidence (deterministic) after normalization, since conv ids may have been remapped.
-    speaker_labels = stage06_data.get("speaker_labels", {})
-    add_phase_confidence_to_enrichments(
-        enrichments, conversations, low_quality_segments, speaker_labels
-    )
-
-    meta = output.get("metadata")
-    if not isinstance(meta, dict):
-        meta = {}
-        output["metadata"] = meta
-    meta["revalidated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-    meta["revalidated_pipeline_version"] = PIPELINE_VERSION
-    meta["revalidated_prompt_version"] = PROMPT_VERSION
-    meta["normalization_repairs_count"] = len(normalization_repairs)
-    meta["normalization_repairs_preview"] = normalization_repairs[:5]
-    meta["evidence_allowlist_repairs_count"] = len(evidence_allowlist_repairs)
-    meta["evidence_allowlist_repairs_preview"] = evidence_allowlist_repairs[:5]
-    meta["dropped_candidates_count"] = len(dropped_candidates)
-    meta["stage07_evidence_allowlist_conversations"] = len(stage07_evidence_allowlist)
-    meta["stage07_evidence_allowlist_segments"] = sum(len(v) for v in stage07_evidence_allowlist.values())
-    meta["target_confident_conversations"] = confident_target_convs
-    meta["synthetic_segment_count"] = len(synthetic_segment_ids)
-    meta["synthetic_low_quality_dropped"] = dropped_synthetic_quality
-    meta["synthetic_artifacts_dropped"] = dropped_synthetic_artifacts
-
-    summary = output.get("summary")
-    if not isinstance(summary, dict):
-        summary = {}
-        output["summary"] = summary
-    summary.update(_summarize_enrichments(enrichments))
-    summary["total_conversations"] = len([c for c in conversations.keys() if c > 0])
-    summary["dropped_candidates"] = {
-        "count": len(dropped_candidates),
-        "by_reason": dict(
-            sorted(
-                Counter(
-                    c.get("reason")
-                    for c in dropped_candidates
-                    if isinstance(c, dict) and isinstance(c.get("reason"), str)
-                ).items()
-            )
-        ),
-    }
-    output["dropped_candidates"] = dropped_candidates
-
-    # Top-level version tags (helps downstream drift detection; safe additive fields).
-    output["pipeline_version"] = PIPELINE_VERSION
-    output["prompt_version"] = PROMPT_VERSION
-
-    # Validate output against Stage 06c ground truth.
-    validation_results = validate_enrichment_output(output, stage06_data)
-    has_errors = any(r.severity == "error" for r in validation_results)
-
-    if dry_run:
-        print(f"{LOG_PREFIX}   [DRY RUN] Would write validation and rewrite output ({'errors' if has_errors else 'no errors'})")
-    else:
-        write_validation_results(
-            validation_results,
-            output_path,
-            output.get("video_id") or stage06_data.get("video_id") or "unknown",
-        )
-        if has_errors:
-            print(f"{LOG_PREFIX}   SKIPPING output rewrite due to validation errors")
-        else:
-            with output_path.open("w", encoding="utf-8") as f:
-                json.dump(output, f, ensure_ascii=False)
-            print(f"{LOG_PREFIX}   Rewrote: {output_path}")
-
-    print(f"{LOG_PREFIX}   Revalidation: {'FAILED' if has_errors else 'PASSED'}")
-
-    return {
-        "conversations": len([c for c in conversations.keys() if c > 0]),
-        "enriched": len(enrichments),
-        "validation_passed": not has_errors,
-        "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
-        "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
-        "normalization_repairs": len(normalization_repairs),
-    }
-
-
 # ---------------------------
 # Path helpers
 # ---------------------------
@@ -3496,10 +1350,6 @@ def repo_root() -> Path:
 
 def verification_root() -> Path:
     return repo_root() / "data" / "06b.verify"
-
-
-def reverify_root() -> Path:
-    return repo_root() / "data" / "06b.reverify"
 
 
 def input_root() -> Path:
@@ -3522,19 +1372,6 @@ def test_verification_root() -> Path:
     return repo_root() / "data" / "test" / "06b.verify"
 
 
-def test_reverify_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.reverify"
-
-
-def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
-    if not raw_path:
-        return default_root
-    path = Path(raw_path)
-    if not path.is_absolute():
-        path = repo_root() / path
-    return path
-
-
 def extract_video_stem(input_path: Path) -> str:
     """Extract video stem from input path (remove .conversations suffix)."""
     stem = input_path.stem
@@ -3543,145 +1380,14 @@ def extract_video_stem(input_path: Path) -> str:
     return stem
 
 
-def extract_video_id_from_path(input_path: Path) -> Optional[str]:
-    for token in (input_path.name, input_path.parent.name, extract_video_stem(input_path)):
-        m = VIDEO_ID_BRACKET_RE.search(token)
-        if m:
-            return m.group(1)
-    return None
-
-
-def load_quarantine_video_ids(quarantine_file: Path) -> Set[str]:
-    """Load quarantine video IDs from JSON file.
-
-    Supported formats:
-      {"quarantined_video_ids":["id1", ...]}
-      {"video_ids":["id1", ...]}
-      {"videos":[{"video_id":"id1"}, "id2", ...]}
-      ["id1", "id2", ...]
-    """
-    try:
-        raw = json.loads(quarantine_file.read_text(encoding="utf-8"))
-    except Exception as e:
-        raise RuntimeError(f"Could not read quarantine file {quarantine_file}: {e}") from e
-
-    ids: Set[str] = set()
-
-    def add_id(value: Any) -> None:
-        if isinstance(value, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", value.strip()):
-            ids.add(value.strip())
-
-    if isinstance(raw, list):
-        for item in raw:
-            add_id(item)
-        return ids
-
-    if not isinstance(raw, dict):
-        return ids
-
-    for key in ("quarantined_video_ids", "video_ids"):
-        arr = raw.get(key)
-        if isinstance(arr, list):
-            for item in arr:
-                add_id(item)
-
-    videos = raw.get("videos")
-    if isinstance(videos, list):
-        for item in videos:
-            if isinstance(item, dict):
-                add_id(item.get("video_id"))
-            else:
-                add_id(item)
-
-    return ids
-
-
-def get_quarantine_block_reason(input_path: Path, quarantine_ids: Set[str]) -> Optional[str]:
-    if not quarantine_ids:
-        return None
-    vid = extract_video_id_from_path(input_path)
-    if vid and vid in quarantine_ids:
-        return f"quarantined video_id={vid}"
-    return None
-
-
-def infer_source_name(input_path: Path, input_root_path: Optional[Path]) -> str:
-    if input_root_path is not None:
-        try:
-            rel = input_path.relative_to(input_root_path)
-            if rel.parts:
-                return rel.parts[0]
-        except ValueError:
-            pass
-    return input_path.parent.name
-
-
-def _find_verification_for_input(
-    input_path: Path,
-    source: str,
-    verify_root: Path,
-    input_root_hint: Optional[Path] = None,
-) -> Optional[Path]:
-    """Find a matching 06b verification report for a Stage 06c input file.
-
-    Supports multiple on-disk layouts:
-    - source-video: data/06b.verify/<source>/<video_dir>/<stem>.verification.json
-    - source-flat:  data/06b.verify/<source>/<stem>.verification.json
-    - root-flat:    data/06b.verify/<stem>.verification.json
-    """
-    video_stem = extract_video_stem(input_path)
-    verification_name = f"{video_stem}.verification.json"
-
-    # Strategy 1: mirror relative path from input root into verify_root.
-    mirror_root = input_root_hint or input_root()
-    try:
-        rel = input_path.parent.relative_to(mirror_root)
-        candidate = verify_root / rel / verification_name
-        if candidate.exists():
-            return candidate
-    except ValueError:
-        pass
-
-    # Strategy 2: source-flat
-    candidate = verify_root / source / verification_name
-    if candidate.exists():
-        return candidate
-
-    # Strategy 3: root-flat
-    candidate = verify_root / verification_name
-    if candidate.exists():
-        return candidate
-
-    # Strategy 4: recursive search (prefer under source/)
-    src_dir = verify_root / source
-    if src_dir.exists():
-        for found in src_dir.rglob(verification_name):
-            return found
-    for found in verify_root.rglob(verification_name):
-        return found
-
-    return None
-
-
-def load_verification_status(
-    input_path: Path,
-    source: str,
-    verify_root: Path,
-    input_root_hint: Optional[Path] = None,
-) -> Dict[str, Any]:
+def load_verification_status(video_stem: str, source: str, verify_root: Path) -> Dict[str, Any]:
     """Load 06b verification report for a video.
 
     Returns dict with 'verdict' key (APPROVE/FLAG/REJECT or None if not found).
     """
-    verify_path = _find_verification_for_input(
-        input_path,
-        source,
-        verify_root,
-        input_root_hint=input_root_hint,
-    )
-    if not verify_path:
-        expected = verify_root / source / f"{extract_video_stem(input_path)}.verification.json"
-        return {"verdict": None, "path": str(expected)}
+    verify_path = verify_root / source / f"{video_stem}.verification.json"
+    if not verify_path.exists():
+        return {"verdict": None, "path": str(verify_path)}
     try:
         data = json.loads(verify_path.read_text(encoding="utf-8"))
         data["path"] = str(verify_path)
@@ -3694,122 +1400,38 @@ def should_process_video(
     input_path: Path,
     source: str,
     verify_root: Path,
-    reverify_verify_root: Optional[Path] = None,
-    input_root_hint: Optional[Path] = None,
-    skip_verification: bool = False,
-    gate_policy: str = "approve_only",
+    skip_verification: bool = False
 ) -> Tuple[bool, str]:
     """Check if video should be processed based on 06b verification status.
 
     Returns (should_process, reason).
-    - approve_only: only APPROVE proceeds.
-    - allow_flag: APPROVE + FLAG proceed; REJECT may proceed only when patch-clean salvage is detected.
-    - reverify_patched: require a second verification report from data/06b.reverify and allow only when
-      that second verdict is APPROVE or FLAG.
+    Only APPROVE videos proceed. FLAG and REJECT are blocked.
     """
-    if gate_policy not in {"approve_only", "allow_flag", "reverify_patched"}:
-        return False, f"invalid verification gate policy: {gate_policy}"
-
     if skip_verification:
         return True, "verification skipped (--skip-verification)"
 
-    status = load_verification_status(
-        input_path,
-        source,
-        verify_root,
-        input_root_hint=input_root_hint,
-    )
+    video_stem = extract_video_stem(input_path)
+    status = load_verification_status(video_stem, source, verify_root)
     verdict = status.get("verdict")
 
     if verdict is None:
         return False, f"no 06b verification found at {status.get('path', 'unknown')}"
-    if gate_policy == "reverify_patched":
-        if reverify_verify_root is None:
-            return False, "reverify_patched policy requires reverify root"
-        reverify_status = load_verification_status(
-            input_path,
-            source,
-            reverify_verify_root,
-            input_root_hint=input_root_hint,
-        )
-        reverify_verdict = reverify_status.get("verdict")
-        if reverify_verdict is None:
-            return False, f"no 06b reverify found at {reverify_status.get('path', 'unknown')}"
-        if reverify_verdict == "REJECT":
-            return False, "REVERIFY REJECT verdict - critical issues remain after patching"
-        if reverify_verdict in {"APPROVE", "FLAG"}:
-            return True, f"REVERIFY {reverify_verdict} (allowed by gate policy)"
-        return False, f"unknown reverify verdict: {reverify_verdict}"
     if verdict == "APPROVE":
         return True, "APPROVE"
     if verdict == "FLAG":
-        if gate_policy == "allow_flag":
-            return True, "FLAG (allowed by gate policy)"
         return False, "FLAG verdict - needs manual review before proceeding"
     if verdict == "REJECT":
-        # Salvage path: if 06c.patch applied high-confidence deterministic fixes cleanly, allow
-        # processing under the same explicit waiver used for FLAG.
-        try:
-            stage06c = json.loads(input_path.read_text(encoding="utf-8"))
-            pm = stage06c.get("patch_metadata")
-        except Exception:
-            pm = None
-        if isinstance(pm, dict):
-            fixes = pm.get("fixes_applied_count", 0)
-            flags = pm.get("flags_not_fixed_count", 0)
-            if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
-                if gate_policy == "allow_flag":
-                    return True, "REJECT (patched cleanly) (allowed by gate policy)"
-                return False, "REJECT (patched cleanly) - rerun with --verification-gate-policy allow_flag"
         return False, "REJECT verdict - critical issues found"
 
     return False, f"unknown verdict: {verdict}"
 
 
-def compute_output_path(
-    input_path: Path,
-    output_dir: Path,
-    input_root: Optional[Path] = None,
-) -> Path:
+def compute_output_path(input_path: Path, output_dir: Path) -> Path:
     """Compute output path from input path."""
     stem = input_path.stem
     if stem.endswith(".conversations"):
         stem = stem[:-len(".conversations")]
-    filename = f"{stem}.enriched.json"
-    if input_root is not None:
-        try:
-            rel_parent = input_path.parent.relative_to(input_root)
-            if rel_parent != Path("."):
-                return output_dir / rel_parent / filename
-        except ValueError:
-            pass
-    return output_dir / filename
-
-
-def find_existing_output_path(
-    input_path: Path,
-    preferred_output_dir: Path,
-    output_root_dir: Optional[Path] = None,
-    input_root: Optional[Path] = None,
-) -> Optional[Path]:
-    """Find existing Stage 07 output across canonical, source-flat, and root-flat layouts."""
-    preferred = compute_output_path(
-        input_path,
-        preferred_output_dir,
-        input_root=input_root,
-    )
-    if preferred.exists():
-        return preferred
-    # Legacy source-flat fallback.
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    # Legacy root-flat fallback.
-    if output_root_dir is not None:
-        legacy_root = compute_output_path(input_path, output_root_dir)
-        if legacy_root.exists():
-            return legacy_root
-    return None
+    return output_dir / f"{stem}.enriched.json"
 
 
 def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
@@ -3834,22 +1456,14 @@ def find_input_files(in_dir: Path) -> List[Path]:
     return sorted(in_dir.rglob("*.conversations.json"))
 
 
-def _run_named_source(
-    args,
-    verification_gate_policy: str,
-    quarantine_ids: Set[str],
-    verify_root_path: Path,
-    reverify_root_path: Path,
-    input_root_path: Path,
-    output_root_path: Path,
-) -> None:
+def _run_named_source(args) -> None:
     """Run for a named source (from pipeline: ./07.content source_name url)."""
     name = args.name
-    in_dir = input_root_path / name
+    in_dir = input_root() / name
     if not in_dir.exists():
         raise SystemExit(f"Input directory not found: {in_dir}")
 
-    out_dir = Path(args.output) if args.output else output_root_path / name
+    out_dir = Path(args.output) if args.output else output_root() / name
     files = find_input_files(in_dir)
     if not files:
         print(f"[07.content] No .conversations.json files found in: {in_dir}")
@@ -3862,56 +1476,27 @@ def _run_named_source(
     total_convs = 0
     total_enriched = 0
     skipped_verification = 0
-    skipped_quarantine = 0
 
     for input_file in files:
-        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
-        if quarantine_reason:
-            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
-            skipped_quarantine += 1
-            continue
-
         # Verification gate
         should_process, reason = should_process_video(
-            input_file,
-            name,
-            verify_root_path,
-            reverify_verify_root=reverify_root_path,
-            input_root_hint=input_root_path,
-            skip_verification=args.skip_verification or args.revalidate,
-            gate_policy=verification_gate_policy,
+            input_file, name, verification_root(),
+            skip_verification=args.skip_verification
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
             skipped_verification += 1
             continue
 
-        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
-        existing_output = find_existing_output_path(
-            input_file,
-            out_dir,
-            out_dir.parent,
-            input_root=in_dir,
-        )
-        if not args.revalidate and existing_output and not args.overwrite:
+        output_file = compute_output_path(input_file, out_dir)
+        if output_file.exists() and not args.overwrite:
             continue
-        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-        if args.revalidate:
-            result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-        else:
-            result = process_video_file(
-                input_file,
-                output_file,
-                dry_run=args.dry_run,
-                claude_model=args.model,
-            )
+        result = process_video_file(input_file, output_file, dry_run=args.dry_run)
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
 
     if skipped_verification > 0:
         print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
-    if skipped_quarantine > 0:
-        print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
     print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations")
 
 
@@ -3932,29 +1517,8 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
-        "--input-root",
-        help=(
-            "Root directory for source/manifest runs "
-            "(default: data/06c.patched, or data/test/06c.patched with --test)"
-        ),
-    )
-    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/07.content/)"
-    )
-    parser.add_argument(
-        "--verification-root",
-        help=(
-            "Root directory containing Stage 06b verification reports "
-            "(default: data/06b.verify, or data/test/06b.verify with --test)"
-        ),
-    )
-    parser.add_argument(
-        "--reverify-root",
-        help=(
-            "Root directory containing Stage 06b reverify reports "
-            "(default: data/06b.reverify, or data/test/06b.reverify with --test)"
-        ),
     )
     parser.add_argument(
         "--test",
@@ -3986,148 +1550,73 @@ def main() -> None:
         action="store_true",
         help="Skip 06b verification gate (process all files regardless of verdict)"
     )
-    parser.add_argument(
-        "--quarantine-file",
-        help="Optional JSON file listing quarantined video IDs to skip",
-    )
-    parser.add_argument(
-        "--verification-gate-policy",
-        choices=["approve_only", "allow_flag", "reverify_patched"],
-        default="approve_only",
-        help=(
-            "Verification gate policy: "
-            "approve_only=only APPROVE proceeds, "
-            "allow_flag=allow FLAG and patched-clean REJECT, "
-            "reverify_patched=require 06b.verify + 06b.reverify, and allow only when reverify verdict is APPROVE/FLAG"
-        ),
-    )
-    parser.add_argument(
-        "--allow-flag",
-        action="store_true",
-        help="Deprecated alias for --verification-gate-policy allow_flag"
-    )
-    parser.add_argument(
-        "--revalidate",
-        action="store_true",
-        help="Re-run deterministic normalization + validation on existing Stage 07 outputs (no Claude call)"
-    )
-    parser.add_argument(
-        "--model",
-        default="opus",
-        help="Claude model alias or full name (default: opus)."
-    )
 
     args = parser.parse_args()
-    verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
-    quarantine_ids: Set[str] = set()
-    if args.quarantine_file:
-        quarantine_path = Path(args.quarantine_file)
-        if not quarantine_path.is_absolute():
-            quarantine_path = repo_root() / quarantine_path
-        if not quarantine_path.exists():
-            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
-        quarantine_ids = load_quarantine_video_ids(quarantine_path)
-        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(quarantine_ids)} video ids)")
 
-    # Only require Claude CLI when we will actually call it.
-    if not args.revalidate and not args.dry_run:
-        claude_bin = find_claude_binary()
-        if not claude_bin:
-            print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
-            print(f"{LOG_PREFIX} Searched: {[str(p) for p in CLAUDE_BINARY_PATHS]}")
-            print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
-            return
+    # Test Claude CLI availability
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+        print(f"{LOG_PREFIX} Searched: {[str(p) for p in CLAUDE_BINARY_PATHS]}")
+        print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
+        return
 
-        try:
-            result = subprocess.run(
-                [claude_bin, "--version"],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            if result.returncode != 0:
-                print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
-            else:
-                print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
-                if isinstance(args.model, str) and args.model.strip():
-                    print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
-        except subprocess.TimeoutExpired:
-            print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
+    try:
+        result = subprocess.run(
+            [claude_bin, "--version"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode != 0:
+            print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
+        else:
+            print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
+    except subprocess.TimeoutExpired:
+        print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    # Determine input/output paths and verification roots.
-    default_input_root = test_input_root() if args.test else input_root()
-    default_output_root = test_output_root() if args.test else output_root()
-    default_verify_root = test_verification_root() if args.test else verification_root()
-    default_reverify_root = test_reverify_root() if args.test else reverify_root()
-
-    in_root = resolve_root_path(args.input_root, default_input_root)
-    out_root = Path(args.output) if args.output else default_output_root
-    verify_root = resolve_root_path(args.verification_root, default_verify_root)
-    reverify_verify_root = resolve_root_path(args.reverify_root, default_reverify_root)
+    # Determine input/output paths and verification root
+    verify_root = verification_root()  # default
+    is_test_mode = False
 
     if args.test:
-        in_dir = in_root
-        out_dir = out_root
+        in_dir = test_input_root()
+        out_dir = test_output_root()
+        verify_root = test_verification_root()
+        is_test_mode = True
     elif args.input:
         input_path = Path(args.input)
         if not input_path.exists():
             input_path = repo_root() / args.input
         if not input_path.exists():
             raise SystemExit(f"Input not found: {args.input}")
-        input_path = input_path.resolve()
 
         if input_path.is_file():
-            source_name = infer_source_name(input_path, in_root)
-            out_dir = Path(args.output) if args.output else out_root
-            preferred_output = compute_output_path(input_path, out_dir, input_root=in_root)
-            existing_output = find_existing_output_path(
-                input_path,
-                out_dir,
-                input_root=in_root,
-            )
-
-            quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
-            if quarantine_reason:
-                print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
-                return
+            # Single file mode - extract source from parent directory
+            source_name = input_path.parent.name
+            out_dir = Path(args.output) if args.output else output_root()
+            output_path = compute_output_path(input_path, out_dir)
 
             # Verification gate
             should_process, reason = should_process_video(
-                input_path,
-                source_name,
-                verify_root,
-                reverify_verify_root=reverify_verify_root,
-                input_root_hint=in_root,
-                skip_verification=args.skip_verification or args.revalidate,
-                gate_policy=verification_gate_policy,
+                input_path, source_name, verification_root(),
+                skip_verification=args.skip_verification
             )
             if not should_process:
                 print(f"{LOG_PREFIX} BLOCKED: {input_path.name} - {reason}")
-                print(
-                    f"{LOG_PREFIX} Use --skip-verification to override "
-                    f"(or --verification-gate-policy allow_flag)"
-                )
+                print(f"{LOG_PREFIX} Use --skip-verification to override")
                 return
 
-            if not args.revalidate and existing_output and not args.overwrite:
-                print(f"[07.content] Output exists, skipping: {existing_output}")
+            if output_path.exists() and not args.overwrite:
+                print(f"[07.content] Output exists, skipping: {output_path}")
                 return
 
-            output_path = existing_output if (args.revalidate and existing_output) else preferred_output
-            if args.revalidate:
-                result = revalidate_video_file(input_path, output_path, dry_run=args.dry_run)
-            else:
-                result = process_video_file(
-                    input_path,
-                    output_path,
-                    dry_run=args.dry_run,
-                    claude_model=args.model,
-                )
+            result = process_video_file(input_path, output_path, dry_run=args.dry_run)
             print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
 
         in_dir = input_path
-        out_dir = Path(args.output) if args.output else out_root
+        out_dir = Path(args.output) if args.output else output_root()
     elif args.manifest:
         manifest_path = Path(args.manifest)
         if not manifest_path.is_absolute():
@@ -4135,97 +1624,44 @@ def main() -> None:
         if not manifest_path.exists():
             raise SystemExit(f"Manifest file not found: {manifest_path}")
 
-        out_base = Path(args.output) if args.output else out_root
         sources_map = load_manifest_sources(manifest_path)
         total_convs = 0
         total_enriched = 0
-        root_flat_files: Optional[List[Path]] = None
 
         for src_name, vid_ids in sorted(sources_map.items()):
-            src_in_dir = in_root / src_name
+            src_in_dir = input_root() / src_name
+            if not src_in_dir.exists():
+                print(f"[07.content] Skipping {src_name}: no 06c.patched output")
+                continue
 
-            src_out_dir = out_base / src_name
-            src_files: List[Path] = []
-            if src_in_dir.exists():
-                src_files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
-
-            covered_ids = {
-                vid for vid in (extract_video_id_from_path(path) for path in src_files)
-                if vid is not None
-            }
-            missing_vid_ids = [vid for vid in vid_ids if vid not in covered_ids]
-
-            fallback_files: List[Path] = []
-            if missing_vid_ids:
-                if root_flat_files is None:
-                    root_flat_files = find_input_files(in_root)
-                fallback_files = [
-                    path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
-                    if path not in src_files
-                ]
-                if fallback_files:
-                    print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {in_root}")
-
-            files = src_files + fallback_files
+            src_out_dir = output_root() / src_name
+            files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
             if not files:
                 print(f"[07.content] Skipping {src_name}: no manifest videos found in input")
                 continue
 
             print(f"[07.content] Manifest: {src_name} ({len(files)} videos)")
             skipped_verification = 0
-            skipped_quarantine = 0
             for input_file in files:
-                quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
-                if quarantine_reason:
-                    print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
-                    skipped_quarantine += 1
-                    continue
-
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file,
-                    src_name,
-                    verify_root,
-                    reverify_verify_root=reverify_verify_root,
-                    input_root_hint=in_root,
-                    skip_verification=args.skip_verification or args.revalidate,
-                    gate_policy=verification_gate_policy,
+                    input_file, src_name, verification_root(),
+                    skip_verification=args.skip_verification
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
                     skipped_verification += 1
                     continue
 
-                preferred_output = compute_output_path(
-                    input_file,
-                    src_out_dir,
-                    input_root=src_in_dir,
-                )
-                existing_output = find_existing_output_path(
-                    input_file,
-                    src_out_dir,
-                    out_base,
-                    input_root=src_in_dir,
-                )
-                if not args.revalidate and existing_output and not args.overwrite:
+                output_file = compute_output_path(input_file, src_out_dir)
+                if output_file.exists() and not args.overwrite:
                     continue
-                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-                if args.revalidate:
-                    result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-                else:
-                    result = process_video_file(
-                        input_file,
-                        output_file,
-                        dry_run=args.dry_run,
-                        claude_model=args.model,
-                    )
+                result = process_video_file(input_file, output_file, dry_run=args.dry_run)
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
             if skipped_verification > 0:
                 print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
-            if skipped_quarantine > 0:
-                print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
         print(f"\n[07.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
         return
@@ -4234,86 +1670,44 @@ def main() -> None:
         if not sources_path.exists():
             raise SystemExit(f"Sources file not found: {sources_path}")
 
-        out_base = Path(args.output) if args.output else out_root
         total_convs = 0
         total_enriched = 0
 
         for src_name, _ in parse_sources_file(sources_path):
-            src_in_dir = in_root / src_name
+            src_in_dir = input_root() / src_name
             if not src_in_dir.exists():
                 print(f"[07.content] Skipping {src_name}: no 06c.patched output")
                 continue
 
-            src_out_dir = out_base / src_name
+            src_out_dir = output_root() / src_name
             files = find_input_files(src_in_dir)
 
             skipped_verification = 0
-            skipped_quarantine = 0
             for input_file in files:
-                quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
-                if quarantine_reason:
-                    print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
-                    skipped_quarantine += 1
-                    continue
-
                 # Verification gate
                 should_process, reason = should_process_video(
-                    input_file,
-                    src_name,
-                    verify_root,
-                    reverify_verify_root=reverify_verify_root,
-                    input_root_hint=in_root,
-                    skip_verification=args.skip_verification or args.revalidate,
-                    gate_policy=verification_gate_policy,
+                    input_file, src_name, verification_root(),
+                    skip_verification=args.skip_verification
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
                     skipped_verification += 1
                     continue
 
-                preferred_output = compute_output_path(
-                    input_file,
-                    src_out_dir,
-                    input_root=src_in_dir,
-                )
-                existing_output = find_existing_output_path(
-                    input_file,
-                    src_out_dir,
-                    out_base,
-                    input_root=src_in_dir,
-                )
-                if not args.revalidate and existing_output and not args.overwrite:
+                output_file = compute_output_path(input_file, src_out_dir)
+                if output_file.exists() and not args.overwrite:
                     continue
-                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-                if args.revalidate:
-                    result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-                else:
-                    result = process_video_file(
-                        input_file,
-                        output_file,
-                        dry_run=args.dry_run,
-                        claude_model=args.model,
-                    )
+                result = process_video_file(input_file, output_file, dry_run=args.dry_run)
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
             if skipped_verification > 0:
                 print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
-            if skipped_quarantine > 0:
-                print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
         print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     elif args.name:
-        _run_named_source(
-            args,
-            verification_gate_policy,
-            quarantine_ids,
-            verify_root,
-            reverify_verify_root,
-            in_root,
-            out_root,
-        )
+        _run_named_source(args)
         return
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
@@ -4324,8 +1718,8 @@ def main() -> None:
         print(f"[07.content] No .conversations.json files found in: {in_dir}")
         return
 
-    # Extract source hint from directory path.
-    source_name = infer_source_name(in_dir, in_root)
+    # Extract source name from directory path
+    source_name = in_dir.name
 
     print(f"[07.content] Input : {in_dir}")
     print(f"[07.content] Output: {out_dir}")
@@ -4344,66 +1738,39 @@ def main() -> None:
     consecutive_failures = 0
     validation_failed = 0
     skipped_verification = 0
-    skipped_quarantine = 0
 
     for input_file in files:
         file_key = str(input_file.relative_to(in_dir))
 
         # Skip if already completed
-        if not args.revalidate and file_key in state.completed_files and not args.overwrite:
+        if file_key in state.completed_files and not args.overwrite:
             skipped += 1
-            continue
-
-        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
-        if quarantine_reason:
-            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
-            skipped_quarantine += 1
             continue
 
         # Verification gate
         should_process, reason = should_process_video(
-            input_file,
-            infer_source_name(input_file, in_root),
-            verify_root,
-            reverify_verify_root=reverify_verify_root,
-            input_root_hint=in_root,
-            skip_verification=args.skip_verification or args.revalidate,
-            gate_policy=verification_gate_policy,
+            input_file, source_name, verify_root,
+            skip_verification=args.skip_verification
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
             skipped_verification += 1
             continue
 
-        preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
-        existing_output = find_existing_output_path(
-            input_file,
-            out_dir,
-            input_root=in_dir,
-        )
+        output_file = compute_output_path(input_file, out_dir)
 
-        if not args.revalidate and existing_output and not args.overwrite:
+        if output_file.exists() and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
             continue
-
-        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
 
         # Mark as in progress
         state.in_progress = file_key
         save_state(state_path, state)
 
         try:
-            if args.revalidate:
-                result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-            else:
-                result = process_video_file(
-                    input_file,
-                    output_file,
-                    dry_run=args.dry_run,
-                    claude_model=args.model,
-                )
+            result = process_video_file(input_file, output_file, dry_run=args.dry_run)
             total_convs += result["conversations"]
             total_enriched += result["enriched"]
             processed += 1
@@ -4443,7 +1810,6 @@ def main() -> None:
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed:           {processed}")
     print(f"  Skipped (existing):  {skipped}")
-    print(f"  Skipped (quarantine): {skipped_quarantine}")
     print(f"  Blocked (verify):    {skipped_verification}")
     print(f"  Failed (exception):  {failed}")
     print(f"  Failed (validation): {validation_failed}")

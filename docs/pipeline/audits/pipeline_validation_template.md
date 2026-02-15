@@ -4,8 +4,8 @@
 **Updated:** 02-07-2026
 
 **Output Filename Convention:**
-- Primary plan/audit → `codex_pipeline_validation.md`
-- Execution runbook → `pipeline_validation_runbook.md`
+- Claude agent → `claude_pipeline_validation.md`
+- Codex agent → `codex_pipeline_validation.md`
 
 ---
 
@@ -85,7 +85,7 @@ List all pipeline docs, scripts, prompts, configs, and data manifests inspected.
 | 06b. Verify | scripts/training-data/06b.verify | LLM (Claude) | .conversations.json | .verification.json |
 | 06c. Patch | scripts/training-data/06c.patch | Deterministic | .verification.json | .conversations.json |
 | 07. Content | scripts/training-data/07.content | LLM (Claude) | .conversations.json | .enriched.json |
-| 08. Taxonomy | scripts/training-data/08.taxonomy-validation | Deterministic | .enriched.json | `<label>.report.json` |
+| 08. Taxonomy | scripts/training-data/08.taxonomy-validation | Deterministic | .enriched.json | report.json |
 | 09. Chunk & Embed | scripts/training-data/09.chunk-embed.ts | ML (Ollama) | .enriched.json | .chunks.json |
 | 10. Ingest | scripts/training-data/10.ingest.ts | Deterministic | .chunks.json | Supabase |
 
