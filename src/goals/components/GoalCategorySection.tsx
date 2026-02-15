@@ -14,6 +14,9 @@ const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog Goals",
+  texting: "Texting Game",
+  dates: "Dating",
+  relationship: "Relationship",
 }
 
 function SortableCategoryGoal({

@@ -54,7 +54,7 @@ export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
 
     for (const l3 of l3ForSection) {
       const cat = l3.display_category as GoalDisplayCategory | null
-      if (cat && (cat === "field_work" || cat === "results" || cat === "dirty_dog")) {
+      if (cat) {
         if (!categories[cat]) categories[cat] = []
         categories[cat]!.push(l3)
       } else {
@@ -85,7 +85,7 @@ export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
     const uncategorized: GoalWithProgress[] = []
     for (const l3 of l3ForL2) {
       const cat = l3.display_category as GoalDisplayCategory | null
-      if (cat && (cat === "field_work" || cat === "results" || cat === "dirty_dog")) {
+      if (cat) {
         if (!categories[cat]) categories[cat] = []
         categories[cat]!.push(l3)
       } else {

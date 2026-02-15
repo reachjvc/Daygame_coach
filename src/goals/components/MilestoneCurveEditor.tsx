@@ -6,6 +6,7 @@ import { Slider } from "@/components/ui/slider"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { RotateCcw } from "lucide-react"
+import { cn } from "@/lib/utils"
 import {
   generateMilestoneLadder,
   interpolateWithControlPoints,
@@ -27,6 +28,20 @@ const PAD = { top: 12, right: 12, bottom: 28, left: 40 }
 const PLOT_W = SVG_W - PAD.left - PAD.right
 const PLOT_H = SVG_H - PAD.top - PAD.bottom
 
+interface CurvePreset {
+  id: string
+  label: string
+  description: string
+  steps: number
+  curveTension: number
+}
+
+const CURVE_PRESETS: CurvePreset[] = [
+  { id: "quick-wins", label: "Quick Wins", description: "Many small steps", steps: 8, curveTension: 1.2 },
+  { id: "balanced", label: "Balanced", description: "Steady climb", steps: 5, curveTension: 0 },
+  { id: "ambitious", label: "Ambitious", description: "Few big leaps", steps: 3, curveTension: -1.5 },
+]
+
 export function MilestoneCurveEditor({
   config,
   onChange,
@@ -40,6 +55,13 @@ export function MilestoneCurveEditor({
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   const milestones = useMemo(() => generateMilestoneLadder(config), [config])
+
+  const activePresetId = useMemo(() => {
+    const match = CURVE_PRESETS.find(
+      (p) => p.steps === config.steps && Math.abs(p.curveTension - config.curveTension) < 0.05
+    )
+    return match?.id ?? null
+  }, [config.steps, config.curveTension])
 
   // Generate smooth curve points for drawing the line
   const curvePoints = useMemo(() => {
@@ -71,6 +93,10 @@ export function MilestoneCurveEditor({
     }),
     []
   )
+
+  const handlePresetSelect = (preset: CurvePreset) => {
+    onChange({ ...config, steps: preset.steps, curveTension: preset.curveTension, controlPoints: [] })
+  }
 
   const handleTensionChange = (values: number[]) => {
     onChange({ ...config, curveTension: values[0] })
@@ -159,8 +185,27 @@ export function MilestoneCurveEditor({
 
   return (
     <div className="space-y-3">
+      {/* Preset toggles */}
+      <div className="flex rounded-md border border-border overflow-hidden">
+        {CURVE_PRESETS.map((preset) => (
+          <Button
+            key={preset.id}
+            variant={activePresetId === preset.id ? "default" : "ghost"}
+            size="sm"
+            onClick={() => handlePresetSelect(preset)}
+            className={cn(
+              "rounded-none flex-1 flex flex-col items-center gap-0 h-auto py-1.5 px-2",
+              activePresetId !== preset.id && "text-muted-foreground"
+            )}
+          >
+            <span className="text-xs font-medium">{preset.label}</span>
+            <span className="text-[10px] opacity-60 font-normal">{preset.description}</span>
+          </Button>
+        ))}
+      </div>
+
       {/* SVG Curve */}
-      <div className="bg-muted/30 rounded-lg p-2 border border-border">
+      <div className="bg-muted/30 rounded-lg p-3 border border-border">
         <svg
           ref={svgRef}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -168,6 +213,14 @@ export function MilestoneCurveEditor({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
+          {/* Gradient fill definition */}
+          <defs>
+            <linearGradient id="curve-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={accentColor} stopOpacity={0.15} />
+              <stop offset="100%" stopColor={accentColor} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+
           {/* Grid lines */}
           {[0.25, 0.5, 0.75].map((t) => {
             const sv = toSvg(0, t)
@@ -242,7 +295,13 @@ export function MilestoneCurveEditor({
           />
 
           {/* Curve line */}
-          <path d={pathD} fill="none" stroke={accentColor} strokeWidth={2} strokeOpacity={0.6} />
+          <path d={pathD} fill="none" stroke={accentColor} strokeWidth={2} strokeOpacity={0.8} />
+
+          {/* Area fill under curve */}
+          <path
+            d={`${pathD} L${PAD.left + PLOT_W},${PAD.top + PLOT_H} L${PAD.left},${PAD.top + PLOT_H} Z`}
+            fill="url(#curve-fill)"
+          />
 
           {/* Milestone dots */}
           {milestones.map((m) => {
@@ -256,8 +315,9 @@ export function MilestoneCurveEditor({
                 cy={sv.y}
                 r={3.5}
                 fill={accentColor}
-                stroke="white"
+                stroke={accentColor}
                 strokeWidth={1.5}
+                strokeOpacity={0.3}
               />
             )
           })}
@@ -295,7 +355,9 @@ export function MilestoneCurveEditor({
       </div>
 
       {/* Controls row */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-2">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">Fine-tune</span>
+        <div className="grid grid-cols-2 gap-4">
         {/* Tension slider */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
@@ -342,16 +404,19 @@ export function MilestoneCurveEditor({
             </Button>
           </div>
         </div>
+        </div>
       </div>
 
       {/* Advanced controls toggle + reset */}
-      <div className="flex items-center gap-2">
-        <button
+      <div className="border-t border-border/50 pt-2 flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="text-[10px] text-muted-foreground h-6 px-2"
         >
           {showAdvanced ? "Hide advanced" : "Advanced"}
-        </button>
+        </Button>
         <div className="flex-1" />
         <Button
           variant="ghost"
@@ -393,7 +458,12 @@ export function MilestoneCurveEditor({
 
       {/* Milestone values list */}
       <div className="space-y-1">
-        <Label className="text-xs">Milestone values</Label>
+        <div className="flex items-center justify-between">
+          <Label className="text-xs text-muted-foreground">Values</Label>
+          <span className="text-[10px] text-muted-foreground tabular-nums">
+            {config.start} → {config.target}
+          </span>
+        </div>
         <div className="grid grid-cols-5 gap-1.5">
           {milestones.map((m, idx) => {
             const isFirst = idx === 0
@@ -419,7 +489,12 @@ export function MilestoneCurveEditor({
                   />
                 ) : (
                   <button
-                    className="w-full h-7 rounded-md text-xs font-medium border border-border bg-card hover:bg-muted/50 transition-colors"
+                    className={cn(
+                      "w-full h-7 rounded-md text-xs tabular-nums transition-colors",
+                      isFirst || isLast
+                        ? "font-semibold border bg-card"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                    )}
                     style={{
                       borderColor: isFirst || isLast ? accentColor : undefined,
                       borderWidth: isFirst || isLast ? 1.5 : undefined,

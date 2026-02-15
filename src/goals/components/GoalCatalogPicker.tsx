@@ -242,6 +242,9 @@ const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",
+  texting: "Texting Game",
+  dates: "Dating",
+  relationship: "Relationship",
 }
 
 function DaygameTier2({
@@ -318,7 +321,7 @@ function DaygameTier3({
 }) {
   return (
     <div className="space-y-3">
-      {(["field_work", "results", "dirty_dog"] as GoalDisplayCategory[]).map((cat) => {
+      {(["field_work", "results", "dirty_dog", "texting", "dates", "relationship"] as GoalDisplayCategory[]).map((cat) => {
         const goals = tiers.tier3[cat]
         if (!goals || goals.length === 0) return null
         return (

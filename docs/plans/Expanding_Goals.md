@@ -1,6 +1,37 @@
 # Expanding Goals — Life Areas & Goal Hierarchy
 
-## Status: DRAFT — Awaiting User Review
+## Status: PARTIALLY SHIPPED
+
+---
+
+## Decisions Made
+
+- **Categories:** Simplify from 10 → 6 + Custom. Merge Daygame+Dating, merge Career+Finances, absorb Mindfulness+Education into Personal Growth, add Lifestyle
+- **L2 scope:** Ship all 10 new daygame/dating L2s at once
+- **Achievement weights:** Per-L2 weights (not shared). Each L2 gets its own weight distribution
+- **L1 flavors:** Create all L3 options first, then decide what goes where for one-person vs abundance
+- **Meta L2s:** Dropped (coach/mentor, document journey)
+- **L2 overlap resolution:** Dropped "Never Worry About Dating Again" (= "Total Dating Freedom") and "Master Online Dating" (no L3s to wire to). 8 new L2s shipped.
+- **Display categories:** Added `texting`, `dates`, `relationship` alongside existing `field_work`, `results`, `dirty_dog`
+- **Per-L2 edges:** Each L2 fans into its specific L3s (not all-to-all). `l2_attract_any` is the broadest (all 25 L3s).
+
+## What's Shipped
+
+- 8 new L2 badge templates (10 total)
+- 5 new Daygame L3s (field_work): Hours in Field, Voice Notes, Approach Quality, Open in <3s, Solo Sessions
+- 8 new Dating L3s: Texting Initiated, Numbers Converted, Texts Replied, Dates Planned, Second Dates Achieved, Creative Dates, Physical Escalation, Women Currently Dating
+- Per-L2 fan-out edges and per-L2 achievement weights
+- 3 new display categories (texting, dates, relationship) with labels in all UI components
+- Enriched life area suggestions (daygame, dating, health, career, social, personal growth)
+- All tests updated and passing (1088 tests)
+
+## What's NOT Shipped Yet
+
+- Life area consolidation (10 → 7) — needs DB migration for existing users
+- Tier 2 suggestion-powered manual hierarchy UX
+- Cross-area L3 sharing (e.g., Meditation feeding into Overcome AA)
+- L1 path differentiation (one-person vs abundance defaults)
+- Online dating L3s
 
 ---
 
@@ -8,14 +39,12 @@
 
 **Two tiers of goal support:**
 
-1. **Curated + auto-tracked** — Full L1→L2→L3 graph with fan-out, achievement weights, and auto-tracking from widgets (field reports, future fitness tracker, etc.). Only built where we have tracking infrastructure.
+1. **Curated + auto-tracked** — Full L1→L2→L3 graph with fan-out, per-L2 achievement weights, auto-tracking from widgets. Only where we have tracking infrastructure.
 
-2. **Manual + suggestion-powered** — User creates their own hierarchy. We provide good L2 suggestions and L3 templates per life area. No graph wiring or achievement weights — just parent-child goals with manual tracking. Available for ALL life areas from day one.
-
-The L2/L3 brainstorm below serves double duty: curated templates for tier 1 areas, suggestion library for tier 2 areas.
+2. **Manual + suggestion-powered** — User creates their own hierarchy. We provide L2 suggestions and L3 templates per life area. No graph wiring — just parent-child goals with manual tracking. Available for ALL life areas from day one.
 
 **Expansion sequence:**
-1. **Now:** Enrich daygame/dating L2s (already have tracking) + ship L2/L3 suggestions for all other areas
+1. **Now:** Enrich Dating & Daygame with all new L2s + L3s. Ship L2/L3 suggestions for all other areas
 2. **Next:** Build fitness/health tracking widget → upgrade Health & Appearance to curated tier
 3. **Later:** Each new tracking widget unlocks another curated area
 
@@ -23,18 +52,14 @@ The L2/L3 brainstorm below serves double duty: curated templates for tier 1 area
 
 ## Source Material
 
-L2/L3 brainstorm originates from `better_goals.md` (deleted in commit `69e8804`). That doc had ~25 L2 goals across 4 sub-categories but only 2 shipped ("Master Daygame" + "Become Confident with Women"). This plan brings in the rest (minus meta: coach/mentor, document journey).
-
-Also incorporates deferred items from better_goals.md:
-- More L3 goals (hours in field, voice notes, texting, dates planned)
-- Differentiate L1 flavors ("one person" vs "abundance" get different default sub-goals)
-- Differentiate achievement weights ("Master Daygame" = results-heavy, "Become Confident" = exposure/consistency-heavy)
+L2/L3 brainstorm from `better_goals.md` (deleted in commit `69e8804`). 25 L2 goals brainstormed, only 2 shipped. This plan brings in the rest minus meta.
 
 ---
 
-## Part 1: MECE Audit of Life Areas
+## Part 1: Life Area Categories
 
-### Current Categories (10)
+### Before (10)
+
 | # | ID | Name |
 |---|-----|------|
 | 1 | `daygame` | Daygame |
@@ -48,55 +73,37 @@ Also incorporates deferred items from better_goals.md:
 | 9 | `education` | Education & Skills |
 | 10 | `custom` | Custom |
 
-### Problems
-
-**Overlaps:**
-1. **Personal Growth vs Mindfulness** — meditation in both, journaling/gratitude ambiguous
-2. **Personal Growth vs Education** — reading in both
-3. **Career vs Education** — study/reading overlap
-4. **Daygame vs Dating** — one pipeline split across two (defensible but fuzzy)
-
-**Gaps:**
-- No home for inner game / mindset / confidence work (the Inner Game module has no life area)
-- Style, grooming, physical presentation not covered
-- Lifestyle / experiences / hobbies not covered
-
-### Proposed Resolution
-
-Merge overlapping categories. Inner game folds into a broader Personal Growth. Style/grooming folds into Health & Fitness (body + presentation = one "look & feel" bucket). Mindfulness absorbed into Personal Growth. Education absorbed into Personal Growth.
+### After (6 + Custom)
 
 | # | ID | Name | What changed |
 |---|-----|------|-------------|
-| 1 | `daygame` | Daygame | KEEP |
-| 2 | `dating` | Dating & Relationships | KEEP |
-| 3 | `health_fitness` | Health & Appearance | RENAME — now includes style, grooming, physical presentation alongside gym/nutrition/sleep |
-| 4 | `career_business` | Career & Business | KEEP |
-| 5 | `social` | Social Life | KEEP |
-| 6 | `personal_growth` | Personal Growth | EXPANDED — absorbs Mindfulness, Education, Inner Game. Big bucket: mindset, learning, meditation, journaling, reading, skills, confidence work |
-| 7 | `finances` | Finances | KEEP |
-| 8 | `lifestyle` | Lifestyle | NEW — replaces Mindfulness slot. Travel, hobbies, experiences, adventures, living situation |
-| 9 | `custom` | Custom | KEEP as escape hatch |
+| 1 | `dating_daygame` | Dating & Daygame | MERGE — daygame + dating into one pipeline |
+| 2 | `health_appearance` | Health & Appearance | RENAME — fitness + style + grooming |
+| 3 | `social` | Social Life | KEEP |
+| 4 | `personal_growth` | Personal Growth | EXPANDED — absorbs Mindfulness, Education, Inner Game |
+| 5 | `career_finances` | Career & Finances | MERGE — career + finances |
+| 6 | `lifestyle` | Lifestyle | NEW — travel, hobbies, experiences, adventures |
+| 7 | `custom` | Custom | KEEP |
 
-**Net result: 8 named categories + Custom = 9 total.** Down from 10. Cleaner, no overlaps, no gaps.
+**Removed:** `daygame` (→ dating_daygame), `dating` (→ dating_daygame), `finances` (→ career_finances), `mindfulness` (→ personal_growth), `education` (→ personal_growth)
 
 **MECE check:**
-- Daygame vs Dating: approach methodology vs relationship pipeline — ME ✓
+- Dating & Daygame vs Social: romantic pursuit vs friendships/community — ME ✓
 - Health & Appearance vs Personal Growth: body/looks vs mind/learning — ME ✓
-- Career vs Finances: earning/building vs managing money — ME ✓
-- Social vs Lifestyle: people vs experiences — ME ✓
-- Personal Growth covers: inner game, mindfulness, education, reading, journaling, meditation, confidence — CE ✓
+- Career & Finances vs Lifestyle: work/money vs play/experiences — ME ✓
+- Personal Growth covers: inner game, mindfulness, education, reading, journaling, meditation, confidence, learning — CE ✓
 - Health & Appearance covers: gym, nutrition, sleep, style, grooming, skincare — CE ✓
-- Lifestyle covers: travel, hobbies, home, adventures — CE ✓
+- Lifestyle covers: travel, hobbies, home, adventures, experiences — CE ✓
+
+**Migration note:** Existing user goals with `life_area = 'daygame'` or `'dating'` need remapping to `'dating_daygame'`. Same for `'finances'` → `'career_finances'`, `'mindfulness'`/`'education'` → `'personal_growth'`.
 
 ---
 
-## Part 2: L2 Goals — The Full Brainstorm
+## Part 2: L2 Goals
 
-### Tier 1: Curated (Daygame + Dating)
+### Tier 1: Curated (Dating & Daygame)
 
-These get the full graph treatment — fan-out edges, achievement weights, auto-tracking where field report data exists.
-
-#### Daygame L2s
+Full graph treatment — fan-out edges, per-L2 achievement weights, auto-tracking.
 
 | ID | Title | Status |
 |----|-------|--------|
@@ -107,20 +114,17 @@ These get the full graph treatment — fan-out edges, achievement weights, auto-
 | `l2_great_talker` | Become Great at Talking to Women | NEW |
 | `l2_master_seduction` | Master Seduction / Attraction | NEW |
 | `l2_attract_any` | Be Able to Attract Any Woman I Want | NEW |
-
-#### Dating L2s
-
-| ID | Title | Status |
-|----|-------|--------|
 | `l2_master_dating` | Master Dating | NEW |
 | `l2_master_texting` | Master Texting Game | NEW |
 | `l2_master_online_dating` | Master Online Dating | NEW |
 | `l2_dating_freedom` | Have Total Dating Freedom | NEW |
 | `l2_never_worry` | Never Worry About Dating Again | NEW |
 
+**Total: 12 L2s** (2 existing + 10 new)
+
 ### Tier 2: Suggestion Library (all other areas)
 
-These are NOT wired into a graph. They appear as suggestions when a user creates goals in that life area. User builds their own hierarchy manually.
+Not graph-wired. Appear as suggestions when user creates goals. Manual hierarchy.
 
 #### Personal Growth L2 suggestions
 
@@ -156,18 +160,20 @@ These are NOT wired into a graph. They appear as suggestions when a user creates
 
 #### Career & Finances
 
-No curated L2s yet. Users create their own. Could add later.
+No curated L2s yet. Users create their own.
 
 ---
 
-## Part 3: L3 Goals — Existing + New
+## Part 3: L3 Goals — The Full Catalog
 
-### Tier 1: Curated L3s (auto-tracked or graph-wired)
+All L3 options listed here. L1 path differentiation (one-person vs abundance defaults) to be decided after reviewing the full set.
 
-#### Existing L3 — Daygame (all shipped)
+### Tier 1: Curated L3s (Dating & Daygame)
 
-| L3 Goal | Type | Category |
-|---------|------|----------|
+#### Existing L3 — Daygame (shipped)
+
+| L3 Goal | Type | Display Category |
+|---------|------|-----------------|
 | Approach Volume | milestone_ladder (1→1000) | field_work |
 | Approach Frequency | habit_ramp (10→25/wk) | field_work |
 | Session Frequency | habit_ramp (3/wk) | field_work |
@@ -181,32 +187,30 @@ No curated L2s yet. Users create their own. Could add later.
 | Rotation Size | milestone_ladder (1→3) | dirty_dog |
 | Sustained Rotation | habit_ramp | dirty_dog |
 
-#### New L3 — Daygame (deferred from better_goals.md)
+#### New L3 — Daygame (from better_goals.md deferred list)
 
-| L3 Goal | Type | Why |
-|---------|------|-----|
-| Hours in Field | milestone_ladder | Total time invested, not just set count |
-| Voice Notes / Field Reports | habit_ramp | Self-coaching loop |
-| Approach Quality Self-Rating | habit_ramp | Deliberate practice, not just volume |
-| Open in <3 Seconds | habit_ramp | 3-second rule consistency |
-| Solo Sessions | habit_ramp | Independence from wings |
+| L3 Goal | Type | Display Category | Why |
+|---------|------|-----------------|-----|
+| Hours in Field | milestone_ladder | field_work | Total time invested |
+| Voice Notes / Field Reports | habit_ramp | field_work | Self-coaching loop |
+| Approach Quality Self-Rating | habit_ramp | field_work | Deliberate practice |
+| Open in <3 Seconds | habit_ramp | field_work | 3-second rule consistency |
+| Solo Sessions | habit_ramp | field_work | Independence from wings |
 
 #### New L3 — Dating
 
-| L3 Goal | Type | Category |
-|---------|------|----------|
-| Texting Conversations Initiated | habit_ramp | Texting |
-| Number-to-Date Conversion Rate | milestone_ladder | Texting |
-| Response Rate (% numbers that reply) | milestone_ladder | Texting |
-| Dates Planned / Executed | habit_ramp | Dates |
-| Date-to-Second-Date Conversion | milestone_ladder | Dates |
-| Physical Escalation on Dates | milestone_ladder | Dates |
-| Creative Date Ideas Tried | milestone_ladder | Dates |
-| Women Currently Dating | milestone_ladder | Relationship |
+| L3 Goal | Type | Display Category |
+|---------|------|-----------------|
+| Texting Conversations Initiated | habit_ramp | texting |
+| Number-to-Date Conversion Rate | milestone_ladder | texting |
+| Response Rate (% numbers that reply) | milestone_ladder | texting |
+| Dates Planned / Executed | habit_ramp | dates |
+| Date-to-Second-Date Conversion | milestone_ladder | dates |
+| Physical Escalation on Dates | milestone_ladder | dates |
+| Creative Date Ideas Tried | milestone_ladder | dates |
+| Women Currently Dating | milestone_ladder | relationship |
 
 ### Tier 2: L3 Suggestion Templates (manual tracking)
-
-These appear as suggestions when creating sub-goals. User picks what's relevant, tracks manually.
 
 #### Personal Growth L3 suggestions
 
@@ -258,7 +262,7 @@ These appear as suggestions when creating sub-goals. User picks what's relevant,
 | Hobbies Practiced Per Week | habit_ramp | Interests |
 | "First Time Doing X" Count | milestone_ladder | Novelty |
 
-#### Career & Business L3 suggestions
+#### Career & Finances L3 suggestions
 
 | L3 Goal | Type | Sub-category |
 |---------|------|-------------|
@@ -267,11 +271,6 @@ These appear as suggestions when creating sub-goals. User picks what's relevant,
 | Revenue / Income Milestones | milestone_ladder | Financial |
 | Side Project Hours Per Week | habit_ramp | Building |
 | Networking Meetings Per Month | habit_ramp | Connections |
-
-#### Finances L3 suggestions
-
-| L3 Goal | Type | Sub-category |
-|---------|------|-------------|
 | Monthly Savings Amount | habit_ramp | Saving |
 | Expense Tracking Adherence | habit_ramp | Awareness |
 | Net Worth Milestones | milestone_ladder | Wealth |
@@ -280,64 +279,101 @@ These appear as suggestions when creating sub-goals. User picks what's relevant,
 
 ---
 
-## Part 4: Curated Fan-Out Edges (Tier 1 only)
+## Part 4: L2 → L3 Fan-Out Edges (Tier 1)
 
-Which L3 goals feed into which L2 achievements? Only for daygame/dating where we have the full graph.
+Per-L2 achievement weights. Each L2 gets its own weight distribution reflecting what actually matters for that transformation.
 
-### Daygame L2 → L3
+### Daygame L2s
 
-**Master Daygame** → all existing L3s + Hours in Field, Voice Notes, Approach Quality
-**Become Confident with Women** → all existing L3s + Hours in Field, Solo Sessions, "Rejected But Kept Going"
-**Overcome Approach Anxiety** → Approach Volume, Consecutive Days, Comfort Zone Challenges, "Rejected But Kept Going", Meditation
-**Master Cold Approach** → Approach Volume, Approach Frequency, Approach Quality, Open in <3s, Phone Numbers, Instadates
-**Great Talker** → Phone Numbers, Instadates, Dates, Response Rate, Voice Notes
-**Master Seduction** → Kiss Closes, Lays, Physical Escalation, Dates, Second Dates
-**Attract Any Woman** → all field work + all results + Physical Attractiveness metrics
+**Master Daygame** (results-heavy)
+→ all existing field_work L3s + Hours in Field, Voice Notes, Approach Quality
+→ all existing results L3s
+→ all dirty_dog L3s
+Weights: results & dirty_dog weighted higher than field_work inputs
 
-Note: some L2s pull L3s from other life areas (e.g., "Overcome AA" pulls Meditation from Personal Growth, "Attract Any Woman" pulls from Health). This is by design — the graph edges cross life area boundaries.
+**Become Confident with Women** (exposure/consistency-heavy)
+→ all existing field_work L3s + Hours in Field, Solo Sessions
+→ results L3s (lower weight)
+→ "Rejected But Kept Going" (cross-area from Personal Growth)
+Weights: field_work & consistency metrics weighted higher than outcome metrics
 
-### Dating L2 → L3
+**Overcome Approach Anxiety** (exposure-heavy)
+→ Approach Volume, Consecutive Days, Solo Sessions
+→ Comfort Zone Challenges (cross-area from Personal Growth)
+→ "Rejected But Kept Going" (cross-area from Personal Growth)
+→ Meditation (cross-area from Personal Growth)
+Weights: pure exposure metrics dominate
 
-**Master Texting** → Texting Conversations, Response Rate, Number-to-Date Conversion
-**Master Dating** → Dates Planned, Date-to-Second-Date, Creative Dates, Physical Escalation
-**Master Online Dating** → *(needs online-specific L3s — deferred for now)*
-**Dating Freedom / Never Worry** → Women Currently Dating, Dates/month, Rotation Size
+**Master Cold Approach** (technique-heavy)
+→ Approach Volume, Approach Frequency, Approach Quality, Open in <3s
+→ Phone Numbers, Instadates
+Weights: quality & frequency metrics over pure volume
+
+**Become Great at Talking to Women** (conversion-heavy)
+→ Phone Numbers, Instadates, Dates, Response Rate
+→ Voice Notes
+Weights: conversion outcomes dominate
+
+**Master Seduction / Attraction** (escalation-heavy)
+→ Kiss Closes, Lays, Physical Escalation, Dates, Second Dates
+Weights: escalation outcomes dominate
+
+**Be Able to Attract Any Woman** (broad)
+→ all field_work + all results + all dirty_dog
+→ Physical Attractiveness metrics (cross-area from Health)
+Weights: broadly distributed, slight emphasis on results
+
+### Dating L2s
+
+**Master Texting Game**
+→ Texting Conversations Initiated, Response Rate, Number-to-Date Conversion
+Weights: conversion rate highest
+
+**Master Dating**
+→ Dates Planned, Date-to-Second-Date Conversion, Creative Dates, Physical Escalation
+Weights: conversion & escalation metrics
+
+**Master Online Dating**
+→ *(needs online-specific L3s — deferred)*
+
+**Have Total Dating Freedom / Never Worry About Dating Again**
+→ Women Currently Dating, Dates/month, Rotation Size, Sustained Rotation
+Weights: abundance metrics — rotation & date volume
 
 ---
 
 ## Part 5: Cross-Area L3 Sharing
 
-Some L3 goals naturally feed into L2s across multiple life areas. These L3s have a "home" life area (where they show in the UI) but connect to L2 achievements elsewhere via graph edges.
+L3s have a "home" life area (where they show in the Daily view) but can connect to L2 achievements in other areas via graph edges.
 
 | L3 Goal | Home Area | Also feeds into |
 |---------|-----------|----------------|
-| Meditation | Personal Growth | Daygame → Overcome AA |
-| Comfort Zone Challenges | Personal Growth | Daygame → Overcome AA, Social → Socially Fearless |
-| "Rejected But Kept Going" | Personal Growth | Daygame → Overcome AA, Become Confident |
-| Gym Sessions | Health & Appearance | Personal Growth → Masculine Frame |
-| Approach Volume | Daygame | Personal Growth → No Fear of Rejection |
+| Meditation | Personal Growth | Dating & Daygame → Overcome AA |
+| Comfort Zone Challenges | Personal Growth | Dating & Daygame → Overcome AA |
+| "Rejected But Kept Going" | Personal Growth | Dating & Daygame → Overcome AA, Become Confident |
+| Gym Sessions | Health & Appearance | Dating & Daygame → Attract Any Woman |
+| Physical Attractiveness metrics | Health & Appearance | Dating & Daygame → Attract Any Woman |
 
-This means: when a user activates "Overcome Approach Anxiety" (daygame L2), the system could suggest "add Meditation to your goals?" even though it lives in Personal Growth. The L3 stays in its home area for the Daily view, but the graph edge connects it to the daygame achievement.
+When a user activates a Dating & Daygame L2 that benefits from cross-area L3s, the system could suggest adding them.
 
 ---
 
-## Part 6: Deferred (Still Not In Scope)
+## Part 6: Deferred
 
-From better_goals.md's "Future" section:
 - AI-assisted decomposition for unknown goal types
 - Advanced UX flows (wizard, interactive tree builder)
 - Time commitment reality-checker
 - Celebration cascade improvements
 - L0 "life dream" goals (exist as data but no special UX)
 - Meta L2s (coach/mentor, document journey) — explicitly dropped
+- Online dating L3s (need to design what to track)
 
 ---
 
-## Part 7: Open Questions
+## Part 7: Remaining Questions
 
-1. **Category restructure** — does the 8+Custom breakdown feel right?
-2. **Tier 1 L2 scope** — all 12 daygame/dating L2s in the first pass, or start with fewer?
-3. **Differentiate "one person" vs "abundance"** — different default L3 targets per path. Do now or defer?
-4. **Differentiate achievement weights** — "Master Daygame" = results-heavy, "Become Confident" = exposure-heavy. Do now or defer?
-5. **Suggestion UX for tier 2** — when user creates a goal in Personal Growth, how do suggestions appear? Dropdown? Catalog-style picker? Simple list?
-6. **Cross-area suggestions** — when activating a daygame L2 that benefits from meditation, should the system prompt "also add this from Personal Growth?" or leave it to the user?
+1. **L1 path differentiation** — which L3s default ON for "one person" vs "abundance"? (Need to review full L3 list first)
+2. **Suggestion UX for tier 2** — when user creates a goal in Personal Growth, how do suggestions appear? Catalog picker? Simple list?
+3. **Cross-area suggestions** — when activating an L2 that benefits from cross-area L3s, auto-suggest or leave to user?
+4. **New display categories** — Dating L3s need categories (texting, dates, relationship). Add to `GoalDisplayCategory` type?
+5. **Migration** — existing users with goals in old life areas need data migration. Strategy?

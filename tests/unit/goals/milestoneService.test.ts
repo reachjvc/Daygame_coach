@@ -340,6 +340,29 @@ describe("generateMilestoneLadder", () => {
     // Second-to-last milestone should be ≥ 300 (no 100→1000 gap)
     expect(values[13]).toBeGreaterThanOrEqual(300)
   })
+
+  test("absolute increments never shrink (non-decreasing)", () => {
+    // Regression: greedy pool selection produced 150→250→300 (+100, +50)
+    // because 250 was closest in log-space, creating a jarring halving of
+    // the increment at a higher magnitude. Increments should never shrink.
+    const configs: MilestoneLadderConfig[] = [
+      { start: 1, target: 1000, steps: 20, curveTension: 0 },
+      { start: 1, target: 1000, steps: 16, curveTension: 2 },
+      { start: 1, target: 500, steps: 10, curveTension: 0 },
+      { start: 1, target: 100, steps: 8, curveTension: 1 },
+    ]
+
+    for (const config of configs) {
+      const result = generateMilestoneLadder(config)
+      const values = result.map((m) => m.value)
+      let prevDelta = 0
+      for (let i = 1; i < values.length; i++) {
+        const delta = values[i] - values[i - 1]
+        expect(delta).toBeGreaterThanOrEqual(prevDelta)
+        prevDelta = delta
+      }
+    }
+  })
 })
 
 // ============================================================================

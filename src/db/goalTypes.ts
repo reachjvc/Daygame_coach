@@ -8,7 +8,7 @@ export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
 export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
 export type GoalType = "recurring" | "milestone" | "habit_ramp"
 export type GoalNature = "input" | "outcome"
-export type GoalDisplayCategory = "field_work" | "results" | "dirty_dog"
+export type GoalDisplayCategory = "field_work" | "results" | "dirty_dog" | "texting" | "dates" | "relationship"
 
 /**
  * Metrics that can be linked to goals for auto-sync with tracking data

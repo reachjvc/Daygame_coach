@@ -75,13 +75,25 @@ const L1_ABUNDANCE: GoalTemplate[] = [
 
 // --- Level 2: Achievements (badges) ---
 const L2_TEMPLATES: GoalTemplate[] = [
+  // Existing
   template("l2_master_daygame", "Master Daygame", 2, "outcome"),
   template("l2_confident", "Become Confident with Women", 2, "outcome"),
+  // New — Daygame-focused
+  template("l2_overcome_aa", "Overcome Approach Anxiety Permanently", 2, "outcome"),
+  template("l2_master_cold_approach", "Master Cold Approach", 2, "outcome"),
+  template("l2_great_talker", "Become Great at Talking to Women", 2, "outcome"),
+  template("l2_master_seduction", "Master Seduction & Attraction", 2, "outcome"),
+  template("l2_attract_any", "Be Able to Attract Any Woman I Want", 2, "outcome"),
+  // New — Dating-focused
+  template("l2_master_dating", "Master Dating", 2, "outcome"),
+  template("l2_master_texting", "Master Texting Game", 2, "outcome"),
+  template("l2_dating_freedom", "Have Total Dating Freedom", 2, "outcome"),
 ]
 
 // --- Level 3: Specific Skills & Metrics ---
 const CURVE_TENSION = 0 // default balanced (geometric) curve
 
+// -- Daygame: Field Work (existing) --
 const L3_FIELD_WORK: GoalTemplate[] = [
   template("l3_approach_volume", "Approach Volume", 3, "input", {
     displayCategory: "field_work",
@@ -112,8 +124,49 @@ const L3_FIELD_WORK: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 30, steps: 8, curveTension: CURVE_TENSION },
   }),
+  // New field work L3s
+  template("l3_hours_in_field", "Hours in Field", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 500, steps: 12, curveTension: CURVE_TENSION },
+  }),
+  template("l3_voice_notes", "Voice Notes / Field Reports", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_approach_quality", "Approach Quality Self-Rating", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_open_in_3_seconds", "Open in <3 Seconds", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 10, durationWeeks: 12 },
+      { frequencyPerWeek: 15, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_solo_sessions", "Solo Sessions", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 12 },
+      { frequencyPerWeek: 3, durationWeeks: 24 },
+    ],
+  }),
 ]
 
+// -- Daygame: Results --
 const L3_RESULTS: GoalTemplate[] = [
   template("l3_phone_numbers", "Phone Numbers", 3, "outcome", {
     displayCategory: "results",
@@ -139,6 +192,7 @@ const L3_RESULTS: GoalTemplate[] = [
   }),
 ]
 
+// -- Daygame: Dirty Dog --
 const L3_DIRTY_DOG: GoalTemplate[] = [
   template("l3_kiss_closes", "Kiss Closes", 3, "outcome", {
     displayCategory: "dirty_dog",
@@ -166,17 +220,79 @@ const L3_DIRTY_DOG: GoalTemplate[] = [
   }),
 ]
 
+// -- Dating: Texting --
+const L3_TEXTING: GoalTemplate[] = [
+  template("l3_texting_initiated", "Texting Conversations Initiated", 3, "input", {
+    displayCategory: "texting",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_number_to_date_conversion", "Numbers Converted to Dates", 3, "outcome", {
+    displayCategory: "texting",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 15, steps: 6, curveTension: CURVE_TENSION },
+  }),
+  template("l3_response_rate", "Texts That Got Replies", 3, "outcome", {
+    displayCategory: "texting",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 25, steps: 6, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Dating: Dates --
+const L3_DATES: GoalTemplate[] = [
+  template("l3_dates_planned", "Dates Planned & Executed", 3, "input", {
+    displayCategory: "dates",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_date_to_second_date", "Second Dates Achieved", 3, "outcome", {
+    displayCategory: "dates",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
+  }),
+  template("l3_creative_dates", "Creative Date Ideas Tried", 3, "outcome", {
+    displayCategory: "dates",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
+  }),
+  template("l3_physical_escalation", "Physical Escalation on Dates", 3, "outcome", {
+    displayCategory: "dates",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Dating: Relationship --
+const L3_RELATIONSHIP: GoalTemplate[] = [
+  template("l3_women_dating", "Women Currently Dating", 3, "outcome", {
+    displayCategory: "relationship",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 5, steps: 5, curveTension: 0 },
+  }),
+]
+
 // ============================================================================
 // Full Catalog
 // ============================================================================
+
+const ALL_L3 = [
+  ...L3_FIELD_WORK, ...L3_RESULTS, ...L3_DIRTY_DOG,
+  ...L3_TEXTING, ...L3_DATES, ...L3_RELATIONSHIP,
+]
 
 export const GOAL_TEMPLATES: GoalTemplate[] = [
   ...L1_ONE_PERSON,
   ...L1_ABUNDANCE,
   ...L2_TEMPLATES,
-  ...L3_FIELD_WORK,
-  ...L3_RESULTS,
-  ...L3_DIRTY_DOG,
+  ...ALL_L3,
 ]
 
 export const GOAL_TEMPLATE_MAP: Record<string, GoalTemplate> =
@@ -186,7 +302,7 @@ export const GOAL_TEMPLATE_MAP: Record<string, GoalTemplate> =
 // Fan-Out Edges
 // ============================================================================
 
-// L1 → L2: all L1 goals fan into both achievements
+// L1 → L2: all L1 goals fan into all achievements
 const L1_TO_L2_EDGES: GoalGraphEdge[] = [...L1_ONE_PERSON, ...L1_ABUNDANCE].flatMap((l1) =>
   L2_TEMPLATES.map((l2) => ({
     parentId: l1.id,
@@ -194,14 +310,61 @@ const L1_TO_L2_EDGES: GoalGraphEdge[] = [...L1_ONE_PERSON, ...L1_ABUNDANCE].flat
   }))
 )
 
-// L2 → L3: both achievements fan into all L3 goals (same set in v1)
-const ALL_L3 = [...L3_FIELD_WORK, ...L3_RESULTS, ...L3_DIRTY_DOG]
+// L2 → L3: per-L2 connections — each L2 links to the L3s relevant to that transformation
+const L2_L3_CONNECTIONS: Record<string, string[]> = {
+  // Master Daygame — broad, results-heavy
+  l2_master_daygame: [
+    // field work
+    "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency", "l3_consecutive_days",
+    "l3_hours_in_field", "l3_voice_notes", "l3_approach_quality", "l3_open_in_3_seconds", "l3_solo_sessions",
+    // results
+    "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
+    // dirty dog
+    "l3_kiss_closes", "l3_lays", "l3_rotation_size", "l3_sustained_rotation",
+  ],
+  // Become Confident — exposure/consistency-heavy
+  l2_confident: [
+    "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency", "l3_consecutive_days",
+    "l3_hours_in_field", "l3_solo_sessions",
+    "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
+  ],
+  // Overcome AA — pure exposure
+  l2_overcome_aa: [
+    "l3_approach_volume", "l3_consecutive_days", "l3_solo_sessions",
+  ],
+  // Master Cold Approach — technique + quality
+  l2_master_cold_approach: [
+    "l3_approach_volume", "l3_approach_frequency", "l3_approach_quality", "l3_open_in_3_seconds",
+    "l3_phone_numbers", "l3_instadates",
+  ],
+  // Become Great at Talking — conversation/conversion
+  l2_great_talker: [
+    "l3_phone_numbers", "l3_instadates", "l3_dates",
+    "l3_response_rate", "l3_voice_notes",
+  ],
+  // Master Seduction — escalation
+  l2_master_seduction: [
+    "l3_kiss_closes", "l3_lays", "l3_physical_escalation",
+    "l3_dates", "l3_second_dates",
+  ],
+  // Attract Any Woman — broadest, everything
+  l2_attract_any: ALL_L3.map((t) => t.id),
+  // Master Texting — texting metrics
+  l2_master_texting: [
+    "l3_texting_initiated", "l3_response_rate", "l3_number_to_date_conversion",
+  ],
+  // Master Dating — date execution
+  l2_master_dating: [
+    "l3_dates_planned", "l3_date_to_second_date", "l3_creative_dates", "l3_physical_escalation",
+  ],
+  // Total Dating Freedom — abundance
+  l2_dating_freedom: [
+    "l3_women_dating", "l3_dates_planned", "l3_rotation_size", "l3_sustained_rotation",
+  ],
+}
 
-const L2_TO_L3_EDGES: GoalGraphEdge[] = L2_TEMPLATES.flatMap((l2) =>
-  ALL_L3.map((l3) => ({
-    parentId: l2.id,
-    childId: l3.id,
-  }))
+const L2_TO_L3_EDGES: GoalGraphEdge[] = Object.entries(L2_L3_CONNECTIONS).flatMap(
+  ([l2Id, l3Ids]) => l3Ids.map((l3Id) => ({ parentId: l2Id, childId: l3Id }))
 )
 
 export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
@@ -210,28 +373,128 @@ export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
 ]
 
 // ============================================================================
-// Achievement Weights (v1: same weights for both achievements)
+// Achievement Weights — per-L2, each sums to 1.0
 // ============================================================================
 
-const BASE_ACHIEVEMENT_WEIGHTS: Record<string, number> = {
-  l3_approach_volume: 0.50,
-  l3_approach_frequency: 0.08,
-  l3_session_frequency: 0.04,
-  l3_consecutive_days: 0.03,
-  l3_phone_numbers: 0.10,
-  l3_instadates: 0.07,
-  l3_dates: 0.07,
-  l3_second_dates: 0.03,
-  l3_kiss_closes: 0.02,
-  l3_lays: 0.03,
-  l3_rotation_size: 0.015,
-  l3_sustained_rotation: 0.015,
+const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
+  // Master Daygame — results-heavy (17 L3s)
+  l2_master_daygame: {
+    l3_approach_volume: 0.15,
+    l3_approach_frequency: 0.06,
+    l3_session_frequency: 0.04,
+    l3_consecutive_days: 0.03,
+    l3_hours_in_field: 0.06,
+    l3_voice_notes: 0.03,
+    l3_approach_quality: 0.05,
+    l3_open_in_3_seconds: 0.03,
+    l3_solo_sessions: 0.03,
+    l3_phone_numbers: 0.12,
+    l3_instadates: 0.08,
+    l3_dates: 0.08,
+    l3_second_dates: 0.05,
+    l3_kiss_closes: 0.05,
+    l3_lays: 0.07,
+    l3_rotation_size: 0.035,
+    l3_sustained_rotation: 0.035,
+  },
+  // Become Confident — exposure/consistency-heavy (10 L3s)
+  l2_confident: {
+    l3_approach_volume: 0.20,
+    l3_approach_frequency: 0.10,
+    l3_session_frequency: 0.10,
+    l3_consecutive_days: 0.10,
+    l3_hours_in_field: 0.10,
+    l3_solo_sessions: 0.10,
+    l3_phone_numbers: 0.10,
+    l3_instadates: 0.07,
+    l3_dates: 0.07,
+    l3_second_dates: 0.06,
+  },
+  // Overcome AA — exposure-heavy (3 L3s)
+  l2_overcome_aa: {
+    l3_approach_volume: 0.50,
+    l3_consecutive_days: 0.30,
+    l3_solo_sessions: 0.20,
+  },
+  // Master Cold Approach — technique + quality (6 L3s)
+  l2_master_cold_approach: {
+    l3_approach_volume: 0.15,
+    l3_approach_frequency: 0.15,
+    l3_approach_quality: 0.25,
+    l3_open_in_3_seconds: 0.20,
+    l3_phone_numbers: 0.15,
+    l3_instadates: 0.10,
+  },
+  // Become Great at Talking — conversion-heavy (5 L3s)
+  l2_great_talker: {
+    l3_phone_numbers: 0.20,
+    l3_instadates: 0.20,
+    l3_dates: 0.25,
+    l3_response_rate: 0.20,
+    l3_voice_notes: 0.15,
+  },
+  // Master Seduction — escalation-heavy (5 L3s)
+  l2_master_seduction: {
+    l3_kiss_closes: 0.15,
+    l3_lays: 0.25,
+    l3_physical_escalation: 0.25,
+    l3_dates: 0.20,
+    l3_second_dates: 0.15,
+  },
+  // Attract Any Woman — broad (all 25 L3s)
+  l2_attract_any: {
+    l3_approach_volume: 0.06,
+    l3_approach_frequency: 0.04,
+    l3_session_frequency: 0.03,
+    l3_consecutive_days: 0.03,
+    l3_hours_in_field: 0.04,
+    l3_voice_notes: 0.02,
+    l3_approach_quality: 0.04,
+    l3_open_in_3_seconds: 0.03,
+    l3_solo_sessions: 0.03,
+    l3_phone_numbers: 0.06,
+    l3_instadates: 0.05,
+    l3_dates: 0.05,
+    l3_second_dates: 0.04,
+    l3_kiss_closes: 0.04,
+    l3_lays: 0.06,
+    l3_rotation_size: 0.03,
+    l3_sustained_rotation: 0.03,
+    l3_texting_initiated: 0.03,
+    l3_number_to_date_conversion: 0.04,
+    l3_response_rate: 0.03,
+    l3_dates_planned: 0.04,
+    l3_date_to_second_date: 0.04,
+    l3_creative_dates: 0.03,
+    l3_physical_escalation: 0.05,
+    l3_women_dating: 0.06,
+  },
+  // Master Texting — texting conversion (3 L3s)
+  l2_master_texting: {
+    l3_texting_initiated: 0.30,
+    l3_response_rate: 0.30,
+    l3_number_to_date_conversion: 0.40,
+  },
+  // Master Dating — date execution (4 L3s)
+  l2_master_dating: {
+    l3_dates_planned: 0.30,
+    l3_date_to_second_date: 0.25,
+    l3_creative_dates: 0.15,
+    l3_physical_escalation: 0.30,
+  },
+  // Total Dating Freedom — abundance (4 L3s)
+  l2_dating_freedom: {
+    l3_women_dating: 0.30,
+    l3_dates_planned: 0.25,
+    l3_rotation_size: 0.25,
+    l3_sustained_rotation: 0.20,
+  },
 }
 
 export const DEFAULT_ACHIEVEMENT_WEIGHTS: DefaultAchievementWeight[] =
-  L2_TEMPLATES.flatMap((l2) =>
-    Object.entries(BASE_ACHIEVEMENT_WEIGHTS).map(([goalId, weight]) => ({
-      achievementId: l2.id,
+  Object.entries(PER_L2_WEIGHTS).flatMap(([l2Id, weights]) =>
+    Object.entries(weights).map(([goalId, weight]) => ({
+      achievementId: l2Id,
       goalId,
       weight,
     }))
@@ -331,6 +594,9 @@ export function getTemplatesByCategory(): Record<GoalDisplayCategory, GoalTempla
     field_work: L3_FIELD_WORK,
     results: L3_RESULTS,
     dirty_dog: L3_DIRTY_DOG,
+    texting: L3_TEXTING,
+    dates: L3_DATES,
+    relationship: L3_RELATIONSHIP,
   }
 }
 
@@ -359,6 +625,6 @@ export function getCatalogTiers(): {
   return {
     tier1: { onePerson: L1_ONE_PERSON, abundance: L1_ABUNDANCE },
     tier2: L2_TEMPLATES,
-    tier3: { field_work: L3_FIELD_WORK, results: L3_RESULTS, dirty_dog: L3_DIRTY_DOG },
+    tier3: getTemplatesByCategory(),
   }
 }

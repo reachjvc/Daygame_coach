@@ -92,16 +92,16 @@ Example progression for **urban-nomad**:
 
 Each set = 40 images (10 archetypes x 4 ages).
 
-| # | Image Set | Ethnicity descriptor | Regions covered | Hair/feature notes | Skin tone rotation |
-|---|-----------|---------------------|-----------------|-------------------|--------------------|
-| 1 | **Nordic/Slavic** | "Scandinavian" | Scandinavia, Slavic Europe, Eastern Europe | DONE. Blonde to light brown, blue/green/grey eyes, light skin | N/A — hair color provides variety |
-| 2 | **Western European** | "Western European" | Western Europe, North America, Australia/Oceania | Broader mix — brunette common, brown or blue eyes. Think UK/French/German | "fair skin", "light skin", "pale with freckles" |
-| 3 | **Mediterranean** | "Mediterranean" | Southern Europe | Dark brown/black hair, brown eyes, warm features. Think Italian/Spanish/Greek | "olive skin", "warm golden skin", "sun-kissed olive complexion" |
-| 4 | **Latin American** | "Latin American" | Latin America | Dark hair, mix of European and Indigenous features. Think Colombian/Brazilian/Argentine | "warm tan skin", "light caramel skin", "golden brown skin", "olive complexion" |
-| 5 | **East Asian** | "East Asian" | East Asia | Chinese/Japanese/Korean features. Straight black hair common | "porcelain skin", "warm ivory skin", "fair skin" |
-| 6 | **Southeast Asian** | "Southeast Asian" | Southeast Asia | Dark hair, rounder features. Think Thai/Filipino/Vietnamese | "warm brown skin", "golden tan skin", "light brown skin" |
-| 7 | **South Asian** | "South Asian" | South Asia | Dark hair, dark eyes. Think Indian/Pakistani | "warm brown skin", "deep brown skin", "medium brown skin", "golden brown skin" |
-| 8 | **African** | "African" | Africa | Sub-Saharan (North Africa closer to Mediterranean) | "deep ebony skin", "rich dark skin", "warm brown skin", "dark mahogany skin" |
+| # | Image Set | Status | Ethnicity descriptor | Regions covered | Hair/feature notes | Skin tone rotation |
+|---|-----------|--------|---------------------|-----------------|-------------------|--------------------|
+| 1 | **Nordic/Slavic** | DONE | "Scandinavian" | Scandinavia, Slavic Europe, Eastern Europe | Blonde to light brown, blue/green/grey eyes, light skin | N/A — hair color provides variety |
+| 2 | **Western European** | TODO | "Western European" | Western Europe, North America, Australia/Oceania | Broader mix — brunette common, brown or blue eyes. Think UK/French/German | "fair skin", "light skin", "pale with freckles" |
+| 3 | **Mediterranean** | TODO | "Mediterranean" | Southern Europe | Dark brown/black hair, brown eyes, warm features. Think Italian/Spanish/Greek | "olive skin", "warm golden skin", "sun-kissed olive complexion" |
+| 4 | **Latin American** | TODO | "Latin American" | Latin America | Dark hair, mix of European and Indigenous features. Think Colombian/Brazilian/Argentine | "warm tan skin", "light caramel skin", "golden brown skin", "olive complexion" |
+| 5 | **East Asian** | TODO | "East Asian" | East Asia | Chinese/Japanese/Korean features. Straight black hair common | "porcelain skin", "warm ivory skin", "fair skin" |
+| 6 | **Southeast Asian** | TODO | "Southeast Asian" | Southeast Asia | Dark hair, rounder features. Think Thai/Filipino/Vietnamese | "warm brown skin", "golden tan skin", "light brown skin" |
+| 7 | **South Asian** | TODO | "South Asian" | South Asia | Dark hair, dark eyes. Think Indian/Pakistani | "warm brown skin", "deep brown skin", "medium brown skin", "golden brown skin" |
+| 8 | **African** | DONE | "African" | Africa | Sub-Saharan (North Africa closer to Mediterranean) | "deep ebony skin", "rich dark skin", "warm brown skin", "dark mahogany skin" |
 
 ### Avoiding the "same woman" problem
 
@@ -194,9 +194,9 @@ const mappings = [
 
 ## Task Estimate
 
-- 7 remaining sets x 40 images each = **280 images**
+- 6 remaining sets x 40 images each = **240 images**
 - ChatGPT generates ~10-15 per session before quality drops or it refuses
-- Expect ~20-25 ChatGPT sessions total
+- Expect ~16-20 ChatGPT sessions total
 - After generation: visual matching + conversion + archetypes.ts code update
 
 ## Completed Sets
@@ -226,6 +226,138 @@ Generated 40 prompts with Claude, fed to ChatGPT image gen.
 
 > **social-connector — age 37**
 > Portrait photo of a beautiful 37-year-old African woman, dark skin, elegant short natural hair with finger waves, wearing a jewel-toned emerald silk dress with chandelier gold earrings and a delicate tennis bracelet, at an intimate dinner party with soft candles and flowers on the table, vibrant magnetic smile, rich warm golden ambient light, shallow depth of field, photorealistic, 1:1
+
+### Set 2: Western European (PENDING — prompts ready)
+
+**Improvements over African set:** Every prompt includes face/build descriptor from archetype table, rotates beauty adjective (striking/elegant/radiant/beautiful/statuesque), and varies skin tone (fair/light/pale with freckles/sun-kissed). Hair color naturally varies (chestnut, auburn, brown, dirty blonde, sandy, copper-red, honey blonde).
+
+#### Age 18
+
+> #1 — corporate-powerhouse — age 18
+> Portrait photo of a striking 18-year-old Western European woman, sharp angular features with a defined jawline, fair skin, dark chestnut hair pulled into a sleek low ponytail, wearing a fitted navy blazer over a white crew-neck top, small silver stud earrings, standing in a modern school hallway with glass windows, composed confident expression, cool natural light, shallow depth of field, photorealistic, 1:1
+
+> #2 — ethereal-creative — age 18
+> Portrait photo of an elegant 18-year-old Western European woman, delicate fine-boned features with a slender willowy frame, light skin, long wavy auburn hair falling loosely past shoulders, wearing a sage green linen blouse with layered delicate rings, seated in a bright art studio with canvases in background, dreamy faraway gaze, soft diffused natural light, shallow depth of field, photorealistic, 1:1
+
+> #3 — disciplined-athlete — age 18
+> Portrait photo of a radiant 18-year-old Western European woman, strong athletic build with broad shoulders, fair skin with light freckles, sandy blonde hair in a high ponytail, wearing a royal blue zip-up running jacket and simple stud earrings, at a sunlit outdoor running track with trees in background, bright energetic smile, golden morning light, shallow depth of field, photorealistic, 1:1
+
+> #4 — academic-intellectual — age 18
+> Portrait photo of a beautiful 18-year-old Western European woman, soft features with wide thoughtful eyes, light skin, medium brown hair in a casual side braid, thin wire-framed glasses, wearing an oversized cream cable-knit sweater, holding a paperback book, sitting in a cozy window seat in a library, curious half-smile, warm natural window light, shallow depth of field, photorealistic, 1:1
+
+> #5 — fashion-scenester — age 18
+> Portrait photo of a statuesque 18-year-old Western European woman, high cheekbones with photogenic bone structure, fair complexion, straight dark brown hair at shoulder length, wearing a black leather jacket over a white crop top, small gold hoop earrings, standing on a European shopping street with boutiques, self-assured cool expression, bright overcast daylight, shallow depth of field, photorealistic, 1:1
+
+> #6 — bohemian-alt — age 18
+> Portrait photo of a radiant 18-year-old Western European woman, warm round face with natural no-makeup beauty, pale skin with freckles, long curly copper-red hair, small silver nose stud, wearing a cream linen wrap top with a simple leather cord necklace, at an outdoor flea market with colorful stalls, warm genuine smile, soft golden afternoon light, shallow depth of field, photorealistic, 1:1
+
+> #7 — modern-traditionalist — age 18
+> Portrait photo of an elegant 18-year-old Western European woman, classic symmetrical features with a graceful oval face, fair skin, honey blonde hair in a neat low bun, wearing a soft pink cardigan over a white peter pan collar blouse, small pearl stud earrings, standing in an elegant garden with trimmed hedges, reserved graceful smile, gentle overcast light, shallow depth of field, photorealistic, 1:1
+
+> #8 — urban-nomad — age 18
+> Portrait photo of a beautiful 18-year-old Western European woman, girl-next-door approachable look, sun-kissed light skin, windswept dirty blonde hair at shoulder length, wearing a white linen button-down shirt and canvas crossbody bag, walking through a European cobblestone piazza, carefree laughing expression, bright warm sunlight, shallow depth of field, photorealistic, 1:1
+
+> #9 — guarded-realist — age 18
+> Portrait photo of a striking 18-year-old Western European woman, prominent bone structure with intense blue-grey eyes, fair complexion, straight dark blonde hair tucked behind ears, wearing a charcoal turtleneck and small silver bar necklace, seated at a minimalist white cafe with a glass of water, measured calm gaze looking slightly past camera, cool muted natural light, shallow depth of field, photorealistic, 1:1
+
+> #10 — social-connector — age 18
+> Portrait photo of a beautiful 18-year-old Western European woman, expressive round face with big warm brown eyes, light skin, medium brown wavy hair with a side part, wearing a mustard yellow blouse and small gold hoop earrings, at a busy outdoor brunch cafe with friends blurred in background, bright animated smile, warm sunny natural light, shallow depth of field, photorealistic, 1:1
+
+#### Age 25
+
+> #11 — corporate-powerhouse — age 25
+> Portrait photo of a striking 25-year-old Western European woman, sharp angular features with a defined jawline, tall and poised, fair skin, sleek dark brown hair at collar length, wearing a tailored charcoal blazer with a silk cream camisole, diamond stud earrings, thin gold pendant necklace, standing by floor-to-ceiling windows in a modern glass office, commanding confident expression, cool natural daylight, shallow depth of field, photorealistic, 1:1
+
+> #12 — ethereal-creative — age 25
+> Portrait photo of an elegant 25-year-old Western European woman, delicate fine-boned features with a slender willowy frame, light ivory skin, long straight honey-brown hair with a center part, wearing a flowing dusty rose silk blouse with stacked thin gold rings, in a warmly lit gallery space with abstract paintings, dreamy slightly detached expression, soft warm ambient light, shallow depth of field, photorealistic, 1:1
+
+> #13 — disciplined-athlete — age 25
+> Portrait photo of a radiant 25-year-old Western European woman, strong athletic build with broad shoulders and radiant skin, fair skin with freckles across nose, light auburn hair in a French braid, wearing a fitted black sports top and smartwatch, at a modern gym with weights blurred in background, direct energetic expression with bright eyes, clean overhead gym lighting, shallow depth of field, photorealistic, 1:1
+
+> #14 — academic-intellectual — age 25
+> Portrait photo of a beautiful 25-year-old Western European woman, soft features with wide thoughtful eyes, light skin, dark brown hair in a loose low bun with wispy pieces framing face, tortoiseshell glasses, wearing a navy turtleneck, holding a ceramic coffee mug, in a bright university cafe with bookshelves, thoughtful half-smile, warm natural light from large windows, shallow depth of field, photorealistic, 1:1
+
+> #15 — fashion-scenester — age 25
+> Portrait photo of a statuesque 25-year-old Western European woman, high cheekbones with photogenic bone structure, fair complexion, sleek chestnut brown hair pulled back in a low chignon, wearing a camel cashmere coat over a black turtleneck, gold link chain necklace, statement sunglasses pushed up on head, on a city shopping street with elegant storefronts, self-assured polished expression, bright overcast European daylight, shallow depth of field, photorealistic, 1:1
+
+> #16 — bohemian-alt — age 25
+> Portrait photo of a radiant 25-year-old Western European woman, warm round face with natural beauty, pale skin with light freckles, long loose wavy copper-auburn hair, tiny gold nose ring, wearing an olive green oversized linen shirt with layered pendant necklaces on leather cord, seated at a weathered wooden table at an outdoor cafe with hanging ivy, genuine relaxed smile, soft dappled afternoon light, shallow depth of field, photorealistic, 1:1
+
+> #17 — modern-traditionalist — age 25
+> Portrait photo of an elegant 25-year-old Western European woman, classic symmetrical features with a graceful oval face, fair skin, medium brown hair in soft waves at shoulder length, wearing a cream cashmere sweater with a single strand of pearls, at an elegant restaurant with white tablecloths and candles, warm reserved smile, soft golden candlelight, shallow depth of field, photorealistic, 1:1
+
+> #18 — urban-nomad — age 25
+> Portrait photo of a beautiful 25-year-old Western European woman, girl-next-door approachable look, sun-kissed light skin, tousled dirty blonde hair with natural highlights, wearing a chambray button-down shirt and small leather backpack strap visible on shoulder, on a European side street with colorful building facades, open carefree expression, warm golden-hour sunlight, shallow depth of field, photorealistic, 1:1
+
+> #19 — guarded-realist — age 25
+> Portrait photo of a striking 25-year-old Western European woman, prominent bone structure with intense green eyes and minimal makeup, fair complexion, straight dark brown hair at jaw length in a blunt bob, wearing a black crew-neck sweater and single thin gold chain, arms loosely crossed, in a modern minimalist apartment with large windows, calm assessing gaze, cool overcast natural light, shallow depth of field, photorealistic, 1:1
+
+> #20 — social-connector — age 25
+> Portrait photo of a beautiful 25-year-old Western European woman, expressive round face with big warm hazel eyes and infectious energy, light skin, medium brown hair styled in loose curls, wearing a rich burgundy wrap top and gold hoop earrings, at an upscale wine bar with warm lighting and other guests blurred behind, vibrant warm smile, rich amber ambient lighting, shallow depth of field, photorealistic, 1:1
+
+#### Age 30
+
+> #21 — corporate-powerhouse — age 30
+> Portrait photo of a striking 30-year-old Western European woman, sharp angular features with a defined jawline, tall and poised, fair skin, dark brown hair in a sleek straight style at shoulder length, wearing a fitted black blazer with a white silk shirt, pearl stud earrings and a thin gold watch, seated at a dark wood executive desk with a laptop, confident commanding expression, warm overhead office lighting, shallow depth of field, photorealistic, 1:1
+
+> #22 — ethereal-creative — age 30
+> Portrait photo of an elegant 30-year-old Western European woman, delicate fine-boned features with a slender willowy frame, light skin, long wavy light brown hair with golden highlights, wearing a draped ivory silk wrap top with a collection of delicate gold rings, in a bright creative studio with fabric samples and sketchbooks, faraway dreamy gaze, soft warm natural light from skylights, shallow depth of field, photorealistic, 1:1
+
+> #23 — disciplined-athlete — age 30
+> Portrait photo of a radiant 30-year-old Western European woman, strong athletic build with broad shoulders and glowing skin, fair skin with light freckles, auburn hair in a sleek low ponytail, wearing a fitted dark green running jacket and small diamond stud earrings, smartwatch on wrist, at a scenic park trail with autumn trees, direct confident expression with bright eyes, crisp golden morning light, shallow depth of field, photorealistic, 1:1
+
+> #24 — academic-intellectual — age 30
+> Portrait photo of a beautiful 30-year-old Western European woman, soft features with wide thoughtful eyes, light skin, dark brown hair parted in the center and tucked behind ears, thin gold-rimmed oval glasses, wearing a slate grey wool blazer over a cream knit top, holding a leather-bound journal, in a home study with floor-to-ceiling bookshelves, contemplative half-smile, warm natural light from a desk lamp and window, shallow depth of field, photorealistic, 1:1
+
+> #25 — fashion-scenester — age 30
+> Portrait photo of a statuesque 30-year-old Western European woman, high cheekbones with photogenic bone structure, fair complexion, rich chestnut hair in a polished blowout with subtle highlights, wearing a tailored navy trench coat with a silk scarf, gold statement earrings, carrying a structured leather bag, on a Paris-style boulevard with cafe awnings, sophisticated self-assured expression, soft overcast European light, shallow depth of field, photorealistic, 1:1
+
+> #26 — bohemian-alt — age 30
+> Portrait photo of a radiant 30-year-old Western European woman, warm round face with natural no-makeup beauty, pale skin with freckles across cheeks, loose long auburn waves, small silver hoop earrings, wearing an earthy rust-colored wrap dress with a layered gold and leather necklace, in a bright artisan pottery studio with shelves of handmade ceramics, warm easy-going expression, soft diffused natural light, shallow depth of field, photorealistic, 1:1
+
+> #27 — modern-traditionalist — age 30
+> Portrait photo of an elegant 30-year-old Western European woman, classic symmetrical features with a graceful oval face, fair skin, medium brown hair in a soft chignon, wearing a tailored powder blue cashmere sweater with a strand of pearls and small pearl drop earrings, seated in an elegant living room with fresh flowers on the table, graceful warm smile, gentle natural afternoon light, shallow depth of field, photorealistic, 1:1
+
+> #28 — urban-nomad — age 30
+> Portrait photo of a beautiful 30-year-old Western European woman, girl-next-door approachable look, sun-kissed light skin, tousled sandy brown hair with sun-bleached ends, wearing a relaxed linen blazer over a white v-neck tee, leather crossbody bag, walking through a Mediterranean-style European side street with stone walls, open easy smile, warm golden afternoon light, shallow depth of field, photorealistic, 1:1
+
+> #29 — guarded-realist — age 30
+> Portrait photo of a striking 30-year-old Western European woman, prominent bone structure with intense grey-blue eyes and minimal makeup, fair complexion, straight dark ash-brown hair at collar length, wearing a fitted black turtleneck with a simple gold bar pendant, seated at a clean marble cafe counter with an espresso, composed measured gaze looking slightly past camera, cool muted natural light, shallow depth of field, photorealistic, 1:1
+
+> #30 — social-connector — age 30
+> Portrait photo of a beautiful 30-year-old Western European woman, expressive round face with big warm brown eyes and infectious energy, light skin, chestnut brown hair in a voluminous blowout, wearing a jewel-toned sapphire blue silk blouse with gold link bracelet and small gold hoops, at an intimate dinner party with soft candles and wine glasses on table, vibrant magnetic smile, warm golden ambient candlelight, shallow depth of field, photorealistic, 1:1
+
+#### Age 37
+
+> #31 — corporate-powerhouse — age 37
+> Portrait photo of a striking 37-year-old Western European woman, sharp angular features with a defined jawline, tall and poised, fair skin, sleek dark brown hair in a refined shoulder-length bob, wearing a tailored deep navy power suit with diamond stud earrings and a thin gold watch, leather portfolio in hand, standing in a corner office with city skyline visible through windows, commanding confident expression, warm golden overhead lighting, shallow depth of field, photorealistic, 1:1
+
+> #32 — ethereal-creative — age 37
+> Portrait photo of an elegant 37-year-old Western European woman, delicate fine-boned features with a slender willowy frame, light ivory skin, long flowing light brown hair with subtle caramel highlights, wearing a draped cream silk blouse with artistic gold statement ring and thin chain bracelet, in a refined gallery opening with modern sculpture in background, serene slightly detached dreamy expression, soft warm gallery lighting, shallow depth of field, photorealistic, 1:1
+
+> #33 — disciplined-athlete — age 37
+> Portrait photo of a radiant 37-year-old Western European woman, strong athletic build with broad shoulders and glowing radiant skin, fair skin with light freckles, auburn hair in a sleek ponytail, wearing a tailored charcoal running jacket over a performance top, rose gold smartwatch, at a scenic waterside running path with morning mist, direct confident expression with bright clear eyes, crisp cool morning light, shallow depth of field, photorealistic, 1:1
+
+> #34 — academic-intellectual — age 37
+> Portrait photo of a beautiful 37-year-old Western European woman, soft features with wide thoughtful eyes, light skin, dark brown hair in a refined low twist with pieces framing face, elegant gold-rimmed glasses, wearing a charcoal wool blazer over an ivory silk blouse, holding a coffee cup, in a sunlit home library with leather-bound books, warm contemplative half-smile, rich warm natural light, shallow depth of field, photorealistic, 1:1
+
+> #35 — fashion-scenester — age 37
+> Portrait photo of a statuesque 37-year-old Western European woman, high cheekbones with photogenic bone structure, fair complexion, rich dark chestnut hair styled in polished waves, wearing a tailored camel coat over a black cashmere turtleneck, silk scarf tucked at collar, gold statement earrings, designer watch, standing outside a luxury boutique with marble facade, composed self-assured expression, soft overcast European light, shallow depth of field, photorealistic, 1:1
+
+> #36 — bohemian-alt — age 37
+> Portrait photo of a radiant 37-year-old Western European woman, warm round face with natural beauty, pale skin with light freckles, long loose auburn waves with a few grey-touched strands, small gold hoop earrings, wearing an olive green oversized knit cardigan over a white v-neck, turquoise pendant necklace, in a cozy home studio with plants and pottery and bookshelves, warm thoughtful expression, soft golden natural light, shallow depth of field, photorealistic, 1:1
+
+> #37 — modern-traditionalist — age 37
+> Portrait photo of an elegant 37-year-old Western European woman, classic symmetrical features with a graceful oval face, fair skin, medium brown hair in a polished side-swept style, wearing a dove grey cashmere wrap dress with pearl drop earrings and a delicate gold bracelet, seated in a refined restaurant with white linen and crystal glassware, graceful warm reserved smile, soft candlelit ambient light, shallow depth of field, photorealistic, 1:1
+
+> #38 — urban-nomad — age 37
+> Portrait photo of a beautiful 37-year-old Western European woman, girl-next-door approachable look, sun-kissed light skin, tousled sandy blonde highlighted hair, wearing a linen blazer over a white crew-neck, leather crossbody bag, silver minimal earrings, on a quiet European cobblestone side street with ivy-covered walls, relaxed open laughing expression, warm late afternoon golden light, shallow depth of field, photorealistic, 1:1
+
+> #39 — guarded-realist — age 37
+> Portrait photo of a striking 37-year-old Western European woman, prominent bone structure with intense grey eyes and minimal makeup, fair complexion, straight dark brown hair at collar length in a precise cut, wearing a black cashmere turtleneck with a simple gold bar necklace, small gold stud earrings, seated at a sleek marble cafe counter with an espresso, composed guarded expression looking slightly past camera, cool overcast Northern European light, shallow depth of field, photorealistic, 1:1
+
+> #40 — social-connector — age 37
+> Portrait photo of a beautiful 37-year-old Western European woman, expressive round face with big warm hazel eyes and infectious energy, light skin, styled chestnut brown hair with subtle highlights in voluminous waves, wearing an elegant emerald green silk blouse with gold chandelier earrings and a delicate tennis bracelet, at an intimate dinner event with soft candles and flowers on table, vibrant warm magnetic smile, rich warm golden ambient light, shallow depth of field, photorealistic, 1:1
 
 ---
 

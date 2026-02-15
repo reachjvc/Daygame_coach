@@ -39,7 +39,7 @@ describe("goal catalog integrity", () => {
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     for (const g of l3Goals) {
       expect(g.displayCategory).toBeTruthy()
-      expect(["field_work", "results", "dirty_dog"]).toContain(g.displayCategory)
+      expect(["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]).toContain(g.displayCategory)
     }
   })
 
@@ -81,16 +81,43 @@ describe("goal catalog integrity", () => {
 // ============================================================================
 
 describe("getChildren", () => {
-  test("L1 goals fan into both L2 achievements", () => {
+  test("L1 goals fan into all L2 achievements", () => {
     const children = getChildren("l1_girlfriend")
-    expect(children.length).toBe(2)
+    const l2Count = GOAL_TEMPLATES.filter((t) => t.level === 2).length
+    expect(children.length).toBe(l2Count)
     const ids = children.map((c) => c.id)
     expect(ids).toContain("l2_master_daygame")
     expect(ids).toContain("l2_confident")
   })
 
-  test("L2 achievements fan into all L3 goals", () => {
+  test("L2 master_daygame fans into its connected L3 goals", () => {
     const children = getChildren("l2_master_daygame")
+    expect(children.length).toBe(17) // 9 field_work + 4 results + 4 dirty_dog
+    const ids = children.map((c) => c.id)
+    expect(ids).toContain("l3_approach_volume")
+    expect(ids).toContain("l3_lays")
+  })
+
+  test("L2 overcome_aa fans into 3 exposure-focused L3s", () => {
+    const children = getChildren("l2_overcome_aa")
+    expect(children.length).toBe(3)
+    const ids = children.map((c) => c.id)
+    expect(ids).toContain("l3_approach_volume")
+    expect(ids).toContain("l3_consecutive_days")
+    expect(ids).toContain("l3_solo_sessions")
+  })
+
+  test("L2 master_texting fans into texting L3s", () => {
+    const children = getChildren("l2_master_texting")
+    expect(children.length).toBe(3)
+    const ids = children.map((c) => c.id)
+    expect(ids).toContain("l3_texting_initiated")
+    expect(ids).toContain("l3_response_rate")
+    expect(ids).toContain("l3_number_to_date_conversion")
+  })
+
+  test("L2 attract_any fans into all L3 goals", () => {
+    const children = getChildren("l2_attract_any")
     const l3Count = GOAL_TEMPLATES.filter((t) => t.level === 3).length
     expect(children.length).toBe(l3Count)
   })
@@ -106,19 +133,18 @@ describe("getChildren", () => {
 })
 
 describe("getLeafGoals", () => {
-  test("L1 goal returns all L3 goals (traverses through L2)", () => {
+  test("L1 goal returns all unique L3 goals (traverses through L2)", () => {
     const leaves = getLeafGoals("l1_girlfriend")
     const l3Count = GOAL_TEMPLATES.filter((t) => t.level === 3).length
-    expect(leaves.length).toBe(l3Count)
+    expect(leaves.length).toBe(l3Count) // attract_any covers all, so union = all
     for (const leaf of leaves) {
       expect(leaf.level).toBe(3)
     }
   })
 
-  test("L2 goal returns all L3 goals directly", () => {
+  test("L2 master_daygame returns its 17 L3 goals", () => {
     const leaves = getLeafGoals("l2_master_daygame")
-    const l3Count = GOAL_TEMPLATES.filter((t) => t.level === 3).length
-    expect(leaves.length).toBe(l3Count)
+    expect(leaves.length).toBe(17)
   })
 
   test("L3 goal returns itself", () => {
@@ -127,9 +153,7 @@ describe("getLeafGoals", () => {
     expect(leaves[0].id).toBe("l3_approach_volume")
   })
 
-  test("deduplicates L3 goals (both L2s share the same L3 set)", () => {
-    // From L1, traversal goes through 2 L2s, each with same L3 children
-    // Should still only have unique L3 goals
+  test("deduplicates L3 goals across L2 fan-outs", () => {
     const leaves = getLeafGoals("l1_rotation")
     const ids = leaves.map((l) => l.id)
     expect(new Set(ids).size).toBe(ids.length)
@@ -145,34 +169,43 @@ describe("getLeafGoals", () => {
 // ============================================================================
 
 describe("achievement weights", () => {
-  test("base weights for each achievement sum to ~1.0", () => {
-    for (const achievementId of ["l2_master_daygame", "l2_confident"]) {
-      const weights = getAchievementWeights(achievementId)
+  const l2Ids = GOAL_TEMPLATES.filter((t) => t.level === 2).map((t) => t.id)
+
+  test("every L2 has weights that sum to ~1.0", () => {
+    for (const l2Id of l2Ids) {
+      const weights = getAchievementWeights(l2Id)
+      expect(weights.length).toBeGreaterThan(0)
       const total = weights.reduce((sum, w) => sum + w.weight, 0)
       expect(total).toBeCloseTo(1.0, 2)
     }
   })
 
-  test("both achievements have the same weights in v1", () => {
+  test("per-L2 weights differ (not shared in v2)", () => {
     const daygame = getAchievementWeights("l2_master_daygame")
-    const confident = getAchievementWeights("l2_confident")
-    expect(daygame.length).toBe(confident.length)
-    for (let i = 0; i < daygame.length; i++) {
-      expect(daygame[i].weight).toBe(confident[i].weight)
-    }
+    const aa = getAchievementWeights("l2_overcome_aa")
+    expect(daygame.length).not.toBe(aa.length)
   })
 
-  test("approach volume has 50% weight", () => {
-    const weights = getAchievementWeights("l2_master_daygame")
-    const approaches = weights.find((w) => w.goalId === "l3_approach_volume")
-    expect(approaches).toBeDefined()
-    expect(approaches!.weight).toBe(0.5)
+  test("approach volume weight varies by L2 context", () => {
+    const daygameWeights = getAchievementWeights("l2_master_daygame")
+    const aaWeights = getAchievementWeights("l2_overcome_aa")
+    const daygameAV = daygameWeights.find((w) => w.goalId === "l3_approach_volume")
+    const aaAV = aaWeights.find((w) => w.goalId === "l3_approach_volume")
+    expect(daygameAV).toBeDefined()
+    expect(aaAV).toBeDefined()
+    // AA weights approach volume much more heavily than master daygame
+    expect(aaAV!.weight).toBeGreaterThan(daygameAV!.weight)
   })
 
   test("all L3 goal IDs in weights exist in catalog", () => {
-    const weights = getAchievementWeights("l2_master_daygame")
-    for (const w of weights) {
+    for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
       expect(GOAL_TEMPLATE_MAP[w.goalId]).toBeDefined()
+    }
+  })
+
+  test("all L2 IDs in weights exist in catalog", () => {
+    for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
+      expect(GOAL_TEMPLATE_MAP[w.achievementId]).toBeDefined()
     }
   })
 })
@@ -233,7 +266,7 @@ describe("redistributeWeights", () => {
     expect(total).toBeCloseTo(1.0, 5)
   })
 
-  test("real scenario: user removes dirty dog goals", () => {
+  test("real scenario: user removes dirty dog goals from master_daygame", () => {
     const allWeights = getAchievementWeights("l2_master_daygame")
     const dirtyDogIds = new Set(["l3_kiss_closes", "l3_lays", "l3_rotation_size", "l3_sustained_rotation"])
     const activeIds = new Set(allWeights.map((w) => w.goalId).filter((id) => !dirtyDogIds.has(id)))
@@ -242,9 +275,9 @@ describe("redistributeWeights", () => {
     const total = result.reduce((s, w) => s + w.weight, 0)
     expect(total).toBeCloseTo(1.0, 2)
 
-    // Approach volume should now be more than 50% (since dirty dog weight redistributed)
+    // Approach volume should now be more than its base weight (since dirty dog weight redistributed)
     const approaches = result.find((w) => w.goalId === "l3_approach_volume")
-    expect(approaches!.weight).toBeGreaterThan(0.50)
+    expect(approaches!.weight).toBeGreaterThan(0.15)
   })
 })
 
@@ -253,9 +286,9 @@ describe("redistributeWeights", () => {
 // ============================================================================
 
 describe("getTemplatesByCategory", () => {
-  test("returns all three categories", () => {
+  test("returns all six categories", () => {
     const cats = getTemplatesByCategory()
-    expect(Object.keys(cats)).toEqual(["field_work", "results", "dirty_dog"])
+    expect(Object.keys(cats).sort()).toEqual(["dates", "dirty_dog", "field_work", "relationship", "results", "texting"])
   })
 
   test("field_work contains approach-related goals", () => {
@@ -272,12 +305,22 @@ describe("getTemplatesByCategory", () => {
     expect(ids).toContain("l3_rotation_size")
   })
 
+  test("texting contains texting-related goals", () => {
+    const cats = getTemplatesByCategory()
+    const ids = cats.texting.map((t) => t.id)
+    expect(ids).toContain("l3_texting_initiated")
+    expect(ids).toContain("l3_response_rate")
+  })
+
   test("all L3 goals are in exactly one category", () => {
     const cats = getTemplatesByCategory()
     const allIds = [
       ...cats.field_work.map((t) => t.id),
       ...cats.results.map((t) => t.id),
       ...cats.dirty_dog.map((t) => t.id),
+      ...cats.texting.map((t) => t.id),
+      ...cats.dates.map((t) => t.id),
+      ...cats.relationship.map((t) => t.id),
     ]
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     expect(allIds.length).toBe(l3Goals.length)

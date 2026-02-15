@@ -33,6 +33,9 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
       { title: "Get 2 numbers weekly", defaultTarget: 2, defaultPeriod: "weekly", linkedMetric: "numbers_weekly" },
       { title: "1 instadate monthly", defaultTarget: 1, defaultPeriod: "monthly", linkedMetric: "instadates_weekly" },
       { title: "Record 5 voice notes", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "Rate 3 approaches per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Open in <3 seconds 5x per week", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "1 solo session per week", defaultTarget: 1, defaultPeriod: "weekly" },
     ],
   },
   {
@@ -46,10 +49,11 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     progressColor: "bg-pink-500",
     sortOrder: 1,
     suggestions: [
-      { title: "Go on 2 dates per month", defaultTarget: 2, defaultPeriod: "monthly" },
-      { title: "Practice conversation skills daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Go on 2 dates per month", defaultTarget: 2, defaultPeriod: "monthly", featured: true },
+      { title: "Initiate 3 texting convos per week", defaultTarget: 3, defaultPeriod: "weekly", featured: true },
       { title: "Plan 1 creative date per month", defaultTarget: 1, defaultPeriod: "monthly" },
       { title: "Message 3 leads per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Physically escalate on every date", defaultTarget: 1, defaultPeriod: "weekly" },
     ],
   },
   {
@@ -69,6 +73,8 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
       { title: "Drink 3L water daily", defaultTarget: 3, defaultPeriod: "daily" },
       { title: "Sleep 8 hours nightly", defaultTarget: 8, defaultPeriod: "daily" },
       { title: "Run 5km 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "Skincare routine daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Haircut every 4 weeks", defaultTarget: 1, defaultPeriod: "monthly" },
     ],
   },
   {
@@ -83,10 +89,12 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     sortOrder: 3,
     suggestions: [
       { title: "Deep work 4 hours daily", defaultTarget: 4, defaultPeriod: "daily", featured: true },
-      { title: "No social media before noon", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Complete 3 high-value tasks", defaultTarget: 3, defaultPeriod: "daily" },
-      { title: "Read 30 mins daily", defaultTarget: 30, defaultPeriod: "daily" },
-      { title: "Write 500 words daily", defaultTarget: 500, defaultPeriod: "daily" },
+      { title: "Complete 3 high-value tasks daily", defaultTarget: 3, defaultPeriod: "daily" },
+      { title: "Side project 5 hours per week", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "1 networking meeting per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Review budget weekly", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "Track expenses daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Save target amount monthly", defaultTarget: 1, defaultPeriod: "monthly" },
     ],
   },
   {
@@ -100,10 +108,11 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     progressColor: "bg-blue-500",
     sortOrder: 4,
     suggestions: [
-      { title: "Attend 1 social event per week", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "Attend 1 social event per week", defaultTarget: 1, defaultPeriod: "weekly", featured: true },
       { title: "Call a friend 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
       { title: "Host 1 dinner per month", defaultTarget: 1, defaultPeriod: "monthly" },
-      { title: "Join a new group or club", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Talk to 1 stranger daily (non-daygame)", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Meet 2 new people per month", defaultTarget: 2, defaultPeriod: "monthly" },
     ],
   },
   {
@@ -117,10 +126,13 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     progressColor: "bg-yellow-500",
     sortOrder: 5,
     suggestions: [
-      { title: "Meditate 10 mins daily", defaultTarget: 10, defaultPeriod: "daily" },
+      { title: "Meditate 10 mins daily", defaultTarget: 10, defaultPeriod: "daily", featured: true },
       { title: "Journal every morning", defaultTarget: 1, defaultPeriod: "daily" },
       { title: "Read 1 book per month", defaultTarget: 1, defaultPeriod: "monthly" },
       { title: "Practice gratitude daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "1 comfort zone challenge per week", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "Read 20 pages daily", defaultTarget: 20, defaultPeriod: "daily" },
+      { title: "1 therapy/coaching session per month", defaultTarget: 1, defaultPeriod: "monthly" },
     ],
   },
   {

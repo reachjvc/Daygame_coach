@@ -232,39 +232,60 @@ export function generateMilestoneLadder(config: MilestoneLadderConfig): Generate
   const candidates = [...new Set([start, ...poolValues, target])].sort((a, b) => a - b)
 
   // Pool-based selection when enough candidates exist
+  let milestones: GeneratedMilestone[]
   if (candidates.length >= steps) {
-    return selectFromPool(candidates, config)
+    milestones = selectFromPool(candidates, config)
+  } else {
+    // Fallback: curve + round for small ranges with sparse pools
+    const range = target - start
+    const useLog = start > 0 && target / start >= 10
+    milestones = []
+
+    for (let i = 0; i < steps; i++) {
+      const t = i / (steps - 1)
+
+      if (i === 0) {
+        milestones.push({ step: 0, rawValue: start, value: start })
+        continue
+      }
+      if (i === steps - 1) {
+        milestones.push({ step: i, rawValue: target, value: target })
+        continue
+      }
+
+      const curved = interpolateWithControlPoints(t, controlPoints, curveTension)
+      const rawValue = useLog
+        ? start * Math.pow(target / start, curved)
+        : start + range * curved
+      milestones.push({ step: i, rawValue, value: roundToNiceNumber(rawValue) })
+    }
+
+    // Enforce monotonic increase
+    for (let i = 1; i < milestones.length - 1; i++) {
+      if (milestones[i].value <= milestones[i - 1].value) {
+        const nextNice = poolValues.find(v => v > milestones[i - 1].value)
+        milestones[i].value = nextNice ?? milestones[i - 1].value + 1
+      }
+    }
   }
 
-  // Fallback: curve + round for small ranges with sparse pools
-  const range = target - start
-  const useLog = start > 0 && target / start >= 10
-  const milestones: GeneratedMilestone[] = []
-
-  for (let i = 0; i < steps; i++) {
-    const t = i / (steps - 1)
-
-    if (i === 0) {
-      milestones.push({ step: 0, rawValue: start, value: start })
-      continue
-    }
-    if (i === steps - 1) {
-      milestones.push({ step: i, rawValue: target, value: target })
-      continue
-    }
-
-    const curved = interpolateWithControlPoints(t, controlPoints, curveTension)
-    const rawValue = useLog
-      ? start * Math.pow(target / start, curved)
-      : start + range * curved
-    milestones.push({ step: i, rawValue, value: roundToNiceNumber(rawValue) })
-  }
-
-  // Enforce monotonic increase
-  for (let i = 1; i < milestones.length - 1; i++) {
-    if (milestones[i].value <= milestones[i - 1].value) {
-      const nextNice = poolValues.find(v => v > milestones[i - 1].value)
-      milestones[i].value = nextNice ?? milestones[i - 1].value + 1
+  // Enforce non-decreasing absolute increments.
+  // Without this, nice-number rounding can produce sequences like
+  // 150→250→300 (increments +100, +50) which feel wrong — the absolute
+  // jump should never shrink as values grow.
+  // Forward sweep: when an increment is smaller than the previous one,
+  // snap to the next pool value that maintains at least the previous increment.
+  if (milestones.length > 3) {
+    for (let i = 2; i < milestones.length - 1; i++) {
+      const prevDelta = milestones[i - 1].value - milestones[i - 2].value
+      const currDelta = milestones[i].value - milestones[i - 1].value
+      if (currDelta < prevDelta) {
+        const minValue = milestones[i - 1].value + prevDelta
+        const better = poolValues.find(v => v >= minValue && v < target)
+        if (better !== undefined) {
+          milestones[i] = { ...milestones[i], value: better }
+        }
+      }
     }
   }
 

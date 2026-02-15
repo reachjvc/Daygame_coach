@@ -16,9 +16,12 @@ const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",
+  texting: "Texting Game",
+  dates: "Dating",
+  relationship: "Relationship",
 }
 
-const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog"]
+const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]
 
 interface GoalTreePreviewProps {
   inserts: BatchGoalInsert[]
