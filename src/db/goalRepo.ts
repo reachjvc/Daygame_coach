@@ -14,7 +14,9 @@ import type {
   LinkedMetric,
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
+import type { UserTrackingStatsRow } from "./trackingTypes"
 import { getUserTrackingStats } from "./trackingRepo"
+import { getISOWeekString } from "../tracking/trackingService"
 
 // ============================================
 // Get Goals
@@ -400,27 +402,26 @@ export async function resetDailyGoals(userId: string): Promise<number> {
 // ============================================
 
 /**
- * Get the metric value from tracking stats based on linked_metric type
+ * Get the metric value from tracking stats based on linked_metric type.
+ * Weekly metrics validate that current_week matches the actual current week —
+ * if the week rolled over but no new session was logged, weekly values return 0.
  */
 function getMetricValue(
-  stats: {
-    current_week_approaches: number
-    current_week_sessions: number
-    total_approaches: number
-    total_sessions: number
-    total_numbers: number
-    total_instadates: number
-  },
+  stats: UserTrackingStatsRow,
   metric: LinkedMetric
 ): number {
+  const currentWeek = getISOWeekString(new Date())
+  const isCurrentWeek = stats.current_week === currentWeek
+
   switch (metric) {
     case "approaches_weekly":
-      return stats.current_week_approaches
+      return isCurrentWeek ? stats.current_week_approaches : 0
     case "sessions_weekly":
-      return stats.current_week_sessions
+      return isCurrentWeek ? stats.current_week_sessions : 0
     case "numbers_weekly":
+      return isCurrentWeek ? (stats.current_week_numbers ?? 0) : 0
     case "instadates_weekly":
-      return 0
+      return isCurrentWeek ? (stats.current_week_instadates ?? 0) : 0
     case "approaches_cumulative":
       return stats.total_approaches
     case "sessions_cumulative":

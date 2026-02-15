@@ -755,9 +755,21 @@ async function incrementApproachStats(
   if (outcome === "number") {
     newNumbers = stats.total_numbers + 1
     updates.total_numbers = newNumbers
+    // Track weekly numbers
+    const weeklyNumbers = stats.current_week === currentWeek ? (stats.current_week_numbers ?? 0) : 0
+    updates.current_week_numbers = weeklyNumbers + 1
   } else if (outcome === "instadate") {
     newInstadates = stats.total_instadates + 1
     updates.total_instadates = newInstadates
+    // Track weekly instadates
+    const weeklyInstadates = stats.current_week === currentWeek ? (stats.current_week_instadates ?? 0) : 0
+    updates.current_week_instadates = weeklyInstadates + 1
+  }
+
+  // Reset weekly numbers/instadates if week changed (no number/instadate this approach)
+  if (stats.current_week !== currentWeek) {
+    if (outcome !== "number") updates.current_week_numbers = 0
+    if (outcome !== "instadate") updates.current_week_instadates = 0
   }
 
   await repoUpdateUserTrackingStats(userId, updates)

@@ -14,9 +14,10 @@ interface GoalCatalogPickerProps {
   onTreeCreated: () => void
   existingGoals?: GoalWithProgress[]
   onClose?: () => void
+  onCreateManual?: () => void
 }
 
-export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose }: GoalCatalogPickerProps) {
+export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCreateManual }: GoalCatalogPickerProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewInserts, setPreviewInserts] = useState<BatchGoalInsert[] | null>(null)
@@ -104,6 +105,16 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose }: Goa
           Pick one goal. We&apos;ll build your full goal tree with milestones,
           achievements, and tracking — all customizable before saving.
         </p>
+        {onCreateManual && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={onCreateManual}
+          >
+            or create your own from scratch
+          </Button>
+        )}
       </div>
 
       {error && (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Plus, Loader2, Target, Settings2, Sparkles } from "lucide-react"
 import { GoalFormModal } from "./GoalFormModal"
@@ -10,6 +10,7 @@ import { GoalCatalogPicker } from "./GoalCatalogPicker"
 import { GoalHierarchyView } from "./GoalHierarchyView"
 import { DailyActionView } from "./DailyActionView"
 import { ViewSwitcher } from "./views/ViewSwitcher"
+import { ActionToast } from "./ActionToast"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts } from "../goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier } from "../types"
 
@@ -28,6 +29,16 @@ export function GoalsHubContent() {
   const [isCustomizeMode, setIsCustomizeMode] = useState(false)
   const [viewMode, setViewMode] = useState<GoalViewMode>("daily")
   const [showCatalog, setShowCatalog] = useState(false)
+  const [isAddingDirtyDog, setIsAddingDirtyDog] = useState(false)
+  const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
+  const toastId = useRef(0)
+  const showToast = useCallback((message: string, variant: "error" | "success") => {
+    const id = ++toastId.current
+    setToasts(prev => [...prev, { id, message, variant }])
+  }, [])
+  const dismissToast = useCallback((id: number) => {
+    setToasts(prev => prev.filter(t => t.id !== id))
+  }, [])
 
   const fetchGoals = useCallback(async () => {
     try {
@@ -71,6 +82,8 @@ export function GoalsHubContent() {
       triggerCelebration(completingGoal)
       setCompletingGoal(null)
       await fetchGoals()
+    } catch {
+      showToast("Failed to complete goal — try again", "error")
     } finally {
       setIsCompleting(false)
     }
@@ -78,36 +91,79 @@ export function GoalsHubContent() {
 
   const handleIncrement = async (goalId: string, amount: number) => {
     const goal = goals.find(g => g.id === goalId)
-    const response = await fetch(`/api/goals/${goalId}/increment`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    })
-    if (!response.ok) throw new Error("Failed to increment")
-    await fetchGoals()
-    if (goal && !goal.is_complete && goal.current_value + amount >= goal.target_value) {
-      triggerCelebration(goal)
+    // Optimistic update
+    setGoals(prev => prev.map(g =>
+      g.id === goalId
+        ? {
+            ...g,
+            current_value: g.current_value + amount,
+            progress_percentage: Math.min(100, Math.round(((g.current_value + amount) / g.target_value) * 100)),
+            is_complete: g.current_value + amount >= g.target_value,
+          }
+        : g
+    ))
+    try {
+      const response = await fetch(`/api/goals/${goalId}/increment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount }),
+      })
+      if (!response.ok) throw new Error("Failed to increment")
+      fetchGoals()
+      if (goal && !goal.is_complete && goal.current_value + amount >= goal.target_value) {
+        triggerCelebration(goal)
+      }
+    } catch {
+      fetchGoals()
+      showToast("Failed to update progress", "error")
     }
   }
 
   const handleSetValue = async (goalId: string, value: number) => {
     const goal = goals.find(g => g.id === goalId)
-    const response = await fetch(`/api/goals/${goalId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ current_value: value }),
-    })
-    if (!response.ok) throw new Error("Failed to set value")
-    await fetchGoals()
-    if (goal && !goal.is_complete && value >= goal.target_value) {
-      triggerCelebration(goal)
+    // Optimistic update
+    setGoals(prev => prev.map(g =>
+      g.id === goalId
+        ? {
+            ...g,
+            current_value: value,
+            progress_percentage: Math.min(100, Math.round((value / g.target_value) * 100)),
+            is_complete: value >= g.target_value,
+          }
+        : g
+    ))
+    try {
+      const response = await fetch(`/api/goals/${goalId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ current_value: value }),
+      })
+      if (!response.ok) throw new Error("Failed to set value")
+      fetchGoals()
+      if (goal && !goal.is_complete && value >= goal.target_value) {
+        triggerCelebration(goal)
+      }
+    } catch {
+      fetchGoals()
+      showToast("Failed to update progress", "error")
     }
   }
 
   const handleReset = async (goalId: string) => {
-    const response = await fetch(`/api/goals/${goalId}/reset`, { method: "POST" })
-    if (!response.ok) throw new Error("Failed to reset")
-    await fetchGoals()
+    // Optimistic update
+    setGoals(prev => prev.map(g =>
+      g.id === goalId
+        ? { ...g, current_value: 0, progress_percentage: 0, is_complete: false }
+        : g
+    ))
+    try {
+      const response = await fetch(`/api/goals/${goalId}/reset`, { method: "POST" })
+      if (!response.ok) throw new Error("Failed to reset")
+      fetchGoals()
+    } catch {
+      fetchGoals()
+      showToast("Failed to reset goal", "error")
+    }
   }
 
   const handleEdit = (goal: GoalWithProgress) => {
@@ -128,25 +184,37 @@ export function GoalsHubContent() {
   }
 
   const handleGoalToggle = async (goalId: string, active: boolean) => {
-    const response = await fetch(`/api/goals/${goalId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ is_archived: !active, is_active: active }),
-    })
-    if (!response.ok) throw new Error("Failed to toggle goal")
-    await fetchGoals()
+    try {
+      const response = await fetch(`/api/goals/${goalId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_archived: !active, is_active: active }),
+      })
+      if (!response.ok) throw new Error("Failed to toggle goal")
+      await fetchGoals()
+    } catch {
+      showToast("Failed to toggle goal", "error")
+    }
   }
 
   const handleAddDirtyDogGoals = async () => {
-    const inserts = generateDirtyDogInserts(goals)
-    if (inserts.length === 0) return
-    const response = await fetch("/api/goals/batch", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ goals: inserts }),
-    })
-    if (!response.ok) throw new Error("Failed to create dirty dog goals")
-    await fetchGoals()
+    if (isAddingDirtyDog) return
+    setIsAddingDirtyDog(true)
+    try {
+      const inserts = generateDirtyDogInserts(goals)
+      if (inserts.length === 0) return
+      const response = await fetch("/api/goals/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goals: inserts }),
+      })
+      if (!response.ok) throw new Error("Failed to create dirty dog goals")
+      await fetchGoals()
+    } catch {
+      showToast("Failed to add goals", "error")
+    } finally {
+      setIsAddingDirtyDog(false)
+    }
   }
 
   const handleFormSuccess = () => { fetchGoals() }
@@ -179,17 +247,17 @@ export function GoalsHubContent() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Target className="size-7 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Goals</h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground hidden sm:block">
               Track progress across all areas of your life
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {goals.length > 0 && (
             <>
               <ViewSwitcher activeView={viewMode} onViewChange={setViewMode} />
@@ -207,17 +275,17 @@ export function GoalsHubContent() {
                 <Sparkles className="size-4 mr-1" />
                 Browse Catalog
               </Button>
-              <Button onClick={handleCreateGoal}>
-                <Plus className="size-4 mr-1" />
-                New Goal
-              </Button>
             </>
           )}
+          <Button onClick={handleCreateGoal}>
+            <Plus className="size-4 mr-1" />
+            New Goal
+          </Button>
         </div>
       </div>
 
       {goals.length === 0 ? (
-        <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
+        <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} />
       ) : viewMode === "daily" ? (
         <DailyActionView
           goals={goals}
@@ -227,6 +295,8 @@ export function GoalsHubContent() {
           onReset={handleReset}
           onEdit={handleEdit}
           onAddChild={handleAddChild}
+          onSwitchView={setViewMode}
+          onCreateGoal={handleCreateGoal}
         />
       ) : (
         <GoalHierarchyView
@@ -240,6 +310,7 @@ export function GoalsHubContent() {
           onAddChild={handleAddChild}
           onGoalToggle={handleGoalToggle}
           onAddDirtyDogGoals={handleAddDirtyDogGoals}
+          isAddingDirtyDog={isAddingDirtyDog}
         />
       )}
 
@@ -283,6 +354,17 @@ export function GoalsHubContent() {
           onClose={() => setShowCatalog(false)}
         />
       )}
+
+      {/* Action toasts */}
+      {toasts.map((t, i) => (
+        <ActionToast
+          key={t.id}
+          message={t.message}
+          variant={t.variant}
+          onDismiss={() => dismissToast(t.id)}
+          style={{ bottom: `${1.5 + i * 4}rem` }}
+        />
+      ))}
     </div>
   )
 }

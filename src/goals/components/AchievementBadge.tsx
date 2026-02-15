@@ -28,7 +28,7 @@ export function AchievementBadge({ achievement, siblingGoals }: AchievementBadge
           />
         </div>
         <p className="mt-1 text-xs text-muted-foreground">
-          {rounded}% of milestones reached
+          {rounded}% progress
         </p>
       </div>
     </div>

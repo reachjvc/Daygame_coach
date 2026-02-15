@@ -348,6 +348,8 @@ export interface UserTrackingStatsRow {
   current_week: string | null           // ISO week string e.g. "2026-W04"
   current_week_sessions: number         // Sessions in current week
   current_week_approaches: number       // Approaches in current week
+  current_week_numbers: number          // Phone numbers in current week
+  current_week_instadates: number       // Instadates in current week
   // Weekly session streaks (2+ sessions OR 5+ approaches = active week)
   current_week_streak: number
   longest_week_streak: number
@@ -376,6 +378,8 @@ export interface UserTrackingStatsUpdate {
   current_week?: string
   current_week_sessions?: number
   current_week_approaches?: number
+  current_week_numbers?: number
+  current_week_instadates?: number
   current_week_streak?: number
   longest_week_streak?: number
   last_active_week?: string

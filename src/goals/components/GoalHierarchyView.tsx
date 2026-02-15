@@ -1,13 +1,13 @@
 "use client"
 
 import { useMemo } from "react"
-import { Target, Clock, Plus } from "lucide-react"
+import { Target, Clock, Plus, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AchievementBadge } from "./AchievementBadge"
 import { GoalCategorySection } from "./GoalCategorySection"
 import { GoalCard } from "./GoalCard"
 import { groupGoalsByHierarchy } from "../goalHierarchyService"
-import { computeProjectedDate } from "../goalsService"
+import { computeProjectedDate, getNextMilestoneInfo } from "../goalsService"
 import type { ProjectedDateInfo } from "../goalsService"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
 
@@ -24,6 +24,7 @@ interface GoalHierarchyViewProps {
   isCustomizeMode?: boolean
   onGoalToggle?: (goalId: string, active: boolean) => Promise<void>
   onAddDirtyDogGoals?: () => void
+  isAddingDirtyDog?: boolean
 }
 
 export function GoalHierarchyView({
@@ -37,6 +38,7 @@ export function GoalHierarchyView({
   isCustomizeMode = false,
   onGoalToggle,
   onAddDirtyDogGoals,
+  isAddingDirtyDog = false,
 }: GoalHierarchyViewProps) {
   const { sections, customGoals } = useMemo(
     () => groupGoalsByHierarchy(goals),
@@ -56,14 +58,37 @@ export function GoalHierarchyView({
     return map
   }, [goals])
 
+  // Compute next milestone info for all goals
+  const milestoneMap = useMemo(() => {
+    const map = new Map<string, { nextValue: number; remaining: number }>()
+    for (const goal of goals) {
+      const info = getNextMilestoneInfo(goal)
+      if (info) map.set(goal.id, info)
+    }
+    return map
+  }, [goals])
+
   return (
     <div className="space-y-8">
+      {/* L0 dream goal context banner */}
+      {goals.filter(g => g.goal_level === 0).map(dream => (
+        <div key={dream.id} className="flex items-center gap-2 text-sm text-muted-foreground italic">
+          <Star className="size-4 text-amber-400" />
+          {dream.title}
+        </div>
+      ))}
+
       {sections.map((section) => {
         // L3 goals that belong to this section's achievements
         const sectionL3s = allL3Goals.filter((g) => {
           const achievementIds = new Set(section.achievements.map((a) => a.id))
           return g.parent_goal_id && achievementIds.has(g.parent_goal_id)
         })
+
+        // Filter out achievements with 0 L3 children
+        const achievementsWithChildren = section.achievements.filter((ach) =>
+          sectionL3s.some((g) => g.parent_goal_id === ach.id)
+        )
 
         return (
           <div key={section.l1Goal.id} className="space-y-5">
@@ -81,9 +106,9 @@ export function GoalHierarchyView({
             </div>
 
             {/* Achievement Badges */}
-            {section.achievements.length > 0 && (
+            {achievementsWithChildren.length > 0 && (
               <div className="grid gap-3 sm:grid-cols-2">
-                {section.achievements.map((ach) => (
+                {achievementsWithChildren.map((ach) => (
                   <AchievementBadge
                     key={ach.id}
                     achievement={ach}
@@ -113,6 +138,7 @@ export function GoalHierarchyView({
                       defaultCollapsed={cat === "dirty_dog"}
                       isCustomizeMode={isCustomizeMode}
                       projections={projectionMap}
+                      milestones={milestoneMap}
                       onIncrement={onIncrement}
                       onSetValue={onSetValue}
                       onComplete={onComplete}
@@ -154,13 +180,20 @@ export function GoalHierarchyView({
                   <p className="text-xs text-muted-foreground mb-3">
                     Track intimate outcomes like kiss closes, lays, and rotation. Opt in if relevant to your goals.
                   </p>
+                  <ul className="text-xs text-muted-foreground mb-3 space-y-0.5 list-disc list-inside">
+                    <li>Kiss Closes (milestone: 1 → 15)</li>
+                    <li>Lays (milestone: 1 → 10)</li>
+                    <li>Rotation Size (milestone: 1 → 3)</li>
+                    <li>Sustained Rotation (habit ramp: 1 → 6 months)</li>
+                  </ul>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onAddDirtyDogGoals}
+                    disabled={isAddingDirtyDog}
                   >
                     <Plus className="size-3.5 mr-1" />
-                    Add Goals
+                    {isAddingDirtyDog ? "Adding..." : "Add Goals"}
                   </Button>
                 </div>
               )}
@@ -168,11 +201,16 @@ export function GoalHierarchyView({
               {/* Uncategorized L3 goals */}
               {section.uncategorized.length > 0 && (
                 <div className="space-y-2">
+                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Other Goals
+                  </h3>
                   {section.uncategorized.map((goal) => (
                     <GoalCard
                       key={goal.id}
                       goal={goal}
                       allGoals={goals}
+                      nextMilestone={milestoneMap.get(goal.id) ?? null}
+                      projectedDate={projectionMap.get(goal.id) ?? null}
                       onIncrement={onIncrement}
                       onSetValue={onSetValue}
                       onComplete={onComplete}
@@ -188,6 +226,13 @@ export function GoalHierarchyView({
         )
       })}
 
+      {sections.length === 0 && customGoals.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <p className="text-sm">No goal hierarchies yet.</p>
+          <p className="text-xs mt-1">Create a goal or browse the catalog to get started.</p>
+        </div>
+      )}
+
       {/* Custom / Legacy Goals */}
       {customGoals.length > 0 && (
         <div className="space-y-3">
@@ -198,6 +243,8 @@ export function GoalHierarchyView({
                 key={goal.id}
                 goal={goal}
                 allGoals={goals}
+                nextMilestone={milestoneMap.get(goal.id) ?? null}
+                projectedDate={projectionMap.get(goal.id) ?? null}
                 onIncrement={onIncrement}
                 onSetValue={onSetValue}
                 onComplete={onComplete}

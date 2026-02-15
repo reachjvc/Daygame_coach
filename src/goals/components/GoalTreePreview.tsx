@@ -65,6 +65,12 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
     return count
   }, [previewState])
 
+  const allL3AlreadyTracked = useMemo(() => {
+    if (!existingTemplateIds || existingTemplateIds.size === 0) return false
+    const l3Inserts = inserts.filter((i) => (i.goal_level ?? 0) === 3)
+    return l3Inserts.length > 0 && l3Inserts.every((i) => i.template_id && existingTemplateIds.has(i.template_id))
+  }, [inserts, existingTemplateIds])
+
   const rootGoal = structural.find((s) => !s._tempParentId)
   const l2Goals = structural.filter((s) => (s.goal_level ?? 0) === 2)
 
@@ -168,6 +174,13 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
           )
         })}
       </div>
+
+      {/* All-tracked notice */}
+      {allL3AlreadyTracked && (
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+          All sub-goals are already active in another tree. Creating this adds a top-level goal only — you can add custom sub-goals to it afterward via &quot;New Goal&quot;.
+        </div>
+      )}
 
       {/* Footer */}
       <div className="flex items-center gap-3 pt-2">

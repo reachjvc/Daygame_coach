@@ -217,9 +217,10 @@ Daygame/dating first. Future: book writing, YouTube channel, financial independe
 
 ---
 
-## Completed Phases (0–7) — Summary
+## Completed Phases (0–11) — Summary
 
-All phases 0–7 are ✅ DONE (code complete; Phase 7 has migration/runtime bugs fixed in Phase 8).
+All phases 0–11 are ✅ DONE.
+
 - **Phase 0:** Goal catalog, fan-out edges, default targets, UX direction
 - **Phase 1:** Type system (`goal_nature`, `display_category`, `goal_level`, `template_id`, `goal_type: habit_ramp`), DB migrations
 - **Phase 2:** Algorithms (milestone ladder generator, curve engine, ramp date calculator, achievement progress)
@@ -227,13 +228,337 @@ All phases 0–7 are ✅ DONE (code complete; Phase 7 has migration/runtime bugs
 - **Phase 4:** All UI (catalog picker, fan-out customization, achievement badges, categories, curve/ramp editors, upward prompts)
 - **Phase 6:** Gap fixes (persist milestone_config/ramp_steps, manual goal graph fields, daily/strategic views, date projections)
 - **Phase 7:** UI/UX polish (cumulative metrics, daily view filter, catalog for existing users, contextual breadcrumbs, dirty dog opt-in, L1/L2 daily hiding)
+- **Phase 8:** Bug fixes — dirty dog batch insert `_tempId` fix, cumulative metric migrations, auto-synced goals read-only, sub-goal button hidden on L3 leaves
+- **Phase 9:** UX hardening — ActionToast component, error toasts on all goal actions, completion dialog error handling, "(synced)" indicator on collapsed auto-synced goals, daily empty state with clickable actions, life area override warning in GoalFormModal
+- **Phase 10:** UX fixes (17 issues) — weekly sync week-boundary validation, `numbers_weekly`/`instadates_weekly` tracking columns, cumulative enum migrations restored, new-user manual creation path, period-aware time labels in Daily view, cumulative metrics in form, optional milestone dates, milestone info in Strategic view, "(synced)" → "auto-tracked", empty summary card hidden, mobile ViewSwitcher labels, sub-goal button flow-based layout, toast queue with stacking, L0 dream goal banner, optimistic UI for increment/setValue/reset
+- **Phase 11:** UX polish & edge cases (8 issues) — clear parent on life area change, hide auto-tracked on completed goals, dirty dog double-click guard, achievement badge label fix, milestone "all-time"/"by date" labels, habit ramp schedule in GoalCard, archived goals hint in Daily empty state, empty Strategic view guidance
 
-**Migrations applied:**
+**Migrations (all on disk, apply in order):**
 - `20260213_add_goal_graph_fields.sql` — goal_nature, display_category, goal_level, template_id, goal_type CHECK
 - `20260214_add_milestone_ramp_columns.sql` — milestone_config (jsonb), ramp_steps (jsonb)
+- `20260214a_add_cumulative_enum.sql` — adds `approaches_cumulative`, `sessions_cumulative`, `numbers_cumulative`, `instadates_cumulative` enum values
+- `20260214b_fix_linked_metrics.sql` — updates existing goals to use cumulative metrics
+- `20260214c_add_weekly_number_columns.sql` — adds `current_week_numbers`, `current_week_instadates` to `user_tracking_stats`
 
-**Migrations NOT YET applied (see Phase 8.2):**
-- Cumulative enum values (`approaches_cumulative`, etc.) + 3 UPDATE statements for existing goals
+---
+
+- **Phase 12:** UX audit fixes (9 issues) — auto-switch to Strategic after catalog tree creation, prominent "create your own" button, sticky form footer on mobile, dirty dog preview list, generic streak label, variant-aware toast duration, aria-labels on icon buttons, breadcrumb truncation 20→25 chars, life area override note persists until user acts
+
+---
+
+## Phase 13–14: UX Fixes (Ready to Implement)
+
+Consolidated from code-path audit + live browser testing. All decisions resolved.
+
+---
+
+### 13.1 — Manual goal invisible in Daily view — CRITICAL
+
+**Files:** `goalsService.ts`
+**Problem:** `isDailyActionable()` requires `goal_level === 3`. Custom goals (created via "New Goal") have `goal_level === null` → hidden from Daily view. Confirmed live with both daily boolean and weekly counter goals.
+
+**Steps:**
+1. In `goalsService.ts`, change `isDailyActionable` (line ~203):
+   ```typescript
+   export function isDailyActionable(goal: GoalWithProgress): boolean {
+     if (goal.goal_level !== null && goal.goal_level !== 3) return false
+     return goal.goal_type === "habit_ramp" || goal.goal_type === "recurring"
+   }
+   ```
+2. Update existing unit test for `isDailyActionable` in `tests/unit/goals/goalsService.test.ts` — add cases for `goal_level: null` with recurring and habit_ramp types returning `true`.
+3. Run `npm test`.
+
+**Verify:** Create a standalone recurring goal (no parent). Switch to Daily view. Goal must appear.
+
+---
+
+### 13.2 — L3 milestone goals hidden in Daily view — HIGH
+
+**Files:** `DailyActionView.tsx`, `goalsService.ts`
+**Problem:** Daily view only shows habit_ramp/recurring goals. The 8+ milestone goals (Approach Volume, Phone Numbers, etc.) are invisible in Daily. User sees 2-3 cards when they have 10+ goals.
+**Decision:** Add read-only "Milestones" summary section below actionable goals.
+
+**Steps:**
+1. In `goalsService.ts`, add a new export function:
+   ```typescript
+   export function isDailyMilestone(goal: GoalWithProgress): boolean {
+     return (goal.goal_level === 3 || goal.goal_level === null)
+       && goal.goal_type === "milestone"
+       && !goal.is_archived
+   }
+   ```
+2. In `DailyActionView.tsx`:
+   - Import `isDailyMilestone` and `getNextMilestoneInfo`
+   - In the `useMemo`, compute `milestoneGoals = goals.filter(isDailyMilestone)`
+   - After the actionable goals `<div>`, render a "Milestones" section (only if `milestoneGoals.length > 0`):
+     ```tsx
+     {milestoneGoals.length > 0 && (
+       <div className="space-y-2">
+         <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+           Milestones
+         </h2>
+         <div className="rounded-lg border border-border bg-card p-3 space-y-2">
+           {milestoneGoals.map((g) => {
+             const info = getNextMilestoneInfo(g)
+             return (
+               <div key={g.id} className="flex items-center justify-between text-sm">
+                 <span className="text-muted-foreground">{g.title}</span>
+                 <span className="font-medium">
+                   {g.current_value}/{g.target_value}
+                   {info && <span className="text-xs text-emerald-400 ml-2">next: {info.nextValue}</span>}
+                 </span>
+               </div>
+             )
+           })}
+         </div>
+       </div>
+     )}
+     ```
+   - Also show this section even when `actionableGoals.length === 0` (replaces the old empty state partially — user sees milestones instead of "nothing here")
+3. Add unit test for `isDailyMilestone`.
+4. Run `npm test`.
+
+**Verify:** User with catalog-generated tree sees habit goals as cards + milestone goals in compact summary below.
+
+---
+
+### 13.4 — Catalog modal auto-switches returning user to Strategic — MEDIUM
+
+**Files:** `GoalsHubContent.tsx`
+**Problem:** Returning user on Daily view clicks "Browse Catalog" → adds tree → gets yanked to Strategic. Disorienting.
+
+**Steps:**
+1. In `GoalsHubContent.tsx` line ~349, change the modal catalog `onTreeCreated` callback:
+   ```tsx
+   onTreeCreated={() => {
+     setShowCatalog(false)
+     setIsLoading(true)
+     fetchGoals()
+   }}
+   ```
+   (Remove `setViewMode("strategic")` — only the new-user inline catalog at line ~288 should auto-switch.)
+2. Run `npm test`.
+
+**Verify:** On Daily view, open Browse Catalog, create a tree. Should stay on Daily view after creation.
+
+---
+
+### 13.5 — Achievement badges render at 0% with no L3 children — MEDIUM
+
+**Files:** `GoalHierarchyView.tsx`
+**Problem:** L2 badges render even with 0 L3 children. Shows confusing 0% progress.
+**Decision:** Filter out achievements with 0 children.
+
+**Steps:**
+1. In `GoalHierarchyView.tsx`, inside the `sections.map` callback (line ~81), after computing `sectionL3s`, filter achievements:
+   ```typescript
+   const achievementsWithChildren = section.achievements.filter((ach) =>
+     sectionL3s.some((g) => g.parent_goal_id === ach.id)
+   )
+   ```
+2. Replace `section.achievements` with `achievementsWithChildren` in the grid render (line ~106).
+3. Run `npm test`.
+
+**Verify:** L2 achievement with 0 L3 children no longer renders a badge. Achievement with 1+ children still shows.
+
+---
+
+### 13.7 — Uncategorized L3 goals render without label — LOW
+
+**Files:** `GoalHierarchyView.tsx`
+**Problem:** L3 goals without `display_category` render in an unlabeled section.
+
+**Steps:**
+1. In `GoalHierarchyView.tsx` line ~197, add a heading before the uncategorized goals map:
+   ```tsx
+   {section.uncategorized.length > 0 && (
+     <div className="space-y-2">
+       <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+         Other Goals
+       </h3>
+       {section.uncategorized.map((goal) => (
+   ```
+2. Run `npm test`.
+
+**Verify:** Uncategorized goals now appear under "Other Goals" heading.
+
+---
+
+### 13.8 — GoalCard meta row can overflow on mobile — LOW
+
+**Files:** `GoalCard.tsx`
+**Problem:** Meta row (streak, days remaining, period, milestone, projected date, auto-synced) in one `flex` row with no wrapping.
+
+**Steps:**
+1. In `GoalCard.tsx` line ~172, add `flex-wrap`:
+   ```tsx
+   <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+   ```
+2. Run `npm test`.
+
+**Verify:** On narrow viewport, meta items wrap instead of overflowing.
+
+---
+
+### 13.9 — Two edit entry points on GoalCard — LOW
+
+**Files:** `GoalCard.tsx`
+**Problem:** Title click (undiscoverable) AND explicit Edit button both open edit form. Title click competes with expand expectation.
+**Decision:** Remove title click-to-edit, keep only explicit Edit button.
+
+**Steps:**
+1. In `GoalCard.tsx` line ~133-136, remove the `onClick` and `cursor-pointer` from the title:
+   ```tsx
+   <h3 className="font-medium text-sm truncate">
+     {goal.title}
+   </h3>
+   ```
+2. Run `npm test`.
+
+**Verify:** Clicking title does nothing. Edit button in expanded section still works.
+
+---
+
+### 13.11 — "Add & Continue" success message too brief — LOW
+
+**Files:** `GoalFormModal.tsx`
+**Problem:** Success toast shows 2 seconds, easy to miss.
+
+**Steps:**
+1. In `GoalFormModal.tsx` line ~354, change `2000` to `3000`:
+   ```typescript
+   setTimeout(() => setSuccessMessage(null), 3000)
+   ```
+2. Run `npm test`.
+
+**Verify:** "Add & Continue" success message stays visible for 3 seconds.
+
+---
+
+### 14.4 — Mobile header layout is cramped — MEDIUM
+
+**Files:** `GoalsHubContent.tsx`
+**Problem:** On mobile (375px), title+subtitle and 5 buttons compete in one row. Subtitle wraps excessively.
+
+**Steps:**
+1. In `GoalsHubContent.tsx` line ~250, change the header container to stack on mobile:
+   ```tsx
+   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+   ```
+2. Hide subtitle on mobile (it's not essential):
+   ```tsx
+   <p className="text-sm text-muted-foreground hidden sm:block">
+     Track progress across all areas of your life
+   </p>
+   ```
+3. Wrap the button row to allow wrapping on mobile:
+   ```tsx
+   <div className="flex items-center gap-2 flex-wrap">
+   ```
+4. Run `npm test`.
+
+**Verify:** On 375px viewport: title shows, subtitle hidden, buttons wrap neatly below.
+
+---
+
+### 14.5 — Expanded milestone card shows less info than collapsed — LOW
+
+**Files:** `GoalCard.tsx`
+**Problem:** Expanding an auto-tracked milestone card shows only "Progress synced automatically" — less info than collapsed state.
+**Decision:** Show milestone ladder with checkmarks and next target.
+
+**Steps:**
+1. In `GoalCard.tsx`, in the expanded section (line ~222), add a milestone ladder render for milestone-type goals with `milestone_config`:
+   ```tsx
+   {goal.goal_type === "milestone" && goal.milestone_config && (
+     <div className="text-xs text-muted-foreground space-y-1">
+       <p className="font-medium">Milestone ladder:</p>
+       <div className="flex flex-wrap gap-2">
+         {(goal.milestone_config as { milestones: number[] }).milestones.map((m: number) => {
+           const reached = goal.current_value >= m
+           return (
+             <span key={m} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${reached ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-muted text-muted-foreground border-border"}`}>
+               {reached ? "✓" : "○"} {m}
+             </span>
+           )
+         })}
+       </div>
+       {nextMilestone && (
+         <p className="text-emerald-400 mt-1">Next: {nextMilestone.nextValue} ({nextMilestone.remaining} more)</p>
+       )}
+     </div>
+   )}
+   ```
+   Place this BEFORE the existing `goal.linked_metric` auto-sync message so both show.
+2. Confirm `milestone_config` shape — check `GoalWithProgress` type has `milestone_config` field. If not, add it to the type.
+3. Run `npm test`.
+
+**Verify:** Expand an "Approach Volume" card → see milestone steps with checkmarks, "Next: 5 (5 more)".
+
+---
+
+### 14.6 — Goal type button labels truncated on mobile form — LOW
+
+**Files:** `GoalFormModal.tsx`
+**Problem:** "Resets each period" and "Gradual increase" truncate on mobile.
+
+**Steps:**
+1. In `GoalFormModal.tsx` line ~391-393, shorten the descriptions:
+   ```typescript
+   { type: "recurring" as GoalType, label: "Recurring", desc: "Resets per period" },
+   { type: "habit_ramp" as GoalType, label: "Habit Ramp", desc: "Ramps up over time" },
+   ```
+2. If still truncating, add `truncate` class to the desc element or switch to responsive hidden text on `sm:`.
+3. Run `npm test`.
+
+**Verify:** On 375px viewport, goal type labels fully visible without truncation.
+
+---
+
+### 14.3 — Catalog confusing for returning users with existing trees — MEDIUM
+
+**Files:** `GoalCatalogPicker.tsx`
+**Problem:** Returning user picks a new L1 → customize screen shows all L3 as "Already tracking" with gray toggles. Dead-end: "Create 1 Goal" would only make an orphan L1 parent with no children. User doesn't understand why they'd do this.
+
+**Steps:**
+1. In `GoalCatalogPicker.tsx`, in the customize/preview step, detect when ALL toggleable sub-goals are already tracked:
+   ```typescript
+   const allAlreadyTracked = previewInserts !== null
+     && previewInserts.filter(g => g.goal_level === 3).length === 0
+   ```
+   (If `generateGoalTreeInserts` already excludes existing-template goals from inserts, check if all L3 inserts were filtered out.)
+2. When `allAlreadyTracked`, show a contextual message above the create button:
+   ```tsx
+   {allAlreadyTracked && (
+     <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-200">
+       All sub-goals are already active in another tree. Creating this adds a top-level goal only — you can add custom sub-goals to it afterward via "New Goal".
+     </div>
+   )}
+   ```
+3. Run `npm test`.
+
+**Verify:** Returning user with full tree opens catalog → picks new L1 → sees the amber message explaining the situation.
+
+---
+
+### DEFERRED to Future
+
+- **13.10** — Reset confirmation ESC-dismissable (inline confirmation is standard, not worth the complexity)
+- **14.2** — "Build a rotation" empty shell (needs design for how multiple L1 trees share L3 goals — data model question, not a quick fix)
+
+### VERIFIED WORKING (Phase 14 browser testing)
+
+- Catalog tree creation flow: pick L1 → customize toggles → create → tree appears
+- Suggestion chips: "10 approaches per week" auto-fills name + target + auto-sync metric
+- Milestone curve editor: interactive, visually excellent
+- Optimistic UI: +1 increment updates counter instantly with green progress bar
+- Delete flow: inline confirmation → goal removed → list re-renders
+- Achievement badges with progress bars render correctly
+- Category sections (Field Work / Results / Dirty Dog) with counts and collapse
+- Auto-synced labeling clear and non-intrusive
+- Zero console errors throughout entire session
+- Mobile layout generally solid (cards stack, modal sticky footer works)
+- Edit modal fully functional with all fields pre-populated
 
 ---
 
@@ -247,214 +572,3 @@ All phases 0–7 are ✅ DONE (code complete; Phase 7 has migration/runtime bugs
 - **Differentiate L1 flavors:** "One person" vs "abundance" get different default sub-goals and targets
 - **Differentiate achievement weights:** "Master Daygame" weights results higher, "Become Confident" weights exposure/consistency higher
 - Celebration cascade: trigger by event type not time horizon
-
----
-
-## Phase 7: UI/UX Polish — ✅ DONE
-
-Code for 7.1–7.6 implemented. Key deliverables:
-- **7.1:** Cumulative metric types (`approaches_cumulative`, etc.) in goalTypes, goalRepo, goalGraph. Code correct.
-- **7.2:** `isDailyActionable()` filter, per-goal weekly summaries in DailyActionView, `deriveTimeHorizon` fix for milestones.
-- **7.3:** "Browse Catalog" modal for existing users, "Active"/"Already tracking" badges, parent remapping.
-- **7.4:** `breadcrumbMode` prop on GoalCard — "none" in categories, "parent-only" in daily.
-- **7.5:** Dirty Dog placeholder with opt-in in strategic view, `generateDirtyDogInserts`.
-- **7.6:** Merged into 7.2 — L0/L1/L2 excluded from daily via `goal_level === 3` check.
-
-**Known issues from Phase 7 (fixed in Phase 8 below):**
-- 7.1 migration was incomplete (missing 2 of 3 UPDATE statements)
-- 7.5 dirty dog opt-in crashes at runtime (batch API rejects inserts without `_tempId`)
-- Auto-synced goals misleadingly show manual increment buttons
-
----
-
-## Phase 8: Bug Fixes & UX Hardening
-
-Bugs and UX gaps found during post-Phase-7 audit. Three bugs (one blocker, one data, one UX) plus one minor cleanup.
-
-**Dependency graph:**
-```
-8.1 (dirty dog batch fix) — independent
-8.2 (migration file) — independent
-8.3 (auto-sync read-only) — independent
-8.4 (sub-goal button cleanup) — independent
-```
-
-All four are independent and parallelizable.
-
----
-
-### MILESTONE 8.1: "Dirty Dog opt-in actually works"
-
-**DEPENDS ON:** Nothing
-**DESTRUCTIVE:** No — fixes existing broken code path.
-**PRIORITY:** P0 BLOCKER — clicking "Add Goals" in dirty dog placeholder returns 400 error.
-
-**Problem:** `generateDirtyDogInserts()` (goalsService.ts:410) returns `UserGoalInsert[]` without `_tempId`. The batch API (`app/api/goals/batch/route.ts:17`) requires `_tempId` on every insert:
-```ts
-if (!g.title || !g._tempId) {
-  return NextResponse.json({ error: "Each goal needs title and _tempId" }, { status: 400 })
-}
-```
-Every call to "Add Goals" fails silently (the error is caught but just sets error state).
-
-**Root cause:** `generateDirtyDogInserts` was designed to return plain `UserGoalInsert[]` but the only batch endpoint requires `BatchGoalInsert` format (with `_tempId` and `_tempParentId`).
-
-**Fix approach:** Change `generateDirtyDogInserts` to return `BatchGoalInsert[]`. These inserts already have real `parent_goal_id` (the L2 parent's UUID), so `_tempParentId` should be `null`. Each insert needs a unique `_tempId` (e.g., `"__temp_" + tmpl.id`).
-
-**FILES TO MODIFY:**
-
-- `src/goals/goalsService.ts` — `generateDirtyDogInserts()`:
-  - Change return type from `UserGoalInsert[]` to `BatchGoalInsert[]`
-  - Import `BatchGoalInsert` from `treeGenerationService`
-  - Add `_tempId: "__temp_" + tmpl.id` and `_tempParentId: null` to each insert
-  - Keep existing `parent_goal_id: l2Parent.id` (real UUID, not temp)
-
-- `src/goals/components/GoalsHubContent.tsx` — `handleAddDirtyDogGoals`:
-  - No change needed — it already sends `{ goals: inserts }` to batch endpoint
-  - The batch endpoint's `createGoalBatch` handles `_tempParentId: null` correctly (uses `parent_goal_id` as-is)
-
-**FILES TO NOT TOUCH:**
-- `app/api/goals/batch/route.ts` — validation is correct, inserts need to conform to it
-- `src/db/goalRepo.ts`
-
-**TESTS TO ADD:**
-- `goalsService.test.ts`: `generateDirtyDogInserts` returns objects with `_tempId` and `_tempParentId: null`
-- `goalsService.test.ts`: each returned insert has `_tempId` starting with `"__temp_"`
-- `goalsService.test.ts`: each returned insert has `parent_goal_id` set to the L2 parent's ID (real UUID)
-
-**ACCEPTANCE TEST:**
-1. User has goals, no dirty dog category
-2. Strategic view → dirty dog placeholder visible
-3. Click "Add Goals" → API returns 201 (not 400)
-4. 4 dirty dog goals appear in dirty dog section
-5. Goals have correct parent (first L2 achievement)
-
-**DONE WHEN:** Dirty dog opt-in creates goals without errors.
-
----
-
-### MILESTONE 8.2: "Complete cumulative metric migration"
-
-**DEPENDS ON:** Nothing
-**DESTRUCTIVE:** No — only adds enum values and fixes existing data.
-**PRIORITY:** P0 DATA — Phone Numbers and Instadates goals show 0 progress for existing users.
-
-**Problem:** The Phase 7.1 code changes are correct (goalGraph, goalTypes, goalRepo all handle cumulative metrics). But the DB migration was never created on disk, and the draft only contained 1 of 3 required UPDATE statements. Existing goals in the DB still have `linked_metric = 'numbers_weekly'` and `linked_metric = 'instadates_weekly'`, so sync returns 0 for them.
-
-**FILES TO CREATE:**
-
-- `supabase/migrations/20260214_fix_cumulative_linked_metrics.sql`:
-```sql
--- Step 1: Add cumulative values to the linked_metric enum type
-ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'approaches_cumulative';
-ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'sessions_cumulative';
-ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'numbers_cumulative';
-ALTER TYPE linked_metric ADD VALUE IF NOT EXISTS 'instadates_cumulative';
-
--- Step 2: Fix existing milestone goals incorrectly linked to weekly metrics
--- (Must run in a separate transaction from ALTER TYPE — Supabase runs each
---  migration as one transaction, so run Step 1 first as its own migration
---  if this fails. Or run Step 2 manually in SQL editor after Step 1 commits.)
-UPDATE user_goals SET linked_metric = 'approaches_cumulative'
-  WHERE template_id = 'l3_approach_volume' AND linked_metric = 'approaches_weekly';
-UPDATE user_goals SET linked_metric = 'numbers_cumulative'
-  WHERE template_id = 'l3_phone_numbers' AND linked_metric = 'numbers_weekly';
-UPDATE user_goals SET linked_metric = 'instadates_cumulative'
-  WHERE template_id = 'l3_instadates' AND linked_metric = 'instadates_weekly';
-```
-
-**FILES TO NOT TOUCH:** All application code — 7.1 code is correct, only the migration is missing.
-
-**IMPORTANT:** `ALTER TYPE ... ADD VALUE` cannot run inside a transaction in PostgreSQL. Supabase wraps each migration file in a transaction. Two options:
-1. Split into two migration files: `20260214a_add_cumulative_enum.sql` (ALTER TYPE only) and `20260214b_fix_linked_metrics.sql` (UPDATE only)
-2. Run the ALTER TYPE statements manually in the Supabase SQL editor first, then apply only the UPDATE migration
-
-Option 1 (two files) is cleaner and automated. Use that approach.
-
-**ACCEPTANCE TEST:**
-1. Run migrations against Supabase
-2. Query: `SELECT id, template_id, linked_metric FROM user_goals WHERE template_id IN ('l3_approach_volume', 'l3_phone_numbers', 'l3_instadates')` → all show cumulative metrics
-3. Visit goals page → sync runs → Phone Numbers shows cumulative total (not 0)
-4. Instadates shows cumulative total (not 0)
-5. Approach Volume shows cumulative total
-
-**DONE WHEN:** All three cumulative goals show real data from tracking stats after sync. Migration files exist on disk and are ready to apply.
-
----
-
-### MILESTONE 8.3: "Auto-synced goals don't show manual increment buttons"
-
-**DEPENDS ON:** Nothing
-**DESTRUCTIVE:** No — hides buttons, doesn't remove functionality.
-**PRIORITY:** P1 UX — confusing but not data-breaking.
-
-**Problem:** Goals with `linked_metric` (Approach Frequency, Session Frequency, Approach Volume, etc.) show +1/+5 increment buttons and direct-entry inputs in both Daily and Strategic views. But every page load calls `syncLinkedGoals` which overwrites `current_value` with tracking data. So: user increments → sees change → refreshes → value reverts to synced data. The "Auto-synced" badge is visible but buried in the meta row.
-
-**Design:** Auto-synced goals should show read-only progress, not editable inputs. The GoalCard already shows an "Auto-synced" badge with a Link icon. Expand this to replace the input widget.
-
-**FILES TO MODIFY:**
-
-- `src/goals/components/GoalCard.tsx`:
-  - In the expanded actions section (~line 229), before rendering `GoalInputWidget`, check `goal.linked_metric`:
-    - If `linked_metric` is set: render a read-only message instead of the input widget
-    - Message: "Progress synced automatically from your session data" (small, muted text)
-    - Still show Edit button (user can change linked_metric via form)
-  - Keep the "Auto-synced" badge in the meta row as-is
-
-- `src/goals/components/DailyActionView.tsx`:
-  - No change needed — it passes `onIncrement` to GoalCard, and GoalCard will now gate it
-
-**FILES TO NOT TOUCH:**
-- `src/goals/components/GoalInputWidget.tsx` — the widget itself is fine, GoalCard just won't render it for synced goals
-- `src/goals/goalsService.ts`
-- `src/db/goalRepo.ts`
-
-**ACCEPTANCE TEST:**
-1. Daily view → Approach Frequency card (auto-synced) → expand → no +1/+5 buttons, shows "synced automatically" message
-2. Session Frequency card → same behavior
-3. Strategic view → Approach Volume card → expand → no direct-entry input, shows sync message
-4. Manual (non-synced) goals → still show increment buttons normally
-5. Edit button still works on synced goals → can change linked_metric to null → increment buttons reappear
-
-**DONE WHEN:** Auto-synced goals show read-only progress. Manual goals unchanged.
-
----
-
-### MILESTONE 8.4: "Sub-goal button only on L1/L2 goals"
-
-**DEPENDS ON:** Nothing
-**DESTRUCTIVE:** No — hides a button on leaf goals.
-**PRIORITY:** P2 MINOR — cosmetic, no functional impact.
-
-**Problem:** GoalCard shows a "Sub-goal" button on all milestone-type goals, including L3 leaf goals (Approach Volume, Phone Numbers, etc.). Creating a child of an L3 has no meaning in the goal graph — L3 is the lowest level. The button just adds visual noise to leaf cards.
-
-**FILES TO MODIFY:**
-
-- `src/goals/components/GoalCard.tsx` — line 101:
-  - Current: `const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0)`
-  - Change to: `const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0) && (goal.goal_level === null || goal.goal_level < 3)`
-  - This hides the button on L3 goals. Goals without `goal_level` (legacy/custom) keep existing behavior.
-
-**FILES TO NOT TOUCH:** Everything else.
-
-**ACCEPTANCE TEST:**
-1. Strategic view → Approach Volume (L3 milestone) → no "Sub-goal" button
-2. Phone Numbers (L3 milestone) → no "Sub-goal" button
-3. Get a Girlfriend (L1 milestone) → "Sub-goal" button still shows
-4. Master Daygame (L2 milestone) → "Sub-goal" button still shows
-5. Custom goal without goal_level → existing behavior preserved
-
-**DONE WHEN:** "Sub-goal" button only appears on L0/L1/L2 goals.
-
----
-
-### Phase 8 Work Summary
-
-| Milestone | What | Priority | Status |
-|-----------|------|----------|--------|
-| **8.1** | Fix dirty dog batch insert (add `_tempId`) | P0 BLOCKER | ✅ DONE |
-| **8.2** | Complete cumulative metric migration (3 UPDATEs + enum) | P0 DATA | ✅ DONE |
-| **8.3** | Auto-synced goals read-only (hide increment buttons) | P1 UX | ✅ DONE |
-| **8.4** | Sub-goal button only on L1/L2 (not L3 leaves) | P2 MINOR | ✅ DONE |
-
-All four are independent — can be done in any order or in parallel.

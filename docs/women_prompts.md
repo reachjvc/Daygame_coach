@@ -12,8 +12,19 @@ Generated via ChatGPT image generation. This format consistently produced great 
 
 ```
 {archetype-name} — age {age}
-Portrait photo of a beautiful {age}-year-old {ethnicity} woman, {hair description}, {clothing/accessories}, {setting/environment}, {expression}, {lighting}, shallow depth of field, photorealistic, 1:1
+Portrait photo of a {beauty-adjective} {age}-year-old {ethnicity} woman, {face/build descriptor}, {hair description}, {clothing/accessories}, {setting/environment}, {expression}, {lighting}, shallow depth of field, photorealistic, 1:1
 ```
+
+### What each slot does
+
+| Slot | Purpose | Why it matters |
+|------|---------|---------------|
+| **beauty-adjective** | Rotate: "beautiful", "striking", "radiant", "elegant", "statuesque" | Pushes ChatGPT toward different face archetypes. "Striking" ≠ "radiant" |
+| **face/build descriptor** | From archetype table below (e.g. "sharp angular features" vs "soft round face") | **THIS IS THE KEY DIFFERENTIATOR.** Without it, all images converge to one face |
+| **hair description** | Style + color/texture specific to ethnicity | For regions where hair color varies (Scandinavian), this alone creates variety. For regions where it doesn't (African, East Asian), face/build does the heavy lifting |
+| **clothing/accessories** | From archetype table — signals the archetype | Keep consistent across regions |
+| **setting/environment** | From archetype table — reinforces archetype | Keep consistent across regions |
+| **expression** | From archetype table — matches personality | Named and specific, never generic |
 
 ### Best Example (user's favorite)
 
@@ -45,20 +56,22 @@ Portrait photo of a beautiful {age}-year-old {ethnicity} woman, {hair descriptio
 
 ## The 10 Archetypes
 
-Each has a distinct visual language. These signals should stay consistent across ALL regions — only skin/hair/features change.
+Each has a distinct visual language. Clothing/setting/expression stay consistent across ALL regions. The **face/build** column is the critical differentiator — it forces ChatGPT to generate a different-looking woman for each archetype, not just the same face in different outfits.
 
-| Archetype | Clothing Signals | Setting Signals | Expression |
-|-----------|-----------------|-----------------|------------|
-| corporate-powerhouse | Navy/black blazer, diamond/pearl studs, pendant necklace | Office, glass building, corporate | Confident smile or composed |
-| ethereal-creative | Artsy layers, statement rings, bohemian-adjacent but refined | Gallery, studio, warm cafe | Dreamy, slightly detached |
-| disciplined-athlete | Athletic wear (running jacket, sports top), ponytail, smartwatch | Gym, park, running track | Direct, confident, energetic |
-| academic-intellectual | Glasses, turtleneck/cable knit, books | Library, university cafe, home study | Thoughtful, half-smile |
-| fashion-scenester | Designer accessories, silk scarf, statement earrings, watch | Shopping street, boutique, city | Confident, trend-aware |
-| bohemian-alt | Linen/wrap dress, layered necklaces, nose ring okay, earthy colors | Market, outdoor cafe, artisan studio | Warm, relaxed, genuine |
-| modern-traditionalist | Cashmere, pearls, modest/elegant, soft pink/cream palette | Elegant home, restaurant, garden | Graceful, warm, reserved |
-| urban-nomad | Linen shirt/blazer, backpack or crossbody bag, minimal jewelry | European street, piazza, cobblestone | Carefree, open, laughing |
-| guarded-realist | Minimal — black/charcoal, simple gold, understated | Minimalist apartment, marble cafe | Measured, slightly guarded, composed |
-| social-connector | Colorful clothing, hoops/statement jewelry, warm palette | Brunch spot, wine bar, dinner event | Big smile, animated, warm |
+**IMPORTANT: The face/build descriptor MUST go in every prompt, right after the ethnicity.** This is what prevents the "same woman in 40 outfits" problem. Without it, ChatGPT converges on one generic face per ethnicity.
+
+| Archetype | Face/Build (put in prompt) | Clothing Signals | Setting Signals | Expression |
+|-----------|---------------------------|-----------------|-----------------|------------|
+| corporate-powerhouse | sharp angular features, defined jawline, tall and poised | Navy/black blazer, diamond/pearl studs, pendant necklace | Office, glass building, corporate | Confident, commanding |
+| ethereal-creative | delicate fine-boned features, slender, willowy frame | Artsy layers, statement rings, bohemian-adjacent but refined | Gallery, studio, warm cafe | Dreamy, slightly detached, faraway gaze |
+| disciplined-athlete | strong athletic build, broad shoulders, radiant skin | Athletic wear (running jacket, sports top), ponytail, smartwatch | Gym, park, running track | Direct, energetic, bright eyes |
+| academic-intellectual | soft features, wide thoughtful eyes, understated | Glasses, turtleneck/cable knit, books | Library, university cafe, home study | Thoughtful half-smile, curious |
+| fashion-scenester | high cheekbones, photogenic bone structure, model-adjacent | Designer accessories, silk scarf, statement earrings, watch | Shopping street, boutique, city | Self-assured, trend-aware |
+| bohemian-alt | warm round face, natural no-makeup beauty, freckles okay | Linen/wrap dress, layered necklaces, nose ring okay, earthy colors | Market, outdoor cafe, artisan studio | Warm, relaxed, genuine smile |
+| modern-traditionalist | classic symmetrical features, graceful oval face | Cashmere, pearls, modest/elegant, soft pink/cream palette | Elegant home, restaurant, garden | Graceful, warm, reserved |
+| urban-nomad | girl-next-door approachable look, sun-kissed, slightly windswept | Linen shirt/blazer, backpack or crossbody bag, minimal jewelry | European street, piazza, cobblestone | Carefree, open, laughing |
+| guarded-realist | striking bone structure, minimal makeup, intense eyes | Minimal — black/charcoal, simple gold, understated | Minimalist apartment, marble cafe | Measured, guarded, looking slightly past camera |
+| social-connector | expressive round face, big warm eyes, infectious energy | Colorful clothing, hoops/statement jewelry, warm palette | Brunch spot, wine bar, dinner event | Big smile, animated, warm |
 
 ## Age Progression Rules
 
@@ -79,16 +92,30 @@ Example progression for **urban-nomad**:
 
 Each set = 40 images (10 archetypes x 4 ages).
 
-| # | Image Set | Ethnicity descriptor | Regions covered | Hair/feature notes |
-|---|-----------|---------------------|-----------------|-------------------|
-| 1 | **Nordic/Slavic** | "Scandinavian" | Scandinavia, Slavic Europe, Eastern Europe | DONE. Blonde to light brown, blue/green/grey eyes, light skin |
-| 2 | **Western European** | "Western European" | Western Europe, North America, Australia/Oceania | Broader mix — brunette common, lighter skin, brown or blue eyes. Think UK/French/German |
-| 3 | **Mediterranean** | "Mediterranean" | Southern Europe | Olive skin, dark brown/black hair, brown eyes, warm features. Think Italian/Spanish/Greek |
-| 4 | **Latin American** | "Latin American" | Latin America | Tan/olive, dark hair, mix of European and Indigenous features. Think Colombian/Brazilian/Argentine |
-| 5 | **East Asian** | "East Asian" | East Asia | Chinese/Japanese/Korean features. Straight black hair common, lighter skin |
-| 6 | **Southeast Asian** | "Southeast Asian" | Southeast Asia | Warmer skin tone, dark hair, rounder features. Think Thai/Filipino/Vietnamese |
-| 7 | **South Asian** | "South Asian" | South Asia | Medium to dark brown skin, dark hair, dark eyes. Think Indian/Pakistani |
-| 8 | **African** | "African" | Africa | Dark skin, diverse features, dark hair. Sub-Saharan look (North Africa closer to Mediterranean) |
+| # | Image Set | Ethnicity descriptor | Regions covered | Hair/feature notes | Skin tone rotation |
+|---|-----------|---------------------|-----------------|-------------------|--------------------|
+| 1 | **Nordic/Slavic** | "Scandinavian" | Scandinavia, Slavic Europe, Eastern Europe | DONE. Blonde to light brown, blue/green/grey eyes, light skin | N/A — hair color provides variety |
+| 2 | **Western European** | "Western European" | Western Europe, North America, Australia/Oceania | Broader mix — brunette common, brown or blue eyes. Think UK/French/German | "fair skin", "light skin", "pale with freckles" |
+| 3 | **Mediterranean** | "Mediterranean" | Southern Europe | Dark brown/black hair, brown eyes, warm features. Think Italian/Spanish/Greek | "olive skin", "warm golden skin", "sun-kissed olive complexion" |
+| 4 | **Latin American** | "Latin American" | Latin America | Dark hair, mix of European and Indigenous features. Think Colombian/Brazilian/Argentine | "warm tan skin", "light caramel skin", "golden brown skin", "olive complexion" |
+| 5 | **East Asian** | "East Asian" | East Asia | Chinese/Japanese/Korean features. Straight black hair common | "porcelain skin", "warm ivory skin", "fair skin" |
+| 6 | **Southeast Asian** | "Southeast Asian" | Southeast Asia | Dark hair, rounder features. Think Thai/Filipino/Vietnamese | "warm brown skin", "golden tan skin", "light brown skin" |
+| 7 | **South Asian** | "South Asian" | South Asia | Dark hair, dark eyes. Think Indian/Pakistani | "warm brown skin", "deep brown skin", "medium brown skin", "golden brown skin" |
+| 8 | **African** | "African" | Africa | Sub-Saharan (North Africa closer to Mediterranean) | "deep ebony skin", "rich dark skin", "warm brown skin", "dark mahogany skin" |
+
+### Avoiding the "same woman" problem
+
+**Why the Scandinavian set worked:** Hair COLOR varied (ash blonde, caramel, light brown, strawberry). Each color pushed ChatGPT toward a different face automatically. No extra effort needed.
+
+**Why the African set failed:** "African woman, dark skin" x40 = one face template with 40 wigs. Hair STYLE variation (braids vs afro vs locs) only changes what's on top of the head — the face underneath stays identical.
+
+**Rules for all remaining sets:**
+
+1. **Face/build descriptor from archetype table is MANDATORY** in every prompt. This is the primary face differentiator. "Sharp angular features" and "warm round face" will generate genuinely different women.
+2. **Rotate skin tone** across the 10 archetypes using the skin tone column above. Don't use the same skin tone descriptor for all 40 prompts. Even within one ethnicity, real people vary.
+3. **Rotate the beauty adjective**: cycle through "beautiful", "striking", "radiant", "elegant", "statuesque" across the 10 archetypes. Each word biases a different face shape.
+4. **For regions with low hair-color variety** (African, East Asian, South Asian, Southeast Asian): the face/build + skin tone rotation are doing ALL the differentiation work. Be extra specific with these.
+5. **For regions with high hair-color variety** (Scandinavian, Western European): hair color helps, but still include face/build descriptors for consistency.
 
 ## Folder Structure
 
@@ -118,7 +145,7 @@ After each image, I'll say "next" and you generate the next one.
 
 GLOBAL STYLE (apply to ALL images):
 - Photorealistic portrait photo, square 1:1 aspect ratio
-- Beautiful {ethnicity} woman
+- Each woman should look like a DIFFERENT person — vary face shape, build, skin tone
 - Head-and-shoulders to upper-body framing
 - Shallow depth of field, soft bokeh background
 - Natural or soft lighting
@@ -171,6 +198,36 @@ const mappings = [
 - ChatGPT generates ~10-15 per session before quality drops or it refuses
 - Expect ~20-25 ChatGPT sessions total
 - After generation: visual matching + conversion + archetypes.ts code update
+
+## Completed Sets
+
+### Set 8: African (DONE — but with caveats)
+
+Generated 40 prompts with Claude, fed to ChatGPT image gen.
+
+**What went wrong:** All 40 prompts used "beautiful African woman, dark skin" with no face/build variation. Result: all images look like the same woman in different outfits and hairstyles. Hair style variety (braids, locs, afro, TWA, etc.) was NOT enough — it only changes what's on top of the head. The face underneath converged to one template.
+
+**What the next set must do differently:** Use the face/build descriptors from the archetype table and rotate skin tones. See "Avoiding the same woman problem" section above.
+
+**What DID work (keep for future sets):**
+- Hair style variety across all 40 — no two identical
+- Age signaling through hair: younger = freer/bigger (afros, puffs, bantu knots), older = refined/intentional (tapered cuts, chignons, finger waves)
+
+**Examples that worked well:**
+
+> **bohemian-alt — age 25**
+> Portrait photo of a beautiful 25-year-old African woman, dark skin, long faux locs with scattered golden beads, small nose ring, wearing an oversized rust-colored linen shirt with layered chain necklaces, seated at a weathered wooden table at an outdoor cafe with hanging plants, genuine easy-going expression, soft warm natural light, shallow depth of field, photorealistic, 1:1
+
+> **corporate-powerhouse — age 37**
+> Portrait photo of a beautiful 37-year-old African woman, dark skin, elegant protective style updo, wearing a tailored deep burgundy power suit with diamond stud earrings and a thin gold chain necklace, leather portfolio in hand, standing in an executive boardroom with dark wood paneling, commanding confident expression, warm golden overhead lighting, shallow depth of field, photorealistic, 1:1
+
+> **guarded-realist — age 30**
+> Portrait photo of a beautiful 30-year-old African woman, dark skin, locs pulled into a sleek high bun, wearing a charcoal cashmere crewneck with a single thin gold chain, arms crossed loosely, standing in a modern minimalist apartment with concrete walls and a single plant, calm assessing gaze, soft muted natural light, shallow depth of field, photorealistic, 1:1
+
+> **social-connector — age 37**
+> Portrait photo of a beautiful 37-year-old African woman, dark skin, elegant short natural hair with finger waves, wearing a jewel-toned emerald silk dress with chandelier gold earrings and a delicate tennis bracelet, at an intimate dinner party with soft candles and flowers on the table, vibrant magnetic smile, rich warm golden ambient light, shallow depth of field, photorealistic, 1:1
+
+---
 
 ## Code Changes Needed (after images exist)
 

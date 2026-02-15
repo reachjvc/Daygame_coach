@@ -7,6 +7,8 @@ import {
   computeLifeAreaProgress,
   deriveTimeHorizon,
   isDailyActionable,
+  isDailyMilestone,
+  getMilestoneLadderValues,
   getInputMode,
   getButtonIncrements,
   getCelebrationTier,
@@ -693,9 +695,50 @@ describe("deriveTimeHorizon", () => {
       expect(isDailyActionable(goal)).toBe(false)
     })
 
-    test("returns false for null goal_level", () => {
+    test("returns true for null goal_level with recurring type (standalone custom goal)", () => {
       const goal = createGoalWithProgress({ goal_level: null, goal_type: "recurring" })
+      expect(isDailyActionable(goal)).toBe(true)
+    })
+
+    test("returns true for null goal_level with habit_ramp type", () => {
+      const goal = createGoalWithProgress({ goal_level: null, goal_type: "habit_ramp" })
+      expect(isDailyActionable(goal)).toBe(true)
+    })
+
+    test("returns false for null goal_level with milestone type", () => {
+      const goal = createGoalWithProgress({ goal_level: null, goal_type: "milestone" })
       expect(isDailyActionable(goal)).toBe(false)
+    })
+  })
+
+  // ============================================================================
+  // isDailyMilestone
+  // ============================================================================
+
+  describe("isDailyMilestone", () => {
+    test("returns true for L3 milestone goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "milestone", is_archived: false })
+      expect(isDailyMilestone(goal)).toBe(true)
+    })
+
+    test("returns true for null goal_level milestone goal", () => {
+      const goal = createGoalWithProgress({ goal_level: null, goal_type: "milestone", is_archived: false })
+      expect(isDailyMilestone(goal)).toBe(true)
+    })
+
+    test("returns false for archived milestone goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "milestone", is_archived: true })
+      expect(isDailyMilestone(goal)).toBe(false)
+    })
+
+    test("returns false for L3 recurring goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 3, goal_type: "recurring" })
+      expect(isDailyMilestone(goal)).toBe(false)
+    })
+
+    test("returns false for L1 milestone goal", () => {
+      const goal = createGoalWithProgress({ goal_level: 1, goal_type: "milestone" })
+      expect(isDailyMilestone(goal)).toBe(false)
     })
   })
 
@@ -878,11 +921,11 @@ describe("deriveTimeHorizon", () => {
     })
 
     test("returns formatted label for positive weeks", () => {
-      expect(formatStreakLabel(8)).toBe("Week 8 of your daygame journey")
+      expect(formatStreakLabel(8)).toBe("Week 8 streak")
     })
 
     test("returns formatted label for 1 week", () => {
-      expect(formatStreakLabel(1)).toBe("Week 1 of your daygame journey")
+      expect(formatStreakLabel(1)).toBe("Week 1 streak")
     })
   })
 

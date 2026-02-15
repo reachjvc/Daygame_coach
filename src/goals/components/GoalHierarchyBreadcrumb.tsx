@@ -56,8 +56,8 @@ export function GoalHierarchyBreadcrumb({
               className={onNavigate ? "cursor-pointer hover:underline" : undefined}
               onClick={() => ancestor && onNavigate?.(ancestor.id)}
             >
-              {ancestor.title.length > 20
-                ? ancestor.title.slice(0, 20) + "..."
+              {ancestor.title.length > 25
+                ? ancestor.title.slice(0, 25) + "..."
                 : ancestor.title}
             </span>
           ) : (

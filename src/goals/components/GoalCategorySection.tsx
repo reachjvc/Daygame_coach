@@ -27,6 +27,7 @@ interface GoalCategorySectionProps {
   onAddChild?: (parentGoal: GoalWithProgress) => void
   onGoalToggle?: (goalId: string, active: boolean) => Promise<void>
   projections?: Map<string, ProjectedDateInfo>
+  milestones?: Map<string, { nextValue: number; remaining: number }>
 }
 
 export function GoalCategorySection({
@@ -43,6 +44,7 @@ export function GoalCategorySection({
   onAddChild,
   onGoalToggle,
   projections,
+  milestones,
 }: GoalCategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const label = CATEGORY_LABELS[category]
@@ -84,6 +86,7 @@ export function GoalCategorySection({
                   allGoals={allGoals}
                   breadcrumbMode="none"
                   projectedDate={projections?.get(goal.id) ?? null}
+                  nextMilestone={milestones?.get(goal.id) ?? null}
                   onIncrement={onIncrement}
                   onSetValue={onSetValue}
                   onComplete={onComplete}

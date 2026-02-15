@@ -31,7 +31,7 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
             title={label}
           >
             <Icon className="size-4" />
-            <span className="text-xs hidden sm:inline">{label}</span>
+            <span className="text-xs">{label}</span>
           </Button>
         )
       })}

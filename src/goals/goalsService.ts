@@ -197,12 +197,22 @@ export function deriveTimeHorizon(goal: GoalWithProgress): string {
 
 /**
  * Determine if a goal should appear in the Daily action view.
- * Only L3 goals with habit_ramp or recurring types are daily-actionable.
- * Milestone goals, L0/L1/L2 goals, and goals without goal_level are excluded.
+ * L3 goals and standalone goals (goal_level null) with habit_ramp or recurring types are daily-actionable.
+ * Milestone goals and L0/L1/L2 goals are excluded.
  */
 export function isDailyActionable(goal: GoalWithProgress): boolean {
-  if (goal.goal_level !== 3) return false
+  if (goal.goal_level !== null && goal.goal_level !== 3) return false
   return goal.goal_type === "habit_ramp" || goal.goal_type === "recurring"
+}
+
+/**
+ * Determine if a goal should appear in the Daily milestones summary.
+ * L3 and standalone milestone goals that are not archived.
+ */
+export function isDailyMilestone(goal: GoalWithProgress): boolean {
+  return (goal.goal_level === 3 || goal.goal_level === null)
+    && goal.goal_type === "milestone"
+    && !goal.is_archived
 }
 
 /**
@@ -278,12 +288,25 @@ export function getNextMilestoneInfo(
 }
 
 /**
+ * Get all milestone ladder values for a goal.
+ * Returns array of milestone values or null if no milestone_config.
+ */
+export function getMilestoneLadderValues(
+  goal: GoalWithProgress
+): number[] | null {
+  if (!goal.milestone_config) return null
+  const config = goal.milestone_config as unknown as MilestoneLadderConfig
+  const milestones = generateMilestoneLadder(config)
+  return milestones.map((m) => m.value)
+}
+
+/**
  * Format a streak label for the daily view.
  * Returns "Week N of your daygame journey" or empty string for 0.
  */
 export function formatStreakLabel(weeks: number): string {
   if (weeks <= 0) return ""
-  return `Week ${weeks} of your daygame journey`
+  return `Week ${weeks} streak`
 }
 
 /**

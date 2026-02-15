@@ -62,12 +62,18 @@ const TRACKING_TYPE_OPTIONS: { value: GoalTrackingType; label: string; descripti
   { value: "boolean", label: "Yes/No", description: "Simple done or not done" },
 ]
 
-const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string }[] = [
-  { value: null, label: "None (manual tracking)" },
-  { value: "approaches_weekly", label: "Weekly approaches" },
-  { value: "sessions_weekly", label: "Weekly sessions" },
-  { value: "numbers_weekly", label: "Weekly numbers" },
-  { value: "instadates_weekly", label: "Weekly instadates" },
+const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string; group: string }[] = [
+  { value: null, label: "None (manual tracking)", group: "none" },
+  // Weekly (resets each week)
+  { value: "approaches_weekly", label: "Approaches (weekly)", group: "weekly" },
+  { value: "sessions_weekly", label: "Sessions (weekly)", group: "weekly" },
+  { value: "numbers_weekly", label: "Phone numbers (weekly)", group: "weekly" },
+  { value: "instadates_weekly", label: "Instadates (weekly)", group: "weekly" },
+  // Cumulative (lifetime total)
+  { value: "approaches_cumulative", label: "Approaches (cumulative)", group: "cumulative" },
+  { value: "sessions_cumulative", label: "Sessions (cumulative)", group: "cumulative" },
+  { value: "numbers_cumulative", label: "Phone numbers (cumulative)", group: "cumulative" },
+  { value: "instadates_cumulative", label: "Instadates (cumulative)", group: "cumulative" },
 ]
 
 export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea, defaultParentGoalId }: GoalFormModalProps) {
@@ -92,6 +98,10 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   const [linkedMetric, setLinkedMetric] = useState<LinkedMetric>(null)
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null)
   const [goalNature, setGoalNature] = useState<GoalNature>("input")
+
+  // Track whether user has manually picked a life area (for override warning)
+  const [userPickedLifeArea, setUserPickedLifeArea] = useState(false)
+  const [lifeAreaOverrideNote, setLifeAreaOverrideNote] = useState<string | null>(null)
 
   // Milestone curve editor state
   const [milestoneConfig, setMilestoneConfig] = useState<MilestoneLadderConfig>({
@@ -168,6 +178,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     setError(null)
     setSuccessMessage(null)
     setShowDeleteConfirm(false)
+    setUserPickedLifeArea(false)
+    setLifeAreaOverrideNote(null)
   }
 
   // Pre-fill parent when opening as "add child"
@@ -195,12 +207,16 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       const parent = parentGoals.find((g) => g.id === parentGoalId)
       if (parent) {
         const knownArea = LIFE_AREAS.find((a) => a.id === parent.life_area)
-        if (knownArea) {
+        if (knownArea && parent.life_area !== lifeArea) {
+          if (userPickedLifeArea) {
+            setLifeAreaOverrideNote("Life area changed to match parent goal")
+          }
           setLifeArea(parent.life_area)
           setCustomLifeArea("")
         }
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentGoalId, parentGoals])
 
   const handleSuggestionClick = (suggestion: GoalSuggestion) => {
@@ -250,7 +266,6 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
     const errors: string[] = []
     if (!title.trim()) errors.push("Please enter a goal title")
     if (!effectiveLifeArea.trim()) errors.push("Please select or enter a life area")
-    if (goalType === "milestone" && !targetDate) errors.push("Please set a target date for milestone goals")
     if (errors.length > 0) {
       setError(errors.join(". "))
       return
@@ -286,7 +301,10 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       if (description.trim()) {
         payload.description = description.trim()
       }
-      if (effectiveLifeArea === "daygame" && (goalType === "recurring" || goalType === "habit_ramp") && period === "weekly") {
+      if (effectiveLifeArea === "daygame" && (
+        goalType === "milestone" ||
+        ((goalType === "recurring" || goalType === "habit_ramp") && period === "weekly")
+      )) {
         payload.linked_metric = linkedMetric
       }
       // Graph fields: nature, display_category, goal_level
@@ -333,7 +351,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         setDescription("")
         setParentGoalId(null)
         setSuccessMessage(`Added "${addedTitle}"`)
-        setTimeout(() => setSuccessMessage(null), 2000)
+        setTimeout(() => setSuccessMessage(null), 3000)
       } else {
         onOpenChange(false)
         resetForm()
@@ -354,7 +372,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         onOpenChange(isOpen)
       }}
     >
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Goal" : "Add New Goal"}</DialogTitle>
           <DialogDescription>
@@ -364,15 +382,15 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
           {/* Goal Type Toggle */}
           <div className="space-y-2">
             <Label>Goal Type</Label>
             <div className="grid grid-cols-3 gap-2">
               {([
-                { type: "recurring" as GoalType, label: "Recurring", desc: "Resets each period" },
+                { type: "recurring" as GoalType, label: "Recurring", desc: "Resets per period" },
                 { type: "milestone" as GoalType, label: "Milestone", desc: "One-time target" },
-                { type: "habit_ramp" as GoalType, label: "Habit Ramp", desc: "Gradual increase" },
+                { type: "habit_ramp" as GoalType, label: "Habit Ramp", desc: "Ramps up over time" },
               ]).map(({ type, label, desc }) => {
                 const isSelected = goalType === type
                 return (
@@ -452,6 +470,9 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                       setLifeArea(area.id)
                       setCustomLifeArea("")
                       setSelectedSuggestion(null)
+                      setUserPickedLifeArea(true)
+                      setLifeAreaOverrideNote(null)
+                      setParentGoalId(null)
                       if (titleIsSuggestion || !title.trim()) {
                         setTitle("")
                         setTargetValue(1)
@@ -476,6 +497,9 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
                   setLifeArea("custom")
                   setSelectedSuggestion(null)
+                  setUserPickedLifeArea(true)
+                  setLifeAreaOverrideNote(null)
+                  setParentGoalId(null)
                   if (titleIsSuggestion || !title.trim()) {
                     setTitle("")
                     setTargetValue(1)
@@ -494,6 +518,9 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 onChange={(e) => setCustomLifeArea(e.target.value)}
                 className="mt-2"
               />
+            )}
+            {lifeAreaOverrideNote && (
+              <p className="text-xs text-amber-500 mt-1">{lifeAreaOverrideNote}</p>
             )}
           </div>
 
@@ -697,7 +724,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             <div className="space-y-2">
               <Label htmlFor="target-date">
                 <Calendar className="size-3 inline mr-1" />
-                Target Date
+                Target Date (optional)
               </Label>
               <Input
                 id="target-date"
@@ -732,8 +759,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             </div>
           )}
 
-          {/* Linked Metric (daygame + weekly only) */}
-          {effectiveLifeArea === "daygame" && (goalType === "recurring" || goalType === "habit_ramp") && period === "weekly" && (
+          {/* Linked Metric (daygame goals: weekly for recurring/habit_ramp, cumulative for milestone) */}
+          {effectiveLifeArea === "daygame" && (
+            goalType === "milestone" ||
+            ((goalType === "recurring" || goalType === "habit_ramp") && period === "weekly")
+          ) && (
             <div className="space-y-2">
               <Label>Auto-Sync with Tracking</Label>
               <Select
@@ -744,11 +774,17 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   <SelectValue placeholder="Select metric to sync" />
                 </SelectTrigger>
                 <SelectContent>
-                  {LINKED_METRIC_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
+                  {LINKED_METRIC_OPTIONS
+                    .filter((opt) => {
+                      if (opt.group === "none") return true
+                      if (goalType === "milestone") return opt.group === "cumulative"
+                      return opt.group === "weekly"
+                    })
+                    .map((opt) => (
+                      <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">

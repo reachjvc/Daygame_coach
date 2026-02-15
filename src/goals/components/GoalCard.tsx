@@ -9,6 +9,7 @@ import { getGoalAccentColor } from "../goalHierarchyService"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
 import { GoalInputWidget } from "./GoalInputWidget"
 import type { GoalWithProgress } from "../types"
+import { getMilestoneLadderValues } from "../goalsService"
 import type { ProjectedDateInfo } from "../goalsService"
 
 function formatDaysRemaining(days: number): string {
@@ -101,7 +102,7 @@ export function GoalCard({
   const showAddChild = onAddChild && (goal.goal_type === "milestone" || childCount > 0) && (goal.goal_level === null || goal.goal_level < 3)
 
   return (
-    <div className={`relative ${showAddChild ? "mb-3" : ""}`}>
+    <div>
     <div
       className="rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80"
       style={{ borderLeftColor: accentColor, borderLeftWidth: 3 }}
@@ -131,8 +132,7 @@ export function GoalCard({
 
           <div className="flex items-center gap-2">
             <h3
-              className="font-medium text-sm truncate cursor-pointer"
-              onClick={() => onEdit?.(goal)}
+              className="font-medium text-sm truncate"
             >
               {goal.title}
             </h3>
@@ -163,13 +163,13 @@ export function GoalCard({
             <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
               {isBoolean
                 ? (goal.is_complete ? "Done" : "Not done")
-                : `${goal.current_value}/${goal.target_value}`
+                : `${goal.current_value}/${goal.target_value}${goal.linked_metric && !goal.is_complete ? " · auto-tracked" : ""}`
               }
             </span>
           </div>
 
           {/* Meta row */}
-          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             {goal.current_streak > 0 && (
               <span className="flex items-center gap-1">
                 <Flame className="size-3 text-orange-500" />
@@ -197,7 +197,7 @@ export function GoalCard({
                 Next: {projectedDate.nextLabel}
               </span>
             )}
-            {goal.linked_metric && (
+            {goal.linked_metric && !goal.is_complete && (
               <span className="flex items-center gap-1 text-blue-400">
                 <Link className="size-3" />
                 Auto-synced
@@ -212,6 +212,7 @@ export function GoalCard({
           size="icon"
           className="h-7 w-7 flex-shrink-0"
           onClick={() => setIsExpanded(!isExpanded)}
+          aria-label={isExpanded ? "Collapse goal" : "Expand goal"}
         >
           {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
         </Button>
@@ -223,6 +224,38 @@ export function GoalCard({
           {goal.description && (
             <p className="text-sm text-muted-foreground">{goal.description}</p>
           )}
+
+          {goal.goal_type === "habit_ramp" && goal.ramp_steps && (
+            <div className="text-xs text-muted-foreground space-y-0.5">
+              <p className="font-medium">Ramp schedule:</p>
+              {(goal.ramp_steps as { frequencyPerWeek: number; durationWeeks: number }[]).map((step, i) => (
+                <p key={i}>{step.frequencyPerWeek}/week for {step.durationWeeks} weeks</p>
+              ))}
+            </div>
+          )}
+
+          {goal.goal_type === "milestone" && goal.milestone_config && (() => {
+            const ladderValues = getMilestoneLadderValues(goal)
+            if (!ladderValues || ladderValues.length === 0) return null
+            return (
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium">Milestone ladder:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {ladderValues.map((m) => {
+                    const reached = goal.current_value >= m
+                    return (
+                      <span key={m} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] ${reached ? "bg-green-500/15 text-green-400 border-green-500/30" : "bg-muted text-muted-foreground border-border"}`}>
+                        {reached ? "✓" : "○"} {m}
+                      </span>
+                    )
+                  })}
+                </div>
+                {nextMilestone && (
+                  <p className="text-emerald-400 mt-1">Next: {nextMilestone.nextValue} ({nextMilestone.remaining} more)</p>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Actions */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -288,13 +321,15 @@ export function GoalCard({
       )}
     </div>
     {showAddChild && (
-      <button
-        onClick={() => onAddChild!(goal)}
-        className="absolute -bottom-3.5 right-4 flex items-center gap-1 px-3 py-1 text-xs font-medium text-orange-300 rounded-full bg-orange-950/80 border border-orange-500/40 shadow-[0_1px_4px_rgba(249,115,22,0.2)] hover:bg-orange-900/80 hover:border-orange-500/60 transition-all cursor-pointer"
-      >
-        <Plus className="size-3" />
-        Sub-goal
-      </button>
+      <div className="flex justify-end -mt-1.5 mr-4 mb-1">
+        <button
+          onClick={() => onAddChild!(goal)}
+          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-orange-300 rounded-full bg-orange-950/80 border border-orange-500/40 shadow-[0_1px_4px_rgba(249,115,22,0.2)] hover:bg-orange-900/80 hover:border-orange-500/60 transition-all cursor-pointer"
+        >
+          <Plus className="size-3" />
+          Sub-goal
+        </button>
+      </div>
     )}
     </div>
   )
