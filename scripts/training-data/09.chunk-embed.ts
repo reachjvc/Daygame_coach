@@ -19,6 +19,7 @@
  * Use:
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --source daily_evolution
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --dry-run
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --full
  *
@@ -53,10 +54,12 @@ type ChunkStateV1 = {
 }
 
 type Args = {
-  help: boolean
   force: boolean
   dryRun: boolean
   source: string | null
+  manifest: string | null
+  maskTranscriptArtifacts: boolean
+  maskLowQuality: boolean
 }
 
 type SegmentType = "INTERACTION" | "EXPLANATION" | "COMMENTARY" | "UNKNOWN"
@@ -74,6 +77,9 @@ type ChunkMetadata = {
   chunkIndex: number
   totalChunks: number
   conversationId?: number
+  // Interaction-local indices for stitching full conversations at retrieval time.
+  conversationChunkIndex?: number
+  conversationChunkTotal?: number
   phase?: string
   techniques?: string[]
   topics?: string[]
@@ -85,6 +91,16 @@ type ChunkMetadata = {
   confidence?: number
   // Phase confidence from Stage 07 LLM evaluation (0.0-1.0)
   phaseConfidence?: number
+  // Approx timestamps from source segments (seconds).
+  startSec?: number
+  endSec?: number
+  // Transcript quality signals (from Stage 07)
+  asrLowQualitySegmentCount?: number
+  asrTranscriptArtifactCount?: number
+  asrTranscriptArtifactTypes?: string[]
+  // Deterministic heuristic score for retrieval downranking (0.0-1.0).
+  chunkConfidence?: number
+  chunkConfidenceVersion?: number
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
 }
@@ -97,16 +113,22 @@ type Chunk = {
 
 type ChunksFile = {
   version: 1
-  sourceFile: string
+  // Stable idempotency key for ingestion and state tracking.
+  // Format: "<channel>/<youtube_video_id>.txt"
   sourceKey: string
+  sourceFile: string
   sourceHash: string
   embeddingModel: string
   chunkSize: number
   chunkOverlap: number
-  videoId: string
   videoType: string
   channel: string
+  // YouTube video id (11 chars). Primary key for videos.
+  videoId: string
+  // Display-only title (may be derived from filename if missing upstream).
   videoTitle: string
+  // Filename stem (includes [video_id] and audio variant suffixes); useful for tracing to Stage 07 artifacts.
+  videoStem: string
   generatedAt: string
   chunks: Chunk[]
 }
@@ -123,6 +145,9 @@ type InteractionJsonlRow = {
   turns?: Array<{
     speaker?: string
     text?: string
+    // Stage 09 can intentionally omit masked lines from chunk text while still
+    // counting the underlying segment for quality/confidence stats.
+    masked?: boolean
     start?: number
     end?: number
     phase?: string
@@ -166,9 +191,21 @@ type ContentEnrichment = {
 }
 
 type EnrichedFile = {
+  source?: string
   video_id?: string
   video_title?: string
   video_type?: { type?: string }
+  metadata?: {
+    source_file?: string
+  }
+  // Stage 07 transcript quality signals (global segment ids)
+  low_quality_segments?: Array<{ segment?: number; reason?: string }>
+  transcript_artifacts?: Array<{
+    type?: string
+    segment_index?: number
+    artifact_type?: string
+    description?: string
+  }>
   speaker_labels?: SpeakerLabels
   segments?: ContentSegment[]
   enrichments?: ContentEnrichment[]
@@ -180,6 +217,8 @@ type InternalChunk = {
   chunkIndex: number
   totalChunks: number
   conversationId?: number
+  conversationChunkIndex?: number
+  conversationChunkTotal?: number
   phase?: string
   techniques?: string[]
   topics?: string[]
@@ -190,6 +229,13 @@ type InternalChunk = {
   channel?: string
   // Phase confidence from Stage 07 (0.0-1.0)
   phaseConfidence?: number
+  startSec?: number
+  endSec?: number
+  asrLowQualitySegmentCount?: number
+  asrTranscriptArtifactCount?: number
+  asrTranscriptArtifactTypes?: string[]
+  chunkConfidence?: number
+  chunkConfidenceVersion?: number
   // Quality flags
   problematicReason?: string[]
 }
@@ -201,6 +247,7 @@ type InternalChunk = {
 function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
+  let manifest: string | null = null
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -210,13 +257,23 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--source=")) {
       source = arg.split("=", 2)[1]
     }
+    if (arg === "--manifest" && argv[i + 1]) {
+      manifest = argv[++i]
+    }
+    if (arg.startsWith("--manifest=")) {
+      manifest = arg.split("=", 2)[1]
+    }
   }
 
   return {
-    help: flags.has("--help") || flags.has("-h"),
     force: flags.has("--full") || flags.has("--force"),
     dryRun: flags.has("--dry-run"),
     source,
+    manifest,
+    // Default: mask transcript_artifacts (usually egregious nonsense / repeated garbage).
+    // Low-quality segment flags are more subjective, so keep them unless explicitly enabled.
+    maskTranscriptArtifacts: !flags.has("--no-mask-transcript-artifacts"),
+    maskLowQuality: flags.has("--mask-low-quality"),
   }
 }
 
@@ -268,20 +325,6 @@ function hashFile(content: string): string {
   return crypto.createHash("sha256").update(content).digest("hex")
 }
 
-function extractVideoIdFromStem(videoStem: string): string | null {
-  const match = videoStem.match(/\[([A-Za-z0-9_-]{11})\]/)
-  return match?.[1] ?? null
-}
-
-function extractStableVideoId(parsedFile: EnrichedFile, videoStem: string): string {
-  if (typeof parsedFile.video_id === "string" && parsedFile.video_id.trim()) {
-    return parsedFile.video_id.trim()
-  }
-  const fromStem = extractVideoIdFromStem(videoStem)
-  if (fromStem) return fromStem
-  throw new Error(`Could not determine stable video_id from enriched file stem: ${videoStem}`)
-}
-
 async function loadState(
   statePath: string,
   defaults: Pick<ChunkStateV1, "embeddingModel" | "chunkSize" | "chunkOverlap">
@@ -314,11 +357,134 @@ async function sleep(ms: number) {
 }
 
 // ---------------------------------------------------------------------------
+// Manifest filtering
+// ---------------------------------------------------------------------------
+
+const MANIFEST_VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+
+function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
+  const abs = path.isAbsolute(manifestPath)
+    ? manifestPath
+    : path.join(process.cwd(), manifestPath)
+  const raw = fs.readFileSync(abs, "utf-8")
+  const out = new Map<string, Set<string>>()
+
+  for (const rawLine of raw.split("\n")) {
+    const line = rawLine.trim()
+    if (!line || line.startsWith("#")) continue
+    const parts = line.split("|", 2).map((p) => p.trim())
+    if (parts.length !== 2) continue
+    const [source, folder] = parts
+    const m = folder.match(MANIFEST_VIDEO_ID_RE)
+    const vid = m?.[1]
+    if (!source || !vid) continue
+    const set = out.get(source) ?? new Set<string>()
+    set.add(vid)
+    out.set(source, set)
+  }
+
+  return out
+}
+
+// ---------------------------------------------------------------------------
 // Quality assessment
 // ---------------------------------------------------------------------------
 
 const PROBLEMATIC_SPEAKER_ROLES = ["collapsed", "mixed/unclear", "unknown"]
 const MIN_SPEAKER_CONFIDENCE = 0.7
+
+type AsrQualityIndex = {
+  lowQualityIds: Set<number>
+  transcriptArtifactIds: Set<number>
+  transcriptArtifactTypesById: Map<number, Set<string>>
+}
+
+function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
+  const lowQualityIds = new Set<number>()
+  const transcriptArtifactIds = new Set<number>()
+  const transcriptArtifactTypesById = new Map<number, Set<string>>()
+
+  for (const lq of file.low_quality_segments ?? []) {
+    const segId = lq?.segment
+    if (typeof segId === "number" && Number.isFinite(segId)) lowQualityIds.add(segId)
+  }
+
+  for (const art of file.transcript_artifacts ?? []) {
+    const segId = art?.segment_index
+    if (typeof segId !== "number" || !Number.isFinite(segId)) continue
+    transcriptArtifactIds.add(segId)
+
+    const t = typeof art?.artifact_type === "string" ? art.artifact_type.trim() : ""
+    if (!t) continue
+    const set = transcriptArtifactTypesById.get(segId) ?? new Set<string>()
+    set.add(t)
+    transcriptArtifactTypesById.set(segId, set)
+  }
+
+  return { lowQualityIds, transcriptArtifactIds, transcriptArtifactTypesById }
+}
+
+function collectAsrStats(
+  segments: ContentSegment[],
+  asr: AsrQualityIndex | null
+): {
+  lowQualityCount: number
+  transcriptArtifactCount: number
+  transcriptArtifactTypes: string[]
+} {
+  if (!asr) return { lowQualityCount: 0, transcriptArtifactCount: 0, transcriptArtifactTypes: [] }
+
+  let lowQualityCount = 0
+  let transcriptArtifactCount = 0
+  const types = new Set<string>()
+
+  for (const seg of segments) {
+    const segId = seg.id
+    if (typeof segId !== "number") continue
+    if (asr.lowQualityIds.has(segId)) lowQualityCount++
+    if (asr.transcriptArtifactIds.has(segId)) {
+      transcriptArtifactCount++
+      const segTypes = asr.transcriptArtifactTypesById.get(segId)
+      if (segTypes) {
+        for (const t of segTypes) types.add(t)
+      }
+    }
+  }
+
+  return {
+    lowQualityCount,
+    transcriptArtifactCount,
+    transcriptArtifactTypes: Array.from(types).sort((a, b) => a.localeCompare(b)),
+  }
+}
+
+const CHUNK_CONFIDENCE_VERSION = 1
+
+function clamp01(n: number): number {
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.min(1, n))
+}
+
+function computeChunkConfidence(chunk: InternalChunk): number {
+  // Heuristic only: this is meant for downranking, not as a hard gate.
+  let conf = 1.0
+
+  if (chunk.type !== "INTERACTION") conf *= 0.9
+
+  if (typeof chunk.phaseConfidence === "number") {
+    const pc = clamp01(chunk.phaseConfidence)
+    conf *= Math.max(0.3, pc)
+  }
+
+  const probs = chunk.problematicReason ?? []
+  if (probs.some((r) => r.startsWith("speaker_role:"))) conf *= 0.85
+  if (probs.some((r) => r.startsWith("low_speaker_conf:"))) conf *= 0.9
+
+  if ((chunk.asrTranscriptArtifactCount ?? 0) > 0) conf *= 0.75
+  if ((chunk.asrLowQualitySegmentCount ?? 0) > 0) conf *= 0.85
+
+  return clamp01(conf)
+}
 
 /**
  * Assess segments for quality problems.
@@ -392,6 +558,7 @@ function buildMetadataPrefix(
 function mapSpeakerLabel(raw?: string): string {
   const s = (raw ?? "").toLowerCase().trim()
   if (s === "coach") return "Coach"
+  if (s === "student") return "Student"
   if (s === "target") return "Girl"
   if (s === "voiceover") return "Voiceover"
   if (s === "ambiguous") return "Ambiguous"
@@ -406,7 +573,8 @@ function chunkInteractionByPhase(
   row: InteractionJsonlRow,
   maxChunkSize: number,
   segments: ContentSegment[],
-  speakerLabels: SpeakerLabels
+  speakerLabels: SpeakerLabels,
+  asrIndex: AsrQualityIndex | null
 ): InternalChunk[] {
   const chunks: InternalChunk[] = []
   const turns = row.turns ?? []
@@ -458,14 +626,6 @@ function chunkInteractionByPhase(
   }
 
   for (const group of phaseGroups) {
-    // Get segments for this phase group
-    const groupSegments = group.turnIndices
-      .map((idx) => segments[idx])
-      .filter((s): s is ContentSegment => s !== undefined)
-
-    // Assess quality for this group's segments
-    const problems = assessSegmentsForProblems(groupSegments, speakerLabels)
-
     let content = ""
     let chunkTurnIndices: number[] = []
 
@@ -474,6 +634,7 @@ function chunkInteractionByPhase(
       const turnIdx = group.turnIndices[i]
       const speaker = mapSpeakerLabel(turn.speaker)
       const text = (turn.text ?? "").trim()
+      const masked = Boolean(turn.masked)
 
       if (text) {
         const line = `${speaker}: ${text}`
@@ -483,6 +644,23 @@ function chunkInteractionByPhase(
             .map((idx) => segments[idx])
             .filter((s): s is ContentSegment => s !== undefined)
           const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
+          const asrStats = collectAsrStats(chunkSegments, asrIndex)
+
+          if (asrStats.lowQualityCount > 0) {
+            chunkProblems.push("asr_low_quality")
+          }
+          if (asrStats.transcriptArtifactTypes.length > 0) {
+            for (const t of asrStats.transcriptArtifactTypes) {
+              chunkProblems.push(`asr_transcript_artifact:${t}`)
+            }
+          }
+
+          const startSec = Math.min(
+            ...chunkSegments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+          )
+          const endSec = Math.max(
+            ...chunkSegments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+          )
 
           chunks.push({
             content: content.trim(),
@@ -493,12 +671,21 @@ function chunkInteractionByPhase(
             phase: group.phase,
             techniques: Array.from(new Set(group.techniques)),
             topics: Array.from(new Set(group.topics)),
-            problematicReason: chunkProblems.length > 0 ? chunkProblems : undefined,
+            startSec: Number.isFinite(startSec) ? startSec : undefined,
+            endSec: Number.isFinite(endSec) ? endSec : undefined,
+            asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+            asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+            asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+            problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
           })
           content = ""
           chunkTurnIndices = []
         }
         content += (content ? "\n" : "") + line
+      }
+
+      if (text || masked) {
+        // Track the segment for stats (even if masked/omitted from text).
         chunkTurnIndices.push(turnIdx)
       }
     }
@@ -509,6 +696,23 @@ function chunkInteractionByPhase(
         .map((idx) => segments[idx])
         .filter((s): s is ContentSegment => s !== undefined)
       const chunkProblems = assessSegmentsForProblems(chunkSegments, speakerLabels)
+      const asrStats = collectAsrStats(chunkSegments, asrIndex)
+
+      if (asrStats.lowQualityCount > 0) {
+        chunkProblems.push("asr_low_quality")
+      }
+      if (asrStats.transcriptArtifactTypes.length > 0) {
+        for (const t of asrStats.transcriptArtifactTypes) {
+          chunkProblems.push(`asr_transcript_artifact:${t}`)
+        }
+      }
+
+      const startSec = Math.min(
+        ...chunkSegments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+      )
+      const endSec = Math.max(
+        ...chunkSegments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+      )
 
       chunks.push({
         content: content.trim(),
@@ -519,7 +723,12 @@ function chunkInteractionByPhase(
         phase: group.phase,
         techniques: [...new Set(group.techniques)],
         topics: [...new Set(group.topics)],
-        problematicReason: chunkProblems.length > 0 ? chunkProblems : undefined,
+        startSec: Number.isFinite(startSec) ? startSec : undefined,
+        endSec: Number.isFinite(endSec) ? endSec : undefined,
+        asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+        asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+        asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+        problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
       })
     }
   }
@@ -589,12 +798,30 @@ function chunkCommentaryText(
   maxSize: number,
   overlap: number,
   segments: ContentSegment[],
-  speakerLabels: SpeakerLabels
+  speakerLabels: SpeakerLabels,
+  asrIndex: AsrQualityIndex | null
 ): InternalChunk[] {
   if (text.length < 20) return []
 
   // Assess all segments that contributed to this text block
   const problems = assessSegmentsForProblems(segments, speakerLabels)
+  const asrStats = collectAsrStats(segments, asrIndex)
+
+  if (asrStats.lowQualityCount > 0) {
+    problems.push("asr_low_quality")
+  }
+  if (asrStats.transcriptArtifactTypes.length > 0) {
+    for (const t of asrStats.transcriptArtifactTypes) {
+      problems.push(`asr_transcript_artifact:${t}`)
+    }
+  }
+
+  const startSec = Math.min(
+    ...segments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+  )
+  const endSec = Math.max(
+    ...segments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+  )
 
   const parts = splitTextBySize(text, maxSize, overlap)
   return parts.map((content, idx) => ({
@@ -604,13 +831,60 @@ function chunkCommentaryText(
     totalChunks: parts.length,
     techniques,
     topics,
-    problematicReason: problems.length > 0 ? problems : undefined,
+    startSec: Number.isFinite(startSec) ? startSec : undefined,
+    endSec: Number.isFinite(endSec) ? endSec : undefined,
+    asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+    asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+    asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+    problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
   }))
 }
 
 // ---------------------------------------------------------------------------
 // Extraction helpers
 // ---------------------------------------------------------------------------
+
+const VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+
+function isValidVideoId(raw: unknown): raw is string {
+  return typeof raw === "string" && /^[A-Za-z0-9_-]{11}$/.test(raw)
+}
+
+function extractVideoIdFromText(text: string): string | null {
+  const m = text.match(VIDEO_ID_RE)
+  return m?.[1] ?? null
+}
+
+function isPlausibleChannelName(raw: string | null | undefined): raw is string {
+  if (!raw) return false
+  const s = raw.trim()
+  if (!s) return false
+  // Channel/source dirs are stable identifiers (no brackets, no file suffixes).
+  if (s.includes("[") || s.includes("]")) return false
+  if (s.endsWith(".json") || s.endsWith(".enriched")) return false
+  if (s.includes(".audio.asr.")) return false
+  return true
+}
+
+function extractChannelFromSourceFile(raw: unknown): string | null {
+  if (typeof raw !== "string" || !raw.trim()) return null
+  const normalized = raw.replace(/\\/g, "/")
+  // Example: data/06c.patched/<channel>/<stem>.conversations.json
+  const m = normalized.match(
+    /data\/(?:06c\.patched|06\.video-type|06b\.verify|07\.content|05\.audio-features)\/([^/]+)\//
+  )
+  return m?.[1] ?? null
+}
+
+function displayTitleFromStem(videoStem: string): string {
+  // Stage 07 filenames are: "<title> [VIDEO_ID].audio.asr.clean16k"
+  let s = videoStem
+  for (const suffix of [".audio.asr.clean16k", ".audio.asr.raw16k"]) {
+    if (s.endsWith(suffix)) s = s.slice(0, -suffix.length)
+  }
+  s = s.replace(/\s*\[[A-Za-z0-9_-]{11}\]\s*$/, "").trim()
+  return s || videoStem
+}
 
 function normalizeVideoStemFromEnrichedFilename(filePath: string): string {
   let base = path.basename(filePath, ".enriched.json")
@@ -659,6 +933,59 @@ function extractVideoType(vt: unknown): string {
 // Embedding generation
 // ---------------------------------------------------------------------------
 
+const OLLAMA_REQUEST_TIMEOUT_MS = 25_000
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(url, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+async function checkOllamaReady(baseUrl: string, model: string): Promise<void> {
+  const url = `${baseUrl}/api/tags`
+  let response: Response
+  try {
+    response = await fetchWithTimeout(url, { method: "GET" }, 2000)
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      `Ollama is not reachable at ${baseUrl} (${msg}). ` +
+        `Start it with 'ollama serve' and ensure OLLAMA_API_URL is correct.`
+    )
+  }
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "")
+    throw new Error(
+      `Ollama health check failed (${response.status}) at ${url}: ${body.slice(0, 200)}`
+    )
+  }
+
+  try {
+    const data = (await response.json()) as { models?: Array<{ name?: string }> }
+    const names = (data.models ?? [])
+      .map((m) => (typeof m?.name === "string" ? m.name : ""))
+      .filter(Boolean)
+    const ok = names.some((n) => n === model || n.startsWith(`${model}:`))
+    if (!ok) {
+      console.warn(
+        `⚠️  Ollama embedding model '${model}' not found in /api/tags. ` +
+          `You may need: ollama pull ${model}`
+      )
+    }
+  } catch {
+    // Non-fatal: model existence will be validated by the /api/embeddings call anyway.
+  }
+}
+
 async function generateEmbedding(
   text: string,
   baseUrl: string,
@@ -667,11 +994,11 @@ async function generateEmbedding(
   const MAX_LENGTH = 8000
   const inputText = text.length > MAX_LENGTH ? text.substring(0, MAX_LENGTH) : text
 
-  const response = await fetch(`${baseUrl}/api/embeddings`, {
+  const response = await fetchWithTimeout(`${baseUrl}/api/embeddings`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model, prompt: inputText }),
-  })
+  }, OLLAMA_REQUEST_TIMEOUT_MS)
 
   if (!response.ok) {
     const body = await response.text()
@@ -713,11 +1040,6 @@ async function generateEmbeddingWithRetry(
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
-  if (args.help) {
-    console.log("Usage: 09.chunk-embed.ts [--source <name>] [--dry-run] [--full]")
-    return
-  }
-
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
   const { QA_CONFIG } = await import("../../src/qa/config")
@@ -734,6 +1056,21 @@ async function main() {
 
   const state = await loadState(statePath, { embeddingModel, chunkSize, chunkOverlap })
 
+  let manifestAllowList: Map<string, Set<string>> | null = null
+  if (args.manifest) {
+    try {
+      manifestAllowList = loadManifestAllowList(args.manifest)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`❌ Could not read manifest: ${args.manifest} (${msg})`)
+      process.exit(1)
+    }
+    if (manifestAllowList.size === 0) {
+      console.error(`❌ Manifest had no valid entries: ${args.manifest}`)
+      process.exit(1)
+    }
+  }
+
   let force = args.force
   if (
     state.embeddingModel !== embeddingModel ||
@@ -747,89 +1084,171 @@ async function main() {
     state.chunkOverlap = chunkOverlap
   }
 
-  const scanDir = args.source ? path.join(enrichedDir, args.source) : enrichedDir
+  let enrichedFiles: string[] = []
 
-  if (!fs.existsSync(scanDir)) {
-    console.error(`❌ Missing directory: ${scanDir}`)
-    process.exit(1)
+  if (manifestAllowList && !args.source) {
+    for (const src of Array.from(manifestAllowList.keys()).sort((a, b) => a.localeCompare(b))) {
+      const srcDir = path.join(enrichedDir, src)
+      if (!fs.existsSync(srcDir)) continue
+      enrichedFiles.push(...(await listJsonlFiles(srcDir, ".enriched.json")))
+    }
+  } else {
+    const scanDir = args.source ? path.join(enrichedDir, args.source) : enrichedDir
+    if (!fs.existsSync(scanDir)) {
+      console.error(`❌ Missing directory: ${scanDir}`)
+      process.exit(1)
+    }
+    enrichedFiles = await listJsonlFiles(scanDir, ".enriched.json")
   }
 
-  const enrichedFiles = await listJsonlFiles(scanDir, ".enriched.json")
   if (enrichedFiles.length === 0) {
-    console.log(`No .enriched.json files found under ${scanDir}`)
+    console.log(`No .enriched.json files found under ${args.source ?? "data/07.content/"}`)
     return
   }
 
-  const toProcess: Array<{
+  const candidates: Array<{
     filePath: string
     sourceKey: string
-    videoId: string
     channel: string
+    videoId: string
     videoStem: string
-    rawContent: string
+    videoTitle: string
     fileHash: string
     videoType: string
-    parsedFile: EnrichedFile
+    rank: number
   }> = []
-  let unchanged = 0
+  let skippedBadJson = 0
+  let skippedNoContent = 0
+  let skippedNoVideoId = 0
+  let skippedNotInManifest = 0
 
   for (const filePath of enrichedFiles) {
     const relEnrichedPath = path.relative(enrichedDir, filePath)
-    const channel = relEnrichedPath.split(path.sep).filter(Boolean)[0] ?? "unknown"
+    const relParts = relEnrichedPath.split(path.sep).filter(Boolean)
+    const channelCandidate = relParts.length > 1 ? relParts[0] : null
     const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
+
+    if (manifestAllowList && channelCandidate) {
+      const vidFromFilename = extractVideoIdFromText(videoStem) || extractVideoIdFromText(relEnrichedPath)
+      const allowed = vidFromFilename ? manifestAllowList.get(channelCandidate) : null
+      if (!allowed || !vidFromFilename || !allowed.has(vidFromFilename)) {
+        skippedNotInManifest++
+        continue
+      }
+    }
 
     const rawContent = await fsp.readFile(filePath, "utf-8")
     const fileHash = hashFile(rawContent)
 
-    let parsedFile: EnrichedFile | null = null
+    let parsedFile: EnrichedFile
     try {
       parsedFile = JSON.parse(rawContent)
     } catch {
+      skippedBadJson++
       continue
     }
 
-    const fileVideoId = extractStableVideoId(parsedFile, videoStem)
-    const sourceKey = path.join(channel, `${fileVideoId}.txt`)
-    const fileVideoType = extractVideoType(parsedFile?.video_type)
-    const fileSegments = parsedFile?.segments
-    const fileEnrichments = parsedFile?.enrichments
-
+    const fileSegments = parsedFile.segments
+    const fileEnrichments = parsedFile.enrichments
     const hasContent =
       Array.isArray(fileSegments) &&
       Array.isArray(fileEnrichments) &&
       fileEnrichments.length > 0
 
     if (!hasContent) {
+      skippedNoContent++
       continue
     }
 
-    const prev = state.sources[sourceKey]
-    const isUnchanged = !force && prev?.enrichedHash === fileHash
+    const videoId =
+      (isValidVideoId(parsedFile.video_id) ? parsedFile.video_id : null) ||
+      extractVideoIdFromText(videoStem) ||
+      extractVideoIdFromText(relEnrichedPath)
 
+    if (!videoId) {
+      skippedNoVideoId++
+      continue
+    }
+
+    const channelFromJson =
+      typeof parsedFile.source === "string" && parsedFile.source.trim()
+        ? parsedFile.source.trim()
+        : null
+    const channelFromMeta = extractChannelFromSourceFile(parsedFile.metadata?.source_file)
+    const channel = isPlausibleChannelName(channelCandidate)
+      ? channelCandidate
+      : channelFromJson ?? channelFromMeta ?? "unknown"
+
+    if (manifestAllowList) {
+      const allowed = manifestAllowList.get(channel)
+      if (!allowed || !allowed.has(videoId)) {
+        skippedNotInManifest++
+        continue
+      }
+    }
+
+    const sourceKey = path.join(channel, `${videoId}.txt`)
+    const fileVideoType = extractVideoType(parsedFile.video_type)
+    const videoTitle =
+      typeof parsedFile.video_title === "string" && parsedFile.video_title.trim()
+        ? parsedFile.video_title.trim()
+        : displayTitleFromStem(videoStem)
+
+    candidates.push({
+      filePath,
+      sourceKey,
+      channel,
+      videoId,
+      videoStem,
+      videoTitle,
+      fileHash,
+      videoType: fileVideoType,
+      // Prefer deeper paths (source-flat over root-flat) when duplicates exist.
+      rank: relParts.length,
+    })
+  }
+
+  // Deduplicate by stable sourceKey (channel + video_id).
+  const bestByKey = new Map<string, (typeof candidates)[number]>()
+  let deduped = 0
+  for (const cand of candidates) {
+    const prev = bestByKey.get(cand.sourceKey)
+    if (
+      !prev ||
+      cand.rank > prev.rank ||
+      (cand.rank === prev.rank && cand.filePath.localeCompare(prev.filePath) < 0)
+    ) {
+      if (prev) deduped++
+      bestByKey.set(cand.sourceKey, cand)
+    } else {
+      deduped++
+    }
+  }
+
+  const toProcess: Array<(typeof candidates)[number]> = []
+  let unchanged = 0
+  for (const cand of Array.from(bestByKey.values()).sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))) {
+    const prev = state.sources[cand.sourceKey]
+    const isUnchanged = !force && prev?.enrichedHash === cand.fileHash
     if (isUnchanged) {
       unchanged++
       continue
     }
-
-    toProcess.push({
-      filePath,
-      sourceKey,
-      videoId: fileVideoId,
-      channel,
-      videoStem,
-      rawContent,
-      fileHash,
-      videoType: fileVideoType,
-      parsedFile: parsedFile!,
-    })
+    toProcess.push(cand)
   }
 
   console.log("================================")
   console.log("📦 CHUNK & EMBED (Stage 09)")
   console.log("================================")
   console.log(`Source:       ${args.source ?? "all"}`)
+  if (args.manifest) console.log(`Manifest:     ${args.manifest}`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To process:   ${toProcess.length}${force ? " (forced)" : ""}`)
+  if (deduped > 0) console.log(`Deduped:      ${deduped} duplicate enriched artifact(s)`)
+  if (skippedBadJson > 0) console.log(`Skipped:      ${skippedBadJson} unreadable JSON file(s)`)
+  if (skippedNoVideoId > 0) console.log(`Skipped:      ${skippedNoVideoId} file(s) missing video_id`)
+  if (skippedNoContent > 0) console.log(`Skipped:      ${skippedNoContent} file(s) with no content`)
+  if (skippedNotInManifest > 0) console.log(`Skipped:      ${skippedNotInManifest} file(s) not in manifest`)
   console.log(`Chunk size:   ${chunkSize}`)
   console.log(`Overlap:      ${chunkOverlap}`)
   console.log(`Model:        ${embeddingModel}`)
@@ -846,11 +1265,38 @@ async function main() {
     return
   }
 
+  // Preflight Ollama once (avoid failing mid-run with unclear errors).
+  await checkOllamaReady(ollamaBaseUrl, embeddingModel)
+
   for (const item of toProcess) {
-    const { sourceKey, videoId, channel, videoStem, fileHash, videoType, parsedFile, filePath } = item
+    const { sourceKey, channel, videoId, videoStem, videoTitle, videoType, filePath } = item
 
     console.log("")
     console.log(`🔁 Processing: ${sourceKey} (videoId: ${videoId})`)
+
+    const rawContent = await fsp.readFile(filePath, "utf-8")
+    const fileHash = hashFile(rawContent)
+
+    let parsedFile: EnrichedFile
+    try {
+      parsedFile = JSON.parse(rawContent)
+    } catch {
+      console.warn(`   ⚠️  Skipping unreadable JSON: ${filePath}`)
+      continue
+    }
+
+    const asrIndex = buildAsrQualityIndex(parsedFile)
+    const maskedSegmentIds = new Set<number>()
+    if (args.maskTranscriptArtifacts) {
+      for (const id of asrIndex.transcriptArtifactIds) maskedSegmentIds.add(id)
+    }
+    if (args.maskLowQuality) {
+      for (const id of asrIndex.lowQualityIds) maskedSegmentIds.add(id)
+    }
+    const asrMaskedCount = maskedSegmentIds.size
+    if (asrMaskedCount > 0) {
+      console.log(`   🧹 Masking ${asrMaskedCount} ASR-flagged segment(s) in chunk text`)
+    }
 
     const internalChunks: InternalChunk[] = []
 
@@ -862,6 +1308,21 @@ async function main() {
     const fileSegments = allSegments.filter((s) => !s.is_teaser)
     if (teaserCount > 0) {
       console.log(`   ⏭️  Skipping ${teaserCount} teaser segments`)
+    }
+
+    // Speaker role uncertainty is often worse than minor ASR issues for retrieval.
+    // Mask these segments from chunk text by default (still counted for confidence).
+    let speakerMaskedCount = 0
+    for (const seg of fileSegments) {
+      const segId = seg.id
+      const role = (seg.speaker_role ?? "").toLowerCase().trim()
+      if (typeof segId === "number" && PROBLEMATIC_SPEAKER_ROLES.includes(role)) {
+        if (!maskedSegmentIds.has(segId)) speakerMaskedCount++
+        maskedSegmentIds.add(segId)
+      }
+    }
+    if (speakerMaskedCount > 0) {
+      console.log(`   🧹 Masking ${speakerMaskedCount} speaker-uncertain segment(s) in chunk text`)
     }
 
     // Process approach enrichments via phase-based chunking
@@ -880,14 +1341,39 @@ async function main() {
         }
       }
 
-      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg) => ({
-        speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
-        text: seg.text ?? "",
-        start: seg.start,
-        end: seg.end,
-        // Stage 07 contract stores global segment IDs in turn_phases[].segment.
-        phase: seg.id !== undefined ? phaseMap.get(seg.id) : undefined,
-      }))
+      // Stage 07 writes turn_phases[].segment as a global segments[].id (it remaps from
+      // conversation-local indices before writing). Older artifacts may still contain
+      // conversation-local indices, so we fall back to idx when the global id lookup fails.
+      let usedLocalPhaseIndex = false
+      const turns: InteractionJsonlRow["turns"] = convSegments.map((seg, idx) => {
+        const globalSegId = seg.id
+        const globalPhase =
+          globalSegId !== undefined ? phaseMap.get(globalSegId) : undefined
+        const localPhase = phaseMap.get(idx)
+        const phase = globalPhase ?? localPhase
+
+        if (globalSegId !== undefined && globalPhase === undefined && localPhase !== undefined) {
+          usedLocalPhaseIndex = true
+        }
+
+        const masked = typeof globalSegId === "number" && maskedSegmentIds.has(globalSegId)
+
+        return {
+          speaker: seg.speaker_role ?? seg.speaker_id ?? "unknown",
+          text: masked ? "" : (seg.text ?? ""),
+          masked,
+          start: seg.start,
+          end: seg.end,
+          phase,
+        }
+      })
+
+      if (usedLocalPhaseIndex) {
+        console.warn(
+          `   ⚠️  turn_phases appears to use conversation-local indices for conv ${convId}; ` +
+            `expected global segments[].id (legacy Stage 07 artifact?)`
+        )
+      }
 
       const row: InteractionJsonlRow = {
         id: `approach_${convId}`,
@@ -901,7 +1387,7 @@ async function main() {
       }
 
       const speakerLabels = parsedFile.speaker_labels ?? {}
-      const phaseChunks = chunkInteractionByPhase(row, chunkSize, convSegments, speakerLabels)
+      const phaseChunks = chunkInteractionByPhase(row, chunkSize, convSegments, speakerLabels, asrIndex)
 
       // Add investmentLevel from enrichment to each chunk
       const investmentLevel = enrichment.investment_level
@@ -922,6 +1408,10 @@ async function main() {
       }
 
       if (phaseChunks.length > 0) {
+        for (let i = 0; i < phaseChunks.length; i++) {
+          phaseChunks[i].conversationChunkIndex = i + 1
+          phaseChunks[i].conversationChunkTotal = phaseChunks.length
+        }
         internalChunks.push(...phaseChunks)
       }
     }
@@ -935,10 +1425,12 @@ async function main() {
       const block = commentaryBlocks[blockIdx]
       const text = block
         .map((seg) => {
+          const segId = seg.id
+          if (typeof segId === "number" && maskedSegmentIds.has(segId)) return null
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line) => line.length > 2)
+        .filter((line): line is string => Boolean(line) && line!.length > 2)
         .join("\n")
 
       const enrichment = commentaryEnrichments.find((e) => e.block_index === blockIdx + 1)
@@ -952,7 +1444,8 @@ async function main() {
         chunkSize,
         chunkOverlap,
         block,
-        speakerLabelsForCommentary
+        speakerLabelsForCommentary,
+        asrIndex
       )
       internalChunks.push(...commentaryChunks)
     }
@@ -969,10 +1462,12 @@ async function main() {
 
       const text = sectionSegs
         .map((seg) => {
+          const segId = seg.id
+          if (typeof segId === "number" && maskedSegmentIds.has(segId)) return null
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line) => line.length > 2)
+        .filter((line): line is string => Boolean(line) && line!.length > 2)
         .join("\n")
 
       const techniques = extractTechniqueNames(section.techniques_discussed)
@@ -985,7 +1480,8 @@ async function main() {
         chunkSize,
         chunkOverlap,
         sectionSegs,
-        speakerLabelsForSections
+        speakerLabelsForSections,
+        asrIndex
       )
       internalChunks.push(...sectionChunks)
     }
@@ -996,11 +1492,16 @@ async function main() {
     }
 
     // Normalize chunkIndex/totalChunks across the whole video
-    const normalizedChunks = internalChunks.map((c, idx) => ({
-      ...c,
-      chunkIndex: idx,
-      totalChunks: internalChunks.length,
-    }))
+    const normalizedChunks = internalChunks.map((c, idx) => {
+      const chunk: InternalChunk = {
+        ...c,
+        chunkIndex: idx,
+        totalChunks: internalChunks.length,
+      }
+      chunk.chunkConfidence = computeChunkConfidence(chunk)
+      chunk.chunkConfidenceVersion = CHUNK_CONFIDENCE_VERSION
+      return chunk
+    })
 
     // Generate embeddings
     console.log(`   📊 Generating ${normalizedChunks.length} embeddings...`)
@@ -1029,6 +1530,12 @@ async function main() {
       if (chunk.conversationId !== undefined) {
         metadata.conversationId = chunk.conversationId
       }
+      if (chunk.conversationChunkIndex !== undefined) {
+        metadata.conversationChunkIndex = chunk.conversationChunkIndex
+      }
+      if (chunk.conversationChunkTotal !== undefined) {
+        metadata.conversationChunkTotal = chunk.conversationChunkTotal
+      }
       if (chunk.phase) {
         metadata.phase = chunk.phase
       }
@@ -1043,6 +1550,27 @@ async function main() {
       }
       if (chunk.phaseConfidence !== undefined) {
         metadata.phaseConfidence = chunk.phaseConfidence
+      }
+      if (chunk.startSec !== undefined) {
+        metadata.startSec = chunk.startSec
+      }
+      if (chunk.endSec !== undefined) {
+        metadata.endSec = chunk.endSec
+      }
+      if (chunk.asrLowQualitySegmentCount !== undefined) {
+        metadata.asrLowQualitySegmentCount = chunk.asrLowQualitySegmentCount
+      }
+      if (chunk.asrTranscriptArtifactCount !== undefined) {
+        metadata.asrTranscriptArtifactCount = chunk.asrTranscriptArtifactCount
+      }
+      if (chunk.asrTranscriptArtifactTypes && chunk.asrTranscriptArtifactTypes.length > 0) {
+        metadata.asrTranscriptArtifactTypes = chunk.asrTranscriptArtifactTypes
+      }
+      if (chunk.chunkConfidence !== undefined) {
+        metadata.chunkConfidence = chunk.chunkConfidence
+      }
+      if (chunk.chunkConfidenceVersion !== undefined) {
+        metadata.chunkConfidenceVersion = chunk.chunkConfidenceVersion
       }
       if (chunk.problematicReason && chunk.problematicReason.length > 0) {
         metadata.problematicReason = chunk.problematicReason
@@ -1066,16 +1594,17 @@ async function main() {
     const outputPath = path.join(outputDir, `${videoId}.chunks.json`)
     const chunksFile: ChunksFile = {
       version: 1,
-      sourceFile: filePath,
       sourceKey,
+      sourceFile: filePath,
       sourceHash: fileHash,
       embeddingModel,
       chunkSize,
       chunkOverlap,
-      videoId,
       videoType,
       channel,
-      videoTitle: videoStem,
+      videoId,
+      videoTitle,
+      videoStem,
       generatedAt: new Date().toISOString(),
       chunks,
     }

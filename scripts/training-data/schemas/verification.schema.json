@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "verification.schema.json",
-  "title": "Stage 06b Verification Output (v2)",
-  "description": "Schema for LLM verification of stage 06 video type classification output",
+  "title": "Stage 06b Verification Output",
+  "description": "Schema for LLM verification of Stage 06 outputs.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -19,7 +19,7 @@
     "verdict": {
       "type": "string",
       "enum": ["APPROVE", "FLAG", "REJECT"],
-      "description": "Overall verification verdict"
+      "description": "Overall verification verdict."
     },
     "video_type_check": {
       "type": "object",
@@ -27,79 +27,74 @@
       "properties": {
         "agrees": {
           "type": "boolean",
-          "description": "Whether the verifier agrees with the video type classification"
+          "description": "Whether the verifier agrees with the Stage 06 video type."
         },
         "suggested_type": {
           "type": ["string", "null"],
-          "enum": ["infield", "talking_head", "podcast", "compilation", null]
+          "enum": ["infield", "compilation", "talking_head", "podcast", null],
+          "description": "Suggested replacement type (null when agrees=true)."
         },
         "confidence": {
-          "type": ["number", "null"],
+          "type": "number",
           "minimum": 0,
-          "maximum": 1
+          "maximum": 1,
+          "description": "Confidence in video_type_check assessment."
         },
         "reasoning": {
           "type": "string",
-          "description": "Brief explanation of agreement/disagreement"
+          "description": "Brief explanation for agreement/disagreement."
         }
       },
-      "required": ["agrees", "reasoning"]
+      "required": ["agrees", "suggested_type", "confidence", "reasoning"]
     },
     "conversation_verdicts": {
       "type": "array",
-      "description": "Verdict for each conversation",
+      "description": "Per-conversation quality verdicts.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "conversation_id": {
             "type": "integer",
-            "minimum": 1,
-            "description": "The conversation ID being evaluated"
+            "minimum": 1
           },
           "verdict": {
             "type": "string",
-            "enum": ["OK", "FLAG", "ISSUE"],
-            "description": "Verdict for this conversation"
+            "enum": ["OK", "FLAG", "ISSUE"]
           },
           "notes": {
-            "type": "string",
-            "description": "Brief notes about the conversation"
+            "type": "string"
           }
         },
-        "required": ["conversation_id", "verdict"]
+        "required": ["conversation_id", "verdict", "notes"]
       }
     },
     "misattributions": {
       "type": "array",
-      "description": "Segments where speaker role is incorrectly assigned",
+      "description": "Segments with likely incorrect speaker_role.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "segment_id": {
             "type": "integer",
-            "minimum": 0,
-            "description": "The segment ID with wrong role"
+            "minimum": 0
           },
           "current_role": {
             "type": "string",
-            "description": "The currently assigned role"
+            "enum": ["coach", "student", "target", "other", "voiceover", "unknown"]
           },
           "suggested_role": {
-            "type": ["string", "null"],
-            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
-            "description": "The correct role this segment should have"
+            "type": "string",
+            "enum": ["coach", "student", "target", "other", "voiceover"]
           },
           "confidence": {
             "type": "number",
             "minimum": 0,
-            "maximum": 1,
-            "description": "Confidence in this correction (0-1)"
+            "maximum": 1
           },
           "evidence": {
-            "type": "string",
-            "description": "Evidence supporting this correction"
+            "type": "string"
           }
         },
         "required": ["segment_id", "current_role", "suggested_role", "confidence", "evidence"]
@@ -107,31 +102,39 @@
     },
     "boundary_issues": {
       "type": "array",
-      "description": "Problems with conversation boundaries",
+      "description": "Conversation boundary concerns and optional deterministic fixes.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "conversation_id": {
             "type": "integer",
-            "minimum": 1,
-            "description": "The conversation with boundary issues"
+            "minimum": 1
           },
           "issue": {
-            "type": "string",
-            "description": "Description of the boundary problem"
+            "type": "string"
           },
           "severity": {
             "type": "string",
-            "enum": ["minor", "moderate", "major"],
-            "description": "Severity of the boundary issue"
+            "enum": ["minor", "moderate", "major"]
           },
           "suggested_fix": {
-            "type": ["string", "null"],
-            "pattern": "^(merge_with_next|merge_with_previous|reclassify_as_commentary|split_at_segment_[0-9]+)$"
+            "oneOf": [
+              {
+                "type": "string",
+                "enum": ["merge_with_next", "merge_with_previous", "reclassify_as_commentary"]
+              },
+              {
+                "type": "string",
+                "pattern": "^split_at_segment_[0-9]+$"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "confidence": {
-            "type": ["number", "null"],
+            "type": "number",
             "minimum": 0,
             "maximum": 1
           }
@@ -141,38 +144,34 @@
     },
     "collapse_issues": {
       "type": "array",
-      "description": "Problems with collapsed speaker override assignments",
+      "description": "Collapsed-speaker override correction suggestions.",
       "items": {
         "type": "object",
         "additionalProperties": false,
         "properties": {
           "speaker_id": {
             "type": "string",
-            "description": "The speaker ID with collapse issues"
+            "minLength": 1
           },
           "segment_id": {
             "type": "integer",
-            "minimum": 0,
-            "description": "The specific segment with wrong override"
+            "minimum": 0
           },
           "current_override": {
             "type": ["string", "null"],
-            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
-            "description": "The current speaker_role_override value"
+            "enum": ["coach", "student", "target", "other", null]
           },
           "suggested_override": {
-            "type": ["string", "null"],
-            "enum": ["coach", "target", "voiceover", "other", "unknown", null],
-            "description": "The correct override value"
+            "type": "string",
+            "enum": ["coach", "student", "target", "other"]
           },
           "confidence": {
-            "type": ["number", "null"],
+            "type": "number",
             "minimum": 0,
             "maximum": 1
           },
           "evidence": {
-            "type": "string",
-            "description": "Evidence supporting this correction"
+            "type": "string"
           }
         },
         "required": ["speaker_id", "segment_id", "current_override", "suggested_override", "confidence", "evidence"]
@@ -180,17 +179,15 @@
     },
     "other_flags": {
       "type": "array",
-      "description": "Any other concerns not covered by other categories",
       "items": {
         "type": "string"
       }
     },
-    "summary": {
-      "type": "string",
-      "description": "One paragraph overall assessment"
-    },
     "metadata": {
       "type": "object"
+    },
+    "summary": {
+      "type": "string"
     }
   },
   "required": [
@@ -204,6 +201,7 @@
     "boundary_issues",
     "collapse_issues",
     "other_flags",
+    "metadata",
     "summary"
   ]
 }
