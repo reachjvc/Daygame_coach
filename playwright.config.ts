@@ -48,6 +48,9 @@ export default defineConfig({
         /approach-logging\.spec\.ts/,
         /data-persistence\.spec\.ts/,
         /start-session\.spec\.ts/,
+        // Goals tests share a user and mutate goals data — run serially
+        /goals-hub\.spec\.ts/,
+        /goals-data-consistency\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {
@@ -101,6 +104,29 @@ export default defineConfig({
       name: 'smoke-android',
       testMatch: /smoke\.spec\.ts/,
       use: { ...devices['Pixel 7'] },
+    },
+
+    // === Goals tests (chained to run ONE file at a time) ===
+    // These files share a test user and mutate goals data, so they must not
+    // run in parallel. Each project contains one file and depends on the
+    // previous, ensuring strict sequential execution.
+    {
+      name: 'goals-1',
+      testMatch: /goals-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'goals-2',
+      testMatch: /goals-data-consistency\.spec\.ts/,
+      dependencies: ['goals-1'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
     },
 
     // === Session-creating tests (chained to run ONE file at a time) ===

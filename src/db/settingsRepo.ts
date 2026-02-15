@@ -141,6 +141,28 @@ export async function updateVoiceLanguage(userId: string, language: string): Pro
 }
 
 /**
+ * Get timezone for a user. Returns null if not set.
+ */
+export async function getUserTimezone(userId: string): Promise<string | null> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("timezone")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null
+    }
+    throw new Error(`Failed to get timezone: ${error.message}`)
+  }
+
+  return data?.timezone ?? null
+}
+
+/**
  * Update timezone for a user.
  */
 export async function updateTimezone(userId: string, timezone: string): Promise<void> {
@@ -153,6 +175,73 @@ export async function updateTimezone(userId: string, timezone: string): Promise<
 
   if (error) {
     throw new Error(`Failed to update timezone: ${error.message}`)
+  }
+}
+
+/**
+ * Get week start day for a user. Returns 0 (Sunday) if not set.
+ * 0=Sunday, 1=Monday, ..., 6=Saturday
+ */
+export async function getWeekStartDay(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("week_start_day")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return 0
+    }
+    throw new Error(`Failed to get week start day: ${error.message}`)
+  }
+
+  return data?.week_start_day ?? 0
+}
+
+/**
+ * Update week start day for a user.
+ */
+export async function updateWeekStartDay(userId: string, day: number): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ week_start_day: day })
+    .eq("id", userId)
+
+  if (error) {
+    throw new Error(`Failed to update week start day: ${error.message}`)
+  }
+}
+
+/**
+ * Get time preferences (timezone + week start day) in a single query.
+ */
+export async function getTimePreferences(userId: string): Promise<{
+  timezone: string | null
+  week_start_day: number
+}> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("timezone, week_start_day")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return { timezone: null, week_start_day: 0 }
+    }
+    throw new Error(`Failed to get time preferences: ${error.message}`)
+  }
+
+  return {
+    timezone: data?.timezone ?? null,
+    week_start_day: data?.week_start_day ?? 0,
   }
 }
 

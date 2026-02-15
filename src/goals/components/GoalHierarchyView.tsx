@@ -87,6 +87,7 @@ export function GoalHierarchyView({
             size="sm"
             className="text-destructive hover:bg-destructive/10 hover:text-destructive"
             onClick={() => onDeleteAllGoals()}
+            data-testid="goals-delete-all-button"
           >
             <Trash2 className="size-4 mr-1" />
             Delete All

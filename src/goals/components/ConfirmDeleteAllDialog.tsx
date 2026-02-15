@@ -17,7 +17,7 @@ export function ConfirmDeleteAllDialog({
   onCancel,
 }: ConfirmDeleteAllDialogProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200" data-testid="goals-delete-all-confirm">
       <div className="relative bg-card border border-border rounded-2xl p-6 max-w-sm mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4 bg-destructive/15">
           <AlertTriangle className="size-7 text-destructive" />
@@ -37,6 +37,7 @@ export function ConfirmDeleteAllDialog({
             className="flex-1"
             onClick={onCancel}
             disabled={isDeleting}
+            data-testid="goals-delete-all-cancel"
           >
             Cancel
           </Button>
@@ -45,6 +46,7 @@ export function ConfirmDeleteAllDialog({
             className="flex-1"
             onClick={onConfirm}
             disabled={isDeleting}
+            data-testid="goals-delete-all-confirm-yes"
           >
             {isDeleting ? (
               <Loader2 className="size-4 animate-spin mr-1" />

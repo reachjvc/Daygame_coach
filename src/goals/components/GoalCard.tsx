@@ -106,6 +106,7 @@ export function GoalCard({
     <div
       className={`rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80${goal.is_archived ? " opacity-50" : ""}`}
       style={{ borderLeftColor: accentColor, borderLeftWidth: 3 }}
+      data-testid={`goal-card-${goal.id}`}
     >
       {/* Header row */}
       <div className="flex items-start gap-3">
@@ -133,6 +134,7 @@ export function GoalCard({
           <div className="flex items-center gap-2">
             <h3
               className="font-medium text-sm truncate"
+              data-testid={`goal-title-${goal.id}`}
             >
               {goal.title}
             </h3>
@@ -160,7 +162,7 @@ export function GoalCard({
                 }}
               />
             </div>
-            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
+            <span className="text-xs text-muted-foreground font-medium whitespace-nowrap" data-testid={`goal-progress-${goal.id}`}>
               {isBoolean
                 ? (goal.is_complete ? "Done" : "Not done")
                 : `${goal.current_value}/${goal.target_value}${goal.linked_metric && !goal.is_complete ? " · auto-tracked" : ""}`
@@ -315,6 +317,7 @@ export function GoalCard({
                   size="sm"
                   onClick={() => onEdit(goal)}
                   className="text-muted-foreground hover:text-foreground h-7 px-2 text-xs"
+                  data-testid={`goal-edit-${goal.id}`}
                 >
                   Edit
                 </Button>

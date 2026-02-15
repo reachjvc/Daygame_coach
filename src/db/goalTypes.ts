@@ -2,6 +2,8 @@
  * Goal tracking types for the user_goals table
  */
 
+import { getTodayInTimezone } from "../shared/dateUtils"
+
 export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
 export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
 export type GoalType = "recurring" | "milestone" | "habit_ramp"
@@ -128,7 +130,7 @@ export interface GoalTreeNode extends GoalWithProgress {
 /**
  * Compute progress fields from a goal row
  */
-export function computeGoalProgress(goal: UserGoalRow): GoalWithProgress {
+export function computeGoalProgress(goal: UserGoalRow, timezone: string | null = null): GoalWithProgress {
   const progress_percentage =
     goal.target_value > 0
       ? Math.min(100, Math.round((goal.current_value / goal.target_value) * 100))
@@ -140,8 +142,8 @@ export function computeGoalProgress(goal: UserGoalRow): GoalWithProgress {
   const dateStr = goal.target_date ?? goal.custom_end_date
   if (dateStr) {
     const endDate = new Date(dateStr)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const todayStr = getTodayInTimezone(timezone)
+    const today = new Date(todayStr + "T00:00:00")
     endDate.setHours(0, 0, 0, 0)
     days_remaining = Math.ceil((endDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
   }

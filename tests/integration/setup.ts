@@ -130,6 +130,7 @@ export async function truncateAllTables(): Promise<void> {
     // user_values must come before profiles and values due to FKs
     await client.query(`
       TRUNCATE TABLE
+        user_goals,
         milestones,
         sticking_points,
         approaches,
@@ -188,4 +189,99 @@ export async function createTestUserStats(userId: string): Promise<void> {
   } finally {
     await client.end()
   }
+}
+
+/**
+ * Insert a test goal and return the goal ID.
+ * Helper for tests that need goal data.
+ * Uses raw SQL INSERT following the createTestUser pattern.
+ */
+export async function createTestGoal(
+  userId: string,
+  overrides: Partial<{
+    title: string; category: string; target_value: number;
+    period: string; tracking_type: string; life_area: string;
+    parent_goal_id: string | null; template_id: string | null;
+    goal_level: number | null; goal_type: string; position: number;
+    is_active: boolean; is_archived: boolean; linked_metric: string | null;
+    current_value: number; display_category: string | null; goal_nature: string | null
+  }> = {}
+): Promise<string> {
+  const client = await getClient()
+
+  try {
+    const defaults = {
+      title: "Test Goal",
+      category: "custom",
+      target_value: 10,
+      period: "weekly",
+      tracking_type: "counter",
+      life_area: "custom",
+      parent_goal_id: null,
+      template_id: null,
+      goal_level: null,
+      goal_type: "recurring",
+      position: 0,
+      is_active: true,
+      is_archived: false,
+      linked_metric: null,
+      current_value: 0,
+      display_category: null,
+      goal_nature: null,
+    }
+
+    const goal = { ...defaults, ...overrides }
+
+    const result = await client.query(`
+      INSERT INTO user_goals (
+        user_id, title, category, target_value, period,
+        tracking_type, life_area, parent_goal_id, template_id,
+        goal_level, goal_type, position, is_active, is_archived,
+        linked_metric, current_value, display_category, goal_nature
+      ) VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8, $9,
+        $10, $11, $12, $13, $14,
+        $15, $16, $17, $18
+      )
+      RETURNING id
+    `, [
+      userId, goal.title, goal.category, goal.target_value, goal.period,
+      goal.tracking_type, goal.life_area, goal.parent_goal_id, goal.template_id,
+      goal.goal_level, goal.goal_type, goal.position, goal.is_active, goal.is_archived,
+      goal.linked_metric, goal.current_value, goal.display_category, goal.goal_nature,
+    ])
+
+    return result.rows[0].id
+  } finally {
+    await client.end()
+  }
+}
+
+/**
+ * Create a 3-level goal hierarchy (L1 → L2 → L3) for tree tests.
+ * Returns the IDs of all three goals.
+ */
+export async function createTestGoalTree(
+  userId: string
+): Promise<{ l1Id: string; l2Id: string; l3Id: string }> {
+  const l1Id = await createTestGoal(userId, {
+    title: "L1 Vision Goal",
+    goal_level: 1,
+    parent_goal_id: null,
+  })
+
+  const l2Id = await createTestGoal(userId, {
+    title: "L2 Outcome Goal",
+    goal_level: 2,
+    parent_goal_id: l1Id,
+  })
+
+  const l3Id = await createTestGoal(userId, {
+    title: "L3 Action Goal",
+    goal_level: 3,
+    parent_goal_id: l2Id,
+  })
+
+  return { l1Id, l2Id, l3Id }
 }

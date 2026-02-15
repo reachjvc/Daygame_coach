@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Settings2, Library } from "lucide-react"
+import { Plus, Loader2, Settings2, Library, Clock } from "lucide-react"
 import { GoalIcon } from "@/components/ui/GoalIcon"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
 import { ConfirmDeleteAllDialog } from "./ConfirmDeleteAllDialog"
 import { GoalCatalogPicker } from "./GoalCatalogPicker"
+import { GoalTimeSettingsDialog, type TimePreferences } from "./GoalTimeSettingsDialog"
 import { GoalHierarchyView } from "./GoalHierarchyView"
 import { DailyActionView } from "./DailyActionView"
 import { ViewSwitcher } from "./views/ViewSwitcher"
@@ -33,6 +34,8 @@ export function GoalsHubContent() {
   const [showCatalog, setShowCatalog] = useState(false)
   const [isAddingDirtyDog, setIsAddingDirtyDog] = useState(false)
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
+  const [isTimeSettingsOpen, setIsTimeSettingsOpen] = useState(false)
+  const [timePrefs, setTimePrefs] = useState<TimePreferences | null>(null)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
   const toastId = useRef(0)
@@ -62,6 +65,10 @@ export function GoalsHubContent() {
 
   useEffect(() => {
     fetchGoals()
+    fetch("/api/settings/time-preferences")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setTimePrefs(data) })
+      .catch(() => {})
   }, [fetchGoals])
 
   const triggerCelebration = useCallback((goal: GoalWithProgress) => {
@@ -238,11 +245,8 @@ export function GoalsHubContent() {
   const handleConfirmDeleteAll = async () => {
     setIsDeletingAll(true)
     try {
-      const results = await Promise.all(
-        goals.map(g => fetch(`/api/goals/${g.id}?permanent=true`, { method: "DELETE" }))
-      )
-      const failed = results.filter(r => !r.ok).length
-      if (failed > 0) showToast(`${failed} goal(s) failed to delete`, "error")
+      const response = await fetch("/api/goals", { method: "DELETE" })
+      if (!response.ok) throw new Error("Failed to delete all goals")
       setShowDeleteAllConfirm(false)
       setIsCustomizeMode(false)
       await fetchGoals()
@@ -279,7 +283,7 @@ export function GoalsHubContent() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex items-center justify-center py-20" data-testid="goals-loading">
         <Loader2 className="size-8 animate-spin text-muted-foreground" />
       </div>
     )
@@ -295,7 +299,7 @@ export function GoalsHubContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="goals-page">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -312,20 +316,30 @@ export function GoalsHubContent() {
             <>
               <ViewSwitcher activeView={viewMode} onViewChange={(v) => { setViewMode(v); setIsCustomizeMode(false) }} />
               <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsTimeSettingsOpen(true)}
+                title="Time settings"
+              >
+                <Clock className="size-4 mr-1" />
+                Time
+              </Button>
+              <Button
                 variant={isCustomizeMode ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+                data-testid="goals-customize-button"
               >
                 <Settings2 className="size-4 mr-1" />
                 {isCustomizeMode ? "Done" : "Customize"}
               </Button>
-              <Button variant="outline" onClick={() => setShowCatalog(true)}>
+              <Button variant="outline" onClick={() => setShowCatalog(true)} data-testid="goals-browse-catalog">
                 <Library className="size-4 mr-1" />
                 Browse Catalog
               </Button>
             </>
           )}
-          <Button onClick={handleCreateGoal}>
+          <Button onClick={handleCreateGoal} data-testid="goals-new-goal-button">
             <Plus className="size-4 mr-1" />
             New Goal
           </Button>
@@ -333,8 +347,11 @@ export function GoalsHubContent() {
       </div>
 
       {goals.length === 0 ? (
-        <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} />
+        <div data-testid="goals-empty-state">
+          <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} />
+        </div>
       ) : viewMode === "daily" ? (
+
         <DailyActionView
           goals={goals}
           isCustomizeMode={isCustomizeMode}
@@ -369,6 +386,13 @@ export function GoalsHubContent() {
           isAddingDirtyDog={isAddingDirtyDog}
         />
       )}
+
+      <GoalTimeSettingsDialog
+        open={isTimeSettingsOpen}
+        onOpenChange={setIsTimeSettingsOpen}
+        initialPrefs={timePrefs}
+        onSaved={setTimePrefs}
+      />
 
       <GoalFormModal
         open={isFormOpen}

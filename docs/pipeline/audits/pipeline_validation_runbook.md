@@ -1042,6 +1042,89 @@ Verification snapshot (`2026-02-15`):
 - expected blockers in current local environment:
   - `scripts/training-data/09.chunk-embed.ts` requires local Ollama availability (`http://localhost:11434`) even for quick execution checks.
 
+##### Iteration D12: High-Confidence Transcript Artifact Repair
+
+Objective:
+- let Stage 07 repair ASR artifacts when the LLM is highly confident about what was actually said, reducing preventable REVIEW downgrades.
+
+Implementation targets:
+- `scripts/training-data/07.content` (prompt + post-processing + validation)
+
+Required behavior:
+- LLM outputs optional `repair_text` and `repair_confidence` (0..1) per artifact.
+- Only repairs with `repair_confidence >= 0.90` are accepted.
+- Accepted repairs: segment text updated, `repaired=true` + `original_text` stored for audit.
+- Rejected repairs: kept as warnings (unchanged behavior).
+- Repaired artifacts downgraded from `warning` to `info` in validation (no longer push to REVIEW).
+
+Implementation status (`2026-02-15`):
+- implemented:
+  - prompt updated (both infield and talking_head) with repair instructions and strict confidence rules.
+  - post-LLM repair acceptance with `REPAIR_ACCEPT_THRESHOLD = 0.90`.
+  - validation downgrades repaired artifacts to `info` severity (`transcript_artifact_repaired` check type).
+  - revalidate path also applies repairs from existing artifact data.
+  - metadata tracks `artifact_repairs_accepted` and `artifact_repairs_rejected`.
+  - pipeline version bumped to `07.content-v1.10`, prompt version to `1.6.0`.
+- observed results after rerun:
+  - `P018.3`:
+    - `tyI2OZCVhT8` seg 41: **REPAIRED** (conf=0.92) — promo splice "offer link is in the description for more..." → "My whole life over there, it's just cold as fuck". Warnings reduced 2→1.
+    - `tyI2OZCVhT8` seg 27: rejected (conf=0.75), `KURlBcRF6-M` segs 8,9,115,116: rejected (conf=0.50-0.85). All below threshold.
+    - `5gfclo7crNI`: clean, no artifacts.
+  - `P018.4`:
+    - `1ok1oovp0K0` segs 98,171: rejected (conf=0.75, 0.85). Both below threshold. 2 warnings remain.
+  - `validate_manifest.py` now supports `--reverify-root` for V2 pipeline path.
+
+##### Iteration D13: Stage 07 Multi-Call Chunked Enrichment (NEXT)
+
+**Priority: HIGH — this is the next thing to build.**
+
+Problem:
+- Stage 07 makes a single LLM call per video regardless of segment count.
+- On large videos (300+ segments), the LLM runs out of attention budget. Artifact detection is non-deterministic: run 1 flags segs 98+276, run 2 flags segs 98+171, missing 276 entirely.
+- This is not a prompt problem — it's a capacity problem. One pass over 326 segments cannot reliably catch every artifact, and no amount of deterministic pre-screening will fix this at 1500 videos.
+
+Solution:
+- Split Stage 07 into multiple focused LLM calls per video, each handling a window of ~100 segments.
+- Each call gets the full job: enrichment extraction, artifact detection, repair assessment, quality flagging.
+- Overlap context: include ~20 segments before and after the core window as read-only context (marked clearly in prompt as "CONTEXT ONLY — do not extract from these"). This prevents artifacts that only make sense with broader context from being missed.
+
+Architecture:
+```
+Video (N segments)
+  → determine window count: ceil(N / window_size)
+  → for each window:
+      context_before = segments[max(0, start-overlap) : start]  (read-only)
+      core           = segments[start : start+window_size]       (extract from these)
+      context_after  = segments[end : min(N, end+overlap)]       (read-only)
+      → LLM call with all three sections clearly labeled
+  → merge pass: combine enrichments, deduplicate, resolve window-boundary conflicts
+```
+
+Key design decisions needed:
+1. **Window size**: Start with 100 segments as default. May need tuning — smaller windows = better detection but more cost. The implementation should accept `--window-size` and `--overlap` flags so we can experiment.
+2. **Overlap size**: Start with 20 segments. Enough for conversation context without excessive duplication.
+3. **Small video bypass**: Videos under the window size (e.g. < 120 segments) should still use a single call. No point splitting a 85-segment video.
+4. **Merge strategy**: When two windows both flag the same segment or extract the same technique, deduplicate. When they conflict (different role for same segment), prefer the window where the segment is in the core range (not overlap).
+5. **Conversation-aware windowing** (optional enhancement): Instead of fixed 100-segment windows, split at conversation boundaries when possible. A conversation that spans segments 50-180 is better analyzed whole than split at segment 100. This is more complex but produces cleaner results.
+6. **Cost impact**: A 326-segment video goes from 1 call to ~4 calls. But 06g (damage-adjudicator) currently makes 1 LLM call per damage seed. If multi-call Stage 07 catches artifacts reliably, 06g becomes less necessary. Net cost may be neutral.
+
+What stays vs what could be simplified after this:
+- **Keep**: 06, 06b, 06c, 06e (verify/patch/reverify chain — genuine peer review, not heuristics)
+- **Keep**: 06d (sanitize — teaser dedup and evidence allowlist are simple, reliable data ops)
+- **Evaluate after D13**: 06f/06g/06h (damage-map/adjudicator/confidence-propagation). If multi-call Stage 07 catches artifacts reliably and assigns confidence directly, the damage pipeline may become redundant. Don't remove yet — run both in parallel on P018.3/P018.4 and compare coverage.
+
+Pass criteria:
+- Same video run twice with multi-call produces consistent artifact detection (>= 90% overlap in flagged segments).
+- Artifact count on `1ok1oovp0K0` is >= what any single previous run found (no regressions from narrower windows).
+- Enrichment quality (techniques, topics, phases) is non-regressing vs single-call baseline.
+- Cost per video is within 2x of current single-call cost.
+
+Test plan:
+1. Implement with `--window-size 100 --overlap 20` defaults.
+2. Run on `P018.4` (`1ok1oovp0K0`, 326 segments → ~4 windows) twice. Compare artifact lists.
+3. Run on `P018.3` (3 videos, 85-125 segments each — should mostly single-call). Confirm no regressions.
+4. Compare enrichment output diff against current single-call baseline.
+
 #### Canonical V2 Evaluation Loop
 
 Preflight checks (run before any LLM stage):
@@ -1168,62 +1251,70 @@ node --import tsx/esm scripts/training-data/10.ingest.ts --manifest docs/pipelin
 # Debug-only override: add --skip-llm-preflight to force execution when preflight is failing.
 ```
 
-Latest execution checkpoint (`2026-02-15`, codex live run):
-- `P018.3`:
-  - bounded LLM stages:
-    - `06b.verify --timeout-seconds 90 --llm-retries 1` timed out on all 3 videos (no `06b.verify` artifacts written).
-    - direct reverify pass (`06b.verify` over `data/06d.sanitized` -> `data/06e.reverify`) also timed out on all 3.
-  - deterministic stages:
-    - `06c.patch` copied unchanged (no baseline verification reports found).
-    - `06d.sanitize`, `06f.damage-map`, `06g.damage-adjudicator`, `06h.confidence-propagation` all produced artifacts.
-    - `06f/06g` summaries showed `damaged_segments=0`, `seeds=0`.
-  - Stage 07 gate behavior:
-    - strict `reverify_patched` run blocks all videos immediately due missing baseline `06b.verify` artifacts.
-  - validation/gate outcomes:
-    - `validate_manifest` fails (`missing_stage06b_reverify` + `stage07_gate_policy_violation` on existing Stage 07 outputs).
-    - `validate_stage_report` marks all 3 videos `BLOCKED` (`reason=missing_stage06b_reverify`).
-    - `08.taxonomy-validation` FAIL: `Zero Stage 07 enrichments detected for 3 video(s)`.
-    - `09.chunk-embed --dry-run` found `To process=0` and `Skipped=3 file(s) with no content`.
-    - `10.ingest --dry-run` quarantined all 3 videos from Stage 08 fail reasons (`no_stage07_enrichments`).
-- `P018.4`:
-  - preflight correction:
-    - Stage 06 artifact is actually missing for `1ok1oovp0K0`; earlier preflight matcher gave a false-positive due `glob` bracket semantics.
-  - bounded LLM stage:
-    - `06.video-type --model sonnet --timeout-seconds 90 --llm-retries 1 --overwrite` times out on the single video.
-  - downstream effects:
-    - `06b/06c/06d/06e/06f/06g/06h/07` skip with “no manifest videos found in input” or missing upstream outputs.
-    - `validate_manifest` fails (`missing_stage06b_reverify`; `missing_stage06b`, `missing_stage06c`, `missing_stage07` present).
-    - `validate_stage_report` marks the video `BLOCKED` (`reason=missing_stage06b_reverify`).
-    - `08.taxonomy-validation` now writes `P018.4.report.json` even with zero files; status is `FAIL` with reason `Manifest coverage incomplete: 1 video(s) missing Stage 07 enriched outputs`.
-    - `09.chunk-embed --dry-run` found `To process=0` (no in-scope Stage 07 files).
-    - `10.ingest --dry-run` now consumes that Stage 08 fail report and quarantines `1ok1oovp0K0` (`missing_stage07_enriched`) instead of failing with “invalid details.files_processed”.
-- operational note:
-  - use unbuffered + bounded LLM commands during execution to avoid opaque hangs:
-    - `timeout <sec> python3 -u scripts/training-data/06b.verify ...`
-    - `timeout <sec> python3 -u scripts/training-data/07.content ...`
-  - startup health probes now abort early (`exit 2`) when Claude is unreachable, instead of timing out one video at a time.
-    - validated on `2026-02-15` with `--preflight-timeout-seconds 5 --preflight-retries 1` for:
-      - `06.video-type`
-      - `06b.verify`
-      - `07.content`
-  - environment health check:
-    - `timeout 40 claude -p "Respond exactly: ok" --output-format text --model opus` timed out (`exit 124`), consistent with observed Stage 06/06b/07 call timeouts.
-  - Stage 08/10 recurrence rails:
-    - Stage 08 emits a structured manifest fail report even when zero Stage 07 files are present.
-    - Stage 10 accepts that report shape for quarantine decisions when `files_processed=0` and all manifest videos are missing Stage 07 outputs.
+Latest execution checkpoint (`2026-02-15`, codex live run — superseded by successful run below):
+- All LLM stages timed out; no artifacts written. See git history for details.
+
+Successful V2 end-to-end run (`2026-02-15`, Claude Code session):
+- `P018.3` (3 videos): **first complete V2 pipeline run**
+  - environment: Claude CLI healthy (both opus and sonnet respond to preflight)
+  - 06b.verify verdicts: `APPROVE=1` (`5gfclo7crNI`), `FLAG=1` (`tyI2OZCVhT8`), `REJECT=1` (`KURlBcRF6-M`)
+  - 06c.patch:
+    - `KURlBcRF6-M`: 1 fix applied (split conv 1 at seg 31 → conv 2), 5 flags not fixed
+    - `tyI2OZCVhT8`: 2 fixes applied (seg 21 target→coach, seg 31 coach→target), 2 flags not fixed
+    - `5gfclo7crNI`: 0 fixes (APPROVE, no changes needed)
+  - 06d.sanitize: all 3 clean (0 teaser, 0 mixed-mode, 0 excluded)
+  - 06e.reverify verdicts: `APPROVE=1` (`5gfclo7crNI`), `FLAG=2` (`tyI2OZCVhT8`, `KURlBcRF6-M`)
+    - `KURlBcRF6-M` improved from REJECT → FLAG after patching
+  - 06f.damage-map: 1 damaged segment total (`tyI2OZCVhT8`), all trace contracts PASS
+  - 06g.damage-adjudicator: 1 seed adjudicated, 0 repairs accepted
+  - 06h.confidence-propagation:
+    - `KURlBcRF6-M`: high=109, medium=16, low=0, blocked_conversations=0
+    - `tyI2OZCVhT8`: high=82, medium=0, low=1, blocked_conversations=0
+    - `5gfclo7crNI`: high=85, medium=0, low=0, blocked_conversations=0
+  - 07.content (reverify_patched gate, input from 06h):
+    - 12 conversations enriched, all 3 videos pass validation
+    - `5gfclo7crNI`: 0 errors, 0 warnings
+    - `tyI2OZCVhT8`: 0 errors, 1 warning (transcript_artifact seg 41 — promo splice)
+    - `KURlBcRF6-M`: 0 errors, 3 warnings (transcript_artifacts segs 9, 63, 116 — ASR hallucinations)
+  - validate_manifest (reverify_patched, max_damaged_token_ratio=0.10, max_dropped_anchor_ratio=0.25):
+    - gate: 3/3 allowed, 0 blocked, 0 policy violations
+    - errors=1 (KURlBcRF6-M damaged_token_ratio 0.167 > 0.10), warnings=4
+    - overall damaged_token_ratio=0.067, dropped_anchor_ratio=0.071
+  - validate_stage_report readiness: READY=1 (`5gfclo7crNI`), REVIEW=1 (`tyI2OZCVhT8`), BLOCKED=1 (`KURlBcRF6-M`)
+  - 08.taxonomy-validation: WARNING (non-blocking; high-freq commentary-only concepts only)
+  - operational note (RESOLVED): `validate_manifest.py` now supports `--reverify-root data/06e.reverify` to read reverify artifacts from the V2 path directly. No copy workaround needed.
+- `P018.4` (1 video): **complete V2 pipeline run** (`2026-02-15`)
+  - Stage 06 generated fresh (sonnet, 300s timeout, 326 segments → infield, 1 conversation, 98 approach + 228 commentary)
+  - 06b.verify verdict: `FLAG` (5 misattributions, 1 boundary issue, 2 other flags)
+  - 06c.patch: 4 fixes applied (seg 1 coach→target, seg 241 coach→target, seg 102 target→coach, seg 296 target→other), 4 flags not fixed
+  - 06d.sanitize: teaser=6 (segs 0-5), mixed_mode=0, excluded=6
+  - 06e.reverify verdict: `FLAG` (not REJECT — passes gate)
+  - 06f.damage-map: 7 damaged segments, trace contract PASS
+  - 06g.damage-adjudicator: 7 seeds, 0 repairs accepted, 0 determinism mismatches
+  - 06h.confidence-propagation: high=318, medium=2, low=6, blocked_conversations=0
+  - 07.content (reverify_patched gate, input from 06h):
+    - 16 enrichments (1 approach + 15 commentary), validation PASSED
+    - 0 errors, 2 warnings (transcript_artifact segs 98, 276)
+    - 6 normalization repairs, 2 evidence-allowlist drops
+  - validate_manifest (reverify_patched, --reverify-root data/06e.reverify, max_damaged_token_ratio=0.10, max_dropped_anchor_ratio=0.25):
+    - gate: 1/1 allowed, 0 blocked, 0 policy violations
+    - errors=0, warnings=2
+    - damaged_token_ratio=0.039, dropped_anchor_ratio=0.065 (both within budget)
+  - validate_stage_report readiness: REVIEW=1 (`1ok1oovp0K0`, reason=transcript_artifact)
+  - 08.taxonomy-validation: WARNING (non-blocking; `pacing_and_matching` 2x, `comfort_with_silence` 2x in approach; 9 commentary-only concepts)
 
 #### V2 Exit Criteria (Before Expanding Rollout)
 
-1. `1ok1oovp0K0` teaser duplicates (`0-5`) are excluded from Stage 07 evidence.
-2. `1ok1oovp0K0` mixed segment `102` is either split cleanly or excluded from evidence.
-3. Zero usage of flagged segments as technique evidence on `P018.3` and `P018.4`.
-4. No `REJECT` in `06e.reverify` on `P018.3` and `P018.4`.
-5. Stage 07 artifact warnings non-increasing on `P018.3` and reduced or stable on `P018.4`.
-6. Stage 08 status non-regressing on `P018.3` and no `FAIL` on `P018.4`.
+1. `1ok1oovp0K0` teaser duplicates (`0-5`) are excluded from Stage 07 evidence. — **PASS** (verified: zero teaser segments in technique evidence)
+2. `1ok1oovp0K0` mixed segment `102` is either split cleanly or excluded from evidence. — **PASS** (seg 102 role-corrected by 06c, not in technique evidence)
+3. Zero usage of flagged segments as technique evidence on `P018.3` and `P018.4`. — **PASS** (both manifests: zero flagged-segment evidence leaks)
+4. No `REJECT` in `06e.reverify` on `P018.3` and `P018.4`. — **PASS** (P018.3: APPROVE=1, FLAG=2; P018.4: FLAG=1)
+5. Stage 07 artifact warnings non-increasing on `P018.3` and reduced or stable on `P018.4`. — **PASS** (P018.3: 4 warnings; P018.4: 2 warnings)
+6. Stage 08 status non-regressing on `P018.3` and no `FAIL` on `P018.4`. — **PASS** (both WARNING, no FAIL)
 7. Every Stage 07 dropped anchor has a traceable reason contract:
-   `reason_code`, `source_stage`, `timestamp`, and segment-linked `damage_reason_code`.
-8. No low-confidence contaminated chunk reaches primary ingest lane.
-9. D11 drift/budget artifacts remain within configured thresholds and audit samples are reviewed.
+   `reason_code`, `source_stage`, `timestamp`, and segment-linked `damage_reason_code`. — **PASS** (P018.4: all 7 dropped candidates have required fields)
+8. No low-confidence contaminated chunk reaches primary ingest lane. — **PENDING** (Stage 09/10 not yet run on P018.4)
+9. D11 drift/budget artifacts remain within configured thresholds and audit samples are reviewed. — **PASS** (P018.4: damaged_token_ratio=0.039 < 0.10, dropped_anchor_ratio=0.065 < 0.25)
 
 ## Holdout Set (HOLDOUT.1)
 

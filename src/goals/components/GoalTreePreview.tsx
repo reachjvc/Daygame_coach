@@ -122,6 +122,7 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
         <button
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3 cursor-pointer"
+          data-testid="catalog-back-button"
         >
           <ArrowLeft className="size-3.5" />
           Back to catalog
@@ -184,7 +185,7 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
 
       {/* Footer */}
       <div className="flex items-center gap-3 pt-2">
-        <Button onClick={handleConfirm} className="flex-1">
+        <Button onClick={handleConfirm} className="flex-1" data-testid="catalog-confirm-button">
           Create {enabledCount} {enabledCount === 1 ? "Goal" : "Goals"}
         </Button>
         <Button variant="ghost" onClick={onBack}>

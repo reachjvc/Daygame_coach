@@ -180,4 +180,42 @@ export const SELECTORS = {
     removeField: (fieldId: string) => `remove-field-${fieldId}`,
     saveButton: 'save-button',
   },
+
+  goals: {
+    page: 'goals-page',
+    loading: 'goals-loading',
+    emptyState: 'goals-empty-state',
+    // Header
+    newGoalButton: 'goals-new-goal-button',
+    catalogButton: 'goals-browse-catalog',
+    customizeButton: 'goals-customize-button',
+    viewSwitcher: 'goals-view-switcher',
+    viewOption: (view: string) => `goals-view-${view}`,
+    // Catalog
+    catalogPicker: 'goal-catalog-picker',
+    catalogCard: (templateId: string) => `catalog-card-${templateId}`,
+    catalogActiveBadge: (templateId: string) => `catalog-active-${templateId}`,
+    catalogConfirm: 'catalog-confirm-button',
+    catalogBack: 'catalog-back-button',
+    // Goal cards
+    goalCard: (goalId: string) => `goal-card-${goalId}`,
+    goalTitle: (goalId: string) => `goal-title-${goalId}`,
+    goalProgress: (goalId: string) => `goal-progress-${goalId}`,
+    goalIncrement: (goalId: string) => `goal-increment-${goalId}`,
+    goalEdit: (goalId: string) => `goal-edit-${goalId}`,
+    goalDelete: (goalId: string) => `goal-delete-${goalId}`,
+    goalToggle: (goalId: string) => `goal-toggle-${goalId}`,
+    // Form modal
+    formModal: 'goal-form-modal',
+    formTitle: 'goal-form-title-input',
+    formCategory: 'goal-form-category',
+    formTarget: 'goal-form-target-input',
+    formSubmit: 'goal-form-submit',
+    formCancel: 'goal-form-cancel',
+    // Customize
+    deleteAllButton: 'goals-delete-all-button',
+    deleteAllConfirm: 'goals-delete-all-confirm',
+    deleteAllConfirmYes: 'goals-delete-all-confirm-yes',
+    deleteAllCancel: 'goals-delete-all-cancel',
+  },
 } as const

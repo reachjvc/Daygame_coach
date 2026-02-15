@@ -167,9 +167,12 @@ TOPIC_TAXONOMY = {
 
 LOG_PREFIX = "[07.content]"
 
-PROMPT_VERSION = "1.5.0"  # v1.5.0: Stage07 evidence allowlist markers + stricter evidence contract
+PROMPT_VERSION = "1.6.0"  # v1.6.0: High-confidence transcript artifact repair
 PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.content-v1.9"  # v1.9: Hard-filter evidence to Stage07 allowlist + dropped_candidates audit trail
+PIPELINE_VERSION = "07.content-v1.10"  # v1.10: Accept high-confidence LLM repairs for ASR artifacts
+
+# Transcript artifact repair
+REPAIR_ACCEPT_THRESHOLD = 0.90
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -1783,11 +1786,19 @@ def validate_enrichment_output(
     artifacts = output.get("transcript_artifacts", [])
     if artifacts:
         for artifact in artifacts:
+            is_repaired = bool(artifact.get("repaired"))
+            severity = "info" if is_repaired else "warning"
+            check = "transcript_artifact_repaired" if is_repaired else "transcript_artifact"
+            repair_suffix = ""
+            if is_repaired:
+                conf = artifact.get("repair_confidence", 0)
+                repair_suffix = f" [REPAIRED conf={conf:.2f}]"
             results.append(ValidationResult(
-                "warning", "transcript_artifact",
+                severity, check,
                 f"Seg {artifact.get('segment_index', '?')}: "
                 f"{artifact.get('artifact_type', '?')} — "
                 f"{artifact.get('description', 'no description')}"
+                f"{repair_suffix}"
             ))
 
     # --- 8. Dropped-candidate reason-code contract ---
@@ -2817,6 +2828,24 @@ Also flag specific artifact types with "transcript_artifact" entries:
 {{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
 IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
 
+For each artifact, also assess whether you can confidently reconstruct what was actually said
+from the surrounding context. If so, include:
+  "repair_text": "what was likely actually said",
+  "repair_confidence": 0.0-1.0
+
+Rules for repair:
+- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
+- The surrounding segments must make the intended meaning unambiguous
+- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
+- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
+- Complete nonsense with no clear context is NOT repairable
+- Do not guess — if unsure, leave repair_text out entirely
+
+Example with repair:
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation", "repair_text": "what was likely said", "repair_confidence": 0.95}}
+Example without repair (too uncertain):
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation"}}
+
 Return empty arrays if transcript quality is good.
 
 OUTPUT FORMAT: Return a JSON object with this structure:
@@ -2955,6 +2984,24 @@ IMPORTANT: SEG_ID must match the global segment id shown in the transcript lines
 Also flag specific artifact types with "transcript_artifact" entries:
 {{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
 IMPORTANT: segment_index is the global seg_id (despite the name).
+
+For each artifact, also assess whether you can confidently reconstruct what was actually said
+from the surrounding context. If so, include:
+  "repair_text": "what was likely actually said",
+  "repair_confidence": 0.0-1.0
+
+Rules for repair:
+- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
+- The surrounding segments must make the intended meaning unambiguous
+- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
+- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
+- Complete nonsense with no clear context is NOT repairable
+- Do not guess — if unsure, leave repair_text out entirely
+
+Example with repair:
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation", "repair_text": "what was likely said", "repair_confidence": 0.95}}
+Example without repair (too uncertain):
+{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation"}}
 
 Return empty arrays if transcript quality is good.
 
@@ -3281,6 +3328,43 @@ def process_video_file(
                 f"low_quality={dropped_synthetic_quality}, artifacts={dropped_synthetic_artifacts}"
             )
 
+    # --- Transcript artifact repair acceptance ---
+    repairs_accepted = 0
+    repairs_rejected = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        repair_text = artifact.get("repair_text")
+        repair_conf = artifact.get("repair_confidence")
+        sid = artifact.get("segment_index")
+        if not repair_text or not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf >= REPAIR_ACCEPT_THRESHOLD and isinstance(sid, int) and sid in seg_by_id:
+            seg = seg_by_id[sid]
+            original_text = seg.get("text", "")
+            seg["text"] = repair_text
+            artifact["repaired"] = True
+            artifact["original_text"] = original_text
+            repairs_accepted += 1
+            orig_preview = original_text[:60] + ("..." if len(original_text) > 60 else "")
+            repair_preview = repair_text[:60] + ("..." if len(repair_text) > 60 else "")
+            print(
+                f"{LOG_PREFIX}   Repaired seg {sid}: "
+                f"'{orig_preview}' -> '{repair_preview}' "
+                f"(confidence={repair_conf:.2f})"
+            )
+        else:
+            repairs_rejected += 1
+            if repair_text:
+                print(
+                    f"{LOG_PREFIX}   Repair rejected seg {sid}: "
+                    f"confidence={repair_conf:.2f} < {REPAIR_ACCEPT_THRESHOLD}"
+                )
+    if repairs_accepted or repairs_rejected:
+        print(
+            f"{LOG_PREFIX}   Artifact repairs: accepted={repairs_accepted}, rejected={repairs_rejected}"
+        )
+
     normalization_repairs = normalize_enrichments(
         enrichments,
         seg_by_id=seg_by_id,
@@ -3375,6 +3459,8 @@ def process_video_file(
             "synthetic_segment_count": len(synthetic_segment_ids),
             "synthetic_low_quality_dropped": dropped_synthetic_quality,
             "synthetic_artifacts_dropped": dropped_synthetic_artifacts,
+            "artifact_repairs_accepted": repairs_accepted,
+            "artifact_repairs_rejected": repairs_rejected,
         },
         # Version tags (safe additive fields; helps drift detection downstream).
         "pipeline_version": PIPELINE_VERSION,
@@ -3630,6 +3716,28 @@ def revalidate_video_file(
         transcript_artifacts = filtered_artifacts
         output["transcript_artifacts"] = transcript_artifacts
 
+    # --- Transcript artifact repair acceptance (revalidate path) ---
+    repairs_accepted = 0
+    repairs_rejected = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        repair_text = artifact.get("repair_text")
+        repair_conf = artifact.get("repair_confidence")
+        sid = artifact.get("segment_index")
+        if not repair_text or not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf >= REPAIR_ACCEPT_THRESHOLD and isinstance(sid, int) and sid in seg_by_id:
+            seg = seg_by_id[sid]
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            seg["text"] = repair_text
+            artifact["repaired"] = True
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            repairs_accepted += 1
+        else:
+            repairs_rejected += 1
+
     # Apply normalization (deterministic repairs before validation).
     normalization_repairs = normalize_enrichments(
         enrichments,
@@ -3673,6 +3781,8 @@ def revalidate_video_file(
     meta["synthetic_segment_count"] = len(synthetic_segment_ids)
     meta["synthetic_low_quality_dropped"] = dropped_synthetic_quality
     meta["synthetic_artifacts_dropped"] = dropped_synthetic_artifacts
+    meta["artifact_repairs_accepted"] = repairs_accepted
+    meta["artifact_repairs_rejected"] = repairs_rejected
 
     summary = output.get("summary")
     if not isinstance(summary, dict):

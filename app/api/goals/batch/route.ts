@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { createGoalBatch } from "@/src/db/goalRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 
 export async function POST(request: Request) {
   const auth = await requireAuth()
@@ -18,7 +19,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Each goal needs title and _tempId" }, { status: 400 })
       }
     }
-    const created = await createGoalBatch(auth.userId, goals)
+    const tz = await getUserTimezone(auth.userId)
+    const created = await createGoalBatch(auth.userId, goals, tz)
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     console.error("Error batch creating goals:", error)

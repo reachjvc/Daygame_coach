@@ -81,6 +81,7 @@ export interface ProfileRow {
   secondary_region?: string | null
   primary_goal?: string | null
   timezone?: string | null
+  week_start_day?: number
 }
 
 export interface ProfileUpdate {
@@ -103,6 +104,7 @@ export interface ProfileUpdate {
   voice_language?: string | null
   preferred_language?: string | null
   timezone?: string | null
+  week_start_day?: number
 }
 
 // ============================================

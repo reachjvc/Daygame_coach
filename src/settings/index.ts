@@ -4,6 +4,7 @@ export {
   handleResetSandboxSettings,
   handleUpdateDifficulty,
   handleUpdateTimezone,
+  handleUpdateWeekStartDay,
   getSubscriptionDetails,
   handleCancelSubscription,
   handleReactivateSubscription,

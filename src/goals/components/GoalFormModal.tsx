@@ -372,7 +372,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         onOpenChange(isOpen)
       }}
     >
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" data-testid="goal-form-modal">
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Goal" : "Add New Goal"}</DialogTitle>
           <DialogDescription>
@@ -531,6 +531,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
               id="goal-title"
               placeholder="What do you want to achieve?"
               value={title}
+              data-testid="goal-form-title-input"
               onChange={(e) => {
                 setTitle(e.target.value)
                 if (error) setError(null)
@@ -860,6 +861,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting || isDeleting}
+            data-testid="goal-form-cancel"
           >
             Cancel
           </Button>
@@ -879,7 +881,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
               )}
             </Button>
           )}
-          <Button onClick={() => handleSubmit(false)} disabled={isSubmitting || isDeleting}>
+          <Button onClick={() => handleSubmit(false)} disabled={isSubmitting || isDeleting} data-testid="goal-form-submit">
             {submitMode === "add" ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-2" />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Loader2, Library, Heart, Flame, Star, X } from "lucide-react"
+import { Loader2, Library, Heart, Flame, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getCatalogGroups } from "../data/goalGraph"
@@ -163,32 +163,13 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
         </div>
       </section>
 
-      {/* Life Dreams */}
-      <section>
-        <div className="flex items-center gap-2 mb-3">
-          <Star className="size-4 text-yellow-500" />
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-            Life dreams
-          </h3>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {groups.lifeDreams.map((tmpl) => (
-            <GoalPickCard
-              key={tmpl.id}
-              template={tmpl}
-              isActive={existingTemplateIds.has(tmpl.id)}
-              onPick={handlePick}
-            />
-          ))}
-        </div>
-      </section>
     </div>
   )
 
-  if (!isModalMode) return content
+  if (!isModalMode) return <div data-testid="goal-catalog-picker">{content}</div>
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 pb-8">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 pb-8" data-testid="goal-catalog-picker">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl max-h-full overflow-y-auto rounded-xl border border-border bg-background p-6 shadow-xl">
         <Button
@@ -216,12 +197,12 @@ function GoalPickCard({
 }) {
   if (isActive) {
     return (
-      <div className="w-full text-left rounded-lg border border-border/50 bg-muted/30 p-4 opacity-60 cursor-default">
+      <div className="w-full text-left rounded-lg border border-border/50 bg-muted/30 p-4 opacity-60 cursor-default" data-testid={`catalog-card-${template.id}`}>
         <div className="flex items-center justify-between">
           <span className="font-medium text-sm text-muted-foreground">
             {template.title}
           </span>
-          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+          <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30" data-testid={`catalog-active-${template.id}`}>
             Active
           </Badge>
         </div>
@@ -233,6 +214,7 @@ function GoalPickCard({
     <button
       onClick={() => onPick(template)}
       className="w-full text-left rounded-lg border border-border bg-card p-4 transition-all hover:border-primary hover:bg-card/80 hover:shadow-sm cursor-pointer group"
+      data-testid={`catalog-card-${template.id}`}
     >
       <span className="font-medium text-sm group-hover:text-primary transition-colors">
         {template.title}

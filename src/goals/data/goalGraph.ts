@@ -54,20 +54,14 @@ function template(
 // Goal Templates
 // ============================================================================
 
-// --- Level 0: Life Dreams ---
-const L0_TEMPLATES: GoalTemplate[] = [
-  template("dream_marry", "Get married to my dream girl", 0, "outcome"),
-  template("dream_family", "Start a happy and loving family", 0, "outcome"),
-  template("dream_love", "Find the love of my life", 0, "outcome"),
-]
-
 // --- Level 1: Major Life Goals ---
 const L1_ONE_PERSON: GoalTemplate[] = [
   template("l1_girlfriend", "Get a girlfriend", 1, "outcome"),
   template("l1_dream_girl", "Find my dream girl", 1, "outcome"),
   template("l1_engaged", "Get engaged to my dream girl", 1, "outcome"),
   template("l1_relationship", "Be in a deeply fulfilling relationship", 1, "outcome"),
-  template("l1_the_one", "Find \"the one\"", 1, "outcome"),
+  template("l1_the_one", "Get married", 1, "outcome"),
+  template("l1_family", "Start a happy and loving family", 1, "outcome"),
 ]
 
 const L1_ABUNDANCE: GoalTemplate[] = [
@@ -177,7 +171,6 @@ const L3_DIRTY_DOG: GoalTemplate[] = [
 // ============================================================================
 
 export const GOAL_TEMPLATES: GoalTemplate[] = [
-  ...L0_TEMPLATES,
   ...L1_ONE_PERSON,
   ...L1_ABUNDANCE,
   ...L2_TEMPLATES,
@@ -192,16 +185,6 @@ export const GOAL_TEMPLATE_MAP: Record<string, GoalTemplate> =
 // ============================================================================
 // Fan-Out Edges
 // ============================================================================
-
-// L0 → L1: aspirational, all L0 goals fan into all L1 goals of same flavor
-// Not critical for v1 — users enter at L1/L2. Included for completeness.
-
-const L0_TO_L1_EDGES: GoalGraphEdge[] = L0_TEMPLATES.flatMap((l0) =>
-  [...L1_ONE_PERSON, ...L1_ABUNDANCE].map((l1) => ({
-    parentId: l0.id,
-    childId: l1.id,
-  }))
-)
 
 // L1 → L2: all L1 goals fan into both achievements
 const L1_TO_L2_EDGES: GoalGraphEdge[] = [...L1_ONE_PERSON, ...L1_ABUNDANCE].flatMap((l1) =>
@@ -222,7 +205,6 @@ const L2_TO_L3_EDGES: GoalGraphEdge[] = L2_TEMPLATES.flatMap((l2) =>
 )
 
 export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
-  ...L0_TO_L1_EDGES,
   ...L1_TO_L2_EDGES,
   ...L2_TO_L3_EDGES,
 ]
@@ -357,12 +339,10 @@ export function getTemplatesByCategory(): Record<GoalDisplayCategory, GoalTempla
 // ============================================================================
 
 export function getCatalogGroups(): {
-  lifeDreams: GoalTemplate[]
   onePerson: GoalTemplate[]
   abundance: GoalTemplate[]
 } {
   return {
-    lifeDreams: L0_TEMPLATES,
     onePerson: L1_ONE_PERSON,
     abundance: L1_ABUNDANCE,
   }

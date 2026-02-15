@@ -318,6 +318,8 @@ CREATE TABLE user_tracking_stats (
   current_week TEXT,
   current_week_sessions INTEGER NOT NULL DEFAULT 0,
   current_week_approaches INTEGER NOT NULL DEFAULT 0,
+  current_week_numbers INTEGER NOT NULL DEFAULT 0,
+  current_week_instadates INTEGER NOT NULL DEFAULT 0,
   -- Weekly session streaks
   current_week_streak INTEGER NOT NULL DEFAULT 0,
   longest_week_streak INTEGER NOT NULL DEFAULT 0,
@@ -388,6 +390,46 @@ CREATE TABLE embeddings (
 );
 
 CREATE INDEX idx_embeddings_source ON embeddings(source);
+
+-- ============================================
+-- User goals table (goal tracking)
+-- Added 15-02-2026 for goalRepo integration tests
+-- ============================================
+
+CREATE TABLE user_goals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL,
+  tracking_type TEXT NOT NULL DEFAULT 'counter',
+  period TEXT NOT NULL DEFAULT 'weekly',
+  target_value INTEGER NOT NULL DEFAULT 1,
+  current_value INTEGER NOT NULL DEFAULT 0,
+  period_start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  custom_end_date DATE,
+  current_streak INTEGER NOT NULL DEFAULT 0,
+  best_streak INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  is_archived BOOLEAN NOT NULL DEFAULT false,
+  linked_metric TEXT,
+  position INTEGER NOT NULL DEFAULT 0,
+  life_area TEXT NOT NULL DEFAULT 'custom',
+  parent_goal_id UUID REFERENCES user_goals(id) ON DELETE CASCADE,
+  target_date DATE,
+  description TEXT,
+  goal_type TEXT NOT NULL DEFAULT 'recurring',
+  goal_nature TEXT,
+  display_category TEXT,
+  goal_level INTEGER,
+  template_id TEXT,
+  milestone_config JSONB,
+  ramp_steps JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_user_goals_user_id ON user_goals(user_id);
+CREATE INDEX idx_user_goals_parent ON user_goals(parent_goal_id);
+CREATE INDEX idx_user_goals_template ON user_goals(template_id);
 
 -- ============================================
 -- Values table (reference data for inner game)

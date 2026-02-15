@@ -1126,6 +1126,14 @@ def main() -> None:
             "(damage types, contamination sources, anchor drop reasons)"
         ),
     )
+    parser.add_argument(
+        "--reverify-root",
+        help=(
+            "Root directory for 06e.reverify (or 06b.reverify) artifacts. "
+            "Defaults to data/06b.reverify for backwards compatibility. "
+            "Use data/06e.reverify when running the V2 sanitized pipeline."
+        ),
+    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -1195,7 +1203,12 @@ def main() -> None:
     s06c_root = data_root / "06c.patched"
     s07_root = data_root / "07.content"
     s06b_root = data_root / "06b.verify"
-    s06b_reverify_root = data_root / "06b.reverify"
+    if args.reverify_root:
+        s06b_reverify_root = Path(args.reverify_root)
+        if not s06b_reverify_root.is_absolute():
+            s06b_reverify_root = repo_root() / s06b_reverify_root
+    else:
+        s06b_reverify_root = data_root / "06b.reverify"
     s09_root = data_root / "09.chunks"
 
     idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getGoalTree, syncLinkedGoals } from "@/src/db/goalRepo"
+import { getUserTimezone } from "@/src/db/settingsRepo"
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth()
@@ -9,9 +10,10 @@ export async function GET(request: NextRequest) {
   const includeArchived = request.nextUrl.searchParams.get("includeArchived") === "true"
 
   try {
+    const tz = await getUserTimezone(auth.userId)
     // Sync linked goals before returning tree to ensure fresh data
-    await syncLinkedGoals(auth.userId).catch(() => {})
-    const tree = await getGoalTree(auth.userId, includeArchived)
+    await syncLinkedGoals(auth.userId, tz).catch(() => {})
+    const tree = await getGoalTree(auth.userId, includeArchived, tz)
     return NextResponse.json(tree)
   } catch (error) {
     console.error("Error getting goal tree:", error)

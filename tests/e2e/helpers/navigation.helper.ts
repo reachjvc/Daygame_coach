@@ -52,6 +52,13 @@ export async function goToOnboarding(page: Page): Promise<void> {
 }
 
 /**
+ * Navigates to the goals page
+ */
+export async function goToGoals(page: Page): Promise<void> {
+  await page.goto('/dashboard/goals', { timeout: ACTION_TIMEOUT })
+}
+
+/**
  * Waits for page to match a URL pattern
  */
 export async function waitForPageLoad(page: Page, urlPattern: RegExp): Promise<void> {

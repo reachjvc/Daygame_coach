@@ -16,7 +16,7 @@ const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = 
 
 export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
   return (
-    <div className="flex items-center rounded-lg border border-border p-0.5">
+    <div className="flex items-center rounded-lg border border-border p-0.5" data-testid="goals-view-switcher">
       {VIEW_OPTIONS.map(({ mode, icon: Icon, label }) => {
         const isActive = activeView === mode
         return (
@@ -29,6 +29,7 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
             }`}
             onClick={() => onViewChange(mode)}
             title={label}
+            data-testid={`goals-view-${mode}`}
           >
             <Icon className="size-4" />
             <span className="text-xs">{label}</span>

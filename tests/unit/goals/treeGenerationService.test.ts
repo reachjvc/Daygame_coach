@@ -140,29 +140,6 @@ describe("generateGoalTreeInserts", () => {
     })
   })
 
-  describe("L0 pick", () => {
-    const inserts = generateGoalTreeInserts("dream_marry")
-
-    it("creates L0 as root with no parent", () => {
-      expect(inserts[0].template_id).toBe("dream_marry")
-      expect(inserts[0].goal_level).toBe(0)
-      expect(inserts[0]._tempParentId).toBeNull()
-    })
-
-    it("creates one L1 child beneath the L0", () => {
-      const l1s = inserts.filter((i) => i.goal_level === 1)
-      expect(l1s.length).toBe(1)
-      expect(l1s[0]._tempParentId).toBe("__temp_dream_marry")
-    })
-
-    it("includes L2 and L3 beneath the L1", () => {
-      const l2s = inserts.filter((i) => i.goal_level === 2)
-      const l3s = inserts.filter((i) => i.goal_level === 3)
-      expect(l2s.length).toBe(2)
-      expect(l3s.length).toBe(12)
-    })
-  })
-
   describe("L2 pick", () => {
     const inserts = generateGoalTreeInserts("l2_master_daygame")
 

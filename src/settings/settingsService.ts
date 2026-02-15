@@ -12,6 +12,7 @@ import {
   updateVoiceLanguage as repoUpdateVoiceLanguage,
   updatePreferredLanguage as repoUpdatePreferredLanguage,
   updateTimezone as repoUpdateTimezone,
+  updateWeekStartDay as repoUpdateWeekStartDay,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
   updateSubscriptionCancelledAt,
@@ -137,6 +138,25 @@ export async function handleUpdateTimezone(
   }
 
   await repoUpdateTimezone(userId, timezone)
+}
+
+// ============================================
+// Week Start Day
+// ============================================
+
+/**
+ * Update week start day for a user.
+ * Validates that the value is 0-6 (Sunday through Saturday).
+ */
+export async function handleUpdateWeekStartDay(
+  userId: string,
+  day: number
+): Promise<void> {
+  if (!Number.isInteger(day) || day < 0 || day > 6) {
+    throw createSettingsError("Invalid week start day (must be 0-6)", "INVALID_INPUT")
+  }
+
+  await repoUpdateWeekStartDay(userId, day)
 }
 
 // ============================================

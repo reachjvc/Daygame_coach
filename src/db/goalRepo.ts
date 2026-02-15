@@ -17,6 +17,7 @@ import { computeGoalProgress } from "./goalTypes"
 import type { UserTrackingStatsRow } from "./trackingTypes"
 import { getUserTrackingStats } from "./trackingRepo"
 import { getISOWeekString } from "../tracking/trackingService"
+import { getTodayInTimezone, getNowInTimezone } from "../shared/dateUtils"
 
 // ============================================
 // Get Goals
@@ -26,7 +27,7 @@ import { getISOWeekString } from "../tracking/trackingService"
  * Get all active (non-archived) goals for a user.
  * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getUserGoals(userId: string, includeArchived = false): Promise<GoalWithProgress[]> {
+export async function getUserGoals(userId: string, includeArchived = false, timezone: string | null = null): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
   let query = supabase
@@ -45,7 +46,7 @@ export async function getUserGoals(userId: string, includeArchived = false): Pro
     throw new Error(`Failed to get goals: ${error.message}`)
   }
 
-  return (data as UserGoalRow[]).map(computeGoalProgress)
+  return (data as UserGoalRow[]).map((g) => computeGoalProgress(g, timezone))
 }
 
 /**
@@ -53,7 +54,8 @@ export async function getUserGoals(userId: string, includeArchived = false): Pro
  */
 export async function getGoalsByCategory(
   userId: string,
-  category: string
+  category: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -69,7 +71,7 @@ export async function getGoalsByCategory(
     throw new Error(`Failed to get goals by category: ${error.message}`)
   }
 
-  return (data as UserGoalRow[]).map(computeGoalProgress)
+  return (data as UserGoalRow[]).map((g) => computeGoalProgress(g, timezone))
 }
 
 /**
@@ -77,7 +79,8 @@ export async function getGoalsByCategory(
  */
 export async function getGoalsByLifeArea(
   userId: string,
-  lifeArea: string
+  lifeArea: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -93,7 +96,7 @@ export async function getGoalsByLifeArea(
     throw new Error(`Failed to get goals by life area: ${error.message}`)
   }
 
-  return (data as UserGoalRow[]).map(computeGoalProgress)
+  return (data as UserGoalRow[]).map((g) => computeGoalProgress(g, timezone))
 }
 
 /**
@@ -101,7 +104,8 @@ export async function getGoalsByLifeArea(
  */
 export async function getGoalById(
   userId: string,
-  goalId: string
+  goalId: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress | null> {
   const supabase = await createServerSupabaseClient()
 
@@ -119,7 +123,7 @@ export async function getGoalById(
     throw new Error(`Failed to get goal: ${error.message}`)
   }
 
-  return computeGoalProgress(data as UserGoalRow)
+  return computeGoalProgress(data as UserGoalRow, timezone)
 }
 
 // ============================================
@@ -131,7 +135,8 @@ export async function getGoalById(
  */
 export async function createGoal(
   userId: string,
-  goal: UserGoalInsert
+  goal: UserGoalInsert,
+  timezone: string | null = null
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -181,7 +186,7 @@ export async function createGoal(
     throw new Error(`Failed to create goal: ${error.message}`)
   }
 
-  return computeGoalProgress(data as UserGoalRow)
+  return computeGoalProgress(data as UserGoalRow, timezone)
 }
 
 // ============================================
@@ -194,7 +199,8 @@ export async function createGoal(
  */
 export async function createGoalBatch(
   userId: string,
-  goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[]
+  goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
+  timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
   const tempToReal = new Map<string, string>()
   const created: GoalWithProgress[] = []
@@ -204,7 +210,7 @@ export async function createGoalBatch(
     const { _tempId, _tempParentId, ...insert } = goal
     insert.parent_goal_id = realParentId ?? undefined
 
-    const result = await createGoal(userId, insert)
+    const result = await createGoal(userId, insert, timezone)
     tempToReal.set(_tempId, result.id)
     created.push(result)
   }
@@ -222,7 +228,8 @@ export async function createGoalBatch(
 export async function updateGoal(
   userId: string,
   goalId: string,
-  update: UserGoalUpdate
+  update: UserGoalUpdate,
+  timezone: string | null = null
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -244,7 +251,7 @@ export async function updateGoal(
     throw new Error(`Failed to update goal: ${error.message}`)
   }
 
-  return computeGoalProgress(data as UserGoalRow)
+  return computeGoalProgress(data as UserGoalRow, timezone)
 }
 
 /**
@@ -253,7 +260,8 @@ export async function updateGoal(
 export async function incrementGoalProgress(
   userId: string,
   goalId: string,
-  amount: number = 1
+  amount: number = 1,
+  timezone: string | null = null
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -296,7 +304,7 @@ export async function incrementGoalProgress(
     throw new Error(`Failed to increment goal: ${error.message}`)
   }
 
-  return computeGoalProgress(data as UserGoalRow)
+  return computeGoalProgress(data as UserGoalRow, timezone)
 }
 
 // ============================================
@@ -308,7 +316,8 @@ export async function incrementGoalProgress(
  */
 export async function resetGoalPeriod(
   userId: string,
-  goalId: string
+  goalId: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress> {
   const supabase = await createServerSupabaseClient()
 
@@ -329,7 +338,7 @@ export async function resetGoalPeriod(
   // If goal wasn't completed, reset streak
   const updateData: Record<string, unknown> = {
     current_value: 0,
-    period_start_date: new Date().toISOString().split("T")[0],
+    period_start_date: getTodayInTimezone(timezone),
   }
 
   if (!wasComplete) {
@@ -348,7 +357,7 @@ export async function resetGoalPeriod(
     throw new Error(`Failed to reset goal period: ${error.message}`)
   }
 
-  return computeGoalProgress(data as UserGoalRow)
+  return computeGoalProgress(data as UserGoalRow, timezone)
 }
 
 // ============================================
@@ -359,7 +368,7 @@ export async function resetGoalPeriod(
  * Reset all daily goals for a user
  * Updates streak based on completion status before resetting
  */
-export async function resetDailyGoals(userId: string): Promise<number> {
+export async function resetDailyGoals(userId: string, timezone: string | null = null): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
   // Get all active daily goals
@@ -385,7 +394,7 @@ export async function resetDailyGoals(userId: string): Promise<number> {
 
     const updateData: Record<string, unknown> = {
       current_value: 0,
-      period_start_date: new Date().toISOString().split("T")[0],
+      period_start_date: getTodayInTimezone(timezone),
     }
 
     // Reset streak if goal wasn't completed
@@ -414,9 +423,10 @@ export async function resetDailyGoals(userId: string): Promise<number> {
  */
 function getMetricValue(
   stats: UserTrackingStatsRow,
-  metric: LinkedMetric
+  metric: LinkedMetric,
+  timezone: string | null = null
 ): number {
-  const currentWeek = getISOWeekString(new Date())
+  const currentWeek = getISOWeekString(getNowInTimezone(timezone))
   const isCurrentWeek = stats.current_week === currentWeek
 
   switch (metric) {
@@ -445,7 +455,7 @@ function getMetricValue(
  * Sync all goals with linked metrics to current tracking data
  * Call this after fetching tracking stats to keep goals in sync
  */
-export async function syncLinkedGoals(userId: string): Promise<number> {
+export async function syncLinkedGoals(userId: string, timezone: string | null = null): Promise<number> {
   const supabase = await createServerSupabaseClient()
 
   // Get user's tracking stats
@@ -474,7 +484,7 @@ export async function syncLinkedGoals(userId: string): Promise<number> {
   let updatedCount = 0
 
   for (const goal of goals) {
-    const newValue = getMetricValue(stats, goal.linked_metric as LinkedMetric)
+    const newValue = getMetricValue(stats, goal.linked_metric as LinkedMetric, timezone)
 
     // Only update if value changed
     if (newValue !== goal.current_value) {
@@ -581,8 +591,8 @@ function buildTree(goals: GoalWithProgress[]): GoalTreeNode[] {
  * Get full goal tree for a user (all active goals as hierarchy).
  * Pass includeArchived=true to also return archived goals (for customize mode).
  */
-export async function getGoalTree(userId: string, includeArchived = false): Promise<GoalTreeNode[]> {
-  const goals = await getUserGoals(userId, includeArchived)
+export async function getGoalTree(userId: string, includeArchived = false, timezone: string | null = null): Promise<GoalTreeNode[]> {
+  const goals = await getUserGoals(userId, includeArchived, timezone)
   return buildTree(goals)
 }
 
@@ -591,7 +601,8 @@ export async function getGoalTree(userId: string, includeArchived = false): Prom
  */
 export async function getChildGoals(
   userId: string,
-  parentGoalId: string
+  parentGoalId: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
   const supabase = await createServerSupabaseClient()
 
@@ -607,7 +618,7 @@ export async function getChildGoals(
     throw new Error(`Failed to get child goals: ${error.message}`)
   }
 
-  return (data as UserGoalRow[]).map(computeGoalProgress)
+  return (data as UserGoalRow[]).map((g) => computeGoalProgress(g, timezone))
 }
 
 /**
@@ -615,10 +626,11 @@ export async function getChildGoals(
  */
 export async function getGoalAncestors(
   userId: string,
-  goalId: string
+  goalId: string,
+  timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
   // Fetch all goals for user and walk up the tree
-  const allGoals = await getUserGoals(userId)
+  const allGoals = await getUserGoals(userId, false, timezone)
   const goalMap = new Map(allGoals.map((g) => [g.id, g]))
 
   const ancestors: GoalWithProgress[] = []
@@ -668,4 +680,37 @@ export async function deleteGoal(userId: string, goalId: string): Promise<void> 
   if (error) {
     throw new Error(`Failed to delete goal: ${error.message}`)
   }
+}
+
+/**
+ * Permanently delete ALL goals for a user (single atomic query).
+ * Returns the count of deleted goals.
+ */
+export async function deleteAllGoals(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  // First get count so we can report it
+  const { data: goals, error: countError } = await supabase
+    .from("user_goals")
+    .select("id")
+    .eq("user_id", userId)
+
+  if (countError) {
+    throw new Error(`Failed to count goals: ${countError.message}`)
+  }
+
+  const count = goals?.length ?? 0
+  if (count === 0) return 0
+
+  // Single atomic delete — no FK race conditions
+  const { error } = await supabase
+    .from("user_goals")
+    .delete()
+    .eq("user_id", userId)
+
+  if (error) {
+    throw new Error(`Failed to delete all goals: ${error.message}`)
+  }
+
+  return count
 }
