@@ -1,4 +1,4 @@
-import { searchSimilarEmbeddings, searchEmbeddingsByKeyword } from "@/src/db/server"
+import { searchSimilarEmbeddings, searchEmbeddingsByKeyword, fetchEmbeddingsBySourceAndConversation } from "@/src/db/server"
 import type { EmbeddingMetadata } from "@/src/db/types"
 import { QA_CONFIG } from "./config"
 import type { RetrievalOptions, RetrievedChunk } from "./types"
@@ -219,6 +219,31 @@ function deriveCoachFromSource(source?: string): string | undefined {
   return parts[0]
 }
 
+function asFiniteNumber(raw: unknown): number | null {
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw
+  if (typeof raw === "string") {
+    const n = Number(raw)
+    return Number.isFinite(n) ? n : null
+  }
+  return null
+}
+
+function sortConversationChunks(
+  rows: Array<{ id: string; content: string; source: string; metadata: EmbeddingMetadata | null }>
+): Array<{ id: string; content: string; source: string; metadata: EmbeddingMetadata | null }> {
+  return [...rows].sort((a, b) => {
+    const am = a.metadata as any
+    const bm = b.metadata as any
+    const aConvIdx = asFiniteNumber(am?.conversationChunkIndex)
+    const bConvIdx = asFiniteNumber(bm?.conversationChunkIndex)
+    if (aConvIdx !== null && bConvIdx !== null) return aConvIdx - bConvIdx
+    const aChunkIdx = asFiniteNumber(am?.chunkIndex)
+    const bChunkIdx = asFiniteNumber(bm?.chunkIndex)
+    if (aChunkIdx !== null && bChunkIdx !== null) return aChunkIdx - bChunkIdx
+    return a.id.localeCompare(b.id)
+  })
+}
+
 function deriveTopicFromSource(source?: string): string | undefined {
   const normalized = normalizeSourcePath(source)
   if (!normalized) return undefined
@@ -361,6 +386,15 @@ export async function retrieveRelevantChunks(
       return typeBonus + exampleBonus
     })()
 
+    const qualityAdjustment = (() => {
+      // Metadata-driven downranking (small on purpose). This should not "hide" rare but relevant clips.
+      // Stage 09 emits chunkConfidence in [0, 1] based on transcript/speaker/phase quality signals.
+      const raw = match.metadata?.chunkConfidence
+      const cc = typeof raw === "number" && raw >= 0 && raw <= 1 ? raw : 1.0
+      // Max penalty ~= -0.12 (only for cc=0). Keep similarity dominant.
+      return -0.12 * (1.0 - cc)
+    })()
+
     const anchorGatingAdjustment = (() => {
       // If the user asks about "studying medicine", avoid matching idioms/plant-medicine talk that lack education/career context.
       if (!studyAnchors) return 0
@@ -382,7 +416,7 @@ export async function retrieveRelevantChunks(
       return phraseBoost + missingContextPenalty + idiomPenalty
     })()
 
-    const combinedScore = baseScore + interactionBonus + anchorGatingAdjustment
+    const combinedScore = baseScore + interactionBonus + qualityAdjustment + anchorGatingAdjustment
 
     return { match, combinedScore }
   })
@@ -392,8 +426,10 @@ export async function retrieveRelevantChunks(
   // Diversity caps to avoid flooding with near-duplicates from one source/coach
   const maxPerSource = 2
   const maxPerCoach = 3
+  const maxPerConversation = 1
   const perSourceCount = new Map<string, number>()
   const perCoachCount = new Map<string, number>()
+  const perConversationCount = new Map<string, number>()
 
   const selectedMatches: typeof combinedCandidates = []
   for (const { match } of scored) {
@@ -401,6 +437,13 @@ export async function retrieveRelevantChunks(
     const sourceKey = normalizeSourcePath(match.source) || "unknown-source"
     const nextSourceCount = (perSourceCount.get(sourceKey) ?? 0) + 1
     if (nextSourceCount > maxPerSource) continue
+
+    const convId = asFiniteNumber((match.metadata as any)?.conversationId)
+    const convKey = convId !== null ? `${sourceKey}|${convId}` : null
+    const nextConvCount = convKey ? (perConversationCount.get(convKey) ?? 0) + 1 : null
+    if (convId !== null) {
+      if ((nextConvCount ?? 0) > maxPerConversation) continue
+    }
 
     const coach = String(
       match.metadata?.coach ??
@@ -413,6 +456,7 @@ export async function retrieveRelevantChunks(
 
     perSourceCount.set(sourceKey, nextSourceCount)
     perCoachCount.set(coach, nextCoachCount)
+    if (convKey) perConversationCount.set(convKey, nextConvCount ?? 1)
     selectedMatches.push(match)
   }
 
@@ -421,11 +465,67 @@ export async function retrieveRelevantChunks(
   if (primaryAnchors.length > 0 && !selectedMatches.some((m) => containsAnyToken(m.content, primaryAnchors))) {
     const bestAnchor = scored.find(({ match }) => containsAnyToken(match.content, primaryAnchors))?.match
     if (bestAnchor) {
+      // Don't duplicate an already-selected chunk.
+      if (selectedMatches.some((m) => m.id === bestAnchor.id)) {
+        // no-op
+      } else {
       // Replace the last item (lowest-ranked) to keep size == topK
       if (selectedMatches.length >= topK) selectedMatches.pop()
       selectedMatches.unshift(bestAnchor)
+      }
     }
   }
+
+  // Context stitching: for interaction chunks, include adjacent chunks from the same conversation
+  // so the QA model sees continuity (open -> hook -> close) instead of an isolated phase.
+  const stitchedContentById = new Map<string, string>()
+  const conversationCache = new Map<string, Array<{ id: string; content: string; source: string; metadata: EmbeddingMetadata | null }>>()
+
+  async function getConversationChunks(source: string, conversationId: number) {
+    const key = `${source}|${conversationId}`
+    const cached = conversationCache.get(key)
+    if (cached) return cached
+
+    const rows = await fetchEmbeddingsBySourceAndConversation(source, conversationId)
+    const normalized = rows.map((r) => ({
+      id: r.id,
+      content: r.content,
+      source: r.source,
+      metadata: r.metadata ?? null,
+    }))
+    conversationCache.set(key, normalized)
+    return normalized
+  }
+
+  const stitchTasks = selectedMatches.map(async (match) => {
+    const sourceKey = normalizeSourcePath(match.source) || ""
+    const convId = asFiniteNumber((match.metadata as any)?.conversationId)
+    if (!sourceKey || convId === null) return
+
+    const all = await getConversationChunks(sourceKey, convId)
+    if (!all.length) return
+
+    const sorted = sortConversationChunks(all)
+    if (sorted.length <= 1) return
+
+    const focusIdx = Math.max(0, sorted.findIndex((r) => r.id === match.id))
+    const convTotal = asFiniteNumber((match.metadata as any)?.conversationChunkTotal)
+
+    const stitchedRows = (() => {
+      // For short conversations (<=4 chunks), just include all phases.
+      if (convTotal !== null && convTotal <= 4) return sorted
+
+      const radius = 1
+      const start = Math.max(0, focusIdx - radius)
+      const endExclusive = Math.min(sorted.length, focusIdx + radius + 1)
+      return sorted.slice(start, endExclusive)
+    })()
+
+    const stitchedText = stitchedRows.map((r) => r.content).join("\n\n---\n\n")
+    if (stitchedText.trim().length > 0) stitchedContentById.set(match.id, stitchedText)
+  })
+
+  await Promise.all(stitchTasks)
 
   // Transform to RetrievedChunk format, truncating if needed
   const chunks: RetrievedChunk[] = selectedMatches.map((match) => {
@@ -434,11 +534,13 @@ export async function retrieveRelevantChunks(
       (typeof match.metadata?.video_title === "string" ? match.metadata.video_title : undefined) ??
       deriveTopicFromSource(match.source)
 
+    const content = stitchedContentById.get(match.id) ?? match.content
+
     return {
       chunkId: match.id,
-      text: match.content.length > maxChunkChars
-        ? match.content.substring(0, maxChunkChars) + "..."
-        : match.content,
+      text: content.length > maxChunkChars
+        ? content.substring(0, maxChunkChars) + "..."
+        : content,
       metadata: {
         coach: typeof rawCoach === "string" ? rawCoach : undefined,
         topic: typeof rawTopic === "string" ? rawTopic : undefined,

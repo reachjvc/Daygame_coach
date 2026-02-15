@@ -98,6 +98,32 @@ export async function searchEmbeddingsByKeyword(
 }
 
 /**
+ * Fetch all chunks for a specific conversation (within a single video/source).
+ * Used for context stitching so the QA model can see neighboring phases.
+ */
+export async function fetchEmbeddingsBySourceAndConversation(
+  source: string,
+  conversationId: number
+): Promise<Array<Pick<EmbeddingRow, "id" | "content" | "source" | "metadata">>> {
+  const supabase = createAdminSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("embeddings")
+    .select("id, content, source, metadata")
+    .eq("source", source)
+    .contains("metadata", { conversationId })
+    .limit(80)
+
+  if (error) {
+    throw new Error(
+      `Failed to fetch embeddings for source '${source}', conversationId ${conversationId}: ${error.message}`
+    )
+  }
+
+  return (data ?? []) as Array<Pick<EmbeddingRow, "id" | "content" | "source" | "metadata">>
+}
+
+/**
  * Get total count of embeddings (for stats/diagnostics).
  */
 export async function getEmbeddingsCount(): Promise<number> {
