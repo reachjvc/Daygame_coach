@@ -146,10 +146,11 @@ export function VoiceChatWindow({ onClose, scenarioType }: VoiceChatWindowProps)
     }
   }, [messages]);
 
-  const scenarioTitles = {
+  const scenarioTitles: Record<ChatScenarioType, string> = {
     "practice-openers": "Practice Openers",
     "practice-career-response": "Practice Career Response",
     "practice-shittests": "Practice Shit-Tests",
+    "keep-it-going": "Keep It Going",
   };
 
   // Get initial woman description when chat opens

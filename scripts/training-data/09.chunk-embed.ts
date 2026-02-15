@@ -1430,7 +1430,7 @@ async function main() {
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line): line is string => Boolean(line) && line.length > 2)
+        .filter((line): line is string => Boolean(line) && line!.length > 2)
         .join("\n")
 
       const enrichment = commentaryEnrichments.find((e) => e.block_index === blockIdx + 1)
@@ -1467,7 +1467,7 @@ async function main() {
           const speaker = mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)
           return `${speaker}: ${(seg.text ?? "").trim()}`
         })
-        .filter((line): line is string => Boolean(line) && line.length > 2)
+        .filter((line): line is string => Boolean(line) && line!.length > 2)
         .join("\n")
 
       const techniques = extractTechniqueNames(section.techniques_discussed)

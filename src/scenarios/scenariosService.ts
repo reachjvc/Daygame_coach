@@ -186,7 +186,7 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
       : null
 
   // Get language from profile or default to Danish
-  const language: Language = (profile?.preferred_language as Language) || "da"
+  const language: Language = (profile?.voice_language as Language) || "da"
   const keepItGoingContext =
     scenario_type === "keep-it-going"
       ? generateKeepItGoingScenario(scenarioSeed, language)
