@@ -13,7 +13,7 @@ import {
 const STILL_IMAGE = "/marcus-test/marcus_alive4_01.png"
 const VIDEO_SRC = "/Marcus/liveportrait_output/marcus_loop_01--test7.mp4"
 const VIDEO_SRC_1_2X = "/Marcus/liveportrait_output/marcus_loop_01--default_driver_1.2x.mp4"
-const VIDEO_SRC_JVC = "/Marcus/liveportrait_output/marcus_alive4_01--testJVC.mp4"
+const VIDEO_SRC_JVC = "/Marcus/liveportrait_output/marcus_alive4_01--marcus.mp4"
 
 const marcus = getRoleModelById("marcus-aurelius")!
 const categoryInfo = ROLE_MODEL_CATEGORIES.find(c => c.id === marcus.category)!

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -88,6 +88,12 @@ const testPages = [
     href: "/test/icon-preview",
     description: "Compare current vs proposed icons for 9 overloaded icon issues",
     icon: Eye,
+  },
+  {
+    name: "Curve Customization",
+    href: "/test/curve-customization",
+    description: "5 visual variations of the curve customizer (Frost, Cyberpunk, Gold, Neon, Zen)",
+    icon: Palette,
   },
 ]
 
