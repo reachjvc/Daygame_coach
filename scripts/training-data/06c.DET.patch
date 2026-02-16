@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06c.patch
+scripts/training-data/06c.DET.patch
 
 Auto-apply high-confidence fixes from 06b verification reports.
 
@@ -8,13 +8,13 @@ Pure deterministic JSON patching — no LLM calls.
 
 Reads:
   - Stage 06 output:
-      data/06.video-type/<source>/<video>/*.conversations.json
+      data/06.LLM.video-type/<source>/<video>/*.conversations.json
   - Stage 06b verification reports:
-      data/06b.verify/<source>/<video>/*.verification.json
+      data/06b.LLM.verify/<source>/<video>/*.verification.json
 
 Writes:
   - Patched conversations (same filename pattern as stage 06):
-      data/06c.patched/<source>/<video>/*.conversations.json
+      data/06c.DET.patched/<source>/<video>/*.conversations.json
 
 Auto-applies:
   - misattributions: changes speaker_role on matched segments
@@ -36,19 +36,19 @@ Flags but does NOT fix (yet):
 Use:
 
   A) From pipeline:
-     ./scripts/training-data/06c.patch "source_name" "youtube_url"
+     ./scripts/training-data/06c.DET.patch "source_name" "youtube_url"
 
   B) Test videos:
-     ./scripts/training-data/06c.patch --test
+     ./scripts/training-data/06c.DET.patch --test
 
   C) Single file:
-     ./scripts/training-data/06c.patch --input data/06.video-type/video.conversations.json
+     ./scripts/training-data/06c.DET.patch --input data/06.LLM.video-type/video.conversations.json
 
   D) Batch from sources file:
-     ./scripts/training-data/06c.patch --sources
+     ./scripts/training-data/06c.DET.patch --sources
 
   E) Dry run (show what would be patched):
-     ./scripts/training-data/06c.patch --input data/06.video-type/video.conversations.json --dry-run
+     ./scripts/training-data/06c.DET.patch --input data/06.LLM.video-type/video.conversations.json --dry-run
 """
 
 from __future__ import annotations
@@ -73,9 +73,9 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.patch-v1.8"  # v1.8: legacy transcript_confidence compatibility normalization
+PIPELINE_VERSION = "06c.DET.patch-v1.8"  # v1.8: legacy transcript_confidence compatibility normalization
 
-LOG_PREFIX = "[06c.patch]"
+LOG_PREFIX = "[06c.DET.patch]"
 
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
@@ -808,7 +808,7 @@ def patch_file(
         if not allow_invalid_verification:
             raise RuntimeError(
                 f"Verification report schema invalid for {conversations_path.name}: {e}. "
-                "Fix/re-run 06b.verify, or use --allow-invalid-verification for legacy reports."
+                "Fix/re-run 06b.LLM.verify, or use --allow-invalid-verification for legacy reports."
             )
         print(f"{LOG_PREFIX}   WARNING: {e}")
         print(f"{LOG_PREFIX}   WARNING: Continuing due to --allow-invalid-verification")
@@ -924,27 +924,27 @@ def repo_root() -> Path:
 
 
 def s06_root() -> Path:
-    return repo_root() / "data" / "06.video-type"
+    return repo_root() / "data" / "06.LLM.video-type"
 
 
 def s06b_root() -> Path:
-    return repo_root() / "data" / "06b.verify"
+    return repo_root() / "data" / "06b.LLM.verify"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06c.patched"
+    return repo_root() / "data" / "06c.DET.patched"
 
 
 def test_s06_root() -> Path:
-    return repo_root() / "data" / "test" / "06.video-type"
+    return repo_root() / "data" / "test" / "06.LLM.video-type"
 
 
 def test_s06b_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.verify"
+    return repo_root() / "data" / "test" / "06b.LLM.verify"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06c.patched"
+    return repo_root() / "data" / "test" / "06c.DET.patched"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -1073,7 +1073,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/06.video-type/)"
+        help="Source name (folder under data/06.LLM.video-type/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -1087,19 +1087,19 @@ def main() -> None:
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06.video-type, or data/test/06.video-type with --test)"
+            "(default: data/06.LLM.video-type, or data/test/06.video-type with --test)"
         ),
     )
     parser.add_argument(
         "--verification-root",
         help=(
             "Root directory containing Stage 06b verification reports "
-            "(default: data/06b.verify, or data/test/06b.verify with --test)"
+            "(default: data/06b.LLM.verify, or data/test/06b.LLM.verify with --test)"
         ),
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/06c.patched/)"
+        help="Output directory (defaults to data/06c.DET.patched/)"
     )
     parser.add_argument(
         "--test",
@@ -1233,7 +1233,7 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.LLM.video-type output")
             continue
 
         src_out_dir = out_base / src_name
@@ -1285,7 +1285,7 @@ def _run_manifest(args, in_base: Path, verify_root: Path, out_base: Path) -> Non
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.video-type output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06.LLM.video-type output")
             continue
 
         src_out_dir = out_base / src_name

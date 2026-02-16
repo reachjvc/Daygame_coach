@@ -6,13 +6,13 @@ Cross-stage consistency validation between Stage 06 (or 06c patched) and Stage 0
 
 Runs after both stages complete for a video (or batch of videos).
 Checks that Stage 07 output is consistent with Stage 06/06c output.
-Prefers 06c.patched data when available, falls back to 06.video-type.
+Prefers 06c.DET.patched data when available, falls back to 06.LLM.video-type.
 
 Use:
   A) Validate a single video pair:
      python validate_cross_stage.py \
-       --s06 data/06c.patched/source/video.conversations.json \
-       --s07 data/07.content/source/video.enriched.json
+       --s06 data/06c.DET.patched/source/video.conversations.json \
+       --s07 data/07.LLM.content/source/video.enriched.json
 
   B) Validate all videos in a source:
      python validate_cross_stage.py --source daily_evolution
@@ -392,9 +392,9 @@ def _layout_mode(stage_root: Path, path_obj: Path) -> str:
 
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
     """Find matching Stage 06/07 output file pairs."""
-    s06c_root = repo_root() / "data" / "06c.patched"
-    s06_root = repo_root() / "data" / "06.video-type"
-    s07_root = repo_root() / "data" / "07.content"
+    s06c_root = repo_root() / "data" / "06c.DET.patched"
+    s06_root = repo_root() / "data" / "06.LLM.video-type"
+    s07_root = repo_root() / "data" / "07.LLM.content"
 
     if not s07_root.exists():
         return []
@@ -434,9 +434,9 @@ def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str
 
 def _count_stage_artifacts(source: Optional[str]) -> Tuple[int, int]:
     """Return (#stage06_or_06c_files, #stage07_files) for source/all scans."""
-    s06c_root = repo_root() / "data" / "06c.patched"
-    s06_root = repo_root() / "data" / "06.video-type"
-    s07_root = repo_root() / "data" / "07.content"
+    s06c_root = repo_root() / "data" / "06c.DET.patched"
+    s06_root = repo_root() / "data" / "06.LLM.video-type"
+    s07_root = repo_root() / "data" / "07.LLM.content"
 
     s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
     s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
@@ -494,9 +494,9 @@ def main() -> None:
             print(f"{LOG_PREFIX} No video ids found in manifest: {manifest_path}")
             sys.exit(0)
 
-        s06c_root = repo_root() / "data" / "06c.patched"
-        s06_root = repo_root() / "data" / "06.video-type"
-        s07_root = repo_root() / "data" / "07.content"
+        s06c_root = repo_root() / "data" / "06c.DET.patched"
+        s06_root = repo_root() / "data" / "06.LLM.video-type"
+        s07_root = repo_root() / "data" / "07.LLM.content"
 
         s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
         s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
@@ -515,7 +515,7 @@ def main() -> None:
             s07_candidates_src = [p for p in s07_candidates_all if _path_has_source(p, src)]
 
             # Stage 06 selection follows normal pipeline preference:
-            # prefer 06c.patched if present, then fall back to 06.video-type.
+            # prefer 06c.DET.patched if present, then fall back to 06.LLM.video-type.
             s06c_candidates_all = s06c_by_vid.get(vid, [])
             s06_candidates_all = s06_by_vid.get(vid, [])
             s06c_candidates_src = [p for p in s06c_candidates_all if _path_has_source(p, src)]

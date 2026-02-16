@@ -225,7 +225,7 @@ describe("filterGoals", () => {
     createGoalWithProgress({
       id: "g2",
       title: "Read books",
-      life_area: "education",
+      life_area: "personal_growth",
       is_complete: true,
       period: "monthly",
     }),
@@ -239,7 +239,7 @@ describe("filterGoals", () => {
     createGoalWithProgress({
       id: "g4",
       title: "Save money for health",
-      life_area: "finances",
+      life_area: "career_business",
       is_complete: false,
       period: "yearly",
     }),
@@ -276,7 +276,7 @@ describe("filterGoals", () => {
     // "health" appears in g1's life_area AND g4's title
     const filters = createEmptyFilters({ search: "health" })
     const result = filterGoals(goals, filters)
-    // g1 matches on life_area "health_fitness", g4 matches on title "Save money for health"
+    // g1 matches on life_area "health_fitness", g4 matches on title "Save money for health" (career_business area)
     expect(result).toHaveLength(2)
     const ids = result.map((g) => g.id)
     expect(ids).toContain("g1")
@@ -306,7 +306,7 @@ describe("filterGoals", () => {
   })
 
   test("should apply combined filters (lifeArea + status)", () => {
-    const filters = createEmptyFilters({ lifeArea: "education", status: "complete" })
+    const filters = createEmptyFilters({ lifeArea: "personal_growth", status: "complete" })
     const result = filterGoals(goals, filters)
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe("g2")
@@ -338,7 +338,7 @@ describe("groupGoalsByLifeArea", () => {
   test("should group goals by their life_area", () => {
     const goals = [
       createGoalWithProgress({ id: "g1", life_area: "health_fitness" }),
-      createGoalWithProgress({ id: "g2", life_area: "education" }),
+      createGoalWithProgress({ id: "g2", life_area: "personal_growth" }),
       createGoalWithProgress({ id: "g3", life_area: "health_fitness" }),
     ]
 
@@ -346,7 +346,7 @@ describe("groupGoalsByLifeArea", () => {
 
     expect(Object.keys(result)).toHaveLength(2)
     expect(result["health_fitness"]).toHaveLength(2)
-    expect(result["education"]).toHaveLength(1)
+    expect(result["personal_growth"]).toHaveLength(1)
     expect(result["health_fitness"][0].id).toBe("g1")
     expect(result["health_fitness"][1].id).toBe("g3")
   })
@@ -454,7 +454,7 @@ describe("computeLifeAreaProgress", () => {
       }),
       createGoalWithProgress({
         id: "g3",
-        life_area: "education",
+        life_area: "personal_growth",
         progress_percentage: 50,
         is_complete: false,
       }),
@@ -463,17 +463,17 @@ describe("computeLifeAreaProgress", () => {
     const result = computeLifeAreaProgress(goals)
 
     const health = result.find((r) => r.lifeArea === "health_fitness")
-    const education = result.find((r) => r.lifeArea === "education")
+    const growth = result.find((r) => r.lifeArea === "personal_growth")
 
     expect(health).toBeDefined()
     expect(health!.completed).toBe(1)
     expect(health!.total).toBe(2)
     expect(health!.avgProgress).toBe(90) // (80 + 100) / 2 = 90
 
-    expect(education).toBeDefined()
-    expect(education!.completed).toBe(0)
-    expect(education!.total).toBe(1)
-    expect(education!.avgProgress).toBe(50)
+    expect(growth).toBeDefined()
+    expect(growth!.completed).toBe(0)
+    expect(growth!.total).toBe(1)
+    expect(growth!.avgProgress).toBe(50)
   })
 
   test("should round avgProgress to nearest integer", () => {
@@ -503,13 +503,13 @@ describe("computeLifeAreaProgress", () => {
     const goals = [
       createGoalWithProgress({
         id: "g1",
-        life_area: "finances",
+        life_area: "career_business",
         progress_percentage: 100,
         is_complete: true,
       }),
       createGoalWithProgress({
         id: "g2",
-        life_area: "finances",
+        life_area: "career_business",
         progress_percentage: 100,
         is_complete: true,
       }),

@@ -81,11 +81,11 @@ export async function createGoalTreeViaAPI(
   const response = await page.request.post('/api/goals/batch', {
     data: {
       goals: [
-        { _tempId: 'l0', _tempParentId: null, title: 'L0 Dream', category: 'dating', target_value: 1, goal_level: 0 },
-        { _tempId: 'l1', _tempParentId: 'l0', title: 'L1 Outcome', category: 'dating', target_value: 1, goal_level: 1 },
-        { _tempId: 'l2', _tempParentId: 'l1', title: 'L2 System', category: 'dating', target_value: 10, goal_level: 2 },
-        { _tempId: 'l3a', _tempParentId: 'l2', title: 'L3 Action A', category: 'dating', target_value: 5, goal_level: 3 },
-        { _tempId: 'l3b', _tempParentId: 'l2', title: 'L3 Action B', category: 'dating', target_value: 3, goal_level: 3 },
+        { _tempId: 'l0', _tempParentId: null, title: 'L0 Dream', category: 'daygame', target_value: 1, goal_level: 0 },
+        { _tempId: 'l1', _tempParentId: 'l0', title: 'L1 Outcome', category: 'daygame', target_value: 1, goal_level: 1 },
+        { _tempId: 'l2', _tempParentId: 'l1', title: 'L2 System', category: 'daygame', target_value: 10, goal_level: 2 },
+        { _tempId: 'l3a', _tempParentId: 'l2', title: 'L3 Action A', category: 'daygame', target_value: 5, goal_level: 3 },
+        { _tempId: 'l3b', _tempParentId: 'l2', title: 'L3 Action B', category: 'daygame', target_value: 3, goal_level: 3 },
       ],
     },
   })

@@ -24,10 +24,11 @@
     "source_file": { "type": "string" },
     "input": {
       "type": "object",
-      "required": ["stage06d", "stage07"],
+      "required": ["stage06d"],
       "additionalProperties": false,
       "properties": {
         "stage06d": { "type": "string" },
+        "stage06e": { "type": ["string", "null"] },
         "stage07": { "type": ["string", "null"] }
       }
     },

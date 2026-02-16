@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06d.sanitize
+scripts/training-data/06d.DET.sanitize
 
 Deterministic sanitization pass between 06c.patch and Stage 07.
 
 Reads:
-  - data/06c.patched/<source>/<video>/*.conversations.json
+  - data/06c.DET.patched/<source>/<video>/*.conversations.json
 
 Writes:
-  - data/06d.sanitized/<source>/<video>/*.conversations.json
-  - data/06d.sanitized/<source>/<video>/*.sanitize.report.json
+  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json
+  - data/06d.DET.sanitized/<source>/<video>/*.sanitize.report.json
 
 Current deterministic rules (D1):
   1) teaser_duplicate detection (early duplicated preview lines)
@@ -34,8 +34,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from batch.manifest_parser import load_manifest_sources, manifest_filter_files
 
 
-LOG_PREFIX = "[06d.sanitize]"
-PIPELINE_VERSION = "06d.sanitize-v1.0"
+LOG_PREFIX = "[06d.DET.sanitize]"
+PIPELINE_VERSION = "06d.DET.sanitize-v1.0"
 
 
 def repo_root() -> Path:
@@ -43,19 +43,19 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06c.patched"
+    return repo_root() / "data" / "06c.DET.patched"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06d.sanitized"
+    return repo_root() / "data" / "06d.DET.sanitized"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06c.patched"
+    return repo_root() / "data" / "test" / "06c.DET.patched"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06d.sanitized"
+    return repo_root() / "data" / "test" / "06d.DET.sanitized"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -1015,7 +1015,7 @@ def _run_sources(args: argparse.Namespace, in_base: Path, out_base: Path) -> Non
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06c.patched output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06c.DET.patched output")
             continue
         src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
@@ -1033,7 +1033,7 @@ def _run_manifest(args: argparse.Namespace, in_base: Path, out_base: Path) -> No
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06c.patched output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06c.DET.patched output")
             continue
         src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
@@ -1059,7 +1059,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/06c.patched/)"
+        help="Source name (folder under data/06c.DET.patched/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -1070,14 +1070,14 @@ def main() -> None:
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06c.patched, or data/test/06c.patched with --test)"
+            "(default: data/06c.DET.patched, or data/test/06c.DET.patched with --test)"
         ),
     )
-    parser.add_argument("--output", help="Output directory (defaults to data/06d.sanitized/)")
+    parser.add_argument("--output", help="Output directory (defaults to data/06d.DET.sanitized/)")
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/06c.patched/)"
+        help="Process test videos (data/test/06c.DET.patched/)"
     )
     parser.add_argument(
         "--sources",

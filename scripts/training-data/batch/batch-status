@@ -49,14 +49,14 @@ def load_manifest(manifest_path: Path) -> List[Tuple[str, str, str]]:
 
 STAGES = [
     ("01.download", "download", "*.wav"),
-    ("02.transcribe", "transcribe", "*.full.json"),
-    ("03.align", "align", "*.full.json"),
-    ("04.diarize", "diarize", "*.full.json"),
-    ("05.audio-features", "audio-features", "*.audio_features.json"),
-    ("06.video-type", "video-type", "*.conversations.json"),
-    ("06b.verify", "verify", "*.verification.json"),
-    ("06c.patched", "patched", "*.conversations.json"),
-    ("07.content", "content", "*.enriched.json"),
+    ("02.EXT.transcribe", "transcribe", "*.full.json"),
+    ("03.EXT.align", "align", "*.full.json"),
+    ("04.EXT.diarize", "diarize", "*.full.json"),
+    ("05.EXT.audio-features", "audio-features", "*.audio_features.json"),
+    ("06.LLM.video-type", "video-type", "*.conversations.json"),
+    ("06b.LLM.verify", "verify", "*.verification.json"),
+    ("06c.DET.patched", "patched", "*.conversations.json"),
+    ("07.LLM.content", "content", "*.enriched.json"),
 ]
 
 
@@ -74,7 +74,7 @@ def check_stage_completion(data_root: Path, stage_dir: str, source: str, video_i
 
 def get_video_type(data_root: Path, source: str, video_id: str) -> Optional[str]:
     """Read video type from stage 06 output."""
-    stage_path = data_root / "06.video-type" / source
+    stage_path = data_root / "06.LLM.video-type" / source
     if not stage_path.exists():
         return None
     for item in stage_path.iterdir():

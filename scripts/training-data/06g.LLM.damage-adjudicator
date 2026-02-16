@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06g.damage-adjudicator
+scripts/training-data/06g.LLM.damage-adjudicator
 
 Targeted LLM adjudicator over Stage 06f damage-map seeds.
 
 Reads:
-  - data/06f.damage-map/<source>/<video>/*.damage-map.json
-  - data/06d.sanitized/<source>/<video>/*.conversations.json (context)
+  - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
+  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json (context)
 
 Writes:
-  - data/06g.damage-adjudicator/<source>/<video>/*.damage-adjudication.json
+  - data/06g.LLM.damage-adjudicator/<source>/<video>/*.damage-adjudication.json
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ except Exception:  # pragma: no cover
     jsonschema = None
 
 
-LOG_PREFIX = "[06g.damage-adjudicator]"
-PIPELINE_VERSION = "06g.damage-adjudicator-v1.0"
+LOG_PREFIX = "[06g.LLM.damage-adjudicator]"
+PIPELINE_VERSION = "06g.LLM.damage-adjudicator-v1.0"
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.prompt.md"
 SCHEMA_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.schema.json"
 CLAUDE_BINARY_PATHS = [
@@ -49,27 +49,27 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06f.damage-map"
+    return repo_root() / "data" / "06f.DET.damage-map"
 
 
 def context_root() -> Path:
-    return repo_root() / "data" / "06d.sanitized"
+    return repo_root() / "data" / "06d.DET.sanitized"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06g.damage-adjudicator"
+    return repo_root() / "data" / "06g.LLM.damage-adjudicator"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06f.damage-map"
+    return repo_root() / "data" / "test" / "06f.DET.damage-map"
 
 
 def test_context_root() -> Path:
-    return repo_root() / "data" / "test" / "06d.sanitized"
+    return repo_root() / "data" / "test" / "06d.DET.sanitized"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06g.damage-adjudicator"
+    return repo_root() / "data" / "test" / "06g.LLM.damage-adjudicator"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -807,7 +807,7 @@ def _run_sources(
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06f.damage-map output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06f.DET.damage-map output")
             continue
         src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
@@ -842,7 +842,7 @@ def _run_manifest(
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06f.damage-map output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06f.DET.damage-map output")
             continue
         src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
@@ -890,23 +890,23 @@ def _run_named_source(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stage 06g LLM damage adjudicator")
-    parser.add_argument("name", nargs="?", help="Source name (folder under data/06f.damage-map/)")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/06f.DET.damage-map/)")
     parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
     parser.add_argument("--input", help="Input .damage-map.json file or directory")
     parser.add_argument(
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06f.damage-map, or data/test/06f.damage-map with --test)"
+            "(default: data/06f.DET.damage-map, or data/test/06f.damage-map with --test)"
         ),
     )
     parser.add_argument(
         "--context-root",
         help=(
-            "06d context root (default: data/06d.sanitized, or data/test/06d.sanitized with --test)"
+            "06d context root (default: data/06d.DET.sanitized, or data/test/06d.sanitized with --test)"
         ),
     )
-    parser.add_argument("--output", help="Output directory (default: data/06g.damage-adjudicator/)")
+    parser.add_argument("--output", help="Output directory (default: data/06g.LLM.damage-adjudicator/)")
     parser.add_argument("--model", default="opus", help="Claude model (default: opus)")
     parser.add_argument("--timeout-seconds", type=int, default=600, help="Per-call timeout seconds")
     parser.add_argument("--retries", type=int, default=2, help="Retries per adjudication call")

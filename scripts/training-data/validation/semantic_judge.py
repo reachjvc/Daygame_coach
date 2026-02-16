@@ -31,7 +31,7 @@ LOG_PREFIX = "[semantic-judge]"
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
 
-# Keep in sync with scripts/training-data/07.content
+# Keep in sync with scripts/training-data/07.LLM.content
 TECHNIQUE_TAXONOMY = [
     "direct_opener",
     "indirect_opener",
@@ -511,7 +511,7 @@ def main() -> None:
         ids = {vid for _, vid, _ in entries}
         source_by_vid = {vid: src for src, vid, _ in entries}
 
-        s07_root = data_root() / "07.content"
+        s07_root = data_root() / "07.LLM.content"
         idx_s07 = index_paths_by_video_id(s07_root, "*.enriched.json", ids)
 
         for vid in sorted(ids):

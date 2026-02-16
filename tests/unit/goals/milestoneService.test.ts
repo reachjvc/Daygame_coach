@@ -341,25 +341,50 @@ describe("generateMilestoneLadder", () => {
     expect(values[13]).toBeGreaterThanOrEqual(300)
   })
 
-  test("absolute increments never shrink (non-decreasing)", () => {
-    // Regression: greedy pool selection produced 150→250→300 (+100, +50)
-    // because 250 was closest in log-space, creating a jarring halving of
-    // the increment at a higher magnitude. Increments should never shrink.
-    const configs: MilestoneLadderConfig[] = [
-      { start: 1, target: 1000, steps: 20, curveTension: 0 },
-      { start: 1, target: 1000, steps: 16, curveTension: 2 },
-      { start: 1, target: 500, steps: 10, curveTension: 0 },
-      { start: 1, target: 100, steps: 8, curveTension: 1 },
-    ]
+  test("milestones are monotonically increasing across all tensions and step counts", () => {
+    const tensions = [-2, -1.5, -0.8, -0.5, 0, 0.5, 0.8, 1.2, 1.5, 2]
+    const stepCounts = [3, 5, 8, 10, 15, 16, 20]
 
-    for (const config of configs) {
-      const result = generateMilestoneLadder(config)
-      const values = result.map((m) => m.value)
-      let prevDelta = 0
-      for (let i = 1; i < values.length; i++) {
-        const delta = values[i] - values[i - 1]
-        expect(delta).toBeGreaterThanOrEqual(prevDelta)
-        prevDelta = delta
+    for (const curveTension of tensions) {
+      for (const steps of stepCounts) {
+        const config: MilestoneLadderConfig = { start: 1, target: 1000, steps, curveTension }
+        const result = generateMilestoneLadder(config)
+        expect(result).toHaveLength(steps)
+        expect(result[0].value).toBe(1)
+        expect(result[result.length - 1].value).toBe(1000)
+        for (let i = 1; i < result.length; i++) {
+          expect(result[i].value).toBeGreaterThan(result[i - 1].value)
+        }
+      }
+    }
+  })
+
+  test("increments never drop by more than 40% (no jarring dips like 150→250→300)", () => {
+    // Regression: the old algorithm produced sequences where the absolute
+    // increment could suddenly halve (e.g., 150→250→300 has deltas 100, 50).
+    // This looks wrong to users regardless of curve shape.
+    const tensions = [-2, -1.5, -1, -0.5, 0, 0.5, 1.0, 1.2, 1.5, 2]
+    const stepCounts = [3, 5, 8, 10, 12, 15, 18, 20]
+
+    for (const curveTension of tensions) {
+      for (const steps of stepCounts) {
+        const config: MilestoneLadderConfig = { start: 1, target: 1000, steps, curveTension }
+        const result = generateMilestoneLadder(config)
+        const values = result.map((m) => m.value)
+
+        for (let i = 2; i < values.length; i++) {
+          const prevDelta = values[i - 1] - values[i - 2]
+          const currDelta = values[i] - values[i - 1]
+          if (prevDelta > 0 && currDelta > 0) {
+            expect(
+              currDelta,
+              `increment at index ${i} (${values[i - 1]}→${values[i]}, delta=${currDelta}) ` +
+                `is smaller than previous (${values[i - 2]}→${values[i - 1]}, delta=${prevDelta}) ` +
+                `with tension=${curveTension} steps=${steps}\n` +
+                `  full values: [${values.join(", ")}]`
+            ).toBeGreaterThanOrEqual(prevDelta)
+          }
+        }
       }
     }
   })

@@ -1,0 +1,16 @@
+{
+  "validation": {
+    "stage07_gate_policy": "approve_only",
+    "quarantine_level": "error",
+    "readiness": {
+      "allow_review_ingest": false,
+      "max_warning_checks": 3,
+      "max_warning_checks_by_type": {
+        "transcript_artifact": 1,
+        "evidence_mismatch": 0,
+        "evidence_not_on_referenced_segment": 0
+      },
+      "block_warning_checks": []
+    }
+  }
+}

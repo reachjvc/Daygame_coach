@@ -25,14 +25,11 @@ export type {
  */
 export type LifeAreaId =
   | "daygame"
-  | "dating"
   | "health_fitness"
   | "career_business"
   | "social"
   | "personal_growth"
-  | "finances"
-  | "mindfulness"
-  | "education"
+  | "lifestyle"
   | "custom"
   | (string & {})
 

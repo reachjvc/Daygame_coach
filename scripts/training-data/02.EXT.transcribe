@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/02.transcribe
+scripts/training-data/02.EXT.transcribe
 
 STEP 2 — RAW TRANSCRIPTION (large-v3 only)
 
 Usage:
-  A) Single source:  ./02.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./02.transcribe --sources docs/pipeline/sources.txt
-  C) Single file:    ./02.transcribe --audio path/to/audio.wav --out output.full.json
-  D) Manifest batch: ./02.transcribe --manifest docs/pipeline/batches/P001.txt
+  A) Single source:  ./02.EXT.transcribe "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./02.EXT.transcribe --sources docs/pipeline/sources.txt
+  C) Single file:    ./02.EXT.transcribe --audio path/to/audio.wav --out output.full.json
+  D) Manifest batch: ./02.EXT.transcribe --manifest docs/pipeline/batches/P001.txt
 
 Transcription Model (UPDATED 03-02-2026):
   large-v3 with condition_on_previous_text=False (default)
@@ -17,13 +17,13 @@ Transcription Model (UPDATED 03-02-2026):
     - Trade-off: Minor capitalization inconsistencies on proper nouns
 
   To enable condition_on_previous_text (better capitalization, risk of hallucination):
-    ./02.transcribe --audio <path> --out <output> --condition-on-prev
+    ./02.EXT.transcribe --audio <path> --out <output> --condition-on-prev
 
 Note: This script ONLY does transcription. Alignment and diarization are
-      handled by subsequent scripts (03.align, 04.diarize).
+      handled by subsequent scripts (03.EXT.align, 04.EXT.diarize).
 
 Input:  data/01.download/<source>/<video>/*.audio.asr.raw16k.wav
-Output: data/02.transcribe/<source>/<video>/<video>.full.json + .txt
+Output: data/02.EXT.transcribe/<source>/<video>/<video>.full.json + .txt
 """
 
 from __future__ import annotations
@@ -405,7 +405,7 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
     def _runner() -> None:
         while not stop.wait(interval_sec):
             elapsed = int(time.monotonic() - start)
-            log(f"[02.transcribe] … {label}: still running ({elapsed}s)")
+            log(f"[02.EXT.transcribe] … {label}: still running ({elapsed}s)")
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
@@ -604,7 +604,7 @@ class FasterWhisperEngine(BaseEngine):
         except Exception as e:
             raise SystemExit(f"Missing faster-whisper. Install: pip install -U faster-whisper ({type(e).__name__}: {e})")
         self._model = WhisperModel(self.model_name, device=self.device, compute_type=self.compute_type)
-        log(f"[02.transcribe] Loaded model: {self.model_name} on device={self.device}")
+        log(f"[02.EXT.transcribe] Loaded model: {self.model_name} on device={self.device}")
 
     def transcribe(self, audio_path: str) -> Dict[str, Any]:
         segments_out: List[Dict[str, Any]] = []
@@ -676,7 +676,7 @@ def transcribe_full_file_with_engine(
 
     out_json_path = Path(out_json)
     log(
-        f"[02.transcribe] START {engine.name} ({getattr(engine, 'model_name', '')}) "
+        f"[02.EXT.transcribe] START {engine.name} ({getattr(engine, 'model_name', '')}) "
         f"| device={getattr(engine, 'device', '')} | audio={Path(audio_path).name} | dur={duration_sec:.1f}s"
     )
 
@@ -688,22 +688,22 @@ def transcribe_full_file_with_engine(
     seg_n = len(segments)
     last_end = float(segments[-1]["end"]) if segments else 0.0
     if duration_sec > 60 and last_end < 0.90 * duration_sec:
-        log(f"[02.transcribe] WARN: transcript ends early (last_end={last_end:.1f}s vs dur={duration_sec:.1f}s)")
+        log(f"[02.EXT.transcribe] WARN: transcript ends early (last_end={last_end:.1f}s vs dur={duration_sec:.1f}s)")
 
     # Check for repetition hallucination (same sentence repeated 3+ times)
     hallucination = _detect_repetition_hallucination(segments, min_repeats=3)
     if hallucination:
-        log(f"[02.transcribe] FLAGGED: Repetition hallucination detected!")
-        log(f"[02.transcribe]   Text: \"{hallucination['repeated_text'][:50]}...\"")
-        log(f"[02.transcribe]   Count: {hallucination['count']} consecutive repetitions")
-        log(f"[02.transcribe]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
+        log(f"[02.EXT.transcribe] FLAGGED: Repetition hallucination detected!")
+        log(f"[02.EXT.transcribe]   Text: \"{hallucination['repeated_text'][:50]}...\"")
+        log(f"[02.EXT.transcribe]   Count: {hallucination['count']} consecutive repetitions")
+        log(f"[02.EXT.transcribe]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
 
     # Check for intra-segment word repetition (e.g., "yeah yeah yeah yeah yeah" within one segment)
     intra_seg_issues = _detect_intra_segment_repetition(segments)
     if intra_seg_issues:
-        log(f"[02.transcribe] FLAGGED: Intra-segment word repetition detected!")
+        log(f"[02.EXT.transcribe] FLAGGED: Intra-segment word repetition detected!")
         for issue in intra_seg_issues:
-            log(f"[02.transcribe]   Seg {issue['segment_index']}: "
+            log(f"[02.EXT.transcribe]   Seg {issue['segment_index']}: "
                 f"\"{issue['repeated_word']}\" x{issue['count']} "
                 f"({issue['time_range'][0]:.1f}s-{issue['time_range'][1]:.1f}s)")
 
@@ -712,19 +712,19 @@ def transcribe_full_file_with_engine(
 
     if quality["severity"] == "CRITICAL":
         for reason in quality["reasons"]:
-            log(f"[02.transcribe] CRITICAL: {reason}")
-        log(f"[02.transcribe] SKIPPED: output NOT written (transcript is unusable)")
-        log(f"[02.transcribe]   words={quality['total_words']} wpm={quality['wpm']} halluc_ratio={quality['hallucination_ratio']}")
+            log(f"[02.EXT.transcribe] CRITICAL: {reason}")
+        log(f"[02.EXT.transcribe] SKIPPED: output NOT written (transcript is unusable)")
+        log(f"[02.EXT.transcribe]   words={quality['total_words']} wpm={quality['wpm']} halluc_ratio={quality['hallucination_ratio']}")
     elif quality["severity"] == "WARNING":
         for reason in quality["reasons"]:
-            log(f"[02.transcribe] WARNING: {reason}")
+            log(f"[02.EXT.transcribe] WARNING: {reason}")
         _write_all_outputs(out_json_path, segments)
     else:
         _write_all_outputs(out_json_path, segments)
 
     elapsed = time.monotonic() - t0
     wrote = "SKIPPED" if quality["severity"] == "CRITICAL" else "WROTE"
-    log(f"[02.transcribe] DONE: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s {wrote} -> {out_json_path.name}")
+    log(f"[02.EXT.transcribe] DONE: segments={seg_n} last_end={last_end:.1f}s elapsed={elapsed:.1f}s {wrote} -> {out_json_path.name}")
 
     # Return quality info (includes hallucination data if present)
     return {"hallucination": hallucination, "quality": quality, "intra_segment_repetition": intra_seg_issues}
@@ -747,10 +747,10 @@ def batch_for_source(
     safe_source = safe_name(source_name)
 
     downloads_root = root / "data" / "01.download" / safe_source
-    out_root = root / "data" / "02.transcribe" / safe_source
+    out_root = root / "data" / "02.EXT.transcribe" / safe_source
 
     if not downloads_root.exists():
-        raise SystemExit(f"[02.transcribe] Missing downloads folder: {downloads_root}")
+        raise SystemExit(f"[02.EXT.transcribe] Missing downloads folder: {downloads_root}")
 
     video_id = extract_video_id(youtube_url)
     video_dirs = sorted([p for p in downloads_root.iterdir() if p.is_dir()])
@@ -760,7 +760,7 @@ def batch_for_source(
         video_dirs = manifest_filter_dirs(video_dirs, manifest_ids)
 
     if not video_dirs:
-        log(f"[02.transcribe] No video folders found under: {downloads_root}")
+        log(f"[02.EXT.transcribe] No video folders found under: {downloads_root}")
         return 0
 
     processed = 0
@@ -772,7 +772,7 @@ def batch_for_source(
         try:
             audio_path = _pick_best_audio_in_video_dir(video_dir, prefer=prefer_audio)
             if audio_path is None:
-                log(f"[02.transcribe] WARN: No audio found in: {video_dir}")
+                log(f"[02.EXT.transcribe] WARN: No audio found in: {video_dir}")
                 continue
 
             out_video_dir = out_root / video_dir.name
@@ -784,8 +784,8 @@ def batch_for_source(
                 skipped += 1
                 continue
 
-            log(f"[02.transcribe] VIDEO: {video_dir.name}")
-            log(f"[02.transcribe] AUDIO: {audio_path.name}")
+            log(f"[02.EXT.transcribe] VIDEO: {video_dir.name}")
+            log(f"[02.EXT.transcribe] AUDIO: {audio_path.name}")
 
             result = transcribe_full_file_with_engine(
                 audio_path=str(audio_path),
@@ -823,8 +823,8 @@ def batch_for_source(
 
         except Exception as e:
             failed += 1
-            log(f"[02.transcribe] ERROR: Failed on folder: {video_dir.name}")
-            log(f"[02.transcribe]        {type(e).__name__}: {e}")
+            log(f"[02.EXT.transcribe] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[02.EXT.transcribe]        {type(e).__name__}: {e}")
             continue
 
     # Write flagged videos to flag file for manual review
@@ -839,9 +839,9 @@ def batch_for_source(
         existing.extend(flagged_videos)
         flag_file.parent.mkdir(parents=True, exist_ok=True)
         flag_file.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        log(f"[02.transcribe] FLAGGED: {len(flagged_videos)} videos written to {flag_file}")
+        log(f"[02.EXT.transcribe] FLAGGED: {len(flagged_videos)} videos written to {flag_file}")
 
-    log(f"[02.transcribe] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
+    log(f"[02.EXT.transcribe] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
     return processed
 
 
@@ -885,7 +885,7 @@ if __name__ == "__main__":
     compute_type = (args.compute_type or "").strip().lower() or ("int8_float16" if device == "cuda" else "int8")
     condition_on_prev = args.condition_on_prev
 
-    log(f"[02.transcribe] Model: {args.model} | device={device} | condition_on_previous_text={condition_on_prev}")
+    log(f"[02.EXT.transcribe] Model: {args.model} | device={device} | condition_on_previous_text={condition_on_prev}")
 
     # Initialize engine
     engine = FasterWhisperEngine(
@@ -910,7 +910,7 @@ if __name__ == "__main__":
             out_path = out_path.with_name(out_path.stem + ".full.json")
 
         if out_path.exists() and not args.overwrite:
-            log(f"[02.transcribe] SKIP: exists ({out_path.name})")
+            log(f"[02.EXT.transcribe] SKIP: exists ({out_path.name})")
             raise SystemExit(0)
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -933,7 +933,7 @@ if __name__ == "__main__":
         sources_map = load_manifest_sources(manifest_path)
         total = 0
         for source_name, vid_ids in sorted(sources_map.items()):
-            log(f"[02.transcribe] Manifest: {source_name} ({len(vid_ids)} videos)")
+            log(f"[02.EXT.transcribe] Manifest: {source_name} ({len(vid_ids)} videos)")
             total += batch_for_source(
                 source_name=source_name,
                 youtube_url="",
@@ -944,7 +944,7 @@ if __name__ == "__main__":
                 manifest_ids=vid_ids,
             )
         cleanup_after_engine_run(engine)
-        log(f"[02.transcribe] ✅ MANIFEST DONE: total_processed={total}")
+        log(f"[02.EXT.transcribe] ✅ MANIFEST DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Batch sources file
@@ -965,14 +965,14 @@ if __name__ == "__main__":
                 progress_interval=args.progress_interval,
             )
         cleanup_after_engine_run(engine)
-        log(f"[02.transcribe] ✅ ALL SOURCES DONE: total_processed={total}")
+        log(f"[02.EXT.transcribe] ✅ ALL SOURCES DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
             "Provide either --audio/--out, --manifest, or --sources [file], or:\n"
-            "./scripts/training-data/02.transcribe <source_name> <youtube_url>"
+            "./scripts/training-data/02.EXT.transcribe <source_name> <youtube_url>"
         )
 
     batch_for_source(

@@ -47,7 +47,7 @@ describe("generateGoalTreeInserts", () => {
       expect(new Set(l3Ids).size).toBe(l3Ids.length)
     })
 
-    it("all inserts have life_area and category set to daygame", () => {
+    it("all inserts have life_area and category set to daygame (Dating & Daygame area)", () => {
       for (const insert of inserts) {
         expect(insert.life_area).toBe("daygame")
         expect(insert.category).toBe("daygame")

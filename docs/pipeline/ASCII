@@ -7,41 +7,41 @@ Never trade quality for speed. Never lower gates to "get content flowing."
              |
              v
 +--------------------------+
-|      01. DOWNLOAD        |    yt-dlp
+|    01.EXT. DOWNLOAD      |    yt-dlp
 |  Download audio from YT  |    Rate-limited, backoff
 +--------------------------+
              |
              |  data/01.download/<source>/<video>/*.wav
              v
 +--------------------------+
-|     02. TRANSCRIBE       |    Whisper large-v3
+|   02.EXT. TRANSCRIBE     |    Whisper large-v3
 |  Speech-to-text (raw)    |    Hallucination prevention
 +--------------------------+
              |
-             |  data/02.transcribe/.../*.full.json
+             |  data/02.EXT.transcribe/.../*.full.json
              v
 +--------------------------+
-|       03. ALIGN          |    WhisperX
+|     03.EXT. ALIGN        |    WhisperX
 |  Sentence-level timing   |    Better word boundaries
 +--------------------------+
              |
-             |  data/03.align/.../*.full.json
+             |  data/03.EXT.align/.../*.full.json
              v
 +--------------------------+
-|      04. DIARIZE         |    pyannote
+|    04.EXT. DIARIZE       |    pyannote
 |  Who said what           |    SPEAKER_00, SPEAKER_01...
 |  (speaker labels)        |    Can misassign speakers
 +--------------------------+
              |
-             |  data/04.diarize/.../*.full.json
+             |  data/04.EXT.diarize/.../*.full.json
              v
 +--------------------------+
-|   05. AUDIO FEATURES     |    librosa / pyannote
+| 05.EXT. AUDIO FEATURES   |    librosa / pyannote
 |  Pitch, energy, tempo,   |    Speaker embeddings
 |  spectral brightness     |
 +--------------------------+
              |
-             |  data/05.audio-features/.../*.audio_features.json
+             |  data/05.EXT.audio-features/.../*.audio_features.json
              v
 +============================================+
 |         LLM STAGES (Claude CLI)            |
@@ -49,7 +49,7 @@ Never trade quality for speed. Never lower gates to "get content flowing."
              |
              v
 +--------------------------+
-|  06. VIDEO TYPE +        |    1 LLM call / video
+|  06.LLM. VIDEO TYPE +    |    1 LLM call / video
 |      CONVERSATIONS       |
 |                          |    Reads ALL segments
 |  Classify video:         |
@@ -75,10 +75,10 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  errors using context    |    via semantic understanding
 +--------------------------+
              |
-             |  data/06.video-type/.../*.conversations.json
+             |  data/06.LLM.video-type/.../*.conversations.json
              v
 +--------------------------+
-|  06b. VERIFY             |    1 LLM call / video
+|  06b.LLM. VERIFY         |    1 LLM call / video
 |                          |    Claude CLI
 |  5-pass critical review  |
 |  of Stage 06 output:     |    APPROVE / FLAG / REJECT
@@ -89,10 +89,10 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |   - Structural coherence |
 +--------------------------+
              |
-             |  data/06b.verify/.../*.verification.json
+             |  data/06b.LLM.verify/.../*.verification.json
              v
 +--------------------------+
-|  06c. PATCH              |    No LLM — pure JSON
+|  06c.DET. PATCH          |    No LLM — pure JSON
 |                          |    transform
 |  Auto-applies from 06b:  |
 |   - Misattributions      |    conf ≥ 0.70
@@ -107,11 +107,72 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |   - other_flags          |    Adds patch_metadata
 +--------------------------+
              |
-             |  data/06c.patched/.../*.conversations.json
+             |  data/06c.DET.patched/.../*.conversations.json
              v
 +--------------------------+
-|    07. CONTENT           |    1 LLM call / video
-|                          |    2 prompt variants:
+|  06d.DET. SANITIZE       |    No LLM — deterministic
+|                          |
+|  Sanitization layer:     |    Deterministic cleanup
+|  evidence allowlists,    |    after 06b/06c fixes
+|  stage07 evidence IDs    |
++--------------------------+
+             |
+             |  data/06d.DET.sanitized/.../*.conversations.json
+             v
++--------------------------+
+|  06e.LLM. QUALITY-CHECK  |    1 LLM call / video
+|                          |    Claude CLI
+|  Focused transcript      |
+|  quality assessment:     |    ASR artifact detection
+|   - word_repetition      |    damage_severity stamped
+|   - nonsense             |    repair suggestions
+|   - language_confusion   |
++--------------------------+
+             |
+             |  data/06e.LLM.quality-check/.../*.quality-check.json
+             |          |
+             v          v (quality seeds)
++--------------------------+
+|  06f.DET. DAMAGE-MAP     |    No LLM — deterministic
+|                          |
+|  Builds damage map from  |    Reads 06d segments +
+|  06d flags + 06e quality |    06e quality-check data
+|  data:                   |
+|   - transcript_artifact  |    Per-segment severity
+|   - low_quality          |    + contamination windows
+|   - mixed_mode           |
+|   - speaker_ambiguity    |
+|   - boundary_uncertain   |
++--------------------------+
+             |
+             |  data/06f.DET.damage-map/.../*.damage-map.json
+             v
++--------------------------+
+|  06g.LLM. DAMAGE-ADJUD.  |    N LLM calls / video
+|                          |    Claude CLI
+|  Per-seed adjudication:  |
+|   - transcript_confidence|    Contamination spans
+|   - speaker_confidence   |    Repair acceptance
+|   - phase_confidence     |    Anchor eligibility
+|   - repair_possible      |
++--------------------------+
+             |
+             |  data/06g.LLM.damage-adjudicator/.../*.damage-adjudication.json
+             v
++--------------------------+
+|  06h.DET. CONF-PROP.     |    No LLM — deterministic
+|                          |
+|  Propagates confidence   |    Reads 06g adjudications
+|  scores from adjudicated |    Stamps per-segment
+|  seeds to all segments   |    confidence scores
++--------------------------+
+             |
+             |  data/06h.DET.confidence-propagation/.../*.confidence.json
+             v
++--------------------------+
+|  07.LLM. CONTENT         |    1 LLM call / video
+|  (enrichment only)       |    2 prompt variants:
+|                          |
 |  INFIELD/COMPILATION:    |
 |   Per approach:          |    31 techniques taxonomy
 |    - Techniques used     |    22 topics taxonomy
@@ -130,15 +191,18 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  ALL: unlisted_concepts  |    Taxonomy gap detection
 |   (techniques & topics   |    on every enrichment
 |    not in taxonomy)      |
+|                          |
+|  Quality pass-through:   |    low_quality_segments +
+|   from 06e, not LLM      |    transcript_artifacts
 +--------------------------+
              |
-             |  data/07.content/.../*.enriched.json
+             |  data/07.LLM.content/.../*.enriched.json
              v
 +--------------------------+
-|  08. TAXONOMY VALIDATION |    No LLM — pure aggregation
+| 08.DET. TAXONOMY VALID.  |    No LLM — pure aggregation
 |                          |
 |  QUALITY GATE            |    Reads all enriched JSON
-|                          |    from data/07.content/
+|                          |    from data/07.LLM.content/
 |  Validates taxonomy      |
 |  coverage before prep    |    Exit code 0 = PASS
 |                          |    Exit code 1 = FAIL
@@ -146,17 +210,17 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  unlisted concepts       |    --threshold N (default 3)
 |  (>= threshold)          |    --strict (any unlisted)
 |                          |
-|  Reports:                |    data/08.taxonomy-validation/
+|  Reports:                |    data/08.DET.taxonomy-validation/
 |   - unlisted techniques  |    <label>.report.json
 |   - unlisted topics      |
 |   - recommendation       |
 +--------------------------+
              |
-             |  data/08.taxonomy-validation/<label>.report.json
+             |  data/08.DET.taxonomy-validation/<label>.report.json
              |  (exits 1 if high-frequency unlisted found)
              v
 +--------------------------+
-|  09. CHUNK & EMBED       |    Ollama embeddings
+|  09.EXT. CHUNK & EMBED   |    Ollama embeddings
 |                          |    (no DB writes)
 |  Transforms enriched     |
 |  content into chunks     |    Outputs JSON files
@@ -179,11 +243,11 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  unchanged sources       |    detection
 +--------------------------+
              |
-             |  data/09.chunks/<source>/<video_id>.chunks.json
-             |  data/09.chunks/.chunk_state.json
+             |  data/09.EXT.chunks/<source>/<video_id>.chunks.json
+             |  data/09.EXT.chunks/.chunk_state.json
              v
 +--------------------------+
-|  10. INGEST              |    Supabase pgvector
+|  10.EXT. INGEST          |    Supabase pgvector
 |                          |    (DB writes only)
 |  Reads chunk files       |
 |  from Stage 09           |    Reads .chunks.json
@@ -232,4 +296,4 @@ REQUIRES (in order):
 3. [ ] Re-embed with metadata prefix (Stage 09)
 4. [ ] Show metadata to Claude in prompt
 
-See: docs/pipeline/claude_automation.md
+See: docs/pipeline/validation_harness.md

@@ -7,26 +7,26 @@ Snapshot source:
 - intended to preserve runbook evidence during branch integration
 
 Included stage folders:
-- `06.video-type/`
-- `06b.verify/`
-- `06b.reverify/`
-- `06c.patched/`
-- `07.content/`
-- `08.taxonomy-validation/`
-- `09.chunks/`
+- `06.LLM.video-type/`
+- `06b.LLM.verify/`
+- `06b.LLM.reverify/`
+- `06c.DET.patched/`
+- `07.LLM.content/`
+- `08.DET.taxonomy-validation/`
+- `09.EXT.chunks/`
 - `validation-audits/`
 
 Not currently present in this snapshot:
-- `06d.sanitize/`
-- `06e.reverify/`
-- `06f.damage-map/`
-- `06g.damage-adjudicator/`
-- `06h.confidence-propagation/`
+- `06d.DET.sanitized/`
+- `06e.LLM.quality-check/`
+- `06f.DET.damage-map/`
+- `06g.LLM.damage-adjudicator/`
+- `06h.DET.confidence-propagation/`
 
 Refresh procedure:
 
 ```bash
-for d in 06.video-type 06b.verify 06b.reverify 06c.patched 07.content 08.taxonomy-validation 09.chunks validation-audits; do
+for d in 06.LLM.video-type 06b.LLM.verify 06b.LLM.reverify 06c.DET.patched 07.LLM.content 08.DET.taxonomy-validation 09.EXT.chunks validation-audits; do
   rsync -a "data/$d/" "data_artifacts/$d/"
 done
 ```

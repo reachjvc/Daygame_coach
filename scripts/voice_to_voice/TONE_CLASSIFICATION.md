@@ -31,7 +31,7 @@ Acoustic tone classification based on audio features. **This is NOT part of the 
 - 30-second tone windows with 10-second hop for macro-level analysis
 
 ## Input
-- `data/05.audio-features/<source>/<video>/*.audio_features.json`
+- `data/05.EXT.audio-features/<source>/<video>/*.audio_features.json`
 
 ## Output
 - `data/06.segment-enrich/<source>/<video>/`
@@ -101,7 +101,7 @@ Acoustic tone classification based on audio features. **This is NOT part of the 
 # Single file
 ./scripts/voice_to_voice/tone-classification --input file.json
 
-# All sources (reads from data/05.audio-features/)
+# All sources (reads from data/05.EXT.audio-features/)
 ./scripts/voice_to_voice/tone-classification --sources
 
 # Force reprocess

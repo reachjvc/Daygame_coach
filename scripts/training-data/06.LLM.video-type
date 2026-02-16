@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06.video-type
+scripts/training-data/06.LLM.video-type
 
 Video Type Classification + Speaker Labeling + Conversation Boundaries
 
@@ -9,25 +9,25 @@ Reads ALL segments and performs analysis in 1 LLM call:
 
 Reads:
   - Audio feature files (from Stage 05):
-      data/05.audio-features/<source>/<video>/*.audio_features.json
+      data/05.EXT.audio-features/<source>/<video>/*.audio_features.json
 
 Writes:
   - Combined analysis files:
-      data/06.video-type/<source>/<video>/*.conversations.json
+      data/06.LLM.video-type/<source>/<video>/*.conversations.json
 
 Use:
 
   A) From pipeline:
-     ./scripts/training-data/06.video-type "source_name" "youtube_url"
+     ./scripts/training-data/06.LLM.video-type "source_name" "youtube_url"
 
   B) Test videos:
-     ./scripts/training-data/06.video-type --test
+     ./scripts/training-data/06.LLM.video-type --test
 
   C) Single file:
-     ./scripts/training-data/06.video-type --input data/test/05.audio-features/video.audio_features.json
+     ./scripts/training-data/06.LLM.video-type --input data/test/05.EXT.audio-features/video.audio_features.json
 
   D) Batch from sources file:
-     ./scripts/training-data/06.video-type --sources
+     ./scripts/training-data/06.LLM.video-type --sources
 
 Requirements:
   - Claude Code CLI installed and authenticated (claude command available)
@@ -57,7 +57,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # ---------------------------
 
 SCHEMA_VERSION = "3.5.0"
-PIPELINE_VERSION = "06.video-type-v3.5.2"  # v3.5.2: add conversation-level target participation labels
+PIPELINE_VERSION = "06.LLM.video-type-v3.5.2"  # v3.5.2: add conversation-level target participation labels
 PROMPT_VERSION = "3.5.0"
 
 DEBUG_MODE = False
@@ -69,7 +69,7 @@ CLAUDE_BINARY_PATHS = [
     "/usr/local/bin/claude",
 ]
 
-LOG_PREFIX = "[06.video-type]"
+LOG_PREFIX = "[06.LLM.video-type]"
 
 SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
 
@@ -737,7 +737,7 @@ def parse_json_response(response: str) -> Optional[Dict]:
     # Save failed response for debugging under data/ (avoid polluting scripts/ worktree).
     try:
         ts = time.strftime("%Y%m%dT%H%M%SZ")
-        debug_dir = repo_root() / "data" / "06.video-type" / "debug"
+        debug_dir = repo_root() / "data" / "06.LLM.video-type" / "debug"
         debug_dir.mkdir(parents=True, exist_ok=True)
         debug_path = debug_dir / f"claude_parse_failed_{ts}_{int(time.time() * 1000)}.txt"
         debug_path.write_text(response, encoding="utf-8")
@@ -1197,19 +1197,19 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "05.audio-features"
+    return repo_root() / "data" / "05.EXT.audio-features"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06.video-type"
+    return repo_root() / "data" / "06.LLM.video-type"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "05.audio-features"
+    return repo_root() / "data" / "test" / "05.EXT.audio-features"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06.video-type"
+    return repo_root() / "data" / "test" / "06.LLM.video-type"
 
 
 def compute_output_path(
@@ -1308,7 +1308,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/05.audio-features/)"
+        help="Source name (folder under data/05.EXT.audio-features/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -1320,12 +1320,12 @@ def main() -> None:
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/06.video-type/)"
+        help="Output directory (defaults to data/06.LLM.video-type/)"
     )
     parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/05.audio-features/)"
+        help="Process test videos (data/test/05.EXT.audio-features/)"
     )
     parser.add_argument(
         "--sources",
@@ -1504,7 +1504,7 @@ def _run_sources(args) -> None:
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = input_root() / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.EXT.audio-features output")
             continue
 
         src_out_dir = out_base / src_name
@@ -1553,7 +1553,7 @@ def _run_manifest(args) -> None:
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = input_root() / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.audio-features output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 05.EXT.audio-features output")
             continue
 
         src_out_dir = out_base / src_name
@@ -1670,7 +1670,7 @@ def _run_directory_with_files(
 
 
 def _run_named_source(args) -> None:
-    """Run for a named source (from pipeline: ./06.video-type source_name url)."""
+    """Run for a named source (from pipeline: ./06.LLM.video-type source_name url)."""
     name = args.name
     in_dir = input_root() / name
     if not in_dir.exists():

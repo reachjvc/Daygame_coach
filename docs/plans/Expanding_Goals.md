@@ -23,11 +23,18 @@
 - Per-L2 fan-out edges and per-L2 achievement weights
 - 3 new display categories (texting, dates, relationship) with labels in all UI components
 - Enriched life area suggestions (daygame, dating, health, career, social, personal growth)
-- All tests updated and passing (1088 tests)
+- **Life area consolidation (10 → 7)** — code shipped, DB migration needed
+  - `daygame` absorbed `dating` → display name "Dating & Daygame"
+  - `health_fitness` → display name "Health & Appearance"
+  - `career_business` absorbed `finances` → display name "Career & Finances"
+  - `personal_growth` absorbed `mindfulness` + `education`
+  - New `lifestyle` area (Mountain icon, teal)
+  - Kept existing IDs to avoid 50+ file rename (pragmatic decision)
+- All tests updated and passing (1087 tests)
 
 ## What's NOT Shipped Yet
 
-- Life area consolidation (10 → 7) — needs DB migration for existing users
+- **DB migration** for life area consolidation — run the SQL below in Supabase
 - Tier 2 suggestion-powered manual hierarchy UX
 - Cross-area L3 sharing (e.g., Meditation feeding into Overcome AA)
 - L1 path differentiation (one-person vs abundance defaults)

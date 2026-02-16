@@ -1,5 +1,5 @@
 /**
- * scripts/training-data/11.retrieval-smoke.ts
+ * scripts/training-data/11.EXT.retrieval-smoke.ts
  *
  * Smoke test for RAG retrieval against the Supabase `embeddings` table.
  *
@@ -9,7 +9,7 @@
  *  - runs vector search via Supabase RPC (match_embeddings)
  *
  * Use:
- *   node --import tsx/esm scripts/training-data/11.retrieval-smoke.ts "what is a false time constraint?"
+ *   node --import tsx/esm scripts/training-data/11.EXT.retrieval-smoke.ts "what is a false time constraint?"
  */
 
 import fs from "fs"
@@ -121,10 +121,10 @@ function parseArgs(argv: string[]): ParsedArgs {
 
 function printHelp() {
   console.log("Usage:")
-  console.log("  node --import tsx/esm scripts/training-data/11.retrieval-smoke.ts \"your question\"")
+  console.log("  node --import tsx/esm scripts/training-data/11.EXT.retrieval-smoke.ts \"your question\"")
   console.log("")
   console.log("Examples:")
-  console.log("  node --import tsx/esm scripts/training-data/11.retrieval-smoke.ts \"approach a girl in public\"")
+  console.log("  node --import tsx/esm scripts/training-data/11.EXT.retrieval-smoke.ts \"approach a girl in public\"")
   console.log("")
   console.log("Optional flags:")
   console.log(`  --top-k <n>           Number of matches to return (default: ${DEFAULT_TOP_K})`)

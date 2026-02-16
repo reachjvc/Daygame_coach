@@ -12,7 +12,7 @@
     },
     "source_file": {
       "type": "string",
-      "description": "Path to input file from 05.audio-features"
+      "description": "Path to input file from 05.EXT.audio-features"
     },
     "processed_at": {
       "type": "string",

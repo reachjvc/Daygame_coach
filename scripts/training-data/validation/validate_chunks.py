@@ -261,15 +261,15 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate Stage 09 chunk files (deterministic, read-only).")
-    parser.add_argument("--source", help="Only validate one source (data/09.chunks/<source>/)")
+    parser.add_argument("--source", help="Only validate one source (data/09.EXT.chunks/<source>/)")
     parser.add_argument("--manifest", help="Only validate videos in this manifest (docs/pipeline/batches/*.txt)")
-    parser.add_argument("--all", action="store_true", help="Validate all sources under data/09.chunks/")
+    parser.add_argument("--all", action="store_true", help="Validate all sources under data/09.EXT.chunks/")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
 
     args = parser.parse_args()
 
-    chunks_root = repo_root() / "data" / "09.chunks"
+    chunks_root = repo_root() / "data" / "09.EXT.chunks"
 
     sources_filter: Optional[Set[str]] = None
     ids_by_source: Optional[Dict[str, Set[str]]] = None

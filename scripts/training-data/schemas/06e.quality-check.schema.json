@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "06e.quality-check.schema.json",
+  "title": "06e Quality Check Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["low_quality_segments", "transcript_artifacts"],
+  "properties": {
+    "low_quality_segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["segment", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "segment": { "type": "integer" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "transcript_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["segment_index", "artifact_type", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "segment_index": { "type": "integer" },
+          "artifact_type": {
+            "type": "string",
+            "enum": ["word_repetition", "nonsense", "language_confusion"]
+          },
+          "description": { "type": "string" },
+          "repair_text": { "type": ["string", "null"] },
+          "repair_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+        }
+      }
+    }
+  }
+}

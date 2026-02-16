@@ -5,44 +5,54 @@
   "sub_batch_size": 10,
   "sub_batches": {
     "P001.1": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "07"
     },
     "P001.2": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.3": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.4": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.5": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.6": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.7": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.8": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.9": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "05"
     },
     "P001.10": {
-      "status": "not_started",
-      "video_count": 6
+      "status": "in_progress",
+      "video_count": 6,
+      "current_stage": "05"
     }
   }
 }

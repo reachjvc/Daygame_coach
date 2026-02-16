@@ -125,15 +125,15 @@ def stable_hash(obj: Any) -> str:
 
 
 def _infer_source_from_stage07_path(p: str) -> Optional[str]:
-    """Infer source name from a Stage 07 path like .../data/07.content/<source>/..."""
+    """Infer source name from a Stage 07 path like .../data/07.LLM.content/<source>/..."""
     try:
         parts = Path(p).parts
-        idx = parts.index("07.content")
+        idx = parts.index("07.LLM.content")
         # Only infer a source when there is an extra path component between
-        # 07.content and the filename. Root-flat layout has no source segment.
+        # 07.LLM.content and the filename. Root-flat layout has no source segment.
         if idx + 2 < len(parts):
             src = parts[idx + 1]
-            if src and src != "07.content":
+            if src and src != "07.LLM.content":
                 return src
     except Exception:
         pass
@@ -273,21 +273,21 @@ def batch_reports_dir() -> Path:
 
 
 def load_enriched_files(source: Optional[str] = None) -> List[Dict]:
-    """Load enriched.json files from data/07.content/, de-duped by video_id."""
-    content_root = repo_root() / "data" / "07.content"
+    """Load enriched.json files from data/07.LLM.content/, de-duped by video_id."""
+    content_root = repo_root() / "data" / "07.LLM.content"
     return _load_json_files(
         content_root,
         "*.enriched.json",
-        stage_name="07.content",
+        stage_name="07.LLM.content",
         source_filter=source,
         only_ids=None,
     )
 
 
 def load_conversations_files(source: Optional[str] = None) -> List[Dict]:
-    """Load conversations.json files, preferring 06c.patched when present."""
-    patched_root = repo_root() / "data" / "06c.patched"
-    vtype_root = repo_root() / "data" / "06.video-type"
+    """Load conversations.json files, preferring 06c.DET.patched when present."""
+    patched_root = repo_root() / "data" / "06c.DET.patched"
+    vtype_root = repo_root() / "data" / "06.LLM.video-type"
 
     idx_06c = _index_paths_by_video_id(
         patched_root / source if source else patched_root,
@@ -305,7 +305,7 @@ def load_conversations_files(source: Optional[str] = None) -> List[Dict]:
         candidates = idx_06c.get(vid) or idx_06.get(vid) or []
         if not candidates:
             continue
-        stage_name = "06c.patched" if vid in idx_06c else "06.video-type"
+        stage_name = "06c.DET.patched" if vid in idx_06c else "06.LLM.video-type"
         best = _pick_best_candidate(candidates, preferred_source=source)
         try:
             data = json.loads(best.read_text())
@@ -320,7 +320,7 @@ def load_conversations_files(source: Optional[str] = None) -> List[Dict]:
 def load_validation_files(source: Optional[str] = None) -> List[Dict]:
     """Load .validation.json files (de-duped by video_id)."""
     validations: List[Dict] = []
-    for stage_dir in ["06.video-type", "07.content"]:
+    for stage_dir in ["06.LLM.video-type", "07.LLM.content"]:
         root = repo_root() / "data" / stage_dir
         validations.extend(_load_json_files(
             root,

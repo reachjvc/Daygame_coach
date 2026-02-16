@@ -11,20 +11,20 @@
 | Iter | What | Key Outcome |
 |------|------|-------------|
 | D0 | Baseline lock + metric harness | Reproducible baseline snapshot for P018.3 + P018.4 |
-| D1 | `06d.sanitize` (flag-only) | Teaser duplicate + mixed-mode detection; `sanitize.report.json` |
+| D1 | `06d.DET.sanitize` (flag-only) | Teaser duplicate + mixed-mode detection; `sanitize.report.json` |
 | D2 | Stage 07 evidence allowlist | Hard-filter to `stage07_evidence_segment_ids`; zero evidence leaks on P018.3/P018.4 |
 | D3 | Collapsed-speaker target hygiene | `target_speaker_ids_confident` in 06d; hook/investment gating in 07; collapsed speakers excluded |
 | D4 | Mixed-mode splitter | Deterministic split at commentary boundary; synthetic child excluded from evidence |
-| D5 | `06e.reverify` wrapper | Reverify on sanitized output; `--timeout-seconds` support; no REJECT on P018.3/P018.4 |
+| D5 | `06e.LLM.reverify` wrapper | Reverify on sanitized output; `--timeout-seconds` support; no REJECT on P018.3/P018.4 |
 | D6 | Taxonomy precision | Commentary-only concepts non-blocking in Stage 08; no FAIL on P018.3/P018.4 |
 
 ##### Iterations D7–D11 (All Complete)
 
 | Iter | What | Key Outcome |
 |------|------|-------------|
-| D7 | `06f.damage-map` | Per-segment damage records + conversation summaries; trace contract enforcement in validator |
-| D8 | `06g.damage-adjudicator` | Targeted LLM adjudication on risky seeds; strict JSON schema; determinism replay mode |
-| D9 | `06h.confidence-propagation` | Merges 06f+06g into per-segment confidence tiers; anchor allowlist metadata for Stage 07 |
+| D7 | `06f.DET.damage-map` | Per-segment damage records + conversation summaries; trace contract enforcement in validator |
+| D8 | `06g.LLM.damage-adjudicator` | Targeted LLM adjudication on risky seeds; strict JSON schema; determinism replay mode |
+| D9 | `06h.DET.confidence-propagation` | Merges 06f+06g into per-segment confidence tiers; anchor allowlist metadata for Stage 07 |
 | D10 | Confidence-aware 07/09/10 | High-confidence anchors only in Stage 07; chunk confidence scoring in 09; dual-lane ingest in 10 |
 | D11 | Recurrence prevention rails | Hard budgets (`--max-damaged-token-ratio`, `--max-dropped-anchor-ratio`), drift histograms, audit sampling, fail-fast timeout/retry on all LLM stages |
 
@@ -35,7 +35,7 @@ Remaining across D7–D11:
 - D10: run retrieval regression eval after full D7-D11 path runs.
 - D11: run 100+ video hardening batch and lock production thresholds.
 
-Environment note: `09.chunk-embed.ts` requires local Ollama (`http://localhost:11434`).
+Environment note: `09.EXT.chunk-embed.ts` requires local Ollama (`http://localhost:11434`).
 
 ##### Iteration D12: High-Confidence Transcript Artifact Repair (Complete)
 
@@ -99,7 +99,7 @@ Merge strategy:
 What stays vs what could be simplified after this:
 - **Keep**: 06, 06b, 06c, 06e (verify/patch/reverify chain — genuine peer review, not heuristics)
 - **Keep**: 06d (sanitize — teaser dedup and evidence allowlist are simple, reliable data ops)
-- **Evaluate after D13**: 06f/06g/06h (damage-map/adjudicator/confidence-propagation). If multi-call Stage 07 catches artifacts reliably and assigns confidence directly, the damage pipeline may become redundant. Don't remove yet — run both in parallel on P018.3/P018.4 and compare coverage.
+- **Evaluate after D13**: 06f/06g/06h (DET.damage-map/LLM.damage-adjudicator/DET.confidence-propagation). If multi-call Stage 07 catches artifacts reliably and assigns confidence directly, the damage pipeline may become redundant. Don't remove yet — run both in parallel on P018.3/P018.4 and compare coverage.
 
 Pass criteria:
 - Same video run twice with multi-call produces consistent artifact detection (>= 90% overlap in flagged segments).
@@ -134,7 +134,7 @@ Implementation status (`2026-02-15`):
   - CLI: `--window-size` (default 100), `--overlap` (default 20).
   - Pipeline version bumped to `07.content-v1.13`, prompt version to `1.7.0`.
 - verified:
-  - `python3 -m py_compile scripts/training-data/07.content` passes.
+  - `python3 -m py_compile scripts/training-data/07.LLM.content` passes.
   - `npm test` passes (1078 tests).
   - CLI `--help` shows new flags.
 - bugs fixed during live validation: trailing-commentary grouping, block_index merge collisions, commentary block boundary preservation.
@@ -155,21 +155,21 @@ Decision (locked):
   - **`<manifest>.non_infield.txt`**: videos with 0 approach conversations → parked.
 - **Infield videos are the priority.** They flow through the full hardening pipeline immediately.
 - **Non-infield videos are processed separately, on demand**, through a simpler path:
-  `06.video-type → 07.content → 08.taxonomy-validation → 09.chunk-embed → 10.ingest`
+  `06.LLM.video-type → 07.LLM.content → 08.DET.taxonomy-validation → 09.EXT.chunk-embed → 10.EXT.ingest`
   Stages 06b through 06h are skipped entirely (no conversations to verify/patch/sanitize/damage-map).
 - The user decides when to run non-infield. They are never auto-processed.
 
 Implementation:
-- New script: `scripts/training-data/split-manifest` (deterministic, no LLM).
-  - Input: `--manifest <path>` + Stage 06 data root (default `data/06.video-type`).
+- New script: `scripts/training-data/DET.split-manifest` (deterministic, no LLM).
+  - Input: `--manifest <path>` + Stage 06 data root (default `data/06.LLM.video-type`).
   - For each video in manifest: load `.conversations.json`, count `conversation_id > 0` segments.
   - Output: two manifest files alongside the original:
     - `docs/pipeline/batches/<name>.infield.txt`
     - `docs/pipeline/batches/<name>.non_infield.txt`
   - Also print summary: `N infield, M non_infield` for operator awareness.
 - Subsequent pipeline commands use the split manifests:
-  - `./scripts/training-data/06b.verify --manifest docs/pipeline/batches/<name>.infield.txt`
-  - (later, when desired) `./scripts/training-data/07.content --manifest docs/pipeline/batches/<name>.non_infield.txt --skip-verification`
+  - `./scripts/training-data/06b.LLM.verify --manifest docs/pipeline/batches/<name>.infield.txt`
+  - (later, when desired) `./scripts/training-data/07.LLM.content --manifest docs/pipeline/batches/<name>.non_infield.txt --skip-verification`
 
 Non-infield Stage 07 path:
 - Uses existing `build_talking_head_prompt()` (topic sections, techniques discussed, transcript quality).
@@ -181,18 +181,18 @@ Non-infield Stage 07 path:
 Operator workflow:
 ```bash
 # 1. Run Stage 06 on full manifest
-./scripts/training-data/06.video-type --manifest docs/pipeline/batches/CANARY.1.txt
+./scripts/training-data/06.LLM.video-type --manifest docs/pipeline/batches/CANARY.1.txt
 
 # 2. Split into infield + non-infield
-./scripts/training-data/split-manifest --manifest docs/pipeline/batches/CANARY.1.txt
+./scripts/training-data/DET.split-manifest --manifest docs/pipeline/batches/CANARY.1.txt
 
 # 3. Full pipeline on infield only
-./scripts/training-data/06b.verify   --manifest docs/pipeline/batches/CANARY.1.infield.txt
-./scripts/training-data/06c.patch    --manifest docs/pipeline/batches/CANARY.1.infield.txt
+./scripts/training-data/06b.LLM.verify   --manifest docs/pipeline/batches/CANARY.1.infield.txt
+./scripts/training-data/06c.DET.patch    --manifest docs/pipeline/batches/CANARY.1.infield.txt
 # ... 06d → 06e → 06f → 06g → 06h → 07 → 08 → 09 → 10
 
 # 4. Later, when desired: non-infield through simpler path
-./scripts/training-data/07.content --manifest docs/pipeline/batches/CANARY.1.non_infield.txt --skip-verification
+./scripts/training-data/07.LLM.content --manifest docs/pipeline/batches/CANARY.1.non_infield.txt --skip-verification
 # ... 08 → 09 → 10
 ```
 
@@ -229,7 +229,7 @@ Successful V2 end-to-end run (`2026-02-15`, Claude Code session):
     - overall damaged_token_ratio=0.067, dropped_anchor_ratio=0.071
   - validate_stage_report readiness: READY=1 (`5gfclo7crNI`), REVIEW=1 (`tyI2OZCVhT8`), BLOCKED=1 (`KURlBcRF6-M`)
   - 08.taxonomy-validation: WARNING (non-blocking; high-freq commentary-only concepts only)
-  - operational note (RESOLVED): `validate_manifest.py` now supports `--reverify-root data/06e.reverify` to read reverify artifacts from the V2 path directly. No copy workaround needed.
+  - operational note (RESOLVED): `validate_manifest.py` now supports `--reverify-root data/06e.LLM.reverify` to read reverify artifacts from the V2 path directly. No copy workaround needed.
 - `P018.4` (1 video): **complete V2 pipeline run** (`2026-02-15`)
   - Stage 06 generated fresh (sonnet, 300s timeout, 326 segments → infield, 1 conversation, 98 approach + 228 commentary)
   - 06b.verify verdict: `FLAG` (5 misattributions, 1 boundary issue, 2 other flags)
@@ -243,7 +243,7 @@ Successful V2 end-to-end run (`2026-02-15`, Claude Code session):
     - 16 enrichments (1 approach + 15 commentary), validation PASSED
     - 0 errors, 2 warnings (transcript_artifact segs 98, 276)
     - 6 normalization repairs, 2 evidence-allowlist drops
-  - validate_manifest (reverify_patched, --reverify-root data/06e.reverify, max_damaged_token_ratio=0.10, max_dropped_anchor_ratio=0.25):
+  - validate_manifest (reverify_patched, --reverify-root data/06e.LLM.reverify, max_damaged_token_ratio=0.10, max_dropped_anchor_ratio=0.25):
     - gate: 1/1 allowed, 0 blocked, 0 policy violations
     - errors=0, warnings=2
     - damaged_token_ratio=0.039, dropped_anchor_ratio=0.065 (both within budget)
@@ -333,8 +333,8 @@ Implementation status (`2026-02-15`):
   - Backward compatible: old chunks without new fields → no co-retrieval, no errors
 - verified:
   - `npm test` passes (1082 tests)
-  - `node --import tsx/esm scripts/training-data/09.chunk-embed.ts --help` exits clean
-  - `node --import tsx/esm scripts/training-data/10.ingest.ts --help` exits clean
+  - `node --import tsx/esm scripts/training-data/09.EXT.chunk-embed.ts --help` exits clean
+  - `node --import tsx/esm scripts/training-data/10.EXT.ingest.ts --help` exits clean
 - remaining:
   - Re-run Stage 09 on P018.4 to verify chunk JSON includes new metadata fields
   - Re-run Stage 10 dry-run to verify pass-through

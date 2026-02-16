@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06f.damage-map
+scripts/training-data/06f.DET.damage-map
 
-Deterministic damage-map stage between 06d.sanitize and 07.content.
+Deterministic damage-map stage between 06d.DET.sanitize and 07.LLM.content.
 
 Reads:
-  - data/06d.sanitized/<source>/<video>/*.conversations.json
-  - optional Stage 07 output:
-      data/07.content/<source>/<video>/*.enriched.json
+  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json
+  - optional Stage 06e quality data:
+      data/06e.LLM.quality-check/<source>/<video>/*.quality-check.json
 
 Writes:
-  - data/06f.damage-map/<source>/<video>/*.damage-map.json
+  - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ except Exception:  # pragma: no cover
     jsonschema = None
 
 
-LOG_PREFIX = "[06f.damage-map]"
-PIPELINE_VERSION = "06f.damage-map-v1.0"
+LOG_PREFIX = "[06f.DET.damage-map]"
+PIPELINE_VERSION = "06f.DET.damage-map-v1.0"
 SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "damage_map.schema.json"
 
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3}
@@ -56,27 +56,27 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06d.sanitized"
+    return repo_root() / "data" / "06d.DET.sanitized"
 
 
-def stage07_root() -> Path:
-    return repo_root() / "data" / "07.content"
+def stage06e_root() -> Path:
+    return repo_root() / "data" / "06e.LLM.quality-check"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06f.damage-map"
+    return repo_root() / "data" / "06f.DET.damage-map"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06d.sanitized"
+    return repo_root() / "data" / "test" / "06d.DET.sanitized"
 
 
-def test_stage07_root() -> Path:
-    return repo_root() / "data" / "test" / "07.content"
+def test_stage06e_root() -> Path:
+    return repo_root() / "data" / "test" / "06e.LLM.quality-check"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06f.damage-map"
+    return repo_root() / "data" / "test" / "06f.DET.damage-map"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -197,53 +197,36 @@ def _extract_video_id_from_name(name: str) -> Optional[str]:
     return m.group(1) if m else None
 
 
-def _build_stage07_candidates(
+def _resolve_stage06e_path(
     input_path: Path,
     input_root_dir: Path,
-    stage07_root_dir: Path,
-) -> List[Path]:
-    candidates: List[Path] = []
+    stage06e_root_dir: Path,
+) -> Optional[Path]:
+    """Map a 06d conversations file to its matching 06e quality-check file.
+
+    06e mirrors 06d's directory layout exactly — just replace the suffix.
+    """
     in_name = input_path.name
-    enriched_name = in_name.replace(".conversations.json", ".enriched.json")
-    if enriched_name == in_name:
-        enriched_name = f"{input_path.stem}.enriched.json"
+    qc_name = in_name.replace(".conversations.json", ".quality-check.json")
+    if qc_name == in_name:
+        qc_name = f"{input_path.stem}.quality-check.json"
 
     try:
         rel_parent = input_path.parent.relative_to(input_root_dir)
     except ValueError:
         rel_parent = None
 
+    # Preferred: mirrored path
     if rel_parent is not None and rel_parent != Path("."):
-        candidates.append(stage07_root_dir / rel_parent / enriched_name)
+        candidate = stage06e_root_dir / rel_parent / qc_name
+        if candidate.exists():
+            return candidate
 
-    candidates.append(stage07_root_dir / enriched_name)
+    # Fallback: flat
+    candidate = stage06e_root_dir / qc_name
+    if candidate.exists():
+        return candidate
 
-    video_id = _extract_video_id_from_name(in_name) or _extract_video_id_from_name(str(input_path))
-    if video_id:
-        candidates.append(stage07_root_dir / f"{video_id}.enriched.json")
-        for p in stage07_root_dir.rglob("*.enriched.json"):
-            if video_id in p.name:
-                candidates.append(p)
-
-    out: List[Path] = []
-    seen: Set[str] = set()
-    for c in candidates:
-        key = str(c)
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append(c)
-    return out
-
-
-def _resolve_stage07_path(
-    input_path: Path,
-    input_root_dir: Path,
-    stage07_root_dir: Path,
-) -> Optional[Path]:
-    for cand in _build_stage07_candidates(input_path, input_root_dir, stage07_root_dir):
-        if cand.exists():
-            return cand
     return None
 
 
@@ -376,10 +359,11 @@ def _summarize_conversations(
 
 def _drop_trace_summary(
     *,
-    stage07_data: Optional[Dict[str, Any]],
+    stage06e_data: Optional[Dict[str, Any]],
     damage_by_seg: Dict[int, Dict[str, Any]],
 ) -> Dict[str, Any]:
-    dropped = stage07_data.get("dropped_candidates") if isinstance(stage07_data, dict) else None
+    # 06e output has no dropped_candidates field — this returns the fallback.
+    dropped = stage06e_data.get("dropped_candidates") if isinstance(stage06e_data, dict) else None
     if not isinstance(dropped, list):
         return {
             "present": False,
@@ -432,10 +416,10 @@ def _drop_trace_summary(
 
 def build_damage_map(
     data_06d: Dict[str, Any],
-    stage07_data: Optional[Dict[str, Any]],
+    stage06e_data: Optional[Dict[str, Any]],
     *,
     source_file: str,
-    stage07_file: Optional[str],
+    stage06e_file: Optional[str],
 ) -> Dict[str, Any]:
     segments_raw = data_06d.get("segments")
     if not isinstance(segments_raw, list):
@@ -457,14 +441,14 @@ def build_damage_map(
 
     low_quality_ids: Set[int] = set()
     artifact_types_by_seg: Dict[int, Set[str]] = {}
-    if isinstance(stage07_data, dict):
-        for item in stage07_data.get("low_quality_segments", []) or []:
+    if isinstance(stage06e_data, dict):
+        for item in stage06e_data.get("low_quality_segments", []) or []:
             if not isinstance(item, dict):
                 continue
             sid = _safe_int(item.get("segment"))
             if sid is not None:
                 low_quality_ids.add(sid)
-        for item in stage07_data.get("transcript_artifacts", []) or []:
+        for item in stage06e_data.get("transcript_artifacts", []) or []:
             if not isinstance(item, dict):
                 continue
             sid = _safe_int(item.get("segment_index"))
@@ -644,7 +628,7 @@ def build_damage_map(
         damage_rows.append(out_row)
 
     conv_summaries = _summarize_conversations(segments=segments, damage_rows=damage_rows)
-    drop_trace = _drop_trace_summary(stage07_data=stage07_data, damage_by_seg=damage_by_seg)
+    drop_trace = _drop_trace_summary(stage06e_data=stage06e_data, damage_by_seg=damage_by_seg)
 
     result: Dict[str, Any] = {
         "video_id": data_06d.get("video_id"),
@@ -653,7 +637,7 @@ def build_damage_map(
         "source_file": source_file,
         "input": {
             "stage06d": source_file,
-            "stage07": stage07_file,
+            "stage06e": stage06e_file,
         },
         "damage_type_enum": [
             "transcript_artifact",
@@ -683,21 +667,21 @@ def process_file(
     output_path: Path,
     *,
     input_root_dir: Path,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
     dry_run: bool = False,
 ) -> Dict[str, int]:
     data_06d = _read_json(input_path)
     if not data_06d:
         raise RuntimeError(f"Could not read 06d input JSON: {input_path}")
 
-    stage07_path = _resolve_stage07_path(input_path, input_root_dir, stage07_root_dir)
-    stage07_data = _read_json(stage07_path) if stage07_path else None
+    stage06e_path = _resolve_stage06e_path(input_path, input_root_dir, stage06e_root_dir)
+    stage06e_data = _read_json(stage06e_path) if stage06e_path else None
 
     damage_map = build_damage_map(
         data_06d,
-        stage07_data,
+        stage06e_data,
         source_file=str(input_path),
-        stage07_file=str(stage07_path) if stage07_path else None,
+        stage06e_file=str(stage06e_path) if stage06e_path else None,
     )
     _validate_damage_map_schema(damage_map)
     counts = damage_map.get("summary", {}) if isinstance(damage_map, dict) else {}
@@ -712,7 +696,7 @@ def process_file(
         return {
             "damaged_segments_total": damaged_total,
             "trace_contract_failed": 0 if trace_ok else 1,
-            "missing_stage07": 1 if stage07_path is None else 0,
+            "missing_stage06e": 1 if stage06e_path is None else 0,
         }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -723,14 +707,14 @@ def process_file(
         f"trace_contract={'PASS' if trace_ok else 'FAIL'}"
     )
     print(f"{LOG_PREFIX}   Output: {output_path}")
-    if stage07_path:
-        print(f"{LOG_PREFIX}   Stage07: {stage07_path}")
+    if stage06e_path:
+        print(f"{LOG_PREFIX}   Stage06e: {stage06e_path}")
     else:
-        print(f"{LOG_PREFIX}   Stage07: (missing; trace contract may fail)")
+        print(f"{LOG_PREFIX}   Stage06e: (missing; quality seeds unavailable)")
     return {
         "damaged_segments_total": damaged_total,
         "trace_contract_failed": 0 if trace_ok else 1,
-        "missing_stage07": 1 if stage07_path is None else 0,
+        "missing_stage06e": 1 if stage06e_path is None else 0,
     }
 
 
@@ -742,7 +726,7 @@ def _run_directory_with_files(
     *,
     output_root_dir: Optional[Path] = None,
     input_root_dir: Path,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     if not files:
         return
@@ -756,7 +740,7 @@ def _run_directory_with_files(
     totals = {
         "damaged_segments_total": 0,
         "trace_contract_failed": 0,
-        "missing_stage07": 0,
+        "missing_stage06e": 0,
     }
 
     for input_file in files:
@@ -780,7 +764,7 @@ def _run_directory_with_files(
                 input_file,
                 preferred_output,
                 input_root_dir=input_root_dir,
-                stage07_root_dir=stage07_root_dir,
+                stage06e_root_dir=stage06e_root_dir,
                 dry_run=args.dry_run,
             )
             processed += 1
@@ -796,7 +780,7 @@ def _run_directory_with_files(
     print(f"  Failed:    {failed}")
     print(f"  Damaged segments:     {totals['damaged_segments_total']}")
     print(f"  Trace contract failed:{totals['trace_contract_failed']}")
-    print(f"  Missing Stage07 refs: {totals['missing_stage07']}")
+    print(f"  Missing Stage06e refs: {totals['missing_stage06e']}")
     if failed > 0:
         sys.exit(1)
 
@@ -807,7 +791,7 @@ def _run_directory(
     args: argparse.Namespace,
     *,
     input_root_dir: Path,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     files = find_input_files(in_dir)
     if not files:
@@ -819,7 +803,7 @@ def _run_directory(
         out_dir,
         args,
         input_root_dir=input_root_dir,
-        stage07_root_dir=stage07_root_dir,
+        stage06e_root_dir=stage06e_root_dir,
     )
 
 
@@ -828,7 +812,7 @@ def _run_input(
     in_base: Path,
     out_base: Path,
     *,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     input_path = Path(args.input)
     if not input_path.exists():
@@ -847,7 +831,7 @@ def _run_input(
             input_path,
             output_path,
             input_root_dir=in_base,
-            stage07_root_dir=stage07_root_dir,
+            stage06e_root_dir=stage06e_root_dir,
             dry_run=args.dry_run,
         )
         return
@@ -858,7 +842,7 @@ def _run_input(
         out_dir,
         args,
         input_root_dir=in_base,
-        stage07_root_dir=stage07_root_dir,
+        stage06e_root_dir=stage06e_root_dir,
     )
 
 
@@ -867,7 +851,7 @@ def _run_sources(
     in_base: Path,
     out_base: Path,
     *,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     sources_path = repo_root() / args.sources
     if not sources_path.exists():
@@ -875,7 +859,7 @@ def _run_sources(
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.DET.sanitized output")
             continue
         src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
@@ -886,7 +870,7 @@ def _run_sources(
             args,
             output_root_dir=out_base,
             input_root_dir=in_base,
-            stage07_root_dir=stage07_root_dir,
+            stage06e_root_dir=stage06e_root_dir,
         )
 
 
@@ -895,7 +879,7 @@ def _run_manifest(
     in_base: Path,
     out_base: Path,
     *,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -907,7 +891,7 @@ def _run_manifest(
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.DET.sanitized output")
             continue
         src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
@@ -922,7 +906,7 @@ def _run_manifest(
             args,
             output_root_dir=out_base,
             input_root_dir=in_base,
-            stage07_root_dir=stage07_root_dir,
+            stage06e_root_dir=stage06e_root_dir,
         )
 
 
@@ -931,7 +915,7 @@ def _run_named_source(
     in_base: Path,
     out_base: Path,
     *,
-    stage07_root_dir: Path,
+    stage06e_root_dir: Path,
 ) -> None:
     name = args.name
     in_dir = in_base / name
@@ -943,30 +927,30 @@ def _run_named_source(
         out_dir,
         args,
         input_root_dir=in_base,
-        stage07_root_dir=stage07_root_dir,
+        stage06e_root_dir=stage06e_root_dir,
     )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Deterministic Stage 06f damage-map stage")
-    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.sanitized/)")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.DET.sanitized/)")
     parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
     parser.add_argument("--input", help="Input .conversations.json file or directory")
     parser.add_argument(
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06d.sanitized, or data/test/06d.sanitized with --test)"
+            "(default: data/06d.DET.sanitized, or data/test/06d.sanitized with --test)"
         ),
     )
     parser.add_argument(
-        "--stage07-root",
+        "--quality-root",
         help=(
-            "Root directory for Stage 07 enriched artifacts used for dropped-candidate trace checks "
-            "(default: data/07.content, or data/test/07.content with --test)"
+            "Root directory for 06e quality data "
+            "(default: data/06e.LLM.quality-check, or data/test/06e.LLM.quality-check with --test)"
         ),
     )
-    parser.add_argument("--output", help="Output directory (default: data/06f.damage-map/)")
+    parser.add_argument("--output", help="Output directory (default: data/06f.DET.damage-map/)")
     parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
     parser.add_argument(
         "--sources",
@@ -981,11 +965,11 @@ def main() -> None:
 
     if args.test:
         in_root = resolve_root_path(args.input_root, test_input_root())
-        s07_root = resolve_root_path(args.stage07_root, test_stage07_root())
+        s06e_root = resolve_root_path(args.quality_root, test_stage06e_root())
         out_root = Path(args.output) if args.output else test_output_root()
     else:
         in_root = resolve_root_path(args.input_root, input_root())
-        s07_root = resolve_root_path(args.stage07_root, stage07_root())
+        s06e_root = resolve_root_path(args.quality_root, stage06e_root())
         out_root = Path(args.output) if args.output else output_root()
 
     if args.test:
@@ -994,35 +978,35 @@ def main() -> None:
             out_root,
             args,
             input_root_dir=in_root,
-            stage07_root_dir=s07_root,
+            stage06e_root_dir=s06e_root,
         )
     elif args.manifest:
         _run_manifest(
             args,
             in_root,
             out_root,
-            stage07_root_dir=s07_root,
+            stage06e_root_dir=s06e_root,
         )
     elif args.input:
         _run_input(
             args,
             in_root,
             out_root,
-            stage07_root_dir=s07_root,
+            stage06e_root_dir=s06e_root,
         )
     elif args.sources:
         _run_sources(
             args,
             in_root,
             out_root,
-            stage07_root_dir=s07_root,
+            stage06e_root_dir=s06e_root,
         )
     elif args.name:
         _run_named_source(
             args,
             in_root,
             out_root,
-            stage07_root_dir=s07_root,
+            stage06e_root_dir=s06e_root,
         )
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")

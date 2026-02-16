@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/07.content
+scripts/training-data/07.LLM.content
 
 Content Enrichment using Claude Code CLI
 
 Reads:
   - Conversation files (default: Stage 06c patched output):
-      data/06c.patched/<source>/<video>/*.conversations.json
-    For hardened runs, pass --input-root data/06d.sanitized so Stage 07 consumes
+      data/06c.DET.patched/<source>/<video>/*.conversations.json
+    For hardened runs, pass --input-root data/06d.DET.sanitized so Stage 07 consumes
     deterministic sanitization metadata (stage07_evidence_segment_ids).
 
 Writes:
   - Enriched conversation files:
-      data/07.content/<source>/<video>/*.enriched.json
+      data/07.LLM.content/<source>/<video>/*.enriched.json
 
 The enrichment adds:
   For infield/compilation videos:
@@ -34,13 +34,13 @@ Architecture:
 Use:
 
   A) Test videos:
-     ./scripts/training-data/07.content --test
+     ./scripts/training-data/07.LLM.content --test
 
   B) Single file:
-     ./scripts/training-data/07.content --input data/test/06c.patched/video.conversations.json
+     ./scripts/training-data/07.LLM.content --input data/test/06c.patched/video.conversations.json
 
   C) Batch from sources file:
-     ./scripts/training-data/07.content --sources
+     ./scripts/training-data/07.LLM.content --sources
 
 Requirements:
   - Claude Code CLI installed and authenticated (claude command available)
@@ -111,6 +111,11 @@ TECHNIQUE_TAXONOMY = {
     "screening": "Asking questions to evaluate her as a potential partner",
     "appreciation": "Expressing genuine appreciation for something about her",
 
+    # Physical (3)
+    "physical_escalation": "Physical touch and kino — arm touches, hand holding, shoulder bumps, bouncing, mini-bounces, compliance-testing through movement. Includes any specific named physical moves (shoulder barge, hand yank, stomach stop, russian arm drag, etc.)",
+    "subcommunication": "Non-verbal signaling — eye contact, body language, posture, walking style, voice tonality, facial expressions, one-handed gestures, masculine energy projection, 'command presence'. Anything communicated without words.",
+    "calibration": "Reading signals and adjusting behavior in real-time — noticing IOIs/IODs, matching energy levels, switching between belligerent/smooth styles based on her response, pacing the interaction.",
+
     # Compliance (1)
     "compliance": "Getting her to agree to small requests, building investment",
 
@@ -165,23 +170,103 @@ TOPIC_TAXONOMY = {
     "language_barrier": "Communication friction due to limited shared language",
     "breakthrough_moment": "A pivotal realization or turning point in confidence or progress",
     "coaching_promotion": "Coach promoting programs, workshops, offers, or calls-to-action",
+
+    # Coaching context topics (v1.3.0)
+    "masculinity": "Masculine energy, polarity, dominance/submission dynamics, archetypes",
+    "inner_game": "Mindset, state management, approach anxiety, self-permission, congruence",
 }
 
-LOG_PREFIX = "[07.content]"
+# Alias mappings: common jargon → canonical taxonomy name.
+# Applied during normalize_enrichments() before moving to unlisted_concepts.
+TECHNIQUE_ALIASES: Dict[str, str] = {
+    # physical_escalation aliases
+    "kino": "physical_escalation",
+    "kino_escalation": "physical_escalation",
+    "physical_game": "physical_escalation",
+    "physical_dominance": "physical_escalation",
+    "directional_touch": "physical_escalation",
+    "belligerent_kino": "physical_escalation",
+    "mini_bounce": "physical_escalation",
+    "shoulder_barge": "physical_escalation",
+    "hand_yank": "physical_escalation",
+    "russian_arm_drag": "physical_escalation",
+    "stomach_stop": "physical_escalation",
+    "spacing_calibration": "physical_escalation",
+    "escalation_philosophy": "physical_escalation",
+    "she_comes_to_you": "compliance",
+    # subcommunication aliases
+    "command_presence": "subcommunication",
+    "eye_contact_calibration": "subcommunication",
+    "voice_cadence": "subcommunication",
+    "one_handed_gestures": "subcommunication",
+    "sexual_posture": "subcommunication",
+    "posture_drill": "subcommunication",
+    "body_language_calibration": "subcommunication",
+    "power_projection": "subcommunication",
+    "masculine_polarity": "subcommunication",
+    "cheeky_smirk": "subcommunication",
+    "polarity_matching": "subcommunication",
+    # calibration aliases
+    "energy_management": "calibration",
+    "state_dependent_calibration": "calibration",
+    "ioi_recognition": "calibration",
+    "ioi_types": "calibration",
+    "hook_point_recognition": "calibration",
+    # frame_control aliases
+    "belligerent_game": "frame_control",
+    "smooth_game": "frame_control",
+    "wolf_in_sheeps_clothing": "frame_control",
+    "panda_in_leather_jacket": "frame_control",
+    "slow_cooker": "frame_control",
+    "conversational_leadership": "frame_control",
+    "boundary_setting": "frame_control",
+    "fractionation": "push_pull",
+    # DHV aliases
+    "archetype_building": "DHV",
+    "archetype_purity": "DHV",
+    "archetype_internalization": "DHV",
+    "shininess": "DHV",
+    "value_tapping": "DHV",
+    # opener aliases
+    "accusational_opener": "direct_opener",
+    "belligerent_opening": "direct_opener",
+    "smooth_opening": "indirect_opener",
+    "brain_fry": "direct_opener",
+    # other
+    "sceptical_parroting": "tease",
+    "pattern_interrupt": "tease",
+    "sexual_spike": "tease",
+    "investment_management": "qualification",
+}
 
-PROMPT_VERSION = "1.7.0"  # v1.7.0: Multi-call conversation-aware windowing (D13b)
+TOPIC_ALIASES: Dict[str, str] = {
+    "body_language": "behavior",
+    "facial_expression": "behavior",
+    "fitness": "appearance",
+    "sexual_tension": "flirting",
+    "attraction_theory": "flirting",
+    "dominance_submission": "flirting",
+    "archetypes": "personality",
+    "masculinity_definition": "masculinity",
+    "masculinity_mindset": "masculinity",
+    "masculine_polarity": "masculinity",
+    "state_management": "inner_game",
+    "daygame_congruence": "inner_game",
+    "self_permission": "inner_game",
+    "social_conditioning": "inner_game",
+    "street_anonymity": "inner_game",
+}
+
+LOG_PREFIX = "[07.LLM.content]"
+
+PROMPT_VERSION = "1.8.0"  # v1.8.0: quality assessment moved to 06e
 PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.content-v1.14"  # v1.14: Add damage_severity to transcript artifacts (graduated chunk confidence)
+PIPELINE_VERSION = "07.LLM.content-v1.15"
 
-# Artifact damage severity mapping: how much does this artifact type hurt comprehension?
-# Used by Stage 09 to graduate chunk confidence penalties instead of a flat penalty.
+# Legacy: artifact severity + repair threshold (moved to 06e, kept for revalidate compat)
 ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
-    "nonsense": "high",           # genuine gibberish, unrecoverable meaning
-    "language_confusion": "medium",  # wrong language mixed in, still partially understandable
-    "word_repetition": "low",     # trivial stutter/doubled word, fully understandable
+    "nonsense": "high", "language_confusion": "medium", "word_repetition": "low",
 }
-
-# Transcript artifact repair
 REPAIR_ACCEPT_THRESHOLD = 0.90
 
 # Failure budget
@@ -571,6 +656,13 @@ def normalize_enrichments(
                 if not raw:
                     continue
                 canon = topic_canon.get(raw.lower())
+                if not canon:
+                    alias_target = TOPIC_ALIASES.get(raw.lower())
+                    if alias_target and alias_target in valid_topics:
+                        canon = alias_target
+                        repairs.append(
+                            f"enrichment {i}: aliased topic '{raw}' -> '{canon}'"
+                        )
                 if canon:
                     normalized_topics.append(canon)
                 else:
@@ -597,6 +689,10 @@ def normalize_enrichments(
                 continue
             raw_name = raw_text.split(":", 1)[0].strip()
             canon = topic_canon.get(raw_name.lower())
+            if not canon:
+                alias_target = TOPIC_ALIASES.get(raw_name.lower())
+                if alias_target and alias_target in valid_topics:
+                    canon = alias_target
             if canon:
                 topics_discussed.append(canon)
                 promoted_topics += 1
@@ -620,6 +716,36 @@ def normalize_enrichments(
                 f"enrichment {i}: promoted {promoted_topics} unlisted topic(s) into taxonomy"
             )
 
+        # Promote previously-unlisted techniques that are now in taxonomy or have aliases.
+        promoted_techniques = 0
+        kept_unlisted_techniques: List[str] = []
+        for raw_tech in unlisted_techniques:
+            if not isinstance(raw_tech, str):
+                continue
+            raw_text = raw_tech.strip()
+            if not raw_text:
+                continue
+            raw_name = raw_text.split(":", 1)[0].strip()
+            canon = technique_canon.get(raw_name.lower())
+            if not canon:
+                alias_target = TECHNIQUE_ALIASES.get(raw_name.lower())
+                if alias_target and alias_target in valid_techniques:
+                    canon = alias_target
+            if canon:
+                # Add as discussed technique for this enrichment.
+                td = e.get("techniques_discussed")
+                if isinstance(td, list):
+                    td.append({"technique": canon, "example": raw_text.split(":", 1)[1].strip() if ":" in raw_text else ""})
+                promoted_techniques += 1
+            else:
+                kept_unlisted_techniques.append(raw_text)
+        if promoted_techniques:
+            unlisted["techniques"] = kept_unlisted_techniques
+            unlisted_techniques = kept_unlisted_techniques
+            repairs.append(
+                f"enrichment {i}: promoted {promoted_techniques} unlisted technique(s) via taxonomy/alias"
+            )
+
         def normalize_technique_list(field_name: str) -> None:
             items = e.get(field_name)
             if items is None:
@@ -640,11 +766,19 @@ def normalize_enrichments(
 
                 raw = tech_name.strip()
                 canon = technique_canon.get(raw.lower())
+                if not canon:
+                    alias_target = TECHNIQUE_ALIASES.get(raw.lower())
+                    if alias_target and alias_target in valid_techniques:
+                        canon = alias_target
+                        repairs.append(
+                            f"enrichment {i}: aliased technique '{raw}' -> '{canon}'"
+                        )
                 if canon:
                     if raw != canon:
-                        repairs.append(
-                            f"enrichment {i}: normalized technique '{raw}' -> '{canon}'"
-                        )
+                        if not any(r.startswith(f"enrichment {i}: aliased technique '{raw}'") for r in repairs):
+                            repairs.append(
+                                f"enrichment {i}: normalized technique '{raw}' -> '{canon}'"
+                            )
                         item["technique"] = canon
                     kept.append(item)
                     continue
@@ -2215,7 +2349,7 @@ def build_stage07_anchor_allowlist(
     """Build high-confidence anchor allowlist.
 
     Preferred source is conversation metadata field ``stage07_anchor_segment_ids``
-    produced by 06h.confidence-propagation. When absent, fallback to the
+    produced by 06h.DET.confidence-propagation. When absent, fallback to the
     broader Stage 07 evidence allowlist for backward compatibility.
     """
     anchor_by_conv: Dict[int, Set[int]] = {}
@@ -2365,7 +2499,7 @@ def enforce_stage07_evidence_allowlist(
         )
         if isinstance(damage_reason, str) and damage_reason.strip():
             rec.setdefault("damage_reason_code", damage_reason.strip())
-        rec.setdefault("source_stage", "07.content")
+        rec.setdefault("source_stage", "07.LLM.content")
         rec.setdefault("timestamp", drop_timestamp)
         dropped_candidates.append(rec)
 
@@ -3058,12 +3192,20 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   IMPORTANT: Map specific instances to the nearest existing technique.
+   If a coach uses a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
+   If they demonstrate non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
+   If they read/adjust to signals (IOIs, energy matching, pacing), map to "calibration".
+   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
    CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
    Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
    Be conservative: if you are not confident the technique is present, omit it.
+   If a nearby commentary block names a technique the coach used in this approach (e.g. "there I was using push-pull"),
+   you may use that as supporting context — but the technique must still be visible in the approach transcript itself.
+   Commentary alone is not sufficient evidence.
    IMPORTANT: Do not use obviously garbled / low-quality transcript segments as technique evidence. If the line is unclear,
    either anchor to an adjacent clean segment or omit the technique.
    Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
@@ -3078,6 +3220,12 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   IMPORTANT: Map specific coaching topics to the nearest existing topic.
+   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
+   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
+   Only add to UNLISTED CONCEPTS if the topic truly doesn't fit ANY existing topic — even broadly.
+   You may use nearby commentary blocks as context for identifying topics (e.g. if the coach explains he was discussing travel, tag "travel").
+   But the topic should be plausible from the approach transcript — don't tag topics that only appear in commentary with no trace in the approach.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
 6. TURN PHASES: Label each turn with its interaction phase.
    CRITICAL: Only include phase labels for SEG_IDs marked (ANCHOR_OK).
@@ -3124,62 +3272,18 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 2. BLOCK INDEX: Sequential starting at 1
 3. DESCRIPTION: 10-20 word summary of what the coach is teaching/explaining
 4. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+   You may reference nearby approaches as context — if the coach is clearly commenting on a technique he just demonstrated, tag it here too.
 5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+   Similarly, if commentary references topics from a nearby approach, include them.
 6. UNLISTED CONCEPTS: Same format as above
-
-TRANSCRIPT QUALITY ASSESSMENT:
-Evaluate the transcription quality of each segment. Flag segments where the ASR (Whisper)
-appears to have produced inaccurate or garbage output. Look for:
-- Text that doesn't make sense in the conversational context
-- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
-- Garbled or nonsensical phrases
-- Language confusion (random foreign words that don't fit)
-- Multiple sentences incorrectly merged without punctuation
-
-Do NOT flag:
-- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
-- Run-on sentences that still make sense (fast speech accurately transcribed)
-- Foreign words/names that fit the context
-- Segments marked (SYNTHETIC): these are deterministic pipeline split helpers, not raw ASR output
-
-Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must be the segment id shown in brackets in the transcript lines.
-
-Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
-
-For each artifact, also assess whether you can confidently reconstruct what was actually said
-from the surrounding context. If so, include:
-  "repair_text": "what was likely actually said",
-  "repair_confidence": 0.0-1.0
-
-Rules for repair:
-- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
-- The surrounding segments must make the intended meaning unambiguous
-- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
-- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
-- Complete nonsense with no clear context is NOT repairable
-- Do not guess — if unsure, leave repair_text out entirely
-
-Example with repair:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation", "repair_text": "what was likely said", "repair_confidence": 0.95}}
-Example without repair (too uncertain):
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation"}}
-
-Return empty arrays if transcript quality is good.
 
 OUTPUT FORMAT: Return a JSON object with this structure:
 {{
-  "enrichments": [...],  // array of approach/commentary enrichments
-  "low_quality_segments": [...],  // segments with poor transcription
-  "transcript_artifacts": [...]  // specific artifact entries
+  "enrichments": [...]  // array of approach/commentary enrichments
 }}
 
 The enrichments array should contain one object for each approach conversation
-AND each commentary block, in chronological order. Include any transcript_artifact entries
-at the end of the array. Output ONLY valid JSON.
+AND each commentary block, in chronological order. Output ONLY valid JSON.
 
 EXAMPLE:
 {{
@@ -3221,11 +3325,7 @@ EXAMPLE:
       "topics_discussed": ["behavior"],
       "unlisted_concepts": {{"techniques": [], "topics": []}}
     }}
-  ],
-  "low_quality_segments": [
-    {{"segment": 130, "reason": "Apparent mishearing - 'ranch me mulatto' doesn't fit context"}}
-  ],
-  "transcript_artifacts": []
+  ]
 }}
 
 YOUR JSON RESPONSE:"""
@@ -3440,12 +3540,20 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   IMPORTANT: Map specific instances to the nearest existing technique.
+   If a coach uses a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
+   If they demonstrate non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
+   If they read/adjust to signals (IOIs, energy matching, pacing), map to "calibration".
+   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
    CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
    Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
    If the quote you want to use is spoken by TARGET/OTHER, do NOT cite it as technique evidence; instead cite the
    COACH/STUDENT segment that is doing the technique (or omit the technique if you can't anchor it to a COACH/STUDENT turn).
    Be conservative: if you are not confident the technique is present, omit it.
+   If a nearby commentary block names a technique the coach used in this approach (e.g. "there I was using push-pull"),
+   you may use that as supporting context — but the technique must still be visible in the approach transcript itself.
+   Commentary alone is not sufficient evidence.
    IMPORTANT: Do not use obviously garbled / low-quality transcript segments as technique evidence. If the line is unclear,
    either anchor to an adjacent clean segment or omit the technique.
    Avoid redundancy: if one opener label captures it (e.g. direct_opener), do NOT also tag another opener variant for the same utterance.
@@ -3460,6 +3568,12 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
+   IMPORTANT: Map specific coaching topics to the nearest existing topic.
+   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
+   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
+   Only add to UNLISTED CONCEPTS if the topic truly doesn't fit ANY existing topic — even broadly.
+   You may use nearby commentary blocks as context for identifying topics (e.g. if the coach explains he was discussing travel, tag "travel").
+   But the topic should be plausible from the approach transcript — don't tag topics that only appear in commentary with no trace in the approach.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
 6. TURN PHASES: Label each turn with its interaction phase.
    CRITICAL: Only include phase labels for SEG_IDs marked (ANCHOR_OK).
@@ -3506,53 +3620,14 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 2. BLOCK INDEX: Sequential starting at 1
 3. DESCRIPTION: 10-20 word summary of what the coach is teaching/explaining
 4. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+   You may reference nearby approaches as context — if the coach is clearly commenting on a technique he just demonstrated, tag it here too.
 5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
+   Similarly, if commentary references topics from a nearby approach, include them.
 6. UNLISTED CONCEPTS: Same format as above
-
-TRANSCRIPT QUALITY ASSESSMENT:
-Evaluate the transcription quality of each segment in the CORE CONTENT section only. Flag segments where the ASR (Whisper)
-appears to have produced inaccurate or garbage output. Look for:
-- Text that doesn't make sense in the conversational context
-- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
-- Garbled or nonsensical phrases
-- Language confusion (random foreign words that don't fit)
-- Multiple sentences incorrectly merged without punctuation
-
-Do NOT flag:
-- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
-- Run-on sentences that still make sense (fast speech accurately transcribed)
-- Foreign words/names that fit the context
-- Segments marked (SYNTHETIC): these are deterministic pipeline split helpers, not raw ASR output
-- Segments in CONTEXT BEFORE or CONTEXT AFTER sections
-
-Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must be the segment id shown in brackets in the transcript lines.
-
-Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is also the SEG_ID shown in brackets (despite the name).
-
-For each artifact, also assess whether you can confidently reconstruct what was actually said
-from the surrounding context. If so, include:
-  "repair_text": "what was likely actually said",
-  "repair_confidence": 0.0-1.0
-
-Rules for repair:
-- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
-- The surrounding segments must make the intended meaning unambiguous
-- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
-- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
-- Complete nonsense with no clear context is NOT repairable
-- Do not guess — if unsure, leave repair_text out entirely
-
-Return empty arrays if transcript quality is good.
 
 OUTPUT FORMAT: Return a JSON object with this structure:
 {{
-  "enrichments": [...],  // array of approach/commentary enrichments
-  "low_quality_segments": [...],  // segments with poor transcription
-  "transcript_artifacts": [...]  // specific artifact entries
+  "enrichments": [...]  // array of approach/commentary enrichments
 }}
 
 The enrichments array should contain one object for each approach conversation
@@ -3841,60 +3916,25 @@ FOR EACH SECTION, analyze:
 6. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only.
    CRITICAL: Only use technique names from the list above.
    If a technique is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
+   IMPORTANT: Map specific instances to the nearest existing technique.
+   If a coach names a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
+   If they describe non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
+   If they discuss reading/adjusting to signals (IOIs, energy matching, pacing), map to "calibration".
+   If they describe a specific type of opener, map to "direct_opener" or "indirect_opener" as appropriate.
+   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
 7. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only.
    CRITICAL: Only use topic names from the list above.
+   IMPORTANT: Map specific coaching topics to the nearest existing topic.
+   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
+   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
    If a topic is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
 8. UNLISTED CONCEPTS: Report any technique or topic that doesn't fit the taxonomy.
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
 
-TRANSCRIPT QUALITY ASSESSMENT:
-Evaluate the transcription quality of each segment. Flag segments where the ASR (Whisper)
-appears to have produced inaccurate or garbage output. Look for:
-- Text that doesn't make sense in the conversational context
-- Apparent mishearings or hallucinations (words that seem wrong for what was likely said)
-- Garbled or nonsensical phrases
-- Language confusion (random foreign words that don't fit)
-- Multiple sentences incorrectly merged without punctuation
-
-Do NOT flag:
-- Natural speech patterns (fillers like "um", "like", short responses like "yeah")
-- Run-on sentences that still make sense (fast speech accurately transcribed)
-- Foreign words/names that fit the context
-
-Output a "low_quality_segments" array listing segments with poor transcription:
-{{"segment": SEG_ID, "reason": "brief explanation of what seems wrong"}}
-IMPORTANT: SEG_ID must match the global segment id shown in the transcript lines.
-
-Also flag specific artifact types with "transcript_artifact" entries:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "word_repetition"|"nonsense"|"language_confusion", "description": "brief explanation"}}
-IMPORTANT: segment_index is the global seg_id (despite the name).
-
-For each artifact, also assess whether you can confidently reconstruct what was actually said
-from the surrounding context. If so, include:
-  "repair_text": "what was likely actually said",
-  "repair_confidence": 0.0-1.0
-
-Rules for repair:
-- Only provide repair_text when you are HIGHLY confident (>= 0.90) you know what was said
-- The surrounding segments must make the intended meaning unambiguous
-- If there are multiple plausible interpretations, do NOT repair — set repair_confidence below 0.90 or omit repair_text entirely
-- Mid-sentence fragments where the beginning/end is clearly recoverable from adjacent segments ARE repairable
-- Complete nonsense with no clear context is NOT repairable
-- Do not guess — if unsure, leave repair_text out entirely
-
-Example with repair:
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation", "repair_text": "what was likely said", "repair_confidence": 0.95}}
-Example without repair (too uncertain):
-{{"type": "transcript_artifact", "segment_index": SEG_ID, "artifact_type": "nonsense", "description": "brief explanation"}}
-
-Return empty arrays if transcript quality is good.
-
 OUTPUT FORMAT: Return a JSON object with this structure:
 {{
-  "enrichments": [...],  // array of section enrichments
-  "low_quality_segments": [...],  // segments with poor transcription
-  "transcript_artifacts": [...]  // specific artifact entries
+  "enrichments": [...]  // array of section enrichments
 }}
 
 Output ONLY valid JSON, no explanation text.
@@ -3926,9 +3966,7 @@ EXAMPLE:
       "topics_discussed": ["hobby", "personality"],
       "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}}
     }}
-  ],
-  "low_quality_segments": [],
-  "transcript_artifacts": []
+  ]
 }}
 
 YOUR JSON RESPONSE:"""
@@ -4008,8 +4046,8 @@ def parse_enrichment_response(response: str) -> ParsedEnrichmentResponse:
                         return _parse_legacy_array(arr)
 
     except (json.JSONDecodeError, ValueError) as e:
-        print(f"[07.content] JSON parse error: {e}")
-        print(f"[07.content] Response preview: {response[:500]}...")
+        print(f"[07.LLM.content] JSON parse error: {e}")
+        print(f"[07.LLM.content] Response preview: {response[:500]}...")
 
     return empty_result
 
@@ -4045,13 +4083,178 @@ def extract_video_title_from_stem(stem: str) -> str:
 def derive_source_from_path(p: Path) -> Optional[str]:
     # Prefer extracting from stage folder layout markers when possible.
     parts = p.parts
-    for marker in ("06c.patched", "06.video-type", "07.content", "05.audio-features", "01.download"):
+    for marker in ("06c.DET.patched", "06.LLM.video-type", "07.LLM.content", "05.EXT.audio-features", "01.download"):
         if marker in parts:
             idx = parts.index(marker)
             if idx + 1 < len(parts):
                 return parts[idx + 1]
     # Fallback: assume parent dir is the source.
     return p.parent.name or None
+
+
+def _process_non_infield(
+    *,
+    data: Dict[str, Any],
+    segments: List[Dict[str, Any]],
+    video_id: str,
+    video_title: str,
+    video_type: str,
+    video_type_confidence: float,
+    source: str,
+    input_path: Path,
+    output_path: Path,
+    claude_model: Optional[str],
+    llm_timeout_seconds: int,
+    llm_retries: int,
+    quality_root_dir: Optional[Path],
+    input_root_dir: Optional[Path],
+) -> Dict[str, Any]:
+    """Non-infield processing path: talking_head/podcast/unknown videos.
+
+    Simpler than infield: no windowing, no evidence allowlists, no phase confidence.
+    """
+    conversations = group_segments_by_conversation(segments)
+    conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
+    commentary_blocks = group_commentary_blocks(segments)
+
+    prompt = build_talking_head_prompt(segments, video_id)
+    print(f"{LOG_PREFIX}   Calling Claude CLI (talking_head prompt, lane=non_infield)...")
+
+    start_time = time.time()
+    response = call_claude(
+        prompt,
+        retries=max(1, int(llm_retries)),
+        timeout=max(1, int(llm_timeout_seconds)),
+        model=claude_model,
+    )
+    elapsed = time.time() - start_time
+
+    enrichments: List[Dict] = []
+    if response:
+        parsed = parse_enrichment_response(response)
+        enrichments = parsed.enrichments
+        print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
+    else:
+        print(f"{LOG_PREFIX}   Claude call failed, using empty enrichments")
+
+    seg_by_id = {
+        s.get("id"): s for s in segments
+        if isinstance(s, dict) and isinstance(s.get("id"), int)
+    }
+
+    # Light normalization: taxonomy aliases only
+    normalization_repairs = normalize_enrichments(
+        enrichments,
+        seg_by_id=seg_by_id,
+        conversations=conversations,
+        commentary_blocks=commentary_blocks,
+        conversation_meta_by_id=conversation_meta_by_id,
+    )
+    if normalization_repairs:
+        preview = "; ".join(normalization_repairs[:3])
+        suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
+        print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
+
+    # Quality data pass-through from 06e
+    quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
+    low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
+    transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
+    if quality_data:
+        print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
+
+    # Collect summary data
+    section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
+    all_unlisted_techniques: List[str] = []
+    all_unlisted_topics: List[str] = []
+    for e in enrichments:
+        unlisted = e.get("unlisted_concepts", {})
+        if isinstance(unlisted, dict):
+            all_unlisted_techniques.extend(unlisted.get("techniques", []) or [])
+            all_unlisted_topics.extend(unlisted.get("topics", []) or [])
+
+    all_techniques = set()
+    for e in enrichments:
+        for t in e.get("techniques_discussed", []):
+            if t.get("technique"):
+                all_techniques.add(t["technique"])
+
+    all_topics = set()
+    for e in enrichments:
+        for topic in e.get("topics_discussed", []):
+            if isinstance(topic, str):
+                all_topics.add(topic)
+
+    upstream_patch = data.get("patch_metadata", {})
+
+    output: Dict[str, Any] = {
+        "metadata": {
+            "source_file": str(input_path),
+            "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "video_type": video_type,
+            "video_type_confidence": video_type_confidence,
+            "routing_lane": "non_infield",
+            "prompt_variant": "talking_head",
+            "sections_enriched": len(section_enrichments),
+            "processing_time_sec": elapsed,
+            "model": "claude-cli",
+            "upstream_verification_verdict": upstream_patch.get("verification_verdict"),
+            "upstream_fixes_applied": upstream_patch.get("fixes_applied_count", 0),
+            "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
+            "normalization_repairs_count": len(normalization_repairs),
+            "normalization_repairs_preview": normalization_repairs[:5],
+            "quality_source": "06e" if quality_data else "none",
+        },
+        "pipeline_version": PIPELINE_VERSION,
+        "prompt_version": PROMPT_VERSION,
+        "source": source,
+        "video_title": video_title,
+        "video_id": video_id,
+        "video_type": data.get("video_type"),
+        "speaker_labels": data.get("speaker_labels"),
+        "segments": segments,
+        "enrichments": enrichments,
+        "low_quality_segments": low_quality_segments,
+        "transcript_artifacts": transcript_artifacts,
+        "summary": {
+            "sections_enriched": len(section_enrichments),
+            "techniques_found": sorted(all_techniques),
+            "topics_found": sorted(all_topics),
+            "unlisted_concepts": {
+                "techniques": sorted(set(all_unlisted_techniques)),
+                "topics": sorted(set(all_unlisted_topics)),
+            },
+        },
+    }
+
+    if isinstance(claude_model, str) and claude_model.strip():
+        meta = output.get("metadata")
+        if isinstance(meta, dict):
+            meta["claude_model"] = claude_model.strip()
+
+    # Validate output
+    validation_results = validate_enrichment_output(output, data)
+    write_validation_results(validation_results, output_path, video_id)
+
+    has_errors = any(r.severity == "error" for r in validation_results)
+
+    if has_errors:
+        print(f"{LOG_PREFIX}   SKIPPING output write due to validation errors")
+    else:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(output, f, ensure_ascii=False)
+        print(f"{LOG_PREFIX}   Wrote: {output_path}")
+
+    print(f"{LOG_PREFIX}   Validation: {'FAILED' if has_errors else 'PASSED'}")
+
+    return {
+        "conversations": 0,
+        "enriched": len(enrichments),
+        "routing_lane": "non_infield",
+        "validation_passed": not has_errors,
+        "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
+        "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
+    }
 
 
 def process_video_file(
@@ -4064,10 +4267,12 @@ def process_video_file(
     force_lane: Optional[str] = None,
     window_size: int = 100,
     overlap: int = 20,
+    quality_root_dir: Optional[Path] = None,
+    input_root_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
-    print(f"[07.content] Processing: {input_path.name}")
+    print(f"[07.LLM.content] Processing: {input_path.name}")
 
     # Load input
     with input_path.open("r", encoding="utf-8") as f:
@@ -4096,13 +4301,35 @@ def process_video_file(
     video_type_confidence = get_video_type_confidence(data)
 
     if not segments:
-        print(f"[07.content] No segments found")
+        print(f"[07.LLM.content] No segments found")
         return {"conversations": 0, "enriched": 0}
 
     # Group by conversation
     conversations = group_segments_by_conversation(segments)
     approach_convs = {k: v for k, v in conversations.items() if k > 0}
     routing_lane = determine_routing_lane(len(approach_convs), force_lane)
+
+    # --- Non-infield early return ---
+    if routing_lane == "non_infield" and not dry_run:
+        print(f"[07.LLM.content]   {len(segments)} segments, type={video_type}")
+        print(f"[07.LLM.content]   Routing lane: non_infield")
+        return _process_non_infield(
+            data=data,
+            segments=segments,
+            video_id=video_id,
+            video_title=video_title,
+            video_type=video_type,
+            video_type_confidence=video_type_confidence,
+            source=source,
+            input_path=input_path,
+            output_path=output_path,
+            claude_model=claude_model,
+            llm_timeout_seconds=llm_timeout_seconds,
+            llm_retries=llm_retries,
+            quality_root_dir=quality_root_dir,
+            input_root_dir=input_root_dir,
+        )
+
     commentary_blocks = group_commentary_blocks(segments)
     conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
     confident_target_convs = sum(
@@ -4125,15 +4352,15 @@ def process_video_file(
         f"forced={force_lane}" if force_lane
         else f"approaches={len(approach_convs)}"
     )
-    print(f"[07.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
+    print(f"[07.LLM.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
-    print(f"[07.content]   Routing lane: {routing_lane} ({lane_reason})")
+    print(f"[07.LLM.content]   Routing lane: {routing_lane} ({lane_reason})")
     print(
-        f"[07.content]   Stage07 evidence allowlist: "
+        f"[07.LLM.content]   Stage07 evidence allowlist: "
         f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
     )
     print(
-        f"[07.content]   Stage07 anchor allowlist: "
+        f"[07.LLM.content]   Stage07 anchor allowlist: "
         f"{len(stage07_anchor_allowlist)} convs, {anchored_segments_total} segment ids"
     )
 
@@ -4163,10 +4390,9 @@ def process_video_file(
             print(f"{LOG_PREFIX}   [DRY RUN] Would call Claude CLI ({video_type} prompt, lane={routing_lane})")
         return {"conversations": len(approach_convs), "enriched": 0, "routing_lane": routing_lane}
 
-    prompt_variant = "talking_head" if routing_lane == "non_infield" or video_type not in ("infield", "compilation") else "infield"
+    # From here on, routing_lane is always infield (non_infield returned early above)
+    prompt_variant = "infield"
     enrichments: List[Dict] = []
-    transcript_artifacts: List[Dict] = []
-    low_quality_segments: List[Dict] = []
     window_results: Optional[List[WindowedCallResult]] = None
 
     if use_windowing and windows:
@@ -4223,8 +4449,6 @@ def process_video_file(
         if all_windows_ok:
             merged = merge_windowed_results(window_results, windows)
             enrichments = merged.enrichments
-            transcript_artifacts = merged.transcript_artifacts
-            low_quality_segments = merged.low_quality_segments
             total_e = sum(len(wr.parsed.enrichments) for wr in window_results)
             print(f"{LOG_PREFIX}   Merged: {len(enrichments)} enrichments "
                   f"(from {total_e} pre-merge) in {elapsed:.1f}s total")
@@ -4232,19 +4456,14 @@ def process_video_file(
             print(f"{LOG_PREFIX}   Claude call failed on window, using empty enrichments")
 
     else:
-        # --- Single-call path (unchanged for small videos / non-infield / talking_head) ---
-        if routing_lane == "non_infield":
-            prompt = build_talking_head_prompt(segments, video_id)
-        elif video_type in ("infield", "compilation"):
-            prompt = build_infield_prompt(
-                conversations,
-                commentary_blocks,
-                video_id,
-                stage07_evidence_allowlist=stage07_evidence_allowlist,
-                stage07_anchor_allowlist=stage07_anchor_allowlist,
-            )
-        else:
-            prompt = build_talking_head_prompt(segments, video_id)
+        # --- Single-call infield path ---
+        prompt = build_infield_prompt(
+            conversations,
+            commentary_blocks,
+            video_id,
+            stage07_evidence_allowlist=stage07_evidence_allowlist,
+            stage07_anchor_allowlist=stage07_anchor_allowlist,
+        )
 
         print(f"{LOG_PREFIX}   Calling Claude CLI ({prompt_variant} prompt, lane={routing_lane})...")
 
@@ -4260,11 +4479,7 @@ def process_video_file(
         if response:
             parsed = parse_enrichment_response(response)
             enrichments = parsed.enrichments
-            transcript_artifacts = parsed.transcript_artifacts
-            low_quality_segments = parsed.low_quality_segments
-            quality_msg = f", {len(low_quality_segments)} low-quality segs" if low_quality_segments else ""
-            artifact_msg = f", {len(transcript_artifacts)} artifacts" if transcript_artifacts else ""
-            print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments{quality_msg}{artifact_msg} in {elapsed:.1f}s")
+            print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
         else:
             print(f"{LOG_PREFIX}   Claude call failed, using empty enrichments")
 
@@ -4282,80 +4497,13 @@ def process_video_file(
         for sid, seg in seg_by_id.items()
         if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
     }
-    dropped_synthetic_quality = 0
-    dropped_synthetic_artifacts = 0
-    if synthetic_segment_ids:
-        filtered_lq: List[Dict[str, Any]] = []
-        for row in low_quality_segments:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_quality += 1
-                continue
-            filtered_lq.append(row)
-        low_quality_segments = filtered_lq
 
-        filtered_artifacts: List[Dict[str, Any]] = []
-        for row in transcript_artifacts:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment_index")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_artifacts += 1
-                continue
-            filtered_artifacts.append(row)
-        transcript_artifacts = filtered_artifacts
-
-        if dropped_synthetic_quality or dropped_synthetic_artifacts:
-            print(
-                f"{LOG_PREFIX}   Dropped synthetic quality signals: "
-                f"low_quality={dropped_synthetic_quality}, artifacts={dropped_synthetic_artifacts}"
-            )
-
-    # --- Stamp damage_severity on each artifact ---
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict):
-            continue
-        atype = artifact.get("artifact_type", "")
-        artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
-
-    # --- Transcript artifact repair acceptance ---
-    repairs_accepted = 0
-    repairs_rejected = 0
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict):
-            continue
-        repair_text = artifact.get("repair_text")
-        repair_conf = artifact.get("repair_confidence")
-        sid = artifact.get("segment_index")
-        if not repair_text or not isinstance(repair_conf, (int, float)):
-            continue
-        if repair_conf >= REPAIR_ACCEPT_THRESHOLD and isinstance(sid, int) and sid in seg_by_id:
-            seg = seg_by_id[sid]
-            original_text = seg.get("text", "")
-            seg["text"] = repair_text
-            artifact["repaired"] = True
-            artifact["original_text"] = original_text
-            repairs_accepted += 1
-            orig_preview = original_text[:60] + ("..." if len(original_text) > 60 else "")
-            repair_preview = repair_text[:60] + ("..." if len(repair_text) > 60 else "")
-            print(
-                f"{LOG_PREFIX}   Repaired seg {sid}: "
-                f"'{orig_preview}' -> '{repair_preview}' "
-                f"(confidence={repair_conf:.2f})"
-            )
-        else:
-            repairs_rejected += 1
-            if repair_text:
-                print(
-                    f"{LOG_PREFIX}   Repair rejected seg {sid}: "
-                    f"confidence={repair_conf:.2f} < {REPAIR_ACCEPT_THRESHOLD}"
-                )
-    if repairs_accepted or repairs_rejected:
-        print(
-            f"{LOG_PREFIX}   Artifact repairs: accepted={repairs_accepted}, rejected={repairs_rejected}"
-        )
+    # --- Quality data pass-through from 06e ---
+    quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
+    low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
+    transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
+    if quality_data:
+        print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
 
     normalization_repairs = normalize_enrichments(
         enrichments,
@@ -4451,10 +4599,7 @@ def process_video_file(
             "stage07_anchor_allowlist_segments": anchored_segments_total,
             "target_confident_conversations": confident_target_convs,
             "synthetic_segment_count": len(synthetic_segment_ids),
-            "synthetic_low_quality_dropped": dropped_synthetic_quality,
-            "synthetic_artifacts_dropped": dropped_synthetic_artifacts,
-            "artifact_repairs_accepted": repairs_accepted,
-            "artifact_repairs_rejected": repairs_rejected,
+            "quality_source": "06e" if quality_data else "none",
             "windowing": {
                 "window_count": len(windows) if windows else 1,
                 "window_size": window_size,
@@ -4636,7 +4781,7 @@ def revalidate_video_file(
     dry_run: bool = False,
 ) -> Dict[str, Any]:
     """Re-run deterministic normalization + validation on an existing .enriched.json (no Claude call)."""
-    print(f"[07.content] Revalidating: {input_path.name}")
+    print(f"[07.LLM.content] Revalidating: {input_path.name}")
 
     # Load Stage 06c input (ground truth for segments + roles).
     with input_path.open("r", encoding="utf-8") as f:
@@ -4644,7 +4789,7 @@ def revalidate_video_file(
 
     segments = stage06_data.get("segments", [])
     if not segments:
-        print(f"[07.content] No segments found")
+        print(f"[07.LLM.content] No segments found")
         return {"conversations": 0, "enriched": 0, "validation_passed": False}
 
     conversations = group_segments_by_conversation(segments)
@@ -4864,35 +5009,43 @@ def repo_root() -> Path:
 
 
 def verification_root() -> Path:
-    return repo_root() / "data" / "06b.verify"
+    return repo_root() / "data" / "06b.LLM.verify"
 
 
 def reverify_root() -> Path:
-    return repo_root() / "data" / "06b.reverify"
+    return repo_root() / "data" / "06b.LLM.reverify"
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06c.patched"
+    return repo_root() / "data" / "06c.DET.patched"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "07.content"
+    return repo_root() / "data" / "07.LLM.content"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06c.patched"
+    return repo_root() / "data" / "test" / "06c.DET.patched"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "07.content"
+    return repo_root() / "data" / "test" / "07.LLM.content"
 
 
 def test_verification_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.verify"
+    return repo_root() / "data" / "test" / "06b.LLM.verify"
 
 
 def test_reverify_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.reverify"
+    return repo_root() / "data" / "test" / "06b.LLM.reverify"
+
+
+def quality_root() -> Path:
+    return repo_root() / "data" / "06e.LLM.quality-check"
+
+
+def test_quality_root() -> Path:
+    return repo_root() / "data" / "test" / "06e.LLM.quality-check"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -4902,6 +5055,50 @@ def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
     if not path.is_absolute():
         path = repo_root() / path
     return path
+
+
+def _load_quality_data(
+    input_path: Path,
+    quality_root_dir: Path,
+    input_root_dir: Path,
+) -> Optional[Dict[str, Any]]:
+    """Load 06e quality-check data for a given input file.
+
+    Maps the input file path to its matching .quality-check.json in quality_root_dir.
+    Returns parsed JSON or None if not found.
+    """
+    in_name = input_path.name
+    qc_name = in_name.replace(".conversations.json", ".quality-check.json")
+    if qc_name == in_name:
+        qc_name = f"{input_path.stem}.quality-check.json"
+
+    try:
+        rel_parent = input_path.parent.relative_to(input_root_dir)
+    except ValueError:
+        rel_parent = None
+
+    # Preferred: mirrored path
+    if rel_parent is not None and rel_parent != Path("."):
+        candidate = quality_root_dir / rel_parent / qc_name
+        if candidate.exists():
+            try:
+                data = json.loads(candidate.read_text(encoding="utf-8"))
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                pass
+
+    # Fallback: flat
+    candidate = quality_root_dir / qc_name
+    if candidate.exists():
+        try:
+            data = json.loads(candidate.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            pass
+
+    return None
 
 
 def extract_video_stem(input_path: Path) -> str:
@@ -4994,9 +5191,9 @@ def _find_verification_for_input(
     """Find a matching 06b verification report for a Stage 06c input file.
 
     Supports multiple on-disk layouts:
-    - source-video: data/06b.verify/<source>/<video_dir>/<stem>.verification.json
-    - source-flat:  data/06b.verify/<source>/<stem>.verification.json
-    - root-flat:    data/06b.verify/<stem>.verification.json
+    - source-video: data/06b.LLM.verify/<source>/<video_dir>/<stem>.verification.json
+    - source-flat:  data/06b.LLM.verify/<source>/<stem>.verification.json
+    - root-flat:    data/06b.LLM.verify/<stem>.verification.json
     """
     video_stem = extract_video_stem(input_path)
     verification_name = f"{video_stem}.verification.json"
@@ -5073,7 +5270,7 @@ def should_process_video(
     Returns (should_process, reason).
     - approve_only: only APPROVE proceeds.
     - allow_flag: APPROVE + FLAG proceed; REJECT may proceed only when patch-clean salvage is detected.
-    - reverify_patched: require a second verification report from data/06b.reverify and allow only when
+    - reverify_patched: require a second verification report from data/06b.LLM.reverify and allow only when
       that second verdict is APPROVE or FLAG.
     """
     if gate_policy not in {"approve_only", "allow_flag", "reverify_patched"}:
@@ -5221,12 +5418,12 @@ def _run_named_source(
     out_dir = Path(args.output) if args.output else output_root_path / name
     files = find_input_files(in_dir)
     if not files:
-        print(f"[07.content] No .conversations.json files found in: {in_dir}")
+        print(f"[07.LLM.content] No .conversations.json files found in: {in_dir}")
         return
 
-    print(f"[07.content] Input : {in_dir}")
-    print(f"[07.content] Output: {out_dir}")
-    print(f"[07.content] Files : {len(files)}")
+    print(f"[07.LLM.content] Input : {in_dir}")
+    print(f"[07.LLM.content] Output: {out_dir}")
+    print(f"[07.LLM.content] Files : {len(files)}")
 
     total_convs = 0
     total_enriched = 0
@@ -5278,6 +5475,8 @@ def _run_named_source(
                 force_lane=args.force_lane,
                 window_size=args.window_size,
                 overlap=args.overlap,
+                quality_root_dir=quality_root_resolved,
+                input_root_dir=in_root,
             )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
@@ -5286,7 +5485,7 @@ def _run_named_source(
         print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
     if skipped_quarantine > 0:
         print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
-    print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations")
+    print(f"\n[07.LLM.content] Done. Enriched {total_enriched}/{total_convs} conversations")
 
 
 def main() -> None:
@@ -5295,7 +5494,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/06c.patched/)"
+        help="Source name (folder under data/06c.DET.patched/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -5309,26 +5508,31 @@ def main() -> None:
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06c.patched, or data/test/06c.patched with --test)"
+            "(default: data/06c.DET.patched, or data/test/06c.patched with --test)"
         ),
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/07.content/)"
+        help="Output directory (defaults to data/07.LLM.content/)"
     )
     parser.add_argument(
         "--verification-root",
         help=(
             "Root directory containing Stage 06b verification reports "
-            "(default: data/06b.verify, or data/test/06b.verify with --test)"
+            "(default: data/06b.LLM.verify, or data/test/06b.verify with --test)"
         ),
     )
     parser.add_argument(
         "--reverify-root",
         help=(
             "Root directory containing Stage 06b reverify reports "
-            "(default: data/06b.reverify, or data/test/06b.reverify with --test)"
+            "(default: data/06b.LLM.reverify, or data/test/06b.LLM.reverify with --test)"
         ),
+    )
+    parser.add_argument(
+        "--quality-root",
+        default=None,
+        help="Root dir for 06e quality data (default: data/06e.LLM.quality-check/)",
     )
     parser.add_argument(
         "--test",
@@ -5367,12 +5571,12 @@ def main() -> None:
     parser.add_argument(
         "--verification-gate-policy",
         choices=["approve_only", "allow_flag", "reverify_patched"],
-        default="approve_only",
+        default="reverify_patched",
         help=(
             "Verification gate policy: "
             "approve_only=only APPROVE proceeds, "
             "allow_flag=allow FLAG and patched-clean REJECT, "
-            "reverify_patched=require 06b.verify + 06b.reverify, and allow only when reverify verdict is APPROVE/FLAG"
+            "reverify_patched=require 06b.LLM.verify + 06b.LLM.reverify, and allow only when reverify verdict is APPROVE/FLAG"
         ),
     )
     parser.add_argument(
@@ -5515,11 +5719,13 @@ def main() -> None:
     default_output_root = test_output_root() if args.test else output_root()
     default_verify_root = test_verification_root() if args.test else verification_root()
     default_reverify_root = test_reverify_root() if args.test else reverify_root()
+    default_quality_root = test_quality_root() if args.test else quality_root()
 
     in_root = resolve_root_path(args.input_root, default_input_root)
     out_root = Path(args.output) if args.output else default_output_root
     verify_root = resolve_root_path(args.verification_root, default_verify_root)
     reverify_verify_root = resolve_root_path(args.reverify_root, default_reverify_root)
+    quality_root_resolved = resolve_root_path(args.quality_root, default_quality_root)
 
     if args.test:
         in_dir = in_root
@@ -5566,7 +5772,7 @@ def main() -> None:
                 return
 
             if not args.revalidate and existing_output and not args.overwrite:
-                print(f"[07.content] Output exists, skipping: {existing_output}")
+                print(f"[07.LLM.content] Output exists, skipping: {existing_output}")
                 return
 
             output_path = existing_output if (args.revalidate and existing_output) else preferred_output
@@ -5583,8 +5789,10 @@ def main() -> None:
                     force_lane=args.force_lane,
                     window_size=args.window_size,
                     overlap=args.overlap,
+                    quality_root_dir=quality_root_resolved,
+                    input_root_dir=in_root,
                 )
-            print(f"\n[07.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
+            print(f"\n[07.LLM.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
 
         in_dir = input_path
@@ -5629,10 +5837,10 @@ def main() -> None:
 
             files = src_files + fallback_files
             if not files:
-                print(f"[07.content] Skipping {src_name}: no manifest videos found in input")
+                print(f"[07.LLM.content] Skipping {src_name}: no manifest videos found in input")
                 continue
 
-            print(f"[07.content] Manifest: {src_name} ({len(files)} videos)")
+            print(f"[07.LLM.content] Manifest: {src_name} ({len(files)} videos)")
             skipped_verification = 0
             skipped_quarantine = 0
             for input_file in files:
@@ -5693,7 +5901,7 @@ def main() -> None:
             if skipped_quarantine > 0:
                 print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
-        print(f"\n[07.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
+        print(f"\n[07.LLM.content] Manifest done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     elif args.sources:
         sources_path = repo_root() / args.sources
@@ -5707,7 +5915,7 @@ def main() -> None:
         for src_name, _ in parse_sources_file(sources_path):
             src_in_dir = in_root / src_name
             if not src_in_dir.exists():
-                print(f"[07.content] Skipping {src_name}: no 06c.patched output")
+                print(f"[07.LLM.content] Skipping {src_name}: no 06c.DET.patched output")
                 continue
 
             src_out_dir = out_base / src_name
@@ -5773,7 +5981,7 @@ def main() -> None:
             if skipped_quarantine > 0:
                 print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
-        print(f"\n[07.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
+        print(f"\n[07.LLM.content] Done. Enriched {total_enriched}/{total_convs} conversations total")
         return
     elif args.name:
         _run_named_source(
@@ -5792,16 +6000,16 @@ def main() -> None:
     # Directory mode
     files = find_input_files(in_dir)
     if not files:
-        print(f"[07.content] No .conversations.json files found in: {in_dir}")
+        print(f"[07.LLM.content] No .conversations.json files found in: {in_dir}")
         return
 
     # Extract source hint from directory path.
     source_name = infer_source_name(in_dir, in_root)
 
-    print(f"[07.content] Input : {in_dir}")
-    print(f"[07.content] Output: {out_dir}")
-    print(f"[07.content] Files : {len(files)}")
-    print(f"[07.content] Source: {source_name}")
+    print(f"[07.LLM.content] Input : {in_dir}")
+    print(f"[07.LLM.content] Output: {out_dir}")
+    print(f"[07.LLM.content] Files : {len(files)}")
+    print(f"[07.LLM.content] Source: {source_name}")
 
     # Load state for checkpointing
     state_path = out_dir / ".enrichment_state.json"

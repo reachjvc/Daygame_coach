@@ -1,13 +1,13 @@
 /**
- * scripts/training-data/00.reset-embeddings.ts
+ * scripts/training-data/00.EXT.reset-embeddings.ts
  *
  * DANGEROUS ADMIN SCRIPT
  *
  * Clears the Supabase `embeddings` table (training data / RAG index).
  *
  * Use:
- *   node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --count
- *   node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --wipe-all --yes
+ *   node --import tsx/esm scripts/training-data/00.EXT.reset-embeddings.ts --count
+ *   node --import tsx/esm scripts/training-data/00.EXT.reset-embeddings.ts --wipe-all --yes
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -36,8 +36,8 @@ function parseArgs(argv: string[]): Args {
 
 function printHelp() {
   console.log("Usage:")
-  console.log("  node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --count")
-  console.log("  node --import tsx/esm scripts/training-data/00.reset-embeddings.ts --wipe-all --yes")
+  console.log("  node --import tsx/esm scripts/training-data/00.EXT.reset-embeddings.ts --count")
+  console.log("  node --import tsx/esm scripts/training-data/00.EXT.reset-embeddings.ts --wipe-all --yes")
   console.log("")
   console.log("Flags:")
   console.log("  --count       Print current embeddings row count and exit")
@@ -124,11 +124,10 @@ async function main() {
     return
   }
 
-  // PostgREST requires a filter for DELETE. Using a sentinel UUID that should never exist.
-  const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
+  // PostgREST requires a filter for DELETE. Using a sentinel value that should never exist.
   console.log("")
   console.log("Deleting ALL rows from `embeddings`...")
-  const { error } = await supabase.from("embeddings").delete().neq("id", ZERO_UUID)
+  const { error } = await supabase.from("embeddings").delete().neq("id", 0)
   if (error) {
     throw new Error(`Failed to wipe embeddings: ${error.message}`)
   }

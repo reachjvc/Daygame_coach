@@ -87,6 +87,11 @@ export function interpolateWithControlPoints(
 // Multipliers for magnitude-based rounding (values >= 10)
 const NICE_MULTIPLIERS = [1, 1.5, 2, 2.5, 3, 4, 5, 6, 7.5, 8, 10]
 
+// Minimum ratio between consecutive increments.  Each step's increment must
+// be at least this fraction of the previous step's increment.  Increments
+// must never shrink — each delta >= previous delta.
+const MIN_INCREMENT_RATIO = 1.0
+
 export function roundToNiceNumber(value: number): number {
   if (value <= 0) return 0
 
@@ -136,6 +141,24 @@ function buildNicePool(min: number, max: number): number[] {
   return [...pool].sort((a, b) => a - b)
 }
 
+/**
+ * Round a value UP to the nearest "nice enough" number.
+ * Used when no pool value satisfies the increment constraint — generates
+ * a reasonable milestone value at any scale (multiples of 5, 25, 50, etc.).
+ */
+function ceilToNice(value: number): number {
+  if (value <= 10) return Math.ceil(value)
+  if (value <= 100) {
+    return Math.ceil(value / 5) * 5
+  }
+  if (value <= 1000) {
+    return Math.ceil(value / 25) * 25
+  }
+  const magnitude = Math.pow(10, Math.floor(Math.log10(value)) - 1)
+  const step = magnitude * 2.5
+  return Math.ceil(value / step) * step
+}
+
 // ============================================================================
 // Pool-Based Milestone Selection
 // ============================================================================
@@ -144,8 +167,12 @@ function buildNicePool(min: number, max: number): number[] {
  * Select N milestones from a pre-computed pool of nice numbers,
  * using the curve as a selection bias in log-space.
  *
+ * Enforces increment smoothness during selection: each increment must be
+ * at least 60% of the previous increment.  This prevents jarring sequences
+ * like 150→250→300 (deltas 100, 50) where the step size suddenly halves.
+ *
  * Guarantees: every milestone is a "nice" number, monotonically increasing,
- * and the maximum gap between consecutive milestones is bounded by pool density.
+ * and increments change smoothly.
  */
 function selectFromPool(
   candidates: number[],
@@ -167,6 +194,7 @@ function selectFromPool(
 
   const milestones: GeneratedMilestone[] = []
   let lo = 0
+  let prevDelta = 0
 
   for (let i = 0; i < steps; i++) {
     if (i === 0) {
@@ -189,17 +217,53 @@ function selectFromPool(
     // Must leave enough candidates for remaining steps
     const hi = n - (steps - i)
 
-    let bestIdx = lo
-    let bestDist = Math.abs(logPos[lo] - desired)
-    for (let j = lo + 1; j <= hi; j++) {
+    // Increment smoothness: each delta must be >= the previous delta.
+    const minIncrement = i >= 2 ? Math.ceil(prevDelta * MIN_INCREMENT_RATIO) : 1
+    const minValue = milestones[i - 1].value + minIncrement
+
+    // Cap value so remaining milestones can maintain non-decreasing deltas
+    // to reach the target.  With k remaining steps, we need at least
+    // minIncrement * k range left.  Solving: value <= (target + prev * (k-1)) / k
+    const remaining = steps - i // steps after this one (including target)
+    const maxValueForDeltas = remaining > 1
+      ? Math.floor((target + milestones[i - 1].value * (remaining - 1)) / remaining)
+      : target - 1
+
+    // Advance search start past candidates below minValue
+    let effLo = lo
+    while (effLo <= hi && candidates[effLo] < minValue) effLo++
+
+    // Fall back to unconstrained if constraint can't be satisfied
+    if (effLo > hi) effLo = lo
+
+    // Search within [effLo, hi] for candidate closest to curve, capped by maxValueForDeltas
+    let bestIdx = -1
+    let bestDist = Infinity
+    for (let j = effLo; j <= hi; j++) {
+      if (candidates[j] > maxValueForDeltas) continue
       const d = Math.abs(logPos[j] - desired)
       if (d < bestDist) {
         bestDist = d
         bestIdx = j
       }
     }
+    // Fall back to closest to minValue if all candidates exceed the cap
+    if (bestIdx < 0) {
+      bestIdx = effLo
+      bestDist = Math.abs(logPos[effLo] - desired)
+      for (let j = effLo + 1; j <= hi; j++) {
+        const d = Math.abs(logPos[j] - desired)
+        if (d < bestDist) {
+          bestDist = d
+          bestIdx = j
+        }
+      }
+    }
 
-    milestones.push({ step: i, rawValue, value: candidates[bestIdx] })
+    const pickedValue = candidates[bestIdx]
+    prevDelta = pickedValue - milestones[i - 1].value
+
+    milestones.push({ step: i, rawValue, value: pickedValue })
     lo = bestIdx + 1
   }
 
@@ -236,9 +300,13 @@ export function generateMilestoneLadder(config: MilestoneLadderConfig): Generate
   if (candidates.length >= steps) {
     milestones = selectFromPool(candidates, config)
   } else {
-    // Fallback: curve + round for small ranges with sparse pools
+    // Fallback: curve + round for small ranges with sparse pools.
+    // Use coarser rounding appropriate to the step density to avoid
+    // collisions and +1 cascades.
     const range = target - start
     const useLog = start > 0 && target / start >= 10
+    const avgStep = range / (steps - 1)
+    const roundStep = avgStep >= 50 ? 25 : avgStep >= 10 ? 5 : avgStep >= 3 ? 2 : 1
     milestones = []
 
     for (let i = 0; i < steps; i++) {
@@ -257,35 +325,76 @@ export function generateMilestoneLadder(config: MilestoneLadderConfig): Generate
       const rawValue = useLog
         ? start * Math.pow(target / start, curved)
         : start + range * curved
-      milestones.push({ step: i, rawValue, value: roundToNiceNumber(rawValue) })
-    }
 
-    // Enforce monotonic increase
-    for (let i = 1; i < milestones.length - 1; i++) {
-      if (milestones[i].value <= milestones[i - 1].value) {
-        const nextNice = poolValues.find(v => v > milestones[i - 1].value)
-        milestones[i].value = nextNice ?? milestones[i - 1].value + 1
-      }
+      // Round to the step-appropriate granularity
+      let value = Math.round(rawValue / roundStep) * roundStep
+
+      // Enforce monotonic increase and leave room for remaining milestones
+      const prev = milestones[i - 1].value
+      const maxValue = target - roundStep * (steps - 1 - i)
+      value = Math.max(value, prev + roundStep)
+      value = Math.min(value, maxValue)
+
+      milestones.push({ step: i, rawValue, value })
     }
   }
 
-  // Enforce non-decreasing absolute increments.
-  // Without this, nice-number rounding can produce sequences like
-  // 150→250→300 (increments +100, +50) which feel wrong — the absolute
-  // jump should never shrink as values grow.
-  // Forward sweep: when an increment is smaller than the previous one,
-  // snap to the next pool value that maintains at least the previous increment.
+  // Enforce non-decreasing increments.  Two passes:
+  //   1) Forward: bump UP milestones whose delta < previous delta
+  //   2) Backward: pull DOWN milestones near the end that leave too little
+  //      room for the final delta to match the penultimate delta
   if (milestones.length > 3) {
-    for (let i = 2; i < milestones.length - 1; i++) {
-      const prevDelta = milestones[i - 1].value - milestones[i - 2].value
-      const currDelta = milestones[i].value - milestones[i - 1].value
-      if (currDelta < prevDelta) {
-        const minValue = milestones[i - 1].value + prevDelta
-        const better = poolValues.find(v => v >= minValue && v < target)
-        if (better !== undefined) {
-          milestones[i] = { ...milestones[i], value: better }
+    // Forward pass (up to 4 iterations for cascading fixes)
+    for (let pass = 0; pass < 4; pass++) {
+      let changed = false
+      for (let i = 2; i < milestones.length - 1; i++) {
+        const prevDelta = milestones[i - 1].value - milestones[i - 2].value
+        const currDelta = milestones[i].value - milestones[i - 1].value
+        const minDelta = Math.ceil(prevDelta * MIN_INCREMENT_RATIO)
+        if (currDelta < minDelta) {
+          const minValue = milestones[i - 1].value + minDelta
+          const maxValue = milestones[i + 1].value - 1
+          if (minValue <= maxValue) {
+            const better = poolValues.find(v => v >= minValue && v <= maxValue)
+            const newVal = better ?? Math.min(ceilToNice(minValue), maxValue)
+            if (newVal > milestones[i].value) {
+              milestones[i] = { ...milestones[i], value: newVal }
+              changed = true
+            }
+          }
         }
       }
+      if (!changed) break
+    }
+
+    // Backward pass: pull milestones DOWN so the next delta stays >= current delta.
+    // This prevents sequences like ...400→750→1000 where 750 is too close to 1000.
+    for (let pass = 0; pass < 4; pass++) {
+      let changed = false
+      for (let i = milestones.length - 2; i >= 2; i--) {
+        const currDelta = milestones[i].value - milestones[i - 1].value
+        const nextDelta = milestones[i + 1].value - milestones[i].value
+        if (nextDelta < currDelta) {
+          // Pull this milestone down so currDelta <= nextDelta becomes possible.
+          // Target: value such that (next - value) >= (value - prev)
+          // => value <= (next + prev) / 2
+          const prev = milestones[i - 1].value
+          const next = milestones[i + 1].value
+          const maxVal = Math.floor((next + prev) / 2)
+          // Don't go below previous milestone + 1
+          const newVal = Math.max(prev + 1, maxVal)
+          if (newVal < milestones[i].value) {
+            // Snap to nearest pool value at or below maxVal
+            const poolBelow = poolValues.filter(v => v >= prev + 1 && v <= maxVal)
+            const snapped = poolBelow.length > 0
+              ? poolBelow[poolBelow.length - 1]
+              : newVal
+            milestones[i] = { ...milestones[i], value: snapped }
+            changed = true
+          }
+        }
+      }
+      if (!changed) break
     }
   }
 

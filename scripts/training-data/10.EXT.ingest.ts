@@ -1,5 +1,5 @@
 /**
- * scripts/training-data/10.ingest.ts
+ * scripts/training-data/10.EXT.ingest.ts
  *
  * Ingest Stage (Stage 10)
  *
@@ -8,7 +8,7 @@
  *
  * Reads:
  *   - Chunked and embedded files (from Stage 09):
- *       data/09.chunks/<source>/<video>.chunks.json
+ *       data/09.EXT.chunks/<source>/<video>.chunks.json
  *
  * Writes:
  *   - Supabase embeddings (via `storeEmbeddings`)
@@ -18,18 +18,18 @@
  *       data/validation/ingest_quarantine/<manifest>[.<source>].<run>.report.json
  *
  * Use:
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --source daily_evolution
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --dry-run
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --verify
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --full
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --source daily_evolution
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --verify
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Notes:
  *   - Manifest ingest uses per-video quarantine for Stage 08/Readiness failures when report detail is available.
@@ -151,7 +151,7 @@ type ChunksFile = {
 
 function printUsage(): void {
   console.log(`Usage:
-  node node_modules/tsx/dist/cli.mjs scripts/training-data/10.ingest.ts [options]
+  node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts [options]
 
 Core:
   --manifest <path>         Restrict ingest to manifest scope
@@ -653,10 +653,10 @@ function extractVideoIdFromPathHint(filePath: string): string | null {
 
 function inferSourceFromStage07Path(filePath: string): string | null {
   const parts = filePath.split(path.sep)
-  const idx = parts.indexOf("07.content")
+  const idx = parts.indexOf("07.LLM.content")
   if (idx >= 0 && idx + 1 < parts.length) {
     const src = parts[idx + 1]
-    if (src && src !== "07.content") {
+    if (src && src !== "07.LLM.content") {
       return src
     }
   }
@@ -778,8 +778,8 @@ function loadStage07EnrichedForSemanticGate(
   preferredSourceByVideo: Map<string, string>
 ): Array<Record<string, unknown>> {
   const root = source
-    ? path.join(process.cwd(), "data", "07.content", source)
-    : path.join(process.cwd(), "data", "07.content")
+    ? path.join(process.cwd(), "data", "07.LLM.content", source)
+    : path.join(process.cwd(), "data", "07.LLM.content")
   if (!fs.existsSync(root)) {
     return []
   }
@@ -1610,13 +1610,13 @@ function checkTaxonomyGate(
   let reportPath = path.join(
     process.cwd(),
     "data",
-    "08.taxonomy-validation",
+    "08.DET.taxonomy-validation",
     `${safeReportName(reportStem)}.report.json`
   )
   const legacyReportPath = path.join(
     process.cwd(),
     "data",
-    "08.taxonomy-validation",
+    "08.DET.taxonomy-validation",
     `${safeReportName(stem)}.report.json`
   )
 
@@ -1628,7 +1628,7 @@ function checkTaxonomyGate(
       reportPath = legacyReportPath
     } else {
       console.error(`❌ Missing Stage 08 report: ${reportPath}`)
-      console.error(`   Run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+      console.error(`   Run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
       process.exit(1)
     }
   }
@@ -1647,7 +1647,7 @@ function checkTaxonomyGate(
     process.exit(1)
   }
 
-  if (data.stage !== "08.taxonomy-validation") {
+  if (data.stage !== "08.DET.taxonomy-validation") {
     console.error(`❌ Stage 08 report has unexpected stage=${String(data.stage)} (${reportPath})`)
     process.exit(1)
   }
@@ -1656,7 +1656,7 @@ function checkTaxonomyGate(
   if (reportSource !== expectedSource) {
     if (!(source && reportSource === legacyExpectedSource)) {
       console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${reportSource}'`)
-      console.error(`   Re-run: python3 scripts/training-data/08.taxonomy-validation --manifest ${manifestPath}`)
+      console.error(`   Re-run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
       process.exit(1)
     }
   }
@@ -1946,7 +1946,7 @@ async function main() {
 
   loadEnvFile(path.join(process.cwd(), ".env.local"))
 
-  const chunksDir = path.join(process.cwd(), "data", "09.chunks")
+  const chunksDir = path.join(process.cwd(), "data", "09.EXT.chunks")
   const statePath = path.join(process.cwd(), "data", ".ingest_state.json")
   const runStartedAt = new Date().toISOString()
 

@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06h.confidence-propagation
+scripts/training-data/06h.DET.confidence-propagation
 
 Merge deterministic damage seeds (06f) + LLM adjudication (06g) into confidence-aware
 conversation payloads for downstream Stage 07/09/10 behavior.
 
 Reads:
-  - data/06d.sanitized/<source>/<video>/*.conversations.json
-  - data/06f.damage-map/<source>/<video>/*.damage-map.json
-  - data/06g.damage-adjudicator/<source>/<video>/*.damage-adjudication.json (optional)
+  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json
+  - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
+  - data/06g.LLM.damage-adjudicator/<source>/<video>/*.damage-adjudication.json (optional)
 
 Writes:
-  - data/06h.confidence-propagation/<source>/<video>/*.conversations.json
-  - data/06h.confidence-propagation/<source>/<video>/*.confidence.report.json
+  - data/06h.DET.confidence-propagation/<source>/<video>/*.conversations.json
+  - data/06h.DET.confidence-propagation/<source>/<video>/*.confidence.report.json
 """
 
 from __future__ import annotations
@@ -30,8 +30,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 from batch.manifest_parser import load_manifest_sources, manifest_filter_files
 
 
-LOG_PREFIX = "[06h.confidence-propagation]"
-PIPELINE_VERSION = "06h.confidence-propagation-v1.0"
+LOG_PREFIX = "[06h.DET.confidence-propagation]"
+PIPELINE_VERSION = "06h.DET.confidence-propagation-v1.0"
 
 
 def repo_root() -> Path:
@@ -39,35 +39,35 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06d.sanitized"
+    return repo_root() / "data" / "06d.DET.sanitized"
 
 
 def damage_root() -> Path:
-    return repo_root() / "data" / "06f.damage-map"
+    return repo_root() / "data" / "06f.DET.damage-map"
 
 
 def adjudication_root() -> Path:
-    return repo_root() / "data" / "06g.damage-adjudicator"
+    return repo_root() / "data" / "06g.LLM.damage-adjudicator"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06h.confidence-propagation"
+    return repo_root() / "data" / "06h.DET.confidence-propagation"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06d.sanitized"
+    return repo_root() / "data" / "test" / "06d.DET.sanitized"
 
 
 def test_damage_root() -> Path:
-    return repo_root() / "data" / "test" / "06f.damage-map"
+    return repo_root() / "data" / "test" / "06f.DET.damage-map"
 
 
 def test_adjudication_root() -> Path:
-    return repo_root() / "data" / "test" / "06g.damage-adjudicator"
+    return repo_root() / "data" / "test" / "06g.LLM.damage-adjudicator"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06h.confidence-propagation"
+    return repo_root() / "data" / "test" / "06h.DET.confidence-propagation"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -396,7 +396,7 @@ def propagate_confidence(
                             seg["original_text_before_repair"] = original_text
                             seg["text"] = repaired_text.strip()
                             seg["repair_metadata"] = {
-                                "source_stage": "06g.damage-adjudicator",
+                                "source_stage": "06g.LLM.damage-adjudicator",
                                 "seed_segment_id": sid,
                                 "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                             }
@@ -747,7 +747,7 @@ def _run_sources(
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.DET.sanitized output")
             continue
         src_out_dir = out_base / src_name
         files = find_input_files(src_in_dir)
@@ -781,7 +781,7 @@ def _run_manifest(
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
         if not src_in_dir.exists():
-            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.sanitized output")
+            print(f"{LOG_PREFIX} Skipping {src_name}: no 06d.DET.sanitized output")
             continue
         src_out_dir = out_base / src_name
         files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
@@ -826,31 +826,31 @@ def _run_named_source(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Stage 06h confidence propagation merge")
-    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.sanitized/)")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/06d.DET.sanitized/)")
     parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
     parser.add_argument("--input", help="Input .conversations.json file or directory")
     parser.add_argument(
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06d.sanitized, or data/test/06d.sanitized with --test)"
+            "(default: data/06d.DET.sanitized, or data/test/06d.sanitized with --test)"
         ),
     )
     parser.add_argument(
         "--damage-root",
         help=(
             "Root directory for 06f damage-map artifacts "
-            "(default: data/06f.damage-map, or data/test/06f.damage-map with --test)"
+            "(default: data/06f.DET.damage-map, or data/test/06f.DET.damage-map with --test)"
         ),
     )
     parser.add_argument(
         "--adjudication-root",
         help=(
             "Root directory for 06g adjudication artifacts "
-            "(default: data/06g.damage-adjudicator, or data/test/06g.damage-adjudicator with --test)"
+            "(default: data/06g.LLM.damage-adjudicator, or data/test/06g.LLM.damage-adjudicator with --test)"
         ),
     )
-    parser.add_argument("--output", help="Output directory (default: data/06h.confidence-propagation/)")
+    parser.add_argument("--output", help="Output directory (default: data/06h.DET.confidence-propagation/)")
     parser.add_argument(
         "--conversation-block-threshold",
         type=float,

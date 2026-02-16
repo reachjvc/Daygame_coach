@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "audio_features.schema.json",
   "title": "Audio Features (05)",
-  "description": "Output schema for 05.audio-features - acoustic features per segment for tone detection",
+  "description": "Output schema for 05.EXT.audio-features - acoustic features per segment for tone detection",
   "type": "object",
   "required": ["source_audio", "audio_sha256", "source_timestamps", "processing", "total_duration_sec", "segments"],
   "properties": {

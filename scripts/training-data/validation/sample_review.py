@@ -170,7 +170,7 @@ def main() -> None:
     source_by_vid = {vid: src for src, vid, _ in entries}
     folder_by_vid = {vid: folder for _, vid, folder in entries}
 
-    s07_root = repo_root() / "data" / "07.content"
+    s07_root = repo_root() / "data" / "07.LLM.content"
     idx_s07 = index_paths_by_video_id(s07_root, "*.enriched.json", ids)
 
     videos: Dict[str, Dict[str, Any]] = {}

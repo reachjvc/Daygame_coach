@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/training-data/01.download
+# scripts/training-data/01.EXT.download
 #
 # Polite/reliable batch downloader:
 # - Fixed pacing between items (playlist/channel safe)
@@ -16,14 +16,14 @@ usage() {
 Usage:
 
   Download one source (video/playlist/channel):
-    ./scripts/training-data/01.download "<source_name>" "<youtube_url>"
+    ./scripts/training-data/01.EXT.download "<source_name>" "<youtube_url>"
 
   Download all sources from config:
-    ./scripts/training-data/01.download --sources docs/pipeline/sources.txt
+    ./scripts/training-data/01.EXT.download --sources docs/pipeline/sources.txt
 
 Examples:
-  ./scripts/training-data/01.download "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
-  ./scripts/training-data/01.download --sources
+  ./scripts/training-data/01.EXT.download "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+  ./scripts/training-data/01.EXT.download --sources
 EOF
 }
 
@@ -95,7 +95,7 @@ SESSION_PAUSE_MAX_SEC="${SESSION_PAUSE_MAX_SEC:-21600}"  # 6 hours
 # Video download (DISABLED by default - pipeline only uses audio)
 # --------------------------
 # To enable video download for future visual analysis:
-#   SKIP_VIDEO=0 ./scripts/training-data/01.download ...
+#   SKIP_VIDEO=0 ./scripts/training-data/01.EXT.download ...
 # Or set in environment: export SKIP_VIDEO=0
 SKIP_VIDEO="${SKIP_VIDEO:-1}"
 
@@ -643,7 +643,7 @@ download_one() {
   fi
 
   # VIDEO (disabled by default - pipeline only uses audio)
-  # Enable with: SKIP_VIDEO=0 ./scripts/training-data/01.download ...
+  # Enable with: SKIP_VIDEO=0 ./scripts/training-data/01.EXT.download ...
   if [[ "${SKIP_VIDEO:-1}" != "1" ]]; then
     : > "$log_video"
     VIDEO_FORMAT="${VIDEO_FORMAT:-best[ext=mp4]/best}"

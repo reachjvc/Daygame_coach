@@ -1,5 +1,5 @@
 /**
- * scripts/training-data/09.chunk-embed.ts
+ * scripts/training-data/09.EXT.chunk-embed.ts
  *
  * Chunk and Embed Stage (Stage 09)
  *
@@ -8,20 +8,20 @@
  *
  * Reads:
  *   - Enriched content files (from Stage 07):
- *       data/07.content/**\/*.enriched.json
+ *       data/07.LLM.content/**\/*.enriched.json
  *
  * Writes:
  *   - Chunked and embedded files:
- *       data/09.chunks/<source>/<video>.chunks.json
+ *       data/09.EXT.chunks/<source>/<video>.chunks.json
  *   - State tracking:
- *       data/09.chunks/.chunk_state.json
+ *       data/09.EXT.chunks/.chunk_state.json
  *
  * Use:
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --source daily_evolution
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --dry-run
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.chunk-embed.ts --full
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.EXT.chunk-embed.ts
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.EXT.chunk-embed.ts --source daily_evolution
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.EXT.chunk-embed.ts --manifest docs/pipeline/batches/CANARY.1.txt
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.EXT.chunk-embed.ts --dry-run
+ *   node node_modules/tsx/dist/cli.mjs scripts/training-data/09.EXT.chunk-embed.ts --full
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -277,7 +277,7 @@ type InternalChunk = {
 
 function printUsage() {
   console.log("Usage:")
-  console.log("  node --import tsx/esm scripts/training-data/09.chunk-embed.ts [options]")
+  console.log("  node --import tsx/esm scripts/training-data/09.EXT.chunk-embed.ts [options]")
   console.log("")
   console.log("Options:")
   console.log("  --source <name>                  Restrict processing to one source")
@@ -1138,9 +1138,9 @@ function isPlausibleChannelName(raw: string | null | undefined): raw is string {
 function extractChannelFromSourceFile(raw: unknown): string | null {
   if (typeof raw !== "string" || !raw.trim()) return null
   const normalized = raw.replace(/\\/g, "/")
-  // Example: data/06c.patched/<channel>/<stem>.conversations.json
+  // Example: data/06c.DET.patched/<channel>/<stem>.conversations.json
   const m = normalized.match(
-    /data\/(?:06c\.patched|06\.video-type|06b\.verify|07\.content|05\.audio-features)\/([^/]+)\//
+    /data\/(?:06c\.DET\.patched|06\.LLM\.video-type|06b\.verify|07\.LLM\.content|05\.EXT\.audio-features)\/([^/]+)\//
   )
   return m?.[1] ?? null
 }
@@ -1317,8 +1317,8 @@ async function main() {
 
   const { QA_CONFIG } = await import("../../src/qa/config")
 
-  const enrichedDir = path.join(process.cwd(), "data", "07.content")
-  const chunksDir = path.join(process.cwd(), "data", "09.chunks")
+  const enrichedDir = path.join(process.cwd(), "data", "07.LLM.content")
+  const chunksDir = path.join(process.cwd(), "data", "09.EXT.chunks")
 
   const chunkSize = QA_CONFIG.rag.chunkSize
   const chunkOverlap = QA_CONFIG.rag.chunkOverlap
@@ -1375,7 +1375,7 @@ async function main() {
   }
 
   if (enrichedFiles.length === 0) {
-    console.log(`No .enriched.json files found under ${args.source ?? "data/07.content/"}`)
+    console.log(`No .enriched.json files found under ${args.source ?? "data/07.LLM.content/"}`)
     return
   }
 

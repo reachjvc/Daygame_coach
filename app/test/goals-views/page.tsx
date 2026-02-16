@@ -75,7 +75,7 @@ function generateMockGoals(): GoalWithProgress[] {
       progress_percentage: 100, is_complete: true, days_remaining: null,
     },
     {
-      ...base, id: "m8", title: "Save $500/month", life_area: "finances", goal_type: "recurring", period: "monthly" as const,
+      ...base, id: "m8", title: "Save $500/month", life_area: "career_business", goal_type: "recurring", period: "monthly" as const,
       target_value: 500, current_value: 320, current_streak: 1, best_streak: 2,
       parent_goal_id: null, target_date: null, description: null,
       progress_percentage: 64, is_complete: false, days_remaining: null,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/06b.verify
+scripts/training-data/06b.LLM.verify
 
 LLM Verification of Stage 06 (Video Type Classification) Output
 
@@ -10,25 +10,25 @@ coherence. Writes a verification report. Does NOT modify stage 06 output.
 
 Reads:
   - Stage 06 output files:
-      data/06.video-type/<source>/<video>/*.conversations.json
+      data/06.LLM.video-type/<source>/<video>/*.conversations.json
 
 Writes:
   - Verification reports:
-      data/06b.verify/<source>/<video>/*.verification.json
+      data/06b.LLM.verify/<source>/<video>/*.verification.json
 
 Use:
 
   A) From pipeline:
-     ./scripts/training-data/06b.verify "source_name" "youtube_url"
+     ./scripts/training-data/06b.LLM.verify "source_name" "youtube_url"
 
   B) Test videos:
-     ./scripts/training-data/06b.verify --test
+     ./scripts/training-data/06b.LLM.verify --test
 
   C) Single file:
-     ./scripts/training-data/06b.verify --input data/06.video-type/video.conversations.json
+     ./scripts/training-data/06b.LLM.verify --input data/06.LLM.video-type/video.conversations.json
 
   D) Batch from sources file:
-     ./scripts/training-data/06b.verify --sources
+     ./scripts/training-data/06b.LLM.verify --sources
 
 Requirements:
   - Claude Code CLI installed and authenticated (claude command available)
@@ -56,7 +56,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.verify-v2.0"  # v2.0: retry+repair schema-invalid verifier JSON before failing
+PIPELINE_VERSION = "06b.LLM.verify-v2.0"  # v2.0: retry+repair schema-invalid verifier JSON before failing
 
 DEBUG_MODE = False
 
@@ -67,7 +67,7 @@ CLAUDE_BINARY_PATHS = [
     "/usr/local/bin/claude",
 ]
 
-LOG_PREFIX = "[06b.verify]"
+LOG_PREFIX = "[06b.LLM.verify]"
 
 # Contract enforcement: verification reports must match verification.schema.json.
 SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "verification.schema.json"
@@ -623,7 +623,7 @@ def parse_json_response(response: str) -> Optional[Dict]:
     # Save failed response for debugging under data/ (avoid polluting scripts/ worktree).
     try:
         ts = time.strftime("%Y%m%dT%H%M%SZ")
-        debug_dir = repo_root() / "data" / "06b.verify" / "debug"
+        debug_dir = repo_root() / "data" / "06b.LLM.verify" / "debug"
         debug_dir.mkdir(parents=True, exist_ok=True)
         debug_path = debug_dir / f"claude_parse_failed_{ts}_{int(time.time() * 1000)}.txt"
         debug_path.write_text(response, encoding="utf-8")
@@ -1373,19 +1373,19 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06.video-type"
+    return repo_root() / "data" / "06.LLM.video-type"
 
 
 def output_root() -> Path:
-    return repo_root() / "data" / "06b.verify"
+    return repo_root() / "data" / "06b.LLM.verify"
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06.video-type"
+    return repo_root() / "data" / "test" / "06.LLM.video-type"
 
 
 def test_output_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.verify"
+    return repo_root() / "data" / "test" / "06b.LLM.verify"
 
 
 def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
@@ -1476,7 +1476,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/06.video-type/)"
+        help="Source name (folder under data/06.LLM.video-type/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -1490,12 +1490,12 @@ def main() -> None:
         "--input-root",
         help=(
             "Root directory for source/manifest runs "
-            "(default: data/06.video-type, or data/test/06.video-type with --test)"
+            "(default: data/06.LLM.video-type, or data/test/06.video-type with --test)"
         ),
     )
     parser.add_argument(
         "--output",
-        help="Output directory (defaults to data/06b.verify/)"
+        help="Output directory (defaults to data/06b.LLM.verify/)"
     )
     parser.add_argument(
         "--test",

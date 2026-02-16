@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/03.align
+scripts/training-data/03.EXT.align
 
 STEP 3 — SENTENCE-LEVEL ALIGNMENT (whisperx.align)
 
 Usage:
-  A) Single source:  ./03.align "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./03.align --sources docs/pipeline/sources.txt
-  C) Single file:    ./03.align --input path/to/transcription.full.json --audio path/to/audio.wav --out output.full.json
+  A) Single source:  ./03.EXT.align "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./03.EXT.align --sources docs/pipeline/sources.txt
+  C) Single file:    ./03.EXT.align --input path/to/transcription.full.json --audio path/to/audio.wav --out output.full.json
 
-Takes raw transcription from 02.transcribe and aligns to sentence-level segments
+Takes raw transcription from 02.EXT.transcribe and aligns to sentence-level segments
 using whisperx.align. This improves segment boundaries for downstream diarization.
 
-Input:  data/02.transcribe/<source>/<video>/<video>.full.json
-Output: data/03.align/<source>/<video>/<video>.full.json
+Input:  data/02.EXT.transcribe/<source>/<video>/<video>.full.json
+Output: data/03.EXT.align/<source>/<video>/<video>.full.json
 """
 
 from __future__ import annotations
@@ -214,7 +214,7 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
     def _runner() -> None:
         while not stop.wait(interval_sec):
             elapsed = int(time.monotonic() - start)
-            log(f"[03.align] … {label}: still running ({elapsed}s)")
+            log(f"[03.EXT.align] … {label}: still running ({elapsed}s)")
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
@@ -390,7 +390,7 @@ class AlignEngine:
             language_code=self.language,
             device=self.device,
         )
-        log(f"[03.align] Loaded alignment model for language={self.language} on device={self.device}")
+        log(f"[03.EXT.align] Loaded alignment model for language={self.language} on device={self.device}")
 
     def align(self, segments: List[Dict[str, Any]], audio16k: np.ndarray) -> List[Dict[str, Any]]:
         """Align segments to sentence-level boundaries.
@@ -402,10 +402,10 @@ class AlignEngine:
         filtered_segments, removed = _preprocess_segments_for_align(segments)
 
         if removed:
-            log(f"[03.align] Filtered {len(removed)} problematic segments (indices: {removed[:10]}{'...' if len(removed) > 10 else ''})")
+            log(f"[03.EXT.align] Filtered {len(removed)} problematic segments (indices: {removed[:10]}{'...' if len(removed) > 10 else ''})")
 
         if not filtered_segments:
-            log("[03.align] WARN: No valid segments after filtering")
+            log("[03.EXT.align] WARN: No valid segments after filtering")
             return segments  # Return original if nothing left to align
 
         try:
@@ -491,24 +491,24 @@ def align_transcription(
     segments = data.get("segments", [])
 
     if not segments:
-        log(f"[03.align] WARN: No segments in {transcription_json.name}")
+        log(f"[03.EXT.align] WARN: No segments in {transcription_json.name}")
         _write_all_outputs(out_json, [])
         return None
 
-    log(f"[03.align] Input: {len(segments)} segments from {transcription_json.name}")
+    log(f"[03.EXT.align] Input: {len(segments)} segments from {transcription_json.name}")
 
     # Check for repetition hallucination in input (same sentence repeated 3+ times)
     hallucination = _detect_repetition_hallucination(segments, min_repeats=3)
     if hallucination:
-        log(f"[03.align] FLAGGED: Repetition hallucination detected in input!")
-        log(f"[03.align]   Text: \"{hallucination['repeated_text'][:50]}...\"")
-        log(f"[03.align]   Count: {hallucination['count']} consecutive repetitions")
-        log(f"[03.align]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
+        log(f"[03.EXT.align] FLAGGED: Repetition hallucination detected in input!")
+        log(f"[03.EXT.align]   Text: \"{hallucination['repeated_text'][:50]}...\"")
+        log(f"[03.EXT.align]   Count: {hallucination['count']} consecutive repetitions")
+        log(f"[03.EXT.align]   Segments: {hallucination['first_index']} to {hallucination['last_index']}")
 
     # Load audio
     audio16k = load_audio_16k_for_whisperx(str(audio_path))
     duration_sec = len(audio16k) / 16000.0
-    log(f"[03.align] Audio: {audio_path.name} ({duration_sec:.1f}s)")
+    log(f"[03.EXT.align] Audio: {audio_path.name} ({duration_sec:.1f}s)")
 
     # Align
     with heartbeat("alignment", interval_sec=progress_interval):
@@ -517,13 +517,13 @@ def align_transcription(
     # Normalize
     aligned_segments = _segments_from_any(aligned_segments, duration_sec)
 
-    log(f"[03.align] Output: {len(aligned_segments)} aligned segments")
+    log(f"[03.EXT.align] Output: {len(aligned_segments)} aligned segments")
 
     # Write output
     _write_all_outputs(out_json, aligned_segments)
 
     elapsed = time.monotonic() - t0
-    log(f"[03.align] DONE: {out_json.name} ({elapsed:.1f}s)")
+    log(f"[03.EXT.align] DONE: {out_json.name} ({elapsed:.1f}s)")
 
     return hallucination
 
@@ -544,25 +544,25 @@ def batch_for_source(
     root = repo_root()
     safe_source = safe_name(source_name)
 
-    # Input from 02.transcribe
-    transcribe_root = root / "data" / "02.transcribe" / safe_source
+    # Input from 02.EXT.transcribe
+    transcribe_root = root / "data" / "02.EXT.transcribe" / safe_source
     # Audio from 01.download
     downloads_root = root / "data" / "01.download" / safe_source
-    # Output to 03.align
-    out_root = root / "data" / "03.align" / safe_source
+    # Output to 03.EXT.align
+    out_root = root / "data" / "03.EXT.align" / safe_source
 
     if not transcribe_root.exists():
-        log(f"[03.align] No transcriptions found: {transcribe_root}")
+        log(f"[03.EXT.align] No transcriptions found: {transcribe_root}")
         return 0
 
     if not downloads_root.exists():
-        log(f"[03.align] No downloads found: {downloads_root}")
+        log(f"[03.EXT.align] No downloads found: {downloads_root}")
         return 0
 
-    # Load flagged videos from 02.transcribe — skip these entirely
+    # Load flagged videos from 02.EXT.transcribe — skip these entirely
     flagged = _load_flagged_videos(transcribe_root / ".flagged.json")
     if flagged:
-        log(f"[03.align] CRITICAL-flagged videos (will skip): {len(flagged)}")
+        log(f"[03.EXT.align] CRITICAL-flagged videos (will skip): {len(flagged)}")
 
     video_id = extract_video_id(youtube_url)
     video_dirs = sorted([p for p in transcribe_root.iterdir() if p.is_dir()])
@@ -572,7 +572,7 @@ def batch_for_source(
         video_dirs = manifest_filter_dirs(video_dirs, manifest_ids)
 
     if not video_dirs:
-        log(f"[03.align] No video folders found under: {transcribe_root}")
+        log(f"[03.EXT.align] No video folders found under: {transcribe_root}")
         return 0
 
     processed = 0
@@ -583,9 +583,9 @@ def batch_for_source(
 
     for video_dir in video_dirs:
         try:
-            # Skip flagged videos (hallucination, quality issues in 02.transcribe)
+            # Skip flagged videos (hallucination, quality issues in 02.EXT.transcribe)
             if video_dir.name in flagged:
-                log(f"[03.align] SKIP (flagged): {video_dir.name}")
+                log(f"[03.EXT.align] SKIP (flagged): {video_dir.name}")
                 skipped += 1
                 continue
 
@@ -597,7 +597,7 @@ def batch_for_source(
             )]
 
             if not transcription_files:
-                log(f"[03.align] WARN: No transcription found in: {video_dir}")
+                log(f"[03.EXT.align] WARN: No transcription found in: {video_dir}")
                 continue
 
             transcription_json = transcription_files[0]
@@ -605,12 +605,12 @@ def batch_for_source(
             # Find corresponding audio
             download_video_dir = downloads_root / video_dir.name
             if not download_video_dir.exists():
-                log(f"[03.align] WARN: No download folder for: {video_dir.name}")
+                log(f"[03.EXT.align] WARN: No download folder for: {video_dir.name}")
                 continue
 
             audio_path = _pick_best_audio_in_video_dir(download_video_dir, prefer=prefer_audio)
             if audio_path is None:
-                log(f"[03.align] WARN: No audio found for: {video_dir.name}")
+                log(f"[03.EXT.align] WARN: No audio found for: {video_dir.name}")
                 continue
 
             # Output
@@ -622,7 +622,7 @@ def batch_for_source(
                 skipped += 1
                 continue
 
-            log(f"[03.align] VIDEO: {video_dir.name}")
+            log(f"[03.EXT.align] VIDEO: {video_dir.name}")
             hallucination = align_transcription(
                 transcription_json=transcription_json,
                 audio_path=audio_path,
@@ -646,8 +646,8 @@ def batch_for_source(
 
         except Exception as e:
             failed += 1
-            log(f"[03.align] ERROR: Failed on folder: {video_dir.name}")
-            log(f"[03.align]        {type(e).__name__}: {e}")
+            log(f"[03.EXT.align] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[03.EXT.align]        {type(e).__name__}: {e}")
             failed_videos.append({
                 "video": video_dir.name,
                 "source": safe_source,
@@ -668,7 +668,7 @@ def batch_for_source(
         existing.extend(failed_videos)
         flag_file.parent.mkdir(parents=True, exist_ok=True)
         flag_file.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        log(f"[03.align] FAILED: {len(failed_videos)} videos written to {flag_file}")
+        log(f"[03.EXT.align] FAILED: {len(failed_videos)} videos written to {flag_file}")
 
     # Write hallucination flags to flag file for manual review
     if flagged_videos:
@@ -682,9 +682,9 @@ def batch_for_source(
         existing_flagged.extend(flagged_videos)
         flagged_file.parent.mkdir(parents=True, exist_ok=True)
         flagged_file.write_text(json.dumps(existing_flagged, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        log(f"[03.align] FLAGGED: {len(flagged_videos)} videos with hallucination written to {flagged_file}")
+        log(f"[03.EXT.align] FLAGGED: {len(flagged_videos)} videos with hallucination written to {flagged_file}")
 
-    log(f"[03.align] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
+    log(f"[03.EXT.align] Done: processed={processed} skipped={skipped} failed={failed} flagged={len(flagged_videos)}")
     return processed
 
 
@@ -698,7 +698,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    p.add_argument("source_name", nargs="?", help="Source name (folder under data/02.transcribe).")
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/02.EXT.transcribe).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
     p.add_argument("--sources", nargs="?", const="docs/pipeline/sources.txt", help="Process all sources from sources file.")
@@ -737,7 +737,7 @@ if __name__ == "__main__":
             raise SystemExit(f"Audio not found: {audio_path}")
 
         if out_path.exists() and not args.overwrite:
-            log(f"[03.align] SKIP: exists ({out_path.name})")
+            log(f"[03.EXT.align] SKIP: exists ({out_path.name})")
             raise SystemExit(0)
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -760,7 +760,7 @@ if __name__ == "__main__":
         sources_map = load_manifest_sources(manifest_path)
         total = 0
         for source_name, vid_ids in sorted(sources_map.items()):
-            log(f"[03.align] Manifest: {source_name} ({len(vid_ids)} videos)")
+            log(f"[03.EXT.align] Manifest: {source_name} ({len(vid_ids)} videos)")
             total += batch_for_source(
                 source_name=source_name,
                 youtube_url="",
@@ -770,7 +770,7 @@ if __name__ == "__main__":
                 progress_interval=args.progress_interval,
                 manifest_ids=vid_ids,
             )
-        log(f"[03.align] ✅ MANIFEST DONE: total_processed={total}")
+        log(f"[03.EXT.align] ✅ MANIFEST DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Batch sources file
@@ -790,14 +790,14 @@ if __name__ == "__main__":
                 engine=engine,
                 progress_interval=args.progress_interval,
             )
-        log(f"[03.align] ✅ ALL SOURCES DONE: total_processed={total}")
+        log(f"[03.EXT.align] ✅ ALL SOURCES DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
             "Provide either --input/--audio/--out, --manifest, or --sources [file], or:\n"
-            "./scripts/training-data/03.align <source_name> <youtube_url>"
+            "./scripts/training-data/03.EXT.align <source_name> <youtube_url>"
         )
 
     batch_for_source(

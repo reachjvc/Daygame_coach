@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-scripts/training-data/04.diarize
+scripts/training-data/04.EXT.diarize
 
 STEP 4 — SPEAKER DIARIZATION (pyannote)
 
 Usage:
-  A) Single source:  ./04.diarize "daily_evolution" "https://youtube.com/watch?v=..."
-  B) Batch sources:  ./04.diarize --sources docs/pipeline/sources.txt
-  C) Single file:    ./04.diarize --input path/to/aligned.full.json --audio path/to/audio.wav --out output.full.json
+  A) Single source:  ./04.EXT.diarize "daily_evolution" "https://youtube.com/watch?v=..."
+  B) Batch sources:  ./04.EXT.diarize --sources docs/pipeline/sources.txt
+  C) Single file:    ./04.EXT.diarize --input path/to/aligned.full.json --audio path/to/audio.wav --out output.full.json
 
-Takes aligned transcription from 03.align and adds speaker labels (SPEAKER_00, SPEAKER_01)
+Takes aligned transcription from 03.EXT.align and adds speaker labels (SPEAKER_00, SPEAKER_01)
 using pyannote speaker diarization.
 
 Requires HF_TOKEN environment variable for pyannote model access.
 
-Input:  data/03.align/<source>/<video>/<video>.full.json
-Output: data/04.diarize/<source>/<video>/<video>.full.json
+Input:  data/03.EXT.align/<source>/<video>/<video>.full.json
+Output: data/04.EXT.diarize/<source>/<video>/<video>.full.json
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def heartbeat(label: str, interval_sec: float = 15.0) -> Iterator[None]:
     def _runner() -> None:
         while not stop.wait(interval_sec):
             elapsed = int(time.monotonic() - start)
-            log(f"[04.diarize] … {label}: still running ({elapsed}s)")
+            log(f"[04.EXT.diarize] … {label}: still running ({elapsed}s)")
 
     t = threading.Thread(target=_runner, daemon=True)
     t.start()
@@ -499,7 +499,7 @@ class DiarizeEngine:
             except TypeError:
                 self._diar_pipeline = DiarizationPipeline(use_auth_token=self.hf_token)
 
-        log(f"[04.diarize] Loaded diarization pipeline on device={self.device}")
+        log(f"[04.EXT.diarize] Loaded diarization pipeline on device={self.device}")
 
     def diarize(self, segments: List[Dict[str, Any]], audio16k: np.ndarray, audio_path: str) -> List[Dict[str, Any]]:
         """Add speaker labels to segments."""
@@ -513,7 +513,7 @@ class DiarizeEngine:
         turns = _merge_turns(turns)
 
         if not turns:
-            log("[04.diarize] WARN: No diarization turns detected")
+            log("[04.EXT.diarize] WARN: No diarization turns detected")
             return segments
 
         # Try whisperx assign_word_speakers first
@@ -589,16 +589,16 @@ def diarize_transcription(
     segments = data.get("segments", [])
 
     if not segments:
-        log(f"[04.diarize] WARN: No segments in {aligned_json.name}")
+        log(f"[04.EXT.diarize] WARN: No segments in {aligned_json.name}")
         _write_all_outputs(out_json, [])
         return
 
-    log(f"[04.diarize] Input: {len(segments)} segments from {aligned_json.name}")
+    log(f"[04.EXT.diarize] Input: {len(segments)} segments from {aligned_json.name}")
 
     # Load audio
     audio16k = load_audio_16k(str(audio_path))
     duration_sec = len(audio16k) / 16000.0
-    log(f"[04.diarize] Audio: {audio_path.name} ({duration_sec:.1f}s)")
+    log(f"[04.EXT.diarize] Audio: {audio_path.name} ({duration_sec:.1f}s)")
 
     # Diarize
     with heartbeat("diarization", interval_sec=progress_interval):
@@ -609,13 +609,13 @@ def diarize_transcription(
 
     # Count speakers
     speakers = set(s.get("speaker", "UNKNOWN") for s in diarized_segments)
-    log(f"[04.diarize] Output: {len(diarized_segments)} segments, {len(speakers)} speakers: {sorted(speakers)}")
+    log(f"[04.EXT.diarize] Output: {len(diarized_segments)} segments, {len(speakers)} speakers: {sorted(speakers)}")
 
     # Write output
     _write_all_outputs(out_json, diarized_segments)
 
     elapsed = time.monotonic() - t0
-    log(f"[04.diarize] DONE: {out_json.name} ({elapsed:.1f}s)")
+    log(f"[04.EXT.diarize] DONE: {out_json.name} ({elapsed:.1f}s)")
 
 
 # --------------------------
@@ -634,26 +634,26 @@ def batch_for_source(
     root = repo_root()
     safe_source = safe_name(source_name)
 
-    # Input from 03.align
-    align_root = root / "data" / "03.align" / safe_source
+    # Input from 03.EXT.align
+    align_root = root / "data" / "03.EXT.align" / safe_source
     # Audio from 01.download
     downloads_root = root / "data" / "01.download" / safe_source
-    # Output to 04.diarize
-    out_root = root / "data" / "04.diarize" / safe_source
+    # Output to 04.EXT.diarize
+    out_root = root / "data" / "04.EXT.diarize" / safe_source
 
     if not align_root.exists():
-        log(f"[04.diarize] No aligned data found: {align_root}")
+        log(f"[04.EXT.diarize] No aligned data found: {align_root}")
         return 0
 
     if not downloads_root.exists():
-        log(f"[04.diarize] No downloads found: {downloads_root}")
+        log(f"[04.EXT.diarize] No downloads found: {downloads_root}")
         return 0
 
-    # Load flagged videos from 02.transcribe — skip these entirely
-    transcribe_root = root / "data" / "02.transcribe" / safe_source
+    # Load flagged videos from 02.EXT.transcribe — skip these entirely
+    transcribe_root = root / "data" / "02.EXT.transcribe" / safe_source
     flagged = _load_flagged_videos(transcribe_root / ".flagged.json")
     if flagged:
-        log(f"[04.diarize] CRITICAL-flagged videos (will skip): {len(flagged)}")
+        log(f"[04.EXT.diarize] CRITICAL-flagged videos (will skip): {len(flagged)}")
 
     video_id = extract_video_id(youtube_url)
     video_dirs = sorted([p for p in align_root.iterdir() if p.is_dir()])
@@ -663,7 +663,7 @@ def batch_for_source(
         video_dirs = manifest_filter_dirs(video_dirs, manifest_ids)
 
     if not video_dirs:
-        log(f"[04.diarize] No video folders found under: {align_root}")
+        log(f"[04.EXT.diarize] No video folders found under: {align_root}")
         return 0
 
     processed = 0
@@ -672,16 +672,16 @@ def batch_for_source(
 
     for video_dir in video_dirs:
         try:
-            # Skip flagged videos (hallucination, quality issues in 02.transcribe)
+            # Skip flagged videos (hallucination, quality issues in 02.EXT.transcribe)
             if video_dir.name in flagged:
-                log(f"[04.diarize] SKIP (flagged): {video_dir.name}")
+                log(f"[04.EXT.diarize] SKIP (flagged): {video_dir.name}")
                 skipped += 1
                 continue
 
             # Find aligned JSON
             aligned_files = sorted(video_dir.glob("*.full.json"))
             if not aligned_files:
-                log(f"[04.diarize] WARN: No aligned file found in: {video_dir}")
+                log(f"[04.EXT.diarize] WARN: No aligned file found in: {video_dir}")
                 continue
 
             aligned_json = aligned_files[0]
@@ -689,12 +689,12 @@ def batch_for_source(
             # Find corresponding audio
             download_video_dir = downloads_root / video_dir.name
             if not download_video_dir.exists():
-                log(f"[04.diarize] WARN: No download folder for: {video_dir.name}")
+                log(f"[04.EXT.diarize] WARN: No download folder for: {video_dir.name}")
                 continue
 
             audio_path = _pick_best_audio_in_video_dir(download_video_dir, prefer=prefer_audio)
             if audio_path is None:
-                log(f"[04.diarize] WARN: No audio found for: {video_dir.name}")
+                log(f"[04.EXT.diarize] WARN: No audio found for: {video_dir.name}")
                 continue
 
             # Output
@@ -706,7 +706,7 @@ def batch_for_source(
                 skipped += 1
                 continue
 
-            log(f"[04.diarize] VIDEO: {video_dir.name}")
+            log(f"[04.EXT.diarize] VIDEO: {video_dir.name}")
             diarize_transcription(
                 aligned_json=aligned_json,
                 audio_path=audio_path,
@@ -718,11 +718,11 @@ def batch_for_source(
 
         except Exception as e:
             failed += 1
-            log(f"[04.diarize] ERROR: Failed on folder: {video_dir.name}")
-            log(f"[04.diarize]        {type(e).__name__}: {e}")
+            log(f"[04.EXT.diarize] ERROR: Failed on folder: {video_dir.name}")
+            log(f"[04.EXT.diarize]        {type(e).__name__}: {e}")
             continue
 
-    log(f"[04.diarize] Done: processed={processed} skipped={skipped} failed={failed}")
+    log(f"[04.EXT.diarize] Done: processed={processed} skipped={skipped} failed={failed}")
     return processed
 
 
@@ -736,7 +736,7 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
-    p.add_argument("source_name", nargs="?", help="Source name (folder under data/03.align).")
+    p.add_argument("source_name", nargs="?", help="Source name (folder under data/03.EXT.align).")
     p.add_argument("youtube_url", nargs="?", help="YouTube URL. Video URL filters by ID.")
 
     p.add_argument("--sources", nargs="?", const="docs/pipeline/sources.txt", help="Process all sources from sources file.")
@@ -775,7 +775,7 @@ if __name__ == "__main__":
             raise SystemExit(f"Audio not found: {audio_path}")
 
         if out_path.exists() and not args.overwrite:
-            log(f"[04.diarize] SKIP: exists ({out_path.name})")
+            log(f"[04.EXT.diarize] SKIP: exists ({out_path.name})")
             raise SystemExit(0)
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -798,7 +798,7 @@ if __name__ == "__main__":
         sources_map = load_manifest_sources(manifest_path)
         total = 0
         for source_name, vid_ids in sorted(sources_map.items()):
-            log(f"[04.diarize] Manifest: {source_name} ({len(vid_ids)} videos)")
+            log(f"[04.EXT.diarize] Manifest: {source_name} ({len(vid_ids)} videos)")
             total += batch_for_source(
                 source_name=source_name,
                 youtube_url="",
@@ -808,7 +808,7 @@ if __name__ == "__main__":
                 progress_interval=args.progress_interval,
                 manifest_ids=vid_ids,
             )
-        log(f"[04.diarize] ✅ MANIFEST DONE: total_processed={total}")
+        log(f"[04.EXT.diarize] ✅ MANIFEST DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Batch sources file
@@ -828,14 +828,14 @@ if __name__ == "__main__":
                 engine=engine,
                 progress_interval=args.progress_interval,
             )
-        log(f"[04.diarize] ✅ ALL SOURCES DONE: total_processed={total}")
+        log(f"[04.EXT.diarize] ✅ ALL SOURCES DONE: total_processed={total}")
         raise SystemExit(0)
 
     # Normal batch mode
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
             "Provide either --input/--audio/--out, --manifest, or --sources [file], or:\n"
-            "./scripts/training-data/04.diarize <source_name> <youtube_url>"
+            "./scripts/training-data/04.EXT.diarize <source_name> <youtube_url>"
         )
 
     batch_for_source(

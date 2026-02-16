@@ -5,8 +5,8 @@ scripts/training-data/validation/validate_manifest.py
 Manifest/sub-batch validation harness (read-only).
 
 Given a batch/sub-batch manifest (docs/pipeline/batches/*.txt), this script:
-  - Checks 06b.verify coverage + verdict distribution
-  - Checks presence of 06c.patched and 07.content artifacts for each video
+  - Checks 06b.LLM.verify coverage + verdict distribution
+  - Checks presence of 06c.DET.patched and 07.LLM.content artifacts for each video
   - Runs cross-stage validation (06/06c vs 07) for all available pairs
 
 This is intended to be the "one command" sanity check after running LLM stages.
@@ -143,8 +143,8 @@ def _stage07_gate_decision(
         return False, f"invalid_gate_policy={policy}"
 
     if policy == "reverify_patched":
-        # Keep parity with 07.content: reverify is an additional gate, not a replacement
-        # for baseline 06b.verify presence.
+        # Keep parity with 07.LLM.content: reverify is an additional gate, not a replacement
+        # for baseline 06b.LLM.verify presence.
         if verdict is None:
             return False, "missing_verdict"
         if verdict not in {"APPROVE", "FLAG", "REJECT"}:
@@ -1041,7 +1041,7 @@ def main() -> None:
             "Stage 07 verification gate policy: "
             "approve_only=only APPROVE can proceed, "
             "allow_flag=allow FLAG and REJECT patched-clean outputs, "
-            "reverify_patched=require 06b.verify + 06b.reverify, and allow only when reverify verdict is APPROVE/FLAG"
+            "reverify_patched=require 06b.LLM.verify + 06b.LLM.reverify, and allow only when reverify verdict is APPROVE/FLAG"
         ),
     )
     parser.add_argument(
@@ -1129,9 +1129,8 @@ def main() -> None:
     parser.add_argument(
         "--reverify-root",
         help=(
-            "Root directory for 06e.reverify (or 06b.reverify) artifacts. "
-            "Defaults to data/06b.reverify for backwards compatibility. "
-            "Use data/06e.reverify when running the V2 sanitized pipeline."
+            "Root directory for 06b.LLM.reverify artifacts. "
+            "Defaults to data/06b.LLM.reverify."
         ),
     )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
@@ -1198,18 +1197,18 @@ def main() -> None:
 
     data_root = repo_root() / "data"
     s01_root = data_root / "01.download"
-    s05_root = data_root / "05.audio-features"
-    s06_root = data_root / "06.video-type"
-    s06c_root = data_root / "06c.patched"
-    s07_root = data_root / "07.content"
-    s06b_root = data_root / "06b.verify"
+    s05_root = data_root / "05.EXT.audio-features"
+    s06_root = data_root / "06.LLM.video-type"
+    s06c_root = data_root / "06c.DET.patched"
+    s07_root = data_root / "07.LLM.content"
+    s06b_root = data_root / "06b.LLM.verify"
     if args.reverify_root:
         s06b_reverify_root = Path(args.reverify_root)
         if not s06b_reverify_root.is_absolute():
             s06b_reverify_root = repo_root() / s06b_reverify_root
     else:
-        s06b_reverify_root = data_root / "06b.reverify"
-    s09_root = data_root / "09.chunks"
+        s06b_reverify_root = data_root / "06b.LLM.reverify"
+    s09_root = data_root / "09.EXT.chunks"
 
     idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)
     idx_s05 = _index_paths_by_video_id(s05_root, "*.audio_features.json", manifest_ids) if args.check_stage05_audio else {}
@@ -1315,14 +1314,14 @@ def main() -> None:
     if args.check_stage08_report:
         stage08_checked = True
         report_stem = _stage08_report_stem(manifest_path.stem, args.source)
-        stage08_report_path = data_root / "08.taxonomy-validation" / f"{report_stem}.report.json"
+        stage08_report_path = data_root / "08.DET.taxonomy-validation" / f"{report_stem}.report.json"
         expected_source = _stage08_expected_source_label(manifest_path.name, args.source)
         legacy_source = _stage08_expected_source_label(manifest_path.name, None)
         legacy_stage08_report_path: Optional[Path] = None
 
         if args.source:
             legacy_report_stem = _stage08_report_stem(manifest_path.stem, None)
-            legacy_stage08_report_path = data_root / "08.taxonomy-validation" / f"{legacy_report_stem}.report.json"
+            legacy_stage08_report_path = data_root / "08.DET.taxonomy-validation" / f"{legacy_report_stem}.report.json"
             if (not stage08_report_path.exists()) and legacy_stage08_report_path.exists():
                 stage08_report_path = legacy_stage08_report_path
                 issues.append({
@@ -1365,7 +1364,7 @@ def main() -> None:
                 })
                 check_counts["error:invalid_stage08_report"] += 1
             else:
-                if report_data.get("stage") != "08.taxonomy-validation":
+                if report_data.get("stage") != "08.DET.taxonomy-validation":
                     issues.append({
                         "video_id": "*",
                         "source": args.source or "all",
@@ -1964,7 +1963,7 @@ def main() -> None:
                 if reverify_verdict:
                     reverify_verdict_counts[reverify_verdict] += 1
 
-        # Gate accounting (mirrors 07.content logic via explicit policy)
+        # Gate accounting (mirrors 07.LLM.content logic via explicit policy)
         gate_allowed, gate_reason = _stage07_gate_decision(
             verdict,
             s06c_path,
@@ -2207,7 +2206,7 @@ def main() -> None:
                 check_counts["error:unreadable_stage07_content"] += 1
 
         # Run cross-stage validation when we have both sides.
-        # Prefer 06c.patched, fall back to 06.video-type if needed.
+        # Prefer 06c.DET.patched, fall back to 06.LLM.video-type if needed.
         s06_for_cross = s06c_path or s06_path
         if s06_for_cross and s07_path:
             s06_data = _load_json(s06_for_cross)
@@ -2708,9 +2707,9 @@ def main() -> None:
         if args.source:
             print(f"{LOG_PREFIX} Source filter: {args.source}")
 
-        print(f"{LOG_PREFIX} 06b.verify verdicts: {dict(verdict_counts) or '{}'}")
+        print(f"{LOG_PREFIX} 06b.LLM.verify verdicts: {dict(verdict_counts) or '{}'}")
         if stage07_gate_policy == "reverify_patched":
-            print(f"{LOG_PREFIX} 06b.reverify verdicts: {dict(reverify_verdict_counts) or '{}'}")
+            print(f"{LOG_PREFIX} 06b.LLM.reverify verdicts: {dict(reverify_verdict_counts) or '{}'}")
             print(
                 f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate} "
                 f"(REVERIFY_APPROVE={gate_reverify_approve}, REVERIFY_FLAG={gate_reverify_flag}, "
@@ -2727,15 +2726,15 @@ def main() -> None:
 
         print(
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
-            f"missing 06b.verify={len(missing_verify)}, invalid 06b.verify={len(invalid_verify)}, "
+            f"missing 06b.LLM.verify={len(missing_verify)}, invalid 06b.LLM.verify={len(invalid_verify)}, "
             + (
-                f"missing 06b.reverify={len(missing_reverify)}, invalid 06b.reverify={len(invalid_reverify)}, "
+                f"missing 06b.LLM.reverify={len(missing_reverify)}, invalid 06b.LLM.reverify={len(invalid_reverify)}, "
                 if stage07_gate_policy == "reverify_patched"
                 else ""
             )
-            + f"missing 06c.patched={len(missing_s06c)}, missing 07.content={len(missing_s07)}"
+            + f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}"
             + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
-            + (f", missing 09.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
+            + (f", missing 09.EXT.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )
         print(
             f"{LOG_PREFIX} Stage 06b verification check: "

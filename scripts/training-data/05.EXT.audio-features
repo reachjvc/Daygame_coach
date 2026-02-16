@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
-# scripts/training-data/05.audio-features
+# scripts/training-data/05.EXT.audio-features
 #
 # STEP 5 — AUDIO FEATURES (+ speaker embeddings)
 #
 # Reads:
 #   data/01.download/<source_name>/<video_name>/*.wav
-#   data/04.diarize/<source_name>/<video_name>/<stem>.json   (diarized JSON with speakers)
+#   data/04.EXT.diarize/<source_name>/<video_name>/<stem>.json   (diarized JSON with speakers)
 #
 # Writes:
-#   data/05.audio-features/<source_name>/<video_name>/<stem>.audio_features.json
+#   data/05.EXT.audio-features/<source_name>/<video_name>/<stem>.audio_features.json
 #
 # Use:
 #   A) One source (video / playlist / channel):
-#      ./scripts/training-data/05.audio-features "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
+#      ./scripts/training-data/05.EXT.audio-features "daily_evolution" "https://www.youtube.com/watch?v=utuuVOXJunM"
 #
 #   B) Batch from sources file:
-#      ./scripts/training-data/05.audio-features --sources
-#      ./scripts/training-data/05.audio-features --sources docs/pipeline/sources.txt
+#      ./scripts/training-data/05.EXT.audio-features --sources
+#      ./scripts/training-data/05.EXT.audio-features --sources docs/pipeline/sources.txt
 #
 #   C) Single-file mode:
-#      python3 scripts/training-data/05.audio-features \
+#      python3 scripts/training-data/05.EXT.audio-features \
 #        --audio path/to/audio.wav \
 #        --transcript path/to/transcript.json \
 #        --out path/to/audio_features.json
@@ -39,7 +39,7 @@
 # └─────────────────────┴────────────────────────────────────────────────────┘
 #
 # FOR SPEAKER IDENTIFICATION:
-# Primary: pyannote_speaker field passed through from 04.diarize (SPEAKER_00, SPEAKER_01)
+# Primary: pyannote_speaker field passed through from 04.EXT.diarize (SPEAKER_00, SPEAKER_01)
 # Backup:  speaker_embedding (256-dim resemblyzer) available for 06.segment-enrich if needed
 #
 # FOR FUTURE VOICE-TO-VOICE COACHING:
@@ -51,7 +51,7 @@
 # │ pitch.direction     │ Question detection (rising) vs statement (falling) │
 # └─────────────────────┴────────────────────────────────────────────────────┘
 #
-# NOTE: Speaker identification now uses pyannote diarization from 04.diarize.
+# NOTE: Speaker identification now uses pyannote diarization from 04.EXT.diarize.
 # NOTE: If pitch.mean_hz == 0, pyin couldn't confidently detect pitch for that segment.
 #       Stage 06 should skip such segments for tone classification.
 # pitch.mean_hz is kept for future voice-to-voice coaching features.
@@ -119,7 +119,7 @@ class Config:
     pitch_trim_percentile: float = 2.0  # use percentile trimming for stats (avoids 900Hz spikes without hard clamping)
 
     # Speaker embeddings (resemblyzer)
-    # NOTE: Speaker identification now uses pyannote diarization from 04.diarize.
+    # NOTE: Speaker identification now uses pyannote diarization from 04.EXT.diarize.
     # 06.segment-enrich uses pyannote_speaker field, NOT embeddings.
     # Embeddings disabled by default to save storage (~1KB per segment).
     # Enable with --store_embedding_vectors if needed for future features.
@@ -690,14 +690,14 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
     safe_source = safe_name(source_name)
 
     downloads_root = root / "data" / "01.download" / safe_source
-    transcribe_root = root / "data" / "04.diarize" / safe_source
-    out_root = root / "data" / "05.audio-features" / safe_source
+    transcribe_root = root / "data" / "04.EXT.diarize" / safe_source
+    out_root = root / "data" / "05.EXT.audio-features" / safe_source
 
     if not downloads_root.exists():
         raise SystemExit(f"[audio-features] Missing downloads folder: {downloads_root}")
 
-    # Load flagged videos from 02.transcribe — skip these entirely
-    transcribe_flag_root = root / "data" / "02.transcribe" / safe_source
+    # Load flagged videos from 02.EXT.transcribe — skip these entirely
+    transcribe_flag_root = root / "data" / "02.EXT.transcribe" / safe_source
     flagged = _load_flagged_videos(transcribe_flag_root / ".flagged.json")
     if flagged:
         print(f"[audio-features] CRITICAL-flagged videos (will skip): {len(flagged)}")
@@ -721,7 +721,7 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
         rel_dir = rel.parent
         stem = wav_path.stem
 
-        # Skip flagged videos (hallucination, quality issues in 02.transcribe)
+        # Skip flagged videos (hallucination, quality issues in 02.EXT.transcribe)
         if str(rel_dir) in flagged:
             skipped += 1
             continue
@@ -748,6 +748,8 @@ def batch_for_source(source_name: str, youtube_url: str, overwrite: bool, cfg: C
             transcribe_root / rel_dir / f"{base_name}.full.json",  # Primary
             transcribe_root / rel_dir / f"{base_name}.full.whisperx.json",  # WhisperX
             transcribe_root / rel_dir / f"{stem}.json",  # Legacy: exact stem match
+            # Fallback: ignore channel subfolders — diarize output is flat (source/video/)
+            transcribe_root / base_name / f"{base_name}.full.json",
         ]
         transcript_path = None
         for candidate in transcript_candidates:
@@ -874,7 +876,7 @@ if __name__ == "__main__":
     if not args.source_name or not args.youtube_url:
         raise SystemExit(
             "Provide either --audio/--transcript/--out, --manifest, or --sources [file], or:\n"
-            "./scripts/training-data/05.audio-features <source_name> <youtube_url>"
+            "./scripts/training-data/05.EXT.audio-features <source_name> <youtube_url>"
         )
 
     batch_for_source(str(args.source_name), str(args.youtube_url), overwrite=bool(args.overwrite), cfg=cfg)

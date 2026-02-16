@@ -4,7 +4,7 @@ scripts/training-data/06.segment-enrich
 
 Tone classification for audio segments based on acoustic features.
 
-Input:  data/05.audio-features/<source>/<video>/*.audio_features.json
+Input:  data/05.EXT.audio-features/<source>/<video>/*.audio_features.json
 Output: data/06.segment-enrich/<source>/<video>/*.segment_enriched.json
 
 Use:

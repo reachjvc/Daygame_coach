@@ -17,7 +17,7 @@ describe("getCategoryConfig", () => {
       const result = getCategoryConfig("daygame")
 
       expect(result.id).toBe("daygame")
-      expect(result.name).toBe("Daygame")
+      expect(result.name).toBe("Dating & Daygame")
       expect(result.color).toBe("text-orange-500")
     })
 
@@ -25,7 +25,7 @@ describe("getCategoryConfig", () => {
       const result = getCategoryConfig("health_fitness")
 
       expect(result.id).toBe("health_fitness")
-      expect(result.name).toBe("Health & Fitness")
+      expect(result.name).toBe("Health & Appearance")
       expect(result.color).toBe("text-green-500")
     })
 
@@ -33,16 +33,8 @@ describe("getCategoryConfig", () => {
       const result = getCategoryConfig("career_business")
 
       expect(result.id).toBe("career_business")
-      expect(result.name).toBe("Career & Business")
+      expect(result.name).toBe("Career & Finances")
       expect(result.color).toBe("text-purple-500")
-    })
-
-    test("should return config for dating life area", () => {
-      const result = getCategoryConfig("dating")
-
-      expect(result.id).toBe("dating")
-      expect(result.name).toBe("Dating & Relationships")
-      expect(result.color).toBe("text-pink-500")
     })
 
     test("should return config for social life area", () => {
@@ -107,8 +99,8 @@ describe("getCategoryConfig", () => {
 // ============================================================================
 
 describe("GOAL_CATEGORIES", () => {
-  test("should have 10 predefined categories (matching LIFE_AREAS)", () => {
-    expect(GOAL_CATEGORIES.length).toBe(10)
+  test("should have 7 predefined categories (matching LIFE_AREAS)", () => {
+    expect(GOAL_CATEGORIES.length).toBe(7)
   })
 
   test("should have unique IDs", () => {
@@ -121,7 +113,7 @@ describe("GOAL_CATEGORIES", () => {
   test("should include daygame as a category", () => {
     const daygame = GOAL_CATEGORIES.find(c => c.id === "daygame")
     expect(daygame).toBeDefined()
-    expect(daygame!.name).toBe("Daygame")
+    expect(daygame!.name).toBe("Dating & Daygame")
   })
 
   test("each category should have suggestions array with valid structure", () => {
@@ -160,13 +152,13 @@ describe("GOAL_CATEGORY_MAP", () => {
     const result = GOAL_CATEGORY_MAP["daygame"]
 
     expect(result.id).toBe("daygame")
-    expect(result.name).toBe("Daygame")
+    expect(result.name).toBe("Dating & Daygame")
   })
 
   test("should provide O(1) lookup for health_fitness", () => {
     const result = GOAL_CATEGORY_MAP["health_fitness"]
 
     expect(result.id).toBe("health_fitness")
-    expect(result.name).toBe("Health & Fitness")
+    expect(result.name).toBe("Health & Appearance")
   })
 })

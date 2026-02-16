@@ -141,8 +141,8 @@ def main():
     parser.add_argument("--size", type=int, default=100, help="Number of videos per batch (default: 100)")
     parser.add_argument("--phase", type=int, help="Only include sources from this priority phase (1-4)")
     parser.add_argument("--source", help="Only include videos from this specific source")
-    parser.add_argument("--skip-processed", default="07.content",
-                        help="Skip videos that already have output in this stage (default: 07.content)")
+    parser.add_argument("--skip-processed", default="07.LLM.content",
+                        help="Skip videos that already have output in this stage (default: 07.LLM.content)")
     parser.add_argument("--infield-first", action="store_true", default=True,
                         help="Sort by infield likelihood (default: true)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing manifest file")
