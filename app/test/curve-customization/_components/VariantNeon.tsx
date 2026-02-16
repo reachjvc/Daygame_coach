@@ -110,17 +110,8 @@ function NeonBadge() {
 /* ── Main component ── */
 
 export default function VariantNeon({ demo }: VariantNeonProps) {
-  const {
-    config,
-    milestones,
-    curvePoints,
-    activePresetId,
-    tensionDisplay,
-    yLabels,
-    presets,
-  } = demo
+  const { config, displayMilestones, displayCurvePoints, displayConfig, activePresetId, displayTensionDisplay, displayYLabels, presets, isCustom, isPreview } = demo
 
-  const [showCurve, setShowCurve] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   return (
@@ -150,7 +141,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                 </div>
                 <div className="flex items-center gap-2 mt-1">
                   <span style={{ fontSize: 12, fontWeight: 500, color: MUTED }}>
-                    Milestone Ladder
+                    Progression plan
                   </span>
                   <NeonBadge />
                 </div>
@@ -180,25 +171,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
             </div>
           </div>
 
-          {/* Hide curve toggle */}
-          <button
-            onClick={() => setShowCurve((v) => !v)}
-            style={{
-              fontSize: 12,
-              color: MUTED,
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              marginTop: 10,
-            }}
-          >
-            {showCurve ? "Hide curve" : "Show curve"}
-          </button>
-
-          {showCurve && (
-            <>
-              {/* ── Preset buttons ── */}
+          {/* ── Preset buttons ── */}
               <GradientBorder
                 radius={15}
                 opacity={0.25}
@@ -218,6 +191,8 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                       <button
                         key={preset.id}
                         onClick={() => demo.selectPreset(preset)}
+                        onMouseEnter={() => demo.hoverPreset(preset.id)}
+                        onMouseLeave={() => demo.unhoverPreset()}
                         style={{
                           flex: 1,
                           display: "flex",
@@ -274,6 +249,10 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                 </div>
               </GradientBorder>
 
+              {isCustom && !isPreview && (
+                <span style={{ fontSize: 11, color: "#c084fc", background: "rgba(192,132,252,0.12)", borderRadius: 6, padding: "2px 8px", marginTop: 8, display: "inline-block" }}>Custom</span>
+              )}
+
               {/* ── SVG in neon panel ── */}
               <div
                 style={{
@@ -285,10 +264,10 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                 }}
               >
                 <CurveSVG
-                  milestones={milestones}
-                  curvePoints={curvePoints}
-                  config={config}
-                  yLabels={yLabels}
+                  milestones={displayMilestones}
+                  curvePoints={displayCurvePoints}
+                  config={displayConfig}
+                  yLabels={displayYLabels}
                   colors={{
                     accent: VIOLET,
                     grid: TEXT,
@@ -320,7 +299,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                   whiteSpace: "nowrap",
                 }}
               >
-                {milestones.map((m) => m.value.toLocaleString()).join(" \u2192 ")}
+                {displayMilestones.map((m) => m.value.toLocaleString()).join(" \u2192 ")}
               </div>
 
               {/* ── Curve shape controls ── */}
@@ -342,7 +321,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                         padding: "4px 8px",
                       }}
                     >
-                      {tensionDisplay}
+                      {displayTensionDisplay}
                     </span>
                     <span
                       style={{
@@ -350,7 +329,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                         color: MUTED,
                       }}
                     >
-                      {config.steps} steps
+                      {displayConfig.steps} milestones
                     </span>
                   </div>
                 </div>
@@ -371,6 +350,9 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                   <span>Fewer big leaps</span>
                   <span>Many small wins</span>
                 </div>
+                <p style={{ fontSize: 11, color: MUTED, opacity: 0.5, margin: 0, marginTop: 6, lineHeight: 1.4 }}>
+                  Adjusts how milestones are distributed. Left for bigger jumps later, right for quick wins early.
+                </p>
               </div>
 
               {/* ── Advanced + Reset row ── */}
@@ -444,7 +426,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                           fontFamily: "var(--font-mono, monospace)",
                         }}
                       >
-                        CP {idx + 1}: ({cp.x.toFixed(2)}, {cp.y.toFixed(2)})
+                        Milestone {idx + 1}: ({cp.x.toFixed(2)}, {cp.y.toFixed(2)})
                       </span>
                       <button
                         onClick={() => demo.removeControlPoint(idx)}
@@ -479,7 +461,7 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
 
               {/* ── Range display ── */}
               <div className="flex items-center justify-between mt-4">
-                <span style={{ fontSize: 14, color: MUTED }}>Range</span>
+                <span style={{ fontSize: 14, color: MUTED }}>Start &rarr; Goal</span>
                 <span
                   style={{
                     fontSize: 14,
@@ -491,8 +473,6 @@ export default function VariantNeon({ demo }: VariantNeonProps) {
                   {config.target.toLocaleString()}
                 </span>
               </div>
-            </>
-          )}
         </div>
       </GradientBorder>
 

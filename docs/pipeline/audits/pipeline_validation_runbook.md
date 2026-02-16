@@ -20,6 +20,7 @@ Rules:
 
 ### Work being done
 **2026-02-16:** P001.2–P001.10 (86 videos) completed stages 02–05. P001.1 was already at stage 07. All 96 P001 videos now through stage 05; next is stage 06+.
+**2026-02-16:** P002.1–P002.10 (97 videos) completed stages 02–05. All P002 sub-batches now through stage 05; next is stage 06+. Note: some sub-batches missing 1-2 downloads (P002.3/4: 8/10, P002.5/6/9: 9/10) — those videos were skipped by the pipeline.
 
 ### Old Evaluation and Test Data
 Evaluation/test validation data (CANARY.1, P018.3, P018.4, D13b, hardening audit results) was archived — not deleted — to preserve drift comparison baselines:

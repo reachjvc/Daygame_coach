@@ -76,17 +76,9 @@ function AutoSyncBadge() {
 /* ── Main component ── */
 
 export default function VariantZen({ demo }: VariantZenProps) {
-  const {
-    config,
-    milestones,
-    curvePoints,
-    activePresetId,
-    tensionDisplay,
-    yLabels,
-    presets,
-  } = demo
+  const { config, displayMilestones, displayCurvePoints, displayConfig, activePresetId, displayTensionDisplay, displayYLabels, presets, isCustom, isPreview } = demo
+  const { setConfig } = demo
 
-  const [showCurve, setShowCurve] = useState(true)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
   return (
@@ -120,7 +112,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <span style={{ fontSize: 13, color: MUTED }}>
-                  Milestone Ladder
+                  Progression plan
                 </span>
                 <AutoSyncBadge />
               </div>
@@ -136,7 +128,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
               onChange={(e) => {
                 const val = parseInt(e.target.value)
                 if (!isNaN(val) && val > config.start) {
-                  demo.setConfig((c) => ({ ...c, target: val }))
+                  setConfig((c) => ({ ...c, target: val }))
                 }
               }}
               style={{
@@ -163,32 +155,6 @@ export default function VariantZen({ demo }: VariantZenProps) {
           </div>
         </div>
 
-        {/* Show/Hide curve */}
-        <button
-          onClick={() => setShowCurve((v) => !v)}
-          style={{
-            fontSize: 12,
-            color: SECONDARY,
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            marginTop: 12,
-            textDecoration: "none",
-            transition: "text-decoration 150ms ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline"
-            e.currentTarget.style.textUnderlineOffset = "3px"
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none"
-          }}
-        >
-          {showCurve ? "Hide curve" : "Show curve"}
-        </button>
-
-        {showCurve && (
           <>
             {/* ── Segmented control presets ── */}
             <div
@@ -207,6 +173,8 @@ export default function VariantZen({ demo }: VariantZenProps) {
                   <button
                     key={preset.id}
                     onClick={() => demo.selectPreset(preset)}
+                    onMouseEnter={() => demo.hoverPreset(preset.id)}
+                    onMouseLeave={() => demo.unhoverPreset()}
                     style={{
                       borderRadius: 6,
                       padding: "8px 16px",
@@ -246,6 +214,10 @@ export default function VariantZen({ demo }: VariantZenProps) {
               })}
             </div>
 
+            {isCustom && !isPreview && (
+              <span style={{ fontSize: 11, color: "#0d9488", background: "rgba(13,148,136,0.08)", borderRadius: 6, padding: "2px 8px", marginTop: 8, display: "inline-block" }}>Custom</span>
+            )}
+
             {/* ── SVG curve area ── */}
             <div
               style={{
@@ -256,10 +228,10 @@ export default function VariantZen({ demo }: VariantZenProps) {
               }}
             >
               <CurveSVG
-                milestones={milestones}
-                curvePoints={curvePoints}
-                config={config}
-                yLabels={yLabels}
+                milestones={displayMilestones}
+                curvePoints={displayCurvePoints}
+                config={displayConfig}
+                yLabels={displayYLabels}
                 colors={{
                   accent: "#0d9488",
                   grid: "#1c1917",
@@ -290,7 +262,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
                 whiteSpace: "nowrap",
               }}
             >
-              {milestones
+              {displayMilestones
                 .map((m) => m.value.toLocaleString())
                 .join(" \u2192 ")}
             </div>
@@ -319,7 +291,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
                       padding: "4px 8px",
                     }}
                   >
-                    {tensionDisplay}
+                    {displayTensionDisplay}
                   </span>
                   <span
                     style={{
@@ -327,7 +299,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
                       color: MUTED,
                     }}
                   >
-                    {config.steps} steps
+                    {displayConfig.steps} milestones
                   </span>
                 </div>
               </div>
@@ -348,6 +320,10 @@ export default function VariantZen({ demo }: VariantZenProps) {
                 <span>Fewer big leaps</span>
                 <span>Many small wins</span>
               </div>
+
+              <p style={{ fontSize: 11, color: MUTED, margin: 0, marginTop: 6, lineHeight: 1.4 }}>
+                Adjusts how milestones are distributed. Left for bigger jumps later, right for quick wins early.
+              </p>
             </div>
 
             {/* ── Advanced + Reset row ── */}
@@ -422,7 +398,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
                           "var(--font-mono, 'Geist Mono', monospace)",
                       }}
                     >
-                      CP {idx + 1}: ({cp.x.toFixed(2)}, {cp.y.toFixed(2)})
+                      Milestone {idx + 1}: ({cp.x.toFixed(2)}, {cp.y.toFixed(2)})
                     </span>
                     <button
                       onClick={() => demo.removeControlPoint(idx)}
@@ -456,7 +432,7 @@ export default function VariantZen({ demo }: VariantZenProps) {
 
             {/* ── Range display ── */}
             <div className="flex items-center justify-between mt-4">
-              <span style={{ fontSize: 14, color: SECONDARY }}>Range</span>
+              <span style={{ fontSize: 14, color: SECONDARY }}>Start {"\u2192"} Goal</span>
               <span
                 style={{
                   fontSize: 14,
@@ -469,7 +445,6 @@ export default function VariantZen({ demo }: VariantZenProps) {
               </span>
             </div>
           </>
-        )}
       </div>
 
       {/* ── Frequency cards ── */}

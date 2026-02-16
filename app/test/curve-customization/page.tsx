@@ -5,11 +5,11 @@ import Link from "next/link"
 import { ArrowLeft, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useCurveDemo } from "./_components/useCurveDemo"
-import { VariantFrost } from "./_components/VariantFrost"
-import { VariantCyberpunk } from "./_components/VariantCyberpunk"
-import { VariantGold } from "./_components/VariantGold"
-import { VariantNeon } from "./_components/VariantNeon"
-import { VariantZen } from "./_components/VariantZen"
+import VariantFrost from "./_components/VariantFrost"
+import VariantCyberpunk from "./_components/VariantCyberpunk"
+import VariantGold from "./_components/VariantGold"
+import VariantNeon from "./_components/VariantNeon"
+import VariantZen from "./_components/VariantZen"
 
 const VARIANTS = [
   { id: "frost", label: "Frost", description: "Glassmorphism — frosted glass, indigo-violet" },

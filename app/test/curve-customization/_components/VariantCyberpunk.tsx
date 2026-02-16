@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { RotateCcw } from "lucide-react"
 import { Slider } from "@/components/ui/slider"
 import { CurveSVG } from "./CurveSVG"
@@ -16,10 +15,12 @@ const CYBER_DESCRIPTIONS: Record<string, string> = {
   "Few big leaps": "EXPONENTIAL",
 }
 
-export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
-  const [showCurve, setShowCurve] = useState(true)
+const MUTED = "#555555"
 
-  const milestoneSummary = demo.milestones
+export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
+  const { config, displayMilestones, displayCurvePoints, displayConfig, activePresetId, displayTensionDisplay, displayYLabels, presets, isCustom, isPreview } = demo
+
+  const milestoneSummary = displayMilestones
     .map((m) => m.value.toLocaleString())
     .join(" > ")
 
@@ -110,37 +111,6 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
           className="flex items-center justify-between mb-3"
         >
           <div className="flex items-center gap-3">
-            {/* Toggle */}
-            <button
-              onClick={() => setShowCurve(!showCurve)}
-              style={{
-                width: "36px",
-                height: "18px",
-                borderRadius: "2px",
-                background: showCurve ? "rgba(255,0,51,0.3)" : "#1c1c1c",
-                boxShadow: showCurve
-                  ? "0 0 8px rgba(255,0,51,0.4)"
-                  : "none",
-                position: "relative",
-                border: "none",
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              <div
-                style={{
-                  width: "12px",
-                  height: "14px",
-                  borderRadius: "1px",
-                  background: showCurve ? "#ff0033" : "#555555",
-                  position: "absolute",
-                  top: "2px",
-                  left: showCurve ? "22px" : "2px",
-                  transition: "all 0.2s",
-                }}
-              />
-            </button>
-
             <div>
               <div
                 style={{
@@ -163,7 +133,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                   color: "#555555",
                 }}
               >
-                MILESTONE LADDER
+                PROGRESSION PLAN
               </div>
             </div>
           </div>
@@ -211,29 +181,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
           </div>
         </div>
 
-        {/* Hide curve link */}
-        {!showCurve && (
-          <button
-            onClick={() => setShowCurve(true)}
-            style={{
-              fontFamily: "var(--font-mono, 'Geist Mono', monospace)",
-              fontSize: "10px",
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              color: "#555555",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              position: "relative",
-              zIndex: 5,
-            }}
-          >
-            [SHOW_CURVE]
-          </button>
-        )}
-
-        {showCurve && (
-          <div style={{ position: "relative", zIndex: 5 }}>
+        <div style={{ position: "relative", zIndex: 5 }}>
             {/* Presets */}
             <div
               style={{
@@ -243,12 +191,14 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
               }}
               className="mb-3"
             >
-              {demo.presets.map((preset, idx) => {
-                const isActive = demo.activePresetId === preset.id
+              {presets.map((preset, idx) => {
+                const isActive = activePresetId === preset.id
                 return (
                   <button
                     key={preset.id}
                     onClick={() => demo.selectPreset(preset)}
+                    onMouseEnter={() => demo.hoverPreset(preset.id)}
+                    onMouseLeave={() => demo.unhoverPreset()}
                     style={{
                       flex: 1,
                       padding: "8px 12px",
@@ -257,7 +207,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                         : "transparent",
                       border: "none",
                       borderRight:
-                        idx < demo.presets.length - 1
+                        idx < presets.length - 1
                           ? "1px solid #1c1c1c"
                           : "none",
                       cursor: "pointer",
@@ -312,6 +262,10 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
               })}
             </div>
 
+            {isCustom && !isPreview && (
+              <span style={{ fontSize: 11, fontFamily: "var(--font-mono, monospace)", letterSpacing: "0.1em", textTransform: "uppercase", color: "#ff0033", background: "rgba(255,0,51,0.1)", borderRadius: 4, padding: "2px 8px", marginTop: 8, display: "inline-block" }}>Custom</span>
+            )}
+
             {/* SVG */}
             <div
               style={{
@@ -323,10 +277,10 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
               className="mb-3"
             >
               <CurveSVG
-                milestones={demo.milestones}
-                curvePoints={demo.curvePoints}
-                config={demo.config}
-                yLabels={demo.yLabels}
+                milestones={displayMilestones}
+                curvePoints={displayCurvePoints}
+                config={displayConfig}
+                yLabels={displayYLabels}
                 colors={{
                   accent: "#ff0033",
                   grid: "#ff0033",
@@ -386,7 +340,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                       padding: "2px 6px",
                     }}
                   >
-                    {demo.tensionDisplay.toUpperCase()}
+                    {displayTensionDisplay.toUpperCase()}
                   </span>
                   <span
                     style={{
@@ -396,7 +350,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                       color: "#555555",
                     }}
                   >
-                    {demo.config.steps} STEPS
+                    {displayConfig.steps} MILESTONES
                   </span>
                 </div>
               </div>
@@ -427,6 +381,9 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                 <span>FEWER BIG LEAPS</span>
                 <span>MANY SMALL WINS</span>
               </div>
+              <p style={{ fontSize: 11, color: MUTED, opacity: 0.5, margin: 0, marginTop: 6, lineHeight: 1.4, fontFamily: "var(--font-mono, monospace)" }}>
+                Adjusts how milestones are distributed. Left for bigger jumps later, right for quick wins early.
+              </p>
             </div>
 
             {/* Advanced + Reset */}
@@ -487,7 +444,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                       color: "#555555",
                     }}
                   >
-                    <span>CP_{idx}</span>
+                    <span>MILESTONE_{idx + 1}:</span>
                     <button
                       onClick={() => demo.removeControlPoint(idx)}
                       style={{
@@ -519,7 +476,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
                   color: "#555555",
                 }}
               >
-                RANGE
+                START &gt; GOAL
               </span>
               <span
                 style={{
@@ -534,8 +491,7 @@ export default function VariantCyberpunk({ demo }: VariantCyberpunkProps) {
               </span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
       {/* Frequency cards */}
       <div className="space-y-2 mt-2">

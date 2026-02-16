@@ -30,34 +30,82 @@ const DEFAULT_CONFIG: MilestoneLadderConfig = {
   controlPoints: [],
 }
 
+function computeCurvePoints(cfg: MilestoneLadderConfig): { x: number; y: number }[] {
+  const pts: { x: number; y: number }[] = []
+  const numPts = 60
+  const cps = cfg.controlPoints ?? []
+  const effStart = Math.max(cfg.start, 1)
+  const effTarget = Math.max(cfg.target, effStart + 1)
+  const range = cfg.target - cfg.start || 1
+  const useLog = effStart > 0 && effTarget / effStart >= 10
+
+  for (let i = 0; i <= numPts; i++) {
+    const t = i / numPts
+    const curved = interpolateWithControlPoints(t, cps, cfg.curveTension)
+    const actualValue = useLog
+      ? effStart * Math.pow(effTarget / effStart, curved)
+      : cfg.start + range * curved
+    const y = (actualValue - cfg.start) / range
+    pts.push({ x: t, y: Math.max(0, Math.min(1, y)) })
+  }
+  return pts
+}
+
+function computeYLabels(cfg: MilestoneLadderConfig) {
+  return [0, 0.25, 0.5, 0.75, 1].map((t) => ({
+    value: t === 0
+      ? cfg.start
+      : t === 1
+        ? cfg.target
+        : roundToNiceNumber(cfg.start + (cfg.target - cfg.start) * t),
+    t,
+    isEndpoint: t === 0 || t === 1,
+  }))
+}
+
+function computeTensionDisplay(tension: number): string {
+  if (Math.abs(tension) < 0.05) return "Even pace"
+  if (tension >= 1.0) return "Early momentum"
+  if (tension > 0.05) return "Gentle start"
+  if (tension <= -1.0) return "Slow build"
+  return "Gradual build"
+}
+
 export function useCurveDemo(initialConfig?: Partial<MilestoneLadderConfig>) {
   const [config, setConfig] = useState<MilestoneLadderConfig>({
     ...DEFAULT_CONFIG,
     ...initialConfig,
   })
 
+  const [previewPresetId, setPreviewPresetId] = useState<string | null>(null)
+
   const milestones = useMemo(() => generateMilestoneLadder(config), [config])
+  const curvePoints = useMemo(() => computeCurvePoints(config), [config])
+  const yLabels = useMemo(() => computeYLabels(config), [config.start, config.target])
 
-  const curvePoints = useMemo(() => {
-    const pts: { x: number; y: number }[] = []
-    const numPts = 60
-    const cps = config.controlPoints ?? []
-    const effStart = Math.max(config.start, 1)
-    const effTarget = Math.max(config.target, effStart + 1)
-    const range = config.target - config.start || 1
-    const useLog = effStart > 0 && effTarget / effStart >= 10
-
-    for (let i = 0; i <= numPts; i++) {
-      const t = i / numPts
-      const curved = interpolateWithControlPoints(t, cps, config.curveTension)
-      const actualValue = useLog
-        ? effStart * Math.pow(effTarget / effStart, curved)
-        : config.start + range * curved
-      const y = (actualValue - config.start) / range
-      pts.push({ x: t, y: Math.max(0, Math.min(1, y)) })
+  const previewData = useMemo(() => {
+    if (!previewPresetId) return null
+    const preset = CURVE_PRESETS.find((p) => p.id === previewPresetId)
+    if (!preset) return null
+    const previewConfig: MilestoneLadderConfig = {
+      ...config,
+      steps: preset.steps,
+      curveTension: preset.curveTension,
+      controlPoints: [],
     }
-    return pts
-  }, [config.curveTension, config.controlPoints, config.start, config.target])
+    return {
+      milestones: generateMilestoneLadder(previewConfig),
+      curvePoints: computeCurvePoints(previewConfig),
+      yLabels: computeYLabels(previewConfig),
+      config: previewConfig,
+      tensionDisplay: computeTensionDisplay(preset.curveTension),
+    }
+  }, [previewPresetId, config])
+
+  const displayMilestones = previewData?.milestones ?? milestones
+  const displayCurvePoints = previewData?.curvePoints ?? curvePoints
+  const displayYLabels = previewData?.yLabels ?? yLabels
+  const displayConfig = previewData?.config ?? config
 
   const activePresetId = useMemo(() => {
     const match = CURVE_PRESETS.find(
@@ -66,26 +114,10 @@ export function useCurveDemo(initialConfig?: Partial<MilestoneLadderConfig>) {
     return match?.id ?? null
   }, [config.steps, config.curveTension])
 
-  const tensionDisplay = useMemo(() => {
-    if (Math.abs(config.curveTension) < 0.05) return "Linear"
-    if (config.curveTension >= 1.0) return "Front-loaded"
-    if (config.curveTension > 0.05) return "Slight front"
-    if (config.curveTension <= -1.0) return "Back-loaded"
-    return "Slight back"
-  }, [config.curveTension])
+  const isCustom = activePresetId === null
 
-  const yLabels = useMemo(() =>
-    [0, 0.25, 0.5, 0.75, 1].map((t) => ({
-      value: t === 0
-        ? config.start
-        : t === 1
-          ? config.target
-          : roundToNiceNumber(config.start + (config.target - config.start) * t),
-      t,
-      isEndpoint: t === 0 || t === 1,
-    })),
-    [config.start, config.target]
-  )
+  const tensionDisplay = useMemo(() => computeTensionDisplay(config.curveTension), [config.curveTension])
+  const displayTensionDisplay = previewData?.tensionDisplay ?? tensionDisplay
 
   const selectPreset = useCallback((preset: CurvePreset) => {
     setConfig((c) => ({ ...c, steps: preset.steps, curveTension: preset.curveTension, controlPoints: [] }))
@@ -128,6 +160,14 @@ export function useCurveDemo(initialConfig?: Partial<MilestoneLadderConfig>) {
     })
   }, [])
 
+  const hoverPreset = useCallback((presetId: string) => {
+    setPreviewPresetId(presetId)
+  }, [])
+
+  const unhoverPreset = useCallback(() => {
+    setPreviewPresetId(null)
+  }, [])
+
   return {
     config,
     setConfig,
@@ -136,6 +176,15 @@ export function useCurveDemo(initialConfig?: Partial<MilestoneLadderConfig>) {
     activePresetId,
     tensionDisplay,
     yLabels,
+    displayMilestones,
+    displayCurvePoints,
+    displayYLabels,
+    displayConfig,
+    displayTensionDisplay,
+    isPreview: previewPresetId !== null,
+    isCustom,
+    hoverPreset,
+    unhoverPreset,
     selectPreset,
     setTension,
     setSteps,
