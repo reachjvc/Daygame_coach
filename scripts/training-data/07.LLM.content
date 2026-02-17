@@ -268,6 +268,208 @@ ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
 }
 REPAIR_ACCEPT_THRESHOLD = 0.85
 
+
+def _apply_quality_repairs(
+    segments: List[Dict[str, Any]],
+    transcript_artifacts: List[Dict[str, Any]],
+    low_quality_segments: List[Dict[str, Any]],
+    log_prefix: str = "",
+) -> Tuple[int, int, int, int]:
+    """Apply 06e quality repairs (delete/replace/merge) to segments in-place.
+
+    Returns (artifact_accepted, artifact_rejected, lq_accepted, lq_rejected).
+    """
+    seg_by_id: Dict[int, Dict[str, Any]] = {
+        s.get("id"): s for s in segments
+        if isinstance(s, dict) and isinstance(s.get("id"), int)
+    }
+
+    # --- Transcript artifact repairs ---
+    repairs_accepted = 0
+    repairs_rejected = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        action = artifact.get("action", "replace")
+        repair_conf = artifact.get("repair_confidence")
+        sid = artifact.get("segment_index")
+
+        if not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
+            repairs_rejected += 1
+            continue
+        if not isinstance(sid, int) or sid not in seg_by_id:
+            repairs_rejected += 1
+            continue
+
+        seg = seg_by_id[sid]
+
+        if action == "replace":
+            repair_text = artifact.get("repair_text")
+            if not repair_text:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            seg["text"] = repair_text
+            artifact["repaired"] = True
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            repairs_accepted += 1
+
+        elif action == "delete":
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "delete"
+            repairs_accepted += 1
+
+        elif action == "merge_prev":
+            prev_seg = seg_by_id.get(sid - 1)
+            if prev_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            prev_text = prev_seg.get("text", "")
+            merge_text = seg.get("text", "")
+            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_prev"
+            repairs_accepted += 1
+
+        elif action == "merge_next":
+            next_seg = seg_by_id.get(sid + 1)
+            if next_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            merge_text = seg.get("text", "")
+            next_text = next_seg.get("text", "")
+            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_next"
+            repairs_accepted += 1
+
+        else:
+            repairs_rejected += 1
+
+    # Guard: segments already repaired as artifacts should not be double-repaired as LQ
+    artifact_repaired_sids: Set[int] = {
+        a.get("segment_index") for a in transcript_artifacts
+        if isinstance(a, dict) and a.get("repaired")
+    }
+
+    # --- Low quality segment repairs ---
+    lq_repairs_accepted = 0
+    lq_repairs_rejected = 0
+    for lq_entry in low_quality_segments:
+        if not isinstance(lq_entry, dict):
+            continue
+        action = lq_entry.get("action", "replace")
+        repair_conf = lq_entry.get("repair_confidence")
+        sid = lq_entry.get("segment")
+
+        if not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
+            lq_repairs_rejected += 1
+            continue
+        if not isinstance(sid, int) or sid not in seg_by_id:
+            lq_repairs_rejected += 1
+            continue
+        if sid in artifact_repaired_sids:
+            lq_repairs_rejected += 1
+            continue
+
+        seg = seg_by_id[sid]
+
+        if action == "replace":
+            repair_text = lq_entry.get("repair_text")
+            if not repair_text:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            seg["text"] = repair_text
+            lq_entry["repaired"] = True
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            lq_repairs_accepted += 1
+
+        elif action == "delete":
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "delete"
+            lq_repairs_accepted += 1
+
+        elif action == "merge_prev":
+            prev_seg = seg_by_id.get(sid - 1)
+            if prev_seg is None:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            prev_text = prev_seg.get("text", "")
+            merge_text = seg.get("text", "")
+            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "merge_prev"
+            lq_repairs_accepted += 1
+
+        elif action == "merge_next":
+            next_seg = seg_by_id.get(sid + 1)
+            if next_seg is None:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            merge_text = seg.get("text", "")
+            next_text = next_seg.get("text", "")
+            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "merge_next"
+            lq_repairs_accepted += 1
+
+        else:
+            lq_repairs_rejected += 1
+
+    # Mark artifact warnings as resolved when LQ already fixed the same segment
+    lq_repaired_sids: Set[int] = {
+        lq.get("segment") for lq in low_quality_segments
+        if isinstance(lq, dict) and lq.get("repaired")
+    }
+    resolved_by_lq = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict) or artifact.get("repaired"):
+            continue
+        sid = artifact.get("segment_index")
+        if isinstance(sid, int) and sid in lq_repaired_sids:
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "resolved_by_lq_repair"
+            resolved_by_lq += 1
+
+    total = repairs_accepted + lq_repairs_accepted
+    if total > 0 and log_prefix:
+        resolved_msg = f", {resolved_by_lq} resolved by LQ" if resolved_by_lq else ""
+        print(f"{log_prefix}   Quality repairs applied: {repairs_accepted} artifact, {lq_repairs_accepted} LQ ({repairs_rejected + lq_repairs_rejected} rejected{resolved_msg})")
+
+    return repairs_accepted, repairs_rejected, lq_repairs_accepted, lq_repairs_rejected
+
+
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20
@@ -1745,6 +1947,7 @@ def validate_enrichment_output(
         int(item.get("segment"))
         for item in (output.get("low_quality_segments") or [])
         if isinstance(item, dict) and isinstance(item.get("segment"), int)
+        and not item.get("repaired")
     }
     transcript_artifact_ids: Set[int] = {
         int(item.get("segment_index"))
@@ -2506,7 +2709,8 @@ def enforce_stage07_evidence_allowlist(
     low_quality_ids: Set[int] = set()
     for item in low_quality_segments or []:
         if isinstance(item, dict) and isinstance(item.get("segment"), int):
-            low_quality_ids.add(int(item["segment"]))
+            if not item.get("repaired"):
+                low_quality_ids.add(int(item["segment"]))
 
     transcript_artifact_ids: Set[int] = set()
     for item in transcript_artifacts or []:
@@ -2735,8 +2939,8 @@ def compute_phase_confidence(
     if not turn_phases:
         return {}
 
-    # Build set of low-quality segment IDs for fast lookup
-    low_quality_ids = {lq.get("segment") for lq in low_quality_segments}
+    # Build set of low-quality segment IDs for fast lookup (exclude repaired)
+    low_quality_ids = {lq.get("segment") for lq in low_quality_segments if not lq.get("repaired")}
 
     # Group segments by phase
     # turn_phases has {"segment": global_id, "phase": "open"|"pre_hook"|...}
@@ -4155,12 +4359,13 @@ def _process_non_infield(
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
 
-    # Quality data pass-through from 06e
+    # Quality data from 06e — load and apply repairs
     quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
     low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
     transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
     if quality_data:
         print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
+        _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
 
     # Collect summary data
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
@@ -4498,12 +4703,13 @@ def process_video_file(
         if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
     }
 
-    # --- Quality data pass-through from 06e ---
+    # --- Quality data from 06e — load and apply repairs ---
     quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
     low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
     transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
     if quality_data:
         print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
+        _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
 
     normalization_repairs = normalize_enrichments(
         enrichments,
@@ -4877,82 +5083,8 @@ def revalidate_video_file(
         atype = artifact.get("artifact_type", "")
         artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
 
-    # --- Transcript artifact repair acceptance (revalidate path) ---
-    repairs_accepted = 0
-    repairs_rejected = 0
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict):
-            continue
-        action = artifact.get("action", "replace")  # backward compat default
-        repair_conf = artifact.get("repair_confidence")
-        sid = artifact.get("segment_index")
-
-        if not isinstance(repair_conf, (int, float)):
-            continue
-        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
-            repairs_rejected += 1
-            continue
-        if not isinstance(sid, int) or sid not in seg_by_id:
-            repairs_rejected += 1
-            continue
-
-        seg = seg_by_id[sid]
-
-        if action == "replace":
-            repair_text = artifact.get("repair_text")
-            if not repair_text:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            seg["text"] = repair_text
-            artifact["repaired"] = True
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            repairs_accepted += 1
-
-        elif action == "delete":
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "delete"
-            repairs_accepted += 1
-
-        elif action == "merge_prev":
-            prev_seg = seg_by_id.get(sid - 1)
-            if prev_seg is None:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            prev_text = prev_seg.get("text", "")
-            merge_text = seg.get("text", "")
-            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "merge_prev"
-            repairs_accepted += 1
-
-        elif action == "merge_next":
-            next_seg = seg_by_id.get(sid + 1)
-            if next_seg is None:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            merge_text = seg.get("text", "")
-            next_text = next_seg.get("text", "")
-            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "merge_next"
-            repairs_accepted += 1
-
-        else:
-            repairs_rejected += 1  # unknown action
+    # --- Apply quality repairs (shared with normal pipeline paths) ---
+    _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
 
     # Apply normalization (deterministic repairs before validation).
     normalization_repairs = normalize_enrichments(
@@ -4999,6 +5131,8 @@ def revalidate_video_file(
     meta["synthetic_artifacts_dropped"] = dropped_synthetic_artifacts
     meta["artifact_repairs_accepted"] = repairs_accepted
     meta["artifact_repairs_rejected"] = repairs_rejected
+    meta["lq_repairs_accepted"] = lq_repairs_accepted
+    meta["lq_repairs_rejected"] = lq_repairs_rejected
 
     summary = output.get("summary")
     if not isinstance(summary, dict):
@@ -5693,8 +5827,6 @@ def main() -> None:
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
-            if skipped_verification > 0:
-                print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
             if skipped_quarantine > 0:
                 print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
@@ -5718,28 +5850,12 @@ def main() -> None:
             src_out_dir = out_base / src_name
             files = find_input_files(src_in_dir)
 
-            skipped_verification = 0
             skipped_quarantine = 0
             for input_file in files:
                 quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
                 if quarantine_reason:
                     print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
                     skipped_quarantine += 1
-                    continue
-
-                # Verification gate
-                should_process, reason = should_process_video(
-                    input_file,
-                    src_name,
-                    verify_root,
-        
-                    input_root_hint=in_root,
-                    skip_verification=args.skip_verification or args.revalidate,
-        
-                )
-                if not should_process:
-                    print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
-                    skipped_verification += 1
                     continue
 
                 preferred_output = compute_output_path(
@@ -5773,8 +5889,6 @@ def main() -> None:
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
-            if skipped_verification > 0:
-                print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
             if skipped_quarantine > 0:
                 print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
 
@@ -5784,7 +5898,6 @@ def main() -> None:
         _run_named_source(
             args,
             quarantine_ids,
-            verify_root,
             in_root,
             out_root,
         )
@@ -5817,7 +5930,6 @@ def main() -> None:
     failed = 0
     consecutive_failures = 0
     validation_failed = 0
-    skipped_verification = 0
     skipped_quarantine = 0
 
     for input_file in files:
@@ -5832,21 +5944,6 @@ def main() -> None:
         if quarantine_reason:
             print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
             skipped_quarantine += 1
-            continue
-
-        # Verification gate
-        should_process, reason = should_process_video(
-            input_file,
-            infer_source_name(input_file, in_root),
-            verify_root,
-
-            input_root_hint=in_root,
-            skip_verification=args.skip_verification or args.revalidate,
-
-        )
-        if not should_process:
-            print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
-            skipped_verification += 1
             continue
 
         preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
@@ -5923,7 +6020,7 @@ def main() -> None:
     print(f"  Processed:           {processed}")
     print(f"  Skipped (existing):  {skipped}")
     print(f"  Skipped (quarantine): {skipped_quarantine}")
-    print(f"  Blocked (verify):    {skipped_verification}")
+
     print(f"  Failed (exception):  {failed}")
     print(f"  Failed (validation): {validation_failed}")
     print(f"  Enriched:            {total_enriched}/{total_convs} conversations")

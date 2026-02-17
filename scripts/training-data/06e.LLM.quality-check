@@ -366,6 +366,14 @@ def quality_check_file(
             if isinstance(r, dict) and r.get("segment_index") not in synthetic_ids
         ]
 
+    # Count LQ segments with high-confidence repairs
+    lq_repair_candidates = sum(
+        1 for lq in low_quality_segments
+        if isinstance(lq, dict)
+        and isinstance(lq.get("repair_confidence"), (int, float))
+        and lq["repair_confidence"] >= REPAIR_ACCEPT_THRESHOLD
+    )
+
     # Stamp damage_severity on each artifact
     for artifact in transcript_artifacts:
         if not isinstance(artifact, dict):
@@ -388,6 +396,7 @@ def quality_check_file(
             "segments_total": len(valid_segments),
             "low_quality_count": len(low_quality_segments),
             "artifact_count": len(transcript_artifacts),
+            "lq_repair_candidates": lq_repair_candidates,
             "artifact_types": dict(
                 __import__("collections").Counter(
                     a.get("artifact_type", "unknown")
@@ -403,7 +412,7 @@ def quality_check_file(
 
     print(
         f"{LOG_PREFIX} {input_path.name}: "
-        f"low_quality={len(low_quality_segments)}, artifacts={len(transcript_artifacts)}"
+        f"low_quality={len(low_quality_segments)} (repairable={lq_repair_candidates}), artifacts={len(transcript_artifacts)}"
     )
     print(f"{LOG_PREFIX}   Output: {output_path}")
     return {

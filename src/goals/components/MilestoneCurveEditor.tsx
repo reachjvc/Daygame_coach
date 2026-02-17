@@ -25,9 +25,9 @@ interface MilestoneCurveEditorProps {
 }
 
 /* ── SVG layout ── */
-const SVG_W = 280
-const SVG_H = 174
-const PAD = { top: 14, right: 12, bottom: 34, left: 44 }
+const SVG_W = 380
+const SVG_H = 220
+const PAD = { top: 18, right: 16, bottom: 38, left: 48 }
 const PLOT_W = SVG_W - PAD.left - PAD.right
 const PLOT_H = SVG_H - PAD.top - PAD.bottom
 

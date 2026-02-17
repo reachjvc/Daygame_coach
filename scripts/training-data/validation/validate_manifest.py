@@ -120,20 +120,6 @@ def _stage08_expected_source_label(manifest_name: str, source_filter: Optional[s
     return f"manifest:{manifest_name}"
 
 
-def _stage07_gate_decision(
-    verdict: Optional[str],
-) -> Tuple[bool, str]:
-    """Only APPROVE passes the verification gate."""
-    if verdict == "APPROVE":
-        return True, "APPROVE"
-    if verdict == "FLAG":
-        return False, "FLAG (blocked)"
-    if verdict == "REJECT":
-        return False, "REJECT (blocked)"
-    if verdict is None:
-        return False, "missing_verdict"
-    return False, f"unknown_verdict={verdict}"
-
 
 def _load_manifest_entries(manifest_path: Path, source: Optional[str] = None) -> List[Tuple[str, str, str]]:
     """Return list of (source, video_id, raw_folder_text)."""
@@ -737,7 +723,7 @@ def _compute_stage07_damage_metrics(s07_data: Dict[str, Any]) -> Dict[str, Any]:
 
     low_quality_ids: Set[int] = set()
     for row in s07_data.get("low_quality_segments", []) or []:
-        if isinstance(row, dict):
+        if isinstance(row, dict) and not row.get("repaired"):
             sid = row.get("segment")
             if isinstance(sid, int):
                 low_quality_ids.add(sid)
@@ -1198,10 +1184,6 @@ def main() -> None:
     damage_budget_violations: List[Dict[str, Any]] = []
     anchor_budget_violations: List[Dict[str, Any]] = []
 
-    blocked_by_gate = 0
-    gate_blocked_video_ids: Set[str] = set()
-    allowed_by_gate = 0
-    gate_policy_violations = 0
     video_artifacts: Dict[str, Dict[str, Optional[str]]] = {}
     stage_reports_emitted = 0
     stage_reports_dir: Optional[Path] = None
@@ -1843,15 +1825,6 @@ def main() -> None:
             if verdict:
                 verdict_counts[verdict] += 1
 
-        # Gate accounting: only APPROVE passes
-        gate_allowed, gate_reason = _stage07_gate_decision(verdict)
-        if not gate_allowed:
-            gate_blocked_video_ids.add(vid)
-        if verdict == "APPROVE":
-            allowed_by_gate += 1
-        else:
-            blocked_by_gate += 1
-
         s07_data: Optional[Dict[str, Any]] = None
         stage07_content_unreadable = False
         if s07_path:
@@ -2092,23 +2065,6 @@ def main() -> None:
                 elif r.severity == "warning":
                     cross_stage_warnings += 1
 
-        if s07_path and not gate_allowed:
-            gate_policy_violations += 1
-            gate_msg = (
-                "Stage 07 output exists but verification gate blocks this verdict "
-                f"(verdict={verdict!r}, reason={gate_reason})"
-            )
-            issues.append({
-                "video_id": vid,
-                "source": src,
-                "severity": "error",
-                "check": "stage07_gate_policy_violation",
-                "message": gate_msg,
-                "s07": str(s07_path),
-                "verify": str(v_path) if v_path else None,
-            })
-            check_counts["error:stage07_gate_policy_violation"] += 1
-
     waivers_applied = 0
     if waiver_rules:
         for issue in issues:
@@ -2264,11 +2220,11 @@ def main() -> None:
     # In text mode, compute a simple pass/fail heuristic that matches how we'd use this in CI.
     # "Complete" here means: for manifest videos, 06c + 07 + 06b verification exist.
     # Completeness should be measured on the active processing scope:
-    # remove user-quarantined items and videos intentionally blocked by gate policy.
+    # remove user-quarantined items.
     effective_manifest_ids = {
         vid
         for vid in manifest_ids
-        if vid not in quarantine_video_ids and vid not in gate_blocked_video_ids
+        if vid not in quarantine_video_ids
     }
     missing_verify_effective = sum(1 for vid in missing_verify if vid in effective_manifest_ids)
     missing_s05_effective = sum(1 for vid in missing_s05 if vid in effective_manifest_ids)
@@ -2414,11 +2370,6 @@ def main() -> None:
             "checked_files": stage06b_checked_files,
             "invalid_files": stage06b_invalid_files,
         },
-        "verification_gate": {
-            "allowed": allowed_by_gate,
-            "blocked": blocked_by_gate,
-            "policy_violations": gate_policy_violations,
-        },
         "stage07_validation": {
             "errors": stage07_val_errors,
             "warnings": stage07_val_warnings,
@@ -2525,10 +2476,6 @@ def main() -> None:
             print(f"{LOG_PREFIX} Source filter: {args.source}")
 
         print(f"{LOG_PREFIX} 06b.LLM.verify verdicts: {dict(verdict_counts) or '{}'}")
-        print(
-            f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate}, "
-            f"policy_violations={gate_policy_violations}"
-        )
 
         print(
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "

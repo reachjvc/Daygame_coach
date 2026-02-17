@@ -441,13 +441,20 @@ def build_damage_map(
 
     low_quality_ids: Set[int] = set()
     artifact_types_by_seg: Dict[int, Set[str]] = {}
+    # Segments with high-confidence LQ repairs skip damage seeding.
+    # Threshold mirrors REPAIR_ACCEPT_THRESHOLD in 06e/07 (0.85).
+    lq_repaired_ids: Set[int] = set()
     if isinstance(stage06e_data, dict):
         for item in stage06e_data.get("low_quality_segments", []) or []:
             if not isinstance(item, dict):
                 continue
-            sid = _safe_int(item.get("segment"))
-            if sid is not None:
-                low_quality_ids.add(sid)
+            sid_lq = _safe_int(item.get("segment"))
+            if sid_lq is None:
+                continue
+            low_quality_ids.add(sid_lq)
+            conf = item.get("repair_confidence")
+            if isinstance(conf, (int, float)) and conf >= 0.85:
+                lq_repaired_ids.add(sid_lq)
         for item in stage06e_data.get("transcript_artifacts", []) or []:
             if not isinstance(item, dict):
                 continue
@@ -502,7 +509,7 @@ def build_damage_map(
                 seed_confidence=0.97,
                 detail=detail,
             )
-        if sid in low_quality_ids:
+        if sid in low_quality_ids and sid not in lq_repaired_ids:
             _update_damage_entry(
                 damage_by_seg,
                 seg_id=sid,

@@ -17,25 +17,12 @@ Objectives:
 Rules:
 - Gating: rule that blocks downstream processing or ingestion.
 - No silent pass: missing/empty/invalid outputs are explicit failures with reason.
-- **Show-don't-summarize:** When reporting flags/warnings/artifacts to user, ALWAYS include the actual segment text + 5 segments before and after for context. Never summarize without showing the raw data first. The user needs to see the text to make judgment calls. Use `>>>` marker on the target segment. Get it right on the first attempt — debug file lookups (bracket escaping, top-level vs nested segments, folder name mismatches across stages) before outputting, not after.
+- **Show-don't-summarize:** When reporting flags/warnings/artifacts to user, ALWAYS include the actual segment text + 5 segments before and after for context. Use `>>>` marker on the target segment. 
 
 ### Work being done
 **2026-02-16:** P001.2–P001.10 (86 videos) completed stages 02–05. P001.1 was already at stage 07. All 96 P001 videos now through stage 05; next is stage 06+.
 **2026-02-16:** P002.1–P002.10 (97 videos) completed stages 02–05. All P002 sub-batches now through stage 05; next is stage 06+. Note: some sub-batches missing 1-2 downloads (P002.3/4: 8/10, P002.5/6/9: 9/10) — those videos were skipped by the pipeline.
 
-### Old Evaluation and Test Data
-Evaluation/test validation data (CANARY.1, P018.3, P018.4, D13b, hardening audit results) was archived — not deleted — to preserve drift comparison baselines:
-
-| Original location | Archived to |
-|---|---|
-| `data/validation/drift/` | `data/old_testing_validation/old_drift/` |
-| `data/validation/ingest_quarantine/` | `data/old_testing_validation/old_ingest_quarantine/` |
-| `data/validation/stage_reports/` | `data/old_testing_validation/old_stage_reports/` |
-| `data/validation-audits/` | `data/old_testing_validation/old_validation_audits/` |
-
-All archived files are prefixed with `old_` (e.g. `old_P018.3.v2.damage-drift.json`). Internal directory structure is preserved.
-
-**Why this exists:** When re-running batches through the pipeline, compare new validation outputs against these archived baselines to detect quality drift or regressions. For example, compare a fresh `P018.3.v2.damage-drift.json` against `data/old_testing_validation/old_drift/old_P018.3.v2.damage-drift.json`.
 
 ## Batch & Manifest Naming
 
@@ -121,17 +108,17 @@ Validation is automatic:
 - Failing videos are quarantined and skipped in subsequent stages
 - Summary report printed at end
 
-Config: `scripts/training-data/batch/pipeline.config.json` (gate policies, warning budgets)
+Config: `scripts/training-data/batch/pipeline.config.json` (quarantine levels, warning budgets)
 
 **Never auto-ingest** — stage 10 requires explicit user approval.
-**Update status** after batch work: status must reflect what actually completed on disk, not what was attempted. If videos within a sub-batch are at different stages (e.g. some gated, some progressed), record the per-video breakdown. Never update `current_stage` to a target stage that wasn't fully achieved — verify against actual output files before writing.
+**Update status** after batch work: status must reflect what actually completed on disk, not what was attempted. If videos within a sub-batch are at different stages (e.g. some quarantined, some progressed), record the per-video breakdown. Never update `current_stage` to a target stage that wasn't fully achieved — verify against actual output files before writing.
 
 Legend:
 - `[LLM]`: Claude-dependent stage (network/auth required).
 - `[DET]`: deterministic local stage (no LLM).
 - `[EXT]`: external local/remote service dependency (`ollama`, `supabase`).
-- `GATE(HARD)`: blocks downstream processing/ingest for that video/scope.
-- `GATE(SOFT)`: does not block alone; emits control metadata consumed by later hard gates.
+- `QUARANTINE`: blocks downstream processing for that video (REJECT verdicts, cross-stage validation failures).
+- `QUALITY METADATA`: informational quality signals consumed by downstream stages (FLAG verdicts, 06e artifacts, 06h confidence).
 
 Stage notes (what each stage is for):
 - `00.EXT.reset-embeddings`: utility to inspect/wipe embeddings table before a clean retrieval test.
@@ -148,7 +135,7 @@ Stage notes (what each stage is for):
 - `06f.DET.damage-map`: normalize segment damage reasons and coverage metrics (reads 06e quality data).
 - `06g.LLM.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments.
 - `06h.DET.confidence-propagation`: turn damage/adjudication into per-segment/per-conversation confidence.
-- `07.LLM.content`: produce enrichments only (no quality assessment); passes through quality fields from 06e.
+- `07.LLM.content`: apply 06e transcript repairs + produce enrichments; REJECT videos already quarantined upstream, FLAG/APPROVE both proceed.
 - `08.DET.taxonomy-validation`: deterministic taxonomy drift gate with per-video quarantine semantics.
 - `09.EXT.chunk-embed`: convert enrichments to retrieval chunks + embeddings (Ollama).
 - `10.EXT.ingest`: ingest eligible chunks to DB with readiness/taxonomy/semantic gates.

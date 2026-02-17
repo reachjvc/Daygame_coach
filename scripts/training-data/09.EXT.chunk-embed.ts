@@ -221,7 +221,7 @@ type EnrichedFile = {
     source_file?: string
   }
   // Stage 07 transcript quality signals (global segment ids)
-  low_quality_segments?: Array<{ segment?: number; reason?: string }>
+  low_quality_segments?: Array<{ segment?: number; reason?: string; repaired?: boolean }>
   transcript_artifacts?: Array<{
     type?: string
     segment_index?: number
@@ -459,6 +459,7 @@ function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
   const transcriptArtifactSeveritiesById = new Map<number, string>()
 
   for (const lq of file.low_quality_segments ?? []) {
+    if (lq?.repaired) continue
     const segId = lq?.segment
     if (typeof segId === "number" && Number.isFinite(segId)) lowQualityIds.add(segId)
   }

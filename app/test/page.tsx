@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -94,6 +94,12 @@ const testPages = [
     href: "/test/curve-customization",
     description: "5 visual variations of the curve customizer (Frost, Cyberpunk, Gold, Neon, Zen)",
     icon: Palette,
+  },
+  {
+    name: "Pipeline",
+    href: "/test/pipeline",
+    description: "Training data pipeline visualization with stages, flags, and validation gates",
+    icon: GitBranch,
   },
 ]
 

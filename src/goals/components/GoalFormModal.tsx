@@ -381,7 +381,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
       }}
     >
       <DialogContent
-        className="sm:max-w-md max-h-[90vh] flex flex-col"
+        className="sm:max-w-lg max-h-[90vh] flex flex-col"
         data-testid="goal-form-modal"
         style={{
           background: theme.bg,

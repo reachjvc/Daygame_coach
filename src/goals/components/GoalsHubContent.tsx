@@ -15,7 +15,7 @@ import { DailyActionView } from "./DailyActionView"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts } from "../goalsService"
-import { isValidCurveThemeId } from "../curveThemes"
+import { isValidCurveThemeId, getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, CurveThemeId } from "../types"
 
 export function GoalsHubContent() {
@@ -317,16 +317,71 @@ export function GoalsHubContent() {
     )
   }
 
+  const cyberTheme = getCurveTheme("cyberpunk")
+  const isCyberPage = curveThemeId === "cyberpunk"
+
   return (
-    <div className="space-y-6" data-testid="goals-page">
+    <div
+      className="space-y-6 p-6 -mx-2"
+      data-testid="goals-page"
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        background: isCyberPage ? cyberTheme.bg : undefined,
+        color: isCyberPage ? cyberTheme.text : undefined,
+        fontFamily: isCyberPage ? "var(--font-mono, 'Geist Mono', monospace)" : undefined,
+        borderRadius: isCyberPage ? 4 : 12,
+        border: isCyberPage ? `1px solid ${cyberTheme.border}` : undefined,
+        boxShadow: isCyberPage ? `0 0 30px rgba(255,0,51,0.08), inset 0 0 60px rgba(255,0,51,0.02)` : undefined,
+        transition: "background 300ms ease, color 300ms ease",
+      }}
+    >
+      {/* Cyberpunk decorative overlays */}
+      {isCyberPage && (
+        <>
+          {/* Scanlines */}
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 1,
+              background:
+                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,51,0.03) 2px, rgba(255,0,51,0.03) 4px)",
+            }}
+          />
+          {/* Corner brackets */}
+          <div style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTop: `2px solid ${cyberTheme.accent}`, borderLeft: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
+          <div style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTop: `2px solid ${cyberTheme.accent}`, borderRight: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottom: `2px solid ${cyberTheme.accent}`, borderLeft: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
+          <div style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottom: `2px solid ${cyberTheme.accent}`, borderRight: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
+        </>
+      )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style={{ position: "relative", zIndex: 5 }}>
         <div className="flex items-center gap-3">
-          <GoalIcon className="size-7 text-primary" />
+          <GoalIcon className="size-7" style={{ color: isCyberPage ? cyberTheme.accent : undefined }} />
           <div>
-            <h1 className="text-2xl font-bold">Goals</h1>
-            <p className="text-sm text-muted-foreground hidden sm:block">
-              Track progress across all areas of your life
+            <h1
+              className="text-2xl font-bold"
+              style={{
+                textTransform: isCyberPage ? "uppercase" : undefined,
+                letterSpacing: isCyberPage ? "0.08em" : undefined,
+                color: isCyberPage ? cyberTheme.text : undefined,
+              }}
+            >
+              Goals
+            </h1>
+            <p
+              className="text-sm hidden sm:block"
+              style={{
+                color: isCyberPage ? cyberTheme.muted : undefined,
+                textTransform: isCyberPage ? "uppercase" : undefined,
+                letterSpacing: isCyberPage ? "0.04em" : undefined,
+                fontSize: isCyberPage ? 10 : undefined,
+              }}
+            >
+              {isCyberPage ? "SYSTEM // GOAL TRACKING MODULE" : "Track progress across all areas of your life"}
             </p>
           </div>
         </div>
@@ -358,13 +413,64 @@ export function GoalsHubContent() {
               </Button>
             </>
           )}
-          <Button onClick={handleCreateGoal} data-testid="goals-new-goal-button">
+          {/* Theme toggle */}
+          <div
+            className="flex overflow-hidden border"
+            data-testid="goals-theme-toggle"
+            style={{
+              borderRadius: isCyberPage ? 2 : 8,
+              borderColor: isCyberPage ? cyberTheme.border : undefined,
+              boxShadow: isCyberPage ? `0 0 8px rgba(255,0,51,0.15)` : undefined,
+            }}
+          >
+            {CURVE_THEME_IDS.map((id) => {
+              const t = getCurveTheme(id)
+              const isActive = id === curveThemeId
+              return (
+                <button
+                  key={id}
+                  onClick={() => handleCurveThemeChange(id)}
+                  data-testid={`theme-toggle-${id}`}
+                  className="cursor-pointer"
+                  style={{
+                    padding: "6px 14px",
+                    fontSize: 13,
+                    fontWeight: isActive ? 600 : 400,
+                    background: isActive ? t.accent : "transparent",
+                    color: isActive ? "#fff" : (isCyberPage ? cyberTheme.muted : undefined),
+                    border: "none",
+                    borderRight: id !== CURVE_THEME_IDS[CURVE_THEME_IDS.length - 1] ? `1px solid ${isCyberPage ? cyberTheme.border : "var(--border)"}` : "none",
+                    transition: "all 150ms ease",
+                    fontFamily: id === "cyberpunk" ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
+                    letterSpacing: id === "cyberpunk" ? "0.05em" : undefined,
+                    textTransform: id === "cyberpunk" ? "uppercase" : "none",
+                  }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+          <Button
+            onClick={handleCreateGoal}
+            data-testid="goals-new-goal-button"
+            style={isCyberPage ? {
+              background: cyberTheme.accent,
+              color: "#fff",
+              borderColor: cyberTheme.accent,
+              borderRadius: 2,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              fontFamily: "var(--font-mono, 'Geist Mono', monospace)",
+            } : undefined}
+          >
             <Plus className="size-4 mr-1" />
-            New Goal
+            {isCyberPage ? "NEW_GOAL" : "New Goal"}
           </Button>
         </div>
       </div>
 
+      <div style={{ position: "relative", zIndex: 5 }}>
       {goals.length === 0 ? (
         <div data-testid="goals-empty-state">
           <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} curveThemeId={curveThemeId} onCurveThemeChange={handleCurveThemeChange} />
@@ -405,6 +511,7 @@ export function GoalsHubContent() {
           isAddingDirtyDog={isAddingDirtyDog}
         />
       )}
+      </div>{/* close z-5 content wrapper */}
 
       <GoalTimeSettingsDialog
         open={isTimeSettingsOpen}

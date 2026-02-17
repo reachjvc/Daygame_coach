@@ -111,6 +111,7 @@ VALIDATE_SOURCE=""
 VALIDATE_WAIVER_FILE=""
 VALIDATE_QUARANTINE_FILE=""
 RUN_QUARANTINE_FILE=""
+PARALLEL=""
 
 # Config-driven defaults (loaded from pipeline.config.json)
 CFG_QUARANTINE_LEVEL="error"
@@ -165,6 +166,7 @@ usage() {
 Usage:
   ./sub-batch-pipeline P001.1 --run              Run stages 06→09 with auto-validation
   ./sub-batch-pipeline P001.1 --run --from 07    Resume from stage 07
+  ./sub-batch-pipeline P001.1 --run --parallel 10  Conveyor-belt parallel mode
   ./sub-batch-pipeline P001 --run-all            Run all incomplete sub-batches
   ./sub-batch-pipeline P001 --run-all --count 3  Run next 3 incomplete sub-batches
   ./sub-batch-pipeline --list                    List all batches and sub-batches
@@ -178,6 +180,7 @@ Usage:
 Options:
   --dry-run                Preview without running
   --from <stage>           With --run, start from this stage (default: 06)
+  --parallel <n>           Conveyor-belt mode: videos run in parallel, n max LLM calls
   --count <n>              With --run-all, limit to n sub-batches
   --source <name>          With --validate, only validate one source
   --quarantine-file <path> Override auto-detected quarantine file
@@ -625,6 +628,18 @@ print('yes' if len(q.get('quarantined_video_ids',[])) >= m_count else 'no')
 run_pipeline() {
   local sub_id="$1"
   local start_stage="${2:-06}"
+
+  # Parallel mode: delegate to pipeline-runner (conveyor-belt orchestrator)
+  if [[ -n "$PARALLEL" ]]; then
+    local runner_args=("$sub_id" --parallel "$PARALLEL" --from "$start_stage")
+    if [[ "$DRY_RUN" == true ]]; then
+      runner_args+=(--dry-run)
+    fi
+    "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}"
+    return $?
+  fi
+
+  # --- Sequential mode (original behavior) ---
 
   # Find start index in STAGE_ORDER
   local start_idx=-1
@@ -1233,6 +1248,15 @@ while [[ $# -gt 0 ]]; do
       ;;
     --waiver-file=*)
       VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
+      shift
+      ;;
+    --parallel|-j)
+      [[ $# -lt 2 ]] && error "--parallel requires a number"
+      PARALLEL="$2"
+      shift 2
+      ;;
+    --parallel=*)
+      PARALLEL="${1#--parallel=}"
       shift
       ;;
     # Legacy flags — warn and ignore

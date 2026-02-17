@@ -427,6 +427,7 @@ def compute_batch_stats(
     phase_confidence_means: List[float] = []
 
     total_low_quality_segments = 0
+    total_lq_repaired = 0
     total_transcript_artifacts = 0
     normalization_repairs_total = 0
     videos_with_repairs = 0
@@ -438,7 +439,9 @@ def compute_batch_stats(
             videos_with_repairs += 1
             normalization_repairs_total += repairs
 
-        total_low_quality_segments += len(enriched_file.get("low_quality_segments", []) or [])
+        lq_list = enriched_file.get("low_quality_segments", []) or []
+        total_low_quality_segments += len(lq_list)
+        total_lq_repaired += sum(1 for lq in lq_list if isinstance(lq, dict) and lq.get("repaired"))
         total_transcript_artifacts += len(enriched_file.get("transcript_artifacts", []) or [])
 
         # Build conversation segment counts for phase coverage (uses Stage 06/06c conversation_id in segments).
@@ -537,6 +540,7 @@ def compute_batch_stats(
         "unlisted_techniques": dict(unlisted_techniques.most_common(20)),
         "unlisted_topics": dict(unlisted_topics.most_common(20)),
         "total_low_quality_segments": total_low_quality_segments,
+        "total_lq_repaired": total_lq_repaired,
         "total_transcript_artifacts": total_transcript_artifacts,
         "videos_with_normalization_repairs": videos_with_repairs,
         "normalization_repairs_total": normalization_repairs_total,
@@ -1116,7 +1120,7 @@ def main() -> None:
         print(f"  Phase coverage:           {s07.get('mean_turn_phase_coverage', 0):.1%} (median {s07.get('median_turn_phase_coverage', 0):.1%})")
         print(f"  Mean phase confidence:    {s07.get('mean_phase_confidence', 0):.2f}")
         print(f"  Transcript artifacts:     {s07.get('total_transcript_artifacts', 0)}")
-        print(f"  Low-quality segments:     {s07.get('total_low_quality_segments', 0)}")
+        print(f"  Low-quality segments:     {s07.get('total_low_quality_segments', 0)} (repaired={s07.get('total_lq_repaired', 0)})")
         print(
             f"  Normalization repairs:    {s07.get('normalization_repairs_total', 0)} "
             f"(videos={s07.get('videos_with_normalization_repairs', 0)})"

@@ -1,0 +1,489 @@
+#!/usr/bin/env python3
+"""
+pipeline-runner — Conveyor-belt pipeline orchestrator.
+
+Each video progresses through stages 06→09 sequentially, but multiple videos
+are in-flight simultaneously. A shared semaphore caps concurrent LLM calls.
+
+Usage:
+    ./pipeline-runner P001.1                     # default: 10 parallel LLM calls
+    ./pipeline-runner P001.1 --parallel 5        # limit concurrent LLM calls
+    ./pipeline-runner P001.1 --from 06e          # resume from a stage
+    ./pipeline-runner P001.1 --dry-run           # show what would run
+"""
+
+import argparse
+import asyncio
+import json
+import os
+import re
+import sys
+import tempfile
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Optional, Set
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent.parent.parent
+BATCHES_DIR = REPO_ROOT / "docs" / "pipeline" / "batches"
+DATA_DIR = REPO_ROOT / "data"
+QUARANTINE_DIR = DATA_DIR / "validation" / "quarantine"
+VENV_PYTHON = str(REPO_ROOT / ".venv" / "bin" / "python")
+TSX_LOADER = REPO_ROOT / "node_modules" / "tsx" / "dist" / "loader.mjs"
+
+VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+DEFAULT_PARALLEL = 10
+
+
+# ── Stage registry ──────────────────────────────────────────────────────────
+
+@dataclass
+class Stage:
+    key: str
+    script: str
+    needs_llm: bool
+
+STAGES = [
+    Stage("06",  "06.LLM.video-type",              needs_llm=True),
+    Stage("06b", "06b.LLM.verify",                  needs_llm=True),
+    Stage("06c", "06c.DET.patch",                    needs_llm=False),
+    Stage("06d", "06d.DET.sanitize",                 needs_llm=False),
+    Stage("06e", "06e.LLM.quality-check",            needs_llm=True),
+    Stage("06f", "06f.DET.damage-map",               needs_llm=False),
+    Stage("06g", "06g.LLM.damage-adjudicator",       needs_llm=True),
+    Stage("06h", "06h.DET.confidence-propagation",    needs_llm=False),
+    Stage("07",  "07.LLM.content",                   needs_llm=True),
+    Stage("08",  "08.DET.taxonomy-validation",        needs_llm=False),
+    Stage("09",  "09.EXT.chunk-embed.ts",            needs_llm=False),
+]
+
+STAGE_KEYS = [s.key for s in STAGES]
+
+
+# ── Video state tracking ────────────────────────────────────────────────────
+
+@dataclass
+class VideoState:
+    video_id: str
+    source: str
+    folder: str
+    current_stage: str = ""
+    status: str = "pending"   # pending | running | done | failed | quarantined
+    error_stage: str = ""
+    error_msg: str = ""
+
+
+# ── Manifest parsing ────────────────────────────────────────────────────────
+
+def load_manifest_videos(manifest_path: Path) -> List[VideoState]:
+    """Parse manifest into list of VideoState entries."""
+    videos = []
+    for line in manifest_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|", 1)
+        if len(parts) != 2:
+            continue
+        source = parts[0].strip()
+        folder = parts[1].strip()
+        match = VIDEO_ID_RE.search(folder)
+        if not match:
+            continue
+        videos.append(VideoState(
+            video_id=match.group(1),
+            source=source,
+            folder=folder,
+        ))
+    return videos
+
+
+# ── Subprocess execution ────────────────────────────────────────────────────
+
+def build_stage_command(
+    stage: Stage,
+    manifest_path: str,
+    quarantine_file: Optional[Path] = None,
+) -> List[str]:
+    """Build the command list to execute a stage script."""
+    script_path = str(REPO_ROOT / "scripts" / "training-data" / stage.script)
+
+    if stage.script.endswith(".ts"):
+        cmd = ["node", "--import", str(TSX_LOADER), script_path]
+    else:
+        cmd = [VENV_PYTHON, "-u", script_path]
+
+    cmd.extend(["--manifest", manifest_path])
+
+    if stage.key == "07" and quarantine_file and quarantine_file.exists():
+        cmd.extend(["--quarantine-file", str(quarantine_file)])
+
+    return cmd
+
+
+async def run_subprocess(
+    cmd: List[str],
+    stage: Stage,
+    video_id: str,
+    log_prefix: str,
+) -> int:
+    """Run a stage subprocess and stream its output."""
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
+    )
+    assert proc.stdout is not None
+    while True:
+        line = await proc.stdout.readline()
+        if not line:
+            break
+        text = line.decode("utf-8", errors="replace").rstrip()
+        print(f"{log_prefix} [{stage.key}] {text}")
+    await proc.wait()
+    return proc.returncode or 0
+
+
+# ── Quarantine check ────────────────────────────────────────────────────────
+
+def check_06b_verdict(video_id: str, source: str) -> bool:
+    """Check if a video was REJECTED by stage 06b. Returns True if REJECT."""
+    verify_dir = DATA_DIR / "06b.LLM.verify" / source
+    if not verify_dir.exists():
+        verify_dir = DATA_DIR / "06b.LLM.verify"
+    candidates = list(verify_dir.rglob(f"*{video_id}*.verification.json"))
+    for cpath in candidates:
+        try:
+            payload = json.loads(cpath.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        verdict = str(
+            payload.get("verdict") or payload.get("overall_verdict") or ""
+        ).strip().upper()
+        if verdict == "REJECT":
+            return True
+    return False
+
+
+def write_quarantine_file(
+    quarantine_path: Path,
+    quarantined: List[VideoState],
+) -> None:
+    """Write quarantine file in the standard format."""
+    if not quarantined:
+        return
+    quarantine_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Load existing quarantine to merge
+    existing_ids: Set[str] = set()
+    existing_videos: List[dict] = []
+    if quarantine_path.exists():
+        try:
+            data = json.loads(quarantine_path.read_text(encoding="utf-8"))
+            existing_videos = data.get("videos", [])
+            existing_ids = set(data.get("quarantined_video_ids", []))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    for vs in quarantined:
+        if vs.video_id not in existing_ids:
+            existing_ids.add(vs.video_id)
+            existing_videos.append({
+                "video_id": vs.video_id,
+                "checks": ["stage06b_reject"],
+                "reasons": [{
+                    "severity": "error",
+                    "check": "stage06b_reject",
+                    "message": "Stage 06b verdict: REJECT",
+                }],
+            })
+
+    out = {
+        "version": 1,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "quarantine_level": "error",
+        "quarantined_video_count": len(existing_ids),
+        "quarantined_video_ids": sorted(existing_ids),
+        "videos": existing_videos,
+    }
+    quarantine_path.write_text(
+        json.dumps(out, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
+# ── Per-video pipeline ──────────────────────────────────────────────────────
+
+async def run_video(
+    vs: VideoState,
+    stages: List[Stage],
+    semaphore: asyncio.Semaphore,
+    quarantine_file: Optional[Path],
+    dry_run: bool,
+    progress: Dict[str, str],
+) -> None:
+    """Run one video through all stages sequentially."""
+    log_prefix = f"[{vs.video_id}]"
+
+    for stage in stages:
+        vs.current_stage = stage.key
+        vs.status = "running"
+        progress[vs.video_id] = stage.key
+
+        # Create temp 1-video manifest
+        fd, tmp_manifest = tempfile.mkstemp(suffix=".txt", prefix=f"manifest_{vs.video_id}_")
+        try:
+            with os.fdopen(fd, "w") as f:
+                f.write(f"{vs.source} | {vs.folder}\n")
+
+            cmd = build_stage_command(stage, tmp_manifest, quarantine_file)
+
+            if dry_run:
+                label = "LLM" if stage.needs_llm else "DET"
+                print(f"{log_prefix} [{label}] {stage.key}: {' '.join(cmd)}")
+                continue
+
+            if stage.needs_llm:
+                progress[vs.video_id] = f"{stage.key}(wait)"
+                async with semaphore:
+                    progress[vs.video_id] = f"{stage.key}(llm)"
+                    rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+            else:
+                rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+
+            if rc != 0:
+                vs.status = "failed"
+                vs.error_stage = stage.key
+                vs.error_msg = f"Exit code {rc}"
+                print(f"{log_prefix} FAILED at stage {stage.key} (exit code {rc})")
+                progress[vs.video_id] = f"{stage.key}(FAIL)"
+                return
+
+            # Post-06b: check for REJECT verdict
+            if stage.key == "06b":
+                if check_06b_verdict(vs.video_id, vs.source):
+                    vs.status = "quarantined"
+                    print(f"{log_prefix} QUARANTINED: REJECT verdict from 06b")
+                    progress[vs.video_id] = "QUARANTINED"
+                    return
+
+        finally:
+            try:
+                os.unlink(tmp_manifest)
+            except OSError:
+                pass
+
+    vs.status = "done"
+    progress[vs.video_id] = "done"
+    print(f"[{vs.video_id}] COMPLETE")
+
+
+# ── Progress display ────────────────────────────────────────────────────────
+
+async def progress_reporter(
+    videos: List[VideoState],
+    progress: Dict[str, str],
+    interval: float = 5.0,
+) -> None:
+    """Periodically print a status summary line."""
+    total = len(videos)
+    while True:
+        await asyncio.sleep(interval)
+        done = sum(1 for v in videos if v.status in ("done", "failed", "quarantined"))
+        active = []
+        for vid, stage in sorted(progress.items()):
+            if stage not in ("done", "QUARANTINED") and "FAIL" not in stage:
+                active.append(f"{vid[:7]}:{stage}")
+        summary = " ".join(active[:8])
+        if len(active) > 8:
+            summary += f" +{len(active) - 8}"
+        print(f"\n--- [{done}/{total} done] {summary} ---\n")
+        if done >= total:
+            break
+
+
+# ── End-of-run validation ───────────────────────────────────────────────────
+
+async def run_end_of_run_validation(sub_id: str, manifest_path: Path) -> int:
+    """Run the same validation suite as sub-batch-pipeline."""
+    quarantine_file = QUARANTINE_DIR / f"{sub_id}.json"
+    waivers_dir = REPO_ROOT / "docs" / "pipeline" / "waivers"
+    waiver_file = waivers_dir / f"{sub_id}.json"
+    stage_reports_dir = DATA_DIR / "validation" / "stage_reports" / sub_id
+
+    # 1. validate_manifest.py
+    validate_args = [
+        VENV_PYTHON, "-u",
+        str(REPO_ROOT / "scripts" / "training-data" / "validation" / "validate_manifest.py"),
+        "--manifest", str(manifest_path),
+        "--quarantine-level", "error",
+        "--check-stage05-audio", "--check-stage08-report", "--check-stage09-chunks",
+        "--emit-stage-reports", "--emit-quarantine",
+        "--stage-reports-dir", str(stage_reports_dir),
+    ]
+    if quarantine_file.exists():
+        validate_args.extend(["--quarantine-file", str(quarantine_file)])
+    if waiver_file.exists():
+        validate_args.extend(["--waiver-file", str(waiver_file)])
+
+    print("\n=== End-of-run validation ===\n")
+    proc = await asyncio.create_subprocess_exec(*validate_args)
+    await proc.wait()
+    rc = proc.returncode or 0
+
+    # 2. validate_stage_report.py
+    report_args = [
+        VENV_PYTHON, "-u",
+        str(REPO_ROOT / "scripts" / "training-data" / "validation" / "validate_stage_report.py"),
+        "--dir", str(stage_reports_dir),
+        "--manifest", str(manifest_path),
+        "--emit-readiness-summary",
+    ]
+    print("\n=== Stage Report Validation ===\n")
+    proc2 = await asyncio.create_subprocess_exec(*report_args)
+    await proc2.wait()
+    if proc2.returncode:
+        rc = proc2.returncode
+
+    # 3. batch_report.py
+    batch_args = [
+        VENV_PYTHON, "-u",
+        str(REPO_ROOT / "scripts" / "training-data" / "validation" / "batch_report.py"),
+        "--all", "--manifest", str(manifest_path),
+        "--batch-id", sub_id, "--no-write",
+    ]
+    print("\n=== Batch Report ===\n")
+    proc3 = await asyncio.create_subprocess_exec(*batch_args)
+    await proc3.wait()
+    if proc3.returncode:
+        rc = proc3.returncode
+
+    return rc
+
+
+# ── Main orchestrator ────────────────────────────────────────────────────────
+
+async def run_pipeline(args: argparse.Namespace) -> int:
+    sub_id = args.sub_batch
+    manifest_path = BATCHES_DIR / f"{sub_id}.txt"
+    if not manifest_path.exists():
+        print(f"ERROR: Manifest not found: {manifest_path}", file=sys.stderr)
+        return 1
+
+    videos = load_manifest_videos(manifest_path)
+    if not videos:
+        print(f"ERROR: No videos found in manifest: {manifest_path}", file=sys.stderr)
+        return 1
+
+    # Determine stage range
+    start_key = args.start_from
+    if start_key not in STAGE_KEYS:
+        print(f"ERROR: Unknown stage: {start_key} (valid: {', '.join(STAGE_KEYS)})", file=sys.stderr)
+        return 1
+    start_idx = STAGE_KEYS.index(start_key)
+    stages = STAGES[start_idx:]
+
+    parallel = args.parallel
+    semaphore = asyncio.Semaphore(parallel)
+    quarantine_file = QUARANTINE_DIR / f"{sub_id}.json"
+
+    print()
+    print("=" * 56)
+    print(f"  Pipeline Runner: {sub_id}")
+    print(f"  Videos: {len(videos)}")
+    print(f"  Stages: {' → '.join(s.key for s in stages)}")
+    print(f"  Parallel LLM calls: {parallel}")
+    if args.dry_run:
+        print("  Mode: DRY RUN")
+    print("=" * 56)
+    print()
+
+    # Shared progress tracker
+    progress: Dict[str, str] = {v.video_id: "pending" for v in videos}
+
+    # Launch all video pipelines + progress reporter
+    tasks = [
+        asyncio.create_task(run_video(vs, stages, semaphore, quarantine_file, args.dry_run, progress))
+        for vs in videos
+    ]
+    if not args.dry_run:
+        reporter = asyncio.create_task(progress_reporter(videos, progress))
+    else:
+        reporter = None
+
+    await asyncio.gather(*tasks)
+    if reporter:
+        reporter.cancel()
+        try:
+            await reporter
+        except asyncio.CancelledError:
+            pass
+
+    # Write quarantine file for any rejected videos
+    quarantined = [v for v in videos if v.status == "quarantined"]
+    if quarantined:
+        write_quarantine_file(quarantine_file, quarantined)
+
+    # Summary
+    done_count = sum(1 for v in videos if v.status == "done")
+    fail_count = sum(1 for v in videos if v.status == "failed")
+    q_count = sum(1 for v in videos if v.status == "quarantined")
+
+    print()
+    print("=" * 56)
+    print(f"  Pipeline Summary: {sub_id}")
+    print("=" * 56)
+    print(f"  Passed:      {done_count}/{len(videos)}")
+    if q_count:
+        print(f"  Quarantined: {q_count}")
+        for v in quarantined:
+            print(f"    {v.video_id}")
+    if fail_count:
+        print(f"  Failed:      {fail_count}")
+        for v in videos:
+            if v.status == "failed":
+                print(f"    {v.video_id} at stage {v.error_stage}: {v.error_msg}")
+    print("=" * 56)
+    print()
+
+    # End-of-run validation (skip if dry run or all failed)
+    if not args.dry_run and done_count > 0:
+        await run_end_of_run_validation(sub_id, manifest_path)
+
+    return 1 if fail_count > 0 else 0
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Conveyor-belt pipeline runner — process videos in parallel across stages.",
+    )
+    parser.add_argument(
+        "sub_batch",
+        help="Sub-batch ID (e.g., P001.1)",
+    )
+    parser.add_argument(
+        "--parallel", "-j",
+        type=int,
+        default=DEFAULT_PARALLEL,
+        help=f"Max concurrent LLM calls (default: {DEFAULT_PARALLEL})",
+    )
+    parser.add_argument(
+        "--from",
+        dest="start_from",
+        default="06",
+        help="Stage to start from (default: 06)",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show commands without executing",
+    )
+    args = parser.parse_args()
+    rc = asyncio.run(run_pipeline(args))
+    sys.exit(rc)
+
+
+if __name__ == "__main__":
+    main()
