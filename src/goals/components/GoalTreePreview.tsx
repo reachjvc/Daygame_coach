@@ -9,8 +9,9 @@ import { Calendar as CalendarWidget } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { buildPreviewState, applyPreviewState } from "../goalsService"
 import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
+import { getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
 import type { BatchGoalInsert } from "../treeGenerationService"
-import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig } from "../types"
+import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig, CurveThemeId } from "../types"
 
 const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   field_work: "Field Work",
@@ -28,9 +29,15 @@ interface GoalTreePreviewProps {
   existingTemplateIds?: Set<string>
   onConfirm: (filteredInserts: BatchGoalInsert[]) => void
   onBack: () => void
+  curveThemeId?: CurveThemeId
+  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
-export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBack }: GoalTreePreviewProps) {
+export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBack, curveThemeId, onCurveThemeChange }: GoalTreePreviewProps) {
+  const theme = getCurveTheme(curveThemeId ?? "zen")
+  const isCyber = (curveThemeId ?? "zen") === "cyberpunk"
+  const inputStyle = isCyber ? { background: theme.cardBg, color: theme.text, borderColor: theme.border } as const : undefined
+
   const [targetDate, setTargetDate] = useState<Date | null>(null)
   const [dateText, setDateText] = useState("")
   const [datePickerOpen, setDatePickerOpen] = useState(false)
@@ -175,39 +182,107 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
   }
 
   return (
-    <div className="space-y-6">
+    <div
+      className="space-y-6"
+      style={{
+        background: theme.bg,
+        color: theme.text,
+        borderRadius: theme.borderRadius,
+        padding: 20,
+        border: `1px solid ${theme.border}`,
+        position: "relative",
+        overflow: "hidden",
+        fontFamily: isCyber ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
+        textTransform: theme.textTransform,
+      }}
+    >
+      {/* Cyberpunk decorative overlays */}
+      {theme.scanlines && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 10,
+            background:
+              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,51,0.03) 2px, rgba(255,0,51,0.03) 4px)",
+          }}
+        />
+      )}
+      {theme.cornerBrackets && (
+        <>
+          <div style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
+          <div style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
+          <div style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
+        </>
+      )}
+
+      <div style={{ position: "relative", zIndex: 5 }}>
       {/* Header */}
       <div>
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3 cursor-pointer"
-          data-testid="catalog-back-button"
-        >
-          <ArrowLeft className="size-3.5" />
-          Back to catalog
-        </button>
-        <h2 className="text-xl font-bold">Customize Your Goals</h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        <div className="flex items-center justify-between mb-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 text-sm transition-colors cursor-pointer"
+            style={{ color: theme.muted }}
+            data-testid="catalog-back-button"
+          >
+            <ArrowLeft className="size-3.5" />
+            Back to catalog
+          </button>
+          {/* Theme switcher */}
+          {onCurveThemeChange && (
+            <div className="flex items-center gap-1.5">
+              {CURVE_THEME_IDS.map((id) => {
+                const t = getCurveTheme(id)
+                const isActive = id === (curveThemeId ?? "zen")
+                return (
+                  <button
+                    key={id}
+                    onClick={() => onCurveThemeChange(id)}
+                    title={t.label}
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: isCyber ? 2 : 8,
+                      background: t.accent,
+                      border: `2px solid ${isActive ? theme.text : "transparent"}`,
+                      cursor: "pointer",
+                      boxShadow: isActive
+                        ? `0 0 0 1px ${theme.bg}, 0 0 6px ${t.accent}60`
+                        : "none",
+                      opacity: isActive ? 1 : 0.4,
+                      transition: "all 150ms ease",
+                    }}
+                  />
+                )
+              })}
+            </div>
+          )}
+        </div>
+        <h2 className="text-xl font-bold" style={{ color: theme.text }}>Customize Your Goals</h2>
+        <p className="text-sm mt-1" style={{ color: theme.muted }}>
           Your big goal breaks into trackable sub-goals. Toggle any off or adjust targets to fit your pace.
         </p>
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs" style={{ color: theme.muted }}>
             <Milestone className="size-3" />
-            <span><span className="text-foreground font-medium">Milestone</span> — cumulative lifetime target</span>
+            <span><span className="font-medium" style={{ color: theme.text }}>Milestone</span> — cumulative lifetime target</span>
           </span>
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1 text-xs" style={{ color: theme.muted }}>
             <Repeat className="size-3" />
-            <span><span className="text-foreground font-medium">Habit Ramp</span> — weekly target that grows over time</span>
+            <span><span className="font-medium" style={{ color: theme.text }}>Habit Ramp</span> — weekly target that grows over time</span>
           </span>
         </div>
       </div>
 
       {/* Summary */}
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="rounded-lg p-4" style={{ border: `1px solid ${theme.border}`, background: theme.cardBg }}>
         {rootGoal && (
-          <p className="font-semibold text-sm">{rootGoal.title}</p>
+          <p className="font-semibold text-sm" style={{ color: theme.text }}>{rootGoal.title}</p>
         )}
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-xs mt-1" style={{ color: theme.muted }}>
           {enabledCount} {enabledCount === 1 ? "goal" : "goals"} selected
         </p>
         {l2Goals.length > 0 && (
@@ -222,11 +297,11 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
                 <button
                   key={g._tempId}
                   onClick={() => toggleL2(g._tempId)}
-                  className={`text-xs rounded-full px-2.5 py-0.5 transition-colors cursor-pointer ${
-                    enabled
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted/50 text-muted-foreground line-through opacity-60"
-                  }`}
+                  className="text-xs rounded-full px-2.5 py-0.5 transition-colors cursor-pointer"
+                  style={enabled
+                    ? { background: `${theme.accent}15`, color: theme.accent }
+                    : { background: `${theme.muted}20`, color: theme.muted, textDecoration: "line-through", opacity: 0.6 }
+                  }
                 >
                   {g.title}{childCount > 0 ? ` (${childCount})` : ""}
                 </button>
@@ -236,8 +311,8 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
         )}
 
         {/* Target date for the top-level goal */}
-        <div className="mt-3 pt-3 border-t border-border/50">
-          <p className="text-xs font-medium text-muted-foreground flex items-center gap-1.5 mb-1.5">
+        <div className="mt-3 pt-3" style={{ borderTop: `1px solid ${theme.border}` }}>
+          <p className="text-xs font-medium flex items-center gap-1.5 mb-1.5" style={{ color: theme.muted }}>
             <Calendar className="size-3" />
             Achieve by (optional)
           </p>
@@ -262,9 +337,10 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
                   }
                 }}
                 className="w-36"
+                style={inputStyle}
               />
               {dateText.length > 0 && dateText.length < 10 && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/40 text-sm pointer-events-none select-none">
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none" style={{ color: `${theme.muted}66` }}>
                   {"dd/mm/yyyy".slice(dateText.length)}
                 </span>
               )}
@@ -272,7 +348,8 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
             <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
               <PopoverTrigger asChild>
                 <button
-                  className="text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                  className="transition-colors cursor-pointer"
+                  style={{ color: theme.accent }}
                   aria-label="Open calendar"
                 >
                   <Calendar className="size-4" />
@@ -299,7 +376,8 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
             {targetDate && (
               <button
                 onClick={() => { setTargetDate(null); setDateText("") }}
-                className="text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="transition-colors cursor-pointer"
+                style={{ color: theme.muted }}
                 aria-label="Clear date"
               >
                 <X className="size-3.5" />
@@ -327,6 +405,8 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
               onUpdateTarget={updateTarget}
               onUpdateMilestoneConfig={updateMilestoneConfig}
               disabledL2s={disabledL2Set}
+              curveThemeId={curveThemeId}
+              onCurveThemeChange={onCurveThemeChange}
             />
           )
         })}
@@ -341,13 +421,19 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
 
       {/* Footer */}
       <div className="flex items-center gap-3 pt-2">
-        <Button onClick={handleConfirm} className="flex-1" data-testid="catalog-confirm-button">
+        <Button
+          onClick={handleConfirm}
+          className="flex-1"
+          data-testid="catalog-confirm-button"
+          style={isCyber ? { background: theme.accent, color: "#fff", borderColor: theme.accent } : undefined}
+        >
           Create {enabledCount} {enabledCount === 1 ? "Goal" : "Goals"}
         </Button>
-        <Button variant="ghost" onClick={onBack}>
+        <Button variant="ghost" onClick={onBack} style={{ color: theme.muted }}>
           Back
         </Button>
       </div>
+      </div>{/* close z-5 wrapper */}
     </div>
   )
 }
@@ -367,6 +453,8 @@ interface CategorySectionProps {
   onUpdateTarget: (tempId: string, value: number) => void
   onUpdateMilestoneConfig: (tempId: string, config: MilestoneLadderConfig) => void
   disabledL2s: Set<string>
+  curveThemeId?: CurveThemeId
+  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
 function CategorySection({
@@ -380,9 +468,12 @@ function CategorySection({
   onUpdateTarget,
   onUpdateMilestoneConfig,
   disabledL2s,
+  curveThemeId,
+  onCurveThemeChange,
 }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const label = CATEGORY_LABELS[category]
+  const theme = getCurveTheme(curveThemeId ?? "zen")
 
   const enabledInCategory = goals.filter(
     (g) => previewState.get(g._tempId)?.enabled
@@ -395,14 +486,14 @@ function CategorySection({
   if (isDirtyDog) {
     return (
       <div className="relative">
-        <div className="rounded-xl border border-border bg-card p-4">
+        <div className="rounded-xl p-4" style={{ border: `1px solid ${theme.border}`, background: theme.cardBg }}>
           <div className="flex items-center justify-between mb-1">
-            <h3 className="font-semibold text-sm">{label}</h3>
-            <span className="text-xs text-muted-foreground">
+            <h3 className="font-semibold text-sm" style={{ color: theme.text }}>{label}</h3>
+            <span className="text-xs" style={{ color: theme.muted }}>
               {enabledInCategory}/{goals.length} selected
             </span>
           </div>
-          <p className="text-xs text-muted-foreground/70">
+          <p className="text-xs" style={{ color: `${theme.muted}b3` }}>
             These track intimate outcomes. Opt in if relevant.
           </p>
 
@@ -422,13 +513,16 @@ function CategorySection({
                     onToggle={() => onToggle(goal._tempId)}
                     onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
                     onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
+                    curveThemeId={curveThemeId}
+                    onCurveThemeChange={onCurveThemeChange}
                   />
                 )
               })}
               <div className="flex justify-end pt-1">
                 <button
                   onClick={() => onToggleCategory(category, noneEnabled || !allEnabled)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                  className="text-xs transition-colors cursor-pointer"
+                  style={{ color: theme.muted }}
                 >
                   {allEnabled ? "Deselect all" : "Select all"}
                 </button>
@@ -456,7 +550,8 @@ function CategorySection({
       <div className="flex items-center gap-2 mb-2">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors cursor-pointer"
+          className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
+          style={{ color: theme.muted }}
         >
           {collapsed ? (
             <ChevronRight className="size-3.5" />
@@ -464,14 +559,15 @@ function CategorySection({
             <ChevronDown className="size-3.5" />
           )}
           <span>{label}</span>
-          <span className="text-muted-foreground/50">
+          <span style={{ color: `${theme.muted}80` }}>
             {enabledInCategory}/{goals.length}
           </span>
         </button>
-        <div className="flex-1 border-t border-border/50 ml-2" />
+        <div className="flex-1 ml-2" style={{ borderTop: `1px solid ${theme.border}` }} />
         <button
           onClick={() => onToggleCategory(category, noneEnabled || !allEnabled)}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          className="text-xs transition-colors cursor-pointer"
+          style={{ color: theme.muted }}
         >
           {allEnabled ? "Deselect all" : "Select all"}
         </button>
@@ -493,6 +589,8 @@ function CategorySection({
                 onToggle={() => onToggle(goal._tempId)}
                 onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
                 onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
+                curveThemeId={curveThemeId}
+                onCurveThemeChange={onCurveThemeChange}
               />
             )
           })}
@@ -514,21 +612,24 @@ interface GoalPreviewRowProps {
   onToggle: () => void
   onUpdateTarget: (value: number) => void
   onUpdateMilestoneConfig: (config: MilestoneLadderConfig) => void
+  curveThemeId?: CurveThemeId
+  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
-function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = false, onToggle, onUpdateTarget, onUpdateMilestoneConfig }: GoalPreviewRowProps) {
+function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = false, onToggle, onUpdateTarget, onUpdateMilestoneConfig, curveThemeId, onCurveThemeChange }: GoalPreviewRowProps) {
   const [showCurve, setShowCurve] = useState(false)
   const isRamp = goal.goal_type === "habit_ramp"
   const isMilestone = !isRamp && !!state.milestoneConfig
   const effectivelyOff = parentDisabled || !state.enabled
+  const theme = getCurveTheme(curveThemeId ?? "zen")
 
   return (
     <div
-      className={`rounded-lg border p-3 transition-colors ${
-        effectivelyOff
-          ? "border-border/50 bg-muted/30 opacity-60"
-          : "border-border bg-card"
-      }`}
+      className="rounded-lg p-3 transition-colors"
+      style={effectivelyOff
+        ? { border: `1px solid ${theme.border}80`, background: `${theme.cardBg}80`, opacity: 0.6 }
+        : { border: `1px solid ${theme.border}`, background: theme.cardBg }
+      }
     >
       <div className="flex items-center gap-3">
       {/* Toggle */}
@@ -537,9 +638,8 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
         disabled={parentDisabled}
         className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${
           parentDisabled ? "cursor-not-allowed" : "cursor-pointer"
-        } ${
-          state.enabled && !parentDisabled ? "bg-primary" : "bg-muted"
         }`}
+        style={{ background: state.enabled && !parentDisabled ? theme.accent : `${theme.muted}40` }}
         role="switch"
         aria-checked={state.enabled && !parentDisabled}
       >
@@ -552,8 +652,8 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className={`text-sm font-medium truncate ${parentDisabled ? "line-through" : ""}`}>{goal.title}</p>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <p className={`text-sm font-medium truncate ${parentDisabled ? "line-through" : ""}`} style={{ color: theme.text }}>{goal.title}</p>
+        <div className="flex items-center gap-2 text-xs" style={{ color: theme.muted }}>
           {isRamp ? (
             <span className="flex items-center gap-1">
               <Repeat className="size-3" />
@@ -572,7 +672,7 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
             <span className="text-amber-400">Already tracking</span>
           )}
           {parentDisabled && (
-            <span className="text-muted-foreground/70 italic">Parent goal disabled</span>
+            <span style={{ color: `${theme.muted}b3` }} className="italic">Parent goal disabled</span>
           )}
         </div>
       </div>
@@ -580,7 +680,7 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
       {/* Target editor */}
       {state.enabled && !parentDisabled && (
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">Target:</span>
+          <span className="text-xs" style={{ color: theme.muted }}>Target:</span>
           <input
             type="number"
             value={state.targetValue}
@@ -588,10 +688,11 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
               const v = parseInt(e.target.value, 10)
               if (!isNaN(v) && v > 0) onUpdateTarget(v)
             }}
-            className="w-16 text-right text-sm font-medium bg-muted/50 border border-border rounded px-1.5 py-0.5 focus:outline-none focus:border-primary"
+            className="w-16 text-right text-sm font-medium rounded px-1.5 py-0.5 focus:outline-none"
+            style={{ background: `${theme.muted}15`, border: `1px solid ${theme.border}`, color: theme.text }}
             min={1}
           />
-          {isRamp && <span className="text-xs text-muted-foreground">/wk</span>}
+          {isRamp && <span className="text-xs" style={{ color: theme.muted }}>/wk</span>}
         </div>
       )}
       </div>
@@ -601,7 +702,8 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
         <div className="mt-2">
           <button
             onClick={() => setShowCurve(!showCurve)}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="text-xs transition-colors cursor-pointer"
+            style={{ color: theme.muted }}
           >
             {showCurve ? "Hide curve" : "Customize curve"}
           </button>
@@ -610,6 +712,8 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
               <MilestoneCurveEditor
                 config={{ ...state.milestoneConfig, target: state.targetValue }}
                 onChange={onUpdateMilestoneConfig}
+                themeId={curveThemeId}
+                onThemeChange={onCurveThemeChange}
                 allowDirectEdit
               />
             </div>

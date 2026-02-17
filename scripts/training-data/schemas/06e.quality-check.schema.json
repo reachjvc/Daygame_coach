@@ -32,7 +32,12 @@
           },
           "description": { "type": "string" },
           "repair_text": { "type": ["string", "null"] },
-          "repair_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+          "repair_confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+          "action": {
+            "type": "string",
+            "enum": ["replace", "delete", "merge_prev", "merge_next"],
+            "default": "replace"
+          }
         }
       }
     }

@@ -284,6 +284,44 @@ export async function updatePreferredLanguage(userId: string, language: string):
 }
 
 /**
+ * Get curve style preference for a user. Returns 'zen' if not set.
+ */
+export async function getCurveStyle(userId: string): Promise<string> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("curve_style")
+    .eq("id", userId)
+    .single()
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return "zen"
+    }
+    throw new Error(`Failed to get curve style: ${error.message}`)
+  }
+
+  return data?.curve_style ?? "zen"
+}
+
+/**
+ * Update curve style preference for a user.
+ */
+export async function updateCurveStyle(userId: string, style: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error } = await supabase
+    .from("profiles")
+    .update({ curve_style: style })
+    .eq("id", userId)
+
+  if (error) {
+    throw new Error(`Failed to update curve style: ${error.message}`)
+  }
+}
+
+/**
  * Get the user's active subscription purchase.
  */
 export async function getActiveSubscriptionPurchase(

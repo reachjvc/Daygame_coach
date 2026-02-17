@@ -1,0 +1,4 @@
+# Sub-batch P001.3e (split 5/5 from P001.3)
+# Format: source_name | video_folder_name
+austen_summers_meets_girls | Picking Up Cosplay Girls At Comic-Con  2019 [XDZbqorwGNk]
+austen_summers_meets_girls | Picking Up Cosplay Girls At Comic-Con 2019 - PART 2 [R6inrSd9qFk]

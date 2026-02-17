@@ -27,6 +27,7 @@ import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
 import { HabitRampEditor } from "./HabitRampEditor"
 import { UpwardConnectionPrompt } from "./UpwardConnectionPrompt"
 import { deriveChildLevel } from "../goalsService"
+import { getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
 import type {
   GoalWithProgress,
   GoalPeriod,
@@ -37,6 +38,7 @@ import type {
   GoalSuggestion,
   MilestoneLadderConfig,
   HabitRampStep,
+  CurveThemeId,
 } from "../types"
 
 interface GoalFormModalProps {
@@ -47,6 +49,8 @@ interface GoalFormModalProps {
   onSuccess?: () => void
   defaultLifeArea?: string | null
   defaultParentGoalId?: string | null
+  curveThemeId?: CurveThemeId
+  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
 const PERIOD_OPTIONS: { value: GoalPeriod; label: string }[] = [
@@ -76,7 +80,7 @@ const LINKED_METRIC_OPTIONS: { value: LinkedMetric; label: string; group: string
   { value: "instadates_cumulative", label: "Instadates (cumulative)", group: "cumulative" },
 ]
 
-export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea, defaultParentGoalId }: GoalFormModalProps) {
+export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSuccess, defaultLifeArea, defaultParentGoalId, curveThemeId, onCurveThemeChange }: GoalFormModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitMode, setSubmitMode] = useState<"add" | "continue" | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -120,6 +124,10 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
   ])
 
   const isEditing = !!goal
+  const theme = getCurveTheme(curveThemeId ?? "zen")
+  const isCyber = (curveThemeId ?? "zen") === "cyberpunk"
+  const inputStyle = isCyber ? { background: theme.cardBg, color: theme.text, borderColor: theme.border } as const : undefined
+  const labelStyle = { color: theme.muted } as const
 
   // Initialize form when editing
   useEffect(() => {
@@ -372,20 +380,88 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
         onOpenChange(isOpen)
       }}
     >
-      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" data-testid="goal-form-modal">
+      <DialogContent
+        className="sm:max-w-md max-h-[90vh] flex flex-col"
+        data-testid="goal-form-modal"
+        style={{
+          background: theme.bg,
+          color: theme.text,
+          borderColor: theme.border,
+          borderRadius: theme.borderRadius,
+          position: "relative",
+          overflow: "hidden",
+          fontFamily: isCyber ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
+        }}
+      >
+        {/* Cyberpunk decorative overlays */}
+        {theme.scanlines && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 10,
+              background:
+                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,51,0.03) 2px, rgba(255,0,51,0.03) 4px)",
+            }}
+          />
+        )}
+        {theme.cornerBrackets && (
+          <>
+            <div style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
+            <div style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
+            <div style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
+          </>
+        )}
+
+        <div style={{ position: "relative", zIndex: 5, display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Goal" : "Add New Goal"}</DialogTitle>
-          <DialogDescription>
+          <div className="flex items-center justify-between">
+            <DialogTitle style={{ color: theme.text, textTransform: theme.textTransform }}>
+              {isEditing ? "Edit Goal" : "Add New Goal"}
+            </DialogTitle>
+            {/* Theme switcher */}
+            {onCurveThemeChange && (
+              <div className="flex items-center gap-1.5">
+                {CURVE_THEME_IDS.map((id) => {
+                  const t = getCurveTheme(id)
+                  const isActive = id === (curveThemeId ?? "zen")
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => onCurveThemeChange(id)}
+                      title={t.label}
+                      style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: isCyber ? 2 : 8,
+                        background: t.accent,
+                        border: `2px solid ${isActive ? theme.text : "transparent"}`,
+                        cursor: "pointer",
+                        boxShadow: isActive
+                          ? `0 0 0 1px ${theme.bg}, 0 0 6px ${t.accent}60`
+                          : "none",
+                        opacity: isActive ? 1 : 0.4,
+                        transition: "all 150ms ease",
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </div>
+          <DialogDescription style={{ color: theme.muted }}>
             {isEditing
               ? "Update your goal details"
               : "Set a goal to track your progress"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0">
+        <div className="space-y-6 py-4 overflow-y-auto flex-1 min-h-0" style={{ textTransform: theme.textTransform }}>
           {/* Goal Type Toggle */}
           <div className="space-y-2">
-            <Label>Goal Type</Label>
+            <Label style={labelStyle}>Goal Type</Label>
             <div className="grid grid-cols-3 gap-2">
               {([
                 { type: "recurring" as GoalType, label: "Recurring", desc: "Resets per period" },
@@ -403,11 +479,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                       backgroundColor: areaConfig.hex,
                       color: "white",
                       borderColor: "transparent",
-                    } : undefined}
+                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
                     onClick={() => setGoalType(type)}
                   >
                     <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[10px] ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
+                    <span className={`text-[10px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
                       {desc}
                     </span>
                   </Button>
@@ -418,7 +494,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
 
           {/* Goal Nature Toggle */}
           <div className="space-y-2">
-            <Label>Goal Nature</Label>
+            <Label style={labelStyle}>Goal Nature</Label>
             <div className="grid grid-cols-2 gap-2">
               {([
                 { nature: "input" as GoalNature, label: "Input", desc: "Actions you control", color: "#22c55e" },
@@ -435,11 +511,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                       backgroundColor: color,
                       color: "white",
                       borderColor: "transparent",
-                    } : undefined}
+                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
                     onClick={() => setGoalNature(nature)}
                   >
                     <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[10px] ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
+                    <span className={`text-[10px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
                       {desc}
                     </span>
                   </Button>
@@ -450,7 +526,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
 
           {/* Life Area Selection */}
           <div className="space-y-2">
-            <Label>Life Area</Label>
+            <Label style={labelStyle}>Life Area</Label>
             <div className="flex flex-wrap gap-2">
               {LIFE_AREAS.filter((a) => a.id !== "custom").map((area) => {
                 const Icon = area.icon
@@ -517,6 +593,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 value={customLifeArea}
                 onChange={(e) => setCustomLifeArea(e.target.value)}
                 className="mt-2"
+                style={inputStyle}
               />
             )}
             {lifeAreaOverrideNote && (
@@ -526,7 +603,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
 
           {/* Goal Title */}
           <div className="space-y-2">
-            <Label htmlFor="goal-title">Goal</Label>
+            <Label htmlFor="goal-title" style={labelStyle}>Goal</Label>
             <Input
               id="goal-title"
               placeholder="What do you want to achieve?"
@@ -539,11 +616,12 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   setSelectedSuggestion(null)
                 }
               }}
+              style={inputStyle}
             />
 
             {suggestions.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-xs text-muted-foreground">Suggestions:</p>
+                <p className="text-xs" style={{ color: theme.muted }}>Suggestions:</p>
                 <div className="flex flex-wrap gap-1.5">
                   {suggestions.map((suggestion) => {
                     const isSelected = selectedSuggestion === suggestion.title
@@ -569,19 +647,20 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="goal-description">Description (optional)</Label>
+            <Label htmlFor="goal-description" style={labelStyle}>Description (optional)</Label>
             <Textarea
               id="goal-description"
               placeholder="Why is this goal important to you?"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
+              style={inputStyle}
             />
           </div>
 
           {/* Tracking Type */}
           <div className="space-y-2">
-            <Label>Tracking Type</Label>
+            <Label style={labelStyle}>Tracking Type</Label>
             <div className="grid grid-cols-2 gap-2">
               {TRACKING_TYPE_OPTIONS.map((option) => {
                 const isSelected = trackingType === option.value
@@ -595,11 +674,11 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                       backgroundColor: areaConfig.hex,
                       color: "white",
                       borderColor: "transparent",
-                    } : undefined}
+                    } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
                     onClick={() => setTrackingType(option.value)}
                   >
                     <span className="font-medium">{option.label}</span>
-                    <span className={`text-xs ${isSelected ? "text-white/70" : "text-muted-foreground"}`}>
+                    <span className={`text-xs ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
                       {option.description}
                     </span>
                   </Button>
@@ -611,7 +690,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Target Value (counter only, non-ramp) */}
           {trackingType === "counter" && goalType !== "habit_ramp" && (
             <div className="space-y-2">
-              <Label>Target</Label>
+              <Label style={labelStyle}>Target</Label>
               <div className="flex items-center gap-4">
                 <Button
                   type="button"
@@ -623,6 +702,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     setMilestoneConfig((c) => ({ ...c, target: newVal }))
                   }}
                   disabled={targetValue <= 1}
+                  style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
                 >
                   <Minus className="size-4" />
                 </Button>
@@ -636,6 +716,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   }}
                   className="w-20 text-center text-lg font-bold"
                   min={1}
+                  style={inputStyle}
                 />
                 <Button
                   type="button"
@@ -646,6 +727,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     setTargetValue(newVal)
                     setMilestoneConfig((c) => ({ ...c, target: newVal }))
                   }}
+                  style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
                 >
                   <Plus className="size-4" />
                 </Button>
@@ -657,11 +739,12 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {goalType === "milestone" && trackingType === "counter" && targetValue > 1 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Milestone Ladder</Label>
+                <Label className="text-xs" style={labelStyle}>Milestone Ladder</Label>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-xs h-6"
+                  style={{ color: theme.muted }}
                   onClick={() => setShowCurveEditor(!showCurveEditor)}
                 >
                   {showCurveEditor ? "Hide" : "Customize curve"}
@@ -671,7 +754,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 <MilestoneCurveEditor
                   config={{ ...milestoneConfig, target: targetValue }}
                   onChange={setMilestoneConfig}
-                  accentColor={areaConfig.hex}
+                  themeId={curveThemeId}
+                  onThemeChange={onCurveThemeChange}
                   allowDirectEdit
                 />
               )}
@@ -681,7 +765,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Habit Ramp Editor */}
           {goalType === "habit_ramp" && (
             <div className="space-y-2">
-              <Label>Ramp Schedule</Label>
+              <Label style={labelStyle}>Ramp Schedule</Label>
               <HabitRampEditor
                 steps={rampSteps}
                 onChange={setRampSteps}
@@ -694,7 +778,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Period (recurring and habit_ramp goals) */}
           {(goalType === "recurring" || goalType === "habit_ramp") && (
             <div className="space-y-2">
-              <Label>Reset Period</Label>
+              <Label style={labelStyle}>Reset Period</Label>
               <div className="flex flex-wrap gap-2">
                 {PERIOD_OPTIONS.map((option) => {
                   const isSelected = period === option.value
@@ -709,7 +793,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                         backgroundColor: areaConfig.hex,
                         color: "white",
                         borderColor: "transparent",
-                      } : undefined}
+                      } : { borderColor: theme.border, color: theme.text, background: "transparent" }}
                       onClick={() => setPeriod(option.value)}
                     >
                       {option.label}
@@ -723,7 +807,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Target Date (milestone goals only) */}
           {goalType === "milestone" && (
             <div className="space-y-2">
-              <Label htmlFor="target-date">
+              <Label htmlFor="target-date" style={labelStyle}>
                 <Calendar className="size-3 inline mr-1" />
                 Target Date (optional)
               </Label>
@@ -733,9 +817,10 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 value={targetDate}
                 onChange={(e) => setTargetDate(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
+                style={inputStyle}
               />
               {targetDate && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs" style={{ color: theme.muted }}>
                   {new Date(targetDate + "T00:00:00").toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -750,7 +835,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Parent Goal / Upward Connection */}
           {parentGoals.length > 0 && (
             <div className="space-y-2">
-              <Label>Parent Goal</Label>
+              <Label style={labelStyle}>Parent Goal</Label>
               <UpwardConnectionPrompt
                 availableParents={filteredParentGoals.length > 0 ? filteredParentGoals : parentGoals}
                 selectedParentId={parentGoalId}
@@ -766,15 +851,15 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             ((goalType === "recurring" || goalType === "habit_ramp") && period === "weekly")
           ) && (
             <div className="space-y-2">
-              <Label>Auto-Sync with Tracking</Label>
+              <Label style={labelStyle}>Auto-Sync with Tracking</Label>
               <Select
                 value={linkedMetric ?? "none"}
                 onValueChange={(v) => setLinkedMetric(v === "none" ? null : (v as LinkedMetric))}
               >
-                <SelectTrigger>
+                <SelectTrigger style={inputStyle}>
                   <SelectValue placeholder="Select metric to sync" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent style={isCyber ? { background: theme.cardBg, borderColor: theme.border } : undefined}>
                   {LINKED_METRIC_OPTIONS
                     .filter((opt) => {
                       if (opt.group === "none") return true
@@ -782,13 +867,13 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                       return opt.group === "weekly"
                     })
                     .map((opt) => (
-                      <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"}>
+                      <SelectItem key={opt.value ?? "none"} value={opt.value ?? "none"} style={isCyber ? { color: theme.text } : undefined}>
                         {opt.label}
                       </SelectItem>
                     ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs" style={{ color: theme.muted }}>
                 Goal progress will automatically update from your session data
               </p>
             </div>
@@ -807,7 +892,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 sm:gap-0" style={{ borderColor: theme.border }}>
           {isEditing && (
             <div className="flex-1 flex items-center gap-1">
               {showDeleteConfirm ? (
@@ -827,6 +912,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     size="sm"
                     onClick={() => setShowDeleteConfirm(false)}
                     disabled={isDeleting}
+                    style={{ color: theme.muted }}
                   >
                     Cancel
                   </Button>
@@ -836,7 +922,8 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-muted-foreground hover:text-foreground"
+                    className="hover:text-foreground"
+                    style={{ color: theme.muted }}
                     onClick={() => handleDelete(false)}
                     disabled={isSubmitting || isDeleting}
                   >
@@ -862,6 +949,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting || isDeleting}
             data-testid="goal-form-cancel"
+            style={{ borderColor: theme.border, color: theme.text, background: "transparent" }}
           >
             Cancel
           </Button>
@@ -870,6 +958,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
               variant="secondary"
               onClick={() => handleSubmit(true)}
               disabled={isSubmitting || !title.trim()}
+              style={isCyber ? { background: theme.border, color: theme.text, borderColor: theme.accent } : undefined}
             >
               {submitMode === "continue" ? (
                 <>
@@ -881,7 +970,12 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
               )}
             </Button>
           )}
-          <Button onClick={() => handleSubmit(false)} disabled={isSubmitting || isDeleting} data-testid="goal-form-submit">
+          <Button
+            onClick={() => handleSubmit(false)}
+            disabled={isSubmitting || isDeleting}
+            data-testid="goal-form-submit"
+            style={isCyber ? { background: theme.accent, color: "#fff", borderColor: theme.accent } : undefined}
+          >
             {submitMode === "add" ? (
               <>
                 <Loader2 className="size-4 animate-spin mr-2" />
@@ -894,6 +988,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
             )}
           </Button>
         </DialogFooter>
+        </div>{/* close z-5 wrapper */}
       </DialogContent>
     </Dialog>
   )

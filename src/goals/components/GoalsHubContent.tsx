@@ -15,7 +15,8 @@ import { DailyActionView } from "./DailyActionView"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts } from "../goalsService"
-import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier } from "../types"
+import { isValidCurveThemeId } from "../curveThemes"
+import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, CurveThemeId } from "../types"
 
 export function GoalsHubContent() {
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
@@ -36,6 +37,7 @@ export function GoalsHubContent() {
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   const [isTimeSettingsOpen, setIsTimeSettingsOpen] = useState(false)
   const [timePrefs, setTimePrefs] = useState<TimePreferences | null>(null)
+  const [curveThemeId, setCurveThemeId] = useState<CurveThemeId>("zen")
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
   const toastId = useRef(0)
@@ -63,11 +65,28 @@ export function GoalsHubContent() {
     }
   }, [])
 
+  const handleCurveThemeChange = useCallback((id: CurveThemeId) => {
+    setCurveThemeId(id)
+    fetch("/api/settings/curve-style", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ curve_style: id }),
+    }).catch(() => {})
+  }, [])
+
   useEffect(() => {
     fetchGoals()
     fetch("/api/settings/time-preferences")
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setTimePrefs(data) })
+      .catch(() => {})
+    fetch("/api/settings/curve-style")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.curve_style && isValidCurveThemeId(data.curve_style)) {
+          setCurveThemeId(data.curve_style)
+        }
+      })
       .catch(() => {})
   }, [fetchGoals])
 
@@ -348,7 +367,7 @@ export function GoalsHubContent() {
 
       {goals.length === 0 ? (
         <div data-testid="goals-empty-state">
-          <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} />
+          <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} curveThemeId={curveThemeId} onCurveThemeChange={handleCurveThemeChange} />
         </div>
       ) : viewMode === "daily" ? (
 
@@ -401,6 +420,8 @@ export function GoalsHubContent() {
         parentGoals={goals}
         onSuccess={handleFormSuccess}
         defaultParentGoalId={defaultParentGoalId}
+        curveThemeId={curveThemeId}
+        onCurveThemeChange={handleCurveThemeChange}
       />
 
       {/* Milestone completion confirmation */}
@@ -442,6 +463,8 @@ export function GoalsHubContent() {
             fetchGoals()
           }}
           onClose={() => setShowCatalog(false)}
+          curveThemeId={curveThemeId}
+          onCurveThemeChange={handleCurveThemeChange}
         />
       )}
 

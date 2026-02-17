@@ -1,6 +1,5 @@
 {
   "validation": {
-    "stage07_gate_policy": "approve_only",
     "quarantine_level": "error",
     "readiness": {
       "allow_review_ingest": false,

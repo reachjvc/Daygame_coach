@@ -13,6 +13,7 @@ import {
   updatePreferredLanguage as repoUpdatePreferredLanguage,
   updateTimezone as repoUpdateTimezone,
   updateWeekStartDay as repoUpdateWeekStartDay,
+  updateCurveStyle as repoUpdateCurveStyle,
   getActiveSubscriptionPurchase,
   updateSubscriptionStatus,
   updateSubscriptionCancelledAt,
@@ -157,6 +158,26 @@ export async function handleUpdateWeekStartDay(
   }
 
   await repoUpdateWeekStartDay(userId, day)
+}
+
+// ============================================
+// Curve Style
+// ============================================
+
+const VALID_CURVE_STYLES = new Set(["zen", "cyberpunk"])
+
+/**
+ * Update curve style for a user.
+ */
+export async function handleUpdateCurveStyle(
+  userId: string,
+  style: string
+): Promise<void> {
+  if (!VALID_CURVE_STYLES.has(style)) {
+    throw createSettingsError("Invalid curve style", "INVALID_INPUT")
+  }
+
+  await repoUpdateCurveStyle(userId, style)
 }
 
 // ============================================

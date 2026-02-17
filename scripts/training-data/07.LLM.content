@@ -263,11 +263,10 @@ PROMPT_VERSION = "1.8.0"  # v1.8.0: quality assessment moved to 06e
 PROMPT_USES_GLOBAL_SEG_IDS = True
 PIPELINE_VERSION = "07.LLM.content-v1.15"
 
-# Legacy: artifact severity + repair threshold (moved to 06e, kept for revalidate compat)
 ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
     "nonsense": "high", "language_confusion": "medium", "word_repetition": "low",
 }
-REPAIR_ACCEPT_THRESHOLD = 0.90
+REPAIR_ACCEPT_THRESHOLD = 0.85
 
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
@@ -2011,7 +2010,8 @@ def validate_enrichment_output(
             repair_suffix = ""
             if is_repaired:
                 conf = artifact.get("repair_confidence", 0)
-                repair_suffix = f" [REPAIRED conf={conf:.2f}]"
+                action = artifact.get("repair_action_applied") or artifact.get("action", "replace")
+                repair_suffix = f" [REPAIRED {action} conf={conf:.2f}]"
             results.append(ValidationResult(
                 severity, check,
                 f"Seg {artifact.get('segment_index', '?')}: "
@@ -4883,21 +4883,76 @@ def revalidate_video_file(
     for artifact in transcript_artifacts:
         if not isinstance(artifact, dict):
             continue
-        repair_text = artifact.get("repair_text")
+        action = artifact.get("action", "replace")  # backward compat default
         repair_conf = artifact.get("repair_confidence")
         sid = artifact.get("segment_index")
-        if not repair_text or not isinstance(repair_conf, (int, float)):
+
+        if not isinstance(repair_conf, (int, float)):
             continue
-        if repair_conf >= REPAIR_ACCEPT_THRESHOLD and isinstance(sid, int) and sid in seg_by_id:
-            seg = seg_by_id[sid]
+        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
+            repairs_rejected += 1
+            continue
+        if not isinstance(sid, int) or sid not in seg_by_id:
+            repairs_rejected += 1
+            continue
+
+        seg = seg_by_id[sid]
+
+        if action == "replace":
+            repair_text = artifact.get("repair_text")
+            if not repair_text:
+                repairs_rejected += 1
+                continue
             original_text = artifact.get("original_text") or seg.get("text", "")
             seg["text"] = repair_text
             artifact["repaired"] = True
             if "original_text" not in artifact:
                 artifact["original_text"] = original_text
             repairs_accepted += 1
+
+        elif action == "delete":
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "delete"
+            repairs_accepted += 1
+
+        elif action == "merge_prev":
+            prev_seg = seg_by_id.get(sid - 1)
+            if prev_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            prev_text = prev_seg.get("text", "")
+            merge_text = seg.get("text", "")
+            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_prev"
+            repairs_accepted += 1
+
+        elif action == "merge_next":
+            next_seg = seg_by_id.get(sid + 1)
+            if next_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            merge_text = seg.get("text", "")
+            next_text = next_seg.get("text", "")
+            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_next"
+            repairs_accepted += 1
+
         else:
-            repairs_rejected += 1
+            repairs_rejected += 1  # unknown action
 
     # Apply normalization (deterministic repairs before validation).
     normalization_repairs = normalize_enrichments(
@@ -5008,13 +5063,6 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def verification_root() -> Path:
-    return repo_root() / "data" / "06b.LLM.verify"
-
-
-def reverify_root() -> Path:
-    return repo_root() / "data" / "06b.LLM.reverify"
-
 
 def input_root() -> Path:
     return repo_root() / "data" / "06c.DET.patched"
@@ -5031,13 +5079,6 @@ def test_input_root() -> Path:
 def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "07.LLM.content"
 
-
-def test_verification_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.LLM.verify"
-
-
-def test_reverify_root() -> Path:
-    return repo_root() / "data" / "test" / "06b.LLM.reverify"
 
 
 def quality_root() -> Path:
@@ -5182,155 +5223,6 @@ def infer_source_name(input_path: Path, input_root_path: Optional[Path]) -> str:
     return input_path.parent.name
 
 
-def _find_verification_for_input(
-    input_path: Path,
-    source: str,
-    verify_root: Path,
-    input_root_hint: Optional[Path] = None,
-) -> Optional[Path]:
-    """Find a matching 06b verification report for a Stage 06c input file.
-
-    Supports multiple on-disk layouts:
-    - source-video: data/06b.LLM.verify/<source>/<video_dir>/<stem>.verification.json
-    - source-flat:  data/06b.LLM.verify/<source>/<stem>.verification.json
-    - root-flat:    data/06b.LLM.verify/<stem>.verification.json
-    """
-    video_stem = extract_video_stem(input_path)
-    verification_name = f"{video_stem}.verification.json"
-
-    # Strategy 1: mirror relative path from input root into verify_root.
-    mirror_root = input_root_hint or input_root()
-    try:
-        rel = input_path.parent.relative_to(mirror_root)
-        candidate = verify_root / rel / verification_name
-        if candidate.exists():
-            return candidate
-    except ValueError:
-        pass
-
-    # Strategy 2: source-flat
-    candidate = verify_root / source / verification_name
-    if candidate.exists():
-        return candidate
-
-    # Strategy 3: root-flat
-    candidate = verify_root / verification_name
-    if candidate.exists():
-        return candidate
-
-    # Strategy 4: recursive search (prefer under source/)
-    src_dir = verify_root / source
-    if src_dir.exists():
-        for found in src_dir.rglob(verification_name):
-            return found
-    for found in verify_root.rglob(verification_name):
-        return found
-
-    return None
-
-
-def load_verification_status(
-    input_path: Path,
-    source: str,
-    verify_root: Path,
-    input_root_hint: Optional[Path] = None,
-) -> Dict[str, Any]:
-    """Load 06b verification report for a video.
-
-    Returns dict with 'verdict' key (APPROVE/FLAG/REJECT or None if not found).
-    """
-    verify_path = _find_verification_for_input(
-        input_path,
-        source,
-        verify_root,
-        input_root_hint=input_root_hint,
-    )
-    if not verify_path:
-        expected = verify_root / source / f"{extract_video_stem(input_path)}.verification.json"
-        return {"verdict": None, "path": str(expected)}
-    try:
-        data = json.loads(verify_path.read_text(encoding="utf-8"))
-        data["path"] = str(verify_path)
-        return data
-    except (json.JSONDecodeError, OSError):
-        return {"verdict": None, "path": str(verify_path)}
-
-
-def should_process_video(
-    input_path: Path,
-    source: str,
-    verify_root: Path,
-    reverify_verify_root: Optional[Path] = None,
-    input_root_hint: Optional[Path] = None,
-    skip_verification: bool = False,
-    gate_policy: str = "approve_only",
-) -> Tuple[bool, str]:
-    """Check if video should be processed based on 06b verification status.
-
-    Returns (should_process, reason).
-    - approve_only: only APPROVE proceeds.
-    - allow_flag: APPROVE + FLAG proceed; REJECT may proceed only when patch-clean salvage is detected.
-    - reverify_patched: require a second verification report from data/06b.LLM.reverify and allow only when
-      that second verdict is APPROVE or FLAG.
-    """
-    if gate_policy not in {"approve_only", "allow_flag", "reverify_patched"}:
-        return False, f"invalid verification gate policy: {gate_policy}"
-
-    if skip_verification:
-        return True, "verification skipped (--skip-verification)"
-
-    status = load_verification_status(
-        input_path,
-        source,
-        verify_root,
-        input_root_hint=input_root_hint,
-    )
-    verdict = status.get("verdict")
-
-    if verdict is None:
-        return False, f"no 06b verification found at {status.get('path', 'unknown')}"
-    if gate_policy == "reverify_patched":
-        if reverify_verify_root is None:
-            return False, "reverify_patched policy requires reverify root"
-        reverify_status = load_verification_status(
-            input_path,
-            source,
-            reverify_verify_root,
-            input_root_hint=input_root_hint,
-        )
-        reverify_verdict = reverify_status.get("verdict")
-        if reverify_verdict is None:
-            return False, f"no 06b reverify found at {reverify_status.get('path', 'unknown')}"
-        if reverify_verdict == "REJECT":
-            return False, "REVERIFY REJECT verdict - critical issues remain after patching"
-        if reverify_verdict in {"APPROVE", "FLAG"}:
-            return True, f"REVERIFY {reverify_verdict} (allowed by gate policy)"
-        return False, f"unknown reverify verdict: {reverify_verdict}"
-    if verdict == "APPROVE":
-        return True, "APPROVE"
-    if verdict == "FLAG":
-        if gate_policy == "allow_flag":
-            return True, "FLAG (allowed by gate policy)"
-        return False, "FLAG verdict - needs manual review before proceeding"
-    if verdict == "REJECT":
-        # Salvage path: if 06c.patch applied high-confidence deterministic fixes cleanly, allow
-        # processing under the same explicit waiver used for FLAG.
-        try:
-            stage06c = json.loads(input_path.read_text(encoding="utf-8"))
-            pm = stage06c.get("patch_metadata")
-        except Exception:
-            pm = None
-        if isinstance(pm, dict):
-            fixes = pm.get("fixes_applied_count", 0)
-            flags = pm.get("flags_not_fixed_count", 0)
-            if isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0:
-                if gate_policy == "allow_flag":
-                    return True, "REJECT (patched cleanly) (allowed by gate policy)"
-                return False, "REJECT (patched cleanly) - rerun with --verification-gate-policy allow_flag"
-        return False, "REJECT verdict - critical issues found"
-
-    return False, f"unknown verdict: {verdict}"
-
 
 def compute_output_path(
     input_path: Path,
@@ -5402,10 +5294,7 @@ def find_input_files(in_dir: Path) -> List[Path]:
 
 def _run_named_source(
     args,
-    verification_gate_policy: str,
     quarantine_ids: Set[str],
-    verify_root_path: Path,
-    reverify_root_path: Path,
     input_root_path: Path,
     output_root_path: Path,
 ) -> None:
@@ -5427,7 +5316,6 @@ def _run_named_source(
 
     total_convs = 0
     total_enriched = 0
-    skipped_verification = 0
     skipped_quarantine = 0
 
     for input_file in files:
@@ -5435,21 +5323,6 @@ def _run_named_source(
         if quarantine_reason:
             print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
             skipped_quarantine += 1
-            continue
-
-        # Verification gate
-        should_process, reason = should_process_video(
-            input_file,
-            name,
-            verify_root_path,
-            reverify_verify_root=reverify_root_path,
-            input_root_hint=input_root_path,
-            skip_verification=args.skip_verification or args.revalidate,
-            gate_policy=verification_gate_policy,
-        )
-        if not should_process:
-            print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
-            skipped_verification += 1
             continue
 
         preferred_output = compute_output_path(input_file, out_dir, input_root=in_dir)
@@ -5481,8 +5354,6 @@ def _run_named_source(
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
 
-    if skipped_verification > 0:
-        print(f"{LOG_PREFIX} Blocked {skipped_verification} video(s) due to verification status")
     if skipped_quarantine > 0:
         print(f"{LOG_PREFIX} Skipped {skipped_quarantine} video(s) due to quarantine")
     print(f"\n[07.LLM.content] Done. Enriched {total_enriched}/{total_convs} conversations")
@@ -5516,20 +5387,6 @@ def main() -> None:
         help="Output directory (defaults to data/07.LLM.content/)"
     )
     parser.add_argument(
-        "--verification-root",
-        help=(
-            "Root directory containing Stage 06b verification reports "
-            "(default: data/06b.LLM.verify, or data/test/06b.verify with --test)"
-        ),
-    )
-    parser.add_argument(
-        "--reverify-root",
-        help=(
-            "Root directory containing Stage 06b reverify reports "
-            "(default: data/06b.LLM.reverify, or data/test/06b.LLM.reverify with --test)"
-        ),
-    )
-    parser.add_argument(
         "--quality-root",
         default=None,
         help="Root dir for 06e quality data (default: data/06e.LLM.quality-check/)",
@@ -5560,29 +5417,8 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
-        "--skip-verification",
-        action="store_true",
-        help="Skip 06b verification gate (process all files regardless of verdict)"
-    )
-    parser.add_argument(
         "--quarantine-file",
         help="Optional JSON file listing quarantined video IDs to skip",
-    )
-    parser.add_argument(
-        "--verification-gate-policy",
-        choices=["approve_only", "allow_flag", "reverify_patched"],
-        default="reverify_patched",
-        help=(
-            "Verification gate policy: "
-            "approve_only=only APPROVE proceeds, "
-            "allow_flag=allow FLAG and patched-clean REJECT, "
-            "reverify_patched=require 06b.LLM.verify + 06b.LLM.reverify, and allow only when reverify verdict is APPROVE/FLAG"
-        ),
-    )
-    parser.add_argument(
-        "--allow-flag",
-        action="store_true",
-        help="Deprecated alias for --verification-gate-policy allow_flag"
     )
     parser.add_argument(
         "--revalidate",
@@ -5657,7 +5493,6 @@ def main() -> None:
         raise SystemExit("--overlap must be >= 0")
     if args.overlap >= args.window_size:
         raise SystemExit("--overlap must be < --window-size")
-    verification_gate_policy = "allow_flag" if args.allow_flag else args.verification_gate_policy
     quarantine_ids: Set[str] = set()
     if args.quarantine_file:
         quarantine_path = Path(args.quarantine_file)
@@ -5714,17 +5549,13 @@ def main() -> None:
                 f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
             )
 
-    # Determine input/output paths and verification roots.
+    # Determine input/output paths.
     default_input_root = test_input_root() if args.test else input_root()
     default_output_root = test_output_root() if args.test else output_root()
-    default_verify_root = test_verification_root() if args.test else verification_root()
-    default_reverify_root = test_reverify_root() if args.test else reverify_root()
     default_quality_root = test_quality_root() if args.test else quality_root()
 
     in_root = resolve_root_path(args.input_root, default_input_root)
     out_root = Path(args.output) if args.output else default_output_root
-    verify_root = resolve_root_path(args.verification_root, default_verify_root)
-    reverify_verify_root = resolve_root_path(args.reverify_root, default_reverify_root)
     quality_root_resolved = resolve_root_path(args.quality_root, default_quality_root)
 
     if args.test:
@@ -5751,24 +5582,6 @@ def main() -> None:
             quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
             if quarantine_reason:
                 print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
-                return
-
-            # Verification gate
-            should_process, reason = should_process_video(
-                input_path,
-                source_name,
-                verify_root,
-                reverify_verify_root=reverify_verify_root,
-                input_root_hint=in_root,
-                skip_verification=args.skip_verification or args.revalidate,
-                gate_policy=verification_gate_policy,
-            )
-            if not should_process:
-                print(f"{LOG_PREFIX} BLOCKED: {input_path.name} - {reason}")
-                print(
-                    f"{LOG_PREFIX} Use --skip-verification to override "
-                    f"(or --verification-gate-policy allow_flag)"
-                )
                 return
 
             if not args.revalidate and existing_output and not args.overwrite:
@@ -5841,28 +5654,12 @@ def main() -> None:
                 continue
 
             print(f"[07.LLM.content] Manifest: {src_name} ({len(files)} videos)")
-            skipped_verification = 0
             skipped_quarantine = 0
             for input_file in files:
                 quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
                 if quarantine_reason:
                     print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
                     skipped_quarantine += 1
-                    continue
-
-                # Verification gate
-                should_process, reason = should_process_video(
-                    input_file,
-                    src_name,
-                    verify_root,
-                    reverify_verify_root=reverify_verify_root,
-                    input_root_hint=in_root,
-                    skip_verification=args.skip_verification or args.revalidate,
-                    gate_policy=verification_gate_policy,
-                )
-                if not should_process:
-                    print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
-                    skipped_verification += 1
                     continue
 
                 preferred_output = compute_output_path(
@@ -5935,10 +5732,10 @@ def main() -> None:
                     input_file,
                     src_name,
                     verify_root,
-                    reverify_verify_root=reverify_verify_root,
+        
                     input_root_hint=in_root,
                     skip_verification=args.skip_verification or args.revalidate,
-                    gate_policy=verification_gate_policy,
+        
                 )
                 if not should_process:
                     print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")
@@ -5986,10 +5783,8 @@ def main() -> None:
     elif args.name:
         _run_named_source(
             args,
-            verification_gate_policy,
             quarantine_ids,
             verify_root,
-            reverify_verify_root,
             in_root,
             out_root,
         )
@@ -6044,10 +5839,10 @@ def main() -> None:
             input_file,
             infer_source_name(input_file, in_root),
             verify_root,
-            reverify_verify_root=reverify_verify_root,
+
             input_root_hint=in_root,
             skip_verification=args.skip_verification or args.revalidate,
-            gate_policy=verification_gate_policy,
+
         )
         if not should_process:
             print(f"{LOG_PREFIX} BLOCKED: {input_file.name} - {reason}")

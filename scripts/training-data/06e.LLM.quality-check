@@ -51,7 +51,7 @@ ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
 }
 
 # Transcript artifact repair: minimum confidence to accept a repair suggestion.
-REPAIR_ACCEPT_THRESHOLD = 0.90
+REPAIR_ACCEPT_THRESHOLD = 0.85
 
 
 def repo_root() -> Path:

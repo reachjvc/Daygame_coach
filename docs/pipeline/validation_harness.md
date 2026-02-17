@@ -55,7 +55,6 @@ All validation thresholds live in `pipeline.config.json`:
 ```json
 {
   "validation": {
-    "stage07_gate_policy": "approve_only",
     "quarantine_level": "error",
     "readiness": {
       "allow_review_ingest": false,
@@ -90,7 +89,7 @@ Stage scripts skip existing outputs unless `--overwrite` is supplied. To re-run 
 
 For isolated experiment runs, root overrides are available on the stage scripts directly:
 - `06c.DET.patch`: `--input-root`, `--verification-root`
-- `07.LLM.content`: `--input-root`, `--verification-root`, `--reverify-root`
+- `07.LLM.content`: `--input-root`, `--verification-root`
 
 ## Advanced: Direct Script Usage
 
@@ -106,7 +105,7 @@ python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pi
 python3 scripts/training-data/validation/validate_manifest.py --manifest docs/pipeline/batches/P001.1.txt --emit-quarantine --emit-stage-reports
 ```
 
-Key flags: `--stage07-gate-policy`, `--quarantine-level`, `--quarantine-file`, `--waiver-file`, `--skip-stage01-presence`
+Key flags: `--quarantine-level`, `--quarantine-file`, `--waiver-file`, `--skip-stage01-presence`
 
 ### validate_cross_stage.py
 

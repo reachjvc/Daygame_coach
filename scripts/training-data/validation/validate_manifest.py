@@ -39,7 +39,6 @@ _CHUNKS_BASENAME_VIDEO_ID_RE = re.compile(r"^([A-Za-z0-9_-]{11})\.chunks\.json$"
 _WAIVER_VIDEO_OR_WILDCARD_RE = re.compile(r"^(\*|[A-Za-z0-9_-]{11})$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
-_STAGE07_GATE_POLICIES = {"approve_only", "allow_flag", "reverify_patched"}
 _KNOWN_STAGE07_DROP_REASONS: Set[str] = {
     "missing_evidence_segment",
     "unknown_evidence_segment",
@@ -121,57 +120,16 @@ def _stage08_expected_source_label(manifest_name: str, source_filter: Optional[s
     return f"manifest:{manifest_name}"
 
 
-def _is_stage06c_patched_clean(s06c_path: Optional[Path]) -> bool:
-    if not s06c_path:
-        return False
-    s06c_data = _load_json(s06c_path)
-    pm = s06c_data.get("patch_metadata") if isinstance(s06c_data, dict) else None
-    if not isinstance(pm, dict):
-        return False
-    fixes = pm.get("fixes_applied_count", 0)
-    flags = pm.get("flags_not_fixed_count", 0)
-    return isinstance(fixes, int) and isinstance(flags, int) and fixes > 0 and flags == 0
-
-
 def _stage07_gate_decision(
     verdict: Optional[str],
-    s06c_path: Optional[Path],
-    policy: str,
-    reverify_verdict: Optional[str] = None,
 ) -> Tuple[bool, str]:
-    if policy not in _STAGE07_GATE_POLICIES:
-        return False, f"invalid_gate_policy={policy}"
-
-    if policy == "reverify_patched":
-        # Keep parity with 07.LLM.content: reverify is an additional gate, not a replacement
-        # for baseline 06b.LLM.verify presence.
-        if verdict is None:
-            return False, "missing_verdict"
-        if verdict not in {"APPROVE", "FLAG", "REJECT"}:
-            return False, f"unknown_verdict={verdict}"
-        if reverify_verdict is None:
-            return False, "missing_reverify_verdict"
-        if reverify_verdict == "REJECT":
-            return False, "REVERIFY REJECT verdict - critical issues remain after patching"
-        if reverify_verdict in {"APPROVE", "FLAG"}:
-            return True, f"REVERIFY {reverify_verdict} (allowed by gate policy)"
-        return False, f"unknown_reverify_verdict={reverify_verdict}"
-
+    """Only APPROVE passes the verification gate."""
     if verdict == "APPROVE":
         return True, "APPROVE"
-
     if verdict == "FLAG":
-        if policy == "allow_flag":
-            return True, "FLAG (allowed by gate policy)"
-        return False, "FLAG (blocked by gate policy)"
-
+        return False, "FLAG (blocked)"
     if verdict == "REJECT":
-        if _is_stage06c_patched_clean(s06c_path):
-            if policy == "allow_flag":
-                return True, "REJECT (patched cleanly) (allowed by gate policy)"
-            return False, "REJECT (patched cleanly) (blocked by gate policy)"
-        return False, "REJECT (critical issues)"
-
+        return False, "REJECT (blocked)"
     if verdict is None:
         return False, "missing_verdict"
     return False, f"unknown_verdict={verdict}"
@@ -1034,22 +992,6 @@ def main() -> None:
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
     parser.add_argument("--source", help="Only validate one source within the manifest")
     parser.add_argument(
-        "--stage07-gate-policy",
-        choices=sorted(_STAGE07_GATE_POLICIES),
-        default="approve_only",
-        help=(
-            "Stage 07 verification gate policy: "
-            "approve_only=only APPROVE can proceed, "
-            "allow_flag=allow FLAG and REJECT patched-clean outputs, "
-            "reverify_patched=require 06b.LLM.verify + 06b.LLM.reverify, and allow only when reverify verdict is APPROVE/FLAG"
-        ),
-    )
-    parser.add_argument(
-        "--allow-flag",
-        action="store_true",
-        help="Deprecated alias for --stage07-gate-policy allow_flag",
-    )
-    parser.add_argument(
         "--skip-stage01-presence",
         action="store_true",
         help="Do not fail when Stage 01 .wav artifacts are missing (useful for archived/migrated datasets)",
@@ -1126,19 +1068,11 @@ def main() -> None:
             "(damage types, contamination sources, anchor drop reasons)"
         ),
     )
-    parser.add_argument(
-        "--reverify-root",
-        help=(
-            "Root directory for 06b.LLM.reverify artifacts. "
-            "Defaults to data/06b.LLM.reverify."
-        ),
-    )
     parser.add_argument("--strict", action="store_true", help="Fail on warnings (not just errors)")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
 
     args = parser.parse_args()
-    stage07_gate_policy = "allow_flag" if args.allow_flag else args.stage07_gate_policy
     emit_quarantine = bool(args.emit_quarantine or args.quarantine_out)
 
     if args.max_damaged_token_ratio is not None and not (0.0 <= float(args.max_damaged_token_ratio) <= 1.0):
@@ -1202,12 +1136,6 @@ def main() -> None:
     s06c_root = data_root / "06c.DET.patched"
     s07_root = data_root / "07.LLM.content"
     s06b_root = data_root / "06b.LLM.verify"
-    if args.reverify_root:
-        s06b_reverify_root = Path(args.reverify_root)
-        if not s06b_reverify_root.is_absolute():
-            s06b_reverify_root = repo_root() / s06b_reverify_root
-    else:
-        s06b_reverify_root = data_root / "06b.LLM.reverify"
     s09_root = data_root / "09.EXT.chunks"
 
     idx_s01_wav = _index_paths_by_video_id(s01_root, "*.wav", manifest_ids)
@@ -1217,15 +1145,11 @@ def main() -> None:
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
     idx_s07_val = _index_paths_by_video_id(s07_root, "*.validation.json", manifest_ids)
     idx_s06b = _index_paths_by_video_id(s06b_root, "*.verification.json", manifest_ids)
-    idx_s06b_reverify = _index_paths_by_video_id(s06b_reverify_root, "*.verification.json", manifest_ids)
     idx_s09 = _index_paths_by_video_id(s09_root, "*.chunks.json", manifest_ids) if args.check_stage09_chunks else {}
 
     verdict_counts: Counter = Counter()
-    reverify_verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
-    missing_reverify: List[str] = []
     invalid_verify: List[str] = []
-    invalid_reverify: List[str] = []
     missing_s01: List[str] = []
     missing_s05: List[str] = []
     missing_s06c: List[str] = []
@@ -1239,8 +1163,6 @@ def main() -> None:
     cross_stage_warnings = 0
     stage06b_checked_files = 0
     stage06b_invalid_files = 0
-    stage06b_reverify_checked_files = 0
-    stage06b_reverify_invalid_files = 0
     stage09_checked_files = 0
     stage09_invalid_files = 0
     stage05_checked_files = 0
@@ -1279,14 +1201,6 @@ def main() -> None:
     blocked_by_gate = 0
     gate_blocked_video_ids: Set[str] = set()
     allowed_by_gate = 0
-    gate_reject = 0
-    gate_reject_patched_allowed = 0
-    gate_flag_blocked = 0
-    gate_flag_allowed = 0
-    gate_reverify_approve = 0
-    gate_reverify_flag = 0
-    gate_reverify_reject = 0
-    gate_reverify_missing = 0
     gate_policy_violations = 0
     video_artifacts: Dict[str, Dict[str, Optional[str]]] = {}
     stage_reports_emitted = 0
@@ -1744,7 +1658,6 @@ def main() -> None:
         s07_candidates = idx_s07.get(vid) or []
         s07v_candidates = idx_s07_val.get(vid) or []
         v_candidates = idx_s06b.get(vid) or []
-        rv_candidates = idx_s06b_reverify.get(vid) or []
         s09_candidates = idx_s09.get(vid) or []
 
         s01_path = _pick_best_candidate(s01_candidates, src) if s01_candidates else None
@@ -1754,7 +1667,6 @@ def main() -> None:
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
         s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
         v_path = _pick_best_candidate(v_candidates, src) if v_candidates else None
-        rv_path = _pick_best_candidate(rv_candidates, src) if rv_candidates else None
         s09_path = _pick_best_candidate(s09_candidates, src) if s09_candidates else None
         video_artifacts[vid] = {
             "s01": str(s01_path) if s01_path else None,
@@ -1764,7 +1676,6 @@ def main() -> None:
             "s07": str(s07_path) if s07_path else None,
             "s07_validation": str(s07v_path) if s07v_path else None,
             "verify": str(v_path) if v_path else None,
-            "reverify": str(rv_path) if rv_path else None,
             "s09": str(s09_path) if s09_path else None,
         }
 
@@ -1932,78 +1843,14 @@ def main() -> None:
             if verdict:
                 verdict_counts[verdict] += 1
 
-        reverify_verdict: Optional[str] = None
-        if stage07_gate_policy == "reverify_patched":
-            if not rv_path:
-                missing_reverify.append(vid)
-                issues.append({
-                    "video_id": vid,
-                    "source": src,
-                    "severity": "error",
-                    "check": "missing_stage06b_reverify",
-                    "message": "No Stage 06b reverify artifact found for this video_id",
-                    "manifest_folder": folder_text,
-                })
-                check_counts["error:missing_stage06b_reverify"] += 1
-            else:
-                stage06b_reverify_checked_files += 1
-                reverify_verdict, rv_errs = _validate_verification_payload(rv_path, vid)
-                if rv_errs:
-                    stage06b_reverify_invalid_files += 1
-                    invalid_reverify.append(vid)
-                    issues.append({
-                        "video_id": vid,
-                        "source": src,
-                        "severity": "error",
-                        "check": "stage06b_reverify_invalid",
-                        "message": f"Stage 06b reverify payload invalid: {rv_errs}",
-                        "reverify": str(rv_path),
-                    })
-                    check_counts["error:stage06b_reverify_invalid"] += 1
-                if reverify_verdict:
-                    reverify_verdict_counts[reverify_verdict] += 1
-
-        # Gate accounting (mirrors 07.LLM.content logic via explicit policy)
-        gate_allowed, gate_reason = _stage07_gate_decision(
-            verdict,
-            s06c_path,
-            stage07_gate_policy,
-            reverify_verdict=reverify_verdict,
-        )
+        # Gate accounting: only APPROVE passes
+        gate_allowed, gate_reason = _stage07_gate_decision(verdict)
         if not gate_allowed:
             gate_blocked_video_ids.add(vid)
-        if stage07_gate_policy == "reverify_patched":
-            if gate_allowed:
-                allowed_by_gate += 1
-            else:
-                blocked_by_gate += 1
-            if reverify_verdict == "APPROVE":
-                gate_reverify_approve += 1
-            elif reverify_verdict == "FLAG":
-                gate_reverify_flag += 1
-            elif reverify_verdict == "REJECT":
-                gate_reverify_reject += 1
-            else:
-                gate_reverify_missing += 1
+        if verdict == "APPROVE":
+            allowed_by_gate += 1
         else:
-            if verdict == "APPROVE":
-                allowed_by_gate += 1
-            elif verdict == "FLAG":
-                if gate_allowed:
-                    allowed_by_gate += 1
-                    gate_flag_allowed += 1
-                else:
-                    blocked_by_gate += 1
-                    gate_flag_blocked += 1
-            elif verdict == "REJECT":
-                gate_reject += 1
-                if gate_allowed:
-                    allowed_by_gate += 1
-                    gate_reject_patched_allowed += 1
-                else:
-                    blocked_by_gate += 1
-            else:
-                blocked_by_gate += 1
+            blocked_by_gate += 1
 
         s07_data: Optional[Dict[str, Any]] = None
         stage07_content_unreadable = False
@@ -2249,13 +2096,8 @@ def main() -> None:
             gate_policy_violations += 1
             gate_msg = (
                 "Stage 07 output exists but verification gate blocks this verdict "
-                f"(policy={stage07_gate_policy}, verdict={verdict!r}, reason={gate_reason})"
+                f"(verdict={verdict!r}, reason={gate_reason})"
             )
-            if stage07_gate_policy == "reverify_patched":
-                gate_msg = (
-                    "Stage 07 output exists but reverify gate blocks this video "
-                    f"(policy={stage07_gate_policy}, reverify_verdict={reverify_verdict!r}, reason={gate_reason})"
-                )
             issues.append({
                 "video_id": vid,
                 "source": src,
@@ -2264,7 +2106,6 @@ def main() -> None:
                 "message": gate_msg,
                 "s07": str(s07_path),
                 "verify": str(v_path) if v_path else None,
-                "reverify": str(rv_path) if rv_path else None,
             })
             check_counts["error:stage07_gate_policy_violation"] += 1
 
@@ -2430,7 +2271,6 @@ def main() -> None:
         if vid not in quarantine_video_ids and vid not in gate_blocked_video_ids
     }
     missing_verify_effective = sum(1 for vid in missing_verify if vid in effective_manifest_ids)
-    missing_reverify_effective = sum(1 for vid in missing_reverify if vid in effective_manifest_ids)
     missing_s05_effective = sum(1 for vid in missing_s05 if vid in effective_manifest_ids)
     missing_s06c_effective = sum(1 for vid in missing_s06c if vid in effective_manifest_ids)
     missing_s07_effective = sum(1 for vid in missing_s07 if vid in effective_manifest_ids)
@@ -2441,7 +2281,6 @@ def main() -> None:
         and (not args.check_stage05_audio or missing_s05_effective == 0)
         and missing_s06c_effective == 0
         and missing_s07_effective == 0
-        and (stage07_gate_policy != "reverify_patched" or missing_reverify_effective == 0)
         and (not args.check_stage09_chunks or missing_s09_effective == 0)
     )
     passed = complete and errors == 0 and (warnings == 0 if args.strict else True)
@@ -2561,14 +2400,6 @@ def main() -> None:
             "missing_01_download": len(missing_s01),
             "missing_06b_verify": len(missing_verify),
             "invalid_06b_verify": len(invalid_verify),
-            **(
-                {
-                    "missing_06b_reverify": len(missing_reverify),
-                    "invalid_06b_reverify": len(invalid_reverify),
-                }
-                if stage07_gate_policy == "reverify_patched"
-                else {}
-            ),
             **({"missing_05_audio_features": len(missing_s05)} if args.check_stage05_audio else {}),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
@@ -2582,24 +2413,10 @@ def main() -> None:
         "stage06b_validation": {
             "checked_files": stage06b_checked_files,
             "invalid_files": stage06b_invalid_files,
-            "reverify_checked_files": stage06b_reverify_checked_files,
-            "reverify_invalid_files": stage06b_reverify_invalid_files,
-            "reverify_verdicts": dict(reverify_verdict_counts),
         },
         "verification_gate": {
-            "policy": stage07_gate_policy,
-            "allow_flag": stage07_gate_policy == "allow_flag",
-            "reverify_patched": stage07_gate_policy == "reverify_patched",
             "allowed": allowed_by_gate,
             "blocked": blocked_by_gate,
-            "reject": gate_reject,
-            "reject_patched_allowed": gate_reject_patched_allowed,
-            "flag_allowed": gate_flag_allowed,
-            "flag_blocked": gate_flag_blocked,
-            "reverify_approve": gate_reverify_approve,
-            "reverify_flag": gate_reverify_flag,
-            "reverify_reject": gate_reverify_reject,
-            "reverify_missing": gate_reverify_missing,
             "policy_violations": gate_policy_violations,
         },
         "stage07_validation": {
@@ -2708,43 +2525,21 @@ def main() -> None:
             print(f"{LOG_PREFIX} Source filter: {args.source}")
 
         print(f"{LOG_PREFIX} 06b.LLM.verify verdicts: {dict(verdict_counts) or '{}'}")
-        if stage07_gate_policy == "reverify_patched":
-            print(f"{LOG_PREFIX} 06b.LLM.reverify verdicts: {dict(reverify_verdict_counts) or '{}'}")
-            print(
-                f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate} "
-                f"(REVERIFY_APPROVE={gate_reverify_approve}, REVERIFY_FLAG={gate_reverify_flag}, "
-                f"REVERIFY_REJECT={gate_reverify_reject}, REVERIFY_MISSING={gate_reverify_missing}, "
-                f"policy={stage07_gate_policy}, policy_violations={gate_policy_violations})"
-            )
-        else:
-            print(
-                f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate} "
-                f"(REJECT={gate_reject}, REJECT_patched_allowed={gate_reject_patched_allowed}, "
-                f"FLAG_allowed={gate_flag_allowed}, FLAG_blocked={gate_flag_blocked}, "
-                f"policy={stage07_gate_policy}, policy_violations={gate_policy_violations})"
-            )
+        print(
+            f"{LOG_PREFIX} Gate: allowed={allowed_by_gate}, blocked={blocked_by_gate}, "
+            f"policy_violations={gate_policy_violations}"
+        )
 
         print(
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
             f"missing 06b.LLM.verify={len(missing_verify)}, invalid 06b.LLM.verify={len(invalid_verify)}, "
-            + (
-                f"missing 06b.LLM.reverify={len(missing_reverify)}, invalid 06b.LLM.reverify={len(invalid_reverify)}, "
-                if stage07_gate_policy == "reverify_patched"
-                else ""
-            )
-            + f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}"
+            f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}"
             + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
             + (f", missing 09.EXT.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )
         print(
             f"{LOG_PREFIX} Stage 06b verification check: "
             f"checked={stage06b_checked_files}, invalid={stage06b_invalid_files}"
-            + (
-                f", reverify_checked={stage06b_reverify_checked_files}, "
-                f"reverify_invalid={stage06b_reverify_invalid_files}"
-                if stage07_gate_policy == "reverify_patched"
-                else ""
-            )
         )
         if args.check_stage05_audio:
             print(

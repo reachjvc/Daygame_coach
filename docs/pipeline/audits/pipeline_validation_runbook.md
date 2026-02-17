@@ -17,6 +17,7 @@ Objectives:
 Rules:
 - Gating: rule that blocks downstream processing or ingestion.
 - No silent pass: missing/empty/invalid outputs are explicit failures with reason.
+- **Show-don't-summarize:** When reporting flags/warnings/artifacts to user, ALWAYS include the actual segment text + 5 segments before and after for context. Never summarize without showing the raw data first. The user needs to see the text to make judgment calls. Use `>>>` marker on the target segment. Get it right on the first attempt — debug file lookups (bracket escaping, top-level vs nested segments, folder name mismatches across stages) before outputting, not after.
 
 ### Work being done
 **2026-02-16:** P001.2–P001.10 (86 videos) completed stages 02–05. P001.1 was already at stage 07. All 96 P001 videos now through stage 05; next is stage 06+.
@@ -95,6 +96,8 @@ MUST UPDATE ASCII file when you make changes to the stages!
 
 ### Running the pipeline
 
+All LLM stages must be run in parallel of 5.
+
 Use `sub-batch-pipeline` for all pipeline operations.
 
 ```bash
@@ -121,7 +124,7 @@ Validation is automatic:
 Config: `scripts/training-data/batch/pipeline.config.json` (gate policies, warning budgets)
 
 **Never auto-ingest** — stage 10 requires explicit user approval.
-**Update status** after batch work: the pipeline updates `P<NNN>.status.json` automatically.
+**Update status** after batch work: status must reflect what actually completed on disk, not what was attempted. If videos within a sub-batch are at different stages (e.g. some gated, some progressed), record the per-video breakdown. Never update `current_stage` to a target stage that wasn't fully achieved — verify against actual output files before writing.
 
 Legend:
 - `[LLM]`: Claude-dependent stage (network/auth required).
@@ -139,7 +142,6 @@ Stage notes (what each stage is for):
 - `05.EXT.audio-features`: compute ASR/audio metadata used by Stage 06.
 - `06.LLM.video-type`: infer conversation structure + roles + type from Stage 05.
 - `06b.LLM.verify`: independent LLM QA pass over Stage 06 artifacts.
-- `06b.LLM.reverify`: re-run verifier on sanitized outputs for strict gating.
 - `06c.DET.patch`: deterministic patch pass from verifier output.
 - `06d.DET.sanitize`: deterministic contamination handling and Stage 07 evidence allowlists.
 - `06e.LLM.quality-check`: focused transcript quality assessment (ASR artifact detection, damage severity, repair suggestions).

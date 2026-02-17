@@ -9,7 +9,6 @@ Snapshot source:
 Included stage folders:
 - `06.LLM.video-type/`
 - `06b.LLM.verify/`
-- `06b.LLM.reverify/`
 - `06c.DET.patched/`
 - `07.LLM.content/`
 - `08.DET.taxonomy-validation/`
@@ -26,7 +25,7 @@ Not currently present in this snapshot:
 Refresh procedure:
 
 ```bash
-for d in 06.LLM.video-type 06b.LLM.verify 06b.LLM.reverify 06c.DET.patched 07.LLM.content 08.DET.taxonomy-validation 09.EXT.chunks validation-audits; do
+for d in 06.LLM.video-type 06b.LLM.verify 06c.DET.patched 07.LLM.content 08.DET.taxonomy-validation 09.EXT.chunks validation-audits; do
   rsync -a "data/$d/" "data_artifacts/$d/"
 done
 ```

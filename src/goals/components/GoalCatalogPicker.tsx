@@ -8,7 +8,7 @@ import { getCatalogTiers } from "../data/goalGraph"
 import { LIFE_AREAS } from "../data/lifeAreas"
 import { generateGoalTreeInserts } from "../treeGenerationService"
 import { GoalTreePreview } from "./GoalTreePreview"
-import type { GoalTemplate, GoalWithProgress, GoalDisplayCategory, LifeAreaConfig } from "../types"
+import type { GoalTemplate, GoalWithProgress, GoalDisplayCategory, LifeAreaConfig, CurveThemeId } from "../types"
 import type { BatchGoalInsert } from "../treeGenerationService"
 
 interface GoalCatalogPickerProps {
@@ -16,9 +16,11 @@ interface GoalCatalogPickerProps {
   existingGoals?: GoalWithProgress[]
   onClose?: () => void
   onCreateManual?: () => void
+  curveThemeId?: CurveThemeId
+  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
-export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCreateManual }: GoalCatalogPickerProps) {
+export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCreateManual, curveThemeId, onCurveThemeChange }: GoalCatalogPickerProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [previewInserts, setPreviewInserts] = useState<BatchGoalInsert[] | null>(null)
@@ -97,6 +99,8 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
         existingTemplateIds={existingTemplateIds}
         onConfirm={handleConfirm}
         onBack={handleBack}
+        curveThemeId={curveThemeId}
+        onCurveThemeChange={onCurveThemeChange}
       />
     </>
   ) : (

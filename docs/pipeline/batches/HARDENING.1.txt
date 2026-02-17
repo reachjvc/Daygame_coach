@@ -3,7 +3,7 @@
 # Date: 2026-02-13
 #
 # Selection criteria:
-# - high 06b/06b.reverify misattribution counts
+# - high 06b misattribution counts
 # - repeated other_flags / boundary issues
 # - known transcript artifact pressure in Stage 07
 # - include one known-problem holdout video without current artifacts (e2dLEB-AwmA)

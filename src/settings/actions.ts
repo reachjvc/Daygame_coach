@@ -11,6 +11,7 @@ import {
   handleUpdateVoiceLanguage,
   handleUpdatePreferredLanguage,
   handleUpdateTimezone,
+  handleUpdateCurveStyle,
   handleCancelSubscription,
   handleReactivateSubscription,
   createBillingPortalSession,
@@ -93,6 +94,15 @@ export async function updatePreferredLanguage(language: string): Promise<void> {
   await handleUpdatePreferredLanguage(userId, language)
   revalidatePath(SETTINGS_CONFIG.paths.settings)
   revalidatePath("/scenarios")
+}
+
+/**
+ * Update curve style preference
+ */
+export async function updateCurveStyle(style: string): Promise<void> {
+  const userId = await requireAuth()
+  await handleUpdateCurveStyle(userId, style)
+  revalidatePath("/dashboard/goals")
 }
 
 /**
