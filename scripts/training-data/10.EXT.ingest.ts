@@ -103,15 +103,18 @@ type ChunkMetadata = {
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
   worstArtifactSeverity?: string
+  chunk_confidence_score?: number
+  // Legacy field names (read for backward compat with old chunks.json)
   chunkConfidence?: number
   chunkConfidenceScore?: number
-  chunk_confidence_score?: number
   chunkConfidenceVersion?: number
   problematicReason?: string[]
-  damagedSegmentIds?: number[]
   damaged_segment_ids?: number[]
-  containsRepairedText?: boolean
+  // Legacy field names (read for backward compat)
+  damagedSegmentIds?: number[]
   contains_repaired_text?: boolean
+  // Legacy field name (read for backward compat)
+  containsRepairedText?: boolean
   // Cross-reference fields (D14b)
   blockIndex?: number
   relatedConversationId?: number | null
@@ -2151,6 +2154,7 @@ async function main() {
     fileHash: string
   }> = []
   let unchanged = 0
+  let mtimeForced = 0
   let skippedUnstableSourceKey = 0
   let invalidChunkFiles = 0
 
@@ -2214,6 +2218,20 @@ async function main() {
     const isUnchanged = !args.force && prev?.chunksHash === fileHash
 
     if (isUnchanged) {
+      // Safety net: re-ingest if chunks file is newer than last ingest
+      if (prev?.ingestedAt) {
+        try {
+          const chunksStat = await fsp.stat(filePath)
+          const ingestedAtMs = new Date(prev.ingestedAt).getTime()
+          if (chunksStat.mtimeMs > ingestedAtMs) {
+            mtimeForced++
+            toIngest.push({ filePath, sourceKey, chunksData, fileHash })
+            continue
+          }
+        } catch {
+          // stat failed — unusual, fall through to unchanged
+        }
+      }
       unchanged++
       continue
     }
@@ -2237,6 +2255,7 @@ async function main() {
   }
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
+  if (mtimeForced > 0) console.log(`Stale:        ${mtimeForced} file(s) with chunks newer than last ingest (auto-forced)`)
   console.log(`State file:   ${statePath}`)
   console.log(`Primary lane: chunk_confidence_score >= ${args.primaryConfidenceThreshold.toFixed(2)}`)
   console.log(`Review lane:  ${args.ingestReviewLane ? "ingest (#review source suffix)" : "skip"}`)
@@ -2304,7 +2323,6 @@ async function main() {
     for (const chunk of chunks) {
       const metadata: Record<string, unknown> = {
         channel,
-        coach: channel,
         video_title: videoTitle,
         chunkIndex: chunk.metadata.chunkIndex,
         totalChunks: chunk.metadata.totalChunks,
@@ -2361,9 +2379,7 @@ async function main() {
       if (typeof chunk.metadata.worstArtifactSeverity === "string") {
         metadata.worstArtifactSeverity = chunk.metadata.worstArtifactSeverity
       }
-      if (typeof chunk.metadata.chunkConfidence === "number") {
-        metadata.chunkConfidence = chunk.metadata.chunkConfidence
-      }
+      // Resolve confidence score: prefer canonical name, fall back to legacy names
       const chunkConfidenceScore =
         (typeof chunk.metadata.chunk_confidence_score === "number" && Number.isFinite(chunk.metadata.chunk_confidence_score))
           ? chunk.metadata.chunk_confidence_score
@@ -2376,7 +2392,6 @@ async function main() {
       if (!hasConfidenceScore) {
         missingConfidenceMetadata += 1
       } else {
-        metadata.chunkConfidenceScore = chunkConfidenceScore
         metadata.chunk_confidence_score = chunkConfidenceScore
       }
       if (typeof chunk.metadata.chunkConfidenceVersion === "number") {
@@ -2385,19 +2400,18 @@ async function main() {
       if (chunk.metadata.problematicReason && chunk.metadata.problematicReason.length > 0) {
         metadata.problematicReason = chunk.metadata.problematicReason
       }
+      // Read canonical or legacy name, write only canonical
       const damagedSegmentIds = Array.isArray(chunk.metadata.damaged_segment_ids)
         ? chunk.metadata.damaged_segment_ids.filter((x): x is number => typeof x === "number")
         : Array.isArray(chunk.metadata.damagedSegmentIds)
         ? chunk.metadata.damagedSegmentIds.filter((x): x is number => typeof x === "number")
         : []
       if (damagedSegmentIds.length > 0) {
-        metadata.damagedSegmentIds = damagedSegmentIds
         metadata.damaged_segment_ids = damagedSegmentIds
       }
       const containsRepairedText =
         chunk.metadata.contains_repaired_text === true || chunk.metadata.containsRepairedText === true
       if (containsRepairedText) {
-        metadata.containsRepairedText = true
         metadata.contains_repaired_text = true
       }
       // D14b: cross-reference metadata pass-through
@@ -2410,12 +2424,20 @@ async function main() {
       if (Array.isArray(chunk.metadata.relatedCommentaryBlockIndices) && chunk.metadata.relatedCommentaryBlockIndices.length > 0) {
         metadata.relatedCommentaryBlockIndices = chunk.metadata.relatedCommentaryBlockIndices
       }
+      if (typeof chunk.metadata.description === "string" && chunk.metadata.description) {
+        metadata.description = chunk.metadata.description
+      }
+      if (typeof chunk.metadata.section_index === "number") {
+        metadata.section_index = chunk.metadata.section_index
+      }
+      if (chunk.metadata.isSummary === true) {
+        metadata.isSummary = true
+      }
 
       const lane: "primary" | "review" =
         hasConfidenceScore && (chunkConfidenceScore as number) >= args.primaryConfidenceThreshold
           ? "primary"
           : "review"
-      metadata.ingestLane = lane
       metadata.ingest_lane = lane
 
       const row = {

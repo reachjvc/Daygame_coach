@@ -37,9 +37,16 @@ describe("goal catalog integrity", () => {
 
   test("L3 goals have display categories", () => {
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
+    const validCategories = [
+      "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+      "mindfulness", "resilience", "learning", "reflection", "discipline",
+      "social_activity", "friendships", "hosting", "social_skills", "network_expansion",
+      "strength", "training", "nutrition", "body_comp",
+      "income", "saving", "investing", "career_growth",
+    ]
     for (const g of l3Goals) {
       expect(g.displayCategory).toBeTruthy()
-      expect(["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]).toContain(g.displayCategory)
+      expect(validCategories).toContain(g.displayCategory)
     }
   })
 
@@ -81,10 +88,10 @@ describe("goal catalog integrity", () => {
 // ============================================================================
 
 describe("getChildren", () => {
-  test("L1 goals fan into all L2 achievements", () => {
+  test("L1 goals fan into their area's L2 achievements", () => {
     const children = getChildren("l1_girlfriend")
-    const l2Count = GOAL_TEMPLATES.filter((t) => t.level === 2).length
-    expect(children.length).toBe(l2Count)
+    const daygameL2Count = GOAL_TEMPLATES.filter((t) => t.level === 2 && t.lifeArea === "daygame").length
+    expect(children.length).toBe(daygameL2Count)
     const ids = children.map((c) => c.id)
     expect(ids).toContain("l2_master_daygame")
     expect(ids).toContain("l2_confident")
@@ -116,10 +123,10 @@ describe("getChildren", () => {
     expect(ids).toContain("l3_number_to_date_conversion")
   })
 
-  test("L2 attract_any fans into all L3 goals", () => {
+  test("L2 attract_any fans into all daygame L3 goals", () => {
     const children = getChildren("l2_attract_any")
-    const l3Count = GOAL_TEMPLATES.filter((t) => t.level === 3).length
-    expect(children.length).toBe(l3Count)
+    const daygameL3Count = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
+    expect(children.length).toBe(daygameL3Count)
   })
 
   test("L3 goals have no children", () => {
@@ -133,10 +140,10 @@ describe("getChildren", () => {
 })
 
 describe("getLeafGoals", () => {
-  test("L1 goal returns all unique L3 goals (traverses through L2)", () => {
+  test("L1 goal returns all unique L3 goals in its area (traverses through L2)", () => {
     const leaves = getLeafGoals("l1_girlfriend")
-    const l3Count = GOAL_TEMPLATES.filter((t) => t.level === 3).length
-    expect(leaves.length).toBe(l3Count) // attract_any covers all, so union = all
+    const daygameL3Count = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
+    expect(leaves.length).toBe(daygameL3Count) // attract_any covers all daygame L3s
     for (const leaf of leaves) {
       expect(leaf.level).toBe(3)
     }
@@ -286,42 +293,73 @@ describe("redistributeWeights", () => {
 // ============================================================================
 
 describe("getTemplatesByCategory", () => {
-  test("returns all six categories", () => {
+  test("returns all categories across all areas", () => {
     const cats = getTemplatesByCategory()
-    expect(Object.keys(cats).sort()).toEqual(["dates", "dirty_dog", "field_work", "relationship", "results", "texting"])
+    const keys = Object.keys(cats).sort()
+    expect(keys).toContain("field_work")
+    expect(keys).toContain("mindfulness")
+    expect(keys).toContain("social_activity")
+    expect(keys.length).toBe(24) // 6 daygame + 5 PG + 5 social + 4 fitness + 4 wealth
   })
 
   test("field_work contains approach-related goals", () => {
     const cats = getTemplatesByCategory()
-    const ids = cats.field_work.map((t) => t.id)
+    const ids = cats.field_work!.map((t) => t.id)
     expect(ids).toContain("l3_approach_volume")
     expect(ids).toContain("l3_approach_frequency")
   })
 
   test("dirty_dog contains lays and rotation", () => {
     const cats = getTemplatesByCategory()
-    const ids = cats.dirty_dog.map((t) => t.id)
+    const ids = cats.dirty_dog!.map((t) => t.id)
     expect(ids).toContain("l3_lays")
     expect(ids).toContain("l3_rotation_size")
   })
 
   test("texting contains texting-related goals", () => {
     const cats = getTemplatesByCategory()
-    const ids = cats.texting.map((t) => t.id)
+    const ids = cats.texting!.map((t) => t.id)
     expect(ids).toContain("l3_texting_initiated")
     expect(ids).toContain("l3_response_rate")
   })
 
+  test("personal growth categories exist", () => {
+    const cats = getTemplatesByCategory()
+    expect(cats.mindfulness!.length).toBeGreaterThan(0)
+    expect(cats.resilience!.length).toBeGreaterThan(0)
+    expect(cats.learning!.length).toBeGreaterThan(0)
+    expect(cats.reflection!.length).toBeGreaterThan(0)
+    expect(cats.discipline!.length).toBeGreaterThan(0)
+  })
+
+  test("social categories exist", () => {
+    const cats = getTemplatesByCategory()
+    expect(cats.social_activity!.length).toBeGreaterThan(0)
+    expect(cats.friendships!.length).toBeGreaterThan(0)
+    expect(cats.hosting!.length).toBeGreaterThan(0)
+    expect(cats.social_skills!.length).toBeGreaterThan(0)
+    expect(cats.network_expansion!.length).toBeGreaterThan(0)
+  })
+
+  test("fitness categories exist", () => {
+    const cats = getTemplatesByCategory()
+    expect(cats.strength!.length).toBeGreaterThan(0)
+    expect(cats.training!.length).toBeGreaterThan(0)
+    expect(cats.nutrition!.length).toBeGreaterThan(0)
+    expect(cats.body_comp!.length).toBeGreaterThan(0)
+  })
+
+  test("wealth categories exist", () => {
+    const cats = getTemplatesByCategory()
+    expect(cats.income!.length).toBeGreaterThan(0)
+    expect(cats.saving!.length).toBeGreaterThan(0)
+    expect(cats.investing!.length).toBeGreaterThan(0)
+    expect(cats.career_growth!.length).toBeGreaterThan(0)
+  })
+
   test("all L3 goals are in exactly one category", () => {
     const cats = getTemplatesByCategory()
-    const allIds = [
-      ...cats.field_work.map((t) => t.id),
-      ...cats.results.map((t) => t.id),
-      ...cats.dirty_dog.map((t) => t.id),
-      ...cats.texting.map((t) => t.id),
-      ...cats.dates.map((t) => t.id),
-      ...cats.relationship.map((t) => t.id),
-    ]
+    const allIds = Object.values(cats).flatMap((templates) => templates!.map((t) => t.id))
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     expect(allIds.length).toBe(l3Goals.length)
     expect(new Set(allIds).size).toBe(allIds.length)

@@ -340,7 +340,7 @@ export function QAPage() {
                       <div key={i} className="rounded-lg border bg-muted/50 p-3">
                         <div className="flex items-center justify-between mb-1">
                           <p className="font-semibold text-foreground">
-                            Source {i + 1}: {source.metadata.coach || "Unknown Coach"}
+                            Source {i + 1}: {source.metadata.coach ?? source.metadata.channel ?? "Unknown Coach"}
                           </p>
                           <span className="text-xs text-muted-foreground">
                             {Math.round(source.relevanceScore * 100)}% match

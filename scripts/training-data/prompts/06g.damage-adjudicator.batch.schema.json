@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "06g.damage-adjudicator.batch.schema.json",
+  "title": "06g Damage Adjudication Batch Output",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["adjudications"],
+  "properties": {
+    "adjudications": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "segment_id",
+          "transcript_confidence",
+          "speaker_confidence",
+          "phase_confidence",
+          "repair_possible",
+          "repaired_text",
+          "contamination_start_segment_id",
+          "contamination_end_segment_id",
+          "confidence_rationale"
+        ],
+        "properties": {
+          "segment_id": { "type": "integer" },
+          "transcript_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "speaker_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "phase_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "repair_possible": { "type": "boolean" },
+          "repaired_text": {
+            "type": ["string", "null"]
+          },
+          "contamination_start_segment_id": { "type": "integer" },
+          "contamination_end_segment_id": { "type": "integer" },
+          "confidence_rationale": {
+            "type": "string",
+            "maxLength": 240
+          }
+        }
+      }
+    }
+  }
+}

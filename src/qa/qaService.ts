@@ -150,7 +150,7 @@ export function chunksToSources(chunks: RetrievedChunk[]): Source[] {
 export function addCoachNamesToSourceCitations(answer: string, chunks: RetrievedChunk[]): string {
   const coachByIndex = new Map<number, string>()
   chunks.forEach((chunk, idx) => {
-    coachByIndex.set(idx + 1, chunk.metadata.coach || "Unknown Coach")
+    coachByIndex.set(idx + 1, chunk.metadata.coach ?? chunk.metadata.channel ?? "Unknown Coach")
   })
 
   // (source 3) -> (Coach — source 3)
@@ -171,7 +171,7 @@ export function createMetaCognition(
   suggestedFollowUps: string[]
 ): MetaCognition {
   // Compute limitations based on chunk metadata
-  const coaches = [...new Set(chunks.map((c) => c.metadata.coach).filter(Boolean))]
+  const coaches = [...new Set(chunks.map((c) => c.metadata.coach ?? c.metadata.channel).filter(Boolean))]
   const limitations = coaches.length === 1
     ? `This answer is based primarily on ${coaches[0]}'s approach. Other coaches may have different perspectives.`
     : coaches.length > 0
@@ -180,7 +180,7 @@ export function createMetaCognition(
 
   const fallbackReasoning = (() => {
     const top = chunks.slice(0, 3).map((c, idx) => {
-      const coach = c.metadata.coach || "Unknown Coach"
+      const coach = c.metadata.coach ?? c.metadata.channel ?? "Unknown Coach"
       const topic = c.metadata.topic ? ` — ${c.metadata.topic}` : ""
       const score = typeof c.relevanceScore === "number" ? ` (${Math.round(c.relevanceScore * 100)}% match)` : ""
       return `source ${idx + 1}: ${coach}${topic}${score}`

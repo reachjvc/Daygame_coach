@@ -9,15 +9,7 @@ import { GoalCard } from "./GoalCard"
 import { GoalToggle } from "./GoalToggle"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
 import type { ProjectedDateInfo } from "../goalsService"
-
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
-  field_work: "Field Work",
-  results: "Results",
-  dirty_dog: "Dirty Dog Goals",
-  texting: "Texting Game",
-  dates: "Dating",
-  relationship: "Relationship",
-}
+import { CATEGORY_LABELS } from "../config"
 
 function SortableCategoryGoal({
   goal,

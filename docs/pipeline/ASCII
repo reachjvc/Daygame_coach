@@ -87,6 +87,10 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |   - Commentary verify    |    Halts pipeline
 |   - Collapsed speakers   |    on REJECT
 |   - Structural coherence |
+|                          |
+|  Auto-tiered model:      |    --model auto (default)
+|   confidence >= 0.85 →   |    Haiku (cheap/fast)
+|   confidence <  0.85 →   |    Opus (thorough)
 +--------------------------+
              |
              |  data/06b.LLM.verify/.../*.verification.json
@@ -149,13 +153,20 @@ Never trade quality for speed. Never lower gates to "get content flowing."
              |  data/06f.DET.damage-map/.../*.damage-map.json
              v
 +--------------------------+
-|  06g.LLM. DAMAGE-ADJUD.  |    N LLM calls / video
+|  06g.LLM. DAMAGE-ADJUD.  |    Batched LLM calls
 |                          |    Claude CLI
 |  Per-seed adjudication:  |
 |   - transcript_confidence|    Contamination spans
 |   - speaker_confidence   |    Repair acceptance
 |   - phase_confidence     |    Anchor eligibility
 |   - repair_possible      |
+|                          |
+|  Batches 5-10 seeds per  |    ~5x fewer LLM calls
+|  prompt (same-conv seeds)|
+|                          |
+|  Skips non-infield videos|    video_type from 06d
+|  (no conversations to    |    --skip-video-type-filter
+|  adjudicate)             |    to override
 +--------------------------+
              |
              |  data/06g.LLM.damage-adjudicator/.../*.damage-adjudication.json
@@ -240,8 +251,13 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |   videoType, channel     |    "get full conversation"
 |   conversationId         |
 |                          |
+|  Confidence floor:       |    Chunks with score < 0.3
+|   Filters low-quality    |    dropped before embedding
+|   chunks pre-embed       |
+|                          |
 |  Incremental: skips      |    Hash-based change
-|  unchanged sources       |    detection
+|  unchanged sources       |    detection + mtime
+|  + stale output detect   |    safety net
 +--------------------------+
              |
              |  data/09.EXT.chunks/<source>/<video_id>.chunks.json
@@ -257,7 +273,8 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  into Supabase           |    storeEmbeddings
 |                          |
 |  Incremental: skips      |    Hash-based change
-|  unchanged chunks        |    detection
+|  unchanged chunks        |    detection + mtime
+|  + stale output detect   |    safety net
 +--------------------------+
              |
              v

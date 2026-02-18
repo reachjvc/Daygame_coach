@@ -12,17 +12,7 @@ import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
 import { getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
 import type { BatchGoalInsert } from "../treeGenerationService"
 import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig, CurveThemeId } from "../types"
-
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
-  field_work: "Field Work",
-  results: "Results",
-  dirty_dog: "Dirty Dog",
-  texting: "Texting Game",
-  dates: "Dating",
-  relationship: "Relationship",
-}
-
-const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]
+import { CATEGORY_LABELS, CATEGORY_ORDER } from "../config"
 
 interface GoalTreePreviewProps {
   inserts: BatchGoalInsert[]

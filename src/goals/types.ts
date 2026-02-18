@@ -201,6 +201,7 @@ export interface GoalTemplate {
   title: string
   level: GoalGraphLevel
   nature: "input" | "outcome"
+  lifeArea: string
   displayCategory: GoalDisplayCategory | null
   templateType: GoalTemplateType | null
   defaultMilestoneConfig: MilestoneLadderConfig | null

@@ -2,16 +2,20 @@
 """
 scripts/training-data/06h.DET.confidence-propagation
 
-Merge deterministic damage seeds (06f) + LLM adjudication (06g) into confidence-aware
-conversation payloads for downstream Stage 07/09/10 behavior.
+Merge deterministic damage seeds (06f) + LLM adjudication (06g) + quality repairs (06e)
+into confidence-aware conversation payloads for downstream Stage 07/09/10 behavior.
+
+Stage 07 reads ONLY from 06h output — no fallbacks, no separate 06e loading.
 
 Reads:
   - data/06d.DET.sanitized/<source>/<video>/*.conversations.json
+  - data/06e.LLM.quality-check/<source>/<video>/*.quality-check.json (optional)
   - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
   - data/06g.LLM.damage-adjudicator/<source>/<video>/*.damage-adjudication.json (optional)
 
 Writes:
   - data/06h.DET.confidence-propagation/<source>/<video>/*.conversations.json
+    (includes quality_data from 06e, damage_reason_codes per segment, applied quality repairs)
   - data/06h.DET.confidence-propagation/<source>/<video>/*.confidence.report.json
 """
 
@@ -31,7 +35,9 @@ from batch.manifest_parser import load_manifest_sources, manifest_filter_files
 
 
 LOG_PREFIX = "[06h.DET.confidence-propagation]"
-PIPELINE_VERSION = "06h.DET.confidence-propagation-v1.0"
+PIPELINE_VERSION = "06h.DET.confidence-propagation-v1.1"
+
+REPAIR_ACCEPT_THRESHOLD = 0.85
 
 
 def repo_root() -> Path:
@@ -50,6 +56,10 @@ def adjudication_root() -> Path:
     return repo_root() / "data" / "06g.LLM.damage-adjudicator"
 
 
+def quality_root() -> Path:
+    return repo_root() / "data" / "06e.LLM.quality-check"
+
+
 def output_root() -> Path:
     return repo_root() / "data" / "06h.DET.confidence-propagation"
 
@@ -64,6 +74,10 @@ def test_damage_root() -> Path:
 
 def test_adjudication_root() -> Path:
     return repo_root() / "data" / "test" / "06g.LLM.damage-adjudicator"
+
+
+def test_quality_root() -> Path:
+    return repo_root() / "data" / "test" / "06e.LLM.quality-check"
 
 
 def test_output_root() -> Path:
@@ -262,10 +276,280 @@ def _apply_propagation_penalties(
         row["overall"] = _clamp01((row["transcript"] + row["speaker"] + row["phase"]) / 3.0)
 
 
+def _load_quality_data(
+    input_path: Path,
+    quality_root_dir: Path,
+    input_root_dir: Path,
+) -> Optional[Dict[str, Any]]:
+    """Load 06e quality-check data for a given input file.
+
+    Maps the input file path to its matching .quality-check.json in quality_root_dir.
+    Returns parsed JSON or None if not found.
+    """
+    in_name = input_path.name
+    qc_name = in_name.replace(".conversations.json", ".quality-check.json")
+    if qc_name == in_name:
+        qc_name = f"{input_path.stem}.quality-check.json"
+
+    # Try preserving source/video directory layout
+    try:
+        rel_parent = input_path.parent.relative_to(input_root_dir)
+        candidate = quality_root_dir / rel_parent / qc_name
+        if candidate.exists():
+            return _read_json(candidate)
+    except ValueError:
+        pass
+
+    # Flat fallback
+    candidate = quality_root_dir / qc_name
+    if candidate.exists():
+        return _read_json(candidate)
+
+    return None
+
+
+def _apply_quality_repairs(
+    segments: List[Dict[str, Any]],
+    transcript_artifacts: List[Dict[str, Any]],
+    low_quality_segments: List[Dict[str, Any]],
+) -> Tuple[int, int, int, int]:
+    """Apply 06e quality repairs (delete/replace/merge) to segments in-place.
+
+    Returns (artifact_accepted, artifact_rejected, lq_accepted, lq_rejected).
+    """
+    seg_by_id: Dict[int, Dict[str, Any]] = {
+        s.get("id"): s for s in segments
+        if isinstance(s, dict) and isinstance(s.get("id"), int)
+    }
+
+    # --- Transcript artifact repairs ---
+    repairs_accepted = 0
+    repairs_rejected = 0
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict):
+            continue
+        action = artifact.get("action", "replace")
+        repair_conf = artifact.get("repair_confidence")
+        sid = artifact.get("segment_index")
+
+        if not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
+            repairs_rejected += 1
+            continue
+        if not isinstance(sid, int) or sid not in seg_by_id:
+            repairs_rejected += 1
+            continue
+
+        seg = seg_by_id[sid]
+
+        if action == "replace":
+            repair_text = artifact.get("repair_text")
+            if not repair_text:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            seg["text"] = repair_text
+            artifact["repaired"] = True
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "replace",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            repairs_accepted += 1
+
+        elif action == "delete":
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "delete"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "delete",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            repairs_accepted += 1
+
+        elif action == "merge_prev":
+            prev_seg = seg_by_id.get(sid - 1)
+            if prev_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            prev_text = prev_seg.get("text", "")
+            merge_text = seg.get("text", "")
+            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_prev"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "merge_prev",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            repairs_accepted += 1
+
+        elif action == "merge_next":
+            next_seg = seg_by_id.get(sid + 1)
+            if next_seg is None:
+                repairs_rejected += 1
+                continue
+            original_text = artifact.get("original_text") or seg.get("text", "")
+            if "original_text" not in artifact:
+                artifact["original_text"] = original_text
+            merge_text = seg.get("text", "")
+            next_text = next_seg.get("text", "")
+            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
+            seg["text"] = ""
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "merge_next"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "merge_next",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            repairs_accepted += 1
+
+        else:
+            repairs_rejected += 1
+
+    # Guard: segments already repaired as artifacts should not be double-repaired as LQ
+    artifact_repaired_sids: Set[int] = {
+        a.get("segment_index") for a in transcript_artifacts
+        if isinstance(a, dict) and a.get("repaired")
+    }
+
+    # --- Low quality segment repairs ---
+    lq_repairs_accepted = 0
+    lq_repairs_rejected = 0
+    for lq_entry in low_quality_segments:
+        if not isinstance(lq_entry, dict):
+            continue
+        action = lq_entry.get("action", "replace")
+        repair_conf = lq_entry.get("repair_confidence")
+        sid = lq_entry.get("segment")
+
+        if not isinstance(repair_conf, (int, float)):
+            continue
+        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
+            lq_repairs_rejected += 1
+            continue
+        if not isinstance(sid, int) or sid not in seg_by_id:
+            lq_repairs_rejected += 1
+            continue
+        if sid in artifact_repaired_sids:
+            lq_repairs_rejected += 1
+            continue
+
+        seg = seg_by_id[sid]
+
+        if action == "replace":
+            repair_text = lq_entry.get("repair_text")
+            if not repair_text:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            seg["text"] = repair_text
+            lq_entry["repaired"] = True
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "replace",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            lq_repairs_accepted += 1
+
+        elif action == "delete":
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "delete"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "delete",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            lq_repairs_accepted += 1
+
+        elif action == "merge_prev":
+            prev_seg = seg_by_id.get(sid - 1)
+            if prev_seg is None:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            prev_text = prev_seg.get("text", "")
+            merge_text = seg.get("text", "")
+            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "merge_prev"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "merge_prev",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            lq_repairs_accepted += 1
+
+        elif action == "merge_next":
+            next_seg = seg_by_id.get(sid + 1)
+            if next_seg is None:
+                lq_repairs_rejected += 1
+                continue
+            original_text = lq_entry.get("original_text") or seg.get("text", "")
+            if "original_text" not in lq_entry:
+                lq_entry["original_text"] = original_text
+            merge_text = seg.get("text", "")
+            next_text = next_seg.get("text", "")
+            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
+            seg["text"] = ""
+            lq_entry["repaired"] = True
+            lq_entry["repair_action_applied"] = "merge_next"
+            seg["repair_metadata"] = {
+                "source_stage": "06e.LLM.quality-check",
+                "action": "merge_next",
+                "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            lq_repairs_accepted += 1
+
+        else:
+            lq_repairs_rejected += 1
+
+    # Mark artifact warnings as resolved when LQ already fixed the same segment
+    lq_repaired_sids: Set[int] = {
+        lq.get("segment") for lq in low_quality_segments
+        if isinstance(lq, dict) and lq.get("repaired")
+    }
+    for artifact in transcript_artifacts:
+        if not isinstance(artifact, dict) or artifact.get("repaired"):
+            continue
+        sid = artifact.get("segment_index")
+        if isinstance(sid, int) and sid in lq_repaired_sids:
+            artifact["repaired"] = True
+            artifact["repair_action_applied"] = "resolved_by_lq_repair"
+
+    total = repairs_accepted + lq_repairs_accepted
+    if total > 0:
+        print(f"{LOG_PREFIX}   Quality repairs applied: {repairs_accepted} artifact, {lq_repairs_accepted} LQ ({repairs_rejected + lq_repairs_rejected} rejected)")
+
+    return repairs_accepted, repairs_rejected, lq_repairs_accepted, lq_repairs_rejected
+
+
 def propagate_confidence(
     data_06d: Dict[str, Any],
     damage_map: Optional[Dict[str, Any]],
     adjudication: Optional[Dict[str, Any]],
+    quality_check: Optional[Dict[str, Any]],
     *,
     conversation_block_threshold: float,
     apply_repairs: bool,
@@ -277,6 +561,18 @@ def propagate_confidence(
     segments: List[Dict[str, Any]] = [s for s in segments_raw if isinstance(s, dict)]
     segments.sort(key=lambda s: _safe_int(s.get("id")) or 0)
     out["segments"] = segments
+
+    # Apply 06e quality repairs BEFORE confidence calculation so repaired text is used.
+    low_quality_segments: List[Dict[str, Any]] = []
+    transcript_artifacts: List[Dict[str, Any]] = []
+    quality_repair_counts = (0, 0, 0, 0)
+    if isinstance(quality_check, dict):
+        low_quality_segments = list(quality_check.get("low_quality_segments", []) or [])
+        transcript_artifacts = list(quality_check.get("transcript_artifacts", []) or [])
+        if low_quality_segments or transcript_artifacts:
+            quality_repair_counts = _apply_quality_repairs(
+                segments, transcript_artifacts, low_quality_segments,
+            )
 
     global_transcript_score = 0.70
     tc = out.get("transcript_confidence")
@@ -311,6 +607,7 @@ def propagate_confidence(
 
     base_conf_by_id: Dict[int, Dict[str, float]] = {}
     contamination_sources_by_seg: Dict[int, Set[str]] = {}
+    damage_reason_codes_by_seg: Dict[int, List[str]] = {}
     contains_repaired_text: Set[int] = set()
     propagation_penalty_by_seg: Dict[int, float] = {}
 
@@ -346,6 +643,7 @@ def propagate_confidence(
             if isinstance(r, str) and str(r).strip()
         ]
         contamination_sources_by_seg[sid] = set(damage_reason_codes)
+        damage_reason_codes_by_seg[sid] = damage_reason_codes
 
         t_mult, s_mult, p_mult = _damage_multiplier(dmg_types)
         transcript_conf = _clamp01(transcript_conf * t_mult)
@@ -422,6 +720,7 @@ def propagate_confidence(
         }
         seg["confidence_tier"] = tier
         seg["contamination_sources"] = sorted(contamination_sources_by_seg.get(sid, set()))
+        seg["damage_reason_codes"] = sorted(damage_reason_codes_by_seg.get(sid, []))
         seg["contains_repaired_text"] = sid in contains_repaired_text
 
     # Conversation-level confidence + anchor allowlist.
@@ -500,6 +799,20 @@ def propagate_confidence(
         "segments_with_repairs": len(contains_repaired_text),
         "damage_map_present": bool(damage_map),
         "adjudication_present": bool(adjudication),
+        "quality_check_present": bool(quality_check),
+        "quality_repairs": {
+            "artifact_accepted": quality_repair_counts[0],
+            "artifact_rejected": quality_repair_counts[1],
+            "lq_accepted": quality_repair_counts[2],
+            "lq_rejected": quality_repair_counts[3],
+        },
+    }
+
+    # Store 06e quality data for downstream consumers (Stage 07 evidence gating).
+    # Includes repaired flags set by _apply_quality_repairs above.
+    out["quality_data"] = {
+        "low_quality_segments": low_quality_segments,
+        "transcript_artifacts": transcript_artifacts,
     }
 
     report = {
@@ -529,6 +842,7 @@ def process_file(
     adjudication_root_dir: Path,
     conversation_block_threshold: float,
     apply_repairs: bool,
+    quality_root_dir: Optional[Path] = None,
     dry_run: bool = False,
 ) -> Dict[str, int]:
     data_06d = _read_json(input_path)
@@ -561,10 +875,25 @@ def process_file(
     damage_data = _read_json(damage_path) if damage_path else None
     adjud_data = _read_json(adjud_path) if adjud_path else None
 
+    # Detect 06g skip sentinel (non-infield video type)
+    adjud_skipped = False
+    if isinstance(adjud_data, dict) and adjud_data.get("skipped"):
+        adjud_skipped = True
+        skip_reason = adjud_data.get("skip_reason", "unknown")
+        print(f"{LOG_PREFIX}   06g adjudication skipped: {skip_reason}")
+        adjud_data = None  # Treat as absent for propagation
+
+    quality_data = None
+    if quality_root_dir is not None:
+        quality_data = _load_quality_data(input_path, quality_root_dir, input_root_dir)
+        if quality_data:
+            print(f"{LOG_PREFIX}   Quality data from 06e loaded")
+
     propagated, report = propagate_confidence(
         data_06d,
         damage_data,
         adjud_data,
+        quality_data,
         conversation_block_threshold=conversation_block_threshold,
         apply_repairs=apply_repairs,
     )
@@ -572,6 +901,8 @@ def process_file(
         "stage06d": str(input_path),
         "damage_map": str(damage_path) if damage_path else None,
         "damage_adjudication": str(adjud_path) if adjud_path else None,
+        "damage_adjudication_skipped": adjud_skipped,
+        "quality_check": "loaded" if quality_data else None,
     }
 
     report_path = output_path.with_suffix(".confidence.report.json")
@@ -646,6 +977,7 @@ def _run_directory_with_files(
                 adjudication_root_dir=adjudication_root_dir,
                 conversation_block_threshold=args.conversation_block_threshold,
                 apply_repairs=args.apply_repairs,
+                quality_root_dir=getattr(args, "_quality_root_dir", None),
                 dry_run=args.dry_run,
             )
             processed += 1
@@ -718,6 +1050,7 @@ def _run_input(
             adjudication_root_dir=adjudication_root_dir,
             conversation_block_threshold=args.conversation_block_threshold,
             apply_repairs=args.apply_repairs,
+            quality_root_dir=getattr(args, "_quality_root_dir", None),
             dry_run=args.dry_run,
         )
         return
@@ -850,6 +1183,13 @@ def main() -> None:
             "(default: data/06g.LLM.damage-adjudicator, or data/test/06g.LLM.damage-adjudicator with --test)"
         ),
     )
+    parser.add_argument(
+        "--quality-root",
+        help=(
+            "Root directory for 06e quality-check artifacts "
+            "(default: data/06e.LLM.quality-check, or data/test/06e.LLM.quality-check with --test)"
+        ),
+    )
     parser.add_argument("--output", help="Output directory (default: data/06h.DET.confidence-propagation/)")
     parser.add_argument(
         "--conversation-block-threshold",
@@ -880,12 +1220,16 @@ def main() -> None:
         in_root = resolve_root_path(args.input_root, test_input_root())
         dmg_root = resolve_root_path(args.damage_root, test_damage_root())
         adj_root = resolve_root_path(args.adjudication_root, test_adjudication_root())
+        qc_root = resolve_root_path(args.quality_root, test_quality_root())
         out_root = Path(args.output) if args.output else test_output_root()
     else:
         in_root = resolve_root_path(args.input_root, input_root())
         dmg_root = resolve_root_path(args.damage_root, damage_root())
         adj_root = resolve_root_path(args.adjudication_root, adjudication_root())
+        qc_root = resolve_root_path(args.quality_root, quality_root())
         out_root = Path(args.output) if args.output else output_root()
+
+    args._quality_root_dir = qc_root
 
     if args.test:
         _run_directory(

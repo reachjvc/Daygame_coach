@@ -23,7 +23,7 @@ function detectScriptIntent(question: string): boolean {
 export function buildSystemPrompt(chunks: RetrievedChunk[], question: string): string {
   const sourceMap = chunks
     .map((chunk, idx) => {
-      const coach = chunk.metadata.coach || "Unknown Coach"
+      const coach = chunk.metadata.coach ?? chunk.metadata.channel ?? "Unknown Coach"
       const topic = chunk.metadata.topic ? ` — ${chunk.metadata.topic}` : ""
       return `source ${idx + 1} = ${coach}${topic}`
     })
@@ -32,7 +32,7 @@ export function buildSystemPrompt(chunks: RetrievedChunk[], question: string): s
   const MAX_PROMPT_CHUNK_CHARS = 2200
   const contextText = chunks
     .map((chunk, idx) => {
-      const coach = chunk.metadata.coach || "Unknown Coach"
+      const coach = chunk.metadata.coach ?? chunk.metadata.channel ?? "Unknown Coach"
       const topic = chunk.metadata.topic ? ` | topic: ${chunk.metadata.topic}` : ""
       const source = chunk.metadata.source ? ` | source: ${chunk.metadata.source}` : ""
       const score =

@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest"
 import { generateGoalTreeInserts, type BatchGoalInsert } from "@/src/goals/treeGenerationService"
 import { GOAL_TEMPLATES, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 
-const L2_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 2).length
-const ALL_L3_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 3).length
+// Daygame-specific counts (l1_girlfriend fans into daygame L2s only)
+const DAYGAME_L2_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 2 && t.lifeArea === "daygame").length
+const DAYGAME_L3_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
 
 describe("generateGoalTreeInserts", () => {
   describe("L1 pick (most common)", () => {
@@ -11,7 +12,7 @@ describe("generateGoalTreeInserts", () => {
 
     it("returns correct number of inserts: 1 L1 + all L2 + all unique L3", () => {
       // L1 fans into all L2s, l2_attract_any fans into all L3s, so union = all L3s
-      expect(inserts.length).toBe(1 + L2_COUNT + ALL_L3_COUNT)
+      expect(inserts.length).toBe(1 + DAYGAME_L2_COUNT + DAYGAME_L3_COUNT)
     })
 
     it("first insert is the picked L1 goal", () => {
@@ -22,7 +23,7 @@ describe("generateGoalTreeInserts", () => {
 
     it("L2 achievements follow the L1", () => {
       const l2s = inserts.filter((i) => i.goal_level === 2)
-      expect(l2s.length).toBe(L2_COUNT)
+      expect(l2s.length).toBe(DAYGAME_L2_COUNT)
       expect(l2s.map((i) => i.template_id)).toContain("l2_master_daygame")
       expect(l2s.map((i) => i.template_id)).toContain("l2_confident")
     })
@@ -36,7 +37,7 @@ describe("generateGoalTreeInserts", () => {
 
     it("L3 goals reference an L2 as parent", () => {
       const l3s = inserts.filter((i) => i.goal_level === 3)
-      expect(l3s.length).toBe(ALL_L3_COUNT)
+      expect(l3s.length).toBe(DAYGAME_L3_COUNT)
       for (const l3 of l3s) {
         expect(l3._tempParentId).toMatch(/^__temp_l2_/)
       }
@@ -90,7 +91,13 @@ describe("generateGoalTreeInserts", () => {
 
     it("L3 goals have display_category set", () => {
       const l3s = inserts.filter((i) => i.goal_level === 3)
-      const validCategories = ["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]
+      const validCategories = [
+        "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+        "mindfulness", "resilience", "learning", "reflection", "discipline",
+        "social_activity", "friendships", "hosting", "social_skills", "network_expansion",
+        "strength", "training", "nutrition", "body_comp",
+        "income", "saving", "investing", "career_growth",
+      ]
       for (const l3 of l3s) {
         expect(validCategories).toContain(l3.display_category)
       }

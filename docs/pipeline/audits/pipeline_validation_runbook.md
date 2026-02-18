@@ -128,16 +128,16 @@ Stage notes (what each stage is for):
 - `04.EXT.diarize`: assign speaker tracks.
 - `05.EXT.audio-features`: compute ASR/audio metadata used by Stage 06.
 - `06.LLM.video-type`: infer conversation structure + roles + type from Stage 05.
-- `06b.LLM.verify`: independent LLM QA pass over Stage 06 artifacts.
+- `06b.LLM.verify`: independent LLM QA pass over Stage 06 artifacts. Auto-tiered model: `--model auto` (default) uses Haiku when video_type confidence >= 0.85, Opus otherwise.
 - `06c.DET.patch`: deterministic patch pass from verifier output.
 - `06d.DET.sanitize`: deterministic contamination handling and Stage 07 evidence allowlists.
 - `06e.LLM.quality-check`: focused transcript quality assessment (ASR artifact detection, damage severity, repair suggestions).
 - `06f.DET.damage-map`: normalize segment damage reasons and coverage metrics (reads 06e quality data).
-- `06g.LLM.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments.
+- `06g.LLM.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments. Batches 5-10 seeds per prompt (~5x fewer calls). Skips non-infield videos automatically (`--skip-video-type-filter` to override).
 - `06h.DET.confidence-propagation`: turn damage/adjudication into per-segment/per-conversation confidence.
 - `07.LLM.content`: apply 06e transcript repairs + produce enrichments; REJECT videos already quarantined upstream, FLAG/APPROVE both proceed.
 - `08.DET.taxonomy-validation`: deterministic taxonomy drift gate with per-video quarantine semantics.
-- `09.EXT.chunk-embed`: convert enrichments to retrieval chunks + embeddings (Ollama).
-- `10.EXT.ingest`: ingest eligible chunks to DB with readiness/taxonomy/semantic gates.
+- `09.EXT.chunk-embed`: convert enrichments to retrieval chunks + embeddings (Ollama). Confidence floor (0.3) drops low-quality chunks pre-embed. Mtime-based stale output detection auto-forces re-chunk when input is newer than output.
+- `10.EXT.ingest`: ingest eligible chunks to DB with readiness/taxonomy/semantic gates. Mtime-based stale output detection auto-forces re-ingest when chunks are newer than last ingest.
 - `11.EXT.retrieval-smoke`: quick end-to-end retrieval check against ingested data.
 

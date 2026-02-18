@@ -4,12 +4,17 @@ scripts/training-data/06g.LLM.damage-adjudicator
 
 Targeted LLM adjudicator over Stage 06f damage-map seeds.
 
+Only runs for infield/compilation videos by default.
+Non-infield videos (talking_head, podcast, lecture) are skipped with a sentinel
+output file (skipped=true). Override with --skip-video-type-filter.
+
 Reads:
   - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
-  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json (context)
+  - data/06d.DET.sanitized/<source>/<video>/*.conversations.json (context + video_type)
 
 Writes:
   - data/06g.LLM.damage-adjudicator/<source>/<video>/*.damage-adjudication.json
+    (full adjudication for infield/compilation, or skip sentinel for other types)
 """
 
 from __future__ import annotations
@@ -33,9 +38,16 @@ except Exception:  # pragma: no cover
 
 
 LOG_PREFIX = "[06g.LLM.damage-adjudicator]"
-PIPELINE_VERSION = "06g.LLM.damage-adjudicator-v1.0"
+PIPELINE_VERSION = "06g.LLM.damage-adjudicator-v1.2"
+
+# Video types that contain infield conversations worth adjudicating.
+# Non-infield types (talking_head, podcast, lecture) have no conversation seeds
+# and are skipped unless --skip-video-type-filter is used.
+INFIELD_VIDEO_TYPES = {"infield", "compilation"}
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.prompt.md"
 SCHEMA_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.schema.json"
+BATCH_PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.batch.prompt.md"
+BATCH_SCHEMA_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.batch.schema.json"
 CLAUDE_BINARY_PATHS = [
     "claude",
     Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
@@ -170,6 +182,16 @@ def _read_json(path: Path) -> Optional[Dict[str, Any]]:
 def _extract_video_id_from_name(name: str) -> Optional[str]:
     m = re.search(r"\[([A-Za-z0-9_-]{11})\]", name)
     return m.group(1) if m else None
+
+
+def _get_video_type(data: Dict[str, Any]) -> str:
+    """Extract video type string from 06d context data."""
+    vt = data.get("video_type", {})
+    if isinstance(vt, dict):
+        return vt.get("type", "unknown")
+    if isinstance(vt, str):
+        return vt
+    return "unknown"
 
 
 def _load_prompt_template() -> str:
@@ -362,6 +384,76 @@ def _build_context_window(
     return out
 
 
+def _build_batch_context_window(
+    *,
+    context_data: Dict[str, Any],
+    seed_segment_ids: List[int],
+    conversation_id: int,
+    left: int,
+    right: int,
+) -> List[Dict[str, Any]]:
+    """Build a context window spanning all seeds in a batch."""
+    segments = [
+        seg for seg in (context_data.get("segments") or [])
+        if isinstance(seg, dict) and isinstance(_safe_int(seg.get("id")), int)
+    ]
+    if conversation_id > 0:
+        conv_only = [
+            seg for seg in segments
+            if (_safe_int(seg.get("conversation_id")) or 0) == conversation_id
+        ]
+        if conv_only:
+            segments = conv_only
+    segments.sort(key=lambda s: _safe_int(s.get("id")) or 0)
+    ids = [_safe_int(seg.get("id")) for seg in segments]
+    ids = [sid for sid in ids if isinstance(sid, int)]
+    seed_indices = [ids.index(sid) for sid in seed_segment_ids if sid in ids]
+    if not seed_indices:
+        return []
+    start = max(0, min(seed_indices) - left)
+    end = min(len(segments), max(seed_indices) + right + 1)
+    window = segments[start:end]
+    out: List[Dict[str, Any]] = []
+    for seg in window:
+        out.append(
+            {
+                "id": _safe_int(seg.get("id")),
+                "conversation_id": _safe_int(seg.get("conversation_id")) or 0,
+                "start": seg.get("start"),
+                "end": seg.get("end"),
+                "speaker_id": seg.get("speaker_id"),
+                "speaker_role": seg.get("speaker_role"),
+                "segment_type": seg.get("segment_type"),
+                "segment_flags": seg.get("segment_flags") if isinstance(seg.get("segment_flags"), list) else [],
+                "text": seg.get("text", ""),
+            }
+        )
+    return out
+
+
+def _group_seeds_into_batches(
+    seed_rows: List[Dict[str, Any]],
+    batch_size: int,
+) -> List[List[Dict[str, Any]]]:
+    """Group seeds by conversation_id, then chunk into batches of batch_size."""
+    from collections import defaultdict
+
+    by_conv: Dict[int, List[Dict[str, Any]]] = defaultdict(list)
+    for seed in seed_rows:
+        conv_id = _safe_int(seed.get("conversation_id")) or 0
+        by_conv[conv_id].append(seed)
+
+    for conv_id in by_conv:
+        by_conv[conv_id].sort(key=lambda s: _safe_int(s.get("segment_id")) or 0)
+
+    batches: List[List[Dict[str, Any]]] = []
+    for conv_id in sorted(by_conv.keys()):
+        conv_seeds = by_conv[conv_id]
+        for i in range(0, len(conv_seeds), batch_size):
+            batches.append(conv_seeds[i : i + batch_size])
+    return batches
+
+
 def _resolve_context_path(
     damage_map_path: Path,
     damage_map_data: Dict[str, Any],
@@ -430,6 +522,245 @@ def _mean(vals: List[float]) -> float:
     return sum(vals) / len(vals)
 
 
+def _process_single_adjudication(
+    adjudication: Dict[str, Any],
+    seed: Dict[str, Any],
+    context_ids: List[int],
+    args: argparse.Namespace,
+) -> Dict[str, Any]:
+    """Post-process a single adjudication result into an output row."""
+    sid = _safe_int(seed.get("segment_id"))
+    conv_id = _safe_int(seed.get("conversation_id")) or 0
+    sev = str(seed.get("severity", "low")).strip().lower() or "low"
+
+    _bounded_contamination(adjudication, context_ids, sid)
+
+    transcript_conf = float(adjudication.get("transcript_confidence", 0.0))
+    speaker_conf = float(adjudication.get("speaker_confidence", 0.0))
+    phase_conf = float(adjudication.get("phase_confidence", 0.0))
+    overall_conf = _mean([transcript_conf, speaker_conf, phase_conf])
+
+    repair_possible = bool(adjudication.get("repair_possible"))
+    repaired_text = adjudication.get("repaired_text")
+    accepted_repair = bool(
+        repair_possible
+        and isinstance(repaired_text, str)
+        and repaired_text.strip()
+        and transcript_conf >= args.repair_accept_threshold
+    )
+
+    allow_anchor = overall_conf >= args.anchor_allow_threshold
+
+    return {
+        "seed_segment_id": sid,
+        "conversation_id": conv_id,
+        "damage_types": seed.get("damage_types", []),
+        "damage_reason_codes": seed.get("damage_reason_codes", []),
+        "severity": sev,
+        "adjudication": adjudication,
+        "overall_confidence": round(overall_conf, 4),
+        "repair_accepted": accepted_repair,
+        "anchor_allowed": allow_anchor,
+        "determinism_match": True,
+    }
+
+
+def _adjudicate_single_seed(
+    seed: Dict[str, Any],
+    *,
+    context_data: Dict[str, Any],
+    args: argparse.Namespace,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> Tuple[Dict[str, Any], bool]:
+    """Adjudicate a single seed (original per-seed path). Returns (row, llm_failed)."""
+    sid = _safe_int(seed.get("segment_id"))
+    conv_id = _safe_int(seed.get("conversation_id")) or 0
+    sev = str(seed.get("severity", "low")).strip().lower() or "low"
+    context_window = _build_context_window(
+        context_data=context_data,
+        seed_segment_id=sid,
+        conversation_id=conv_id,
+        left=args.context_left,
+        right=args.context_right,
+    )
+    context_ids = [x for x in (_safe_int(r.get("id")) for r in context_window) if isinstance(x, int)]
+
+    seed_payload = {
+        "segment_id": sid,
+        "conversation_id": conv_id,
+        "severity": sev,
+        "damage_types": seed.get("damage_types", []),
+        "damage_reason_codes": seed.get("damage_reason_codes", []),
+        "contamination_window_hint": seed.get("contamination_window"),
+    }
+    prompt = (
+        prompt_template
+        .replace("{{SEED_JSON}}", json.dumps(seed_payload, ensure_ascii=False))
+        .replace("{{CONTEXT_JSON}}", json.dumps(context_window, ensure_ascii=False))
+    )
+
+    normalized_runs: List[Dict[str, Any]] = []
+    raw_runs: List[Optional[str]] = []
+    call_count = max(1, int(args.determinism_n))
+    if args.dry_run:
+        call_count = 1
+
+    for _ in range(call_count):
+        if args.dry_run:
+            payload = _seed_fallback(sid, sev)
+            normalized_runs.append(payload)
+            raw_runs.append(None)
+            continue
+        raw = _call_claude(
+            prompt,
+            model=args.model,
+            timeout_seconds=args.timeout_seconds,
+            retries=args.retries,
+        )
+        raw_runs.append(raw)
+        parsed = _extract_json(raw or "") if raw else None
+        if not isinstance(parsed, dict) or not _validate_schema(parsed, schema):
+            parsed = _seed_fallback(sid, sev)
+            parsed["confidence_rationale"] = "fallback_schema_or_parse_failure"
+        parsed = _normalize_adjudication(parsed)
+        normalized_runs.append(parsed)
+
+    adjudication = normalized_runs[0] if normalized_runs else _seed_fallback(sid, sev)
+    deterministic_match = True
+    if len(normalized_runs) > 1:
+        first = json.dumps(normalized_runs[0], sort_keys=True, ensure_ascii=False)
+        for other in normalized_runs[1:]:
+            if json.dumps(other, sort_keys=True, ensure_ascii=False) != first:
+                deterministic_match = False
+                break
+
+    row = _process_single_adjudication(adjudication, seed, context_ids, args)
+    row["determinism_match"] = deterministic_match
+    if args.include_raw_llm and raw_runs:
+        row["raw_llm_output"] = raw_runs[0]
+
+    llm_failed = not args.dry_run and (raw_runs[0] is None)
+    return row, llm_failed
+
+
+def _adjudicate_batch(
+    batch: List[Dict[str, Any]],
+    *,
+    context_data: Dict[str, Any],
+    args: argparse.Namespace,
+    batch_prompt_template: str,
+    batch_schema: Optional[Dict[str, Any]],
+) -> Tuple[List[Dict[str, Any]], int]:
+    """Adjudicate a batch of seeds in a single LLM call. Returns (rows, llm_failures)."""
+    conv_id = _safe_int(batch[0].get("conversation_id")) or 0
+    seed_ids = []
+    for s in batch:
+        sid = _safe_int(s.get("segment_id"))
+        if sid is not None:
+            seed_ids.append(sid)
+
+    context_window = _build_batch_context_window(
+        context_data=context_data,
+        seed_segment_ids=seed_ids,
+        conversation_id=conv_id,
+        left=args.context_left,
+        right=args.context_right,
+    )
+    context_ids = [x for x in (_safe_int(r.get("id")) for r in context_window) if isinstance(x, int)]
+
+    seeds_payload = []
+    for seed in batch:
+        sid = _safe_int(seed.get("segment_id"))
+        sev = str(seed.get("severity", "low")).strip().lower() or "low"
+        seeds_payload.append({
+            "segment_id": sid,
+            "conversation_id": conv_id,
+            "severity": sev,
+            "damage_types": seed.get("damage_types", []),
+            "damage_reason_codes": seed.get("damage_reason_codes", []),
+            "contamination_window_hint": seed.get("contamination_window"),
+        })
+
+    prompt = (
+        batch_prompt_template
+        .replace("{{SEEDS_JSON}}", json.dumps(seeds_payload, ensure_ascii=False))
+        .replace("{{CONTEXT_JSON}}", json.dumps(context_window, ensure_ascii=False))
+    )
+
+    rows: List[Dict[str, Any]] = []
+    llm_failures = 0
+
+    if args.dry_run:
+        for seed in batch:
+            sid = _safe_int(seed.get("segment_id"))
+            sev = str(seed.get("severity", "low")).strip().lower() or "low"
+            fb = _seed_fallback(sid, sev)
+            row = _process_single_adjudication(fb, seed, context_ids, args)
+            rows.append(row)
+        return rows, 0
+
+    raw = _call_claude(
+        prompt,
+        model=args.model,
+        timeout_seconds=args.timeout_seconds,
+        retries=args.retries,
+    )
+
+    if not raw:
+        print(f"{LOG_PREFIX} WARN: Batch LLM call failed for {len(batch)} seeds, using fallbacks")
+        llm_failures = len(batch)
+        for seed in batch:
+            sid = _safe_int(seed.get("segment_id"))
+            sev = str(seed.get("severity", "low")).strip().lower() or "low"
+            fb = _seed_fallback(sid, sev)
+            fb["confidence_rationale"] = "fallback_batch_llm_failure"
+            row = _process_single_adjudication(fb, seed, context_ids, args)
+            rows.append(row)
+        return rows, llm_failures
+
+    parsed = _extract_json(raw) if raw else None
+    if not isinstance(parsed, dict) or not _validate_schema(parsed, batch_schema):
+        print(f"{LOG_PREFIX} WARN: Batch response failed schema validation, using fallbacks")
+        llm_failures = len(batch)
+        for seed in batch:
+            sid = _safe_int(seed.get("segment_id"))
+            sev = str(seed.get("severity", "low")).strip().lower() or "low"
+            fb = _seed_fallback(sid, sev)
+            fb["confidence_rationale"] = "fallback_batch_schema_failure"
+            row = _process_single_adjudication(fb, seed, context_ids, args)
+            rows.append(row)
+        return rows, llm_failures
+
+    adj_list = parsed.get("adjudications", [])
+    if not isinstance(adj_list, list):
+        adj_list = []
+
+    # Index LLM results by segment_id for matching
+    adj_by_id: Dict[int, Dict[str, Any]] = {}
+    for adj in adj_list:
+        if isinstance(adj, dict):
+            adj_sid = _safe_int(adj.get("segment_id"))
+            if adj_sid is not None:
+                adj_by_id[adj_sid] = adj
+
+    for seed in batch:
+        sid = _safe_int(seed.get("segment_id"))
+        sev = str(seed.get("severity", "low")).strip().lower() or "low"
+        matched = adj_by_id.get(sid)
+        if matched is not None:
+            adjudication = _normalize_adjudication(matched)
+        else:
+            print(f"{LOG_PREFIX} WARN: Batch response missing segment_id={sid}, using fallback")
+            adjudication = _seed_fallback(sid, sev)
+            adjudication["confidence_rationale"] = "fallback_batch_missing_segment"
+            llm_failures += 1
+        row = _process_single_adjudication(adjudication, seed, context_ids, args)
+        rows.append(row)
+
+    return rows, llm_failures
+
+
 def adjudicate_file(
     input_path: Path,
     output_path: Path,
@@ -439,6 +770,8 @@ def adjudicate_file(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, int]:
     damage_map = _read_json(input_path)
     if not damage_map:
@@ -455,6 +788,49 @@ def adjudicate_file(
     context_data = _read_json(context_path)
     if not context_data:
         raise RuntimeError(f"Could not read 06d context JSON: {context_path}")
+
+    # R2: Skip non-infield videos — they have no conversation seeds to adjudicate.
+    video_type = _get_video_type(context_data)
+    if video_type not in INFIELD_VIDEO_TYPES and not args.skip_video_type_filter:
+        skip_output = {
+            "video_id": damage_map.get("video_id"),
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "pipeline_version": PIPELINE_VERSION,
+            "source_file": str(input_path),
+            "damage_map_file": str(input_path),
+            "context_file": str(context_path),
+            "skipped": True,
+            "skip_reason": f"non_infield_video_type:{video_type}",
+            "video_type": video_type,
+            "model": args.model,
+            "summary": {
+                "seeds_total": 0,
+                "llm_calls": 0,
+                "repairs_accepted": 0,
+                "anchor_allowed": 0,
+                "llm_failures": 0,
+                "determinism_mismatches": 0,
+                "contamination_spans": 0,
+            },
+            "seeds": [],
+        }
+        if not args.dry_run:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(
+                json.dumps(skip_output, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+        print(
+            f"{LOG_PREFIX} SKIP {input_path.name}: video_type={video_type} "
+            f"(not in {sorted(INFIELD_VIDEO_TYPES)})"
+        )
+        return {
+            "seeds_total": 0,
+            "llm_calls": 0,
+            "repairs_accepted": 0,
+            "determinism_mismatches": 0,
+            "llm_failures": 0,
+        }
 
     seeds = damage_map.get("segments")
     if not isinstance(seeds, list):
@@ -480,119 +856,66 @@ def adjudicate_file(
     determinism_mismatches = 0
     anchor_allowed = 0
     contamination_spans: Set[str] = set()
+    llm_calls = 0
 
-    for seed in seed_rows:
-        sid = _safe_int(seed.get("segment_id"))
-        if sid is None:
-            continue
-        conv_id = _safe_int(seed.get("conversation_id")) or 0
-        sev = str(seed.get("severity", "low")).strip().lower() or "low"
-        context_window = _build_context_window(
-            context_data=context_data,
-            seed_segment_id=sid,
-            conversation_id=conv_id,
-            left=args.context_left,
-            right=args.context_right,
+    use_batching = args.batch_size > 1 and batch_prompt_template is not None
+
+    if use_batching:
+        batches = _group_seeds_into_batches(seed_rows, args.batch_size)
+        print(
+            f"{LOG_PREFIX}   Batching: {len(seed_rows)} seeds -> "
+            f"{len(batches)} batches (batch_size={args.batch_size})"
         )
-        context_ids = [_safe_int(row.get("id")) for row in context_window]
-        context_ids = [x for x in context_ids if isinstance(x, int)]
-
-        seed_payload = {
-            "segment_id": sid,
-            "conversation_id": conv_id,
-            "severity": sev,
-            "damage_types": seed.get("damage_types", []),
-            "damage_reason_codes": seed.get("damage_reason_codes", []),
-            "contamination_window_hint": seed.get("contamination_window"),
-        }
-        prompt = (
-            prompt_template
-            .replace("{{SEED_JSON}}", json.dumps(seed_payload, ensure_ascii=False))
-            .replace("{{CONTEXT_JSON}}", json.dumps(context_window, ensure_ascii=False))
-        )
-
-        normalized_runs: List[Dict[str, Any]] = []
-        raw_runs: List[Optional[str]] = []
-        call_count = max(1, int(args.determinism_n))
-        if args.dry_run:
-            call_count = 1
-
-        for _ in range(call_count):
-            if args.dry_run:
-                payload = _seed_fallback(sid, sev)
-                normalized_runs.append(payload)
-                raw_runs.append(None)
-                continue
-            raw = _call_claude(
-                prompt,
-                model=args.model,
-                timeout_seconds=args.timeout_seconds,
-                retries=args.retries,
+        for batch in batches:
+            batch_rows, batch_llm_fails = _adjudicate_batch(
+                batch,
+                context_data=context_data,
+                args=args,
+                batch_prompt_template=batch_prompt_template,
+                batch_schema=batch_schema,
             )
-            raw_runs.append(raw)
-            parsed = _extract_json(raw or "") if raw else None
-            if not isinstance(parsed, dict) or not _validate_schema(parsed, schema):
-                parsed = _seed_fallback(sid, sev)
-                parsed["confidence_rationale"] = "fallback_schema_or_parse_failure"
-            parsed = _normalize_adjudication(parsed)
-            _bounded_contamination(parsed, context_ids, sid)
-            normalized_runs.append(parsed)
-
-        adjudication = normalized_runs[0] if normalized_runs else _seed_fallback(sid, sev)
-        deterministic_match = True
-        if len(normalized_runs) > 1:
-            first = json.dumps(normalized_runs[0], sort_keys=True, ensure_ascii=False)
-            for other in normalized_runs[1:]:
-                if json.dumps(other, sort_keys=True, ensure_ascii=False) != first:
-                    deterministic_match = False
-                    break
-            if not deterministic_match:
+            llm_calls += 1
+            llm_failures += batch_llm_fails
+            for row in batch_rows:
+                if row.get("repair_accepted"):
+                    repairs_accepted += 1
+                if row.get("anchor_allowed"):
+                    anchor_allowed += 1
+                adj = row.get("adjudication", {})
+                span = (
+                    f"{adj.get('contamination_start_segment_id')}->"
+                    f"{adj.get('contamination_end_segment_id')}"
+                )
+                contamination_spans.add(span)
+                adjudications.append(row)
+    else:
+        for seed in seed_rows:
+            sid = _safe_int(seed.get("segment_id"))
+            if sid is None:
+                continue
+            row, llm_failed = _adjudicate_single_seed(
+                seed,
+                context_data=context_data,
+                args=args,
+                prompt_template=prompt_template,
+                schema=schema,
+            )
+            llm_calls += 1
+            if llm_failed:
+                llm_failures += 1
+            if not row.get("determinism_match", True):
                 determinism_mismatches += 1
-
-        transcript_conf = float(adjudication.get("transcript_confidence", 0.0))
-        speaker_conf = float(adjudication.get("speaker_confidence", 0.0))
-        phase_conf = float(adjudication.get("phase_confidence", 0.0))
-        overall_conf = _mean([transcript_conf, speaker_conf, phase_conf])
-
-        repair_possible = bool(adjudication.get("repair_possible"))
-        repaired_text = adjudication.get("repaired_text")
-        accepted_repair = bool(
-            repair_possible
-            and isinstance(repaired_text, str)
-            and repaired_text.strip()
-            and transcript_conf >= args.repair_accept_threshold
-        )
-        if accepted_repair:
-            repairs_accepted += 1
-
-        allow_anchor = overall_conf >= args.anchor_allow_threshold
-        if allow_anchor:
-            anchor_allowed += 1
-
-        span = (
-            f"{adjudication.get('contamination_start_segment_id')}->"
-            f"{adjudication.get('contamination_end_segment_id')}"
-        )
-        contamination_spans.add(span)
-
-        if not args.dry_run and (raw_runs[0] is None):
-            llm_failures += 1
-
-        row = {
-            "seed_segment_id": sid,
-            "conversation_id": conv_id,
-            "damage_types": seed.get("damage_types", []),
-            "damage_reason_codes": seed.get("damage_reason_codes", []),
-            "severity": sev,
-            "adjudication": adjudication,
-            "overall_confidence": round(overall_conf, 4),
-            "repair_accepted": accepted_repair,
-            "anchor_allowed": allow_anchor,
-            "determinism_match": deterministic_match,
-        }
-        if args.include_raw_llm and raw_runs:
-            row["raw_llm_output"] = raw_runs[0]
-        adjudications.append(row)
+            if row.get("repair_accepted"):
+                repairs_accepted += 1
+            if row.get("anchor_allowed"):
+                anchor_allowed += 1
+            adj = row.get("adjudication", {})
+            span = (
+                f"{adj.get('contamination_start_segment_id')}->"
+                f"{adj.get('contamination_end_segment_id')}"
+            )
+            contamination_spans.add(span)
+            adjudications.append(row)
 
     out = {
         "video_id": damage_map.get("video_id"),
@@ -601,7 +924,10 @@ def adjudicate_file(
         "source_file": str(input_path),
         "damage_map_file": str(input_path),
         "context_file": str(context_path),
+        "video_type": video_type,
+        "skipped": False,
         "model": args.model,
+        "batch_size": args.batch_size,
         "thresholds": {
             "repair_accept_threshold": args.repair_accept_threshold,
             "anchor_allow_threshold": args.anchor_allow_threshold,
@@ -611,6 +937,7 @@ def adjudicate_file(
         },
         "summary": {
             "seeds_total": len(adjudications),
+            "llm_calls": llm_calls,
             "repairs_accepted": repairs_accepted,
             "anchor_allowed": anchor_allowed,
             "llm_failures": llm_failures,
@@ -623,11 +950,13 @@ def adjudicate_file(
     if args.dry_run:
         print(
             f"{LOG_PREFIX} [DRY RUN] {input_path.name}: "
-            f"seeds={len(adjudications)}, repairs_accepted={repairs_accepted}, "
+            f"seeds={len(adjudications)}, llm_calls={llm_calls}, "
+            f"repairs_accepted={repairs_accepted}, "
             f"determinism_mismatches={determinism_mismatches}"
         )
         return {
             "seeds_total": len(adjudications),
+            "llm_calls": llm_calls,
             "repairs_accepted": repairs_accepted,
             "determinism_mismatches": determinism_mismatches,
             "llm_failures": llm_failures,
@@ -637,12 +966,14 @@ def adjudicate_file(
     output_path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(
         f"{LOG_PREFIX} {input_path.name}: seeds={len(adjudications)}, "
-        f"repairs_accepted={repairs_accepted}, determinism_mismatches={determinism_mismatches}"
+        f"llm_calls={llm_calls}, repairs_accepted={repairs_accepted}, "
+        f"determinism_mismatches={determinism_mismatches}"
     )
     print(f"{LOG_PREFIX}   Output : {output_path}")
     print(f"{LOG_PREFIX}   Context: {context_path}")
     return {
         "seeds_total": len(adjudications),
+        "llm_calls": llm_calls,
         "repairs_accepted": repairs_accepted,
         "determinism_mismatches": determinism_mismatches,
         "llm_failures": llm_failures,
@@ -660,6 +991,8 @@ def _run_directory_with_files(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     if not files:
         return
@@ -672,6 +1005,7 @@ def _run_directory_with_files(
     failed = 0
     totals = {
         "seeds_total": 0,
+        "llm_calls": 0,
         "repairs_accepted": 0,
         "determinism_mismatches": 0,
         "llm_failures": 0,
@@ -701,6 +1035,8 @@ def _run_directory_with_files(
                 context_root_dir=context_root_dir,
                 prompt_template=prompt_template,
                 schema=schema,
+                batch_prompt_template=batch_prompt_template,
+                batch_schema=batch_schema,
             )
             processed += 1
             for key in totals:
@@ -714,6 +1050,7 @@ def _run_directory_with_files(
     print(f"  Skipped:                {skipped}")
     print(f"  Failed:                 {failed}")
     print(f"  Seeds total:            {totals['seeds_total']}")
+    print(f"  LLM calls:              {totals['llm_calls']}")
     print(f"  Repairs accepted:       {totals['repairs_accepted']}")
     print(f"  Determinism mismatches: {totals['determinism_mismatches']}")
     print(f"  LLM failures:           {totals['llm_failures']}")
@@ -730,6 +1067,8 @@ def _run_directory(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     files = find_input_files(in_dir)
     if not files:
@@ -744,6 +1083,8 @@ def _run_directory(
         context_root_dir=context_root_dir,
         prompt_template=prompt_template,
         schema=schema,
+        batch_prompt_template=batch_prompt_template,
+        batch_schema=batch_schema,
     )
 
 
@@ -755,6 +1096,8 @@ def _run_input(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     input_path = Path(args.input)
     if not input_path.exists():
@@ -777,6 +1120,8 @@ def _run_input(
             context_root_dir=context_root_dir,
             prompt_template=prompt_template,
             schema=schema,
+            batch_prompt_template=batch_prompt_template,
+            batch_schema=batch_schema,
         )
         return
 
@@ -789,6 +1134,8 @@ def _run_input(
         context_root_dir=context_root_dir,
         prompt_template=prompt_template,
         schema=schema,
+        batch_prompt_template=batch_prompt_template,
+        batch_schema=batch_schema,
     )
 
 
@@ -800,6 +1147,8 @@ def _run_sources(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     sources_path = repo_root() / args.sources
     if not sources_path.exists():
@@ -821,6 +1170,8 @@ def _run_sources(
             context_root_dir=context_root_dir,
             prompt_template=prompt_template,
             schema=schema,
+            batch_prompt_template=batch_prompt_template,
+            batch_schema=batch_schema,
         )
 
 
@@ -832,6 +1183,8 @@ def _run_manifest(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -860,6 +1213,8 @@ def _run_manifest(
             context_root_dir=context_root_dir,
             prompt_template=prompt_template,
             schema=schema,
+            batch_prompt_template=batch_prompt_template,
+            batch_schema=batch_schema,
         )
 
 
@@ -871,6 +1226,8 @@ def _run_named_source(
     context_root_dir: Path,
     prompt_template: str,
     schema: Optional[Dict[str, Any]],
+    batch_prompt_template: Optional[str] = None,
+    batch_schema: Optional[Dict[str, Any]] = None,
 ) -> None:
     name = args.name
     in_dir = in_base / name
@@ -885,6 +1242,8 @@ def _run_named_source(
         context_root_dir=context_root_dir,
         prompt_template=prompt_template,
         schema=schema,
+        batch_prompt_template=batch_prompt_template,
+        batch_schema=batch_schema,
     )
 
 
@@ -922,6 +1281,11 @@ def main() -> None:
     parser.add_argument("--context-right", type=int, default=8, help="Context window right size in segments")
     parser.add_argument("--include-low-severity", action="store_true", help="Also adjudicate low-severity seeds")
     parser.add_argument("--include-raw-llm", action="store_true", help="Include raw LLM output in artifact (debug only)")
+    parser.add_argument(
+        "--skip-video-type-filter",
+        action="store_true",
+        help="Run adjudication on all video types (override default infield/compilation-only filter)",
+    )
     parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
     parser.add_argument(
         "--sources",
@@ -930,6 +1294,7 @@ def main() -> None:
         help="Process all sources from sources.txt file",
     )
     parser.add_argument("--manifest", help="Manifest file: process listed videos only")
+    parser.add_argument("--batch-size", type=int, default=8, help="Seeds per LLM call (1=no batching, default=8)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing files")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
     args = parser.parse_args()
@@ -940,6 +1305,7 @@ def main() -> None:
     args.timeout_seconds = max(1, int(args.timeout_seconds))
     args.retries = max(1, int(args.retries))
     args.determinism_n = max(1, int(args.determinism_n))
+    args.batch_size = max(1, min(15, int(args.batch_size)))
     args.context_left = max(0, int(args.context_left))
     args.context_right = max(0, int(args.context_right))
     args.repair_accept_threshold = max(0.0, min(1.0, float(args.repair_accept_threshold)))
@@ -947,6 +1313,21 @@ def main() -> None:
 
     prompt_template = _load_prompt_template()
     schema = _load_schema()
+
+    # Load batch prompt/schema (used when batch_size > 1)
+    batch_prompt_template: Optional[str] = None
+    batch_schema: Optional[Dict[str, Any]] = None
+    if args.batch_size > 1:
+        if not BATCH_PROMPT_PATH.exists():
+            raise RuntimeError(f"Batch prompt template missing: {BATCH_PROMPT_PATH}")
+        batch_prompt_template = BATCH_PROMPT_PATH.read_text(encoding="utf-8")
+        if BATCH_SCHEMA_PATH.exists():
+            try:
+                raw = json.loads(BATCH_SCHEMA_PATH.read_text(encoding="utf-8"))
+                batch_schema = raw if isinstance(raw, dict) else None
+            except Exception:
+                batch_schema = None
+        print(f"{LOG_PREFIX} Batch mode: batch_size={args.batch_size}")
 
     if args.test:
         in_root = resolve_root_path(args.input_root, test_input_root())
@@ -957,6 +1338,11 @@ def main() -> None:
         ctx_root = resolve_root_path(args.context_root, context_root())
         out_root = Path(args.output) if args.output else output_root()
 
+    batch_kw = {
+        "batch_prompt_template": batch_prompt_template,
+        "batch_schema": batch_schema,
+    }
+
     if args.test:
         _run_directory(
             in_root,
@@ -966,6 +1352,7 @@ def main() -> None:
             context_root_dir=ctx_root,
             prompt_template=prompt_template,
             schema=schema,
+            **batch_kw,
         )
     elif args.manifest:
         _run_manifest(
@@ -975,6 +1362,7 @@ def main() -> None:
             context_root_dir=ctx_root,
             prompt_template=prompt_template,
             schema=schema,
+            **batch_kw,
         )
     elif args.input:
         _run_input(
@@ -984,6 +1372,7 @@ def main() -> None:
             context_root_dir=ctx_root,
             prompt_template=prompt_template,
             schema=schema,
+            **batch_kw,
         )
     elif args.sources:
         _run_sources(
@@ -993,6 +1382,7 @@ def main() -> None:
             context_root_dir=ctx_root,
             prompt_template=prompt_template,
             schema=schema,
+            **batch_kw,
         )
     elif args.name:
         _run_named_source(
@@ -1002,6 +1392,7 @@ def main() -> None:
             context_root_dir=ctx_root,
             prompt_template=prompt_template,
             schema=schema,
+            **batch_kw,
         )
     else:
         raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")

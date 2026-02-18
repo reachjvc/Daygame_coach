@@ -47,6 +47,7 @@ CHECK_SEVERITY_ALLOWED = {"error", "warning", "info"}
 POLICY_WARNING_BUDGET_EXCLUDED_CHECKS: Set[str] = {
     # These warnings are useful context but should not consume readiness warning budgets.
     "missing_stage01_audio",
+    "segment_text_modified",
     "stage07_normalization_repairs",
     "stage08_validation_warning",
     "stage08_video_warning",

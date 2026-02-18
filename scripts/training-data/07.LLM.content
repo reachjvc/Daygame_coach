@@ -5,10 +5,10 @@ scripts/training-data/07.LLM.content
 Content Enrichment using Claude Code CLI
 
 Reads:
-  - Conversation files (default: Stage 06c patched output):
-      data/06c.DET.patched/<source>/<video>/*.conversations.json
-    For hardened runs, pass --input-root data/06d.DET.sanitized so Stage 07 consumes
-    deterministic sanitization metadata (stage07_evidence_segment_ids).
+  - Conversation files from Stage 06h (confidence-propagation):
+      data/06h.DET.confidence-propagation/<source>/<video>/*.conversations.json
+    06h accumulates all upstream data (06d sanitization, 06e quality repairs,
+    06f damage maps, 06g adjudication, confidence scores).
 
 Writes:
   - Enriched conversation files:
@@ -37,7 +37,7 @@ Use:
      ./scripts/training-data/07.LLM.content --test
 
   B) Single file:
-     ./scripts/training-data/07.LLM.content --input data/test/06c.patched/video.conversations.json
+     ./scripts/training-data/07.LLM.content --input data/test/06h.DET.confidence-propagation/video.conversations.json
 
   C) Batch from sources file:
      ./scripts/training-data/07.LLM.content --sources
@@ -206,15 +206,22 @@ TECHNIQUE_ALIASES: Dict[str, str] = {
     "masculine_polarity": "subcommunication",
     "cheeky_smirk": "subcommunication",
     "polarity_matching": "subcommunication",
+    "hard_dominance": "subcommunication",
+    "soft_dominance": "subcommunication",
+    "hard_soft_dominance": "subcommunication",
     # calibration aliases
     "energy_management": "calibration",
     "state_dependent_calibration": "calibration",
     "ioi_recognition": "calibration",
     "ioi_types": "calibration",
     "hook_point_recognition": "calibration",
+    "eye_mesmer": "calibration",
+    "social_acuity": "calibration",
     # frame_control aliases
     "belligerent_game": "frame_control",
     "smooth_game": "frame_control",
+    "belligerent_vs_smooth": "frame_control",
+    "hunting_vs_fishing": "frame_control",
     "wolf_in_sheeps_clothing": "frame_control",
     "panda_in_leather_jacket": "frame_control",
     "slow_cooker": "frame_control",
@@ -232,29 +239,77 @@ TECHNIQUE_ALIASES: Dict[str, str] = {
     "belligerent_opening": "direct_opener",
     "smooth_opening": "indirect_opener",
     "brain_fry": "direct_opener",
-    # other
+    # tease aliases
     "sceptical_parroting": "tease",
     "pattern_interrupt": "tease",
     "sexual_spike": "tease",
+    "vacuum": "tease",
+    # other
     "investment_management": "qualification",
+    "archetype_development": "DHV",
+    "cadence_drill": "subcommunication",
+    "fishing_frame": "frame_control",
+    "hunting_frame": "frame_control",
+    "path_manipulation": "physical_escalation",
+    "ping_range": "subcommunication",
 }
 
 TOPIC_ALIASES: Dict[str, str] = {
     "body_language": "behavior",
     "facial_expression": "behavior",
+    "cultural_calibration": "behavior",
+    "false_investment": "behavior",
+    "ping_range": "behavior",
     "fitness": "appearance",
     "sexual_tension": "flirting",
     "attraction_theory": "flirting",
     "dominance_submission": "flirting",
     "archetypes": "personality",
+    "archetype_purity": "personality",
     "masculinity_definition": "masculinity",
     "masculinity_mindset": "masculinity",
     "masculine_polarity": "masculinity",
+    "polarity_theory": "masculinity",
+    "smooth_vs_belligerent": "masculinity",
+    "smooth_vs_belligerent_style": "masculinity",
+    "castle_metaphor": "masculinity",
     "state_management": "inner_game",
     "daygame_congruence": "inner_game",
     "self_permission": "inner_game",
     "social_conditioning": "inner_game",
     "street_anonymity": "inner_game",
+    "outcome_independence": "inner_game",
+    "permission": "inner_game",
+    "social_pressure": "inner_game",
+    "vibe_state": "inner_game",
+    "hook_point": "behavior",
+    "shininess": "appearance",
+    "social_acuity": "behavior",
+    "lens_metaphor": "inner_game",
+    # Non-content structural elements → coaching_promotion
+    "intro_music": "coaching_promotion",
+    "intro_song": "coaching_promotion",
+    "intro_segment": "coaching_promotion",
+    "outro_segment": "coaching_promotion",
+    "outro_music": "coaching_promotion",
+    "video_structure": "coaching_promotion",
+    "skill_level_prerequisites": "coaching_promotion",
+    "skill_level_prerequisite": "coaching_promotion",
+    "absorption_drill": "inner_game",
+    "belligerence_vs_smoothness": "masculinity",
+    "cultural_differences": "behavior",
+    "game_style": "masculinity",
+    "mindfulness_drill": "inner_game",
+    "permission_giving": "inner_game",
+    "pinball_metaphor": "inner_game",
+    "polarity_spectrum": "masculinity",
+    "power_projection": "masculinity",
+    "seduction_philosophy": "masculinity",
+    "self_development_reading": "inner_game",
+    "set_structure": "behavior",
+    "social_differentiation": "masculinity",
+    "spacing": "behavior",
+    "street_presence": "behavior",
 }
 
 LOG_PREFIX = "[07.LLM.content]"
@@ -266,210 +321,6 @@ PIPELINE_VERSION = "07.LLM.content-v1.15"
 ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
     "nonsense": "high", "language_confusion": "medium", "word_repetition": "low",
 }
-REPAIR_ACCEPT_THRESHOLD = 0.85
-
-
-def _apply_quality_repairs(
-    segments: List[Dict[str, Any]],
-    transcript_artifacts: List[Dict[str, Any]],
-    low_quality_segments: List[Dict[str, Any]],
-    log_prefix: str = "",
-) -> Tuple[int, int, int, int]:
-    """Apply 06e quality repairs (delete/replace/merge) to segments in-place.
-
-    Returns (artifact_accepted, artifact_rejected, lq_accepted, lq_rejected).
-    """
-    seg_by_id: Dict[int, Dict[str, Any]] = {
-        s.get("id"): s for s in segments
-        if isinstance(s, dict) and isinstance(s.get("id"), int)
-    }
-
-    # --- Transcript artifact repairs ---
-    repairs_accepted = 0
-    repairs_rejected = 0
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict):
-            continue
-        action = artifact.get("action", "replace")
-        repair_conf = artifact.get("repair_confidence")
-        sid = artifact.get("segment_index")
-
-        if not isinstance(repair_conf, (int, float)):
-            continue
-        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
-            repairs_rejected += 1
-            continue
-        if not isinstance(sid, int) or sid not in seg_by_id:
-            repairs_rejected += 1
-            continue
-
-        seg = seg_by_id[sid]
-
-        if action == "replace":
-            repair_text = artifact.get("repair_text")
-            if not repair_text:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            seg["text"] = repair_text
-            artifact["repaired"] = True
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            repairs_accepted += 1
-
-        elif action == "delete":
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "delete"
-            repairs_accepted += 1
-
-        elif action == "merge_prev":
-            prev_seg = seg_by_id.get(sid - 1)
-            if prev_seg is None:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            prev_text = prev_seg.get("text", "")
-            merge_text = seg.get("text", "")
-            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "merge_prev"
-            repairs_accepted += 1
-
-        elif action == "merge_next":
-            next_seg = seg_by_id.get(sid + 1)
-            if next_seg is None:
-                repairs_rejected += 1
-                continue
-            original_text = artifact.get("original_text") or seg.get("text", "")
-            if "original_text" not in artifact:
-                artifact["original_text"] = original_text
-            merge_text = seg.get("text", "")
-            next_text = next_seg.get("text", "")
-            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
-            seg["text"] = ""
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "merge_next"
-            repairs_accepted += 1
-
-        else:
-            repairs_rejected += 1
-
-    # Guard: segments already repaired as artifacts should not be double-repaired as LQ
-    artifact_repaired_sids: Set[int] = {
-        a.get("segment_index") for a in transcript_artifacts
-        if isinstance(a, dict) and a.get("repaired")
-    }
-
-    # --- Low quality segment repairs ---
-    lq_repairs_accepted = 0
-    lq_repairs_rejected = 0
-    for lq_entry in low_quality_segments:
-        if not isinstance(lq_entry, dict):
-            continue
-        action = lq_entry.get("action", "replace")
-        repair_conf = lq_entry.get("repair_confidence")
-        sid = lq_entry.get("segment")
-
-        if not isinstance(repair_conf, (int, float)):
-            continue
-        if repair_conf < REPAIR_ACCEPT_THRESHOLD:
-            lq_repairs_rejected += 1
-            continue
-        if not isinstance(sid, int) or sid not in seg_by_id:
-            lq_repairs_rejected += 1
-            continue
-        if sid in artifact_repaired_sids:
-            lq_repairs_rejected += 1
-            continue
-
-        seg = seg_by_id[sid]
-
-        if action == "replace":
-            repair_text = lq_entry.get("repair_text")
-            if not repair_text:
-                lq_repairs_rejected += 1
-                continue
-            original_text = lq_entry.get("original_text") or seg.get("text", "")
-            seg["text"] = repair_text
-            lq_entry["repaired"] = True
-            if "original_text" not in lq_entry:
-                lq_entry["original_text"] = original_text
-            lq_repairs_accepted += 1
-
-        elif action == "delete":
-            original_text = lq_entry.get("original_text") or seg.get("text", "")
-            if "original_text" not in lq_entry:
-                lq_entry["original_text"] = original_text
-            seg["text"] = ""
-            lq_entry["repaired"] = True
-            lq_entry["repair_action_applied"] = "delete"
-            lq_repairs_accepted += 1
-
-        elif action == "merge_prev":
-            prev_seg = seg_by_id.get(sid - 1)
-            if prev_seg is None:
-                lq_repairs_rejected += 1
-                continue
-            original_text = lq_entry.get("original_text") or seg.get("text", "")
-            if "original_text" not in lq_entry:
-                lq_entry["original_text"] = original_text
-            prev_text = prev_seg.get("text", "")
-            merge_text = seg.get("text", "")
-            prev_seg["text"] = (prev_text.rstrip() + " " + merge_text.lstrip()).strip()
-            seg["text"] = ""
-            lq_entry["repaired"] = True
-            lq_entry["repair_action_applied"] = "merge_prev"
-            lq_repairs_accepted += 1
-
-        elif action == "merge_next":
-            next_seg = seg_by_id.get(sid + 1)
-            if next_seg is None:
-                lq_repairs_rejected += 1
-                continue
-            original_text = lq_entry.get("original_text") or seg.get("text", "")
-            if "original_text" not in lq_entry:
-                lq_entry["original_text"] = original_text
-            merge_text = seg.get("text", "")
-            next_text = next_seg.get("text", "")
-            next_seg["text"] = (merge_text.rstrip() + " " + next_text.lstrip()).strip()
-            seg["text"] = ""
-            lq_entry["repaired"] = True
-            lq_entry["repair_action_applied"] = "merge_next"
-            lq_repairs_accepted += 1
-
-        else:
-            lq_repairs_rejected += 1
-
-    # Mark artifact warnings as resolved when LQ already fixed the same segment
-    lq_repaired_sids: Set[int] = {
-        lq.get("segment") for lq in low_quality_segments
-        if isinstance(lq, dict) and lq.get("repaired")
-    }
-    resolved_by_lq = 0
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict) or artifact.get("repaired"):
-            continue
-        sid = artifact.get("segment_index")
-        if isinstance(sid, int) and sid in lq_repaired_sids:
-            artifact["repaired"] = True
-            artifact["repair_action_applied"] = "resolved_by_lq_repair"
-            resolved_by_lq += 1
-
-    total = repairs_accepted + lq_repairs_accepted
-    if total > 0 and log_prefix:
-        resolved_msg = f", {resolved_by_lq} resolved by LQ" if resolved_by_lq else ""
-        print(f"{log_prefix}   Quality repairs applied: {repairs_accepted} artifact, {lq_repairs_accepted} LQ ({repairs_rejected + lq_repairs_rejected} rejected{resolved_msg})")
-
-    return repairs_accepted, repairs_rejected, lq_repairs_accepted, lq_repairs_rejected
-
-
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20
@@ -2523,25 +2374,6 @@ def build_stage07_evidence_allowlist(
             clean_ids = {sid for sid in allow_ids if isinstance(sid, int)}
             allow_by_conv[conv_id] = clean_ids
 
-    if allow_by_conv:
-        return allow_by_conv
-
-    # Backward-compatible fallback for pre-06d artifacts.
-    for seg in segments:
-        if not isinstance(seg, dict):
-            continue
-        conv_id = seg.get("conversation_id")
-        if not isinstance(conv_id, int) or conv_id <= 0:
-            continue
-        seg_id = seg.get("id")
-        if not isinstance(seg_id, int):
-            continue
-        if str(seg.get("segment_type", "")).strip().lower() != "approach":
-            continue
-        if bool(seg.get("exclude_from_stage07_evidence")):
-            continue
-        allow_by_conv.setdefault(conv_id, set()).add(seg_id)
-
     return allow_by_conv
 
 
@@ -2549,11 +2381,8 @@ def build_stage07_anchor_allowlist(
     conversations_meta: Any,
     stage07_evidence_allowlist: Dict[int, Set[int]],
 ) -> Dict[int, Set[int]]:
-    """Build high-confidence anchor allowlist.
-
-    Preferred source is conversation metadata field ``stage07_anchor_segment_ids``
-    produced by 06h.DET.confidence-propagation. When absent, fallback to the
-    broader Stage 07 evidence allowlist for backward compatibility.
+    """Build high-confidence anchor allowlist from ``stage07_anchor_segment_ids``
+    produced by 06h.DET.confidence-propagation.
     """
     anchor_by_conv: Dict[int, Set[int]] = {}
 
@@ -3396,11 +3225,16 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: Map specific instances to the nearest existing technique.
-   If a coach uses a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
-   If they demonstrate non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
-   If they read/adjust to signals (IOIs, energy matching, pacing), map to "calibration".
-   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific concept maps to an existing technique.
+   Map aggressively — here are common mappings:
+   - Physical moves (shoulder barge, hand yank, kino, touching) → "physical_escalation"
+   - Non-verbal signaling (body language, eye contact, posture, walking style, dominance displays, hard/soft dominance) → "subcommunication"
+   - Reading/adjusting to signals (IOIs, energy matching, pacing, social acuity, eye mesmer) → "calibration"
+   - Game style frameworks (belligerent vs smooth, hunting vs fishing, direct vs indirect) → "frame_control"
+   - Creating silence, pauses, or vacuum to build tension → "tease" or "frame_control"
+   - Specific opener variants → "direct_opener" or "indirect_opener"
+   UNLISTED CONCEPTS is a last resort. If you can argue the concept relates to ANY existing technique, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted techniques total, not per video.
    CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
    Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
@@ -3424,10 +3258,17 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: Map specific coaching topics to the nearest existing topic.
-   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
-   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
-   Only add to UNLISTED CONCEPTS if the topic truly doesn't fit ANY existing topic — even broadly.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific topic maps to an existing entry.
+   Map aggressively — here are common mappings:
+   - Masculine energy, polarity, dominance dynamics, archetypes, style comparisons → "masculinity"
+   - Mindset, state, outcome independence, approach anxiety, confidence, permission, vibe → "inner_game"
+   - Reading signals, investment levels, hook points, calibration concepts, false investment → "behavior"
+   - Appearance, style, grooming, clothing, shininess → "appearance"
+   - Personality types, archetype discussion, character traits → "personality"
+   - Intro/outro segments, video structure, course promotion, skill level discussion → "coaching_promotion"
+   - Metaphors (castle, lens, etc.) → map to the TOPIC the metaphor illustrates, not a new topic
+   UNLISTED CONCEPTS is a last resort. If you can argue the topic relates to ANY existing entry, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted topics total, not per video.
    You may use nearby commentary blocks as context for identifying topics (e.g. if the coach explains he was discussing travel, tag "travel").
    But the topic should be plausible from the approach transcript — don't tag topics that only appear in commentary with no trace in the approach.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
@@ -3744,11 +3585,16 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 4. TECHNIQUES USED: List up to 10 techniques that are clearly demonstrated. For each, include the SEG_ID and a short exact quote.
    CRITICAL: Only use technique names from the TECHNIQUE REFERENCE above.
    If you observe a technique not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: Map specific instances to the nearest existing technique.
-   If a coach uses a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
-   If they demonstrate non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
-   If they read/adjust to signals (IOIs, energy matching, pacing), map to "calibration".
-   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific concept maps to an existing technique.
+   Map aggressively — here are common mappings:
+   - Physical moves (shoulder barge, hand yank, kino, touching) → "physical_escalation"
+   - Non-verbal signaling (body language, eye contact, posture, walking style, dominance displays, hard/soft dominance) → "subcommunication"
+   - Reading/adjusting to signals (IOIs, energy matching, pacing, social acuity, eye mesmer) → "calibration"
+   - Game style frameworks (belligerent vs smooth, hunting vs fishing, direct vs indirect) → "frame_control"
+   - Creating silence, pauses, or vacuum to build tension → "tease" or "frame_control"
+   - Specific opener variants → "direct_opener" or "indirect_opener"
+   UNLISTED CONCEPTS is a last resort. If you can argue the concept relates to ANY existing technique, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted techniques total, not per video.
    CRITICAL: For approach techniques, you may ONLY cite SEG_IDs marked (ANCHOR_OK).
    Never cite (CONTEXT_ONLY) or (EVIDENCE_EXCLUDED) turns as technique anchors.
    IMPORTANT: The SEG_ID you cite for a technique MUST refer to an APPROACHER turn: COACH or STUDENT (not TARGET/OTHER).
@@ -3772,10 +3618,17 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 5. TOPICS: List up to 8 topics explicitly discussed from the TOPIC REFERENCE list only.
    CRITICAL: Only use topic names from the TOPIC REFERENCE above.
    If you observe a topic not in the list, do NOT include it here — add it to UNLISTED CONCEPTS instead.
-   IMPORTANT: Map specific coaching topics to the nearest existing topic.
-   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
-   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
-   Only add to UNLISTED CONCEPTS if the topic truly doesn't fit ANY existing topic — even broadly.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific topic maps to an existing entry.
+   Map aggressively — here are common mappings:
+   - Masculine energy, polarity, dominance dynamics, archetypes, style comparisons → "masculinity"
+   - Mindset, state, outcome independence, approach anxiety, confidence, permission, vibe → "inner_game"
+   - Reading signals, investment levels, hook points, calibration concepts, false investment → "behavior"
+   - Appearance, style, grooming, clothing, shininess → "appearance"
+   - Personality types, archetype discussion, character traits → "personality"
+   - Intro/outro segments, video structure, course promotion, skill level discussion → "coaching_promotion"
+   - Metaphors (castle, lens, etc.) → map to the TOPIC the metaphor illustrates, not a new topic
+   UNLISTED CONCEPTS is a last resort. If you can argue the topic relates to ANY existing entry, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted topics total, not per video.
    You may use nearby commentary blocks as context for identifying topics (e.g. if the coach explains he was discussing travel, tag "travel").
    But the topic should be plausible from the approach transcript — don't tag topics that only appear in commentary with no trace in the approach.
    Be conservative: do not infer "ambitions" or "career" unless they are explicitly discussed.
@@ -4120,18 +3973,29 @@ FOR EACH SECTION, analyze:
 6. TECHNIQUES DISCUSSED: Techniques from TECHNIQUE REFERENCE only.
    CRITICAL: Only use technique names from the list above.
    If a technique is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
-   IMPORTANT: Map specific instances to the nearest existing technique.
-   If a coach names a specific physical move (e.g. "shoulder barge", "hand yank", "kino"), map it to "physical_escalation".
-   If they describe non-verbal signaling (body language, eye contact, walking style, posture), map to "subcommunication".
-   If they discuss reading/adjusting to signals (IOIs, energy matching, pacing), map to "calibration".
-   If they describe a specific type of opener, map to "direct_opener" or "indirect_opener" as appropriate.
-   Only add to UNLISTED CONCEPTS if the concept truly doesn't fit ANY existing technique — even broadly.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific concept maps to an existing technique.
+   Map aggressively — here are common mappings:
+   - Physical moves (shoulder barge, hand yank, kino, touching) → "physical_escalation"
+   - Non-verbal signaling (body language, eye contact, posture, walking style, dominance displays, hard/soft dominance) → "subcommunication"
+   - Reading/adjusting to signals (IOIs, energy matching, pacing, social acuity, eye mesmer) → "calibration"
+   - Game style frameworks (belligerent vs smooth, hunting vs fishing, direct vs indirect) → "frame_control"
+   - Creating silence, pauses, or vacuum to build tension → "tease" or "frame_control"
+   - Specific opener variants → "direct_opener" or "indirect_opener"
+   UNLISTED CONCEPTS is a last resort. If you can argue the concept relates to ANY existing technique, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted techniques total, not per video.
 7. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only.
    CRITICAL: Only use topic names from the list above.
-   IMPORTANT: Map specific coaching topics to the nearest existing topic.
-   If a coach discusses masculine energy, polarity, or dominance dynamics, map to "masculinity".
-   If they discuss mindset, state management, or approach anxiety, map to "inner_game".
-   If a topic is discussed but not in the list, do NOT include it here — add to UNLISTED CONCEPTS.
+   IMPORTANT: The taxonomy is intentionally broad. Almost every specific topic maps to an existing entry.
+   Map aggressively — here are common mappings:
+   - Masculine energy, polarity, dominance dynamics, archetypes, style comparisons → "masculinity"
+   - Mindset, state, outcome independence, approach anxiety, confidence, permission, vibe → "inner_game"
+   - Reading signals, investment levels, hook points, calibration concepts, false investment → "behavior"
+   - Appearance, style, grooming, clothing, shininess → "appearance"
+   - Personality types, archetype discussion, character traits → "personality"
+   - Intro/outro segments, video structure, course promotion, skill level discussion → "coaching_promotion"
+   - Metaphors (castle, lens, etc.) → map to the TOPIC the metaphor illustrates, not a new topic
+   UNLISTED CONCEPTS is a last resort. If you can argue the topic relates to ANY existing entry, use the existing one.
+   In 10 videos you should typically have 0-2 unlisted topics total, not per video.
 8. UNLISTED CONCEPTS: Report any technique or topic that doesn't fit the taxonomy.
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
@@ -4287,7 +4151,7 @@ def extract_video_title_from_stem(stem: str) -> str:
 def derive_source_from_path(p: Path) -> Optional[str]:
     # Prefer extracting from stage folder layout markers when possible.
     parts = p.parts
-    for marker in ("06c.DET.patched", "06.LLM.video-type", "07.LLM.content", "05.EXT.audio-features", "01.download"):
+    for marker in ("06h.DET.confidence-propagation", "06c.DET.patched", "06.LLM.video-type", "07.LLM.content", "05.EXT.audio-features", "01.download"):
         if marker in parts:
             idx = parts.index(marker)
             if idx + 1 < len(parts):
@@ -4310,8 +4174,6 @@ def _process_non_infield(
     claude_model: Optional[str],
     llm_timeout_seconds: int,
     llm_retries: int,
-    quality_root_dir: Optional[Path],
-    input_root_dir: Optional[Path],
 ) -> Dict[str, Any]:
     """Non-infield processing path: talking_head/podcast/unknown videos.
 
@@ -4359,13 +4221,12 @@ def _process_non_infield(
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
 
-    # Quality data from 06e — load and apply repairs
-    quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
+    # Quality data from 06h (already repaired by 06h)
+    quality_data = data.get("quality_data", {})
     low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
     transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
-    if quality_data:
-        print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
-        _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
+    if low_quality_segments or transcript_artifacts:
+        print(f"{LOG_PREFIX}   Quality data: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
 
     # Collect summary data
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
@@ -4472,8 +4333,6 @@ def process_video_file(
     force_lane: Optional[str] = None,
     window_size: int = 100,
     overlap: int = 20,
-    quality_root_dir: Optional[Path] = None,
-    input_root_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Process a single video's conversations.json file."""
 
@@ -4531,8 +4390,6 @@ def process_video_file(
             claude_model=claude_model,
             llm_timeout_seconds=llm_timeout_seconds,
             llm_retries=llm_retries,
-            quality_root_dir=quality_root_dir,
-            input_root_dir=input_root_dir,
         )
 
     commentary_blocks = group_commentary_blocks(segments)
@@ -4703,13 +4560,12 @@ def process_video_file(
         if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
     }
 
-    # --- Quality data from 06e — load and apply repairs ---
-    quality_data = _load_quality_data(input_path, quality_root_dir or quality_root(), input_root_dir or input_root())
+    # Quality data from 06h (already repaired by 06h)
+    quality_data = data.get("quality_data", {})
     low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
     transcript_artifacts = quality_data.get("transcript_artifacts", []) if quality_data else []
-    if quality_data:
-        print(f"{LOG_PREFIX}   Quality from 06e: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
-        _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
+    if low_quality_segments or transcript_artifacts:
+        print(f"{LOG_PREFIX}   Quality data: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
 
     normalization_repairs = normalize_enrichments(
         enrichments,
@@ -4989,7 +4845,7 @@ def revalidate_video_file(
     """Re-run deterministic normalization + validation on an existing .enriched.json (no Claude call)."""
     print(f"[07.LLM.content] Revalidating: {input_path.name}")
 
-    # Load Stage 06c input (ground truth for segments + roles).
+    # Load Stage 06h input (ground truth for segments + roles).
     with input_path.open("r", encoding="utf-8") as f:
         stage06_data = json.load(f)
 
@@ -5027,7 +4883,7 @@ def revalidate_video_file(
     with output_path.open("r", encoding="utf-8") as f:
         output = json.load(f)
 
-    # Keep Stage 06c as the source of truth for transcript fields (Stage 07 should mirror it).
+    # Keep Stage 06h as the source of truth for transcript fields (Stage 07 should mirror it).
     output["video_id"] = stage06_data.get("video_id", output.get("video_id"))
     output["source"] = derive_source_from_path(input_path) or output.get("source") or "unknown"
     output["video_title"] = extract_video_title_from_stem(input_path.stem)
@@ -5037,8 +4893,10 @@ def revalidate_video_file(
     output["segments"] = segments
 
     enrichments: List[Dict[str, Any]] = output.get("enrichments", []) or []
-    low_quality_segments: List[Dict[str, Any]] = output.get("low_quality_segments", []) or []
-    transcript_artifacts: List[Dict[str, Any]] = output.get("transcript_artifacts", []) or []
+    # Quality data from 06h input (already repaired by 06h)
+    quality_data = stage06_data.get("quality_data", {})
+    low_quality_segments: List[Dict[str, Any]] = quality_data.get("low_quality_segments", []) if quality_data else []
+    transcript_artifacts: List[Dict[str, Any]] = quality_data.get("transcript_artifacts", []) if quality_data else []
     seg_by_id = {
         s.get("id"): s
         for s in segments
@@ -5082,9 +4940,6 @@ def revalidate_video_file(
             continue
         atype = artifact.get("artifact_type", "")
         artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
-
-    # --- Apply quality repairs (shared with normal pipeline paths) ---
-    _apply_quality_repairs(segments, transcript_artifacts, low_quality_segments, log_prefix=LOG_PREFIX)
 
     # Apply normalization (deterministic repairs before validation).
     normalization_repairs = normalize_enrichments(
@@ -5199,7 +5054,7 @@ def repo_root() -> Path:
 
 
 def input_root() -> Path:
-    return repo_root() / "data" / "06c.DET.patched"
+    return repo_root() / "data" / "06h.DET.confidence-propagation"
 
 
 def output_root() -> Path:
@@ -5207,73 +5062,12 @@ def output_root() -> Path:
 
 
 def test_input_root() -> Path:
-    return repo_root() / "data" / "test" / "06c.DET.patched"
+    return repo_root() / "data" / "test" / "06h.DET.confidence-propagation"
 
 
 def test_output_root() -> Path:
     return repo_root() / "data" / "test" / "07.LLM.content"
 
-
-
-def quality_root() -> Path:
-    return repo_root() / "data" / "06e.LLM.quality-check"
-
-
-def test_quality_root() -> Path:
-    return repo_root() / "data" / "test" / "06e.LLM.quality-check"
-
-
-def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
-    if not raw_path:
-        return default_root
-    path = Path(raw_path)
-    if not path.is_absolute():
-        path = repo_root() / path
-    return path
-
-
-def _load_quality_data(
-    input_path: Path,
-    quality_root_dir: Path,
-    input_root_dir: Path,
-) -> Optional[Dict[str, Any]]:
-    """Load 06e quality-check data for a given input file.
-
-    Maps the input file path to its matching .quality-check.json in quality_root_dir.
-    Returns parsed JSON or None if not found.
-    """
-    in_name = input_path.name
-    qc_name = in_name.replace(".conversations.json", ".quality-check.json")
-    if qc_name == in_name:
-        qc_name = f"{input_path.stem}.quality-check.json"
-
-    try:
-        rel_parent = input_path.parent.relative_to(input_root_dir)
-    except ValueError:
-        rel_parent = None
-
-    # Preferred: mirrored path
-    if rel_parent is not None and rel_parent != Path("."):
-        candidate = quality_root_dir / rel_parent / qc_name
-        if candidate.exists():
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-                if isinstance(data, dict):
-                    return data
-            except Exception:
-                pass
-
-    # Fallback: flat
-    candidate = quality_root_dir / qc_name
-    if candidate.exists():
-        try:
-            data = json.loads(candidate.read_text(encoding="utf-8"))
-            if isinstance(data, dict):
-                return data
-        except Exception:
-            pass
-
-    return None
 
 
 def extract_video_stem(input_path: Path) -> str:
@@ -5482,8 +5276,6 @@ def _run_named_source(
                 force_lane=args.force_lane,
                 window_size=args.window_size,
                 overlap=args.overlap,
-                quality_root_dir=quality_root_resolved,
-                input_root_dir=in_root,
             )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
@@ -5499,7 +5291,7 @@ def main() -> None:
     )
     parser.add_argument(
         "name", nargs="?",
-        help="Source name (folder under data/06c.DET.patched/)"
+        help="Source name (folder under data/06h.DET.confidence-propagation/)"
     )
     parser.add_argument(
         "youtube_url", nargs="?",
@@ -5510,25 +5302,13 @@ def main() -> None:
         help="Input .conversations.json file or directory"
     )
     parser.add_argument(
-        "--input-root",
-        help=(
-            "Root directory for source/manifest runs "
-            "(default: data/06c.DET.patched, or data/test/06c.patched with --test)"
-        ),
-    )
-    parser.add_argument(
         "--output",
         help="Output directory (defaults to data/07.LLM.content/)"
     )
     parser.add_argument(
-        "--quality-root",
-        default=None,
-        help="Root dir for 06e quality data (default: data/06e.LLM.quality-check/)",
-    )
-    parser.add_argument(
         "--test",
         action="store_true",
-        help="Process test videos (data/test/06c.patched/)"
+        help="Process test videos (data/test/06h.DET.confidence-propagation/)"
     )
     parser.add_argument(
         "--sources",
@@ -5684,13 +5464,8 @@ def main() -> None:
             )
 
     # Determine input/output paths.
-    default_input_root = test_input_root() if args.test else input_root()
-    default_output_root = test_output_root() if args.test else output_root()
-    default_quality_root = test_quality_root() if args.test else quality_root()
-
-    in_root = resolve_root_path(args.input_root, default_input_root)
-    out_root = Path(args.output) if args.output else default_output_root
-    quality_root_resolved = resolve_root_path(args.quality_root, default_quality_root)
+    in_root = test_input_root() if args.test else input_root()
+    out_root = Path(args.output) if args.output else (test_output_root() if args.test else output_root())
 
     if args.test:
         in_dir = in_root
@@ -5736,8 +5511,6 @@ def main() -> None:
                     force_lane=args.force_lane,
                     window_size=args.window_size,
                     overlap=args.overlap,
-                    quality_root_dir=quality_root_resolved,
-                    input_root_dir=in_root,
                 )
             print(f"\n[07.LLM.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
@@ -5844,7 +5617,7 @@ def main() -> None:
         for src_name, _ in parse_sources_file(sources_path):
             src_in_dir = in_root / src_name
             if not src_in_dir.exists():
-                print(f"[07.LLM.content] Skipping {src_name}: no 06c.DET.patched output")
+                print(f"[07.LLM.content] Skipping {src_name}: no 06h input")
                 continue
 
             src_out_dir = out_base / src_name

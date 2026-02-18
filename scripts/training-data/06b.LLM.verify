@@ -8,6 +8,10 @@ Pure LLM quality gate — reads stage 06 conversations.json, asks an LLM to
 critically evaluate speaker roles, conversation boundaries, and structural
 coherence. Writes a verification report. Does NOT modify stage 06 output.
 
+Model selection (--model auto, default):
+  When 06's video_type confidence >= 0.85, uses Haiku (fast/cheap).
+  Otherwise uses Opus (full reasoning). Override with --model opus.
+
 Reads:
   - Stage 06 output files:
       data/06.LLM.video-type/<source>/<video>/*.conversations.json
@@ -56,7 +60,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.LLM.verify-v2.0"  # v2.0: retry+repair schema-invalid verifier JSON before failing
+PIPELINE_VERSION = "06b.LLM.verify-v2.1"  # v2.1: auto-tiered model (haiku for high-confidence, opus for uncertain)
 
 DEBUG_MODE = False
 
@@ -85,6 +89,13 @@ _NO_VALUES = {"0", "false", "no", "n", "disagree", "disagrees", "flag", "issue",
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
 MAX_SCHEMA_REPAIR_ATTEMPTS = 2
+
+# Auto-tiered model selection (R3): when --model auto (default), use haiku for
+# videos where 06's video_type confidence is high — these rarely need full Opus
+# reasoning to verify. Opus is reserved for uncertain classifications.
+AUTO_TIER_CONFIDENCE_THRESHOLD = 0.85
+AUTO_TIER_FAST_MODEL = "haiku"
+AUTO_TIER_FULL_MODEL = "opus"
 
 
 def _load_schema() -> Optional[Dict[str, Any]]:
@@ -1113,6 +1124,19 @@ def build_verification_prompt(data: Dict) -> str:
     )
 
 
+def _auto_select_model(data: Dict[str, Any]) -> Tuple[str, str]:
+    """Pick model based on 06's confidence. Returns (model, reason)."""
+    vt = data.get("video_type")
+    if not isinstance(vt, dict):
+        return AUTO_TIER_FULL_MODEL, "missing video_type"
+    confidence = vt.get("confidence")
+    if not isinstance(confidence, (int, float)):
+        return AUTO_TIER_FULL_MODEL, "missing confidence"
+    if confidence >= AUTO_TIER_CONFIDENCE_THRESHOLD:
+        return AUTO_TIER_FAST_MODEL, f"video_type confidence {confidence:.2f} >= {AUTO_TIER_CONFIDENCE_THRESHOLD}"
+    return AUTO_TIER_FULL_MODEL, f"video_type confidence {confidence:.2f} < {AUTO_TIER_CONFIDENCE_THRESHOLD}"
+
+
 def verify_file(
     input_path: Path,
     output_path: Path,
@@ -1139,6 +1163,13 @@ def verify_file(
 
     if not segments:
         raise RuntimeError(f"No segments found in {input_path}")
+
+    # Auto-tier model selection: when model is "auto", pick based on 06 confidence
+    auto_tier_reason: Optional[str] = None
+    if isinstance(claude_model, str) and claude_model.strip().lower() == "auto":
+        selected, auto_tier_reason = _auto_select_model(data)
+        claude_model = selected
+        print(f"{LOG_PREFIX}   Auto-tier: {selected} ({auto_tier_reason})")
 
     if dry_run:
         print(f"{LOG_PREFIX}   [DRY RUN] Would verify this file")
@@ -1261,6 +1292,7 @@ def verify_file(
             **({"claude_model": model_in_use.strip()} if isinstance(model_in_use, str) and model_in_use.strip() else {}),
             **({"claude_model_requested": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
             **({"claude_fallback_model": fallback_model.strip()} if isinstance(fallback_model, str) and fallback_model.strip() else {}),
+            **({"auto_tier_reason": auto_tier_reason} if auto_tier_reason else {}),
         }
         notes: List[str] = []
         if used_fallback_model and isinstance(model_in_use, str) and model_in_use.strip():
@@ -1534,8 +1566,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--model",
-        default="opus",
-        help="Claude model alias or full name (default: opus)."
+        default="auto",
+        help="Claude model (default: auto). Auto uses haiku for high-confidence videos, opus for uncertain ones."
     )
     parser.add_argument(
         "--fallback-model",
@@ -1609,11 +1641,15 @@ def main() -> None:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
     if not args.dry_run and not args.skip_llm_preflight:
-        probe_models: List[Optional[str]] = [args.model]
+        # When model is "auto", probe both tier models; otherwise probe the explicit model
+        if isinstance(args.model, str) and args.model.strip().lower() == "auto":
+            probe_models: List[Optional[str]] = [AUTO_TIER_FULL_MODEL, AUTO_TIER_FAST_MODEL]
+        else:
+            probe_models: List[Optional[str]] = [args.model]
         if (
             isinstance(args.fallback_model, str)
             and args.fallback_model.strip()
-            and args.fallback_model.strip() != (args.model or "").strip()
+            and args.fallback_model.strip() not in {(m or "").strip() for m in probe_models}
         ):
             probe_models.append(args.fallback_model.strip())
 
@@ -1648,7 +1684,14 @@ def main() -> None:
             raise SystemExit(2)
 
     if isinstance(args.model, str) and args.model.strip():
-        print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
+        model_label = args.model.strip()
+        if model_label.lower() == "auto":
+            print(
+                f"{LOG_PREFIX} Claude model: auto "
+                f"(haiku if confidence >= {AUTO_TIER_CONFIDENCE_THRESHOLD}, else opus)"
+            )
+        else:
+            print(f"{LOG_PREFIX} Claude model: {model_label}")
     if isinstance(args.fallback_model, str) and args.fallback_model.strip():
         print(f"{LOG_PREFIX} Claude fallback model: {args.fallback_model.strip()}")
     print(f"{LOG_PREFIX} LLM timeout seconds: {args.timeout_seconds}")

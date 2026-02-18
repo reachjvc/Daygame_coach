@@ -17,19 +17,11 @@ if in doubt, ask user if documents should be updated or not.
 
 ## Critical Rules
 
-### 1. Doc-Before-Summary (MOST VIOLATED - PAY ATTENTION)
+### 1. Working on the pipeline
+Any work on the pipeline requires thorough understanding of all the steps. User will commonly ask about how the pipeline stages work in relation to eachother, but claude has multiple times made the mistake of not thoroughly enough understanding what is actually happening, by not looking at data (and instead looking at a visualization or .md file explaining current state) or by not actually figuring out what a script or stage does, and by instead assuming it works as intended or as it says in the top lines.
 
-```
-WRONG ORDER:
-1. Implement feature
-2. Tell user "Done!"        ← User sees this
-3. (forget to update doc)   ← Doc is now stale
+When answering questions or working on improving the pipeline it is paramount that you make sure your recommendation and communication is grounded in the current facts of the data or what the script does, and that these are thoroughly investigated each and every time, instead of relying on summaries or assumptions etc.
 
-CORRECT ORDER:
-1. Implement feature
-2. Update doc               ← Do this FIRST
-3. Tell user "Done!"        ← Only after doc is updated
-```
 
 ### 2. Test-Driven Workflow
 
@@ -37,6 +29,17 @@ CORRECT ORDER:
 - **Between every step**: Run `npm test`
 - **If test fails**: Fix production code, add regression test
 - **Never proceed** with failing tests
+
+### Test File Organization
+| Pattern | Runner | Location |
+|---------|--------|----------|
+| `*.test.ts` | Vitest | `tests/unit/` |
+| `*.integration.test.ts` | Vitest | `tests/integration/` |
+| `*.spec.ts` | Playwright | `tests/e2e/` |
+
+### Database Layer (`src/db/`)
+All database access via `*Repo.ts` files. Direct Supabase imports outside `src/db/` will fail architecture tests.
+
 
 ### 3. No Fallback Mechanisms Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the user.
 
@@ -122,25 +125,16 @@ Specs in `docs/slices/SLICE_*.md`
 - [ ] All slice types in `types.ts`
 - [ ] Slice UI in `src/{slice}/components/`
 
----
+### 11. Doc-Before-Summary 
 
-## Testing
+```
+WRONG ORDER:
+1. Implement feature
+2. Tell user "Done!"        ← User sees this
+3. (forget to update doc)   ← Doc is now stale
 
-Read Testing_behavior.md before creating tests.
-
-Expect fast failures (<2 seconds). Fail fast, get error codes, iterate by fixing errors and adding regression tests.
-
-Pre-commit hook (`.husky/pre-commit`) runs `npm test` automatically.
-
-### Test File Organization
-| Pattern | Runner | Location |
-|---------|--------|----------|
-| `*.test.ts` | Vitest | `tests/unit/` |
-| `*.integration.test.ts` | Vitest | `tests/integration/` |
-| `*.spec.ts` | Playwright | `tests/e2e/` |
-
-### Database Layer (`src/db/`)
-All database access via `*Repo.ts` files. Direct Supabase imports outside `src/db/` will fail architecture tests.
-
-
-
+CORRECT ORDER:
+1. Implement feature
+2. Update doc               ← Do this FIRST
+3. Tell user "Done!"        ← Only after doc is updated
+```

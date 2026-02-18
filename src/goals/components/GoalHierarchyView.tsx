@@ -10,8 +10,7 @@ import { groupGoalsByHierarchy } from "../goalHierarchyService"
 import { computeProjectedDate, getNextMilestoneInfo } from "../goalsService"
 import type { ProjectedDateInfo } from "../goalsService"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
-
-const CATEGORY_ORDER: GoalDisplayCategory[] = ["field_work", "results", "dirty_dog", "texting", "dates", "relationship"]
+import { CATEGORY_ORDER } from "../config"
 
 interface GoalHierarchyViewProps {
   goals: GoalWithProgress[]

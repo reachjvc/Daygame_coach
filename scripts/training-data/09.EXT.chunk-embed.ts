@@ -102,16 +102,18 @@ type ChunkMetadata = {
   asrTranscriptArtifactTypes?: string[]
   worstArtifactSeverity?: string
   // Deterministic heuristic score for retrieval downranking (0.0-1.0).
-  chunkConfidence?: number
-  chunkConfidenceScore?: number
   chunk_confidence_score?: number
   chunkConfidenceVersion?: number
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
-  damagedSegmentIds?: number[]
   damaged_segment_ids?: number[]
-  containsRepairedText?: boolean
   contains_repaired_text?: boolean
+  // Section/conversation summary from Stage 07 enrichment
+  description?: string
+  // Position within talking_head (1-based section index)
+  section_index?: number
+  // True for summary chunks (one per enrichment entry)
+  isSummary?: boolean
   // Cross-reference fields (D14b: commentary ↔ conversation linking)
   blockIndex?: number
   relatedConversationId?: number | null
@@ -258,13 +260,15 @@ type InternalChunk = {
   asrTranscriptArtifactCount?: number
   asrTranscriptArtifactTypes?: string[]
   worstArtifactSeverity?: string
-  chunkConfidence?: number
-  chunkConfidenceScore?: number
+  chunk_confidence_score?: number
   chunkConfidenceVersion?: number
   // Quality flags
   problematicReason?: string[]
-  damagedSegmentIds?: number[]
-  containsRepairedText?: boolean
+  damaged_segment_ids?: number[]
+  contains_repaired_text?: boolean
+  description?: string
+  section_index?: number
+  isSummary?: boolean
   // Cross-reference fields (D14b)
   blockIndex?: number
   relatedConversationId?: number | null
@@ -465,6 +469,7 @@ function buildAsrQualityIndex(file: EnrichedFile): AsrQualityIndex {
   }
 
   for (const art of file.transcript_artifacts ?? []) {
+    if (art?.repaired) continue
     const segId = art?.segment_index
     if (typeof segId !== "number" || !Number.isFinite(segId)) continue
     transcriptArtifactIds.add(segId)
@@ -531,13 +536,13 @@ function collectAsrStats(
 function collectConfidenceDamageStats(
   segments: ContentSegment[]
 ): {
-  damagedSegmentIds: number[]
-  containsRepairedText: boolean
+  damaged_segment_ids: number[]
+  contains_repaired_text: boolean
   lowTierCount: number
   mediumTierCount: number
 } {
-  const damagedSegmentIds: number[] = []
-  let containsRepairedText = false
+  const damaged_segment_ids: number[] = []
+  let contains_repaired_text = false
   let lowTierCount = 0
   let mediumTierCount = 0
 
@@ -546,7 +551,7 @@ function collectConfidenceDamageStats(
     const tier = (seg.confidence_tier ?? "").toLowerCase().trim()
     const hasContamination = Array.isArray(seg.contamination_sources) && seg.contamination_sources.length > 0
     if (typeof sid === "number" && (tier === "low" || hasContamination)) {
-      damagedSegmentIds.push(sid)
+      damaged_segment_ids.push(sid)
     }
     if (tier === "low") {
       lowTierCount += 1
@@ -554,19 +559,20 @@ function collectConfidenceDamageStats(
       mediumTierCount += 1
     }
     if (seg.contains_repaired_text === true) {
-      containsRepairedText = true
+      contains_repaired_text = true
     }
   }
 
   return {
-    damagedSegmentIds: [...new Set(damagedSegmentIds)].sort((a, b) => a - b),
-    containsRepairedText,
+    damaged_segment_ids: [...new Set(damaged_segment_ids)].sort((a, b) => a - b),
+    contains_repaired_text,
     lowTierCount,
     mediumTierCount,
   }
 }
 
 const CHUNK_CONFIDENCE_VERSION = 2  // v2: graduated artifact severity penalty (was flat x0.75)
+const MIN_CHUNK_CONFIDENCE = 0.3    // Skip chunks below this floor to avoid polluting vector store
 
 function clamp01(n: number): number {
   if (!Number.isFinite(n)) return 0
@@ -577,7 +583,7 @@ function computeChunkConfidence(chunk: InternalChunk): number {
   // Heuristic only: this is meant for downranking, not as a hard gate.
   let conf = 1.0
 
-  if (chunk.type !== "INTERACTION") conf *= 0.9
+  // No type-based penalty: commentary is equally valuable for RAG retrieval
 
   if (typeof chunk.phaseConfidence === "number") {
     const pc = clamp01(chunk.phaseConfidence)
@@ -598,7 +604,7 @@ function computeChunkConfidence(chunk: InternalChunk): number {
   else if (artSeverity === "low") conf *= 0.97
 
   if ((chunk.asrLowQualitySegmentCount ?? 0) > 0) conf *= 0.85
-  if ((chunk.damagedSegmentIds ?? []).length > 0) conf *= 0.82
+  if ((chunk.damaged_segment_ids ?? []).length > 0) conf *= 0.82
 
   return clamp01(conf)
 }
@@ -649,9 +655,15 @@ function assessSegmentsForProblems(
 function buildMetadataPrefix(
   phase?: string,
   techniques?: string[],
-  topics?: string[]
+  topics?: string[],
+  description?: string,
+  videoType?: string
 ): string {
   const parts: string[] = []
+
+  if (videoType) {
+    parts.push(`[TYPE: ${videoType}]`)
+  }
 
   if (phase && phase !== "unknown") {
     parts.push(`[PHASE: ${phase}]`)
@@ -665,7 +677,45 @@ function buildMetadataPrefix(
     parts.push(`[TOPIC: ${topics.join(", ")}]`)
   }
 
+  if (description) {
+    parts.push(`[DESC: ${description}]`)
+  }
+
   return parts.length > 0 ? parts.join(" ") + "\n" : ""
+}
+
+/**
+ * Build a summary chunk from an enrichment entry's description.
+ * Returns null if the description is missing or too short to be useful.
+ */
+function buildSummaryChunk(
+  enrichment: ContentEnrichment,
+  type: SegmentType,
+  opts: { conversationId?: number; blockIndex?: number; section_index?: number }
+): InternalChunk | null {
+  const desc = enrichment.description
+  if (typeof desc !== "string" || desc.trim().length < 10) return null
+
+  const techniques = extractTechniqueNames(
+    enrichment.techniques_used ?? enrichment.techniques_discussed
+  )
+  const topics = extractStringArray(enrichment.topics_discussed)
+
+  return {
+    content: desc.trim(),
+    type,
+    chunkIndex: 0,
+    totalChunks: 0,
+    techniques,
+    topics,
+    conversationId: opts.conversationId,
+    section_index: opts.section_index,
+    blockIndex: opts.blockIndex,
+    description: desc.trim(),
+    isSummary: true,
+    chunk_confidence_score: 1.0,
+    chunkConfidenceVersion: CHUNK_CONFIDENCE_VERSION,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -777,7 +827,7 @@ function chunkInteractionByPhase(
           } else if (confStats.mediumTierCount > 0) {
             chunkProblems.push("confidence_tier:medium")
           }
-          if (confStats.damagedSegmentIds.length > 0) {
+          if (confStats.damaged_segment_ids.length > 0) {
             chunkProblems.push("contamination_sources_present")
           }
 
@@ -804,8 +854,8 @@ function chunkInteractionByPhase(
             asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
             worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
             problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
-            damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
-            containsRepairedText: confStats.containsRepairedText || undefined,
+            damaged_segment_ids: confStats.damaged_segment_ids.length > 0 ? confStats.damaged_segment_ids : undefined,
+            contains_repaired_text: confStats.contains_repaired_text || undefined,
           })
           content = ""
           chunkTurnIndices = []
@@ -841,7 +891,7 @@ function chunkInteractionByPhase(
       } else if (confStats.mediumTierCount > 0) {
         chunkProblems.push("confidence_tier:medium")
       }
-      if (confStats.damagedSegmentIds.length > 0) {
+      if (confStats.damaged_segment_ids.length > 0) {
         chunkProblems.push("contamination_sources_present")
       }
 
@@ -868,8 +918,8 @@ function chunkInteractionByPhase(
         asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
         worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
         problematicReason: chunkProblems.length > 0 ? [...new Set(chunkProblems)] : undefined,
-        damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
-        containsRepairedText: confStats.containsRepairedText || undefined,
+        damaged_segment_ids: confStats.damaged_segment_ids.length > 0 ? confStats.damaged_segment_ids : undefined,
+        contains_repaired_text: confStats.contains_repaired_text || undefined,
       })
     }
   }
@@ -1046,8 +1096,8 @@ function splitTextBySize(text: string, maxSize: number, overlap: number): string
 
 /**
  * Build simple text chunks for commentary or talking_head content.
- * Assesses all source segments for quality issues - if any segment is problematic,
- * all chunks from this block are flagged (conservative approach for non-phase-aligned content).
+ * Assesses quality per-chunk by mapping text lines back to source segments,
+ * so a few bad segments (e.g. intro music) don't penalize the entire section.
  */
 function chunkCommentaryText(
   text: string,
@@ -1061,53 +1111,114 @@ function chunkCommentaryText(
 ): InternalChunk[] {
   if (text.length < 20) return []
 
-  // Assess all segments that contributed to this text block
-  const problems = assessSegmentsForProblems(segments, speakerLabels)
-  const asrStats = collectAsrStats(segments, asrIndex)
-  const confStats = collectConfidenceDamageStats(segments)
+  // Split text into lines and track which segment each line came from.
+  // The caller builds text as "Speaker: seg.text" per segment, one line per segment,
+  // filtering out masked/empty lines. We mirror that logic to map line→segment.
+  const textLines = text.split("\n").filter((l) => l.trim().length > 0)
 
-  if (asrStats.lowQualityCount > 0) {
-    problems.push("asr_low_quality")
-  }
-  if (asrStats.transcriptArtifactTypes.length > 0) {
-    for (const t of asrStats.transcriptArtifactTypes) {
-      problems.push(`asr_transcript_artifact:${t}`)
+  // Build line→segment mapping: for each non-empty text line, find the matching segment
+  const lineToSegment: (ContentSegment | undefined)[] = []
+  let segCursor = 0
+  for (const line of textLines) {
+    // Find the segment whose text appears in this line
+    let matched = false
+    for (let s = segCursor; s < segments.length; s++) {
+      const segText = (segments[s].text ?? "").trim()
+      if (segText && line.includes(segText)) {
+        lineToSegment.push(segments[s])
+        segCursor = s + 1
+        matched = true
+        break
+      }
     }
-  }
-  if (confStats.lowTierCount > 0) {
-    problems.push("confidence_tier:low")
-  } else if (confStats.mediumTierCount > 0) {
-    problems.push("confidence_tier:medium")
-  }
-  if (confStats.damagedSegmentIds.length > 0) {
-    problems.push("contamination_sources_present")
+    if (!matched) lineToSegment.push(undefined)
   }
 
-  const startSec = Math.min(
-    ...segments.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
-  )
-  const endSec = Math.max(
-    ...segments.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
-  )
+  // Use the same splitting logic as splitTextBySize but track line indices per chunk
+  const chunkLineRanges: { start: number; end: number }[] = []
+  let current = ""
+  let chunkStartLine = 0
+  let lineIdx = 0
+
+  for (const line of textLines) {
+    const candidate = current ? current + "\n" + line : line
+    if (candidate.length > maxSize && current.length > 0) {
+      chunkLineRanges.push({ start: chunkStartLine, end: lineIdx })
+      // Overlap: rewind by overlap chars worth of lines
+      const overlapStart = Math.max(0, current.length - overlap)
+      const overlapText = current.slice(overlapStart).trim()
+      current = overlapText ? overlapText + "\n" + line : line
+      // Approximate: overlap lines come from the tail of the previous chunk
+      const overlapLineCount = current.split("\n").length - 1
+      chunkStartLine = Math.max(0, lineIdx - overlapLineCount)
+    } else {
+      current = candidate
+    }
+    lineIdx++
+  }
+  if (current.trim()) {
+    chunkLineRanges.push({ start: chunkStartLine, end: textLines.length })
+  }
 
   const parts = splitTextBySize(text, maxSize, overlap)
-  return parts.map((content, idx) => ({
-    content,
-    type: "COMMENTARY" as SegmentType,
-    chunkIndex: idx,
-    totalChunks: parts.length,
-    techniques,
-    topics,
-    startSec: Number.isFinite(startSec) ? startSec : undefined,
-    endSec: Number.isFinite(endSec) ? endSec : undefined,
-    asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
-    asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
-    asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
-    worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
-    problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
-    damagedSegmentIds: confStats.damagedSegmentIds.length > 0 ? confStats.damagedSegmentIds : undefined,
-    containsRepairedText: confStats.containsRepairedText || undefined,
-  }))
+
+  return parts.map((content, idx) => {
+    // Gather segments for this specific chunk
+    const range = chunkLineRanges[idx] ?? { start: 0, end: textLines.length }
+    const chunkSegments: ContentSegment[] = []
+    for (let l = range.start; l < range.end; l++) {
+      const seg = lineToSegment[l]
+      if (seg) chunkSegments.push(seg)
+    }
+    // Fall back to all segments if mapping produced nothing (safety net)
+    const segs = chunkSegments.length > 0 ? chunkSegments : segments
+
+    const problems = assessSegmentsForProblems(segs, speakerLabels)
+    const asrStats = collectAsrStats(segs, asrIndex)
+    const confStats = collectConfidenceDamageStats(segs)
+
+    if (asrStats.lowQualityCount > 0) {
+      problems.push("asr_low_quality")
+    }
+    if (asrStats.transcriptArtifactTypes.length > 0) {
+      for (const t of asrStats.transcriptArtifactTypes) {
+        problems.push(`asr_transcript_artifact:${t}`)
+      }
+    }
+    if (confStats.lowTierCount > 0) {
+      problems.push("confidence_tier:low")
+    } else if (confStats.mediumTierCount > 0) {
+      problems.push("confidence_tier:medium")
+    }
+    if (confStats.damaged_segment_ids.length > 0) {
+      problems.push("contamination_sources_present")
+    }
+
+    const chunkStartSec = Math.min(
+      ...segs.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+    )
+    const chunkEndSec = Math.max(
+      ...segs.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+    )
+
+    return {
+      content,
+      type: "COMMENTARY" as SegmentType,
+      chunkIndex: idx,
+      totalChunks: parts.length,
+      techniques,
+      topics,
+      startSec: Number.isFinite(chunkStartSec) ? chunkStartSec : undefined,
+      endSec: Number.isFinite(chunkEndSec) ? chunkEndSec : undefined,
+      asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+      asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+      asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+      worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
+      problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
+      damaged_segment_ids: confStats.damaged_segment_ids.length > 0 ? confStats.damaged_segment_ids : undefined,
+      contains_repaired_text: confStats.contains_repaired_text || undefined,
+    }
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -1501,10 +1612,29 @@ async function main() {
 
   const toProcess: Array<(typeof candidates)[number]> = []
   let unchanged = 0
+  let mtimeForced = 0
   for (const cand of Array.from(bestByKey.values()).sort((a, b) => a.sourceKey.localeCompare(b.sourceKey))) {
     const prev = state.sources[cand.sourceKey]
     const isUnchanged = !force && prev?.enrichedHash === cand.fileHash
     if (isUnchanged) {
+      // Safety net: verify output exists and isn't older than input
+      const outputPath = path.join(chunksDir, cand.channel, `${cand.videoId}.chunks.json`)
+      try {
+        const [inputStat, outputStat] = await Promise.all([
+          fsp.stat(cand.filePath),
+          fsp.stat(outputPath),
+        ])
+        if (inputStat.mtimeMs > outputStat.mtimeMs) {
+          mtimeForced++
+          toProcess.push(cand)
+          continue
+        }
+      } catch {
+        // Output missing — re-process even though hash says unchanged
+        mtimeForced++
+        toProcess.push(cand)
+        continue
+      }
       unchanged++
       continue
     }
@@ -1518,6 +1648,7 @@ async function main() {
   if (args.manifest) console.log(`Manifest:     ${args.manifest}`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To process:   ${toProcess.length}${force ? " (forced)" : ""}`)
+  if (mtimeForced > 0) console.log(`Stale:        ${mtimeForced} file(s) with input newer than output (auto-forced)`)
   if (deduped > 0) console.log(`Deduped:      ${deduped} duplicate enriched artifact(s)`)
   if (skippedBadJson > 0) console.log(`Skipped:      ${skippedBadJson} unreadable JSON file(s)`)
   if (skippedNoVideoId > 0) console.log(`Skipped:      ${skippedNoVideoId} file(s) missing video_id`)
@@ -1707,6 +1838,12 @@ async function main() {
         }
       }
 
+      // Propagate description from enrichment
+      const approachDesc = typeof enrichment.description === "string" ? enrichment.description : undefined
+      if (approachDesc) {
+        for (const chunk of phaseChunks) chunk.description = approachDesc
+      }
+
       if (phaseChunks.length > 0) {
         for (let i = 0; i < phaseChunks.length; i++) {
           phaseChunks[i].conversationChunkIndex = i + 1
@@ -1714,6 +1851,13 @@ async function main() {
         }
         approachChunksByConvId.set(convId, phaseChunks)
         internalChunks.push(...phaseChunks)
+      }
+
+      // Summary chunk for this approach enrichment
+      const summaryChunk = buildSummaryChunk(enrichment, "INTERACTION", { conversationId: convId })
+      if (summaryChunk) {
+        if (investmentLevel) summaryChunk.investmentLevel = investmentLevel
+        internalChunks.push(summaryChunk)
       }
     }
 
@@ -1750,6 +1894,12 @@ async function main() {
         asrIndex
       )
 
+      // Propagate description from enrichment
+      const commentaryDesc = typeof enrichment?.description === "string" ? enrichment.description : undefined
+      if (commentaryDesc) {
+        for (const chunk of commentaryChunks) chunk.description = commentaryDesc
+      }
+
       // D14b: stamp cross-reference metadata on commentary chunks
       const bIdx = blockIdx + 1
       const relatedConvId = crossRefMap.commentaryToConversation.get(bIdx)
@@ -1761,6 +1911,15 @@ async function main() {
       }
 
       internalChunks.push(...commentaryChunks)
+
+      // Summary chunk for this commentary enrichment
+      if (enrichment) {
+        const commentarySummary = buildSummaryChunk(enrichment, "COMMENTARY", { blockIndex: bIdx })
+        if (commentarySummary) {
+          if (relatedConvId !== undefined) commentarySummary.relatedConversationId = relatedConvId
+          internalChunks.push(commentarySummary)
+        }
+      }
     }
 
     // D14b: stamp relatedCommentaryBlockIndices on approach chunks (second pass)
@@ -1806,7 +1965,18 @@ async function main() {
         speakerLabelsForSections,
         asrIndex
       )
+      // Propagate description + section_index from enrichment
+      const sectionDesc = typeof section.description === "string" ? section.description : undefined
+      const secIdx = typeof section.section_index === "number" ? section.section_index : undefined
+      for (const chunk of sectionChunks) {
+        if (sectionDesc) chunk.description = sectionDesc
+        if (secIdx !== undefined) chunk.section_index = secIdx
+      }
       internalChunks.push(...sectionChunks)
+
+      // Summary chunk for this talking_head section
+      const sectionSummary = buildSummaryChunk(section, "COMMENTARY", { section_index: secIdx })
+      if (sectionSummary) internalChunks.push(sectionSummary)
     }
 
     if (internalChunks.length === 0) {
@@ -1821,22 +1991,48 @@ async function main() {
         chunkIndex: idx,
         totalChunks: internalChunks.length,
       }
-      chunk.chunkConfidence = computeChunkConfidence(chunk)
-      chunk.chunkConfidenceScore = chunk.chunkConfidence
+      // Summary chunks keep their pre-set 1.0 confidence (no ASR source)
+      if (!chunk.isSummary) {
+        chunk.chunk_confidence_score = computeChunkConfidence(chunk)
+      }
       chunk.chunkConfidenceVersion = CHUNK_CONFIDENCE_VERSION
       return chunk
     })
 
+    // Filter out chunks below minimum confidence threshold
+    const beforeFilterCount = normalizedChunks.length
+    const filteredChunks = normalizedChunks.filter((c) => {
+      if (c.isSummary) return true
+      const score = c.chunk_confidence_score ?? 1.0
+      return score >= MIN_CHUNK_CONFIDENCE
+    })
+    const droppedCount = beforeFilterCount - filteredChunks.length
+    if (droppedCount > 0) {
+      console.log(`   🚫 Filtered ${droppedCount} chunk(s) below confidence floor ${MIN_CHUNK_CONFIDENCE}`)
+    }
+
+    // Re-normalize global indices after filtering
+    for (let i = 0; i < filteredChunks.length; i++) {
+      filteredChunks[i].chunkIndex = i
+      filteredChunks[i].totalChunks = filteredChunks.length
+    }
+
+    if (filteredChunks.length === 0) {
+      console.log(`   ⚠️  All chunks filtered below confidence floor, skipping`)
+      continue
+    }
+
     // Generate embeddings
-    console.log(`   📊 Generating ${normalizedChunks.length} embeddings...`)
+    console.log(`   📊 Generating ${filteredChunks.length} embeddings...`)
     const chunks: Chunk[] = []
 
-    for (let i = 0; i < normalizedChunks.length; i++) {
-      const chunk = normalizedChunks[i]
+    for (let i = 0; i < filteredChunks.length; i++) {
+      const chunk = filteredChunks[i]
 
       // Build metadata prefix for semantic matching
-      const prefix = buildMetadataPrefix(chunk.phase, chunk.techniques, chunk.topics)
-      const contentWithPrefix = prefix + chunk.content
+      const summaryTag = chunk.isSummary ? "[SUMMARY] " : ""
+      const prefix = buildMetadataPrefix(chunk.phase, chunk.techniques, chunk.topics, chunk.description, videoType)
+      const contentWithPrefix = summaryTag + prefix + chunk.content
 
       const embedding = await generateEmbeddingWithRetry(contentWithPrefix, ollamaBaseUrl, embeddingModel)
 
@@ -1893,10 +2089,8 @@ async function main() {
       if (chunk.worstArtifactSeverity) {
         metadata.worstArtifactSeverity = chunk.worstArtifactSeverity
       }
-      if (chunk.chunkConfidence !== undefined) {
-        metadata.chunkConfidence = chunk.chunkConfidence
-        metadata.chunkConfidenceScore = chunk.chunkConfidence
-        metadata.chunk_confidence_score = chunk.chunkConfidence
+      if (chunk.chunk_confidence_score !== undefined) {
+        metadata.chunk_confidence_score = chunk.chunk_confidence_score
       }
       if (chunk.chunkConfidenceVersion !== undefined) {
         metadata.chunkConfidenceVersion = chunk.chunkConfidenceVersion
@@ -1904,13 +2098,11 @@ async function main() {
       if (chunk.problematicReason && chunk.problematicReason.length > 0) {
         metadata.problematicReason = chunk.problematicReason
       }
-      if (chunk.damagedSegmentIds && chunk.damagedSegmentIds.length > 0) {
-        metadata.damagedSegmentIds = chunk.damagedSegmentIds
-        metadata.damaged_segment_ids = chunk.damagedSegmentIds
+      if (chunk.damaged_segment_ids && chunk.damaged_segment_ids.length > 0) {
+        metadata.damaged_segment_ids = chunk.damaged_segment_ids
       }
-      if (chunk.containsRepairedText !== undefined) {
-        metadata.containsRepairedText = chunk.containsRepairedText
-        metadata.contains_repaired_text = chunk.containsRepairedText
+      if (chunk.contains_repaired_text !== undefined) {
+        metadata.contains_repaired_text = chunk.contains_repaired_text
       }
       // D14b: cross-reference metadata
       if (typeof chunk.blockIndex === "number") {
@@ -1922,6 +2114,17 @@ async function main() {
       if (chunk.relatedCommentaryBlockIndices && chunk.relatedCommentaryBlockIndices.length > 0) {
         metadata.relatedCommentaryBlockIndices = chunk.relatedCommentaryBlockIndices
       }
+      // M2: description + section context
+      if (chunk.description) {
+        metadata.description = chunk.description
+      }
+      if (chunk.section_index !== undefined) {
+        metadata.section_index = chunk.section_index
+      }
+      // M3: summary chunk flag
+      if (chunk.isSummary) {
+        metadata.isSummary = true
+      }
 
       chunks.push({
         content: contentWithPrefix,
@@ -1929,8 +2132,8 @@ async function main() {
         metadata,
       })
 
-      if ((i + 1) % 25 === 0 || i + 1 === normalizedChunks.length) {
-        console.log(`   - Embedded ${i + 1}/${normalizedChunks.length}`)
+      if ((i + 1) % 25 === 0 || i + 1 === filteredChunks.length) {
+        console.log(`   - Embedded ${i + 1}/${filteredChunks.length}`)
       }
     }
 

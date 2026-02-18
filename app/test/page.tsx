@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, GitBranch } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, Target, Layers, Star, Globe, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -96,10 +96,34 @@ const testPages = [
     icon: Palette,
   },
   {
-    name: "Pipeline",
-    href: "/test/pipeline",
-    description: "Training data pipeline visualization with stages, flags, and validation gates",
-    icon: GitBranch,
+    name: "Goal Flow Variants",
+    href: "/test/goals",
+    description: "5 redesigns of goal selection → customization flow (Wizard, Quest, MindMap, Journey, Architect)",
+    icon: Target,
+  },
+  {
+    name: "Goal Flow V2",
+    href: "/test/goalsv2",
+    description: "5 post-customize extensions with curve editor (Forge, Constellation, Momentum, Seasons, War Room)",
+    icon: Layers,
+  },
+  {
+    name: "Constellation V3",
+    href: "/test/goalsv3",
+    description: "5 visual explorations of the Constellation flow (Orrery, Nebula, Bioluminescent, Circuit, Aurora)",
+    icon: Star,
+  },
+  {
+    name: "Competitor Sites",
+    href: "/test/competitors",
+    description: "21 competitor & inspiration sites with screenshots, notes, and recommendations",
+    icon: Globe,
+  },
+  {
+    name: "Product Animations",
+    href: "/test/animations",
+    description: "Animated product showcase for demos and investor reviews",
+    icon: Play,
   },
 ]
 

@@ -461,7 +461,7 @@ export function generateDirtyDogInserts(
   const l2Parent = existingGoals.find((g) => g.goal_level === 2)
   if (!l2Parent) return []
 
-  const dirtyDogTemplates = getTemplatesByCategory().dirty_dog
+  const dirtyDogTemplates = getTemplatesByCategory().dirty_dog ?? []
   const existingTemplateIds = new Set(existingGoals.map((g) => g.template_id).filter(Boolean))
 
   return dirtyDogTemplates

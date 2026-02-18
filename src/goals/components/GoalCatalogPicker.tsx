@@ -242,14 +242,8 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
 // Daygame Tier 2: L1 goals + L2 achievements
 // ============================================================================
 
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
-  field_work: "Field Work",
-  results: "Results",
-  dirty_dog: "Dirty Dog",
-  texting: "Texting Game",
-  dates: "Dating",
-  relationship: "Relationship",
-}
+// Category labels imported from centralized config
+import { CATEGORY_LABELS } from "../config"
 
 function DaygameTier2({
   tiers,

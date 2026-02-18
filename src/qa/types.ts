@@ -57,6 +57,7 @@ export interface Source {
 
 export interface SourceMetadata {
   coach?: string
+  channel?: string
   topic?: string
   source?: string
   timestamp?: string

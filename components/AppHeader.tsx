@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Beaker, BookOpen, Castle, Crosshair, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
+import { Beaker, BookOpen, Castle, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
 import { GoalIcon } from "@/components/ui/GoalIcon"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
@@ -215,8 +215,15 @@ export function AppHeader({
     <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
       <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo */}
-        <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center gap-2 font-bold text-xl text-foreground">
-          <Crosshair className="size-6 text-primary" />
+        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-foreground">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 32 32" className="shrink-0">
+            <circle cx="16" cy="16" r="11" fill="none" stroke="#ff6b35" strokeWidth="2"/>
+            <circle cx="16" cy="16" r="2.5" fill="#ff6b35"/>
+            <line x1="16" y1="1" x2="16" y2="7" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="16" y1="25" x2="16" y2="31" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="1" y1="16" x2="7" y2="16" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round"/>
+            <line x1="25" y1="16" x2="31" y2="16" stroke="#ff6b35" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
           <span>DayGame Coach</span>
         </Link>
 
