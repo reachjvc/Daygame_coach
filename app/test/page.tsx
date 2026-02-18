@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, Target, Layers, Star, Globe, Play } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, Target, Layers, Star, Globe, Play, Rocket, Brain } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -112,6 +112,18 @@ const testPages = [
     href: "/test/goalsv3",
     description: "5 visual explorations of the Constellation flow (Orrery, Nebula, Bioluminescent, Circuit, Aurora)",
     icon: Star,
+  },
+  {
+    name: "Goal Flow V4",
+    href: "/test/goalsv4",
+    description: "2 Orrery + 2 Aurora full product builds — interactive goals, animations, Playwright-tested",
+    icon: Rocket,
+  },
+  {
+    name: "5 Goal Philosophies",
+    href: "/test/5views_goals",
+    description: "5 radically different approaches to goal-setting: Anti-Goals, One Thing, Story Arc, Garden, Contracts",
+    icon: Brain,
   },
   {
     name: "Competitor Sites",

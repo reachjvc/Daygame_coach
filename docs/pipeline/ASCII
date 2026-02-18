@@ -179,7 +179,7 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  seeds to all segments   |    confidence scores
 +--------------------------+
              |
-             |  data/06h.DET.confidence-propagation/.../*.confidence.json
+             |  data/06h.DET.confidence-propagation/.../*.confidence.report.json
              v
 +--------------------------+
 |  07.LLM. CONTENT         |    1 LLM call / video

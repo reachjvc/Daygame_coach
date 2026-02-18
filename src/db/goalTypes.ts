@@ -14,11 +14,15 @@ export type GoalDisplayCategory =
   // Personal Growth
   | "mindfulness" | "resilience" | "learning" | "reflection" | "discipline"
   // Social
-  | "social_activity" | "friendships" | "hosting" | "social_skills" | "network_expansion"
+  | "social_activity" | "friendships" | "hosting" | "social_skills" | "network_expansion" | "mentorship"
   // Fitness
-  | "strength" | "training" | "nutrition" | "body_comp"
+  | "strength" | "training" | "nutrition" | "body_comp" | "flexibility" | "endurance"
   // Wealth
-  | "income" | "saving" | "investing" | "career_growth"
+  | "income" | "saving" | "investing" | "career_growth" | "entrepreneurship"
+  // Vices & Elimination
+  | "porn_freedom" | "digital_discipline" | "substance_control" | "self_control"
+  // Lifestyle
+  | "hobbies_skills" | "cooking_domestic" | "adventure_travel" | "style_grooming"
 
 /**
  * Metrics that can be linked to goals for auto-sync with tracking data

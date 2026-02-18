@@ -117,7 +117,7 @@ def build_stage_command(
 
     cmd.extend(["--manifest", manifest_path])
 
-    if stage.key == "07" and quarantine_file and quarantine_file.exists():
+    if stage.key in ("07", "08") and quarantine_file and quarantine_file.exists():
         cmd.extend(["--quarantine-file", str(quarantine_file)])
 
     return cmd

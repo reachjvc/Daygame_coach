@@ -16,6 +16,7 @@ import {
   Sprout,
   Mountain,
   Puzzle,
+  Ban,
 } from "lucide-react"
 import type { LifeAreaConfig } from "../types"
 
@@ -141,13 +142,33 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     progressColor: "bg-teal-500",
     sortOrder: 5,
     suggestions: [
-      { title: "Travel to 1 new place per month", defaultTarget: 1, defaultPeriod: "monthly", featured: true },
+      { title: "Practice hobby 3x per week", defaultTarget: 3, defaultPeriod: "weekly", featured: true },
+      { title: "Cook 5 home meals per week", defaultTarget: 5, defaultPeriod: "weekly", featured: true },
       { title: "Try 1 new experience per week", defaultTarget: 1, defaultPeriod: "weekly" },
-      { title: "Cook 3 home meals per week", defaultTarget: 3, defaultPeriod: "weekly" },
-      { title: "1 hobby session per week", defaultTarget: 1, defaultPeriod: "weekly" },
-      { title: "Declutter 1 room per month", defaultTarget: 1, defaultPeriod: "monthly" },
-      { title: "Morning routine daily", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Plan 1 adventure per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Travel to 1 new place per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Grooming routine daily", defaultTarget: 1, defaultPeriod: "daily" },
+      { title: "Upgrade 1 wardrobe piece per month", defaultTarget: 1, defaultPeriod: "monthly" },
+      { title: "Deep clean weekly", defaultTarget: 1, defaultPeriod: "weekly" },
+      { title: "1 adventure per month", defaultTarget: 1, defaultPeriod: "monthly" },
+    ],
+  },
+  {
+    id: "vices_elimination",
+    name: "Vices & Elimination",
+    icon: Ban,
+    hex: "#f43f5e",
+    color: "text-rose-500",
+    bgColor: "bg-rose-500/10",
+    borderColor: "border-rose-500/30",
+    progressColor: "bg-rose-500",
+    sortOrder: 6,
+    suggestions: [
+      { title: "Porn-free every day", defaultTarget: 7, defaultPeriod: "weekly", featured: true },
+      { title: "Screen time under limit 6 days/week", defaultTarget: 6, defaultPeriod: "weekly", featured: true },
+      { title: "5 alcohol-free days per week", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "No social media 3 days/week", defaultTarget: 3, defaultPeriod: "weekly" },
+      { title: "No junk food 5 days/week", defaultTarget: 5, defaultPeriod: "weekly" },
+      { title: "No late-night scrolling 6 days/week", defaultTarget: 6, defaultPeriod: "weekly" },
     ],
   },
   {

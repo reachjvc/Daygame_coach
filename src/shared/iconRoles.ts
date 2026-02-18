@@ -58,6 +58,7 @@ export const UTILITY_ICONS = new Set([
 // ---------------------------------------------------------------------------
 export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Award: ["achievements", "milestone badges"],
+  Ban: ["vices/elimination life area"],
   Beaker: ["test pages (dev only)"],
   BookOpen: ["articles nav", "reading/knowledge"],
   Brain: ["psychology/inner-game", "analysis"],
@@ -132,12 +133,11 @@ export const CUSTOM_ICON_COMPONENTS: Record<string, { importPattern: string; all
   GoalIcon: {
     importPattern: "GoalIcon",
     allowedPathPatterns: [
-      /src\/goals\//,
-      /src\/tracking\//,
-      /src\/inner-game\//,
-      /src\/home\//,
-      /components\/AppHeader/,
-      /app\/test\//,
+      /src\/goals\//,         // goal CRUD, views, tree
+      /src\/tracking\//,      // field reports reference goals
+      /src\/inner-game\//,    // GoalsTab within inner-game
+      /components\/AppHeader/, // goals nav item
+      /app\/test\//,          // dev preview pages
     ],
   },
 }

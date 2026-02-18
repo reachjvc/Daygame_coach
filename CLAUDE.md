@@ -22,6 +22,8 @@ Any work on the pipeline requires thorough understanding of all the steps. User 
 
 When answering questions or working on improving the pipeline it is paramount that you make sure your recommendation and communication is grounded in the current facts of the data or what the script does, and that these are thoroughly investigated each and every time, instead of relying on summaries or assumptions etc.
 
+**Pipeline data verification: match by YouTube ID, not source folder.** Multiple batches share source folders (e.g. `coach_kyle_how_to_approach_a_girl` has P001 AND P002 videos). Listing a source dir counts videos from ALL batches. To check a specific sub-batch's progress: extract YouTube IDs from the manifest, then `find data/<stage> -name "*<youtube_id>*"` for each. Never trust source-folder-level counts as batch-level counts.
+
 
 ### 2. Test-Driven Workflow
 

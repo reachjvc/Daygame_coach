@@ -4,6 +4,8 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import {
   ArrowLeft,
+  ArrowRight,
+  BarChart3,
   MessageCircle,
   Dumbbell,
   Sprout,
@@ -1002,36 +1004,407 @@ function OnboardingSection() {
   )
 }
 
+// ─── Feature Grid Section ─────────────────────────────────────────────────
+
+const FEATURES = [
+  { title: "AI Conversations", desc: "Practice approaches with hyper-realistic AI women. Get scored on every line.", icon: Swords, hex: "#ff6b35" },
+  { title: "Ask Your Coach", desc: "AI answers grounded in 200+ hours of real coaching transcripts.", icon: BookOpen, hex: "#a855f7" },
+  { title: "Goal Tracking", desc: "Hierarchical goals across 6 life areas with adaptive habit ramps.", icon: Target, hex: "#22c55e" },
+  { title: "Session Logging", desc: "Live timer. Voice notes. Auto-transcription. Approach metadata.", icon: Calendar, hex: "#3b82f6" },
+  { title: "Inner Game", desc: "6-step guided values discovery. Shadow self. Peak experiences.", icon: Compass, hex: "#eab308" },
+  { title: "Level System", desc: "Earn XP from every action. Level up from Rookie to Master.", icon: Crown, hex: "#e63946" },
+]
+
+function FeatureGrid() {
+  const { ref, isVisible } = useIsVisible("-50px")
+  return (
+    <div ref={ref} className="space-y-10">
+      <div className="text-center space-y-3">
+        <p className="text-sm font-medium text-primary uppercase tracking-widest">The Platform</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground">Everything You Need to Level Up</h2>
+        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          AI practice, real coaching data, goal tracking, and self-discovery — all in one app.
+        </p>
+      </div>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {FEATURES.map((f, i) => {
+          const Icon = f.icon
+          return (
+            <div
+              key={f.title}
+              className={`group relative rounded-xl border border-white/[0.06] bg-white/[0.02] p-6 transition-all duration-500 hover:bg-white/[0.05] hover:border-white/[0.12] hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)] ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+              style={{ transitionDelay: isVisible ? `${i * 80}ms` : "0ms" }}
+            >
+              <div
+                className="rounded-lg p-2.5 w-fit mb-4 transition-transform duration-300 group-hover:scale-110"
+                style={{ backgroundColor: `${f.hex}12`, color: f.hex }}
+              >
+                <Icon className="size-5" />
+              </div>
+              <h3 className="font-semibold text-foreground mb-2">{f.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── Scenario Gallery Section ─────────────────────────────────────────────
+
+const SCENARIOS = [
+  { location: "Bookstore", archetype: "The Intellectual", difficulty: "Beginner", icon: BookOpen, color: "#a855f7" },
+  { location: "Coffee Shop", archetype: "The Barista Girl", difficulty: "Beginner", icon: MessageCircle, color: "#f97316" },
+  { location: "Street Stop", archetype: "The Passerby", difficulty: "Intermediate", icon: Footprints, color: "#3b82f6" },
+  { location: "Gym", archetype: "The Fitness Girl", difficulty: "Intermediate", icon: Dumbbell, color: "#22c55e" },
+  { location: "Park", archetype: "The Dog Walker", difficulty: "Beginner", icon: Sprout, color: "#eab308" },
+  { location: "Night Venue", archetype: "The Party Girl", difficulty: "Advanced", icon: Sparkles, color: "#e63946" },
+]
+
+function ScenarioGallery() {
+  const { ref, isVisible } = useIsVisible("-50px")
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    if (!isVisible) return
+    const id = setInterval(() => setActiveIndex((i) => (i + 1) % SCENARIOS.length), 2000)
+    return () => clearInterval(id)
+  }, [isVisible])
+
+  return (
+    <AnimatedSection>
+      <div ref={ref} className="space-y-10">
+        <div className="text-center space-y-3">
+          <p className="text-sm font-medium text-primary uppercase tracking-widest">50+ Scenarios</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground">Practice Anywhere. With Anyone.</h2>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            Every location. Every archetype. Every difficulty level. The AI adapts to your experience.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {SCENARIOS.map((s, i) => {
+            const Icon = s.icon
+            const isActive = i === activeIndex
+            return (
+              <div
+                key={s.location}
+                className={`relative rounded-xl border p-5 transition-all duration-500 cursor-default ${
+                  isActive
+                    ? "border-primary/40 bg-primary/[0.06] shadow-[0_0_30px_rgba(255,107,53,0.1)] scale-[1.02]"
+                    : "border-border bg-card hover:border-border/80"
+                } ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                style={{ transitionDelay: isVisible ? `${i * 100}ms` : "0ms" }}
+                onMouseEnter={() => setActiveIndex(i)}
+              >
+                <div className="flex items-start gap-3">
+                  <div
+                    className="rounded-lg p-2 transition-colors duration-300"
+                    style={{ backgroundColor: `${s.color}15`, color: s.color }}
+                  >
+                    <Icon className="size-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-sm">{s.location}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">{s.archetype}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      s.difficulty === "Beginner"
+                        ? "bg-green-500/15 text-green-400 border border-green-500/20"
+                        : s.difficulty === "Intermediate"
+                          ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
+                          : "bg-red-500/15 text-red-400 border border-red-500/20"
+                    }`}
+                  >
+                    {s.difficulty}
+                  </span>
+                </div>
+                {isActive && (
+                  <div
+                    className="absolute inset-0 rounded-xl pointer-events-none"
+                    style={{
+                      background: `radial-gradient(ellipse at center, ${s.color}08 0%, transparent 70%)`,
+                    }}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </AnimatedSection>
+  )
+}
+
+// ─── Social Proof Banner ──────────────────────────────────────────────────
+
+const PROOF_STATS = [
+  { value: 200, suffix: "+", label: "Hours of Coaching Data" },
+  { value: 50, suffix: "+", label: "Practice Scenarios" },
+  { value: 6, suffix: "", label: "Life Areas Tracked" },
+  { value: 52, suffix: "wk", label: "Of Guided Content" },
+]
+
+function SocialProofBanner() {
+  const { ref, isVisible } = useIsVisible("-50px")
+  const count0 = useCountUp(PROOF_STATS[0].value, isVisible, 2500)
+  const count1 = useCountUp(PROOF_STATS[1].value, isVisible, 2500)
+  const count2 = useCountUp(PROOF_STATS[2].value, isVisible, 2500)
+  const count3 = useCountUp(PROOF_STATS[3].value, isVisible, 2500)
+  const counts = [count0, count1, count2, count3]
+
+  return (
+    <div ref={ref} className="py-4">
+      <div className="text-center mb-12">
+        <p className="text-sm font-medium text-primary uppercase tracking-widest mb-3">By the Numbers</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground">Built on Real Coaching Data</h2>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+        {PROOF_STATS.map((stat, i) => (
+          <div
+            key={stat.label}
+            className={`text-center space-y-2 transition-all duration-700 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+            }`}
+            style={{ transitionDelay: isVisible ? `${i * 150}ms` : "0ms" }}
+          >
+            <p className="text-5xl md:text-6xl font-bold text-foreground tabular-nums">
+              {counts[i]}<span className="text-primary">{stat.suffix}</span>
+            </p>
+            <p className="text-sm text-muted-foreground">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Weekly Review Section ────────────────────────────────────────────────
+
+const WEEKLY_METRICS = [
+  { label: "Approaches", value: "12", prev: "8", icon: Footprints, hex: "#ff6b35" },
+  { label: "Avg Duration", value: "4.2m", prev: "3.4m", icon: Calendar, hex: "#3b82f6" },
+  { label: "Numbers", value: "3", prev: "2", icon: TrendingUp, hex: "#22c55e" },
+  { label: "Confidence", value: "7.4", prev: "6.2", icon: Flame, hex: "#f97316" },
+]
+
+const WEEKLY_INSIGHT = "Your approach frequency is up 50% this week. The biggest shift: you're staying in conversations longer — 4.2 minutes on average vs 3.4 last week. That extra minute is where numbers happen. Keep pushing."
+
+function WeeklyReviewSection() {
+  const { ref, isVisible } = useIsVisible("-50px")
+  const cycle = useAnimationLoop(isVisible, 16000)
+  const [visibleMetrics, setVisibleMetrics] = useState(0)
+  const [streamedChars, setStreamedChars] = useState(0)
+  const [showInsight, setShowInsight] = useState(false)
+
+  useEffect(() => {
+    if (!isVisible) return
+    setVisibleMetrics(0)
+    setStreamedChars(0)
+    setShowInsight(false)
+
+    const timeouts: ReturnType<typeof setTimeout>[] = []
+    WEEKLY_METRICS.forEach((_, i) => {
+      timeouts.push(setTimeout(() => setVisibleMetrics(i + 1), 400 + i * 400))
+    })
+    timeouts.push(setTimeout(() => setShowInsight(true), 2400))
+
+    return () => timeouts.forEach(clearTimeout)
+  }, [isVisible, cycle])
+
+  useEffect(() => {
+    if (!showInsight) return
+    if (streamedChars >= WEEKLY_INSIGHT.length) return
+    const id = setInterval(() => setStreamedChars((c) => Math.min(c + 3, WEEKLY_INSIGHT.length)), 20)
+    return () => clearInterval(id)
+  }, [showInsight, streamedChars])
+
+  return (
+    <AnimatedSection>
+      <div ref={ref} className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="space-y-4">
+          <Badge variant="outline" className="text-primary border-primary/30 mb-2">
+            <BarChart3 className="size-3 mr-1" /> Weekly Insights
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground">Weekly Reviews That Actually Help</h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Every Sunday, your AI coach analyzes your week. What improved. What to focus on. Personalized, data-driven insights — not generic motivation.
+          </p>
+        </div>
+
+        <div className="rounded-lg border-2 border-border bg-card shadow-2xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-foreground">Weekly Review</h3>
+              <p className="text-xs text-muted-foreground">Feb 10 – Feb 16</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-full text-xs bg-green-500/15 text-green-400 border border-green-500/20">
+              +50% activity
+            </span>
+          </div>
+          <div className="p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              {WEEKLY_METRICS.map((m, i) => {
+                const Icon = m.icon
+                return (
+                  <div
+                    key={m.label}
+                    className={`rounded-lg border border-border bg-background/50 p-3 transition-all duration-500 ${
+                      i < visibleMetrics ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <Icon className="size-3" style={{ color: m.hex }} />
+                      <span className="text-xs text-muted-foreground">{m.label}</span>
+                    </div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-lg font-bold text-foreground">{m.value}</span>
+                      <span className="text-xs text-green-400">↑ was {m.prev}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {showInsight && (
+              <div
+                className="rounded-lg border border-primary/20 bg-primary/[0.03] p-3"
+                style={{ animation: "fadeSlideUp 0.4s ease-out" }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="size-3.5 text-primary" />
+                  <span className="text-xs font-medium text-primary">AI Coach Insight</span>
+                </div>
+                <p className="text-sm text-foreground leading-relaxed">
+                  {WEEKLY_INSIGHT.slice(0, streamedChars)}
+                  {streamedChars < WEEKLY_INSIGHT.length && (
+                    <span className="inline-block w-[2px] h-3.5 bg-primary ml-0.5 animate-pulse" />
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </AnimatedSection>
+  )
+}
+
+// ─── CTA Section ──────────────────────────────────────────────────────────
+
+function CTASection() {
+  const { ref, isVisible } = useIsVisible("-50px")
+  return (
+    <div
+      ref={ref}
+      className={`relative text-center space-y-6 transition-all duration-1000 ${
+        isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      }`}
+    >
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,107,53,0.1) 0%, transparent 70%)",
+        }}
+      />
+      <h2 className="text-4xl md:text-5xl font-bold text-foreground relative">
+        Start Practicing Today
+      </h2>
+      <p className="text-xl text-muted-foreground max-w-lg mx-auto relative">
+        AI-powered practice. Real coaching data. Personalized to you.
+      </p>
+      <div className="relative pt-4">
+        <Button size="lg" className="text-lg px-8 h-14 shadow-[0_0_30px_rgba(255,107,53,0.3)]">
+          Get Started
+          <ArrowRight className="size-5 ml-2" />
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function AnimationsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-6xl px-8 py-12">
+      {/* Navigation */}
+      <div className="mx-auto max-w-6xl px-8 pt-12">
         <Button asChild variant="ghost" size="sm" className="mb-8">
           <Link href="/test">
             <ArrowLeft className="size-4 mr-2" />
             Back to Test Pages
           </Link>
         </Button>
+      </div>
 
-        <div className="space-y-32">
-          <HeroSection />
+      {/* Hero */}
+      <div className="mx-auto max-w-6xl px-8">
+        <HeroSection />
+      </div>
+
+      {/* Feature Grid — accent background */}
+      <div className="mt-32 bg-[#0d0f1a] border-y border-white/[0.04]">
+        <div className="mx-auto max-w-6xl px-8 py-20">
+          <FeatureGrid />
+        </div>
+      </div>
+
+      {/* Core feature sections */}
+      <div className="mx-auto max-w-6xl px-8">
+        <div className="space-y-32 py-32">
           <VoiceChatSection />
+          <ScenarioGallery />
           <GoalsSection />
           <ProgressSection />
+        </div>
+      </div>
+
+      {/* Social Proof — accent background */}
+      <div className="bg-[#0d0f1a] border-y border-white/[0.04]">
+        <div className="mx-auto max-w-6xl px-8 py-20">
+          <SocialProofBanner />
+        </div>
+      </div>
+
+      {/* More feature sections */}
+      <div className="mx-auto max-w-6xl px-8">
+        <div className="space-y-32 py-32">
           <CoachQASection />
           <InnerGameSection />
+          <WeeklyReviewSection />
           <LevelSection />
           <OnboardingSection />
         </div>
+      </div>
 
-        {/* Footer */}
-        <div className="mt-32 pb-12 text-center">
-          <p className="text-muted-foreground text-sm">
-            Daygame Coach — MVP Product Review
-          </p>
+      {/* CTA — gradient background */}
+      <div
+        className="border-t border-white/[0.04]"
+        style={{ background: "linear-gradient(180deg, #0d0f1a 0%, #121212 100%)" }}
+      >
+        <div className="mx-auto max-w-6xl px-8 py-24">
+          <CTASection />
         </div>
+      </div>
+
+      {/* Footer */}
+      <div className="pb-12 text-center">
+        <p className="text-muted-foreground text-sm">
+          Daygame Coach — MVP Product Review
+        </p>
       </div>
     </div>
   )

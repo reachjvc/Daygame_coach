@@ -99,8 +99,8 @@ describe("getCategoryConfig", () => {
 // ============================================================================
 
 describe("GOAL_CATEGORIES", () => {
-  test("should have 7 predefined categories (matching LIFE_AREAS)", () => {
-    expect(GOAL_CATEGORIES.length).toBe(7)
+  test("should have 8 predefined categories (matching LIFE_AREAS)", () => {
+    expect(GOAL_CATEGORIES.length).toBe(8)
   })
 
   test("should have unique IDs", () => {

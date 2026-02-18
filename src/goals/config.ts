@@ -28,16 +28,30 @@ export const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   hosting: "Hosting & Events",
   social_skills: "Social Skills",
   network_expansion: "Network Expansion",
+  mentorship: "Mentorship",
   // Fitness
   strength: "Strength",
   training: "Training Discipline",
   nutrition: "Nutrition & Recovery",
   body_comp: "Body Composition",
+  flexibility: "Flexibility & Mobility",
+  endurance: "Running & Endurance",
   // Wealth
   income: "Income & Earning",
   saving: "Budgeting & Saving",
   investing: "Investing",
   career_growth: "Career Growth",
+  entrepreneurship: "Entrepreneurship",
+  // Vices & Elimination
+  porn_freedom: "Porn & Fap Recovery",
+  digital_discipline: "Digital Discipline",
+  substance_control: "Substance Control",
+  self_control: "Self-Control",
+  // Lifestyle
+  hobbies_skills: "Hobbies & Skills",
+  cooking_domestic: "Cooking & Home",
+  adventure_travel: "Adventure & Travel",
+  style_grooming: "Style & Grooming",
 }
 
 /**
@@ -50,11 +64,15 @@ export const CATEGORY_ORDER: GoalDisplayCategory[] = [
   // Personal Growth
   "mindfulness", "resilience", "learning", "reflection", "discipline",
   // Social
-  "social_activity", "friendships", "hosting", "social_skills", "network_expansion",
+  "social_activity", "friendships", "hosting", "social_skills", "network_expansion", "mentorship",
   // Fitness
-  "strength", "training", "nutrition", "body_comp",
+  "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
   // Wealth
-  "income", "saving", "investing", "career_growth",
+  "income", "saving", "investing", "career_growth", "entrepreneurship",
+  // Vices & Elimination
+  "porn_freedom", "digital_discipline", "substance_control", "self_control",
+  // Lifestyle
+  "hobbies_skills", "cooking_domestic", "adventure_travel", "style_grooming",
 ]
 
 /**

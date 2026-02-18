@@ -439,7 +439,7 @@ run_stage() {
   echo "=== Running Stage $stage for $sub_id ==="
   echo ""
 
-  if [[ "$stage" == "07" ]]; then
+  if [[ "$stage" == "07" || "$stage" == "08" ]]; then
     quarantine_file="$RUN_QUARANTINE_FILE"
     if [[ -z "$quarantine_file" ]]; then
       if [[ -f "$auto_quarantine" ]]; then
@@ -449,7 +449,7 @@ run_stage() {
   fi
 
   if [[ "$DRY_RUN" == true ]]; then
-    if [[ "$stage" == "07" && -n "$quarantine_file" ]]; then
+    if [[ ("$stage" == "07" || "$stage" == "08") && -n "$quarantine_file" ]]; then
       stage_args+=(--quarantine-file "$quarantine_file")
     fi
     echo "[DRY RUN] Would run: $script ${stage_args[*]}"
@@ -478,7 +478,7 @@ with open(status_file, "w") as f:
 PYEOF
   fi
 
-  if [[ "$stage" == "07" ]]; then
+  if [[ "$stage" == "07" || "$stage" == "08" ]]; then
     if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
       stage_args+=(--quarantine-file "$quarantine_file")
       echo "Using quarantine file: $quarantine_file"

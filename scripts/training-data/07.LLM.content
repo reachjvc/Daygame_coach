@@ -119,13 +119,18 @@ TECHNIQUE_TAXONOMY = {
     # Compliance (1)
     "compliance": "Getting her to agree to small requests, building investment",
 
-    # Closing (8)
+    # Social (1)
+    "group_dynamics": "Engaging and managing the whole group (friends, obstacles) rather than isolating the target immediately",
+
+    # Closing (10)
     "number_close": "Asking for her phone number",
     "instagram_close": "Asking for her Instagram handle",
     "soft_close": "Suggesting future meeting without immediate commitment",
     "assumptive_close": "Acting as if she's already agreed ('So when are you free?')",
     "instant_date": "Suggesting to continue hanging out right now",
     "bounce": "Moving to a different location together",
+    "pulling": "Leading her from venue to your place — the final location change of the night",
+    "pull_talk": "Maintaining fun light conversation during location transitions to smooth over logistical friction",
     "time_bridge": "Setting up specific future plans",
     "logistics_check": "Asking about her schedule/availability (does not start close by itself)",
 }
@@ -174,6 +179,7 @@ TOPIC_TAXONOMY = {
     # Coaching context topics (v1.3.0)
     "masculinity": "Masculine energy, polarity, dominance/submission dynamics, archetypes",
     "inner_game": "Mindset, state management, approach anxiety, self-permission, congruence",
+    "gutter_game": "Nighttime street game paradigm — sexual escalation and same-night pulls over daytime number-taking",
 }
 
 # Alias mappings: common jargon → canonical taxonomy name.
@@ -250,6 +256,7 @@ TECHNIQUE_ALIASES: Dict[str, str] = {
     "cadence_drill": "subcommunication",
     "fishing_frame": "frame_control",
     "hunting_frame": "frame_control",
+    "plausible_deniability": "frame_control",
     "path_manipulation": "physical_escalation",
     "ping_range": "subcommunication",
 }
@@ -310,6 +317,7 @@ TOPIC_ALIASES: Dict[str, str] = {
     "social_differentiation": "masculinity",
     "spacing": "behavior",
     "street_presence": "behavior",
+    "plausible_deniability": "logistics",
 }
 
 LOG_PREFIX = "[07.LLM.content]"
@@ -4228,6 +4236,14 @@ def _process_non_infield(
     if low_quality_segments or transcript_artifacts:
         print(f"{LOG_PREFIX}   Quality data: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
 
+    # Propagate 06h confidence flags onto enrichments
+    for e in enrichments:
+        conv_id = e.get("conversation_id")
+        if isinstance(conv_id, int) and conv_id in conversation_meta_by_id:
+            block_reason = conversation_meta_by_id[conv_id].get("confidence_block_reason")
+            if block_reason:
+                e["confidence_flag"] = block_reason
+
     # Collect summary data
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
     all_unlisted_techniques: List[str] = []
@@ -4268,6 +4284,9 @@ def _process_non_infield(
             "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
             "normalization_repairs_count": len(normalization_repairs),
             "normalization_repairs_preview": normalization_repairs[:5],
+            "conversations_confidence_flagged": sum(
+                1 for e in enrichments if e.get("confidence_flag")
+            ),
             "quality_source": "06e" if quality_data else "none",
         },
         "pipeline_version": PIPELINE_VERSION,
@@ -4425,6 +4444,12 @@ def process_video_file(
         f"[07.LLM.content]   Stage07 anchor allowlist: "
         f"{len(stage07_anchor_allowlist)} convs, {anchored_segments_total} segment ids"
     )
+    confidence_flagged_convs = sum(
+        1 for cid, meta in conversation_meta_by_id.items()
+        if cid > 0 and meta.get("confidence_block_reason")
+    )
+    if confidence_flagged_convs:
+        print(f"{LOG_PREFIX}   06h confidence flags: {confidence_flagged_convs} conversation(s) flagged")
 
     # Determine if windowing applies (D13b: infield lane with enough segments)
     use_windowing = (
@@ -4602,6 +4627,14 @@ def process_video_file(
     commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
 
+    # Propagate 06h confidence flags onto enrichments
+    for e in enrichments:
+        conv_id = e.get("conversation_id")
+        if isinstance(conv_id, int) and conv_id in conversation_meta_by_id:
+            block_reason = conversation_meta_by_id[conv_id].get("confidence_block_reason")
+            if block_reason:
+                e["confidence_flag"] = block_reason
+
     # Collect unlisted concepts across all enrichments (post-normalization).
     all_unlisted_techniques: List[str] = []
     all_unlisted_topics: List[str] = []
@@ -4661,6 +4694,9 @@ def process_video_file(
             "stage07_anchor_allowlist_segments": anchored_segments_total,
             "target_confident_conversations": confident_target_convs,
             "synthetic_segment_count": len(synthetic_segment_ids),
+            "conversations_confidence_flagged": sum(
+                1 for e in approach_enrichments if e.get("confidence_flag")
+            ),
             "quality_source": "06e" if quality_data else "none",
             "windowing": {
                 "window_count": len(windows) if windows else 1,

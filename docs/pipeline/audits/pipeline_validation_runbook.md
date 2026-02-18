@@ -20,8 +20,29 @@ Rules:
 - **Show-don't-summarize:** When reporting flags/warnings/artifacts to user, ALWAYS include the actual segment text + 5 segments before and after for context. Use `>>>` marker on the target segment. 
 
 ### Work being done
-**2026-02-16:** P001.2–P001.10 (86 videos) completed stages 02–05. P001.1 was already at stage 07. All 96 P001 videos now through stage 05; next is stage 06+.
-**2026-02-16:** P002.1–P002.10 (97 videos) completed stages 02–05. All P002 sub-batches now through stage 05; next is stage 06+. Note: some sub-batches missing 1-2 downloads (P002.3/4: 8/10, P002.5/6/9: 9/10) — those videos were skipped by the pipeline.
+**2026-02-18 (verified on-disk, YouTube ID match per stage dir):**
+
+P002 (all): stage 05. P001 mixed:
+
+| Batch | At | Blocked | Gap |
+|-------|----|---------|-----|
+| 1.1 (10) | **10 (ingested)** | — | done |
+| 1.2 (10) | 06h | 07 | 0/10 at 07 |
+| 1.3 (10) | 06h | 07 | 0/10 at 07 |
+| 1.4 (10) | 06d | 06e | 7/10 at 06e, 0 at 06f |
+| 1.5 (10) | 06f | 06g | 9/10 at 06f (1 missing since 06b) |
+| 1.6 (10) | 05 | 06 | not started |
+| 1.7 (10) | 06h | 07 | 0/10 at 07 |
+| 1.8 (10) | 06h | 07 | 7/10 at 07 |
+| 1.9 (10) | 06h | 07 | 9/10 06b–06h, 6/10 at 07 |
+| 1.10 (6) | 05 | 06 | not started |
+
+**Next:**
+1. 1.6, 1.10, P002: `--run` from 06
+2. 1.4: fix 3 missing 06e, resume 06e
+3. 1.5: fix 1 missing 06b, resume 06g
+4. 1.2, 1.3, 1.7: resume 07
+5. 1.8, 1.9: investigate blocked 07 videos, re-run
 
 
 ## Batch & Manifest Naming

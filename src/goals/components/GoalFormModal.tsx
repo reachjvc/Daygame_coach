@@ -388,7 +388,6 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           color: theme.text,
           borderColor: theme.border,
           borderRadius: theme.borderRadius,
-          position: "relative",
           overflow: "hidden",
           fontFamily: isCyber ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
         }}

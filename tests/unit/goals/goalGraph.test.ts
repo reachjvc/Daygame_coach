@@ -40,9 +40,11 @@ describe("goal catalog integrity", () => {
     const validCategories = [
       "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
       "mindfulness", "resilience", "learning", "reflection", "discipline",
-      "social_activity", "friendships", "hosting", "social_skills", "network_expansion",
-      "strength", "training", "nutrition", "body_comp",
-      "income", "saving", "investing", "career_growth",
+      "social_activity", "friendships", "hosting", "social_skills", "network_expansion", "mentorship",
+      "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
+      "income", "saving", "investing", "career_growth", "entrepreneurship",
+      "porn_freedom", "digital_discipline", "substance_control", "self_control",
+      "hobbies_skills", "cooking_domestic", "adventure_travel", "style_grooming",
     ]
     for (const g of l3Goals) {
       expect(g.displayCategory).toBeTruthy()
@@ -299,7 +301,7 @@ describe("getTemplatesByCategory", () => {
     expect(keys).toContain("field_work")
     expect(keys).toContain("mindfulness")
     expect(keys).toContain("social_activity")
-    expect(keys.length).toBe(24) // 6 daygame + 5 PG + 5 social + 4 fitness + 4 wealth
+    expect(keys.length).toBe(36) // 6 daygame + 5 PG + 6 social + 6 fitness + 5 wealth + 4 vices + 4 lifestyle
   })
 
   test("field_work contains approach-related goals", () => {

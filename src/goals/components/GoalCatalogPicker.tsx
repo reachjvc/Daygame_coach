@@ -4,11 +4,13 @@ import { useState, useMemo } from "react"
 import { Loader2, Library, Heart, Flame, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { getCatalogTiers } from "../data/goalGraph"
+import { getAreaCatalog, getCatalogGroups } from "../data/goalGraph"
+import type { AreaCatalog } from "../data/goalGraph"
 import { LIFE_AREAS } from "../data/lifeAreas"
 import { generateGoalTreeInserts } from "../treeGenerationService"
 import { GoalTreePreview } from "./GoalTreePreview"
-import type { GoalTemplate, GoalWithProgress, GoalDisplayCategory, LifeAreaConfig, CurveThemeId } from "../types"
+import { CATEGORY_LABELS, CATEGORY_ORDER } from "../config"
+import type { GoalTemplate, GoalWithProgress, GoalDisplayCategory, CurveThemeId } from "../types"
 import type { BatchGoalInsert } from "../treeGenerationService"
 
 interface GoalCatalogPickerProps {
@@ -25,7 +27,9 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
   const [error, setError] = useState<string | null>(null)
   const [previewInserts, setPreviewInserts] = useState<BatchGoalInsert[] | null>(null)
   const [selectedAreaId, setSelectedAreaId] = useState<string>("daygame")
-  const tiers = getCatalogTiers()
+
+  const catalog = getAreaCatalog(selectedAreaId)
+  const daygameGroups = selectedAreaId === "daygame" ? getCatalogGroups() : null
 
   const existingTemplateIds = useMemo(
     () => new Set((existingGoals ?? []).map((g) => g.template_id).filter(Boolean) as string[]),
@@ -35,8 +39,8 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
   const isModalMode = !!onClose
   const selectedArea = LIFE_AREAS.find((a) => a.id === selectedAreaId)!
 
-  // All areas except custom (no suggestions)
-  const visibleAreas = LIFE_AREAS.filter((a) => a.id !== "custom")
+  // Only show areas that have template catalogs
+  const visibleAreas = LIFE_AREAS.filter((a) => a.id !== "custom" && getAreaCatalog(a.id) !== null)
 
   const handlePick = (template: GoalTemplate) => {
     if (existingTemplateIds.has(template.id)) return
@@ -179,19 +183,13 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
             <div className="flex-1 border-t border-border/30" />
           </div>
 
-          {selectedAreaId === "daygame" ? (
-            <DaygameTier2
-              tiers={tiers}
-              existingTemplateIds={existingTemplateIds}
-              onPick={handlePick}
-              accentColor={selectedArea.hex}
-            />
-          ) : (
-            <SuggestionTier2
-              area={selectedArea}
-              onCreateManual={onCreateManual}
-            />
-          )}
+          <AreaTier2
+            catalog={catalog}
+            daygameGroups={daygameGroups}
+            existingTemplateIds={existingTemplateIds}
+            onPick={handlePick}
+            accentColor={selectedArea.hex}
+          />
         </div>
 
         {/* Column 3: Specifics (Tier 3) */}
@@ -201,18 +199,12 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
             <div className="flex-1 border-t border-border/30" />
           </div>
 
-          {selectedAreaId === "daygame" ? (
-            <DaygameTier3
-              tiers={tiers}
-              existingTemplateIds={existingTemplateIds}
-              onPick={handlePick}
-              accentColor={selectedArea.hex}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-32 text-xs text-muted-foreground/50">
-              Coming soon
-            </div>
-          )}
+          <AreaTier3
+            catalog={catalog}
+            existingTemplateIds={existingTemplateIds}
+            onPick={handlePick}
+            accentColor={selectedArea.hex}
+          />
         </div>
       </div>
     </div>
@@ -239,60 +231,82 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
 }
 
 // ============================================================================
-// Daygame Tier 2: L1 goals + L2 achievements
+// AreaTier2: L1 goals + L2 achievements (generic for all areas)
 // ============================================================================
 
-// Category labels imported from centralized config
-import { CATEGORY_LABELS } from "../config"
-
-function DaygameTier2({
-  tiers,
+function AreaTier2({
+  catalog,
+  daygameGroups,
   existingTemplateIds,
   onPick,
   accentColor,
 }: {
-  tiers: ReturnType<typeof getCatalogTiers>
+  catalog: AreaCatalog | null
+  daygameGroups: { onePerson: GoalTemplate[]; abundance: GoalTemplate[] } | null
   existingTemplateIds: Set<string>
   onPick: (t: GoalTemplate) => void
   accentColor: string
 }) {
+  if (!catalog) {
+    return (
+      <div className="flex items-center justify-center h-32 text-xs text-muted-foreground/50">
+        No goals yet
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-3">
-      {/* Find the One */}
-      <div>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Heart className="size-3.5 text-pink-500" />
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Find the One</span>
+      {/* L1 Goals */}
+      {daygameGroups ? (
+        <>
+          {/* Daygame special: Find the One / Abundance split */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Heart className="size-3.5 text-pink-500" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Find the One</span>
+            </div>
+            <GoalItemList
+              items={daygameGroups.onePerson}
+              existingIds={existingTemplateIds}
+              onPick={onPick}
+              accentColor={accentColor}
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <Flame className="size-3.5 text-orange-500" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Abundance</span>
+            </div>
+            <GoalItemList
+              items={daygameGroups.abundance}
+              existingIds={existingTemplateIds}
+              onPick={onPick}
+              accentColor={accentColor}
+            />
+          </div>
+        </>
+      ) : (
+        <div>
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Life Goals</span>
+          </div>
+          <GoalItemList
+            items={catalog.l1Goals}
+            existingIds={existingTemplateIds}
+            onPick={onPick}
+            accentColor={accentColor}
+          />
         </div>
-        <GoalItemList
-          items={tiers.tier1.onePerson}
-          existingIds={existingTemplateIds}
-          onPick={onPick}
-          accentColor={accentColor}
-        />
-      </div>
+      )}
 
-      {/* Abundance */}
-      <div>
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Flame className="size-3.5 text-orange-500" />
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Abundance</span>
-        </div>
-        <GoalItemList
-          items={tiers.tier1.abundance}
-          existingIds={existingTemplateIds}
-          onPick={onPick}
-          accentColor={accentColor}
-        />
-      </div>
-
-      {/* Achievements */}
+      {/* L2 Achievements */}
       <div>
         <div className="flex items-center gap-1.5 mb-1.5">
           <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Achievements</span>
         </div>
         <GoalItemList
-          items={tiers.tier2}
+          items={catalog.l2Achievements}
           existingIds={existingTemplateIds}
           onPick={onPick}
           accentColor={accentColor}
@@ -303,24 +317,32 @@ function DaygameTier2({
 }
 
 // ============================================================================
-// Daygame Tier 3: L3 goals grouped by display category
+// AreaTier3: L3 goals grouped by display category (generic for all areas)
 // ============================================================================
 
-function DaygameTier3({
-  tiers,
+function AreaTier3({
+  catalog,
   existingTemplateIds,
   onPick,
   accentColor,
 }: {
-  tiers: ReturnType<typeof getCatalogTiers>
+  catalog: AreaCatalog | null
   existingTemplateIds: Set<string>
   onPick: (t: GoalTemplate) => void
   accentColor: string
 }) {
+  if (!catalog) {
+    return (
+      <div className="flex items-center justify-center h-32 text-xs text-muted-foreground/50">
+        No goals yet
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-3">
-      {(["field_work", "results", "dirty_dog", "texting", "dates", "relationship"] as GoalDisplayCategory[]).map((cat) => {
-        const goals = tiers.tier3[cat]
+      {CATEGORY_ORDER.map((cat) => {
+        const goals = catalog.l3ByCategory[cat]
         if (!goals || goals.length === 0) return null
         return (
           <div key={cat}>
@@ -336,41 +358,6 @@ function DaygameTier3({
           </div>
         )
       })}
-    </div>
-  )
-}
-
-// ============================================================================
-// Suggestion Tier 2 (non-daygame life areas)
-// ============================================================================
-
-function SuggestionTier2({
-  area,
-  onCreateManual,
-}: {
-  area: LifeAreaConfig
-  onCreateManual?: () => void
-}) {
-  if (area.suggestions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-32 text-xs text-muted-foreground/50">
-        No goals yet
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-1">
-      {area.suggestions.map((s) => (
-        <button
-          key={s.title}
-          onClick={onCreateManual}
-          className="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors hover:bg-muted/50 cursor-pointer"
-          style={{ borderLeft: `2px solid ${area.hex}30` }}
-        >
-          {s.title}
-        </button>
-      ))}
     </div>
   )
 }

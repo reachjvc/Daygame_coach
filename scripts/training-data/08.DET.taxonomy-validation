@@ -347,6 +347,7 @@ def evaluate_validation(
     strict: bool,
     manifest_video_ids: Optional[Set[str]] = None,
     manifest_missing_video_ids: Optional[List[str]] = None,
+    quarantine_video_ids: Optional[Set[str]] = None,
 ) -> Dict[str, Any]:
     """Evaluate validation status based on per-domain thresholds and strict mode."""
     techniques = report["techniques"]
@@ -425,11 +426,12 @@ def evaluate_validation(
 
     per_video_stats = report.get("video_stats")
     per_video_stats = per_video_stats if isinstance(per_video_stats, dict) else {}
+    _quarantine = quarantine_video_ids or set()
     if manifest_video_ids is not None:
-        candidate_video_ids = sorted(manifest_video_ids)
+        candidate_video_ids = sorted(manifest_video_ids - _quarantine)
     else:
         candidate_video_ids = sorted(
-            set(per_video_stats.keys()) | unreadable_video_ids | missing_video_ids
+            (set(per_video_stats.keys()) | unreadable_video_ids | missing_video_ids) - _quarantine
         )
 
     per_video_status: List[Dict[str, Any]] = []
@@ -869,6 +871,10 @@ def main() -> int:
         action="store_true",
         help="Skip writing report file to data/08.DET.taxonomy-validation/"
     )
+    parser.add_argument(
+        "--quarantine-file",
+        help="Quarantine JSON file — quarantined video IDs are excluded from manifest coverage checks",
+    )
 
     args = parser.parse_args()
 
@@ -893,6 +899,19 @@ def main() -> int:
     manifest_missing_video_ids: List[str] = []
     manifest_path: Optional[Path] = None
 
+    # Load quarantine IDs (excluded from manifest coverage checks)
+    quarantine_video_ids: Set[str] = set()
+    if args.quarantine_file:
+        qf = Path(args.quarantine_file)
+        if qf.exists():
+            try:
+                qdata = json.loads(qf.read_text(encoding="utf-8"))
+                quarantine_video_ids = set(qdata.get("quarantined_video_ids", []))
+                if quarantine_video_ids:
+                    print(f"[08.DET.taxonomy-validation] Quarantine: excluding {len(quarantine_video_ids)} video(s) from coverage")
+            except (json.JSONDecodeError, OSError):
+                pass
+
     # Filter by manifest if provided
     if args.manifest:
         manifest_path = Path(args.manifest)
@@ -906,7 +925,16 @@ def main() -> int:
             print(f"[08.DET.taxonomy-validation] Error: No valid video IDs found in manifest: {manifest_path}", file=sys.stderr)
             return 1
         files, matched_manifest_video_ids = filter_files_by_manifest(files, manifest_video_ids)
-        manifest_missing_video_ids = sorted(manifest_video_ids - matched_manifest_video_ids)
+        manifest_missing_video_ids = sorted(
+            (manifest_video_ids - matched_manifest_video_ids) - quarantine_video_ids
+        )
+        # Exclude quarantined videos from per-video analysis
+        if quarantine_video_ids:
+            files = [
+                f for f in files
+                if extract_video_id(f.parent.name) not in quarantine_video_ids
+                and extract_video_id(f.stem) not in quarantine_video_ids
+            ]
         if args.source:
             label = f"manifest:{manifest_path.name}|source:{args.source}"
             report_name = f"{manifest_path.stem}.{args.source}"
@@ -1004,6 +1032,7 @@ def main() -> int:
         strict=args.strict,
         manifest_video_ids=manifest_video_ids,
         manifest_missing_video_ids=manifest_missing_video_ids,
+        quarantine_video_ids=quarantine_video_ids,
     )
     scope = {
         "manifest": manifest_path.name if manifest_path else None,

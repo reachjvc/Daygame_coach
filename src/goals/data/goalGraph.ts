@@ -338,6 +338,15 @@ const L3_PG_MINDFULNESS: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
   }),
+  template("l3_pg_breathwork", "Breathwork Sessions", 3, "input", {
+    lifeArea: PG, displayCategory: "mindfulness",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
 ]
 
 // -- Resilience (2 habit_ramp + 2 milestone_ladder) --
@@ -429,6 +438,11 @@ const L3_PG_REFLECTION: GoalTemplate[] = [
     lifeArea: PG, displayCategory: "reflection",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 1000, steps: 12, curveTension: CURVE_TENSION },
+  }),
+  template("l3_pg_retreats", "Retreat or Workshop Days", 3, "outcome", {
+    lifeArea: PG, displayCategory: "reflection",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
   }),
 ]
 
@@ -652,9 +666,38 @@ const L3_SOC_NETWORK: GoalTemplate[] = [
   }),
 ]
 
+// -- Mentorship (2 habit_ramp + 1 milestone_ladder) --
+const L3_SOC_MENTORSHIP: GoalTemplate[] = [
+  template("l3_s_mentoring_given", "Mentoring Sessions Given", 3, "input", {
+    lifeArea: SOC, displayCategory: "mentorship",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_s_mentoring_received", "Mentoring Sessions Received", 3, "input", {
+    lifeArea: SOC, displayCategory: "mentorship",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 48 },
+    ],
+  }),
+  template("l3_s_volunteering", "Community & Volunteering Hours", 3, "input", {
+    lifeArea: SOC, displayCategory: "mentorship",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 8 },
+      { frequencyPerWeek: 2, durationWeeks: 12 },
+      { frequencyPerWeek: 3, durationWeeks: 24 },
+    ],
+  }),
+]
+
 const ALL_L3_SOC = [
   ...L3_SOC_ACTIVITY, ...L3_SOC_FRIENDSHIPS, ...L3_SOC_HOSTING,
-  ...L3_SOC_SKILLS, ...L3_SOC_NETWORK,
+  ...L3_SOC_SKILLS, ...L3_SOC_NETWORK, ...L3_SOC_MENTORSHIP,
 ]
 
 // ============================================================================
@@ -746,6 +789,15 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
   }),
+  template("l3_f_combat_sports", "Combat Sports Sessions", 3, "input", {
+    lifeArea: FIT, displayCategory: "training",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 4, durationWeeks: 24 },
+    ],
+  }),
 ]
 
 // -- Nutrition --
@@ -812,8 +864,64 @@ const L3_FIT_BODY_COMP: GoalTemplate[] = [
   }),
 ]
 
+// -- Flexibility & Mobility --
+const L3_FIT_FLEXIBILITY: GoalTemplate[] = [
+  template("l3_f_mobility_sessions", "Stretching/Mobility Sessions", 3, "input", {
+    lifeArea: FIT, displayCategory: "flexibility",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_f_yoga", "Yoga Sessions", 3, "input", {
+    lifeArea: FIT, displayCategory: "flexibility",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 8 },
+      { frequencyPerWeek: 2, durationWeeks: 12 },
+      { frequencyPerWeek: 3, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_f_flexibility_hours", "Total Flexibility Hours", 3, "outcome", {
+    lifeArea: FIT, displayCategory: "flexibility",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 200, steps: 10, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Running & Endurance --
+const L3_FIT_ENDURANCE: GoalTemplate[] = [
+  template("l3_f_running_sessions", "Running Sessions", 3, "input", {
+    lifeArea: FIT, displayCategory: "endurance",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 4, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_f_running_distance", "Total Running Distance (km)", 3, "outcome", {
+    lifeArea: FIT, displayCategory: "endurance",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 1000, steps: 12, curveTension: CURVE_TENSION },
+  }),
+  template("l3_f_longest_run", "Longest Run (km)", 3, "outcome", {
+    lifeArea: FIT, displayCategory: "endurance",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 42, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_f_cardio_weeks", "Consecutive Cardio Weeks", 3, "outcome", {
+    lifeArea: FIT, displayCategory: "endurance",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 52, steps: 10, curveTension: CURVE_TENSION },
+  }),
+]
+
 const ALL_L3_FIT = [
   ...L3_FIT_STRENGTH, ...L3_FIT_TRAINING, ...L3_FIT_NUTRITION, ...L3_FIT_BODY_COMP,
+  ...L3_FIT_FLEXIBILITY, ...L3_FIT_ENDURANCE,
 ]
 
 // ============================================================================
@@ -963,10 +1071,379 @@ const L3_WLT_CAREER: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
   }),
+  template("l3_w_public_speaking", "Public Speaking Events", 3, "outcome", {
+    lifeArea: WLT, displayCategory: "career_growth",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 25, steps: 8, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Entrepreneurship --
+const L3_WLT_ENTREPRENEURSHIP: GoalTemplate[] = [
+  template("l3_w_side_revenue", "Side Project Revenue", 3, "outcome", {
+    lifeArea: WLT, displayCategory: "entrepreneurship",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 100, target: 10000, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_w_customers", "Paying Customers", 3, "outcome", {
+    lifeArea: WLT, displayCategory: "entrepreneurship",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 100, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_w_products_launched", "Products/Services Launched", 3, "outcome", {
+    lifeArea: WLT, displayCategory: "entrepreneurship",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 5, steps: 4, curveTension: CURVE_TENSION },
+  }),
+  template("l3_w_entrepreneurship_hours", "Entrepreneurship Hours", 3, "input", {
+    lifeArea: WLT, displayCategory: "entrepreneurship",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 8 },
+      { frequencyPerWeek: 10, durationWeeks: 12 },
+      { frequencyPerWeek: 15, durationWeeks: 24 },
+    ],
+  }),
 ]
 
 const ALL_L3_WLT = [
-  ...L3_WLT_INCOME, ...L3_WLT_SAVING, ...L3_WLT_INVESTING, ...L3_WLT_CAREER,
+  ...L3_WLT_INCOME, ...L3_WLT_SAVING, ...L3_WLT_INVESTING, ...L3_WLT_CAREER, ...L3_WLT_ENTREPRENEURSHIP,
+]
+
+// ============================================================================
+// VICES & ELIMINATION — Templates
+// ============================================================================
+
+const VIC = "vices_elimination" // life area shorthand
+
+// --- Vices: Level 1 ---
+const L1_VICES: GoalTemplate[] = [
+  template("l1_v_break_free", "Break free from all addictions", 1, "outcome", { lifeArea: VIC }),
+  template("l1_v_self_control", "Achieve complete self-control", 1, "outcome", { lifeArea: VIC }),
+  template("l1_v_clean_life", "Live a clean, disciplined life", 1, "outcome", { lifeArea: VIC }),
+  template("l1_v_reclaim_time", "Reclaim my time and energy", 1, "outcome", { lifeArea: VIC }),
+]
+
+// --- Vices: Level 2 (Achievements) ---
+const L2_VIC_TEMPLATES: GoalTemplate[] = [
+  template("l2_v_porn_free", "Overcome Porn Addiction", 2, "outcome", { lifeArea: VIC }),
+  template("l2_v_digital", "Master Digital Discipline", 2, "outcome", { lifeArea: VIC }),
+  template("l2_v_substance", "Conquer Substance Habits", 2, "outcome", { lifeArea: VIC }),
+  template("l2_v_willpower", "Build Unbreakable Self-Control", 2, "outcome", { lifeArea: VIC }),
+]
+
+// --- Vices: Level 3 ---
+
+// -- Porn & Fap Recovery --
+const L3_VIC_PORN: GoalTemplate[] = [
+  template("l3_v_porn_free_days", "Porn-Free Days", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "porn_freedom",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_v_nofap_streak", "NoFap Streak", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "porn_freedom",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 90, steps: 8, curveTension: CURVE_TENSION },
+  }),
+  template("l3_v_porn_free_sustained", "Porn-Free Weeks Sustained", 3, "input", {
+    lifeArea: VIC, displayCategory: "porn_freedom",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 7, durationWeeks: 48 },
+    ],
+  }),
+  template("l3_v_urge_journal", "Urge Journaling Sessions", 3, "input", {
+    lifeArea: VIC, displayCategory: "porn_freedom",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+]
+
+// -- Digital Discipline --
+const L3_VIC_DIGITAL: GoalTemplate[] = [
+  template("l3_v_screen_time", "Screen Time Under Target", 3, "input", {
+    lifeArea: VIC, displayCategory: "digital_discipline",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 4 },
+      { frequencyPerWeek: 6, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_social_media_free", "Social Media Free Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "digital_discipline",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_no_gaming", "No-Gaming Days per Week", 3, "input", {
+    lifeArea: VIC, displayCategory: "digital_discipline",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 4, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 6, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_dopamine_detox", "Dopamine Detox Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "digital_discipline",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_screen_streak", "Consecutive Days Under Screen Limit", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "digital_discipline",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 90, steps: 8, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Substance Control --
+const L3_VIC_SUBSTANCE: GoalTemplate[] = [
+  template("l3_v_alcohol_free", "Alcohol-Free Days per Week", 3, "input", {
+    lifeArea: VIC, displayCategory: "substance_control",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_sober_days", "Consecutive Sober Days", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "substance_control",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_v_smoke_free", "Smoke-Free Days", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "substance_control",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_v_clean_eating", "Clean Eating Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "substance_control",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+]
+
+// -- Self-Control --
+const L3_VIC_SELF_CONTROL: GoalTemplate[] = [
+  template("l3_v_junk_food_free", "Junk Food Free Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "self_control",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_impulse_free", "Impulse Purchase Free Weeks", 3, "outcome", {
+    lifeArea: VIC, displayCategory: "self_control",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 52, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_v_no_late_scrolling", "Late Night Scrolling Free Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "self_control",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 4 },
+      { frequencyPerWeek: 6, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_v_budget_days", "Stuck to Budget Days", 3, "input", {
+    lifeArea: VIC, displayCategory: "self_control",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 4 },
+      { frequencyPerWeek: 6, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+]
+
+const ALL_L3_VIC = [
+  ...L3_VIC_PORN, ...L3_VIC_DIGITAL, ...L3_VIC_SUBSTANCE, ...L3_VIC_SELF_CONTROL,
+]
+
+// ============================================================================
+// LIFESTYLE — Templates
+// ============================================================================
+
+const LIFE = "lifestyle" // life area shorthand
+
+// --- Lifestyle: Level 1 ---
+const L1_LIFESTYLE: GoalTemplate[] = [
+  template("l1_li_adventurous", "Live an exciting, adventurous life", 1, "outcome", { lifeArea: LIFE }),
+  template("l1_li_well_rounded", "Become a well-rounded, interesting man", 1, "outcome", { lifeArea: LIFE }),
+  template("l1_li_environment", "Master my living environment", 1, "outcome", { lifeArea: LIFE }),
+  template("l1_li_hobbies", "Develop impressive hobbies and skills", 1, "outcome", { lifeArea: LIFE }),
+]
+
+// --- Lifestyle: Level 2 (Achievements) ---
+const L2_LIFE_TEMPLATES: GoalTemplate[] = [
+  template("l2_li_adventure", "Build an Adventure-Filled Life", 2, "outcome", { lifeArea: LIFE }),
+  template("l2_li_creative", "Master a Creative Skill", 2, "outcome", { lifeArea: LIFE }),
+  template("l2_li_living_space", "Create an Impressive Living Space", 2, "outcome", { lifeArea: LIFE }),
+  template("l2_li_style", "Develop a Personal Style", 2, "outcome", { lifeArea: LIFE }),
+  template("l2_li_cook", "Become a Great Cook", 2, "outcome", { lifeArea: LIFE }),
+]
+
+// --- Lifestyle: Level 3 ---
+
+// -- Hobbies & Skills --
+const L3_LIFE_HOBBIES: GoalTemplate[] = [
+  template("l3_li_hobby_sessions", "Hobby Practice Sessions", 3, "input", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_instrument_hours", "Musical Instrument Hours", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 500, steps: 12, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_martial_arts", "Martial Arts Classes", 3, "input", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 4, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_dance_classes", "Dance Classes Attended", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 100, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_creative_projects", "Creative Projects Completed", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 25, steps: 8, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_language_learning", "Language Learning Sessions", 3, "input", {
+    lifeArea: LIFE, displayCategory: "hobbies_skills",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+]
+
+// -- Cooking & Home --
+const L3_LIFE_COOKING: GoalTemplate[] = [
+  template("l3_li_home_cooked", "Home-Cooked Meals", 3, "input", {
+    lifeArea: LIFE, displayCategory: "cooking_domestic",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 8 },
+      { frequencyPerWeek: 5, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_recipes", "Recipes Mastered", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "cooking_domestic",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 50, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_deep_clean", "Deep Cleans Completed", 3, "input", {
+    lifeArea: LIFE, displayCategory: "cooking_domestic",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 48 },
+    ],
+  }),
+  template("l3_li_home_projects", "Home Improvement Projects", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "cooking_domestic",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Adventure & Travel --
+const L3_LIFE_ADVENTURE: GoalTemplate[] = [
+  template("l3_li_new_experiences", "New Experiences Tried", 3, "input", {
+    lifeArea: LIFE, displayCategory: "adventure_travel",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_places_visited", "Countries or Cities Visited", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "adventure_travel",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 30, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_adventures", "Adventure Activities Done", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "adventure_travel",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 50, steps: 10, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_weekend_trips", "Weekend Trips Taken", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "adventure_travel",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 24, steps: 8, curveTension: CURVE_TENSION },
+  }),
+]
+
+// -- Style & Grooming --
+const L3_LIFE_STYLE: GoalTemplate[] = [
+  template("l3_li_grooming", "Grooming Routine Days", 3, "input", {
+    lifeArea: LIFE, displayCategory: "style_grooming",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 4 },
+      { frequencyPerWeek: 6, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_wardrobe", "Wardrobe Pieces Upgraded", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "style_grooming",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+  }),
+  template("l3_li_skincare", "Skincare Routine Days", 3, "input", {
+    lifeArea: LIFE, displayCategory: "style_grooming",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 4 },
+      { frequencyPerWeek: 6, durationWeeks: 12 },
+      { frequencyPerWeek: 7, durationWeeks: 24 },
+    ],
+  }),
+  template("l3_li_style_experiments", "Style Experiments Tried", 3, "outcome", {
+    lifeArea: LIFE, displayCategory: "style_grooming",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+  }),
+]
+
+const ALL_L3_LIFE = [
+  ...L3_LIFE_HOBBIES, ...L3_LIFE_COOKING, ...L3_LIFE_ADVENTURE, ...L3_LIFE_STYLE,
 ]
 
 // ============================================================================
@@ -989,6 +1466,10 @@ export const GOAL_TEMPLATES: GoalTemplate[] = [
   ...L1_FITNESS, ...L2_FIT_TEMPLATES, ...ALL_L3_FIT,
   // Wealth
   ...L1_WEALTH, ...L2_WLT_TEMPLATES, ...ALL_L3_WLT,
+  // Vices & Elimination
+  ...L1_VICES, ...L2_VIC_TEMPLATES, ...ALL_L3_VIC,
+  // Lifestyle
+  ...L1_LIFESTYLE, ...L2_LIFE_TEMPLATES, ...ALL_L3_LIFE,
 ]
 
 export const GOAL_TEMPLATE_MAP: Record<string, GoalTemplate> =
@@ -1014,8 +1495,15 @@ const L1_TO_L2_FIT: GoalGraphEdge[] = L1_FITNESS.flatMap((l1) =>
 const L1_TO_L2_WLT: GoalGraphEdge[] = L1_WEALTH.flatMap((l1) =>
   L2_WLT_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
 )
+const L1_TO_L2_VIC: GoalGraphEdge[] = L1_VICES.flatMap((l1) =>
+  L2_VIC_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+)
+const L1_TO_L2_LIFE: GoalGraphEdge[] = L1_LIFESTYLE.flatMap((l1) =>
+  L2_LIFE_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+)
 const L1_TO_L2_EDGES: GoalGraphEdge[] = [
   ...L1_TO_L2_DAYGAME, ...L1_TO_L2_PG, ...L1_TO_L2_SOC, ...L1_TO_L2_FIT, ...L1_TO_L2_WLT,
+  ...L1_TO_L2_VIC, ...L1_TO_L2_LIFE,
 ]
 
 // L2 → L3: per-L2 connections — each L2 links to the L3s relevant to that transformation
@@ -1069,10 +1557,10 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   ],
 
   // ---- PERSONAL GROWTH ----
-  // Master Mindfulness & Presence (7 L3s — cross-category)
+  // Master Mindfulness & Presence (8 L3s — cross-category)
   l2_pg_mindfulness: [
     "l3_pg_meditation", "l3_pg_gratitude", "l3_pg_meditation_hours", "l3_pg_meditation_streak",
-    "l3_pg_journal", "l3_pg_weekly_reviews", "l3_pg_therapy",
+    "l3_pg_journal", "l3_pg_weekly_reviews", "l3_pg_therapy", "l3_pg_breathwork",
   ],
   // Build Mental Toughness & Resilience (6 L3s)
   l2_pg_toughness: [
@@ -1084,15 +1572,15 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_pg_books", "l3_pg_courses", "l3_pg_study_hours", "l3_pg_reading_hours",
     "l3_pg_journal", "l3_pg_journal_entries",
   ],
-  // Master Journaling & Self-Reflection (6 L3s)
+  // Master Journaling & Self-Reflection (7 L3s)
   l2_pg_reflection: [
     "l3_pg_journal", "l3_pg_weekly_reviews", "l3_pg_therapy", "l3_pg_journal_entries",
-    "l3_pg_gratitude", "l3_pg_meditation",
+    "l3_pg_gratitude", "l3_pg_meditation", "l3_pg_retreats",
   ],
-  // Develop Emotional Intelligence (6 L3s)
+  // Develop Emotional Intelligence (7 L3s)
   l2_pg_eq: [
     "l3_pg_meditation", "l3_pg_gratitude", "l3_pg_meditation_hours",
-    "l3_pg_journal", "l3_pg_therapy", "l3_pg_journal_entries",
+    "l3_pg_journal", "l3_pg_therapy", "l3_pg_journal_entries", "l3_pg_breathwork",
   ],
   // Build Iron Discipline (6 L3s)
   l2_pg_discipline: [
@@ -1120,40 +1608,47 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_s_events_planned", "l3_s_total_hosted",
     "l3_s_social_events", "l3_s_plans_initiated",
   ],
-  // Expand Your Network (7 L3s)
+  // Expand Your Network (9 L3s)
   l2_s_network: [
     "l3_s_new_people", "l3_s_network_size", "l3_s_introductions_received",
     "l3_s_social_events", "l3_s_plans_initiated",
     "l3_s_new_conversations", "l3_s_total_events_attended",
+    "l3_s_mentoring_given", "l3_s_volunteering",
   ],
-  // Become a Connector (6 L3s)
+  // Become a Connector (9 L3s)
   l2_s_connector: [
     "l3_s_introductions", "l3_s_old_friends", "l3_s_followups",
     "l3_s_new_people", "l3_s_conversations_total", "l3_s_close_friends",
+    "l3_s_mentoring_given", "l3_s_mentoring_received", "l3_s_volunteering",
   ],
 
   // ---- FITNESS ----
-  // Build Real Strength — strength lifts + training consistency (9 L3s)
+  // Build Real Strength — strength lifts + training consistency (10 L3s)
   l2_f_strength: [
     "l3_f_bench_press", "l3_f_squat", "l3_f_deadlift", "l3_f_overhead_press", "l3_f_pullups",
     "l3_f_gym_frequency", "l3_f_total_sessions", "l3_f_consecutive_weeks", "l3_f_training_hours",
+    "l3_f_combat_sports",
   ],
-  // Transform Body Composition — body metrics + key habits (8 L3s)
+  // Transform Body Composition — body metrics + key habits (9 L3s)
   l2_f_body_comp: [
     "l3_f_weight_lost", "l3_f_muscle_gained", "l3_f_body_measurements", "l3_f_progress_photos",
     "l3_f_gym_frequency", "l3_f_total_sessions", "l3_f_protein", "l3_f_calorie_target",
+    "l3_f_cardio_sessions",
   ],
   // Master Nutrition & Recovery — nutrition habits + body outcomes (7 L3s)
   l2_f_nutrition: [
     "l3_f_protein", "l3_f_meals_prepped", "l3_f_water", "l3_f_calorie_target",
     "l3_f_weight_lost", "l3_f_muscle_gained", "l3_f_consecutive_weeks",
   ],
-  // Build Unbreakable Training Discipline — all training + nutrition + body comp (13 L3s)
+  // Build Unbreakable Training Discipline — all training + new categories (18 L3s)
   l2_f_training_discipline: [
     "l3_f_gym_frequency", "l3_f_total_sessions", "l3_f_consecutive_weeks", "l3_f_training_hours", "l3_f_cardio_sessions",
+    "l3_f_combat_sports",
     "l3_f_protein",
     "l3_f_weight_lost", "l3_f_muscle_gained", "l3_f_body_measurements", "l3_f_progress_photos",
     "l3_f_bench_press", "l3_f_squat", "l3_f_deadlift",
+    "l3_f_mobility_sessions", "l3_f_yoga", "l3_f_flexibility_hours",
+    "l3_f_running_sessions",
   ],
 
   // ---- WEALTH ----
@@ -1162,10 +1657,11 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_w_net_worth", "l3_w_savings_rate", "l3_w_emergency_fund", "l3_w_spending_discipline",
     "l3_w_income_streams", "l3_w_monthly_income",
   ],
-  // Maximize Earning Power (6 L3s)
+  // Maximize Earning Power (10 L3s)
   l2_w_earning: [
     "l3_w_monthly_income", "l3_w_side_income", "l3_w_networking",
     "l3_w_skills", "l3_w_deep_work", "l3_w_income_streams",
+    "l3_w_public_speaking", "l3_w_side_revenue", "l3_w_customers", "l3_w_entrepreneurship_hours",
   ],
   // Build Investment Portfolio (5 L3s)
   l2_w_investing: [
@@ -1175,6 +1671,50 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // Become Completely Debt Free (4 L3s)
   l2_w_debt_free: [
     "l3_w_savings_rate", "l3_w_spending_discipline", "l3_w_emergency_fund", "l3_w_net_worth",
+  ],
+
+  // ---- VICES & ELIMINATION ----
+  // Overcome Porn Addiction
+  l2_v_porn_free: [
+    "l3_v_porn_free_days", "l3_v_nofap_streak", "l3_v_porn_free_sustained", "l3_v_urge_journal",
+    "l3_v_no_late_scrolling", "l3_v_dopamine_detox",
+  ],
+  // Master Digital Discipline
+  l2_v_digital: [
+    "l3_v_screen_time", "l3_v_social_media_free", "l3_v_no_gaming", "l3_v_dopamine_detox", "l3_v_screen_streak",
+    "l3_v_no_late_scrolling",
+  ],
+  // Conquer Substance Habits
+  l2_v_substance: [
+    "l3_v_alcohol_free", "l3_v_sober_days", "l3_v_smoke_free", "l3_v_clean_eating",
+    "l3_v_junk_food_free",
+  ],
+  // Build Unbreakable Self-Control
+  l2_v_willpower: ALL_L3_VIC.map((t) => t.id),
+
+  // ---- LIFESTYLE ----
+  // Build an Adventure-Filled Life
+  l2_li_adventure: [
+    "l3_li_new_experiences", "l3_li_places_visited", "l3_li_adventures", "l3_li_weekend_trips",
+    "l3_li_hobby_sessions", "l3_li_dance_classes",
+  ],
+  // Master a Creative Skill
+  l2_li_creative: [
+    "l3_li_hobby_sessions", "l3_li_instrument_hours", "l3_li_creative_projects",
+    "l3_li_language_learning", "l3_li_dance_classes",
+  ],
+  // Create an Impressive Living Space
+  l2_li_living_space: [
+    "l3_li_home_cooked", "l3_li_recipes", "l3_li_deep_clean", "l3_li_home_projects",
+    "l3_li_grooming", "l3_li_skincare",
+  ],
+  // Develop a Personal Style
+  l2_li_style: [
+    "l3_li_grooming", "l3_li_wardrobe", "l3_li_skincare", "l3_li_style_experiments",
+  ],
+  // Become a Great Cook
+  l2_li_cook: [
+    "l3_li_home_cooked", "l3_li_recipes", "l3_li_new_experiences",
   ],
 }
 
@@ -1307,15 +1847,16 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
 
   // ---- PERSONAL GROWTH WEIGHTS ----
 
-  // Master Mindfulness & Presence (7 L3s)
+  // Master Mindfulness & Presence (8 L3s)
   l2_pg_mindfulness: {
-    l3_pg_meditation: 0.22,
-    l3_pg_gratitude: 0.15,
-    l3_pg_meditation_hours: 0.18,
-    l3_pg_meditation_streak: 0.15,
-    l3_pg_journal: 0.10,
-    l3_pg_weekly_reviews: 0.10,
-    l3_pg_therapy: 0.10,
+    l3_pg_meditation: 0.20,
+    l3_pg_gratitude: 0.13,
+    l3_pg_meditation_hours: 0.16,
+    l3_pg_meditation_streak: 0.13,
+    l3_pg_journal: 0.09,
+    l3_pg_weekly_reviews: 0.09,
+    l3_pg_therapy: 0.08,
+    l3_pg_breathwork: 0.12,
   },
   // Build Mental Toughness & Resilience (6 L3s)
   l2_pg_toughness: {
@@ -1335,23 +1876,25 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_pg_journal: 0.10,
     l3_pg_journal_entries: 0.10,
   },
-  // Master Journaling & Self-Reflection (6 L3s)
+  // Master Journaling & Self-Reflection (7 L3s)
   l2_pg_reflection: {
-    l3_pg_journal: 0.22,
-    l3_pg_weekly_reviews: 0.15,
-    l3_pg_therapy: 0.13,
-    l3_pg_journal_entries: 0.20,
-    l3_pg_gratitude: 0.15,
-    l3_pg_meditation: 0.15,
-  },
-  // Develop Emotional Intelligence (6 L3s)
-  l2_pg_eq: {
-    l3_pg_meditation: 0.20,
-    l3_pg_gratitude: 0.15,
-    l3_pg_meditation_hours: 0.15,
     l3_pg_journal: 0.20,
-    l3_pg_therapy: 0.15,
-    l3_pg_journal_entries: 0.15,
+    l3_pg_weekly_reviews: 0.13,
+    l3_pg_therapy: 0.12,
+    l3_pg_journal_entries: 0.17,
+    l3_pg_gratitude: 0.13,
+    l3_pg_meditation: 0.13,
+    l3_pg_retreats: 0.12,
+  },
+  // Develop Emotional Intelligence (7 L3s)
+  l2_pg_eq: {
+    l3_pg_meditation: 0.17,
+    l3_pg_gratitude: 0.13,
+    l3_pg_meditation_hours: 0.13,
+    l3_pg_journal: 0.17,
+    l3_pg_therapy: 0.13,
+    l3_pg_journal_entries: 0.13,
+    l3_pg_breathwork: 0.14,
   },
   // Build Iron Discipline (6 L3s)
   l2_pg_discipline: {
@@ -1395,50 +1938,57 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_s_social_events: 0.13,
     l3_s_plans_initiated: 0.12,
   },
-  // Expand Your Network (7 L3s)
+  // Expand Your Network (9 L3s)
   l2_s_network: {
-    l3_s_new_people: 0.20,
-    l3_s_network_size: 0.15,
-    l3_s_introductions_received: 0.12,
-    l3_s_social_events: 0.13,
-    l3_s_plans_initiated: 0.10,
-    l3_s_new_conversations: 0.15,
-    l3_s_total_events_attended: 0.15,
+    l3_s_new_people: 0.17,
+    l3_s_network_size: 0.13,
+    l3_s_introductions_received: 0.10,
+    l3_s_social_events: 0.11,
+    l3_s_plans_initiated: 0.08,
+    l3_s_new_conversations: 0.13,
+    l3_s_total_events_attended: 0.12,
+    l3_s_mentoring_given: 0.08,
+    l3_s_volunteering: 0.08,
   },
-  // Become a Connector (6 L3s)
+  // Become a Connector (9 L3s)
   l2_s_connector: {
-    l3_s_introductions: 0.22,
-    l3_s_old_friends: 0.10,
-    l3_s_followups: 0.15,
-    l3_s_new_people: 0.20,
-    l3_s_conversations_total: 0.18,
-    l3_s_close_friends: 0.15,
+    l3_s_introductions: 0.16,
+    l3_s_old_friends: 0.08,
+    l3_s_followups: 0.11,
+    l3_s_new_people: 0.15,
+    l3_s_conversations_total: 0.13,
+    l3_s_close_friends: 0.11,
+    l3_s_mentoring_given: 0.10,
+    l3_s_mentoring_received: 0.08,
+    l3_s_volunteering: 0.08,
   },
 
   // ---- FITNESS WEIGHTS ----
 
-  // Build Real Strength (9 L3s)
+  // Build Real Strength (10 L3s)
   l2_f_strength: {
-    l3_f_bench_press: 0.18,
-    l3_f_squat: 0.18,
-    l3_f_deadlift: 0.18,
-    l3_f_overhead_press: 0.10,
-    l3_f_pullups: 0.10,
+    l3_f_bench_press: 0.16,
+    l3_f_squat: 0.16,
+    l3_f_deadlift: 0.16,
+    l3_f_overhead_press: 0.09,
+    l3_f_pullups: 0.09,
     l3_f_gym_frequency: 0.08,
     l3_f_total_sessions: 0.07,
     l3_f_consecutive_weeks: 0.06,
     l3_f_training_hours: 0.05,
+    l3_f_combat_sports: 0.08,
   },
-  // Transform Body Composition (8 L3s)
+  // Transform Body Composition (9 L3s)
   l2_f_body_comp: {
-    l3_f_weight_lost: 0.20,
-    l3_f_muscle_gained: 0.20,
-    l3_f_body_measurements: 0.12,
-    l3_f_progress_photos: 0.08,
-    l3_f_gym_frequency: 0.12,
-    l3_f_total_sessions: 0.08,
-    l3_f_protein: 0.10,
-    l3_f_calorie_target: 0.10,
+    l3_f_weight_lost: 0.18,
+    l3_f_muscle_gained: 0.18,
+    l3_f_body_measurements: 0.11,
+    l3_f_progress_photos: 0.07,
+    l3_f_gym_frequency: 0.11,
+    l3_f_total_sessions: 0.07,
+    l3_f_protein: 0.09,
+    l3_f_calorie_target: 0.09,
+    l3_f_cardio_sessions: 0.10,
   },
   // Master Nutrition & Recovery (7 L3s)
   l2_f_nutrition: {
@@ -1450,21 +2000,26 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_f_muscle_gained: 0.10,
     l3_f_consecutive_weeks: 0.08,
   },
-  // Build Unbreakable Training Discipline (13 L3s)
+  // Build Unbreakable Training Discipline (18 L3s)
   l2_f_training_discipline: {
-    l3_f_gym_frequency: 0.12,
-    l3_f_total_sessions: 0.10,
-    l3_f_consecutive_weeks: 0.10,
-    l3_f_training_hours: 0.08,
-    l3_f_cardio_sessions: 0.06,
-    l3_f_protein: 0.06,
-    l3_f_weight_lost: 0.08,
-    l3_f_muscle_gained: 0.08,
-    l3_f_body_measurements: 0.06,
-    l3_f_progress_photos: 0.04,
-    l3_f_bench_press: 0.08,
-    l3_f_squat: 0.08,
-    l3_f_deadlift: 0.06,
+    l3_f_gym_frequency: 0.09,
+    l3_f_total_sessions: 0.08,
+    l3_f_consecutive_weeks: 0.08,
+    l3_f_training_hours: 0.06,
+    l3_f_cardio_sessions: 0.05,
+    l3_f_combat_sports: 0.05,
+    l3_f_protein: 0.05,
+    l3_f_weight_lost: 0.06,
+    l3_f_muscle_gained: 0.06,
+    l3_f_body_measurements: 0.04,
+    l3_f_progress_photos: 0.03,
+    l3_f_bench_press: 0.06,
+    l3_f_squat: 0.06,
+    l3_f_deadlift: 0.05,
+    l3_f_mobility_sessions: 0.05,
+    l3_f_yoga: 0.04,
+    l3_f_flexibility_hours: 0.04,
+    l3_f_running_sessions: 0.05,
   },
 
   // ---- WEALTH WEIGHTS ----
@@ -1478,14 +2033,18 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_w_income_streams: 0.10,
     l3_w_monthly_income: 0.15,
   },
-  // Maximize Earning Power (6 L3s)
+  // Maximize Earning Power (10 L3s)
   l2_w_earning: {
-    l3_w_monthly_income: 0.25,
-    l3_w_side_income: 0.20,
-    l3_w_networking: 0.10,
-    l3_w_skills: 0.18,
-    l3_w_deep_work: 0.15,
-    l3_w_income_streams: 0.12,
+    l3_w_monthly_income: 0.16,
+    l3_w_side_income: 0.13,
+    l3_w_networking: 0.07,
+    l3_w_skills: 0.12,
+    l3_w_deep_work: 0.10,
+    l3_w_income_streams: 0.08,
+    l3_w_public_speaking: 0.08,
+    l3_w_side_revenue: 0.10,
+    l3_w_customers: 0.08,
+    l3_w_entrepreneurship_hours: 0.08,
   },
   // Build Investment Portfolio (5 L3s)
   l2_w_investing: {
@@ -1501,6 +2060,97 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_w_spending_discipline: 0.30,
     l3_w_emergency_fund: 0.25,
     l3_w_net_worth: 0.20,
+  },
+
+  // ---- VICES & ELIMINATION WEIGHTS ----
+
+  // Overcome Porn Addiction (6 L3s)
+  l2_v_porn_free: {
+    l3_v_porn_free_days: 0.25,
+    l3_v_nofap_streak: 0.20,
+    l3_v_porn_free_sustained: 0.20,
+    l3_v_urge_journal: 0.15,
+    l3_v_no_late_scrolling: 0.10,
+    l3_v_dopamine_detox: 0.10,
+  },
+  // Master Digital Discipline (6 L3s)
+  l2_v_digital: {
+    l3_v_screen_time: 0.22,
+    l3_v_social_media_free: 0.18,
+    l3_v_no_gaming: 0.15,
+    l3_v_dopamine_detox: 0.13,
+    l3_v_screen_streak: 0.17,
+    l3_v_no_late_scrolling: 0.15,
+  },
+  // Conquer Substance Habits (5 L3s)
+  l2_v_substance: {
+    l3_v_alcohol_free: 0.25,
+    l3_v_sober_days: 0.25,
+    l3_v_smoke_free: 0.20,
+    l3_v_clean_eating: 0.15,
+    l3_v_junk_food_free: 0.15,
+  },
+  // Build Unbreakable Self-Control (all 17 L3s)
+  l2_v_willpower: {
+    l3_v_porn_free_days: 0.07,
+    l3_v_nofap_streak: 0.06,
+    l3_v_porn_free_sustained: 0.06,
+    l3_v_urge_journal: 0.05,
+    l3_v_screen_time: 0.07,
+    l3_v_social_media_free: 0.06,
+    l3_v_no_gaming: 0.05,
+    l3_v_dopamine_detox: 0.05,
+    l3_v_screen_streak: 0.06,
+    l3_v_alcohol_free: 0.07,
+    l3_v_sober_days: 0.06,
+    l3_v_smoke_free: 0.05,
+    l3_v_clean_eating: 0.05,
+    l3_v_junk_food_free: 0.06,
+    l3_v_impulse_free: 0.06,
+    l3_v_no_late_scrolling: 0.06,
+    l3_v_budget_days: 0.06,
+  },
+
+  // ---- LIFESTYLE WEIGHTS ----
+
+  // Build an Adventure-Filled Life (6 L3s)
+  l2_li_adventure: {
+    l3_li_new_experiences: 0.20,
+    l3_li_places_visited: 0.22,
+    l3_li_adventures: 0.20,
+    l3_li_weekend_trips: 0.15,
+    l3_li_hobby_sessions: 0.13,
+    l3_li_dance_classes: 0.10,
+  },
+  // Master a Creative Skill (5 L3s)
+  l2_li_creative: {
+    l3_li_hobby_sessions: 0.25,
+    l3_li_instrument_hours: 0.25,
+    l3_li_creative_projects: 0.20,
+    l3_li_language_learning: 0.15,
+    l3_li_dance_classes: 0.15,
+  },
+  // Create an Impressive Living Space (6 L3s)
+  l2_li_living_space: {
+    l3_li_home_cooked: 0.18,
+    l3_li_recipes: 0.15,
+    l3_li_deep_clean: 0.20,
+    l3_li_home_projects: 0.22,
+    l3_li_grooming: 0.13,
+    l3_li_skincare: 0.12,
+  },
+  // Develop a Personal Style (4 L3s)
+  l2_li_style: {
+    l3_li_grooming: 0.28,
+    l3_li_wardrobe: 0.27,
+    l3_li_skincare: 0.22,
+    l3_li_style_experiments: 0.23,
+  },
+  // Become a Great Cook (3 L3s)
+  l2_li_cook: {
+    l3_li_home_cooked: 0.40,
+    l3_li_recipes: 0.40,
+    l3_li_new_experiences: 0.20,
   },
 }
 
@@ -1623,16 +2273,30 @@ export function getTemplatesByCategory(): Partial<Record<GoalDisplayCategory, Go
     hosting: L3_SOC_HOSTING,
     social_skills: L3_SOC_SKILLS,
     network_expansion: L3_SOC_NETWORK,
+    mentorship: L3_SOC_MENTORSHIP,
     // Fitness
     strength: L3_FIT_STRENGTH,
     training: L3_FIT_TRAINING,
     nutrition: L3_FIT_NUTRITION,
     body_comp: L3_FIT_BODY_COMP,
+    flexibility: L3_FIT_FLEXIBILITY,
+    endurance: L3_FIT_ENDURANCE,
     // Wealth
     income: L3_WLT_INCOME,
     saving: L3_WLT_SAVING,
     investing: L3_WLT_INVESTING,
     career_growth: L3_WLT_CAREER,
+    entrepreneurship: L3_WLT_ENTREPRENEURSHIP,
+    // Vices & Elimination
+    porn_freedom: L3_VIC_PORN,
+    digital_discipline: L3_VIC_DIGITAL,
+    substance_control: L3_VIC_SUBSTANCE,
+    self_control: L3_VIC_SELF_CONTROL,
+    // Lifestyle
+    hobbies_skills: L3_LIFE_HOBBIES,
+    cooking_domestic: L3_LIFE_COOKING,
+    adventure_travel: L3_LIFE_ADVENTURE,
+    style_grooming: L3_LIFE_STYLE,
   }
 }
 
@@ -1708,6 +2372,18 @@ export function getAreaCatalog(lifeArea: string): AreaCatalog | null {
         l1Goals: L1_WEALTH,
         l2Achievements: L2_WLT_TEMPLATES,
         l3ByCategory: getTemplatesByCategoryForArea("career_business"),
+      }
+    case "vices_elimination":
+      return {
+        l1Goals: L1_VICES,
+        l2Achievements: L2_VIC_TEMPLATES,
+        l3ByCategory: getTemplatesByCategoryForArea("vices_elimination"),
+      }
+    case "lifestyle":
+      return {
+        l1Goals: L1_LIFESTYLE,
+        l2Achievements: L2_LIFE_TEMPLATES,
+        l3ByCategory: getTemplatesByCategoryForArea("lifestyle"),
       }
     default:
       return null

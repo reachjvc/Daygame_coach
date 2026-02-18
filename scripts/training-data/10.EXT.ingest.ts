@@ -72,6 +72,7 @@ type Args = {
   skipReadinessGate: boolean
   readinessSummary: string | null
   quarantineReportOut: string | null
+  quarantineFile: string | null
   semanticBatchId: string | null
   semanticReportOut: string | null
   semanticMinFresh: number | null
@@ -168,6 +169,7 @@ Gates:
   --skip-readiness-gate     Skip readiness summary gate (manifest mode)
   --readiness-summary <p>   Override readiness summary path
                             (default readiness policy is READY-only)
+  --quarantine-file <path>  Upstream quarantine JSON — quarantined video IDs are excluded from ingest
   --quarantine-report-out <p>
                             Override manifest quarantine report output path
 
@@ -212,6 +214,7 @@ function validateKnownArgs(argv: string[]): void {
     "--source",
     "--manifest",
     "--readiness-summary",
+    "--quarantine-file",
     "--quarantine-report-out",
     "--semantic-batch-id",
     "--semantic-report-out",
@@ -267,6 +270,7 @@ function parseArgs(argv: string[]): Args {
   let manifest: string | null = null
   let readinessSummary: string | null = null
   let quarantineReportOut: string | null = null
+  let quarantineFile: string | null = null
   let semanticBatchId: string | null = null
   let semanticReportOut: string | null = null
   let semanticMinFresh: number | null = null
@@ -294,6 +298,12 @@ function parseArgs(argv: string[]): Args {
     }
     if (arg.startsWith("--readiness-summary=")) {
       readinessSummary = arg.split("=", 2)[1]
+    }
+    if (arg === "--quarantine-file" && argv[i + 1]) {
+      quarantineFile = argv[++i]
+    }
+    if (arg.startsWith("--quarantine-file=")) {
+      quarantineFile = arg.split("=", 2)[1]
     }
     if (arg === "--quarantine-report-out" && argv[i + 1]) {
       quarantineReportOut = argv[++i]
@@ -356,6 +366,7 @@ function parseArgs(argv: string[]): Args {
     skipReadinessGate: flags.has("--skip-readiness-gate"),
     readinessSummary,
     quarantineReportOut,
+    quarantineFile,
     semanticBatchId,
     semanticReportOut,
     semanticMinFresh,
@@ -1589,7 +1600,8 @@ function checkSemanticGate(
 function checkTaxonomyGate(
   manifestPath: string,
   source: string | null,
-  expectedVideoIds: Set<string>
+  expectedVideoIds: Set<string>,
+  overrideManifestVideoCount?: number
 ): TaxonomyGateResult {
   const emptyResult: TaxonomyGateResult = {
     blockedVideoIds: new Set<string>(),
@@ -1602,7 +1614,7 @@ function checkTaxonomyGate(
     return emptyResult
   }
 
-  const expectedManifestVideos = expectedVideoIds.size
+  const expectedManifestVideos = overrideManifestVideoCount ?? expectedVideoIds.size
   const stem = path.basename(manifestPath, path.extname(manifestPath))
   const manifestBase = path.basename(manifestPath)
   const expectedSource = source
@@ -2015,9 +2027,31 @@ async function main() {
     postTaxonomyVideoIds = new Set(expectedVideoIds)
     postReadinessVideoIds = new Set(expectedVideoIds)
 
+    // Exclude upstream-quarantined videos
+    if (args.quarantineFile) {
+      try {
+        const qRaw = fs.readFileSync(args.quarantineFile, "utf-8")
+        const qData = JSON.parse(qRaw)
+        const qIds: string[] = Array.isArray(qData?.quarantined_video_ids) ? qData.quarantined_video_ids : []
+        if (qIds.length > 0) {
+          const before = expectedVideoIds.size
+          for (const qid of qIds) {
+            expectedVideoIds.delete(qid)
+          }
+          const removed = before - expectedVideoIds.size
+          if (removed > 0) {
+            console.log(`🔒 Quarantine file: excluded ${removed} video(s) from ingest`)
+          }
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.warn(`⚠️  Could not read quarantine file: ${args.quarantineFile} (${msg})`)
+      }
+    }
+
     if (!args.skipTaxonomyGate) {
       taxonomyGateExecuted = true
-      taxonomyGateResult = checkTaxonomyGate(args.manifest, args.source, expectedVideoIds)
+      taxonomyGateResult = checkTaxonomyGate(args.manifest, args.source, expectedVideoIds, expectedManifestVideos)
       if (taxonomyGateResult.blockedVideoIds.size > 0) {
         const before = expectedVideoIds.size
         const filtered = new Set<string>()

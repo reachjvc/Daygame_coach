@@ -1,192 +1,202 @@
 import { test, expect } from "@playwright/test"
 
-test.describe("Variant D - Journey Goal Flow", () => {
+test.describe("Variant D (Aurora Beta / Solar Storm) V4 Smoke Test", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("http://localhost:3000/test/goals?variant=d")
-    await page.waitForSelector("[data-testid='variant-d']", { timeout: 10000 })
+    await page.goto("http://localhost:3000/test/goalsv4")
+    // Click the Aurora Beta tab
+    await page.locator("button", { hasText: "Aurora Beta" }).click()
+    // Wait for Variant D to load
+    await page.waitForSelector('[data-testid="variant-d"]', { timeout: 15000 })
   })
 
-  test("Phase 1: Landing page renders with two path cards", async ({ page }) => {
+  test("Landing page renders with storm theme and two paths", async ({ page }) => {
+    // Storm badge
+    await expect(page.locator("text=Solar Storm")).toBeVisible()
+
     // Hero text
-    await expect(page.getByText("What kind of dating life do you want?")).toBeVisible()
-    await expect(page.getByText("Design your journey")).toBeVisible()
+    await expect(page.locator("text=Ignite your trajectory")).toBeVisible()
 
-    // Two main path cards - use first() since text may appear in sub-elements
-    await expect(page.getByRole("heading", { name: "Find the One" })).toBeVisible()
-    await expect(page.getByRole("heading", { name: "Abundance" })).toBeVisible()
+    // Two path options
+    await expect(page.locator("h2", { hasText: "Find the One" })).toBeVisible()
+    await expect(page.locator("h2", { hasText: "Abundance" })).toBeVisible()
 
-    // Other life areas section
-    await expect(page.getByText("Other life areas")).toBeVisible()
-    await expect(page.getByText("Health & Appearance")).toBeVisible()
-    await expect(page.getByText("Career & Finances")).toBeVisible()
+    // Frequency bands section
+    await expect(page.locator("text=Frequency Bands")).toBeVisible()
+
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-landing.png",
+      fullPage: true,
+    })
   })
 
-  test("Phase 2: Clicking Abundance path shows goal expansion", async ({ page }) => {
-    // Click abundance path card (use heading to be precise)
-    await page.getByRole("heading", { name: "Abundance" }).click()
+  test("Full flow: landing -> pick -> customize -> chart -> complete (Abundance)", async ({ page }) => {
+    // Step 1: Select Abundance path
+    await page.locator("h2", { hasText: "Abundance" }).click()
 
-    // Should show step 1 with L1 options
-    await expect(page.getByText("Choose your big goal")).toBeVisible()
-    await expect(page.getByText("This is your North Star")).toBeVisible()
+    // Should show goal picker with storm metaphors
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
 
-    // Abundance L1 options should appear
-    await expect(page.getByText("Build a rotation")).toBeVisible()
-    await expect(page.getByText("Have an abundant dating life")).toBeVisible()
-  })
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-pick-l1.png",
+      fullPage: true,
+    })
 
-  test("Phase 2: Selecting L1 reveals achievements", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
+    // Pick an L1 goal (first option)
+    const l1Options = page.locator("button").filter({ hasText: "Build a rotation" })
+    if (await l1Options.count() > 0) {
+      await l1Options.first().click()
+    } else {
+      // Fallback: click the first L1 option in the grid
+      const l1Grid = page.locator(".grid button").first()
+      await l1Grid.click()
+    }
 
-    // Select an L1 goal
-    await page.getByText("Build a rotation").click()
+    // Step 2 should auto-appear: Magnetic field lines
+    await expect(page.locator("text=Magnetic field lines")).toBeVisible({ timeout: 5000 })
 
-    // Step 2 should appear
-    await expect(page.getByText("Achievements to unlock")).toBeVisible()
+    // Step 3 should auto-appear: Charged particles
+    await expect(page.locator("text=Charged particles")).toBeVisible({ timeout: 5000 })
 
-    // L2 achievements should be visible
-    await expect(page.getByText("Master Daygame")).toBeVisible()
-    await expect(page.getByText("Become Confident with Women")).toBeVisible()
-  })
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-pick-l2l3.png",
+      fullPage: true,
+    })
 
-  test("Phase 2: Selecting L2s reveals trackable goals", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
+    // Click "Calibrate Storm" to proceed to customizer
+    const calibrateBtn = page.locator("button", { hasText: "Calibrate Storm" })
+    await calibrateBtn.scrollIntoViewIfNeeded()
+    await calibrateBtn.click()
 
-    // Step 3 should appear (auto-selected L2s trigger it)
-    await expect(page.getByText("What you'll track")).toBeVisible()
-
-    // Categories should be visible (use locator.first() before expect)
-    await expect(page.getByText("Field Work").first()).toBeVisible()
-    await expect(page.getByText("Results").first()).toBeVisible()
-  })
-
-  test("Phase 2 -> 3: Click Customize & Confirm goes to commitment builder", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-
-    // Click the confirm button
-    await page.getByText("Customize & Confirm").click()
-
-    // Should be in commitment builder
-    await expect(page.getByText("Customize your goals")).toBeVisible()
-    await expect(page.getByText("Your vision")).toBeVisible()
-  })
-
-  test("Phase 3: Commitment builder has toggle switches and target inputs", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-    await page.getByText("Customize & Confirm").click()
+    // Should be in customizer step
+    await expect(page.locator("text=Calibrate the storm")).toBeVisible({ timeout: 5000 })
 
     // Should have toggle switches
     const switches = page.locator("button[role='switch']")
     expect(await switches.count()).toBeGreaterThan(0)
 
-    // Should have target inputs
-    const targetInputs = page.locator("input[type='number']")
-    expect(await targetInputs.count()).toBeGreaterThan(0)
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-customize.png",
+      fullPage: true,
+    })
 
-    // Achievements section should be present
-    await expect(page.getByText("Achievements").first()).toBeVisible()
+    // Click "View Storm" to proceed to chart
+    const viewStormBtn = page.locator("button", { hasText: "View Storm" })
+    await viewStormBtn.scrollIntoViewIfNeeded()
+    await viewStormBtn.click()
+
+    // Should be in chart step
+    await expect(page.locator("text=Your Solar Storm")).toBeVisible({ timeout: 5000 })
+    await expect(page.locator("text=Storm Observatory")).toBeVisible()
+
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-chart.png",
+      fullPage: true,
+    })
+
+    // Click "Complete Storm" to finish
+    const completeBtn = page.locator("button", { hasText: "Complete Storm" })
+    await completeBtn.scrollIntoViewIfNeeded()
+    await completeBtn.click()
+
+    // Should be on complete screen
+    await expect(page.getByRole("heading", { name: "Storm Activated" })).toBeVisible({ timeout: 5000 })
+
+    // Should show stats
+    await expect(page.getByText("Nodes", { exact: true })).toBeVisible()
+    await expect(page.getByText("Fields", { exact: true })).toBeVisible()
+    await expect(page.getByText("Milestones", { exact: true })).toBeVisible()
+    await expect(page.getByText("Habits", { exact: true })).toBeVisible()
+
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-complete.png",
+      fullPage: true,
+    })
   })
 
-  test("Phase 3 -> 4: Creating goals shows summary", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-    await page.getByText("Customize & Confirm").click()
-
-    // Click create
-    await page.getByText("Create My Goals").click()
-
-    // Should show summary
-    await expect(page.getByText("Your Journey is Set")).toBeVisible()
-
-    // Stats should be visible
-    await expect(page.getByText("Vision").first()).toBeVisible()
-
-    // Scroll to bottom and check Start Over button
+  test("Start over from complete screen returns to landing", async ({ page }) => {
     const container = page.locator("[data-testid='variant-d']")
-    const startOverButton = container.getByRole("button", { name: "Start Over" })
-    await startOverButton.scrollIntoViewIfNeeded()
-    await expect(startOverButton).toBeVisible()
-  })
 
-  test("Phase 4: Start Over returns to landing", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-    await page.getByText("Customize & Confirm").click()
-    await page.getByText("Create My Goals").click()
+    // Run through entire flow quickly
+    await page.locator("h2", { hasText: "Abundance" }).click()
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
 
-    // Scroll to and click start over
-    const container = page.locator("[data-testid='variant-d']")
-    const startOverButton = container.getByRole("button", { name: "Start Over" })
-    await startOverButton.scrollIntoViewIfNeeded()
-    await startOverButton.click()
+    // Pick first L1
+    const l1Grid = container.locator("button").filter({ hasText: "Build a rotation" })
+    if (await l1Grid.count() > 0) {
+      await l1Grid.first().click()
+    }
+    await expect(page.locator("text=Magnetic field lines")).toBeVisible({ timeout: 5000 })
+
+    // Calibrate Storm
+    const calibrateBtn = container.locator("button", { hasText: "Calibrate Storm" })
+    await calibrateBtn.scrollIntoViewIfNeeded()
+    await calibrateBtn.click()
+    await expect(page.locator("text=Calibrate the storm")).toBeVisible({ timeout: 5000 })
+
+    // View Storm
+    const viewStormBtn = container.locator("button", { hasText: "View Storm" })
+    await viewStormBtn.scrollIntoViewIfNeeded()
+    await viewStormBtn.click()
+    await expect(page.locator("text=Your Solar Storm")).toBeVisible({ timeout: 5000 })
+
+    // Complete Storm
+    const completeBtn = container.locator("button", { hasText: "Complete Storm" })
+    await completeBtn.scrollIntoViewIfNeeded()
+    await completeBtn.click()
+    await expect(page.getByRole("heading", { name: "Storm Activated" })).toBeVisible({ timeout: 5000 })
+
+    // Click "Ignite a new storm"
+    const startOverBtn = container.locator("button", { hasText: "Ignite a new storm" })
+    await startOverBtn.scrollIntoViewIfNeeded()
+    await startOverBtn.click()
 
     // Should be back at landing
-    await expect(page.getByText("What kind of dating life do you want?")).toBeVisible()
-  })
-
-  test("Find the One path works end-to-end", async ({ page }) => {
-    // Click Find the One
-    await page.getByRole("heading", { name: "Find the One" }).click()
-
-    // Should show L1 options for one-person path
-    await expect(page.getByText("Get a girlfriend")).toBeVisible()
-    await expect(page.getByText("Find my dream girl")).toBeVisible()
-
-    // Select one
-    await page.getByText("Get a girlfriend").click()
-
-    // Should show achievements
-    await expect(page.getByText("Achievements to unlock")).toBeVisible()
-
-    // Go to customization
-    await page.getByText("Customize & Confirm").click()
-    await expect(page.getByText("Customize your goals")).toBeVisible()
-
-    // Create
-    await page.getByText("Create My Goals").click()
-    await expect(page.getByText("Your Journey is Set")).toBeVisible()
+    await expect(page.locator("text=Ignite your trajectory")).toBeVisible({ timeout: 5000 })
   })
 
   test("Back navigation works at each phase", async ({ page }) => {
-    // Go to expansion
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await expect(page.getByText("Choose your big goal")).toBeVisible()
+    const container = page.locator("[data-testid='variant-d']")
 
-    // Back to landing
-    await page.getByText("Back").first().click()
-    await expect(page.getByText("What kind of dating life do you want?")).toBeVisible()
+    // Go to goal picker
+    await page.locator("h2", { hasText: "Abundance" }).click()
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
 
-    // Go to expansion again and then commitment
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-    await page.getByText("Customize & Confirm").click()
-    await expect(page.getByText("Customize your goals")).toBeVisible()
+    // Back to landing - use the specific back button within variant-d container
+    await container.locator("button", { hasText: "Back" }).first().click()
+    await expect(page.locator("text=Ignite your trajectory")).toBeVisible({ timeout: 5000 })
 
-    // Back to expansion
-    await page.getByText("Back to selection").click()
-    await expect(page.getByText("Choose your big goal")).toBeVisible()
+    // Go to picker again, select L1, go to customizer
+    await page.locator("h2", { hasText: "Abundance" }).click()
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
+
+    const l1Options = page.locator("button").filter({ hasText: "Build a rotation" })
+    if (await l1Options.count() > 0) {
+      await l1Options.first().click()
+    }
+
+    const calibrateBtn = page.locator("button", { hasText: "Calibrate Storm" })
+    await calibrateBtn.scrollIntoViewIfNeeded()
+    await calibrateBtn.click()
+    await expect(page.locator("text=Calibrate the storm")).toBeVisible({ timeout: 5000 })
+
+    // Back to picker
+    await page.locator("text=Back to selection").click()
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
   })
 
-  test("Life area cards show placeholder for non-daygame areas", async ({ page }) => {
-    // Click a non-daygame life area
-    await page.getByText("Health & Appearance").click()
+  test("Find the One path works", async ({ page }) => {
+    // Click Find the One
+    await page.locator("h2", { hasText: "Find the One" }).click()
 
-    // Should show placeholder
-    await expect(page.getByText("Only daygame has a full template graph")).toBeVisible()
+    // Should show goal picker
+    await expect(page.locator("text=Choose your solar flare")).toBeVisible({ timeout: 5000 })
 
-    // Back link
-    await page.getByText("Back to start").click()
-    await expect(page.getByText("What kind of dating life do you want?")).toBeVisible()
-  })
+    // Should show Find the One L1 options
+    await expect(page.locator("text=Get a girlfriend")).toBeVisible()
 
-  test("L3 category toggle works", async ({ page }) => {
-    await page.getByRole("heading", { name: "Abundance" }).click()
-    await page.getByText("Build a rotation").click()
-
-    // Categories with goals should be visible
-    await expect(page.getByText("What you'll track")).toBeVisible()
-    await expect(page.getByText("Field Work").first()).toBeVisible()
+    await page.screenshot({
+      path: "tests/e2e/screenshots/v4-variant-d-one-person.png",
+      fullPage: true,
+    })
   })
 })
