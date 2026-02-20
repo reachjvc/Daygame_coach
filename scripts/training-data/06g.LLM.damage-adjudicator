@@ -30,6 +30,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from batch.manifest_parser import load_manifest_sources, manifest_filter_files
+from batch.quarantine_helpers import get_quarantine_block_reason, load_quarantine_video_ids
 
 try:
     import jsonschema  # type: ignore
@@ -151,13 +152,6 @@ def find_existing_output_path(
     )
     if preferred.exists():
         return preferred
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    if output_root_dir is not None:
-        root_flat = compute_output_path(input_path, output_root_dir)
-        if root_flat.exists():
-            return root_flat
     return None
 
 
@@ -320,7 +314,7 @@ def _normalize_adjudication(payload: Dict[str, Any]) -> Dict[str, Any]:
     return out
 
 
-def _seed_fallback(seg_id: int, severity: str) -> Dict[str, Any]:
+def _dry_run_seed_payload(seg_id: int, severity: str) -> Dict[str, Any]:
     base = {
         "transcript_confidence": 0.35,
         "speaker_confidence": 0.35,
@@ -329,7 +323,7 @@ def _seed_fallback(seg_id: int, severity: str) -> Dict[str, Any]:
         "repaired_text": None,
         "contamination_start_segment_id": seg_id,
         "contamination_end_segment_id": seg_id,
-        "confidence_rationale": "fallback_without_llm_output",
+        "confidence_rationale": "dry_run_placeholder",
     }
     if severity == "high":
         base["transcript_confidence"] = 0.20
@@ -483,15 +477,6 @@ def _resolve_context_path(
     except Exception:
         pass
 
-    # Final fallback: video_id search.
-    video_id = damage_map_data.get("video_id")
-    if isinstance(video_id, str) and video_id.strip():
-        matches: List[Path] = []
-        for p in context_root_dir.rglob("*.conversations.json"):
-            if video_id in p.name:
-                matches.append(p)
-        if matches:
-            return sorted(matches, key=lambda p: str(p))[0]
     return None
 
 
@@ -608,7 +593,7 @@ def _adjudicate_single_seed(
 
     for _ in range(call_count):
         if args.dry_run:
-            payload = _seed_fallback(sid, sev)
+            payload = _dry_run_seed_payload(sid, sev)
             normalized_runs.append(payload)
             raw_runs.append(None)
             continue
@@ -618,15 +603,26 @@ def _adjudicate_single_seed(
             timeout_seconds=args.timeout_seconds,
             retries=args.retries,
         )
+        if not raw:
+            raise RuntimeError(
+                f"LLM call failed for segment_id={sid} (strict mode: no synthetic adjudication)"
+            )
         raw_runs.append(raw)
-        parsed = _extract_json(raw or "") if raw else None
-        if not isinstance(parsed, dict) or not _validate_schema(parsed, schema):
-            parsed = _seed_fallback(sid, sev)
-            parsed["confidence_rationale"] = "fallback_schema_or_parse_failure"
+        parsed = _extract_json(raw)
+        if not isinstance(parsed, dict):
+            raise RuntimeError(
+                f"LLM response was not valid JSON for segment_id={sid} (strict mode)"
+            )
+        if not _validate_schema(parsed, schema):
+            raise RuntimeError(
+                f"LLM response failed schema validation for segment_id={sid} (strict mode)"
+            )
         parsed = _normalize_adjudication(parsed)
         normalized_runs.append(parsed)
 
-    adjudication = normalized_runs[0] if normalized_runs else _seed_fallback(sid, sev)
+    if not normalized_runs:
+        raise RuntimeError(f"No adjudication outputs for segment_id={sid}")
+    adjudication = normalized_runs[0]
     deterministic_match = True
     if len(normalized_runs) > 1:
         first = json.dumps(normalized_runs[0], sort_keys=True, ensure_ascii=False)
@@ -640,8 +636,7 @@ def _adjudicate_single_seed(
     if args.include_raw_llm and raw_runs:
         row["raw_llm_output"] = raw_runs[0]
 
-    llm_failed = not args.dry_run and (raw_runs[0] is None)
-    return row, llm_failed
+    return row, False
 
 
 def _adjudicate_batch(
@@ -689,14 +684,13 @@ def _adjudicate_batch(
     )
 
     rows: List[Dict[str, Any]] = []
-    llm_failures = 0
 
     if args.dry_run:
         for seed in batch:
             sid = _safe_int(seed.get("segment_id"))
             sev = str(seed.get("severity", "low")).strip().lower() or "low"
-            fb = _seed_fallback(sid, sev)
-            row = _process_single_adjudication(fb, seed, context_ids, args)
+            payload = _dry_run_seed_payload(sid, sev)
+            row = _process_single_adjudication(payload, seed, context_ids, args)
             rows.append(row)
         return rows, 0
 
@@ -708,29 +702,15 @@ def _adjudicate_batch(
     )
 
     if not raw:
-        print(f"{LOG_PREFIX} WARN: Batch LLM call failed for {len(batch)} seeds, using fallbacks")
-        llm_failures = len(batch)
-        for seed in batch:
-            sid = _safe_int(seed.get("segment_id"))
-            sev = str(seed.get("severity", "low")).strip().lower() or "low"
-            fb = _seed_fallback(sid, sev)
-            fb["confidence_rationale"] = "fallback_batch_llm_failure"
-            row = _process_single_adjudication(fb, seed, context_ids, args)
-            rows.append(row)
-        return rows, llm_failures
+        raise RuntimeError(
+            f"Batch LLM call failed for {len(batch)} seeds (strict mode: no synthetic adjudication)"
+        )
 
-    parsed = _extract_json(raw) if raw else None
-    if not isinstance(parsed, dict) or not _validate_schema(parsed, batch_schema):
-        print(f"{LOG_PREFIX} WARN: Batch response failed schema validation, using fallbacks")
-        llm_failures = len(batch)
-        for seed in batch:
-            sid = _safe_int(seed.get("segment_id"))
-            sev = str(seed.get("severity", "low")).strip().lower() or "low"
-            fb = _seed_fallback(sid, sev)
-            fb["confidence_rationale"] = "fallback_batch_schema_failure"
-            row = _process_single_adjudication(fb, seed, context_ids, args)
-            rows.append(row)
-        return rows, llm_failures
+    parsed = _extract_json(raw)
+    if not isinstance(parsed, dict):
+        raise RuntimeError("Batch response was not valid JSON (strict mode)")
+    if not _validate_schema(parsed, batch_schema):
+        raise RuntimeError("Batch response failed schema validation (strict mode)")
 
     adj_list = parsed.get("adjudications", [])
     if not isinstance(adj_list, list):
@@ -746,19 +726,14 @@ def _adjudicate_batch(
 
     for seed in batch:
         sid = _safe_int(seed.get("segment_id"))
-        sev = str(seed.get("severity", "low")).strip().lower() or "low"
         matched = adj_by_id.get(sid)
-        if matched is not None:
-            adjudication = _normalize_adjudication(matched)
-        else:
-            print(f"{LOG_PREFIX} WARN: Batch response missing segment_id={sid}, using fallback")
-            adjudication = _seed_fallback(sid, sev)
-            adjudication["confidence_rationale"] = "fallback_batch_missing_segment"
-            llm_failures += 1
+        if matched is None:
+            raise RuntimeError(f"Batch response missing required segment_id={sid} (strict mode)")
+        adjudication = _normalize_adjudication(matched)
         row = _process_single_adjudication(adjudication, seed, context_ids, args)
         rows.append(row)
 
-    return rows, llm_failures
+    return rows, 0
 
 
 def adjudicate_file(
@@ -1002,6 +977,7 @@ def _run_directory_with_files(
 
     processed = 0
     skipped = 0
+    skipped_quarantine = 0
     failed = 0
     totals = {
         "seeds_total": 0,
@@ -1010,8 +986,14 @@ def _run_directory_with_files(
         "determinism_mismatches": 0,
         "llm_failures": 0,
     }
+    quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
 
     for input_file in files:
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
+            continue
         preferred_output = compute_output_path_with_layout(
             input_file,
             out_dir,
@@ -1048,6 +1030,7 @@ def _run_directory_with_files(
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed:              {processed}")
     print(f"  Skipped:                {skipped}")
+    print(f"  Skipped (quarantine):   {skipped_quarantine}")
     print(f"  Failed:                 {failed}")
     print(f"  Seeds total:            {totals['seeds_total']}")
     print(f"  LLM calls:              {totals['llm_calls']}")
@@ -1107,6 +1090,11 @@ def _run_input(
     input_path = input_path.resolve()
 
     if input_path.is_file():
+        quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
+        quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
+            return
         out_dir = Path(args.output) if args.output else out_base
         output_path = compute_output_path_with_layout(input_path, out_dir, input_root_dir=in_base)
         if output_path.exists() and not args.overwrite:
@@ -1297,6 +1285,10 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=8, help="Seeds per LLM call (1=no batching, default=8)")
     parser.add_argument("--dry-run", action="store_true", help="Preview without writing files")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
+    parser.add_argument(
+        "--quarantine-file",
+        help="Optional JSON file listing quarantined video IDs to skip",
+    )
     args = parser.parse_args()
 
     if args.llm_retries is not None:
@@ -1310,6 +1302,16 @@ def main() -> None:
     args.context_right = max(0, int(args.context_right))
     args.repair_accept_threshold = max(0.0, min(1.0, float(args.repair_accept_threshold)))
     args.anchor_allow_threshold = max(0.0, min(1.0, float(args.anchor_allow_threshold)))
+
+    args._quarantine_ids = set()
+    if args.quarantine_file:
+        quarantine_path = Path(args.quarantine_file)
+        if not quarantine_path.is_absolute():
+            quarantine_path = repo_root() / quarantine_path
+        if not quarantine_path.exists():
+            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
+        args._quarantine_ids = load_quarantine_video_ids(quarantine_path)
+        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(args._quarantine_ids)} video ids)")
 
     prompt_template = _load_prompt_template()
     schema = _load_schema()

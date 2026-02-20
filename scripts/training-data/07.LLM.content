@@ -373,7 +373,7 @@ def determine_routing_lane(
     approach_conversation_count: int,
     force_lane: Optional[str] = None,
 ) -> str:
-    """Determine whether a video goes through infield or non-infield enrichment lane.
+    """Determine whether a video goes through infield or non-infield enrichment routing.
 
     Routing is based on a structural fact: does the video contain any approach
     conversations (conversation_id > 0)? This is deterministic — set by Stage 06
@@ -1133,7 +1133,7 @@ def normalize_enrichments(
                                     if isinstance(sid, int):
                                         matches.append(sid)
                                     continue
-                                # Fuzzy fallback for segment-boundary duplication and minor ASR drift.
+                                # Fuzzy recovery for segment-boundary duplication and minor ASR drift.
                                 if w >= 2 and window_text and fuzzy_evidence_match(example, window_text, threshold=0.8):
                                     sid = window[0].get("id")
                                     if isinstance(sid, int):
@@ -1404,14 +1404,14 @@ def normalize_enrichments(
                     # Extremely conservative: only remove post_hook when there is basically
                     # no evidence of active participation.
                     if target_turns <= 2 and max_target_len < 30 and not questionish:
-                        fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
+                        replacement_phase = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
                         for sid, ph in list(tp_map.items()):
                             if ph == "post_hook":
-                                tp_map[sid] = fallback
+                                tp_map[sid] = replacement_phase
                                 tp_changed = True
                         if tp_changed:
                             repairs.append(
-                                f"conv {conv_id}: downgraded post_hook -> {fallback} (minimal target engagement)"
+                                f"conv {conv_id}: downgraded post_hook -> {replacement_phase} (minimal target engagement)"
                             )
 
                     # If we have confident target IDs from sanitized metadata, require post_hook
@@ -1442,14 +1442,14 @@ def normalize_enrichments(
                                     has_confident_target_post_hook = True
                                     break
                         if not has_confident_target_post_hook:
-                            fallback = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
+                            replacement_phase = "pre_hook" if "pre_hook" in set(tp_map.values()) else "open"
                             for sid, ph in list(tp_map.items()):
                                 if ph == "post_hook":
-                                    tp_map[sid] = fallback
+                                    tp_map[sid] = replacement_phase
                                     tp_changed = True
                             if tp_changed:
                                 repairs.append(
-                                    f"conv {conv_id}: downgraded post_hook -> {fallback} "
+                                    f"conv {conv_id}: downgraded post_hook -> {replacement_phase} "
                                     f"(no confident target speaker support)"
                                 )
 
@@ -1475,14 +1475,14 @@ def normalize_enrichments(
                 close_start = min(close_segs) if close_segs else None
 
                 if close_start is not None:
-                    # Pick fallback for any close labels *before* close_start.
+                    # Pick replacement phase for any close labels *before* close_start.
                     pre_phases = [
                         ph for sid, ph in tp_map.items()
                         if isinstance(sid, int) and sid < close_start and ph != "close"
                     ]
-                    fallback_close = "pre_hook"
+                    replacement_close_phase = "pre_hook"
                     if pre_phases:
-                        fallback_close = max(pre_phases, key=lambda p: phase_rank2.get(p, 0))
+                        replacement_close_phase = max(pre_phases, key=lambda p: phase_rank2.get(p, 0))
 
                     for sid, ph in list(tp_map.items()):
                         if sid >= close_start:
@@ -1491,7 +1491,7 @@ def normalize_enrichments(
                                 tp_changed = True
                         else:
                             if ph == "close":
-                                tp_map[sid] = fallback_close
+                                tp_map[sid] = replacement_close_phase
                                 tp_changed = True
 
                     if tp_changed:
@@ -1549,12 +1549,12 @@ def normalize_enrichments(
 
                         if has_cta and not conv_has_close_cue:
                             non_close_phases = [p for p in tp_map.values() if p != "close"]
-                            fallback_close = "pre_hook"
+                            replacement_close_phase = "pre_hook"
                             if non_close_phases:
-                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
+                                replacement_close_phase = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
                             for sid, ph in list(tp_map.items()):
                                 if ph == "close":
-                                    tp_map[sid] = fallback_close
+                                    tp_map[sid] = replacement_close_phase
                                     tp_changed = True
                             if tp_changed:
                                 repairs.append(
@@ -1562,12 +1562,12 @@ def normalize_enrichments(
                                 )
                         elif not conv_has_close_cue:
                             non_close_phases = [p for p in tp_map.values() if p != "close"]
-                            fallback_close = "pre_hook"
+                            replacement_close_phase = "pre_hook"
                             if non_close_phases:
-                                fallback_close = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
+                                replacement_close_phase = max(non_close_phases, key=lambda p: phase_rank2.get(p, 0))
                             for sid, ph in list(tp_map.items()):
                                 if ph == "close":
-                                    tp_map[sid] = fallback_close
+                                    tp_map[sid] = replacement_close_phase
                                     tp_changed = True
                             if tp_changed:
                                 repairs.append(
@@ -2093,16 +2093,13 @@ def validate_enrichment_output(
                 ))
                 continue
             reason_code_raw = rec.get("reason_code")
-            reason_fallback_raw = rec.get("reason")
             reason_code: Optional[str] = None
             if isinstance(reason_code_raw, str) and reason_code_raw.strip():
                 reason_code = reason_code_raw.strip()
-            elif isinstance(reason_fallback_raw, str) and reason_fallback_raw.strip():
-                reason_code = reason_fallback_raw.strip()
             if not reason_code:
                 results.append(ValidationResult(
                     "error", "dropped_candidate_missing_reason_code",
-                    f"dropped_candidates[{idx}] is missing reason_code/reason"
+                    f"dropped_candidates[{idx}] is missing reason_code"
                 ))
                 continue
             if reason_code not in KNOWN_DROPPED_CANDIDATE_REASONS:
@@ -2365,7 +2362,7 @@ def build_stage07_evidence_allowlist(
 
     Preferred source is Stage 06d/06e conversation metadata field
     ``stage07_evidence_segment_ids``. For backward compatibility with older
-    Stage 06c inputs, we derive a conservative fallback from segment fields.
+    Stage 06c inputs, we derive a conservative default from segment fields.
     """
     allow_by_conv: Dict[int, Set[int]] = {}
 
@@ -2603,7 +2600,7 @@ def enforce_stage07_evidence_allowlist(
                 if isinstance(seg_id, int) and seg_id in allow_ids:
                     kept_techniques.append(tech)
                     continue
-                # Defensive fallback (should be covered by reason function).
+                # Defensive default (should be covered by reason function).
                 dropped_count += 1
                 _record_drop(
                     {
@@ -4061,8 +4058,10 @@ class ParsedEnrichmentResponse:
 def parse_enrichment_response(response: str) -> ParsedEnrichmentResponse:
     """Parse JSON response from LLM.
 
-    Handles both new format (JSON object with enrichments/low_quality_segments/transcript_artifacts)
-    and legacy format (JSON array of enrichments with transcript_artifact entries mixed in).
+    Expected format is a JSON object with:
+    - enrichments
+    - low_quality_segments (optional)
+    - transcript_artifacts (optional)
     """
     empty_result = ParsedEnrichmentResponse([], [], [])
 
@@ -4080,12 +4079,6 @@ def parse_enrichment_response(response: str) -> ParsedEnrichmentResponse:
                     low_quality_segments=data.get("low_quality_segments", []),
                     transcript_artifacts=data.get("transcript_artifacts", []),
                 )
-
-        # Try to find JSON array in code block (legacy format)
-        code_block_arr_match = re.search(r"```(?:json)?\s*(\[[\s\S]*?\])\s*```", response)
-        if code_block_arr_match:
-            arr = json.loads(code_block_arr_match.group(1))
-            return _parse_legacy_array(arr)
 
         # Try to find raw JSON object
         obj_start = response.find("{")
@@ -4107,36 +4100,11 @@ def parse_enrichment_response(response: str) -> ParsedEnrichmentResponse:
                             )
                         break
 
-        # Try to find raw JSON array (legacy format)
-        arr_start = response.find("[")
-        if arr_start != -1:
-            bracket_count = 0
-            for i, char in enumerate(response[arr_start:], arr_start):
-                if char == "[":
-                    bracket_count += 1
-                elif char == "]":
-                    bracket_count -= 1
-                    if bracket_count == 0:
-                        json_str = response[arr_start:i + 1]
-                        arr = json.loads(json_str)
-                        return _parse_legacy_array(arr)
-
     except (json.JSONDecodeError, ValueError) as e:
         print(f"[07.LLM.content] JSON parse error: {e}")
         print(f"[07.LLM.content] Response preview: {response[:500]}...")
 
     return empty_result
-
-
-def _parse_legacy_array(arr: List[Dict]) -> ParsedEnrichmentResponse:
-    """Parse legacy format where transcript_artifacts are mixed in the array."""
-    transcript_artifacts = [e for e in arr if e.get("type") == "transcript_artifact"]
-    enrichments = [e for e in arr if e.get("type") != "transcript_artifact"]
-    return ParsedEnrichmentResponse(
-        enrichments=enrichments,
-        low_quality_segments=[],
-        transcript_artifacts=transcript_artifacts,
-    )
 
 
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
@@ -4192,7 +4160,7 @@ def _process_non_infield(
     commentary_blocks = group_commentary_blocks(segments)
 
     prompt = build_talking_head_prompt(segments, video_id)
-    print(f"{LOG_PREFIX}   Calling Claude CLI (talking_head prompt, lane=non_infield)...")
+    print(f"{LOG_PREFIX}   Calling Claude CLI (talking_head prompt, routing=non_infield)...")
 
     start_time = time.time()
     response = call_claude(
@@ -4395,7 +4363,7 @@ def process_video_file(
     # --- Non-infield early return ---
     if routing_lane == "non_infield" and not dry_run:
         print(f"[07.LLM.content]   {len(segments)} segments, type={video_type}")
-        print(f"[07.LLM.content]   Routing lane: non_infield")
+        print(f"[07.LLM.content]   Routing: non_infield")
         return _process_non_infield(
             data=data,
             segments=segments,
@@ -4429,13 +4397,13 @@ def process_video_file(
     allowlisted_segments_total = sum(len(v) for v in stage07_evidence_allowlist.values())
     anchored_segments_total = sum(len(v) for v in stage07_anchor_allowlist.values())
 
-    lane_reason = (
+    route_reason = (
         f"forced={force_lane}" if force_lane
         else f"approaches={len(approach_convs)}"
     )
     print(f"[07.LLM.content]   {len(segments)} segments, {len(approach_convs)} approaches, "
           f"{len(commentary_blocks)} commentary blocks, type={video_type}")
-    print(f"[07.LLM.content]   Routing lane: {routing_lane} ({lane_reason})")
+    print(f"[07.LLM.content]   Routing: {routing_lane} ({route_reason})")
     print(
         f"[07.LLM.content]   Stage07 evidence allowlist: "
         f"{len(stage07_evidence_allowlist)} convs, {allowlisted_segments_total} segment ids"
@@ -4451,7 +4419,7 @@ def process_video_file(
     if confidence_flagged_convs:
         print(f"{LOG_PREFIX}   06h confidence flags: {confidence_flagged_convs} conversation(s) flagged")
 
-    # Determine if windowing applies (D13b: infield lane with enough segments)
+    # Determine if windowing applies (D13b: infield routing with enough segments)
     use_windowing = (
         routing_lane != "non_infield"
         and video_type in ("infield", "compilation")
@@ -4468,13 +4436,13 @@ def process_video_file(
     if dry_run:
         if use_windowing and windows:
             print(f"{LOG_PREFIX}   [DRY RUN] Would use {len(windows)} windows "
-                  f"(window_size={window_size}, overlap={overlap}, lane={routing_lane})")
+                  f"(window_size={window_size}, overlap={overlap}, routing={routing_lane})")
             for w in windows:
                 print(f"{LOG_PREFIX}     Window {w.index + 1}: {len(w.core_segments)} core, "
                       f"{len(w.context_before)} ctx_before, {len(w.context_after)} ctx_after, "
                       f"convs={sorted(w.core_conversation_ids)}")
         else:
-            print(f"{LOG_PREFIX}   [DRY RUN] Would call Claude CLI ({video_type} prompt, lane={routing_lane})")
+            print(f"{LOG_PREFIX}   [DRY RUN] Would call Claude CLI ({video_type} prompt, routing={routing_lane})")
         return {"conversations": len(approach_convs), "enriched": 0, "routing_lane": routing_lane}
 
     # From here on, routing_lane is always infield (non_infield returned early above)
@@ -4552,7 +4520,7 @@ def process_video_file(
             stage07_anchor_allowlist=stage07_anchor_allowlist,
         )
 
-        print(f"{LOG_PREFIX}   Calling Claude CLI ({prompt_variant} prompt, lane={routing_lane})...")
+        print(f"{LOG_PREFIX}   Calling Claude CLI ({prompt_variant} prompt, routing={routing_lane})...")
 
         start_time = time.time()
         response = call_claude(
@@ -5214,7 +5182,7 @@ def find_existing_output_path(
     output_root_dir: Optional[Path] = None,
     input_root: Optional[Path] = None,
 ) -> Optional[Path]:
-    """Find existing Stage 07 output across canonical, source-flat, and root-flat layouts."""
+    """Find existing Stage 07 output in canonical layout only."""
     preferred = compute_output_path(
         input_path,
         preferred_output_dir,
@@ -5222,15 +5190,6 @@ def find_existing_output_path(
     )
     if preferred.exists():
         return preferred
-    # Legacy source-flat fallback.
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    # Legacy root-flat fallback.
-    if output_root_dir is not None:
-        legacy_root = compute_output_path(input_path, output_root_dir)
-        if legacy_root.exists():
-            return legacy_root
     return None
 
 
@@ -5410,10 +5369,11 @@ def main() -> None:
         help="Retry attempts for startup Claude health probe (default: 2).",
     )
     parser.add_argument(
-        "--force-lane",
+        "--force-routing",
+        dest="force_lane",
         choices=["infield", "non_infield"],
         default=None,
-        help="Force all videos into a specific routing lane (default: auto-detect from video_type + confidence).",
+        help="Force all videos into a specific routing mode (default: auto-detect from video_type + confidence).",
     )
     parser.add_argument(
         "--window-size",
@@ -5564,34 +5524,14 @@ def main() -> None:
         sources_map = load_manifest_sources(manifest_path)
         total_convs = 0
         total_enriched = 0
-        root_flat_files: Optional[List[Path]] = None
-
         for src_name, vid_ids in sorted(sources_map.items()):
             src_in_dir = in_root / src_name
 
             src_out_dir = out_base / src_name
-            src_files: List[Path] = []
-            if src_in_dir.exists():
-                src_files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
-
-            covered_ids = {
-                vid for vid in (extract_video_id_from_path(path) for path in src_files)
-                if vid is not None
-            }
-            missing_vid_ids = [vid for vid in vid_ids if vid not in covered_ids]
-
-            fallback_files: List[Path] = []
-            if missing_vid_ids:
-                if root_flat_files is None:
-                    root_flat_files = find_input_files(in_root)
-                fallback_files = [
-                    path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
-                    if path not in src_files
-                ]
-                if fallback_files:
-                    print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {in_root}")
-
-            files = src_files + fallback_files
+            if not src_in_dir.exists():
+                print(f"[07.LLM.content] Skipping {src_name}: no source directory in input")
+                continue
+            files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
             if not files:
                 print(f"[07.LLM.content] Skipping {src_name}: no manifest videos found in input")
                 continue

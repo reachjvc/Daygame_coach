@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -79,6 +80,14 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const router = useRouter()
   const [templates, setTemplates] = useState<ReviewTemplateRow[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<ReviewTemplateRow | null>(null)
+
+  // Browser back: return to template selection instead of leaving page
+  const handleBarrierBack = useCallback(() => {
+    setSelectedTemplate(null)
+    setFormValues({})
+    setSubmitError(null)
+  }, [])
+  useHistoryBarrier(selectedTemplate !== null, handleBarrierBack)
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStatsData | null>(null)
   const [previousCommitment, setPreviousCommitment] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)

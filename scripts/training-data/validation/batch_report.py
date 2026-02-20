@@ -46,6 +46,28 @@ SEMANTIC_JUDGE_DEFAULT_PROMPT_VERSION = "1.2.9"
 SEMANTIC_JUDGE_DEFAULT_MAX_SEGMENTS = 200
 
 
+def _canonical_issue_severity(raw: Any) -> str:
+    sev = str(raw or "").strip().lower()
+    if sev in {"critical", "major", "minor", "info"}:
+        return sev
+    if sev in {"error", "fail", "reject"}:
+        return "major"
+    if sev in {"warning", "warn", "flag"}:
+        return "minor"
+    return "info"
+
+
+def _canonical_gate_decision_from_result(result: Dict[str, Any], issue_severity: str) -> str:
+    gate = str(result.get("gate_decision", "")).strip().lower()
+    if gate in {"pass", "review", "block"}:
+        return gate
+    if issue_severity in {"critical", "major"}:
+        return "block"
+    if issue_severity == "minor":
+        return "review"
+    return "pass"
+
+
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
@@ -551,6 +573,8 @@ def compute_batch_stats(
     total_warnings = 0
     warning_types: Counter = Counter()
     error_types: Counter = Counter()
+    canonical_gate_counts: Counter = Counter()
+    canonical_issue_severity_counts: Counter = Counter()
 
     stage_validation: Dict[str, Dict[str, Any]] = {}
 
@@ -573,6 +597,18 @@ def compute_batch_stats(
         stage_validation[stage]["total_warnings"] += summary.get("warnings", 0)
 
         for result in vf.get("results", []):
+            if not isinstance(result, dict):
+                continue
+            issue_severity = _canonical_issue_severity(
+                result.get("issue_severity")
+            )
+            if issue_severity == "info":
+                issue_severity = _canonical_issue_severity(result.get("severity"))
+            canonical_issue_severity_counts[issue_severity] += 1
+            canonical_gate_counts[
+                _canonical_gate_decision_from_result(result, issue_severity)
+            ] += 1
+
             if result.get("severity") == "error":
                 error_types[result.get("check", "unknown")] += 1
                 stage_validation[stage]["error_types"][result.get("check", "unknown")] += 1
@@ -586,6 +622,10 @@ def compute_batch_stats(
         "total_warnings": total_warnings,
         "error_types": dict(error_types.most_common()),
         "warning_types": dict(warning_types.most_common()),
+        "canonical": {
+            "gate_decisions": dict(canonical_gate_counts),
+            "issue_severity": dict(canonical_issue_severity_counts),
+        },
         "by_stage": {
             stage: {
                 "total_validations": d["total_validations"],
@@ -1142,6 +1182,10 @@ def main() -> None:
         print(f"  Total validations:        {val.get('total_validations', 0)}")
         print(f"  Total errors:             {val.get('total_errors', 0)}")
         print(f"  Total warnings:           {val.get('total_warnings', 0)}")
+        canonical = val.get("canonical", {})
+        if canonical:
+            print(f"  Canonical gates:          {canonical.get('gate_decisions', {})}")
+            print(f"  Canonical severity:       {canonical.get('issue_severity', {})}")
         if val.get("error_types"):
             print(f"  Error types:              {val.get('error_types', {})}")
         if val.get("warning_types"):

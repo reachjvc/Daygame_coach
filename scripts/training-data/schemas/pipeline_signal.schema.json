@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pipeline Signal",
+  "description": "Canonical quality signal emitted by pipeline validation and gating layers.",
+  "type": "object",
+  "required": [
+    "issue_code",
+    "issue_severity",
+    "gate_decision",
+    "scope_type",
+    "origin_stage",
+    "message"
+  ],
+  "properties": {
+    "issue_code": {
+      "type": "string",
+      "pattern": "^[a-z0-9_]+$",
+      "minLength": 3
+    },
+    "issue_severity": {
+      "type": "string",
+      "enum": ["critical", "major", "minor", "info"]
+    },
+    "gate_decision": {
+      "type": "string",
+      "enum": ["pass", "review", "block"]
+    },
+    "scope_type": {
+      "type": "string",
+      "enum": ["segment", "conversation", "video", "batch"]
+    },
+    "signal_class": {
+      "type": "string",
+      "enum": [
+        "artifact_contract",
+        "conversation_structure",
+        "other_quality",
+        "quarantine_gate",
+        "routing_mismatch",
+        "taxonomy_coverage",
+        "transcript_quality"
+      ]
+    },
+    "remediation_path": {
+      "type": "string",
+      "enum": [
+        "contract_repair",
+        "conversation_review",
+        "manual_review",
+        "quarantine",
+        "routing_policy_review",
+        "taxonomy_review",
+        "transcript_review"
+      ]
+    },
+    "scope_id": {
+      "type": ["string", "integer", "null"]
+    },
+    "video_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{11}$"
+    },
+    "origin_stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "legacy": {
+      "type": "object",
+      "description": "Optional original issue payload for traceability."
+    }
+  },
+  "additionalProperties": true
+}

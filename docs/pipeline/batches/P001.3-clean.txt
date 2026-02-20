@@ -1,0 +1,4 @@
+# P001.3 clean subset (2 videos passing quality gate)
+# Format: source_name | video_folder_name
+austen_summers_meets_girls | How to Take Home a Swedish Blonde [D1t_K8hjJzc]
+austen_summers_meets_girls | Picking Up Cosplay Girls At Comic-Con  2019 [XDZbqorwGNk]

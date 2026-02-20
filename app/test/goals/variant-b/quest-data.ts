@@ -164,13 +164,13 @@ const UNIT_MAP: Record<string, string> = {
   l3_second_dates: "dates",
   l3_kiss_closes: "closes",
   l3_lays: "lays",
-  l3_rotation_size: "women",
+
   l3_sustained_rotation: "/week",
   l3_texting_initiated: "/week",
   l3_number_to_date_conversion: "conversions",
   l3_response_rate: "replies",
   l3_dates_planned: "/week",
-  l3_date_to_second_date: "dates",
+
   l3_creative_dates: "dates",
   l3_physical_escalation: "dates",
   l3_women_dating: "women",

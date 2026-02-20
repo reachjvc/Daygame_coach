@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext";
 import Link from "next/link";
 import {
   ChevronDown,
@@ -88,6 +89,13 @@ export function ScenariosHub({
   const [currentLanguage, setCurrentLanguage] = useState<"da" | "en">(initialLanguage);
 
   const recommendedScenarioIds = getRecommendedScenarios();
+
+  // Browser back: close active scenario instead of leaving page
+  const handleBarrierBack = useCallback(() => {
+    setActiveScenario(null);
+    setSelectedSituationId(null);
+  }, []);
+  useHistoryBarrier(activeScenario !== null, handleBarrierBack);
 
   // Handle language change from settings bar
   const handleLanguageChange = async (language: string) => {

@@ -5,8 +5,9 @@
   "sub_batch_size": 10,
   "sub_batches": {
     "P003.1": {
-      "status": "not_started",
-      "video_count": 10
+      "status": "in_progress",
+      "video_count": 10,
+      "current_stage": "09"
     },
     "P003.2": {
       "status": "not_started",

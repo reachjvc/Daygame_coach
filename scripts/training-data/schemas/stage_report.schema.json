@@ -47,7 +47,31 @@
         "properties": {
           "severity": { "type": "string", "enum": ["error", "warning", "info"] },
           "check": { "type": "string" },
-          "message": { "type": "string" }
+          "message": { "type": "string" },
+          "signal_class": {
+            "type": "string",
+            "enum": [
+              "artifact_contract",
+              "conversation_structure",
+              "other_quality",
+              "quarantine_gate",
+              "routing_mismatch",
+              "taxonomy_coverage",
+              "transcript_quality"
+            ]
+          },
+          "remediation_path": {
+            "type": "string",
+            "enum": [
+              "contract_repair",
+              "conversation_review",
+              "manual_review",
+              "quarantine",
+              "routing_policy_review",
+              "taxonomy_review",
+              "transcript_review"
+            ]
+          }
         },
         "required": ["severity", "check", "message"]
       }

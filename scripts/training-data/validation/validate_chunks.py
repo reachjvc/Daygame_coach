@@ -33,6 +33,7 @@ LOG_PREFIX = "[validate-chunks]"
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 _VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _STABLE_SOURCE_KEY_RE = re.compile(r".+[\\/][A-Za-z0-9_-]{11}\.txt$")
+_SNAKE_RE = re.compile(r"[^a-z0-9_]+")
 
 
 def repo_root() -> Path:
@@ -79,6 +80,11 @@ class Issue:
     path: str
 
     def to_dict(self) -> Dict[str, Any]:
+        issue_severity = _canonical_issue_severity(self.severity)
+        gate_decision = _canonical_gate_decision(issue_severity)
+        scope_type = "video" if _is_valid_video_id(self.video_id) else "batch"
+        issue_code = _canonical_issue_code(self.check)
+        signal_class = _canonical_signal_class(self.check)
         return {
             "severity": self.severity,
             "video_id": self.video_id,
@@ -86,7 +92,63 @@ class Issue:
             "check": self.check,
             "message": self.message,
             "path": self.path,
+            "issue_code": issue_code,
+            "issue_severity": issue_severity,
+            "gate_decision": gate_decision,
+            "scope_type": scope_type,
+            "origin_stage": "09.chunk-embed-validation",
+            "signal_class": signal_class,
+            "remediation_path": _canonical_remediation_path(signal_class),
         }
+
+
+def _canonical_issue_code(raw: str) -> str:
+    text = _SNAKE_RE.sub("_", str(raw or "").strip().lower()).strip("_")
+    return text or "unspecified_issue"
+
+
+def _canonical_issue_severity(legacy_severity: str) -> str:
+    sev = str(legacy_severity or "").strip().lower()
+    if sev in {"critical", "major", "minor", "info"}:
+        return sev
+    if sev == "error":
+        return "major"
+    if sev == "warning":
+        return "minor"
+    return "info"
+
+
+def _canonical_gate_decision(issue_severity: str) -> str:
+    if issue_severity in {"critical", "major"}:
+        return "block"
+    if issue_severity == "minor":
+        return "review"
+    return "pass"
+
+
+def _canonical_signal_class(check: str) -> str:
+    chk = str(check or "").strip().lower()
+    if chk.startswith("missing_") or chk.startswith("invalid_") or chk in {
+        "bad_chunk_index",
+        "bad_total_chunks",
+        "total_chunks_mismatch",
+        "missing_chunk_indices",
+        "duplicate_chunk_index",
+        "inconsistent_embedding_dims",
+        "missing_metadata",
+    }:
+        return "artifact_contract"
+    if chk in {"empty_content"}:
+        return "transcript_quality"
+    return "other_quality"
+
+
+def _canonical_remediation_path(signal_class: str) -> str:
+    if signal_class == "artifact_contract":
+        return "contract_repair"
+    if signal_class == "transcript_quality":
+        return "transcript_review"
+    return "manual_review"
 
 
 def _is_valid_video_id(raw: Any) -> bool:
@@ -111,8 +173,17 @@ def validate_chunks_file(path: Path) -> Tuple[Optional[str], Optional[str], List
     channel = data.get("channel") if isinstance(data.get("channel"), str) else ""
     video_id = data.get("videoId") if isinstance(data.get("videoId"), str) else None
     if not _is_valid_video_id(video_id):
-        # Try fallback: extract from filename stem.
-        video_id = _extract_video_id_from_text(path.name)
+        issues.append(
+            Issue(
+                "error",
+                "unknown",
+                channel or "unknown",
+                "missing_or_invalid_video_id",
+                "Top-level 'videoId' is missing or invalid",
+                str(path),
+            )
+        )
+        video_id = None
 
     vid = video_id if isinstance(video_id, str) else "unknown"
     src = channel or "unknown"

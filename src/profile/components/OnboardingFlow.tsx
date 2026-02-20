@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
+import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -66,9 +67,12 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
     }
   };
 
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
+  const handleBack = useCallback(() => {
+    if (step > 1) setStep((s) => s - 1);
+  }, [step]);
+
+  // Browser back: go to previous step instead of leaving onboarding
+  useHistoryBarrier(step > 1, handleBack);
 
   const canProceed = () => {
     switch (step) {

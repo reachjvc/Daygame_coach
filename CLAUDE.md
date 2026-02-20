@@ -45,7 +45,8 @@ All database access via `*Repo.ts` files. Direct Supabase imports outside `src/d
 
 ### 3. No Fallback Mechanisms Scripts must fail explicitly - no silent fallbacks. Fix the issue or ask the user.
 
-### 4. Quality Over Speed 20 extra hours for better architecture is worth it.
+### 4. Quality Over Speed — Identify and Resolve Trade-offs
+20 extra hours for better architecture is worth it. Before implementing any design, actively ask: "what are the trade-offs and edge cases?" Don't wait to discover them during review. Never ship code with a "known trade-off" or "acceptable for v1" caveat when the correct solution is achievable now. If a design has an identified edge case that produces wrong behavior, fix it in the design before implementing. We don't introduce bugs we already know about.
 
 ### 5. Security Rules (CRITICAL for Auth/RLS/Payments)
 
@@ -140,3 +141,15 @@ CORRECT ORDER:
 2. Update doc               ← Do this FIRST
 3. Tell user "Done!"        ← Only after doc is updated
 ```
+
+### 12. Test pages
+Whenever you create something for the test pages, it must be accessible from the /test dashboard before returning to user
+
+### 13. Multi-Agent Orchestration
+
+**Debates = sequential, not parallel.** Don't send all agents the same prompt simultaneously — that produces parallel monologues, not debate. Instead:
+1. Agent A makes a claim → route to Agent B to react to *that specific thing* → B responds → route to C or back to A → repeat. The chain IS the debate.
+2. Never batch "everyone write your position, then I'll relay." That's a panel Q&A, not a debate.
+3. Keep exchanges short (150 words max per turn) so the conversation moves fast.
+
+**Never make user re-prompt for progress.** Use `run_in_background` + poll inbox. Act on results immediately. If slow, proactively update user.

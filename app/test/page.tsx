@@ -120,10 +120,52 @@ const testPages = [
     icon: Rocket,
   },
   {
+    name: "Goal Flow V5",
+    href: "/test/goalsv5",
+    description: "10 creative V5 variants — Aurora-Orrery, Living Dashboard, Trophy Room, Neural Pathways + 6 more",
+    icon: Sparkles,
+  },
+  {
+    name: "Goal Flow V6",
+    href: "/test/goalsv6",
+    description: "Streamlined Aurora-Orrery — merged goal selection + target editing into one step, 4-step wizard",
+    icon: Sparkles,
+  },
+  {
+    name: "Goal Flow V7",
+    href: "/test/goalsv7",
+    description: "4 creative variants — improved aurora, enhanced animations, cohesive theming across all steps",
+    icon: Sparkles,
+  },
+  {
+    name: "V7 × 2 (threshold test)",
+    href: "/test/goalsv7b",
+    description: "Same V7 variants A+B in single page (~200K) — tests compilation threshold",
+    icon: Sparkles,
+  },
+  {
+    name: "V7 × 3 (threshold test)",
+    href: "/test/goalsv7c",
+    description: "Same V7 variants A+B+C in single page (~300K) — tests compilation threshold",
+    icon: Sparkles,
+  },
+  {
+    name: "V7 × 4 (all variants)",
+    href: "/test/goalsv7d",
+    description: "All 4 V7 variants A+B+C+D in single page with tab switcher",
+    icon: Sparkles,
+  },
+  {
     name: "5 Goal Philosophies",
     href: "/test/5views_goals",
     description: "5 radically different approaches to goal-setting: Anti-Goals, One Thing, Story Arc, Garden, Contracts",
     icon: Brain,
+  },
+  {
+    name: "Goal Flow V8",
+    href: "/test/goalsv8",
+    description: "Cosmic Particles base + per-category summary colors from Liquid Void, sorted badge tiers",
+    icon: Sparkles,
   },
   {
     name: "Competitor Sites",

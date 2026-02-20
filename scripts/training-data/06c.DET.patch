@@ -24,7 +24,7 @@ Auto-applies:
 
 Can optionally apply limited deterministic `other_flags` fixes:
   - mixed-speaker / run-on transcript artifacts: demote cited segments to speaker_role=unknown
-    (enabled only with --apply-mixed-speaker-other-flags)
+    (disabled in strict mode)
 
 Legacy compatibility:
   - backfills/normalizes top-level transcript_confidence when missing/invalid
@@ -67,13 +67,14 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 import jsonschema
 
 from batch.manifest_parser import load_manifest, load_manifest_sources, manifest_filter_files
+from batch.quarantine_helpers import get_quarantine_block_reason, load_quarantine_video_ids
 
 
 # ---------------------------
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06c.DET.patch-v1.8"  # v1.8: legacy transcript_confidence compatibility normalization
+PIPELINE_VERSION = "06c.DET.patch-v2.0"  # v2.0: strict single-path patching
 
 LOG_PREFIX = "[06c.DET.patch]"
 
@@ -744,8 +745,6 @@ def patch_file(
     verification_path: Optional[Path],
     output_path: Path,
     dry_run: bool = False,
-    allow_reject: bool = False,
-    allow_invalid_verification: bool = False,
     apply_mixed_speaker_other_flags: bool = False,
 ) -> Dict[str, Any]:
     """Patch a single conversations file using its verification report."""
@@ -767,35 +766,10 @@ def patch_file(
             print(f"{LOG_PREFIX}     {repair}")
 
     if verification_path is None or not verification_path.exists():
-        # No verification file — copy unchanged
-        print(f"{LOG_PREFIX}   No verification report found — copying unchanged")
-
-        patched["patch_metadata"] = {
-            "patched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "pipeline_version": PIPELINE_VERSION,
-            "apply_mixed_speaker_other_flags": apply_mixed_speaker_other_flags,
-            "compatibility_repairs": compatibility_repairs,
-            "verification_verdict": None,
-            "verification_file": None,
-            "fixes_applied": [],
-            "fixes_applied_count": 0,
-            "flags_not_fixed": [],
-            "flags_not_fixed_count": 0,
-            "note": "No verification report found — copied unchanged",
-        }
-
-        # Even when copying unchanged, ensure the output is schema-valid.
-        _validate_conversations_schema(patched)
-
-        if not dry_run:
-            output_path.parent.mkdir(parents=True, exist_ok=True)
-            with output_path.open("w", encoding="utf-8") as f:
-                json.dump(patched, f, indent=2, ensure_ascii=False)
-            print(f"{LOG_PREFIX}   Output: {output_path}")
-        else:
-            print(f"{LOG_PREFIX}   [DRY RUN] Would copy unchanged to {output_path}")
-
-        return {"verdict": None, "fixes": 0, "flags": 0}
+        raise RuntimeError(
+            f"Missing required 06b verification report for {conversations_path.name}. "
+            "06c runs strict and will not patch without a valid 06b artifact."
+        )
 
     # Load verification report
     with verification_path.open("r", encoding="utf-8") as f:
@@ -805,23 +779,19 @@ def patch_file(
         _validate_verification_schema(verification_data)
     except RuntimeError as e:
         verification_schema_valid = False
-        if not allow_invalid_verification:
-            raise RuntimeError(
-                f"Verification report schema invalid for {conversations_path.name}: {e}. "
-                "Fix/re-run 06b.LLM.verify, or use --allow-invalid-verification for legacy reports."
-            )
-        print(f"{LOG_PREFIX}   WARNING: {e}")
-        print(f"{LOG_PREFIX}   WARNING: Continuing due to --allow-invalid-verification")
+        raise RuntimeError(
+            f"Verification report schema invalid for {conversations_path.name}: {e}. "
+            "Fix/re-run 06b.LLM.verify."
+        )
 
     verdict = verification_data.get("verdict", "FLAG")
     print(f"{LOG_PREFIX}   Verification verdict: {verdict}")
     print(f"{LOG_PREFIX}   Verification file: {verification_path}")
 
-    if verdict == "REJECT" and not allow_reject:
+    if verdict == "REJECT":
         raise RuntimeError(
             f"Verification verdict is REJECT for {conversations_path.name}. "
-            "By default 06c refuses to patch REJECT outputs. Re-run with --allow-reject if you want to apply "
-            "high-confidence deterministic fixes anyway (useful for iteration / salvage)."
+            "06c runs strict and will not patch REJECT outputs."
         )
 
     if verdict == "APPROVE":
@@ -996,27 +966,13 @@ def find_existing_output_path(
     )
     if preferred.exists():
         return preferred
-    # Legacy source-flat fallback.
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    # Legacy root-flat fallback.
-    if output_root_dir is not None:
-        root_flat = compute_output_path(input_path, output_root_dir)
-        if root_flat.exists():
-            return root_flat
     return None
 
 
 def find_verification_for(
     conversations_path: Path, s06_dir: Path, s06b_dir: Path
 ) -> Optional[Path]:
-    """Find the matching verification JSON for a conversations file.
-
-    Tries two strategies:
-    1. Mirror the relative path from s06_dir into s06b_dir, swapping extension
-    2. Flat lookup in s06b_dir root (for files not in source subdirectories)
-    """
+    """Find the matching verification JSON via canonical mirrored layout."""
     stem = conversations_path.stem
     if stem.endswith(".conversations"):
         stem = stem[:-len(".conversations")]
@@ -1030,15 +986,6 @@ def find_verification_for(
             return candidate
     except ValueError:
         pass
-
-    # Strategy 2: Flat lookup at s06b root
-    candidate = s06b_dir / verification_name
-    if candidate.exists():
-        return candidate
-
-    # Strategy 3: Search recursively in s06b_dir
-    for found in s06b_dir.rglob(verification_name):
-        return found
 
     return None
 
@@ -1127,22 +1074,8 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
-        "--allow-reject",
-        action="store_true",
-        help="Allow patching when 06b verdict is REJECT (apply high-confidence deterministic fixes anyway)"
-    )
-    parser.add_argument(
-        "--allow-invalid-verification",
-        action="store_true",
-        help="Allow patching with schema-invalid 06b verification reports (legacy fallback; unsafe)",
-    )
-    parser.add_argument(
-        "--apply-mixed-speaker-other-flags",
-        action="store_true",
-        help=(
-            "Apply deterministic mixed-speaker other_flag demotions "
-            "(set cited run-on/merged segments to speaker_role=unknown)."
-        ),
+        "--quarantine-file",
+        help="Optional JSON file listing quarantined video IDs to skip",
     )
     parser.add_argument(
         "--debug",
@@ -1151,6 +1084,16 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    args._quarantine_ids = set()
+    if args.quarantine_file:
+        quarantine_path = Path(args.quarantine_file)
+        if not quarantine_path.is_absolute():
+            quarantine_path = repo_root() / quarantine_path
+        if not quarantine_path.exists():
+            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
+        args._quarantine_ids = load_quarantine_video_ids(quarantine_path)
+        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(args._quarantine_ids)} video ids)")
 
     if args.test:
         in_root = resolve_root_path(args.input_root, test_s06_root())
@@ -1191,6 +1134,11 @@ def _run_input(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
     input_path = input_path.resolve()
 
     if input_path.is_file():
+        quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
+        quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
+            return
         out_dir = Path(args.output) if args.output else out_base
         output_path = compute_output_path_with_layout(input_path, out_dir, input_root=in_base)
 
@@ -1204,9 +1152,7 @@ def _run_input(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
             verification_path,
             output_path,
             dry_run=args.dry_run,
-            allow_reject=args.allow_reject,
-            allow_invalid_verification=args.allow_invalid_verification,
-            apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+            apply_mixed_speaker_other_flags=False,
         )
         print(f"\n{LOG_PREFIX} Done. Verdict: {result.get('verdict')}, "
               f"Fixes: {result.get('fixes', 0)}, Flags: {result.get('flags', 0)}")
@@ -1229,6 +1175,8 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
 
     total_fixes = 0
     total_files = 0
+    skipped_quarantine = 0
+    quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
 
     for src_name, _ in parse_sources_file(sources_path):
         src_in_dir = in_base / src_name
@@ -1240,6 +1188,11 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
         files = find_input_files(src_in_dir)
 
         for input_file in files:
+            quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+            if quarantine_reason:
+                print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+                skipped_quarantine += 1
+                continue
             preferred_output = compute_output_path_with_layout(
                 input_file,
                 src_out_dir,
@@ -1260,9 +1213,7 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
                     verification_path,
                     preferred_output,
                     dry_run=args.dry_run,
-                    allow_reject=args.allow_reject,
-                    allow_invalid_verification=args.allow_invalid_verification,
-                    apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+                    apply_mixed_speaker_other_flags=False,
                 )
                 total_fixes += result.get("fixes", 0)
                 total_files += 1
@@ -1270,6 +1221,7 @@ def _run_sources(args, in_base: Path, verify_root: Path, out_base: Path) -> None
                 print(f"{LOG_PREFIX} Error: {e}")
 
     print(f"\n{LOG_PREFIX} Done. Patched {total_files} files, {total_fixes} total fixes")
+    print(f"{LOG_PREFIX} Skipped (quarantine): {skipped_quarantine}")
 
 
 def _run_manifest(args, in_base: Path, verify_root: Path, out_base: Path) -> None:
@@ -1328,13 +1280,20 @@ def _run_directory_with_files(
 
     processed = 0
     skipped = 0
+    skipped_quarantine = 0
     failed = 0
     consecutive_failures = 0
     total_fixes = 0
     total_flags = 0
+    quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
 
     for input_file in files:
         file_key = str(input_file.relative_to(in_dir))
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
+            continue
 
         if file_key in state.completed_files and not args.overwrite:
             skipped += 1
@@ -1372,9 +1331,7 @@ def _run_directory_with_files(
                 verification_path,
                 preferred_output,
                 dry_run=args.dry_run,
-                allow_reject=args.allow_reject,
-                allow_invalid_verification=args.allow_invalid_verification,
-                apply_mixed_speaker_other_flags=args.apply_mixed_speaker_other_flags,
+                apply_mixed_speaker_other_flags=False,
             )
             processed += 1
             consecutive_failures = 0
@@ -1401,6 +1358,7 @@ def _run_directory_with_files(
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed: {processed}")
     print(f"  Skipped:   {skipped}")
+    print(f"  Skipped (quarantine): {skipped_quarantine}")
     print(f"  Failed:    {failed}")
     print(f"  Fixes:     {total_fixes}")
     print(f"  Flags:     {total_flags}")
@@ -1411,6 +1369,9 @@ def _run_directory_with_files(
         if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
             print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
             sys.exit(1)
+    if failed > 0:
+        print(f"\n{LOG_PREFIX} HALTING: strict mode does not allow failed files")
+        sys.exit(1)
 
 
 def _run_named_source(args, in_base: Path, verify_root: Path, out_base: Path) -> None:

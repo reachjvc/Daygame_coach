@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
+import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -46,7 +47,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         <ViewportHeightUpdater />
-        {children}
+        <HistoryBarrierProvider>
+          {children}
+        </HistoryBarrierProvider>
       </body>
     </html>
   )

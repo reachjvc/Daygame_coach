@@ -449,22 +449,10 @@ def _write_all_outputs(out_json_path: Path, segments: List[Dict[str, Any]]) -> N
 # Audio selection
 # --------------------------
 
-def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "clean") -> Optional[Path]:
+def _pick_best_audio_in_video_dir(video_dir: Path) -> Optional[Path]:
     clean = sorted(video_dir.glob("*.audio.asr.clean16k.wav"))
-    raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
-    legacy = sorted(video_dir.glob("*.wav"))
-
-    if prefer == "raw" and raw:
-        return raw[0]
-    if prefer == "legacy" and legacy:
-        return legacy[0]
-
     if clean:
         return clean[0]
-    if raw:
-        return raw[0]
-    if legacy:
-        return legacy[0]
     return None
 
 
@@ -536,7 +524,6 @@ def batch_for_source(
     source_name: str,
     youtube_url: str,
     overwrite: bool,
-    prefer_audio: str,
     engine: AlignEngine,
     progress_interval: float,
     manifest_ids: Optional[Set[str]] = None,
@@ -608,9 +595,9 @@ def batch_for_source(
                 log(f"[03.EXT.align] WARN: No download folder for: {video_dir.name}")
                 continue
 
-            audio_path = _pick_best_audio_in_video_dir(download_video_dir, prefer=prefer_audio)
+            audio_path = _pick_best_audio_in_video_dir(download_video_dir)
             if audio_path is None:
-                log(f"[03.EXT.align] WARN: No audio found for: {video_dir.name}")
+                log(f"[03.EXT.align] WARN: No clean16k audio found for: {video_dir.name}")
                 continue
 
             # Output
@@ -708,7 +695,6 @@ if __name__ == "__main__":
     p.add_argument("--out", help="Single-file output .full.json.")
 
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
-    p.add_argument("--prefer-audio", choices=["clean", "raw", "legacy"], default="clean")
 
     p.add_argument("--language", default=os.environ.get("WHISPER_LANGUAGE", "en"))
     p.add_argument("--device", default=os.environ.get("WHISPERX_DEVICE", ""))
@@ -765,7 +751,6 @@ if __name__ == "__main__":
                 source_name=source_name,
                 youtube_url="",
                 overwrite=bool(args.overwrite),
-                prefer_audio=str(args.prefer_audio),
                 engine=engine,
                 progress_interval=args.progress_interval,
                 manifest_ids=vid_ids,
@@ -786,7 +771,6 @@ if __name__ == "__main__":
                 source_name=source_name,
                 youtube_url=youtube_url,
                 overwrite=bool(args.overwrite),
-                prefer_audio=str(args.prefer_audio),
                 engine=engine,
                 progress_interval=args.progress_interval,
             )
@@ -804,7 +788,6 @@ if __name__ == "__main__":
         source_name=str(args.source_name),
         youtube_url=str(args.youtube_url),
         overwrite=bool(args.overwrite),
-        prefer_audio=str(args.prefer_audio),
         engine=engine,
         progress_interval=args.progress_interval,
     )

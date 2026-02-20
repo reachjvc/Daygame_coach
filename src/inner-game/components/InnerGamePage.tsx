@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
@@ -45,6 +46,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
 
   // Welcome modal - only for first-time users
   const [showWelcome, setShowWelcome] = useState(false)
+
 
   // Fetch initial data (skip in preview mode)
   useEffect(() => {
@@ -238,6 +240,15 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
     if (!progress || progress.currentSubstep <= 0) return
     await updateProgress({ currentSubstep: progress.currentSubstep - 1 })
   }
+
+  // Browser back barriers (LIFO: substep → step → leaves page)
+  useHistoryBarrier(viewMode === "step", handleBackToHub)
+  useHistoryBarrier(
+    viewMode === "step" &&
+      progress?.currentStep === InnerGameStep.VALUES &&
+      (progress?.currentSubstep ?? 0) > 0,
+    handleValuesBack
+  )
 
   // Handle shadow completion
   const handleShadowComplete = async (response: string, inferredValues: InferredValue[]) => {

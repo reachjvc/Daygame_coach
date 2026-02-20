@@ -60,21 +60,13 @@ def find_conversations_file(
     video_id: str,
     stage06_root: Path,
 ) -> Optional[Path]:
-    """Find the .conversations.json file for a video in Stage 06 output.
-
-    Checks source-video layout first, then root-flat fallback.
-    """
+    """Find the .conversations.json file for a video in Stage 06 source layout."""
     # Source-video layout: data/06.LLM.video-type/<source>/*[video_id]*.conversations.json
     src_dir = stage06_root / source
     if src_dir.exists():
         for f in src_dir.rglob("*.conversations.json"):
             if f"[{video_id}]" in f.name and not f.name.endswith(".validation.json"):
                 return f
-
-    # Root-flat fallback: data/06.LLM.video-type/*[video_id]*.conversations.json
-    for f in stage06_root.glob("*.conversations.json"):
-        if f"[{video_id}]" in f.name and not f.name.endswith(".validation.json"):
-            return f
 
     return None
 

@@ -27,7 +27,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 VIDEO_ID_RE = re.compile(r"[A-Za-z0-9_-]{11}")
 
@@ -103,31 +103,117 @@ def merge_quarantine(
     return existing
 
 
-def extract_from_cross_stage_or_chunks(data: dict) -> tuple[Set[str], List[dict]]:
-    """Extract error-severity video IDs from validate_cross_stage or validate_chunks JSON."""
+def _extract_video_id_from_row(row: Dict[str, Any]) -> Optional[str]:
+    candidates: List[Any] = [row.get("video_id")]
+
+    scope = row.get("scope")
+    if isinstance(scope, dict):
+        candidates.append(scope.get("video_id"))
+
+    source_key = row.get("sourceKey") or row.get("source_key")
+    if isinstance(source_key, str):
+        m = re.search(r"[\\/](?P<vid>[A-Za-z0-9_-]{11})\.txt$", source_key)
+        if m:
+            candidates.append(m.group("vid"))
+
+    for value in candidates:
+        if isinstance(value, str):
+            vid = value.strip()
+            if VIDEO_ID_RE.fullmatch(vid):
+                return vid
+    return None
+
+
+def _is_blocking_issue(row: Dict[str, Any]) -> bool:
+    gate_decision = str(row.get("gate_decision", "")).strip().lower()
+    if gate_decision:
+        return gate_decision == "block"
+
+    issue_severity = str(row.get("issue_severity", "")).strip().lower()
+    if issue_severity:
+        return issue_severity in {"critical", "major"}
+    return False
+
+
+def _is_canonical_issue(row: Dict[str, Any]) -> bool:
+    issue_code = row.get("issue_code")
+    if not isinstance(issue_code, str) or not issue_code.strip():
+        return False
+    has_gate = isinstance(row.get("gate_decision"), str) and bool(str(row.get("gate_decision")).strip())
+    has_severity = isinstance(row.get("issue_severity"), str) and bool(str(row.get("issue_severity")).strip())
+    return has_gate or has_severity
+
+
+def _reason_check_name(row: Dict[str, Any], stage_label: Optional[str]) -> str:
+    for key in ("issue_code", "check"):
+        raw = row.get(key)
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()
+    if stage_label:
+        return f"stage{stage_label}_block"
+    return "unknown"
+
+
+def _reason_message(row: Dict[str, Any]) -> str:
+    for key in ("message", "reasoning", "detail", "description"):
+        raw = row.get(key)
+        if isinstance(raw, str) and raw.strip():
+            return raw.strip()[:300]
+    return "Blocking validation issue"
+
+
+def extract_from_cross_stage_or_chunks(
+    data: dict,
+    stage_label: Optional[str] = None,
+) -> Tuple[Set[str], List[dict]]:
+    """Extract blocking video IDs from canonical validator JSON."""
     new_ids: Set[str] = set()
     new_videos: List[dict] = []
     video_issues: Dict[str, List[dict]] = {}
 
     results = data.get("results", data.get("issues", []))
+    if not isinstance(results, list):
+        results = []
     for r in results:
-        severity = r.get("severity", "")
-        if severity != "error":
+        if not isinstance(r, dict):
             continue
-        vid = r.get("video_id", "")
-        if not vid or not VIDEO_ID_RE.fullmatch(vid):
+        if not _is_canonical_issue(r):
+            continue
+        if not _is_blocking_issue(r):
+            continue
+        vid = _extract_video_id_from_row(r)
+        if not vid:
             continue
         new_ids.add(vid)
         video_issues.setdefault(vid, []).append(r)
 
+    # Also accept canonical gate-style payloads with top-level "videos".
+    videos_rows = data.get("videos")
+    if isinstance(videos_rows, list):
+        for row in videos_rows:
+            if not isinstance(row, dict):
+                continue
+            if not _is_canonical_issue(row):
+                continue
+            vid = _extract_video_id_from_row(row)
+            if not vid:
+                continue
+            gate_decision = str(row.get("gate_decision", "")).strip().lower()
+            if gate_decision and gate_decision != "block":
+                continue
+            if not gate_decision and not _is_blocking_issue(row):
+                continue
+            new_ids.add(vid)
+            video_issues.setdefault(vid, []).append(row)
+
     for vid in sorted(new_ids):
         issues = video_issues[vid]
-        checks = sorted({i.get("check", "unknown") for i in issues})
+        checks = sorted({_reason_check_name(i, stage_label) for i in issues})
         reasons = [
             {
                 "severity": "error",
-                "check": i.get("check", "unknown"),
-                "message": (i.get("message", ""))[:300],
+                "check": _reason_check_name(i, stage_label),
+                "message": _reason_message(i),
             }
             for i in issues
         ]
@@ -285,7 +371,7 @@ def main():
         except json.JSONDecodeError as e:
             print(f"ERROR: Failed to parse validator JSON from stdin: {e}", file=sys.stderr)
             sys.exit(1)
-        ids, vids = extract_from_cross_stage_or_chunks(data)
+        ids, vids = extract_from_cross_stage_or_chunks(data, stage_label=args.stage)
         new_ids |= ids
         new_videos.extend(vids)
     else:

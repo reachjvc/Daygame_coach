@@ -8,9 +8,8 @@ Pure LLM quality gate — reads stage 06 conversations.json, asks an LLM to
 critically evaluate speaker roles, conversation boundaries, and structural
 coherence. Writes a verification report. Does NOT modify stage 06 output.
 
-Model selection (--model auto, default):
-  When 06's video_type confidence >= 0.85, uses Haiku (fast/cheap).
-  Otherwise uses Opus (full reasoning). Override with --model opus.
+Model selection:
+  Uses one explicit Claude model (`--model`, default: opus).
 
 Reads:
   - Stage 06 output files:
@@ -49,7 +48,7 @@ import sys
 import time
 from dataclasses import dataclass, asdict
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import jsonschema
 
@@ -60,7 +59,7 @@ from batch.manifest_parser import load_manifest, load_manifest_sources, manifest
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.LLM.verify-v2.1"  # v2.1: auto-tiered model (haiku for high-confidence, opus for uncertain)
+PIPELINE_VERSION = "06b.LLM.verify-v3.0"  # v3.0: strict single-path verification
 
 DEBUG_MODE = False
 
@@ -88,14 +87,6 @@ _NO_VALUES = {"0", "false", "no", "n", "disagree", "disagrees", "flag", "issue",
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail
-MAX_SCHEMA_REPAIR_ATTEMPTS = 2
-
-# Auto-tiered model selection (R3): when --model auto (default), use haiku for
-# videos where 06's video_type confidence is high — these rarely need full Opus
-# reasoning to verify. Opus is reserved for uncertain classifications.
-AUTO_TIER_CONFIDENCE_THRESHOLD = 0.85
-AUTO_TIER_FAST_MODEL = "haiku"
-AUTO_TIER_FULL_MODEL = "opus"
 
 
 def _load_schema() -> Optional[Dict[str, Any]]:
@@ -354,112 +345,6 @@ Be specific. Cite segment IDs and quote text when flagging issues. Empty arrays 
 CRITICAL: When you identify multiple segments with the same issue (e.g., "segments 0, 5, 25, 118 are all coach audio on wrong speaker"), create a SEPARATE misattribution or collapse_issue entry for EACH segment. Do NOT summarize multiple fixable issues into one other_flags string. The other_flags array is ONLY for issues that cannot be expressed as individual segment fixes.
 """
 
-# Conversion prompt for when analysis is good but JSON parsing fails
-CONVERSION_PROMPT = """You previously analyzed a video verification task and produced this analysis:
-
----
-{analysis}
----
-
-Your analysis was thorough and correct. However, the JSON output was missing or malformed.
-
-Please convert your analysis above into a valid JSON object. Output ONLY the JSON, no other text.
-
-CRITICAL SCHEMA REQUIREMENTS (06c.patch auto-applies fixes based on these fields):
-
-1. video_type_check: If agrees=false, you MUST include:
-   - "suggested_type": one of "infield", "compilation", "talking_head", "podcast" (NOT prose)
-   - "confidence": 0.0-1.0
-
-2. misattributions: Each entry MUST include:
-   - "suggested_role": one of "coach", "student", "target", "other", "voiceover" (NOT prose)
-   - "confidence": 0.0-1.0
-
-3. boundary_issues: Each entry MUST include:
-   - "suggested_fix": one of "merge_with_next", "merge_with_previous", "split_at_segment_N", "reclassify_as_commentary", or null
-   - "confidence": 0.0-1.0
-   - For split fixes, N must be a real segment ID (e.g., "split_at_segment_29")
-
-4. collapse_issues: Each entry MUST include:
-   - "current_override": the actual current value (use null if no override, NOT "none" or prose)
-   - "suggested_override": one of "coach", "student", "target", "other" (NOT prose)
-   - "confidence": 0.0-1.0
-
-Required schema:
-{{
-  "verdict": "APPROVE|FLAG|REJECT",
-  "video_type_check": {{
-    "agrees": true|false,
-    "suggested_type": "infield|compilation|talking_head|podcast",
-    "confidence": 0.92,
-    "reasoning": "brief explanation"
-  }},
-  "conversation_verdicts": [{{"conversation_id": 1, "verdict": "OK|FLAG|ISSUE", "notes": "brief"}}],
-  "misattributions": [{{
-    "segment_id": 123,
-    "current_role": "target",
-    "suggested_role": "coach",
-    "confidence": 0.88,
-    "evidence": "why this is wrong"
-  }}],
-  "boundary_issues": [{{
-    "conversation_id": 1,
-    "issue": "description",
-    "severity": "minor|moderate|major",
-    "suggested_fix": "split_at_segment_29",
-    "confidence": 0.90
-  }}],
-  "collapse_issues": [{{
-    "speaker_id": "SPEAKER_01",
-    "segment_id": 123,
-    "current_override": null,
-    "suggested_override": "target",
-    "confidence": 0.88,
-    "evidence": "why"
-  }}],
-  "other_flags": ["any other concerns as strings"],
-  "summary": "one paragraph overall assessment"
-}}
-
-Rules:
-- Extract ALL issues mentioned in your analysis
-- Use empty arrays [] for categories with no issues
-- Include segment IDs and evidence from your analysis
-- Include confidence scores (0.0-1.0) for each issue based on your certainty
-- For video_type_check: include suggested_type only if agrees=false, use null if agrees=true
-- For boundary_issues: include suggested_fix as exact value, not prose
-- For collapse_issues: use null for current_override if segment has no override, not "none" or "none (raw label)"
-- The verdict should match what you concluded (FLAG if issues found, APPROVE if none, REJECT if critical errors)
-- CRITICAL: Create a SEPARATE entry for EACH affected segment. Do NOT summarize multiple segment issues into one other_flags string.
-
-Output the JSON now:
-"""
-
-SCHEMA_REPAIR_PROMPT = """You are repairing a JSON payload for a strict verification schema.
-
-The current payload failed schema validation with this error:
-{schema_error}
-
-Repair the payload below so it matches the required verification contract.
-Keep the same semantic intent and evidence where possible.
-
-Current payload:
-```json
-{candidate_json}
-```
-
-Rules:
-- Output ONLY a single JSON object (no markdown, no prose).
-- Keep top-level keys: verdict, video_type_check, conversation_verdicts, misattributions, boundary_issues, collapse_issues, other_flags, summary.
-- Top-level verdict must be APPROVE|FLAG|REJECT.
-- conversation_verdicts[].verdict must be OK|FLAG|ISSUE.
-- Ensure confidence fields are numeric in [0,1].
-- Use enum-safe values for suggested roles/types/overrides/fixes.
-- Use null (not strings like "none") where nullable fields are intended.
-- Use arrays for list fields, even when empty.
-"""
-
-
 # ---------------------------
 # State Management
 # ---------------------------
@@ -645,74 +530,6 @@ def parse_json_response(response: str) -> Optional[Dict]:
     return None
 
 
-def convert_analysis_to_json(
-    analysis: str,
-    timeout: int = 120,
-    model: Optional[str] = None,
-) -> Optional[Dict]:
-    """Convert a text analysis to JSON using a second LLM call.
-
-    This is the fallback when the original response had good analysis
-    but failed to produce valid JSON.
-    """
-    if not analysis or len(analysis) < 50:
-        return None
-
-    print(f"{LOG_PREFIX}   Attempting JSON conversion fallback...")
-
-    prompt = CONVERSION_PROMPT.format(analysis=analysis)
-
-    try:
-        raw = call_claude(prompt, retries=1, timeout=timeout, model=model)
-        converted = parse_json_response(raw or "")
-        if converted and "verdict" in converted:
-            print(f"{LOG_PREFIX}   JSON conversion successful!")
-            return converted
-        else:
-            print(f"{LOG_PREFIX}   JSON conversion produced invalid output")
-    except subprocess.TimeoutExpired:
-        print(f"{LOG_PREFIX}   JSON conversion timed out")
-    except Exception as e:
-        print(f"{LOG_PREFIX}   JSON conversion error: {e}")
-
-    return None
-
-
-def repair_json_to_schema(
-    candidate: Dict[str, Any],
-    schema_error: str,
-    timeout: int = 180,
-    model: Optional[str] = None,
-) -> Optional[Dict[str, Any]]:
-    """Ask the LLM to minimally repair a parsed JSON payload to satisfy schema."""
-    if not isinstance(candidate, dict):
-        return None
-
-    print(f"{LOG_PREFIX}   Attempting schema repair fallback...")
-    candidate_json = json.dumps(candidate, indent=2, ensure_ascii=False)
-    if len(candidate_json) > 45000:
-        candidate_json = candidate_json[:45000] + "\n/* truncated */"
-
-    prompt = SCHEMA_REPAIR_PROMPT.format(
-        schema_error=schema_error[:400],
-        candidate_json=candidate_json,
-    )
-
-    try:
-        raw = call_claude(prompt, retries=1, timeout=timeout, model=model)
-        repaired = parse_json_response(raw or "")
-        if isinstance(repaired, dict) and "verdict" in repaired:
-            print(f"{LOG_PREFIX}   Schema repair fallback produced candidate JSON")
-            return repaired
-        print(f"{LOG_PREFIX}   Schema repair fallback returned invalid JSON")
-    except subprocess.TimeoutExpired:
-        print(f"{LOG_PREFIX}   Schema repair fallback timed out")
-    except Exception as e:
-        print(f"{LOG_PREFIX}   Schema repair fallback error: {e}")
-
-    return None
-
-
 def _clamp_confidence(raw: Any, default: float = 0.0) -> float:
     try:
         return max(0.0, min(1.0, float(raw)))
@@ -822,6 +639,8 @@ def normalize_conversation_verdicts(raw: Any) -> List[Dict[str, Any]]:
             cid_int = int(cid)  # allow numeric strings
         except Exception:
             continue
+        if cid_int < 1:
+            continue
 
         notes = item.get("notes")
         normalized.append({
@@ -865,6 +684,11 @@ def normalize_boundary_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
         try:
             cid_int = int(cid)  # allow numeric strings
         except Exception:
+            continue
+        if cid_int < 1:
+            dropped.append(
+                f"Dropped boundary issue with invalid conversation_id {cid_int} (must be >= 1)"
+            )
             continue
         issue = item.get("issue")
         if issue is None:
@@ -1089,8 +913,9 @@ def build_verification_prompt(data: Dict) -> str:
         conversations_summary += f"\n  Commentary: {len(commentary_segs)} segments (conversation_id=0)"
 
     # Full transcript
+    transcript_segments = segments
     transcript_lines = []
-    for seg in segments:
+    for seg in transcript_segments:
         sid = seg.get("id", 0)
         start = seg.get("start", 0)
         end = seg.get("end", 0)
@@ -1119,22 +944,9 @@ def build_verification_prompt(data: Dict) -> str:
         speaker_labels_text=speaker_labels_text,
         collapse_info=collapse_info,
         conversations_summary=conversations_summary,
-        segment_count=len(segments),
+        segment_count=len(transcript_segments),
         transcript=transcript,
     )
-
-
-def _auto_select_model(data: Dict[str, Any]) -> Tuple[str, str]:
-    """Pick model based on 06's confidence. Returns (model, reason)."""
-    vt = data.get("video_type")
-    if not isinstance(vt, dict):
-        return AUTO_TIER_FULL_MODEL, "missing video_type"
-    confidence = vt.get("confidence")
-    if not isinstance(confidence, (int, float)):
-        return AUTO_TIER_FULL_MODEL, "missing confidence"
-    if confidence >= AUTO_TIER_CONFIDENCE_THRESHOLD:
-        return AUTO_TIER_FAST_MODEL, f"video_type confidence {confidence:.2f} >= {AUTO_TIER_CONFIDENCE_THRESHOLD}"
-    return AUTO_TIER_FULL_MODEL, f"video_type confidence {confidence:.2f} < {AUTO_TIER_CONFIDENCE_THRESHOLD}"
 
 
 def verify_file(
@@ -1142,7 +954,6 @@ def verify_file(
     output_path: Path,
     dry_run: bool = False,
     claude_model: Optional[str] = None,
-    fallback_model: Optional[str] = None,
     llm_timeout_seconds: int = 300,
     llm_retries: int = 3,
 ) -> Dict[str, Any]:
@@ -1164,13 +975,6 @@ def verify_file(
     if not segments:
         raise RuntimeError(f"No segments found in {input_path}")
 
-    # Auto-tier model selection: when model is "auto", pick based on 06 confidence
-    auto_tier_reason: Optional[str] = None
-    if isinstance(claude_model, str) and claude_model.strip().lower() == "auto":
-        selected, auto_tier_reason = _auto_select_model(data)
-        claude_model = selected
-        print(f"{LOG_PREFIX}   Auto-tier: {selected} ({auto_tier_reason})")
-
     if dry_run:
         print(f"{LOG_PREFIX}   [DRY RUN] Would verify this file")
         return {"verdict": None, "issues": 0}
@@ -1182,177 +986,82 @@ def verify_file(
     print(f"{LOG_PREFIX}   Sending to LLM for verification ({len(prompt)} chars)...")
 
     max_retries = max(1, int(llm_retries))
-    result = None
-    raw_response = None
+    result: Optional[Dict[str, Any]] = None
     llm_calls = 0
-    used_conversion_fallback = False
-    model_sequence: List[Optional[str]] = [claude_model]
-    if (
-        isinstance(fallback_model, str)
-        and fallback_model.strip()
-        and fallback_model.strip() != (claude_model or "").strip()
-    ):
-        model_sequence.append(fallback_model.strip())
-    model_in_use: Optional[str] = model_sequence[0]
-    used_fallback_model = False
-    timeout_switch_requested = False
-    timeout_switch_reason: Optional[str] = None
-    for model_idx, active_model in enumerate(model_sequence):
-        model_in_use = active_model
-        if model_idx > 0:
-            used_fallback_model = True
-            print(
-                f"{LOG_PREFIX}   Switching model fallback to '{active_model}'"
-                + (f" ({timeout_switch_reason})" if timeout_switch_reason else "")
+    for attempt in range(max_retries):
+        try:
+            raw_response = call_claude(
+                prompt,
+                retries=1,
+                timeout=max(1, int(llm_timeout_seconds)),
+                model=claude_model,
             )
-        timeout_switch_requested = False
-        timeout_switch_reason = None
-
-        for attempt in range(max_retries):
-            try:
-                # Keep retries at 1 here; retry/fallback orchestration is managed at verify_file level.
-                raw_response = call_claude(
-                    prompt,
-                    retries=1,
-                    timeout=max(1, int(llm_timeout_seconds)),
-                    model=active_model,
-                )
-                llm_calls += 1
-            except RuntimeError as e:
-                msg = str(e)
-                is_timeout = "timeout" in msg.lower()
-                if is_timeout and attempt < max_retries - 1:
-                    print(
-                        f"{LOG_PREFIX}   WARNING: verification call timed out on model "
-                        f"'{active_model}' ({attempt + 1}/{max_retries}); retrying..."
-                    )
-                    continue
-                if is_timeout and model_idx < len(model_sequence) - 1:
-                    timeout_switch_requested = True
-                    timeout_switch_reason = f"timeout on model '{active_model}'"
-                    break
-                raise
-
-            result = parse_json_response(raw_response)
-
-            if result and "verdict" in result:
-                break
-
-            # JSON parsing failed - try conversion fallback before retrying full prompt
-            if raw_response and len(raw_response) > 100:
-                print(f"{LOG_PREFIX}   WARNING: JSON parsing failed, trying conversion fallback...")
-                result = convert_analysis_to_json(raw_response, model=active_model)
-                llm_calls += 1
-                if result and "verdict" in result:
-                    used_conversion_fallback = True
-                    print(f"{LOG_PREFIX}   Conversion fallback succeeded!")
-                    break
-
+            llm_calls += 1
+        except RuntimeError:
             if attempt < max_retries - 1:
-                print(f"{LOG_PREFIX}   WARNING: Conversion also failed, retrying full prompt ({attempt + 2}/{max_retries})...")
-                time.sleep(2)
+                print(
+                    f"{LOG_PREFIX}   WARNING: verification call failed "
+                    f"({attempt + 1}/{max_retries}); retrying..."
+                )
+                time.sleep(2 ** attempt)
+                continue
+            raise
 
+        result = parse_json_response(raw_response or "")
         if result and "verdict" in result:
             break
-        if timeout_switch_requested:
-            continue
+        if attempt < max_retries - 1:
+            print(
+                f"{LOG_PREFIX}   WARNING: invalid/missing JSON response "
+                f"({attempt + 1}/{max_retries}); retrying..."
+            )
+            time.sleep(2 ** attempt)
 
     if not result or "verdict" not in result:
-        raise RuntimeError(f"Verification LLM failed after {max_retries} retries and conversion fallback")
+        raise RuntimeError(
+            f"Verification LLM failed after {max_retries} retries (strict mode)"
+        )
 
-    schema_repair_attempts = 0
-    output: Dict[str, Any] = {}
-    verdict = "FLAG"
-    misattributions: List[Dict[str, Any]] = []
-    boundary_issues: List[Dict[str, Any]] = []
-    collapse_issues: List[Dict[str, Any]] = []
-    other_flags: List[str] = []
-    conversation_verdicts: List[Dict[str, Any]] = []
+    elapsed = time.time() - start_time
+    verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
+    video_type_check = normalize_video_type_check(result.get("video_type_check", {}))
+    conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
+    misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
+    boundary_issues, dropped_boundary = normalize_boundary_issues(result.get("boundary_issues", []))
+    collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
+    other_flags_raw = result.get("other_flags", [])
+    other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
+    for note in dropped_misattributions + dropped_collapse + dropped_boundary:
+        other_flags.append(note)
 
-    while True:
-        elapsed = time.time() - start_time
+    metadata: Dict[str, Any] = {
+        "input_file": str(input_path),
+        "processing_time_sec": elapsed,
+        "llm_calls": llm_calls,
+        "model": "claude-cli",
+        **(
+            {"claude_model": claude_model.strip()}
+            if isinstance(claude_model, str) and claude_model.strip()
+            else {}
+        ),
+    }
 
-        # Build verification output from the most recent candidate result.
-        verdict = normalize_overall_verdict(result.get("verdict", "FLAG"))
-        video_type_check = normalize_video_type_check(result.get("video_type_check", {}))
-        conversation_verdicts = normalize_conversation_verdicts(result.get("conversation_verdicts", []))
-        misattributions, dropped_misattributions = normalize_misattributions(result.get("misattributions", []))
-        boundary_issues, dropped_boundary = normalize_boundary_issues(result.get("boundary_issues", []))
-        collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
-        other_flags_raw = result.get("other_flags", [])
-        other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
-        for note in dropped_misattributions + dropped_collapse + dropped_boundary:
-            other_flags.append(note)
+    output: Dict[str, Any] = {
+        "video_id": video_id,
+        "verified_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "pipeline_version": PIPELINE_VERSION,
+        "verdict": verdict,
+        "video_type_check": video_type_check,
+        "conversation_verdicts": conversation_verdicts,
+        "misattributions": misattributions,
+        "boundary_issues": boundary_issues,
+        "collapse_issues": collapse_issues,
+        "other_flags": other_flags,
+        "summary": str(result.get("summary", "")),
+        "metadata": metadata,
+    }
 
-        metadata: Dict[str, Any] = {
-            "input_file": str(input_path),
-            "processing_time_sec": elapsed,
-            "llm_calls": llm_calls,
-            "model": "claude-cli",
-            **({"claude_model": model_in_use.strip()} if isinstance(model_in_use, str) and model_in_use.strip() else {}),
-            **({"claude_model_requested": claude_model.strip()} if isinstance(claude_model, str) and claude_model.strip() else {}),
-            **({"claude_fallback_model": fallback_model.strip()} if isinstance(fallback_model, str) and fallback_model.strip() else {}),
-            **({"auto_tier_reason": auto_tier_reason} if auto_tier_reason else {}),
-        }
-        notes: List[str] = []
-        if used_fallback_model and isinstance(model_in_use, str) and model_in_use.strip():
-            notes.append(f"Model fallback used ({model_in_use.strip()})")
-        if used_conversion_fallback:
-            notes.append("Used JSON conversion fallback")
-        if schema_repair_attempts:
-            notes.append(f"Used schema repair fallback ({schema_repair_attempts} attempt(s))")
-            metadata["schema_repair_attempts"] = schema_repair_attempts
-        if notes:
-            metadata["note"] = "; ".join(notes)
-
-        output = {
-            "video_id": video_id,
-            "verified_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "pipeline_version": PIPELINE_VERSION,
-            "verdict": verdict,
-            "video_type_check": video_type_check,
-            "conversation_verdicts": conversation_verdicts,
-            "misattributions": misattributions,
-            "boundary_issues": boundary_issues,
-            "collapse_issues": collapse_issues,
-            "other_flags": other_flags,
-            "summary": str(result.get("summary", "")),
-            "metadata": metadata,
-        }
-
-        try:
-            _validate_verification_schema(output)
-            break
-        except RuntimeError as e:
-            if schema_repair_attempts >= MAX_SCHEMA_REPAIR_ATTEMPTS:
-                raise RuntimeError(
-                    f"{e} (after {schema_repair_attempts} schema repair attempt(s))"
-                ) from e
-
-            schema_repair_attempts += 1
-            print(
-                f"{LOG_PREFIX}   WARNING: Normalized output failed schema validation "
-                f"(attempt {schema_repair_attempts}/{MAX_SCHEMA_REPAIR_ATTEMPTS}): {e}"
-            )
-
-            llm_calls += 1
-            repaired = repair_json_to_schema(result, str(e), model=model_in_use)
-            if repaired and "verdict" in repaired:
-                result = repaired
-                continue
-
-            if raw_response and len(raw_response) > 100:
-                print(f"{LOG_PREFIX}   WARNING: Schema repair failed, retrying analysis-to-JSON conversion...")
-                llm_calls += 1
-                converted = convert_analysis_to_json(raw_response, model=model_in_use)
-                if converted and "verdict" in converted:
-                    used_conversion_fallback = True
-                    result = converted
-                    continue
-
-            raise RuntimeError(
-                f"Could not repair schema-invalid verification output: {e}"
-            ) from e
+    _validate_verification_schema(output)
 
     total_issues = (
         len(misattributions)
@@ -1429,15 +1138,6 @@ def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
     return path
 
 
-def extract_video_ids_from_paths(paths: List[Path]) -> Set[str]:
-    ids: Set[str] = set()
-    for path in paths:
-        video_id = extract_video_id(str(path))
-        if re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
-            ids.add(video_id)
-    return ids
-
-
 def compute_output_path(
     input_path: Path,
     output_dir: Path,
@@ -1466,15 +1166,6 @@ def find_existing_output_path(
     preferred = compute_output_path(input_path, preferred_output_dir, input_root=input_root)
     if preferred.exists():
         return preferred
-    # Legacy source-flat fallback.
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    # Legacy root-flat fallback.
-    if output_root_dir is not None:
-        root_flat = compute_output_path(input_path, output_root_dir)
-        if root_flat.exists():
-            return root_flat
     return None
 
 
@@ -1555,24 +1246,14 @@ def main() -> None:
         help="Overwrite existing output files"
     )
     parser.add_argument(
-        "--allow-reject-verdicts",
-        action="store_true",
-        help="Do not fail the run when one or more videos receive REJECT verdicts",
-    )
-    parser.add_argument(
         "--debug",
         action="store_true",
         help="Enable debug logging for LLM responses"
     )
     parser.add_argument(
         "--model",
-        default="auto",
-        help="Claude model (default: auto). Auto uses haiku for high-confidence videos, opus for uncertain ones."
-    )
-    parser.add_argument(
-        "--fallback-model",
-        default="sonnet",
-        help="Fallback Claude model used only if the primary model times out (default: sonnet). Use '' to disable.",
+        default="opus",
+        help="Claude model (default: opus).",
     )
     parser.add_argument(
         "--timeout-seconds",
@@ -1584,7 +1265,7 @@ def main() -> None:
         "--llm-retries",
         type=int,
         default=3,
-        help="Retry attempts per model before failing/switching fallback (default: 3).",
+        help="Retry attempts per verification call before failing (default: 3).",
     )
     parser.add_argument(
         "--skip-llm-preflight",
@@ -1641,59 +1322,27 @@ def main() -> None:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
     if not args.dry_run and not args.skip_llm_preflight:
-        # When model is "auto", probe both tier models; otherwise probe the explicit model
-        if isinstance(args.model, str) and args.model.strip().lower() == "auto":
-            probe_models: List[Optional[str]] = [AUTO_TIER_FULL_MODEL, AUTO_TIER_FAST_MODEL]
-        else:
-            probe_models: List[Optional[str]] = [args.model]
-        if (
-            isinstance(args.fallback_model, str)
-            and args.fallback_model.strip()
-            and args.fallback_model.strip() not in {(m or "").strip() for m in probe_models}
-        ):
-            probe_models.append(args.fallback_model.strip())
-
-        preflight_ok = False
-        failure_reasons: List[str] = []
-        for probe_model in probe_models:
-            ok, reason = run_claude_preflight(
-                claude_bin,
-                model=probe_model,
-                timeout_seconds=args.preflight_timeout_seconds,
-                retries=args.preflight_retries,
-            )
-            model_label = (probe_model or "").strip() or "default"
-            if ok:
-                preflight_ok = True
-                print(
-                    f"{LOG_PREFIX} Claude preflight: ok on model={model_label} "
-                    f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
-                )
-                break
-            failure_reasons.append(f"{model_label}: {reason}")
-
-        if not preflight_ok:
-            print(
-                f"{LOG_PREFIX} Error: Claude preflight failed on all probe models "
-                f"({'; '.join(failure_reasons)})"
-            )
+        ok, reason = run_claude_preflight(
+            claude_bin,
+            model=args.model,
+            timeout_seconds=args.preflight_timeout_seconds,
+            retries=args.preflight_retries,
+        )
+        if not ok:
+            print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
             print(
                 f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
                 f"--skip-llm-preflight only for controlled debugging."
             )
             raise SystemExit(2)
+        model_label = (args.model or "").strip() or "default"
+        print(
+            f"{LOG_PREFIX} Claude preflight: ok on model={model_label} "
+            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+        )
 
     if isinstance(args.model, str) and args.model.strip():
-        model_label = args.model.strip()
-        if model_label.lower() == "auto":
-            print(
-                f"{LOG_PREFIX} Claude model: auto "
-                f"(haiku if confidence >= {AUTO_TIER_CONFIDENCE_THRESHOLD}, else opus)"
-            )
-        else:
-            print(f"{LOG_PREFIX} Claude model: {model_label}")
-    if isinstance(args.fallback_model, str) and args.fallback_model.strip():
-        print(f"{LOG_PREFIX} Claude fallback model: {args.fallback_model.strip()}")
+        print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")
     print(f"{LOG_PREFIX} LLM timeout seconds: {args.timeout_seconds}")
     print(f"{LOG_PREFIX} LLM retries: {args.llm_retries}")
 
@@ -1736,7 +1385,6 @@ def _run_input(args) -> None:
             output_path,
             dry_run=args.dry_run,
             claude_model=args.model,
-            fallback_model=args.fallback_model,
             llm_timeout_seconds=args.timeout_seconds,
             llm_retries=args.llm_retries,
         )
@@ -1782,7 +1430,6 @@ def _run_sources(args) -> None:
                     preferred_output,
                     dry_run=args.dry_run,
                     claude_model=args.model,
-                    fallback_model=args.fallback_model,
                     llm_timeout_seconds=args.timeout_seconds,
                     llm_retries=args.llm_retries,
                 )
@@ -1805,35 +1452,13 @@ def _run_manifest(args) -> None:
     in_base = resolve_root_path(args.input_root, input_root())
     out_base = Path(args.output) if args.output else output_root()
     sources_map = load_manifest_sources(manifest_path)
-    root_flat_files: Optional[List[Path]] = None
-
     for src_name, vid_ids in sorted(sources_map.items()):
         src_in_dir = in_base / src_name
-
+        if not src_in_dir.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no source directory in input root")
+            continue
         in_dir_for_state = src_in_dir
-        src_files: List[Path] = []
-        if src_in_dir.exists():
-            src_files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
-
-        covered_ids = extract_video_ids_from_paths(src_files)
-        missing_vid_ids = [vid for vid in vid_ids if vid not in covered_ids]
-
-        fallback_files: List[Path] = []
-        if missing_vid_ids:
-            if root_flat_files is None:
-                root_flat_files = find_input_files(in_base)
-            fallback_files = [
-                path for path in manifest_filter_files(root_flat_files, missing_vid_ids)
-                if path not in src_files
-            ]
-            if fallback_files:
-                print(f"{LOG_PREFIX} Manifest root-flat fallback for {src_name}: using {in_base}")
-                if not src_in_dir.exists():
-                    in_dir_for_state = in_base
-
-        files = src_files + fallback_files
-        if not src_in_dir.exists() and files:
-            in_dir_for_state = in_base
+        files = manifest_filter_files(find_input_files(src_in_dir), vid_ids)
 
         src_out_dir = out_base / src_name
         if not files:
@@ -1901,7 +1526,6 @@ def _run_directory_with_files(
                 preferred_output,
                 dry_run=args.dry_run,
                 claude_model=args.model,
-                fallback_model=args.fallback_model,
                 llm_timeout_seconds=args.timeout_seconds,
                 llm_retries=args.llm_retries,
             )
@@ -1941,13 +1565,14 @@ def _run_directory_with_files(
         if failure_rate > MAX_FAILURE_RATE and total_attempted >= 5:
             print(f"\n{LOG_PREFIX} HALTING: Failure rate {failure_rate:.0%} exceeds {MAX_FAILURE_RATE:.0%} threshold")
             sys.exit(1)
+    if failed > 0:
+        print(f"\n{LOG_PREFIX} HALTING: strict mode does not allow failed files")
+        sys.exit(1)
 
     reject_count = verdicts.get("REJECT", 0)
     if reject_count > 0:
         print(f"\n{LOG_PREFIX} WARNING: {reject_count} video(s) received REJECT verdict")
         print(f"{LOG_PREFIX} Review verification reports before proceeding to stage 07")
-        if not args.allow_reject_verdicts:
-            sys.exit(1)
 
 
 def _run_named_source(args) -> None:

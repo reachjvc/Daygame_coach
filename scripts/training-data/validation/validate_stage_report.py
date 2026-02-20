@@ -26,6 +26,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple
 LOG_PREFIX = "[validate-stage-report]"
 VIDEO_ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
+SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
 
 TOP_REQUIRED: Set[str] = {
     "stage",
@@ -44,6 +45,24 @@ TOP_REQUIRED: Set[str] = {
 TOP_ALLOWED: Set[str] = TOP_REQUIRED | {"batch_id", "manifest_path"}
 STATUS_ALLOWED = {"PASS", "WARN", "FAIL"}
 CHECK_SEVERITY_ALLOWED = {"error", "warning", "info"}
+SIGNAL_CLASS_ALLOWED = {
+    "artifact_contract",
+    "conversation_structure",
+    "other_quality",
+    "quarantine_gate",
+    "routing_mismatch",
+    "taxonomy_coverage",
+    "transcript_quality",
+}
+REMEDIATION_PATH_ALLOWED = {
+    "contract_repair",
+    "conversation_review",
+    "manual_review",
+    "quarantine",
+    "routing_policy_review",
+    "taxonomy_review",
+    "transcript_review",
+}
 POLICY_WARNING_BUDGET_EXCLUDED_CHECKS: Set[str] = {
     # These warnings are useful context but should not consume readiness warning budgets.
     "missing_stage01_audio",
@@ -54,9 +73,190 @@ POLICY_WARNING_BUDGET_EXCLUDED_CHECKS: Set[str] = {
 }
 
 ARTIFACT_KEYS = {"path", "sha256", "bytes"}
-CHECK_KEYS = {"severity", "check", "message"}
+CHECK_REQUIRED_KEYS = {"severity", "check", "message"}
+CHECK_OPTIONAL_KEYS = {"signal_class", "remediation_path"}
+CHECK_KEYS = CHECK_REQUIRED_KEYS | CHECK_OPTIONAL_KEYS
 TIMESTAMP_KEYS = {"started_at", "finished_at", "elapsed_sec"}
 VERSION_KEYS = {"pipeline_version", "prompt_version", "model", "schema_version", "git_sha"}
+
+
+def _canonical_issue_severity(legacy_severity: str) -> str:
+    sev = str(legacy_severity or "").strip().lower()
+    if sev in {"critical", "major", "minor", "info"}:
+        return sev
+    if sev == "error":
+        return "major"
+    if sev == "warning":
+        return "minor"
+    return "info"
+
+
+def _canonical_gate_decision(issue_severity: str) -> str:
+    if issue_severity in {"critical", "major"}:
+        return "block"
+    if issue_severity == "minor":
+        return "review"
+    return "pass"
+
+
+def _canonical_gate_from_status(status: str) -> str:
+    text = str(status or "").strip().upper()
+    if text == "BLOCKED":
+        return "block"
+    if text == "REVIEW":
+        return "review"
+    return "pass"
+
+
+def _safe_name(raw: str) -> str:
+    cleaned = SAFE_NAME_RE.sub("_", str(raw or "").strip()).strip("_")
+    return cleaned or "report"
+
+
+def _default_gate_path(
+    manifest_path: Optional[Path],
+    source_filter: Optional[str],
+    report_dir: Optional[Path],
+) -> Path:
+    if manifest_path is not None:
+        root = _repo_root() / "data" / "validation" / "gates"
+        stem = _safe_name(manifest_path.stem)
+        if source_filter:
+            stem = _safe_name(f"{stem}.{source_filter}")
+        return root / f"{stem}.gate.json"
+    if report_dir is not None:
+        return report_dir / "canonical-gate.json"
+    return Path("canonical-gate.json")
+
+
+def _canonical_issue_code(raw: str) -> str:
+    text = re.sub(r"[^a-z0-9_]+", "_", str(raw or "").strip().lower()).strip("_")
+    return text or "unspecified_issue"
+
+
+def _remediation_path_for_signal_class(signal_class: str) -> str:
+    mapping = {
+        "artifact_contract": "contract_repair",
+        "conversation_structure": "conversation_review",
+        "other_quality": "manual_review",
+        "quarantine_gate": "quarantine",
+        "routing_mismatch": "routing_policy_review",
+        "taxonomy_coverage": "taxonomy_review",
+        "transcript_quality": "transcript_review",
+    }
+    return mapping.get(signal_class, "manual_review")
+
+
+def _parse_counter_mapping(raw: Any) -> Counter[str]:
+    out: Counter[str] = Counter()
+    if not isinstance(raw, dict):
+        return out
+    for key, value in raw.items():
+        if not isinstance(key, str):
+            continue
+        label = key.strip()
+        if not label:
+            continue
+        count: Optional[int] = None
+        if isinstance(value, bool):
+            count = None
+        elif isinstance(value, int):
+            count = value
+        elif isinstance(value, float) and value.is_integer():
+            count = int(value)
+        elif isinstance(value, str) and value.strip().isdigit():
+            count = int(value.strip())
+        if count is None or count <= 0:
+            continue
+        out[label] += count
+    return out
+
+
+def _signal_class_for_readiness_reason(reason_code: str, warning_classes: Counter[str]) -> str:
+    reason = str(reason_code or "").strip()
+    if reason in SIGNAL_CLASS_ALLOWED:
+        return reason
+    if reason.startswith("policy_block_warning_class:"):
+        candidate = reason.split(":", 1)[1].strip()
+        if candidate in SIGNAL_CLASS_ALLOWED:
+            return candidate
+    if reason.startswith("policy_warning_class_budget_exceeded:"):
+        parts = reason.split(":")
+        if len(parts) >= 2 and parts[1] in SIGNAL_CLASS_ALLOWED:
+            return parts[1]
+    if reason.startswith("policy_block_warning_check:"):
+        chk = reason.split(":", 1)[1].strip()
+        return _warning_class_for_check(chk)
+    if reason.startswith("policy_warning_check_budget_exceeded:"):
+        parts = reason.split(":")
+        if len(parts) >= 2:
+            return _warning_class_for_check(parts[1])
+    if reason in {"missing_stage_report", "invalid_stage_report", "report_fail"}:
+        return "artifact_contract"
+    if warning_classes:
+        return sorted(warning_classes.items(), key=lambda item: (-item[1], item[0]))[0][0]
+    return "other_quality"
+
+
+def _canonical_signals_from_readiness_video(video: Dict[str, Any]) -> List[Dict[str, Any]]:
+    vid = str(video.get("video_id", "")).strip()
+    status = str(video.get("status", "")).strip().upper()
+    gate = _canonical_gate_from_status(status)
+    reason_code = str(video.get("reason_code", "")).strip() or "unspecified_reason"
+    check_counts = video.get("check_counts")
+    warning_classes = Counter()
+    if isinstance(check_counts, dict):
+        warning_classes = _parse_counter_mapping(check_counts.get("warning_classes"))
+    signal_class = _signal_class_for_readiness_reason(reason_code, warning_classes)
+    issue_severity = "major" if gate == "block" else ("minor" if gate == "review" else "info")
+
+    signals: List[Dict[str, Any]] = []
+    if not (gate == "pass" and reason_code == "ok"):
+        signals.append(
+            {
+                "issue_code": _canonical_issue_code(f"readiness_{reason_code}"),
+                "issue_severity": issue_severity,
+                "gate_decision": gate,
+                "scope_type": "video",
+                "origin_stage": "stage-report-validation",
+                "video_id": vid,
+                "signal_class": signal_class,
+                "remediation_path": _remediation_path_for_signal_class(signal_class),
+                "message": f"Readiness status={status or 'UNKNOWN'} reason={reason_code}",
+                "legacy": {
+                    "status": status,
+                    "reason_code": reason_code,
+                },
+            }
+        )
+
+    for cls in sorted(warning_classes):
+        if cls not in SIGNAL_CLASS_ALLOWED:
+            continue
+        count = int(warning_classes.get(cls, 0))
+        if count <= 0:
+            continue
+        warning_gate = "pass" if gate == "pass" else "review"
+        warning_severity = "info" if warning_gate == "pass" else "minor"
+        signals.append(
+            {
+                "issue_code": _canonical_issue_code(f"warning_class_{cls}"),
+                "issue_severity": warning_severity,
+                "gate_decision": warning_gate,
+                "scope_type": "video",
+                "origin_stage": "stage-report-validation",
+                "video_id": vid,
+                "signal_class": cls,
+                "remediation_path": _remediation_path_for_signal_class(cls),
+                "message": f"Stage-report warning class '{cls}' count={count}",
+                "legacy": {
+                    "status": status,
+                    "reason_code": reason_code,
+                    "count": count,
+                },
+            }
+        )
+    return signals
 
 
 @dataclass
@@ -132,6 +332,68 @@ def _video_id_from_report(record: ReportRecord) -> Optional[str]:
     return _video_id_from_filename_hint(record.path)
 
 
+def _repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def _load_content_type_from_conversations(path: Path) -> Optional[str]:
+    data = _load_json(path)
+    if not isinstance(data, dict):
+        return None
+    # Stage 06 stores this under `video_type`; policy terminology uses
+    # "content type" to avoid ambiguity with ingest lanes.
+    raw = data.get("video_type")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    if isinstance(raw, dict):
+        raw_type = raw.get("type")
+        if isinstance(raw_type, str) and raw_type.strip():
+            return raw_type.strip()
+    return None
+
+
+def _resolve_content_type(video_id: str, recs: List[ReportRecord]) -> Optional[str]:
+    """
+    Resolve Stage 06/06c content type for a video_id, preferring source/stem paths
+    referenced by the stage reports and falling back to id-based search.
+    """
+    data_root = _repo_root() / "data"
+    stage_dirs = ("06c.DET.patched", "06.LLM.video-type")
+
+    for rec in recs:
+        source = rec.data.get("source")
+        stem = rec.data.get("stem")
+        if not isinstance(source, str) or not source.strip():
+            continue
+        if not isinstance(stem, str) or not stem.strip():
+            continue
+        source = source.strip()
+        stem = stem.strip()
+        for stage_dir in stage_dirs:
+            source_root = data_root / stage_dir / source
+            stem_dir = source_root / stem
+            if stem_dir.is_dir():
+                for path in sorted(stem_dir.glob("*.conversations.json")):
+                    content_type = _load_content_type_from_conversations(path)
+                    if content_type:
+                        return content_type
+            if source_root.is_dir():
+                for path in source_root.rglob(f"*{video_id}*.conversations.json"):
+                    content_type = _load_content_type_from_conversations(path)
+                    if content_type:
+                        return content_type
+
+    for stage_dir in stage_dirs:
+        stage_root = data_root / stage_dir
+        if not stage_root.is_dir():
+            continue
+        for path in stage_root.rglob(f"*{video_id}*.conversations.json"):
+            content_type = _load_content_type_from_conversations(path)
+            if content_type:
+                return content_type
+    return None
+
+
 def _parse_warning_check_budget(raw: str) -> Tuple[str, int]:
     text = str(raw).strip()
     if not text:
@@ -153,6 +415,32 @@ def _parse_warning_check_budget(raw: str) -> Tuple[str, int]:
     if not budget_raw.isdigit():
         raise ValueError("max must be an integer >= 0")
     return check, int(budget_raw)
+
+
+def _parse_content_type_warning_class_budget(raw: str) -> Tuple[str, str, int]:
+    """
+    Parse '<content_type>:<warning_class>=<max>' into (content_type, warning_class, max).
+    """
+    text = str(raw).strip()
+    if not text:
+        raise ValueError("empty value")
+    if "=" not in text:
+        raise ValueError("expected '<content_type>:<warning_class>=<max>'")
+    left, budget_raw = text.split("=", 1)
+    left = left.strip()
+    budget_raw = budget_raw.strip()
+    if ":" not in left:
+        raise ValueError("expected '<content_type>:<warning_class>=<max>'")
+    content_type, warning_class = left.split(":", 1)
+    content_type = content_type.strip()
+    warning_class = warning_class.strip()
+    if not content_type:
+        raise ValueError("missing content_type")
+    if not warning_class:
+        raise ValueError("missing warning_class")
+    if not budget_raw.isdigit():
+        raise ValueError("max must be an integer >= 0")
+    return content_type, warning_class, int(budget_raw)
 
 
 def _parse_stage07_warning_breakdown(message: str) -> Counter[str]:
@@ -199,6 +487,23 @@ def _parse_stage07_warning_breakdown(message: str) -> Counter[str]:
     return out
 
 
+def _warning_class_for_check(check: str) -> str:
+    chk = str(check or "").strip().lower()
+    if not chk:
+        return "other_quality"
+    if chk in {"transcript_artifact", "segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
+        return "transcript_quality"
+    if chk in {"prompt_variant_mismatch", "video_type_mismatch"}:
+        return "routing_mismatch"
+    if chk.startswith("stage08_"):
+        return "taxonomy_coverage"
+    if chk in {"conversation_not_contiguous", "compilation_with_single_conversation"}:
+        return "conversation_structure"
+    if chk.startswith("missing_") or chk.startswith("invalid_"):
+        return "artifact_contract"
+    return "other_quality"
+
+
 def _validate_artifact(item: Any, *, path: str, loc: str, issues: List[Issue]) -> None:
     if not isinstance(item, dict):
         issues.append(Issue("error", path, "invalid_artifact_item", f"{loc} must be an object"))
@@ -225,7 +530,7 @@ def _validate_check_item(item: Any, *, path: str, idx: int, issues: List[Issue])
     unknown = sorted(set(item.keys()) - CHECK_KEYS)
     if unknown:
         issues.append(Issue("error", path, "check_unknown_keys", f"{loc} has unknown keys: {unknown}"))
-    missing = sorted(CHECK_KEYS - set(item.keys()))
+    missing = sorted(CHECK_REQUIRED_KEYS - set(item.keys()))
     if missing:
         issues.append(Issue("error", path, "check_missing_required", f"{loc} missing keys: {missing}"))
     sev = item.get("severity")
@@ -237,6 +542,28 @@ def _validate_check_item(item: Any, *, path: str, idx: int, issues: List[Issue])
     msg = item.get("message")
     if not isinstance(msg, str) or not msg.strip():
         issues.append(Issue("error", path, "check_invalid_message", f"{loc}.message must be a non-empty string"))
+    signal_class = item.get("signal_class")
+    if signal_class is not None:
+        if not isinstance(signal_class, str) or signal_class not in SIGNAL_CLASS_ALLOWED:
+            issues.append(
+                Issue(
+                    "error",
+                    path,
+                    "check_invalid_signal_class",
+                    f"{loc}.signal_class must be one of {sorted(SIGNAL_CLASS_ALLOWED)} when present",
+                )
+            )
+    remediation_path = item.get("remediation_path")
+    if remediation_path is not None:
+        if not isinstance(remediation_path, str) or remediation_path not in REMEDIATION_PATH_ALLOWED:
+            issues.append(
+                Issue(
+                    "error",
+                    path,
+                    "check_invalid_remediation_path",
+                    f"{loc}.remediation_path must be one of {sorted(REMEDIATION_PATH_ALLOWED)} when present",
+                )
+            )
 
 
 def validate_stage_report(data: Dict[str, Any], path: Path) -> List[Issue]:
@@ -340,9 +667,11 @@ def _compute_readiness(
     manifest_ids: Optional[Set[str]],
     missing_manifest_ids: Set[str],
     block_warning_checks: Set[str],
+    block_warning_classes: Set[str],
     max_warning_checks: Optional[int],
     max_warning_checks_by_type: Dict[str, int],
-    allow_review_ingest: bool,
+    max_warning_checks_by_class: Dict[str, int],
+    review_warning_class_budget_by_content_type: Dict[str, Dict[str, int]],
 ) -> Dict[str, Any]:
     reports_by_vid: Dict[str, List[ReportRecord]] = defaultdict(list)
     for rec in report_records:
@@ -358,14 +687,16 @@ def _compute_readiness(
         candidate_ids = sorted(set(reports_by_vid.keys()) | set(unreadable_by_vid.keys()))
 
     by_status: Counter[str] = Counter()
+    by_gate: Counter[str] = Counter()
     allow_ingest = 0
     videos: List[Dict[str, Any]] = []
-    allow_ingest_statuses = {"READY", "REVIEW"} if allow_review_ingest else {"READY"}
+    allow_ingest_statuses = {"READY"}
 
     for vid in candidate_ids:
         recs = reports_by_vid.get(vid, [])
         unreadable = unreadable_by_vid.get(vid, 0)
         invalid_reports = unreadable + sum(1 for r in recs if not r.valid)
+        content_type = _resolve_content_type(vid, recs)
 
         fail_reports = 0
         warn_reports = 0
@@ -379,6 +710,8 @@ def _compute_readiness(
         sources: Set[str] = set()
         warning_signal_counts: Counter[str] = Counter()
         policy_warning_signal_counts: Counter[str] = Counter()
+        warning_signal_class_counts: Counter[str] = Counter()
+        policy_warning_signal_class_counts: Counter[str] = Counter()
 
         for rec in recs:
             report_paths.append(str(rec.path))
@@ -414,6 +747,12 @@ def _compute_readiness(
                     warning_checks += 1
                     chk_name = chk.strip() if isinstance(chk, str) and chk.strip() else ""
                     msg = item.get("message")
+                    raw_signal_class = item.get("signal_class")
+                    provided_signal_class = (
+                        raw_signal_class
+                        if isinstance(raw_signal_class, str) and raw_signal_class in SIGNAL_CLASS_ALLOWED
+                        else ""
+                    )
                     expanded_warning_counts: Counter[str] = Counter()
                     if chk_name == "stage07_validation_warnings" and isinstance(msg, str):
                         expanded_warning_counts = _parse_stage07_warning_breakdown(msg)
@@ -421,19 +760,46 @@ def _compute_readiness(
                     if expanded_warning_counts:
                         for sub_check, sub_count in expanded_warning_counts.items():
                             warning_signal_counts[sub_check] += sub_count
+                            signal_class = _warning_class_for_check(sub_check)
+                            warning_signal_class_counts[signal_class] += sub_count
                             if sub_check not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
                                 policy_warning_signal_counts[sub_check] += sub_count
+                                policy_warning_signal_class_counts[signal_class] += sub_count
                                 policy_warning_checks += sub_count
                     elif chk_name:
                         warning_signal_counts[chk_name] += 1
+                        signal_class = provided_signal_class or _warning_class_for_check(chk_name)
+                        warning_signal_class_counts[signal_class] += 1
                         if chk_name not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
                             policy_warning_signal_counts[chk_name] += 1
+                            policy_warning_signal_class_counts[signal_class] += 1
                             policy_warning_checks += 1
                     else:
                         # Unnamed warnings still count against the generic warning budget.
+                        signal_class = provided_signal_class or "other_quality"
+                        warning_signal_class_counts[signal_class] += 1
+                        policy_warning_signal_class_counts[signal_class] += 1
                         policy_warning_checks += 1
                 elif sev == "info":
                     info_checks += 1
+
+        review_budget_for_type = (
+            review_warning_class_budget_by_content_type.get(content_type, {})
+            if content_type
+            else {}
+        )
+        applied_review_budget = {
+            cls: int(limit)
+            for cls, limit in sorted(review_budget_for_type.items())
+            if isinstance(cls, str) and cls
+        }
+        review_warning_class_excess: Counter[str] = Counter()
+        for cls, seen in policy_warning_signal_class_counts.items():
+            budget = int(review_budget_for_type.get(cls, 0) or 0)
+            excess = int(seen) - budget
+            if excess > 0:
+                review_warning_class_excess[cls] = excess
+        review_warning_checks = sum(review_warning_class_excess.values())
 
         if vid in missing_manifest_ids:
             status = "BLOCKED"
@@ -444,10 +810,16 @@ def _compute_readiness(
         elif fail_reports > 0 or error_checks > 0:
             status = "BLOCKED"
             reason_code = next((r for r in reasons if r), "report_fail")
-        elif policy_warning_checks > 0:
+        elif review_warning_checks > 0:
             status = "REVIEW"
-            if policy_warning_signal_counts:
-                # Use the dominant actionable warning check as REVIEW reason.
+            if review_warning_class_excess:
+                # Prefer class-level reason so review semantics stay stable even
+                # when raw warning check names evolve.
+                reason_code = sorted(
+                    review_warning_class_excess.items(),
+                    key=lambda item: (-item[1], item[0]),
+                )[0][0]
+            elif policy_warning_signal_counts:
                 reason_code = sorted(
                     policy_warning_signal_counts.items(),
                     key=lambda item: (-item[1], item[0]),
@@ -468,30 +840,58 @@ def _compute_readiness(
                 status = "BLOCKED"
                 reason_code = f"policy_block_warning_check:{blocked_warning_hit}"
             else:
-                per_check_exceeded = next(
+                blocked_warning_class_hit = next(
                     (
-                        (chk, warning_signal_counts.get(chk, 0), limit)
-                        for chk, limit in sorted(max_warning_checks_by_type.items(), key=lambda item: item[0])
-                        if warning_signal_counts.get(chk, 0) > limit
+                        cls
+                        for cls in sorted(block_warning_classes)
+                        if warning_signal_class_counts.get(cls, 0) > 0
                     ),
                     None,
                 )
-                if per_check_exceeded is not None:
-                    chk, seen, limit = per_check_exceeded
+                if blocked_warning_class_hit:
                     status = "BLOCKED"
-                    reason_code = f"policy_warning_check_budget_exceeded:{chk}:{seen}>{limit}"
-                elif max_warning_checks is not None and policy_warning_checks > max_warning_checks:
-                    status = "BLOCKED"
-                    reason_code = "policy_warning_budget_exceeded"
+                    reason_code = f"policy_block_warning_class:{blocked_warning_class_hit}"
+                else:
+                    per_class_exceeded = next(
+                        (
+                            (cls, warning_signal_class_counts.get(cls, 0), limit)
+                            for cls, limit in sorted(max_warning_checks_by_class.items(), key=lambda item: item[0])
+                            if warning_signal_class_counts.get(cls, 0) > limit
+                        ),
+                        None,
+                    )
+                    if per_class_exceeded is not None:
+                        cls, seen, limit = per_class_exceeded
+                        status = "BLOCKED"
+                        reason_code = f"policy_warning_class_budget_exceeded:{cls}:{seen}>{limit}"
+                    else:
+                        per_check_exceeded = next(
+                            (
+                                (chk, warning_signal_counts.get(chk, 0), limit)
+                                for chk, limit in sorted(max_warning_checks_by_type.items(), key=lambda item: item[0])
+                                if warning_signal_counts.get(chk, 0) > limit
+                            ),
+                            None,
+                        )
+                        if per_check_exceeded is not None:
+                            chk, seen, limit = per_check_exceeded
+                            status = "BLOCKED"
+                            reason_code = f"policy_warning_check_budget_exceeded:{chk}:{seen}>{limit}"
+                        elif max_warning_checks is not None and policy_warning_checks > max_warning_checks:
+                            status = "BLOCKED"
+                            reason_code = "policy_warning_budget_exceeded"
 
         ready_for_ingest = status in allow_ingest_statuses
+        gate_decision = _canonical_gate_from_status(status)
         if ready_for_ingest:
             allow_ingest += 1
         by_status[status] += 1
+        by_gate[gate_decision] += 1
 
         videos.append({
             "video_id": vid,
             "status": status,
+            "gate_decision": gate_decision,
             "ready_for_ingest": ready_for_ingest,
             "reason_code": reason_code,
             "report_counts": {
@@ -506,10 +906,16 @@ def _compute_readiness(
                 "errors": error_checks,
                 "warnings": warning_checks,
                 "policy_warnings": policy_warning_checks,
+                "review_warnings": review_warning_checks,
                 "info": info_checks,
                 "warning_types": dict(warning_signal_counts),
                 "policy_warning_types": dict(policy_warning_signal_counts),
+                "warning_classes": dict(warning_signal_class_counts),
+                "policy_warning_classes": dict(policy_warning_signal_class_counts),
+                "review_warning_class_excess": dict(review_warning_class_excess),
+                "content_type_review_budget": applied_review_budget,
             },
+            "content_type": content_type,
             "sources": sorted(sources),
             "reports": sorted(report_paths),
         })
@@ -528,13 +934,20 @@ def _compute_readiness(
             "blocked": "missing report coverage, invalid report, FAIL status, or error checks",
             "allow_ingest_statuses": sorted(allow_ingest_statuses),
             "block_warning_checks": sorted(block_warning_checks),
+            "block_warning_classes": sorted(block_warning_classes),
             "max_warning_checks": max_warning_checks,
             "max_warning_checks_by_type": {k: max_warning_checks_by_type[k] for k in sorted(max_warning_checks_by_type)},
+            "max_warning_checks_by_class": {k: max_warning_checks_by_class[k] for k in sorted(max_warning_checks_by_class)},
+            "review_warning_class_budget_by_content_type": {
+                vt: {k: v for k, v in sorted(class_map.items())}
+                for vt, class_map in sorted(review_warning_class_budget_by_content_type.items())
+            },
             "warning_budget_excluded_checks": sorted(POLICY_WARNING_BUDGET_EXCLUDED_CHECKS),
         },
         "summary": {
             "videos": len(videos),
             "by_status": dict(by_status),
+            "by_gate_decision": dict(by_gate),
             "allow_ingest": allow_ingest,
             "blocked": by_status.get("BLOCKED", 0),
         },
@@ -559,10 +972,28 @@ def main() -> None:
         help="Output path for --emit-readiness-summary (default: <dir>/readiness-summary.json or ./readiness-summary.json)",
     )
     parser.add_argument(
+        "--emit-canonical-gate",
+        action="store_true",
+        help="Emit canonical gate artifact derived from readiness decisions",
+    )
+    parser.add_argument(
+        "--canonical-gate-out",
+        help=(
+            "Output path for --emit-canonical-gate "
+            "(default: data/validation/gates/<manifest>.gate.json when --manifest is set)"
+        ),
+    )
+    parser.add_argument(
         "--block-warning-check",
         action="append",
         default=[],
         help="Warning check name to escalate from REVIEW to BLOCKED (repeatable)",
+    )
+    parser.add_argument(
+        "--block-warning-class",
+        action="append",
+        default=[],
+        help="Warning class to escalate from REVIEW to BLOCKED (repeatable)",
     )
     parser.add_argument(
         "--max-warning-checks",
@@ -579,26 +1010,34 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--block-review-ingest",
-        action="store_true",
-        help="Deprecated alias for READY-only ingest policy (default behavior)",
+        "--max-warning-class",
+        action="append",
+        default=[],
+        help=(
+            "Escalate to BLOCKED when a warning class exceeds its budget. "
+            "Format: <class>=<max> (or <class>:<max>), repeatable."
+        ),
     )
     parser.add_argument(
-        "--allow-review-ingest",
-        action="store_true",
-        help="Allow REVIEW videos as ingest-ready in readiness summary policy",
+        "--review-warning-class-budget-by-content-type",
+        action="append",
+        default=[],
+        help=(
+            "Treat class warnings up to budget as PASS for that content type. "
+            "Format: <content_type>:<class>=<max>, repeatable."
+        ),
     )
     parser.add_argument("--json", action="store_true", help="Output JSON report")
     parser.add_argument("--show", type=int, default=40, help="Max issue lines in text mode")
     args = parser.parse_args()
+    if args.canonical_gate_out and not args.emit_canonical_gate:
+        args.emit_canonical_gate = True
 
     if args.max_warning_checks is not None and args.max_warning_checks < 0:
         print(f"{LOG_PREFIX} ERROR: --max-warning-checks must be >= 0", file=sys.stderr)
         sys.exit(2)
-    if args.block_review_ingest and args.allow_review_ingest:
-        print(f"{LOG_PREFIX} ERROR: --block-review-ingest and --allow-review-ingest are mutually exclusive", file=sys.stderr)
-        sys.exit(2)
     block_warning_checks = {str(c).strip() for c in (args.block_warning_check or []) if str(c).strip()}
+    block_warning_classes = {str(c).strip() for c in (args.block_warning_class or []) if str(c).strip()}
     max_warning_checks_by_type: Dict[str, int] = {}
     for raw in args.max_warning_check or []:
         try:
@@ -618,6 +1057,47 @@ def main() -> None:
             )
             sys.exit(2)
         max_warning_checks_by_type[check] = budget
+
+    max_warning_checks_by_class: Dict[str, int] = {}
+    for raw in args.max_warning_class or []:
+        try:
+            warning_class, budget = _parse_warning_check_budget(raw)
+        except ValueError as exc:
+            print(
+                f"{LOG_PREFIX} ERROR: invalid --max-warning-class value '{raw}': {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        prev = max_warning_checks_by_class.get(warning_class)
+        if prev is not None and prev != budget:
+            print(
+                f"{LOG_PREFIX} ERROR: conflicting --max-warning-class budgets for '{warning_class}' "
+                f"({prev} vs {budget})",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        max_warning_checks_by_class[warning_class] = budget
+
+    review_warning_class_budget_by_content_type: Dict[str, Dict[str, int]] = {}
+    for raw in args.review_warning_class_budget_by_content_type or []:
+        try:
+            content_type, warning_class, budget = _parse_content_type_warning_class_budget(raw)
+        except ValueError as exc:
+            print(
+                f"{LOG_PREFIX} ERROR: invalid --review-warning-class-budget-by-content-type value '{raw}': {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        per_type = review_warning_class_budget_by_content_type.setdefault(content_type, {})
+        prev = per_type.get(warning_class)
+        if prev is not None and prev != budget:
+            print(
+                f"{LOG_PREFIX} ERROR: conflicting review class budget for '{content_type}:{warning_class}' "
+                f"({prev} vs {budget})",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        per_type[warning_class] = budget
 
     files: List[Path] = []
     if args.file:
@@ -683,7 +1163,6 @@ def main() -> None:
                 )
             )
 
-    allow_review_ingest = bool(args.allow_review_ingest)
     readiness_summary = _compute_readiness(
         report_records=report_records,
         unreadable_by_vid=dict(unreadable_by_vid),
@@ -693,9 +1172,11 @@ def main() -> None:
         manifest_ids=manifest_ids,
         missing_manifest_ids=missing_manifest_ids,
         block_warning_checks=block_warning_checks,
+        block_warning_classes=block_warning_classes,
         max_warning_checks=args.max_warning_checks,
         max_warning_checks_by_type=max_warning_checks_by_type,
-        allow_review_ingest=allow_review_ingest,
+        max_warning_checks_by_class=max_warning_checks_by_class,
+        review_warning_class_budget_by_content_type=review_warning_class_budget_by_content_type,
     )
     readiness_out: Optional[Path] = None
     if args.emit_readiness_summary:
@@ -708,14 +1189,120 @@ def main() -> None:
         readiness_out.parent.mkdir(parents=True, exist_ok=True)
         readiness_out.write_text(json.dumps(readiness_summary, indent=2) + "\n", encoding="utf-8")
 
+    canonical_gate_payload: Optional[Dict[str, Any]] = None
+    canonical_gate_out: Optional[Path] = None
+    if args.emit_canonical_gate:
+        if args.canonical_gate_out:
+            canonical_gate_out = Path(args.canonical_gate_out)
+        else:
+            canonical_gate_out = _default_gate_path(
+                manifest_path=manifest_path,
+                source_filter=args.source,
+                report_dir=Path(args.dir) if args.dir else None,
+            )
+        videos_payload: List[Dict[str, Any]] = []
+        summary_counts: Counter[str] = Counter()
+        signal_class_counts: Counter[str] = Counter()
+        readiness_videos = readiness_summary.get("videos")
+        if isinstance(readiness_videos, list):
+            for row in readiness_videos:
+                if not isinstance(row, dict):
+                    continue
+                vid = str(row.get("video_id", "")).strip()
+                if not vid or not VIDEO_ID_RE.fullmatch(vid):
+                    continue
+                gate = _canonical_gate_from_status(str(row.get("status", "")))
+                if gate not in {"pass", "review", "block"}:
+                    gate = "pass"
+                summary_counts[gate] += 1
+                signals = _canonical_signals_from_readiness_video(row)
+                for signal in signals:
+                    signal_class = str(signal.get("signal_class", "")).strip()
+                    if signal_class:
+                        signal_class_counts[signal_class] += 1
+                sources_raw = row.get("sources")
+                source = None
+                if isinstance(sources_raw, list):
+                    first_source = next(
+                        (s for s in sources_raw if isinstance(s, str) and s.strip()),
+                        None,
+                    )
+                    if isinstance(first_source, str):
+                        source = first_source.strip()
+                videos_payload.append(
+                    {
+                        "video_id": vid,
+                        "source": source,
+                        "gate_decision": gate,
+                        "signals": signals,
+                        "legacy": {
+                            "status": row.get("status"),
+                            "reason_code": row.get("reason_code"),
+                            "content_type": row.get("content_type"),
+                            "ready_for_ingest": row.get("ready_for_ingest"),
+                        },
+                    }
+                )
+
+        manifest_ref: Optional[str] = None
+        if manifest_path is not None:
+            manifest_ref = str(manifest_path)
+        elif args.dir:
+            manifest_ref = str(Path(args.dir))
+        else:
+            manifest_ref = "stage-report-scope"
+
+        canonical_gate_payload = {
+            "version": 1,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "manifest": manifest_ref,
+            "source_filter": args.source or None,
+            "summary": {
+                "video_count": len(videos_payload),
+                "pass": int(summary_counts.get("pass", 0)),
+                "review": int(summary_counts.get("review", 0)),
+                "block": int(summary_counts.get("block", 0)),
+                "signal_class_counts": dict(signal_class_counts),
+                "decision_source": "stage_report_readiness",
+            },
+            "videos": videos_payload,
+        }
+
+        canonical_gate_out.parent.mkdir(parents=True, exist_ok=True)
+        canonical_gate_out.write_text(
+            json.dumps(canonical_gate_payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
     errors = sum(1 for i in issues if i.severity == "error")
     warnings = sum(1 for i in issues if i.severity == "warning")
+    normalized_issues: List[Dict[str, str]] = []
+    canonical_gate_counts: Counter[str] = Counter()
+    canonical_severity_counts: Counter[str] = Counter()
+    for issue in issues:
+        row = issue.to_dict()
+        issue_severity = _canonical_issue_severity(issue.severity)
+        gate_decision = _canonical_gate_decision(issue_severity)
+        issue_code = re.sub(r"[^a-z0-9_]+", "_", str(row.get("check", "")).strip().lower()).strip("_")
+        row["issue_code"] = issue_code or "unspecified_issue"
+        row["issue_severity"] = issue_severity
+        row["gate_decision"] = gate_decision
+        row["scope_type"] = "batch" if row.get("check") == "missing_stage_report" else "video"
+        row["origin_stage"] = "stage-report-validation"
+        normalized_issues.append(row)
+        canonical_gate_counts[gate_decision] += 1
+        canonical_severity_counts[issue_severity] += 1
+
     report = {
         "version": 1,
         "validated_files": validated,
         "unreadable_files": unreadable,
         "issues_summary": {"errors": errors, "warnings": warnings},
-        "issues": [i.to_dict() for i in issues],
+        "canonical_summary": {
+            "gate_decisions": dict(canonical_gate_counts),
+            "issue_severity": dict(canonical_severity_counts),
+        },
+        "issues": normalized_issues,
         "manifest": (
             {
                 "path": str(manifest_path) if manifest_path else None,
@@ -728,6 +1315,8 @@ def main() -> None:
         ),
         "readiness_summary": readiness_summary,
         "readiness_summary_out": str(readiness_out) if readiness_out else None,
+        "canonical_gate_out": str(canonical_gate_out) if canonical_gate_out else None,
+        "canonical_gate_summary": (canonical_gate_payload or {}).get("summary"),
         "passed": errors == 0,
     }
 
@@ -747,6 +1336,13 @@ def main() -> None:
             f"REVIEW={readiness_summary['summary']['by_status'].get('REVIEW', 0)}, "
             f"BLOCKED={readiness_summary['summary']['by_status'].get('BLOCKED', 0)}"
         )
+        if canonical_gate_out is not None and canonical_gate_payload is not None:
+            gate_summary = canonical_gate_payload.get("summary", {})
+            print(
+                f"{LOG_PREFIX} Canonical gate emitted: pass={gate_summary.get('pass', 0)}, "
+                f"review={gate_summary.get('review', 0)}, block={gate_summary.get('block', 0)}, "
+                f"out={canonical_gate_out}"
+            )
         readiness_videos = readiness_summary.get("videos")
         if isinstance(readiness_videos, list):
             blocked_rows = [

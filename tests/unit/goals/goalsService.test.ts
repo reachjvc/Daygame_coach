@@ -1056,17 +1056,16 @@ describe("deriveTimeHorizon", () => {
   // ============================================================================
 
   describe("generateDirtyDogInserts", () => {
-    test("returns 4 dirty dog goals when none exist and L2 parent present", () => {
+    test("returns 3 dirty dog goals when none exist and L2 parent present", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
         createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
-      expect(inserts.length).toBe(4)
+      expect(inserts.length).toBe(3)
       const templateIds = inserts.map((i) => i.template_id)
       expect(templateIds).toContain("l3_kiss_closes")
       expect(templateIds).toContain("l3_lays")
-      expect(templateIds).toContain("l3_rotation_size")
       expect(templateIds).toContain("l3_sustained_rotation")
     })
 
@@ -1116,9 +1115,8 @@ describe("deriveTimeHorizon", () => {
         createGoalWithProgress({ id: "dd-2", goal_level: 3, template_id: "l3_lays" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
-      expect(inserts.length).toBe(2)
+      expect(inserts.length).toBe(1)
       const templateIds = inserts.map((i) => i.template_id)
-      expect(templateIds).toContain("l3_rotation_size")
       expect(templateIds).toContain("l3_sustained_rotation")
     })
   })

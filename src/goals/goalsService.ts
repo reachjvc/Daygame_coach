@@ -452,7 +452,7 @@ export function findExistingByTemplate(
 }
 
 /**
- * Generate inserts for the 4 dirty dog goals, parented to the first existing L2 achievement.
+ * Generate inserts for the 3 dirty dog goals, parented to the first existing L2 achievement.
  * Returns empty array if no L2 parent exists or all dirty dog goals already exist.
  */
 export function generateDirtyDogInserts(

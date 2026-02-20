@@ -5,7 +5,7 @@ scripts/training-data/validation/validate_cross_stage.py
 Cross-stage consistency validation between Stage 06 (or 06c patched) and Stage 07 outputs.
 
 Runs after both stages complete for a video (or batch of videos).
-Checks that Stage 07 output is consistent with Stage 06/06c output.
+Checks that Stage 07 output is consistent with Stage 06c output.
 Prefers 06c.DET.patched data when available, falls back to 06.LLM.video-type.
 
 Use:
@@ -42,6 +42,7 @@ LOG_PREFIX = "[cross-stage]"
 
 _VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
 _BRACKET_ID_RE = re.compile(r"\[([A-Za-z0-9_-]+)\]")
+_SNAKE_RE = re.compile(r"[^a-z0-9_]+")
 
 
 def _load_manifest_entries(
@@ -78,13 +79,78 @@ class ValidationResult:
     message: str
     video_id: str = ""
 
-    def to_dict(self) -> Dict[str, str]:
+    def to_dict(self) -> Dict[str, Any]:
+        issue_severity = _canonical_issue_severity(self.severity)
+        gate_decision = _canonical_gate_decision(issue_severity)
+        scope_type = "video" if isinstance(self.video_id, str) and bool(self.video_id.strip()) else "batch"
+        issue_code = _canonical_issue_code(self.check)
+        signal_class = _canonical_signal_class(self.check)
         return {
             "severity": self.severity,
             "check": self.check,
             "message": self.message,
             "video_id": self.video_id,
+            "issue_code": issue_code,
+            "issue_severity": issue_severity,
+            "gate_decision": gate_decision,
+            "scope_type": scope_type,
+            "origin_stage": "cross-stage-validation",
+            "signal_class": signal_class,
+            "remediation_path": _canonical_remediation_path(signal_class),
         }
+
+
+def _canonical_issue_code(raw: str) -> str:
+    text = _SNAKE_RE.sub("_", str(raw or "").strip().lower()).strip("_")
+    return text or "unspecified_issue"
+
+
+def _canonical_issue_severity(legacy_severity: str) -> str:
+    sev = str(legacy_severity or "").strip().lower()
+    if sev in {"critical", "major", "minor", "info"}:
+        return sev
+    if sev == "error":
+        return "major"
+    if sev == "warning":
+        return "minor"
+    return "info"
+
+
+def _canonical_gate_decision(issue_severity: str) -> str:
+    if issue_severity in {"critical", "major"}:
+        return "block"
+    if issue_severity == "minor":
+        return "review"
+    return "pass"
+
+
+def _canonical_signal_class(check: str) -> str:
+    chk = str(check or "").strip().lower()
+    if chk in {"video_type_mismatch", "prompt_variant_mismatch"}:
+        return "routing_mismatch"
+    if chk.startswith("manifest_") or chk.startswith("missing_") or chk.startswith("invalid_"):
+        return "artifact_contract"
+    if chk in {"missing_enrichments", "phantom_enrichments", "turn_phase_wrong_conversation", "technique_wrong_conversation"}:
+        return "conversation_structure"
+    if "segment_text" in chk or "transcript" in chk:
+        return "transcript_quality"
+    if chk.startswith("stage08_"):
+        return "taxonomy_coverage"
+    return "other_quality"
+
+
+def _canonical_remediation_path(signal_class: str) -> str:
+    if signal_class == "artifact_contract":
+        return "contract_repair"
+    if signal_class == "routing_mismatch":
+        return "routing_policy_review"
+    if signal_class == "taxonomy_coverage":
+        return "taxonomy_review"
+    if signal_class == "transcript_quality":
+        return "transcript_review"
+    if signal_class == "conversation_structure":
+        return "conversation_review"
+    return "manual_review"
 
 
 def validate_cross_stage(
@@ -364,7 +430,7 @@ def _index_by_video_id(files: Iterable[Path]) -> Dict[str, List[Path]]:
 def _pick_best_candidate(candidates: List[Path], preferred_source: Optional[str]) -> Path:
     def rank(p: Path) -> Tuple[int, int, str]:
         # Prefer candidates whose path includes the source folder name (when available),
-        # and prefer deeper (more specific) layouts (source-video > source-flat > root-flat).
+        # and prefer deeper (more specific) layouts (source-video > source-flat).
         source_bonus = 1 if (preferred_source and preferred_source in p.parts) else 0
         depth = len(p.parts)
         return (source_bonus, depth, str(p))
@@ -376,45 +442,26 @@ def _path_has_source(path_obj: Path, source: str) -> bool:
     return source in path_obj.parts
 
 
-def _layout_mode(stage_root: Path, path_obj: Path) -> str:
-    """Classify file layout relative to stage root."""
-    try:
-        rel = path_obj.relative_to(stage_root)
-    except Exception:
-        return "unknown"
-    parts = rel.parts
-    if len(parts) <= 1:
-        return "root-flat"
-    if len(parts) == 2:
-        return "source-flat"
-    return "source-video"
-
-
 def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str]]:
-    """Find matching Stage 06/07 output file pairs."""
+    """Find matching Stage 06c/07 output file pairs in canonical source layout."""
     s06c_root = repo_root() / "data" / "06c.DET.patched"
-    s06_root = repo_root() / "data" / "06.LLM.video-type"
     s07_root = repo_root() / "data" / "07.LLM.content"
 
-    if not s07_root.exists():
+    if not s07_root.exists() or not s06c_root.exists():
         return []
 
-    # Index Stage 06 candidates by video_id (prefer patched artifacts when present).
+    # Index Stage 06c candidates by video_id.
     s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
-    s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
-
     s06c_by_vid = _index_by_video_id(s06c_files)
-    s06_by_vid = _index_by_video_id(s06_files)
 
-    # Enumerate Stage 07 outputs (layout-agnostic).
-    if source and (s07_root / source).exists():
-        s07_files = sorted((s07_root / source).rglob("*.enriched.json"))
+    # Enumerate Stage 07 outputs from source scope only.
+    if source:
+        source_dir = s07_root / source
+        if not source_dir.exists():
+            return []
+        s07_files = sorted(source_dir.rglob("*.enriched.json"))
     else:
         s07_files = sorted(s07_root.rglob("*.enriched.json"))
-        if source:
-            # If the caller requested a source but Stage 07 layout is root-flat,
-            # we can only best-effort filter by path parts.
-            s07_files = [p for p in s07_files if source in p.parts]
 
     pairs: List[Tuple[Path, Path, str]] = []
     for s07_file in s07_files:
@@ -422,7 +469,7 @@ def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str
         if not vid:
             continue
 
-        candidates = s06c_by_vid.get(vid) or s06_by_vid.get(vid)
+        candidates = s06c_by_vid.get(vid)
         if not candidates:
             continue
 
@@ -433,26 +480,23 @@ def find_video_pairs(source: Optional[str] = None) -> List[Tuple[Path, Path, str
 
 
 def _count_stage_artifacts(source: Optional[str]) -> Tuple[int, int]:
-    """Return (#stage06_or_06c_files, #stage07_files) for source/all scans."""
+    """Return (#stage06c_files, #stage07_files) for source/all scans."""
     s06c_root = repo_root() / "data" / "06c.DET.patched"
-    s06_root = repo_root() / "data" / "06.LLM.video-type"
     s07_root = repo_root() / "data" / "07.LLM.content"
 
     s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
-    s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
     s07_files = sorted(s07_root.rglob("*.enriched.json")) if s07_root.exists() else []
 
     if source:
         s06c_files = [p for p in s06c_files if source in p.parts]
-        s06_files = [p for p in s06_files if source in p.parts]
         s07_files = [p for p in s07_files if source in p.parts]
 
-    return (len(s06c_files) + len(s06_files), len(s07_files))
+    return (len(s06c_files), len(s07_files))
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06/06c and 07")
-    parser.add_argument("--s06", help="Stage 06 or 06c output file (conversations.json)")
+    parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06c and 07")
+    parser.add_argument("--s06", help="Stage 06c output file (conversations.json)")
     parser.add_argument("--s07", help="Stage 07 output file (enriched.json)")
     parser.add_argument("--manifest", help="Validate only videos listed in a batch/sub-batch manifest file")
     parser.add_argument("--source", help="Validate all videos in a source directory")
@@ -495,15 +539,12 @@ def main() -> None:
             sys.exit(0)
 
         s06c_root = repo_root() / "data" / "06c.DET.patched"
-        s06_root = repo_root() / "data" / "06.LLM.video-type"
         s07_root = repo_root() / "data" / "07.LLM.content"
 
         s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
-        s06_files = sorted(s06_root.rglob("*.conversations.json")) if s06_root.exists() else []
         s07_files = sorted(s07_root.rglob("*.enriched.json")) if s07_root.exists() else []
 
         s06c_by_vid = _index_by_video_id(s06c_files)
-        s06_by_vid = _index_by_video_id(s06_files)
         s07_by_vid = _index_by_video_id(s07_files)
 
         pairs: List[Tuple[Path, Path, str]] = []
@@ -514,30 +555,20 @@ def main() -> None:
             s07_candidates_all = s07_by_vid.get(vid, [])
             s07_candidates_src = [p for p in s07_candidates_all if _path_has_source(p, src)]
 
-            # Stage 06 selection follows normal pipeline preference:
-            # prefer 06c.DET.patched if present, then fall back to 06.LLM.video-type.
             s06c_candidates_all = s06c_by_vid.get(vid, [])
-            s06_candidates_all = s06_by_vid.get(vid, [])
             s06c_candidates_src = [p for p in s06c_candidates_all if _path_has_source(p, src)]
-            s06_candidates_src = [p for p in s06_candidates_all if _path_has_source(p, src)]
 
-            # Pick Stage 07 candidate (source-specific first; then best global fallback).
-            s07_path: Optional[Path] = None
-            if s07_candidates_src:
-                s07_path = _pick_best_candidate(s07_candidates_src, preferred_source=src)
-            elif s07_candidates_all:
-                s07_path = _pick_best_candidate(s07_candidates_all, preferred_source=src)
-
-            # Pick Stage 06 candidate (patched-first).
-            s06_path: Optional[Path] = None
-            if s06c_candidates_src:
-                s06_path = _pick_best_candidate(s06c_candidates_src, preferred_source=src)
-            elif s06c_candidates_all:
-                s06_path = _pick_best_candidate(s06c_candidates_all, preferred_source=src)
-            elif s06_candidates_src:
-                s06_path = _pick_best_candidate(s06_candidates_src, preferred_source=src)
-            elif s06_candidates_all:
-                s06_path = _pick_best_candidate(s06_candidates_all, preferred_source=src)
+            # Strict source-scoped selection.
+            s07_path: Optional[Path] = (
+                _pick_best_candidate(s07_candidates_src, preferred_source=src)
+                if s07_candidates_src
+                else None
+            )
+            s06_path: Optional[Path] = (
+                _pick_best_candidate(s06c_candidates_src, preferred_source=src)
+                if s06c_candidates_src
+                else None
+            )
 
             # Coverage diagnostics: Stage 07
             if not s07_candidates_all:
@@ -548,59 +579,30 @@ def main() -> None:
                     vid,
                 ))
             elif not s07_candidates_src:
-                s07_layouts = sorted({_layout_mode(s07_root, p) for p in s07_candidates_all})
-                has_non_root = any(mode not in ("root-flat", "unknown") for mode in s07_layouts)
-                if has_non_root:
-                    coverage_results.append(ValidationResult(
-                        "error",
-                        "manifest_stage07_source_mismatch",
-                        f"Stage 07 output exists for video_id '{vid}' but not under source '{src}' "
-                        f"(layouts={s07_layouts}; example={s07_candidates_all[0]})",
-                        vid,
-                    ))
-                else:
-                    coverage_results.append(ValidationResult(
-                        "warning",
-                        "manifest_stage07_source_ambiguous_root_flat",
-                        f"Stage 07 output for video_id '{vid}' is root-flat/ambiguous for source '{src}' "
-                        f"(layouts={s07_layouts}; example={s07_candidates_all[0]})",
-                        vid,
-                    ))
+                coverage_results.append(ValidationResult(
+                    "error",
+                    "manifest_stage07_source_mismatch",
+                    f"Stage 07 output exists for video_id '{vid}' but not under source '{src}' "
+                    f"(example={s07_candidates_all[0]})",
+                    vid,
+                ))
 
-            # Coverage diagnostics: Stage 06 (06c preferred; 06 fallback)
-            if not s06c_candidates_all and not s06_candidates_all:
+            # Coverage diagnostics: Stage 06c
+            if not s06c_candidates_all:
                 coverage_results.append(ValidationResult(
                     "error",
                     "manifest_missing_stage06_output",
-                    f"Manifest entry source='{src}' folder='{folder_text}' has no Stage 06/06c conversations output for video_id '{vid}'",
+                    f"Manifest entry source='{src}' folder='{folder_text}' has no Stage 06c conversations output for video_id '{vid}'",
                     vid,
                 ))
-            elif not s06c_candidates_src and not s06_candidates_src:
-                s06_layouts = sorted(
-                    {f"06c:{_layout_mode(s06c_root, p)}" for p in s06c_candidates_all}
-                    | {f"06:{_layout_mode(s06_root, p)}" for p in s06_candidates_all}
-                )
-                has_non_root = any(
-                    not mode.endswith("root-flat") and not mode.endswith("unknown")
-                    for mode in s06_layouts
-                )
-                example = s06c_candidates_all[0] if s06c_candidates_all else s06_candidates_all[0]
-                if has_non_root:
-                    coverage_results.append(ValidationResult(
-                        "error",
-                        "manifest_stage06_source_mismatch",
-                        f"Stage 06/06c output exists for video_id '{vid}' but not under source '{src}' "
-                        f"(layouts={s06_layouts}; example={example})",
-                        vid,
-                    ))
-                else:
-                    coverage_results.append(ValidationResult(
-                        "warning",
-                        "manifest_stage06_source_ambiguous_root_flat",
-                        f"Stage 06/06c output for video_id '{vid}' is root-flat/ambiguous for source '{src}' "
-                        f"(layouts={s06_layouts}; example={example})",
-                        vid,
-                    ))
+            elif not s06c_candidates_src:
+                coverage_results.append(ValidationResult(
+                    "error",
+                    "manifest_stage06_source_mismatch",
+                    f"Stage 06c output exists for video_id '{vid}' but not under source '{src}' "
+                    f"(example={s06c_candidates_all[0]})",
+                    vid,
+                ))
 
             if s06_path and s07_path:
                 key = (str(s06_path), str(s07_path), vid)
@@ -642,7 +644,7 @@ def main() -> None:
                 sys.exit(0)
             print(
                 f"{LOG_PREFIX} ERROR: No matching Stage 06/07 file pairs found for {source_label} "
-                f"(stage06+06c files={s06_count}, stage07 files={s07_count})"
+                f"(stage06c files={s06_count}, stage07 files={s07_count})"
             )
             print(
                 f"{LOG_PREFIX}        This usually indicates layout/source mismatch or missing video_id metadata."

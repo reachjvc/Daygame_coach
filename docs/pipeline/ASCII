@@ -88,9 +88,9 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |   - Collapsed speakers   |    on REJECT
 |   - Structural coherence |
 |                          |
-|  Auto-tiered model:      |    --model auto (default)
-|   confidence >= 0.85 →   |    Haiku (cheap/fast)
-|   confidence <  0.85 →   |    Opus (thorough)
+|  Single model path:      |    --model opus (default)
+|   no model fallback      |    strict fail on timeout/
+|   and no auto-tiering    |    invalid output
 +--------------------------+
              |
              |  data/06b.LLM.verify/.../*.verification.json
@@ -177,9 +177,12 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  Propagates confidence   |    Reads 06g adjudications
 |  scores from adjudicated |    Stamps per-segment
 |  seeds to all segments   |    confidence scores
+|  Band thresholds tunable |    --confidence-band-high-threshold
+|                          |    --confidence-band-medium-threshold
 +--------------------------+
              |
              |  data/06h.DET.confidence-propagation/.../*.confidence.report.json
+             |  data/06h.DET.confidence-propagation/.../*.confidence.trace.json
              v
 +--------------------------+
 |  07.LLM. CONTENT         |    1 LLM call / video
@@ -254,6 +257,10 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  Confidence floor:       |    Chunks with score < 0.3
 |   Filters low-quality    |    dropped before embedding
 |   chunks pre-embed       |
+|  Floor tunable           |    --min-chunk-confidence
+|  Emits floor telemetry   |    minChunkConfidence
+|                          |    preFilterChunkCount
+|                          |    droppedChunksBelowFloor
 |                          |
 |  Incremental: skips      |    Hash-based change
 |  unchanged sources       |    detection + mtime

@@ -822,11 +822,9 @@ def analyze_video(
             labels = result["speaker_labels"]
             classifications = result["segments"]
 
-            # Extract transcript_confidence (with fallback for older responses)
-            transcript_conf = result.get("transcript_confidence", {
-                "score": 70,
-                "reasoning": "Not assessed (legacy response)"
-            })
+            transcript_conf = result.get("transcript_confidence")
+            if not isinstance(transcript_conf, dict):
+                raise RuntimeError("LLM response missing required transcript_confidence object")
 
             # Ensure all speakers have labels
             for speaker in speakers:
@@ -1240,15 +1238,6 @@ def find_existing_output_path(
     preferred = compute_output_path(input_path, preferred_output_dir, input_root=input_root)
     if preferred.exists():
         return preferred
-    # Legacy source-flat fallback.
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    # Legacy root-flat fallback.
-    if output_root_dir is not None:
-        root_flat = compute_output_path(input_path, output_root_dir)
-        if root_flat.exists():
-            return root_flat
     return None
 
 
@@ -1269,33 +1258,9 @@ def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
 
 
 def find_input_files(in_dir: Path) -> List[Path]:
-    """Find audio_features.json files, preferring clean16k over raw16k per video.
-
-    Matches convention from stages 03-05: clean16k is canonical for downstream stages.
-    Falls back to raw16k only when clean16k is missing for a given video.
-    """
+    """Find canonical clean16k audio_features artifacts only."""
     all_files = sorted(in_dir.rglob("*.audio_features.json"))
-
-    # Group by video directory
-    dir_files: Dict[Path, List[Path]] = {}
-    for f in all_files:
-        dir_files.setdefault(f.parent, []).append(f)
-
-    selected: List[Path] = []
-    for video_dir in sorted(dir_files.keys()):
-        files = dir_files[video_dir]
-        clean = [f for f in files if ".clean16k." in f.name]
-        raw = [f for f in files if ".raw16k." in f.name]
-        other = [f for f in files if ".clean16k." not in f.name and ".raw16k." not in f.name]
-
-        if clean:
-            selected.extend(clean)
-        elif raw:
-            selected.extend(raw)
-        else:
-            selected.extend(other)
-
-    return sorted(selected)
+    return sorted([f for f in all_files if ".clean16k." in f.name])
 
 
 # ---------------------------

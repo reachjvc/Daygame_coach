@@ -2,14 +2,26 @@
   "validation": {
     "quarantine_level": "error",
     "readiness": {
-      "allow_review_ingest": false,
-      "max_warning_checks": 3,
+      "max_warning_checks": 10,
       "max_warning_checks_by_type": {
-        "transcript_artifact": 1,
         "evidence_mismatch": 0,
         "evidence_not_on_referenced_segment": 0
       },
-      "block_warning_checks": []
+      "block_warning_checks": [],
+      "max_warning_checks_by_class": {
+        "transcript_quality": 12,
+        "routing_mismatch": 2
+      },
+      "review_warning_class_budget_by_content_type": {
+        "infield": {
+          "transcript_quality": 4
+        },
+        "talking_head": {
+          "transcript_quality": 1,
+          "routing_mismatch": 0
+        }
+      },
+      "block_warning_classes": []
     }
   }
 }

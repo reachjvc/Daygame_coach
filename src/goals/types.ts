@@ -245,3 +245,24 @@ export interface PreviewGoalState {
   targetValue: number
   milestoneConfig?: MilestoneLadderConfig
 }
+
+// ============================================================================
+// Badge Engine Types
+// ============================================================================
+
+/**
+ * Badge tier thresholds for L2 achievement progress.
+ * 0-24% = none, 25% = bronze, 50% = silver, 75% = gold, 100% = diamond
+ */
+export type BadgeTier = "none" | "bronze" | "silver" | "gold" | "diamond"
+
+/**
+ * Status of a single L2 badge, computed from weighted L3 goal progress.
+ */
+export interface BadgeStatus {
+  badgeId: string
+  title: string
+  progress: number
+  tier: BadgeTier
+  unlocked: boolean
+}

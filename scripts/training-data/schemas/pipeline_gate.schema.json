@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pipeline Gate Summary",
+  "description": "Canonical manifest-level gate decision artifact.",
+  "type": "object",
+  "required": ["version", "generated_at", "manifest", "summary", "videos"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_filter": {
+      "type": ["string", "null"]
+    },
+    "summary": {
+      "type": "object",
+      "required": ["video_count", "pass", "review", "block"],
+      "properties": {
+        "video_count": { "type": "integer", "minimum": 0 },
+        "pass": { "type": "integer", "minimum": 0 },
+        "review": { "type": "integer", "minimum": 0 },
+        "block": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": true
+    },
+    "videos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["video_id", "gate_decision", "signals"],
+        "properties": {
+          "video_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{11}$"
+          },
+          "gate_decision": {
+            "type": "string",
+            "enum": ["pass", "review", "block"]
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "$ref": "./pipeline_signal.schema.json"
+            }
+          },
+          "legacy": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

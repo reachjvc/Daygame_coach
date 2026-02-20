@@ -277,7 +277,7 @@ describe("redistributeWeights", () => {
 
   test("real scenario: user removes dirty dog goals from master_daygame", () => {
     const allWeights = getAchievementWeights("l2_master_daygame")
-    const dirtyDogIds = new Set(["l3_kiss_closes", "l3_lays", "l3_rotation_size", "l3_sustained_rotation"])
+    const dirtyDogIds = new Set(["l3_kiss_closes", "l3_lays", "l3_sustained_rotation"])
     const activeIds = new Set(allWeights.map((w) => w.goalId).filter((id) => !dirtyDogIds.has(id)))
 
     const result = redistributeWeights(allWeights, activeIds)
@@ -311,11 +311,11 @@ describe("getTemplatesByCategory", () => {
     expect(ids).toContain("l3_approach_frequency")
   })
 
-  test("dirty_dog contains lays and rotation", () => {
+  test("dirty_dog contains lays and sustained rotation", () => {
     const cats = getTemplatesByCategory()
     const ids = cats.dirty_dog!.map((t) => t.id)
     expect(ids).toContain("l3_lays")
-    expect(ids).toContain("l3_rotation_size")
+    expect(ids).toContain("l3_sustained_rotation")
   })
 
   test("texting contains texting-related goals", () => {

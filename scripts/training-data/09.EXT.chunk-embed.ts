@@ -59,6 +59,8 @@ type Args = {
   help: boolean
   source: string | null
   manifest: string | null
+  quarantineFile: string | null
+  minChunkConfidence: number
   maskTranscriptArtifacts: boolean
   maskAllTranscriptArtifacts: boolean
   maskLowQuality: boolean
@@ -136,6 +138,12 @@ type ChunksFile = {
   embeddingModel: string
   chunkSize: number
   chunkOverlap: number
+  // Active confidence floor used to retain non-summary chunks in this run.
+  minChunkConfidence: number
+  // Number of chunks before confidence-floor filtering.
+  preFilterChunkCount: number
+  // Number of non-summary chunks dropped by confidence-floor filtering.
+  droppedChunksBelowFloor: number
   videoType: string
   channel: string
   // YouTube video id (11 chars). Primary key for videos.
@@ -279,6 +287,8 @@ type InternalChunk = {
 // CLI
 // ---------------------------------------------------------------------------
 
+const DEFAULT_MIN_CHUNK_CONFIDENCE = 0.3
+
 function printUsage() {
   console.log("Usage:")
   console.log("  node --import tsx/esm scripts/training-data/09.EXT.chunk-embed.ts [options]")
@@ -286,6 +296,8 @@ function printUsage() {
   console.log("Options:")
   console.log("  --source <name>                  Restrict processing to one source")
   console.log("  --manifest <path>                Restrict processing to manifest scope")
+  console.log("  --quarantine-file <path>         Skip video IDs listed in quarantine JSON")
+  console.log("  --min-chunk-confidence <0..1>    Confidence floor for non-summary chunk retention (default 0.30)")
   console.log("  --dry-run                        Build chunks without writing/embedding")
   console.log("  --full, --force                  Force re-chunk of all eligible files")
   console.log("  --mask-low-quality               Also mask low-quality segments")
@@ -298,6 +310,16 @@ function parseArgs(argv: string[]): Args {
   const flags = new Set(argv)
   let source: string | null = null
   let manifest: string | null = null
+  let quarantineFile: string | null = null
+  let minChunkConfidence = DEFAULT_MIN_CHUNK_CONFIDENCE
+
+  const parseBoundedConfidence = (raw: string): number => {
+    const value = Number(raw)
+    if (!Number.isFinite(value) || value < 0 || value > 1) {
+      throw new Error(`--min-chunk-confidence must be a number in [0,1], got: ${raw}`)
+    }
+    return value
+  }
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -313,6 +335,18 @@ function parseArgs(argv: string[]): Args {
     if (arg.startsWith("--manifest=")) {
       manifest = arg.split("=", 2)[1]
     }
+    if (arg === "--quarantine-file" && argv[i + 1]) {
+      quarantineFile = argv[++i]
+    }
+    if (arg.startsWith("--quarantine-file=")) {
+      quarantineFile = arg.split("=", 2)[1]
+    }
+    if (arg === "--min-chunk-confidence" && argv[i + 1]) {
+      minChunkConfidence = parseBoundedConfidence(argv[++i])
+    }
+    if (arg.startsWith("--min-chunk-confidence=")) {
+      minChunkConfidence = parseBoundedConfidence(arg.split("=", 2)[1])
+    }
   }
 
   return {
@@ -321,6 +355,8 @@ function parseArgs(argv: string[]): Args {
     help: flags.has("-h") || flags.has("--help"),
     source,
     manifest,
+    quarantineFile,
+    minChunkConfidence,
     // Default: mask only high-severity transcript artifacts (genuine nonsense/gibberish).
     // Low-severity artifacts (word repetition, minor grammar) are kept in chunk text.
     // --mask-all-transcript-artifacts restores old behavior of masking everything.
@@ -414,6 +450,7 @@ async function sleep(ms: number) {
 // ---------------------------------------------------------------------------
 
 const MANIFEST_VIDEO_ID_RE = /\[([A-Za-z0-9_-]{11})\]/
+const QUARANTINE_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/
 
 function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
   const abs = path.isAbsolute(manifestPath)
@@ -437,6 +474,48 @@ function loadManifestAllowList(manifestPath: string): Map<string, Set<string>> {
   }
 
   return out
+}
+
+function loadQuarantineVideoIds(quarantinePath: string): Set<string> {
+  const abs = path.isAbsolute(quarantinePath)
+    ? quarantinePath
+    : path.join(process.cwd(), quarantinePath)
+  const raw = fs.readFileSync(abs, "utf-8")
+  const parsed: unknown = JSON.parse(raw)
+  const ids = new Set<string>()
+
+  const addId = (value: unknown) => {
+    if (typeof value !== "string") return
+    const v = value.trim()
+    if (QUARANTINE_VIDEO_ID_RE.test(v)) ids.add(v)
+  }
+
+  if (Array.isArray(parsed)) {
+    for (const item of parsed) addId(item)
+    return ids
+  }
+
+  if (!parsed || typeof parsed !== "object") return ids
+
+  const obj = parsed as Record<string, unknown>
+  for (const key of ["quarantined_video_ids", "video_ids"]) {
+    const arr = obj[key]
+    if (!Array.isArray(arr)) continue
+    for (const item of arr) addId(item)
+  }
+
+  const videos = obj.videos
+  if (Array.isArray(videos)) {
+    for (const item of videos) {
+      if (item && typeof item === "object" && !Array.isArray(item)) {
+        addId((item as Record<string, unknown>).video_id)
+      } else {
+        addId(item)
+      }
+    }
+  }
+
+  return ids
 }
 
 // ---------------------------------------------------------------------------
@@ -572,7 +651,6 @@ function collectConfidenceDamageStats(
 }
 
 const CHUNK_CONFIDENCE_VERSION = 2  // v2: graduated artifact severity penalty (was flat x0.75)
-const MIN_CHUNK_CONFIDENCE = 0.3    // Skip chunks below this floor to avoid polluting vector store
 
 function clamp01(n: number): number {
   if (!Number.isFinite(n)) return 0
@@ -1419,7 +1497,14 @@ async function generateEmbeddingWithRetry(
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const args = parseArgs(process.argv.slice(2))
+  let args: Args
+  try {
+    args = parseArgs(process.argv.slice(2))
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error(`❌ ${msg}`)
+    process.exit(1)
+  }
   if (args.help) {
     printUsage()
     return
@@ -1452,6 +1537,16 @@ async function main() {
     }
     if (manifestAllowList.size === 0) {
       console.error(`❌ Manifest had no valid entries: ${args.manifest}`)
+      process.exit(1)
+    }
+  }
+  let quarantineVideoIds = new Set<string>()
+  if (args.quarantineFile) {
+    try {
+      quarantineVideoIds = loadQuarantineVideoIds(args.quarantineFile)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`❌ Could not read quarantine file: ${args.quarantineFile} (${msg})`)
       process.exit(1)
     }
   }
@@ -1506,17 +1601,23 @@ async function main() {
   let skippedNoContent = 0
   let skippedNoVideoId = 0
   let skippedNotInManifest = 0
+  let skippedQuarantine = 0
 
   for (const filePath of enrichedFiles) {
     const relEnrichedPath = path.relative(enrichedDir, filePath)
     const relParts = relEnrichedPath.split(path.sep).filter(Boolean)
     const channelCandidate = relParts.length > 1 ? relParts[0] : null
     const videoStem = normalizeVideoStemFromEnrichedFilename(filePath)
+    const videoIdFromFilename = extractVideoIdFromText(videoStem) || extractVideoIdFromText(relEnrichedPath)
+
+    if (videoIdFromFilename && quarantineVideoIds.has(videoIdFromFilename)) {
+      skippedQuarantine++
+      continue
+    }
 
     if (manifestAllowList && channelCandidate) {
-      const vidFromFilename = extractVideoIdFromText(videoStem) || extractVideoIdFromText(relEnrichedPath)
-      const allowed = vidFromFilename ? manifestAllowList.get(channelCandidate) : null
-      if (!allowed || !vidFromFilename || !allowed.has(vidFromFilename)) {
+      const allowed = videoIdFromFilename ? manifestAllowList.get(channelCandidate) : null
+      if (!allowed || !videoIdFromFilename || !allowed.has(videoIdFromFilename)) {
         skippedNotInManifest++
         continue
       }
@@ -1547,11 +1648,14 @@ async function main() {
 
     const videoId =
       (isValidVideoId(parsedFile.video_id) ? parsedFile.video_id : null) ||
-      extractVideoIdFromText(videoStem) ||
-      extractVideoIdFromText(relEnrichedPath)
+      videoIdFromFilename
 
     if (!videoId) {
       skippedNoVideoId++
+      continue
+    }
+    if (quarantineVideoIds.has(videoId)) {
+      skippedQuarantine++
       continue
     }
 
@@ -1646,6 +1750,7 @@ async function main() {
   console.log("================================")
   console.log(`Source:       ${args.source ?? "all"}`)
   if (args.manifest) console.log(`Manifest:     ${args.manifest}`)
+  if (args.quarantineFile) console.log(`Quarantine:   ${args.quarantineFile} (${quarantineVideoIds.size} ids)`)
   console.log(`Unchanged:    ${unchanged}`)
   console.log(`To process:   ${toProcess.length}${force ? " (forced)" : ""}`)
   if (mtimeForced > 0) console.log(`Stale:        ${mtimeForced} file(s) with input newer than output (auto-forced)`)
@@ -1654,8 +1759,10 @@ async function main() {
   if (skippedNoVideoId > 0) console.log(`Skipped:      ${skippedNoVideoId} file(s) missing video_id`)
   if (skippedNoContent > 0) console.log(`Skipped:      ${skippedNoContent} file(s) with no content`)
   if (skippedNotInManifest > 0) console.log(`Skipped:      ${skippedNotInManifest} file(s) not in manifest`)
+  if (skippedQuarantine > 0) console.log(`Skipped:      ${skippedQuarantine} file(s) quarantined`)
   console.log(`Chunk size:   ${chunkSize}`)
   console.log(`Overlap:      ${chunkOverlap}`)
+  console.log(`Min conf:     ${args.minChunkConfidence}`)
   console.log(`Model:        ${embeddingModel}`)
   console.log(`Output dir:   ${chunksDir}`)
 
@@ -2004,11 +2111,11 @@ async function main() {
     const filteredChunks = normalizedChunks.filter((c) => {
       if (c.isSummary) return true
       const score = c.chunk_confidence_score ?? 1.0
-      return score >= MIN_CHUNK_CONFIDENCE
+      return score >= args.minChunkConfidence
     })
     const droppedCount = beforeFilterCount - filteredChunks.length
     if (droppedCount > 0) {
-      console.log(`   🚫 Filtered ${droppedCount} chunk(s) below confidence floor ${MIN_CHUNK_CONFIDENCE}`)
+      console.log(`   🚫 Filtered ${droppedCount} chunk(s) below confidence floor ${args.minChunkConfidence}`)
     }
 
     // Re-normalize global indices after filtering
@@ -2150,6 +2257,9 @@ async function main() {
       embeddingModel,
       chunkSize,
       chunkOverlap,
+      minChunkConfidence: args.minChunkConfidence,
+      preFilterChunkCount: beforeFilterCount,
+      droppedChunksBelowFloor: droppedCount,
       videoType,
       channel,
       videoId,

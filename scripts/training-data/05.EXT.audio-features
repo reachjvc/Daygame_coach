@@ -391,7 +391,7 @@ def compute_pitch_features(y: np.ndarray, sr: int, cfg: Config) -> Dict[str, Any
         # Soft robustness (not hard clamping): trim only the extreme outliers
         f0v_stats = percentile_trim(f0v, cfg.pitch_trim_percentile)
         if f0v_stats.size < 2:
-            f0v_stats = f0v  # fallback
+            f0v_stats = f0v  # retain original voiced values when trimming is too aggressive
 
         mean_hz = float(np.mean(f0v_stats))
         std_hz = float(np.std(f0v_stats))

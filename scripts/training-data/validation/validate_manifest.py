@@ -53,6 +53,113 @@ _KNOWN_STAGE07_DROP_REASONS: Set[str] = {
 }
 
 
+def _canonical_issue_severity(legacy_severity: str) -> str:
+    sev = str(legacy_severity or "").strip().lower()
+    if sev in {"critical", "major", "minor", "info"}:
+        return sev
+    if sev == "error":
+        return "major"
+    if sev == "warning":
+        return "minor"
+    return "info"
+
+
+def _canonical_gate_decision(issue_severity: str) -> str:
+    if issue_severity in {"critical", "major"}:
+        return "block"
+    if issue_severity == "minor":
+        return "review"
+    return "pass"
+
+
+def _canonical_scope_type(issue: Dict[str, Any]) -> str:
+    scope = str(issue.get("scope_type", "")).strip().lower()
+    if scope in {"segment", "conversation", "video", "batch"}:
+        return scope
+    if issue.get("segment_id") is not None:
+        return "segment"
+    if issue.get("conversation_id") is not None:
+        return "conversation"
+    vid = str(issue.get("video_id", "")).strip()
+    if vid == "*" or not vid:
+        return "batch"
+    return "video"
+
+
+def _canonical_issue_code(raw_check: str) -> str:
+    cleaned = _SAFE_NAME_RE.sub("_", str(raw_check or "").strip().lower()).strip("_")
+    return cleaned or "unspecified_issue"
+
+
+def _canonical_signal_class(issue: Dict[str, Any]) -> str:
+    check = str(issue.get("check", "")).strip().lower()
+    issue_code = str(issue.get("issue_code", "")).strip().lower()
+
+    if check in {"preexisting_quarantine", "stage06b_reject"}:
+        return "quarantine_gate"
+    if issue_code in {"preexisting_quarantine", "stage06b_reject"}:
+        return "quarantine_gate"
+
+    if check in {"video_type_mismatch", "prompt_variant_mismatch"}:
+        return "routing_mismatch"
+    if issue_code in {"video_type_mismatch", "prompt_variant_mismatch"}:
+        return "routing_mismatch"
+
+    if check.startswith("stage08_"):
+        return "taxonomy_coverage"
+    if issue_code.startswith("stage08_"):
+        return "taxonomy_coverage"
+
+    if check in {"segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
+        return "transcript_quality"
+    if issue_code in {"segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
+        return "transcript_quality"
+
+    if check in {"conversation_not_contiguous", "compilation_with_single_conversation"}:
+        return "conversation_structure"
+    if issue_code in {"conversation_not_contiguous", "compilation_with_single_conversation"}:
+        return "conversation_structure"
+
+    if (
+        check.startswith("missing_")
+        or check.startswith("invalid_")
+        or issue_code.startswith("missing_")
+        or issue_code.startswith("invalid_")
+    ):
+        return "artifact_contract"
+
+    return "other_quality"
+
+
+def _canonical_remediation_path(signal_class: str) -> str:
+    if signal_class == "quarantine_gate":
+        return "quarantine"
+    if signal_class == "artifact_contract":
+        return "contract_repair"
+    if signal_class == "routing_mismatch":
+        return "routing_policy_review"
+    if signal_class == "taxonomy_coverage":
+        return "taxonomy_review"
+    if signal_class == "transcript_quality":
+        return "transcript_review"
+    if signal_class == "conversation_structure":
+        return "conversation_review"
+    return "manual_review"
+
+
+def _annotate_issue_canonical(issue: Dict[str, Any], origin_stage: str = "manifest-validation") -> None:
+    # Keep legacy fields untouched; add canonical siblings for transition.
+    issue_severity = _canonical_issue_severity(str(issue.get("severity", "")))
+    issue["issue_severity"] = issue_severity
+    issue["gate_decision"] = _canonical_gate_decision(issue_severity)
+    issue["scope_type"] = _canonical_scope_type(issue)
+    issue["issue_code"] = _canonical_issue_code(str(issue.get("check", "")))
+    signal_class = _canonical_signal_class(issue)
+    issue["signal_class"] = signal_class
+    issue["remediation_path"] = _canonical_remediation_path(signal_class)
+    issue["origin_stage"] = origin_stage
+
+
 @dataclass(frozen=True)
 class WaiverRule:
     video_id: str
@@ -892,11 +999,18 @@ def _issue_to_stage_check(issue: Dict[str, Any]) -> Dict[str, str]:
     sev = sev_raw if sev_raw in {"error", "warning", "info"} else "info"
     check = str(issue.get("check", "unknown")).strip() or "unknown"
     message = str(issue.get("message", "")).strip() or "(no message)"
-    return {
+    out = {
         "severity": sev,
         "check": check,
         "message": message,
     }
+    signal_class = str(issue.get("signal_class", "")).strip()
+    if signal_class:
+        out["signal_class"] = signal_class
+    remediation_path = str(issue.get("remediation_path", "")).strip()
+    if remediation_path:
+        out["remediation_path"] = remediation_path
+    return out
 
 
 def _build_video_stage_report(
@@ -973,6 +1087,12 @@ def _default_quarantine_path(manifest_path: Path, source_filter: Optional[str]) 
     return repo_root() / "data" / "validation" / "quarantine" / f"{name}.json"
 
 
+def _default_gate_path(manifest_path: Path, source_filter: Optional[str]) -> Path:
+    suffix = f".{source_filter}" if source_filter else ""
+    name = _safe_report_name(f"{manifest_path.stem}{suffix}")
+    return repo_root() / "data" / "validation" / "gates" / f"{name}.gate.json"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Manifest validation harness (06b/06c/07 cross-stage)")
     parser.add_argument("--manifest", required=True, help="Batch/sub-batch manifest file (docs/pipeline/batches/*.txt)")
@@ -1034,6 +1154,15 @@ def main() -> None:
         help="Severity threshold for quarantine entries: error or warning (default: error)",
     )
     parser.add_argument(
+        "--emit-canonical-gate",
+        action="store_true",
+        help="Emit canonical manifest-level gate artifact under data/validation/gates/",
+    )
+    parser.add_argument(
+        "--canonical-gate-out",
+        help="Output file for --emit-canonical-gate (defaults to data/validation/gates/<manifest>[.<source>].gate.json)",
+    )
+    parser.add_argument(
         "--max-damaged-token-ratio",
         type=float,
         help=(
@@ -1060,6 +1189,7 @@ def main() -> None:
 
     args = parser.parse_args()
     emit_quarantine = bool(args.emit_quarantine or args.quarantine_out)
+    emit_canonical_gate = bool(args.emit_canonical_gate or args.canonical_gate_out)
 
     if args.max_damaged_token_ratio is not None and not (0.0 <= float(args.max_damaged_token_ratio) <= 1.0):
         print(f"{LOG_PREFIX} ERROR: --max-damaged-token-ratio must be within [0,1]", file=sys.stderr)
@@ -1212,39 +1342,14 @@ def main() -> None:
         report_stem = _stage08_report_stem(manifest_path.stem, args.source)
         stage08_report_path = data_root / "08.DET.taxonomy-validation" / f"{report_stem}.report.json"
         expected_source = _stage08_expected_source_label(manifest_path.name, args.source)
-        legacy_source = _stage08_expected_source_label(manifest_path.name, None)
-        legacy_stage08_report_path: Optional[Path] = None
-
-        if args.source:
-            legacy_report_stem = _stage08_report_stem(manifest_path.stem, None)
-            legacy_stage08_report_path = data_root / "08.DET.taxonomy-validation" / f"{legacy_report_stem}.report.json"
-            if (not stage08_report_path.exists()) and legacy_stage08_report_path.exists():
-                stage08_report_path = legacy_stage08_report_path
-                issues.append({
-                    "video_id": "*",
-                    "source": args.source or "all",
-                    "severity": "warning",
-                    "check": "stage08_report_legacy_name",
-                    "message": (
-                        "Using legacy Stage 08 report path without source suffix; "
-                        f"re-run Stage 08 to write source-scoped report: {legacy_stage08_report_path.name}"
-                    ),
-                    "stage08_report": str(stage08_report_path),
-                })
-                check_counts["warning:stage08_report_legacy_name"] += 1
 
         if not stage08_report_path.exists():
-            extra = (
-                f" (legacy candidate: {legacy_stage08_report_path})"
-                if legacy_stage08_report_path is not None
-                else ""
-            )
             issues.append({
                 "video_id": "*",
                 "source": args.source or "all",
                 "severity": "error",
                 "check": "missing_stage08_report",
-                "message": f"Missing Stage 08 report for manifest scope: {stage08_report_path}{extra}",
+                "message": f"Missing Stage 08 report for manifest scope: {stage08_report_path}",
             })
             check_counts["error:missing_stage08_report"] += 1
         else:
@@ -1273,44 +1378,30 @@ def main() -> None:
 
                 source_label = report_data.get("source")
                 if source_label != expected_source:
-                    if args.source and source_label == legacy_source:
-                        issues.append({
-                            "video_id": "*",
-                            "source": args.source or "all",
-                            "severity": "warning",
-                            "check": "stage08_report_legacy_scope",
-                            "message": (
-                                f"Stage 08 report source uses legacy scope {legacy_source!r}; "
-                                f"expected {expected_source!r}"
-                            ),
-                            "stage08_report": str(stage08_report_path),
-                        })
-                        check_counts["warning:stage08_report_legacy_scope"] += 1
-                    else:
-                        issues.append({
-                            "video_id": "*",
-                            "source": args.source or "all",
-                            "severity": "error",
-                            "check": "invalid_stage08_report_scope",
-                            "message": (
-                                f"Stage 08 report source mismatch: expected {expected_source!r}, "
-                                f"found {source_label!r}"
-                            ),
-                            "stage08_report": str(stage08_report_path),
-                        })
-                        check_counts["error:invalid_stage08_report_scope"] += 1
+                    issues.append({
+                        "video_id": "*",
+                        "source": args.source or "all",
+                        "severity": "error",
+                        "check": "invalid_stage08_report_scope",
+                        "message": (
+                            f"Stage 08 report source mismatch: expected {expected_source!r}, "
+                            f"found {source_label!r}"
+                        ),
+                        "stage08_report": str(stage08_report_path),
+                    })
+                    check_counts["error:invalid_stage08_report_scope"] += 1
 
                 scope = report_data.get("scope")
                 if scope is None:
                     issues.append({
                         "video_id": "*",
                         "source": args.source or "all",
-                        "severity": "warning",
+                        "severity": "error",
                         "check": "missing_stage08_report_scope",
                         "message": "Stage 08 report missing scope metadata; cannot fully verify manifest/source scope",
                         "stage08_report": str(stage08_report_path),
                     })
-                    check_counts["warning:missing_stage08_report_scope"] += 1
+                    check_counts["error:missing_stage08_report_scope"] += 1
                 elif not isinstance(scope, dict):
                     issues.append({
                         "video_id": "*",
@@ -1340,32 +1431,18 @@ def main() -> None:
                     expected_scope_source = args.source or None
                     scope_source = scope.get("source_filter")
                     if scope_source != expected_scope_source:
-                        if args.source and scope_source in {None, ""}:
-                            issues.append({
-                                "video_id": "*",
-                                "source": args.source or "all",
-                                "severity": "warning",
-                                "check": "stage08_report_scope_legacy_source",
-                                "message": (
-                                    "Stage 08 report scope missing source_filter for source-scoped validation; "
-                                    "re-run Stage 08 for explicit source scope metadata"
-                                ),
-                                "stage08_report": str(stage08_report_path),
-                            })
-                            check_counts["warning:stage08_report_scope_legacy_source"] += 1
-                        else:
-                            issues.append({
-                                "video_id": "*",
-                                "source": args.source or "all",
-                                "severity": "error",
-                                "check": "invalid_stage08_report_scope_source",
-                                "message": (
-                                    f"Stage 08 report scope.source_filter mismatch: expected {expected_scope_source!r}, "
-                                    f"found {scope_source!r}"
-                                ),
-                                "stage08_report": str(stage08_report_path),
-                            })
-                            check_counts["error:invalid_stage08_report_scope_source"] += 1
+                        issues.append({
+                            "video_id": "*",
+                            "source": args.source or "all",
+                            "severity": "error",
+                            "check": "invalid_stage08_report_scope_source",
+                            "message": (
+                                f"Stage 08 report scope.source_filter mismatch: expected {expected_scope_source!r}, "
+                                f"found {scope_source!r}"
+                            ),
+                            "stage08_report": str(stage08_report_path),
+                        })
+                        check_counts["error:invalid_stage08_report_scope_source"] += 1
 
                     scope_manifest_videos = scope.get("manifest_videos")
                     if isinstance(scope_manifest_videos, int) and scope_manifest_videos != len(manifest_ids):
@@ -1416,7 +1493,11 @@ def main() -> None:
                             issues.append({
                                 "video_id": "*",
                                 "source": args.source or "all",
-                                "severity": "warning",
+                                # Per-video FAIL rows already carry actionable signal.
+                                # Keep manifest-level FAIL summary as non-gating context
+                                # so a single missing/failed video doesn't downgrade every
+                                # video in the manifest to REVIEW.
+                                "severity": "info",
                                 "check": "stage08_validation_fail_manifest",
                                 "message": (
                                     "Stage 08 report status is FAIL; per-video failures will be quarantined"
@@ -1424,7 +1505,6 @@ def main() -> None:
                                 ),
                                 "stage08_report": str(stage08_report_path),
                             })
-                            check_counts["warning:stage08_validation_fail_manifest"] += 1
                         else:
                             issues.append({
                                 "video_id": "*",
@@ -2101,6 +2181,9 @@ def main() -> None:
                 }
                 quarantine_applied += 1
 
+    for issue in issues:
+        _annotate_issue_canonical(issue)
+
     # Recompute check counts after waiver application to keep summary/gates consistent.
     check_counts = Counter()
     for issue in issues:
@@ -2111,6 +2194,88 @@ def main() -> None:
 
     quarantine_severities = {"error"} if args.quarantine_level == "error" else {"error", "warning"}
     quarantine_items: Dict[str, Dict[str, Any]] = {}
+    if emit_quarantine and quarantine_file_path and quarantine_file_path.exists():
+        # Preserve existing quarantine membership/reasons when re-emitting so
+        # stage-derived quarantines (for example 06b REJECT) are never dropped
+        # by a later validation-only quarantine write.
+        try:
+            existing_quarantine_raw = json.loads(
+                quarantine_file_path.read_text(encoding="utf-8")
+            )
+        except Exception:
+            existing_quarantine_raw = None
+
+        if isinstance(existing_quarantine_raw, dict):
+            existing_videos = existing_quarantine_raw.get("videos")
+            if isinstance(existing_videos, list):
+                for existing_item in existing_videos:
+                    if not isinstance(existing_item, dict):
+                        continue
+                    vid = str(existing_item.get("video_id", "")).strip()
+                    if not vid or vid not in manifest_ids:
+                        continue
+                    checks_raw = existing_item.get("checks")
+                    checks_set: Set[str] = set()
+                    if isinstance(checks_raw, list):
+                        checks_set = {
+                            str(v).strip()
+                            for v in checks_raw
+                            if isinstance(v, str) and str(v).strip()
+                        }
+                    reasons_raw = existing_item.get("reasons")
+                    reasons_list: List[Dict[str, str]] = []
+                    if isinstance(reasons_raw, list):
+                        for reason in reasons_raw:
+                            if not isinstance(reason, dict):
+                                continue
+                            reasons_list.append(
+                                {
+                                    "severity": str(reason.get("severity", "")),
+                                    "check": str(reason.get("check", "unknown")),
+                                    "message": str(reason.get("message", ""))[:300],
+                                    "issue_severity": str(reason.get("issue_severity", "")),
+                                    "gate_decision": str(reason.get("gate_decision", "")),
+                                    "scope_type": str(reason.get("scope_type", "")),
+                                    "issue_code": str(reason.get("issue_code", "")),
+                                    "signal_class": str(reason.get("signal_class", "")),
+                                    "remediation_path": str(reason.get("remediation_path", "")),
+                                }
+                            )
+                    quarantine_items[vid] = {
+                        "video_id": vid,
+                        "source": existing_item.get("source") or source_by_vid.get(vid),
+                        "checks": checks_set,
+                        "reasons": reasons_list,
+                    }
+
+        for vid in sorted(quarantine_video_ids):
+            if vid not in manifest_ids:
+                continue
+            item = quarantine_items.setdefault(
+                vid,
+                {
+                    "video_id": vid,
+                    "source": source_by_vid.get(vid),
+                    "checks": set(),
+                    "reasons": [],
+                },
+            )
+            if "preexisting_quarantine" not in item["checks"]:
+                item["checks"].add("preexisting_quarantine")
+                item["reasons"].append(
+                    {
+                        "severity": "error",
+                        "check": "preexisting_quarantine",
+                        "message": "Video is quarantined by prior run input.",
+                        "issue_severity": "",
+                        "gate_decision": "block",
+                        "scope_type": "video",
+                        "issue_code": "preexisting_quarantine",
+                        "signal_class": "quarantine_gate",
+                        "remediation_path": "quarantine",
+                    }
+                )
+
     if emit_quarantine:
         for issue in issues:
             sev = str(issue.get("severity", "")).strip().lower()
@@ -2134,6 +2299,12 @@ def main() -> None:
                 "severity": sev,
                 "check": str(issue.get("check", "unknown")),
                 "message": msg[:300],
+                "issue_severity": str(issue.get("issue_severity", "")),
+                "gate_decision": str(issue.get("gate_decision", "")),
+                "scope_type": str(issue.get("scope_type", "")),
+                "issue_code": str(issue.get("issue_code", "")),
+                "signal_class": str(issue.get("signal_class", "")),
+                "remediation_path": str(issue.get("remediation_path", "")),
             })
 
         for item in quarantine_items.values():
@@ -2166,6 +2337,97 @@ def main() -> None:
                 quarantine_out_path.write_text(json.dumps(quarantine_payload, indent=2) + "\n", encoding="utf-8")
             except Exception as exc:
                 print(f"{LOG_PREFIX} ERROR: Could not emit quarantine file {quarantine_out_path}: {exc}", file=sys.stderr)
+                sys.exit(2)
+
+    canonical_gate_payload: Optional[Dict[str, Any]] = None
+    canonical_gate_out_path: Optional[Path] = None
+    if emit_canonical_gate:
+        if args.canonical_gate_out:
+            canonical_gate_out_path = Path(args.canonical_gate_out)
+            if not canonical_gate_out_path.is_absolute():
+                canonical_gate_out_path = repo_root() / canonical_gate_out_path
+        else:
+            canonical_gate_out_path = _default_gate_path(manifest_path, args.source)
+
+        global_signals = [i for i in issues if str(i.get("video_id", "")).strip() == "*"]
+        issues_by_vid: DefaultDict[str, List[Dict[str, Any]]] = defaultdict(list)
+        for issue in issues:
+            vid = str(issue.get("video_id", "")).strip()
+            if vid and vid != "*" and vid in manifest_ids:
+                issues_by_vid[vid].append(issue)
+
+        summary_counts = {"pass": 0, "review": 0, "block": 0}
+        signal_class_counts: Counter[str] = Counter()
+        videos_payload: List[Dict[str, Any]] = []
+        for vid in sorted(manifest_ids):
+            raw_signals = list(global_signals) + list(issues_by_vid.get(vid, []))
+            gate = "pass"
+            signals_payload: List[Dict[str, Any]] = []
+            for sig in raw_signals:
+                sig_gate = str(sig.get("gate_decision", "pass")).strip().lower()
+                if sig_gate not in {"pass", "review", "block"}:
+                    sig_gate = "pass"
+                if sig_gate == "block":
+                    gate = "block"
+                elif sig_gate == "review" and gate != "block":
+                    gate = "review"
+                signals_payload.append(
+                    {
+                        "issue_code": str(sig.get("issue_code", "")),
+                        "issue_severity": str(sig.get("issue_severity", "")),
+                        "gate_decision": sig_gate,
+                        "signal_class": str(sig.get("signal_class", "")),
+                        "remediation_path": str(sig.get("remediation_path", "")),
+                        "scope_type": str(sig.get("scope_type", "")),
+                        "origin_stage": str(sig.get("origin_stage", "manifest-validation")),
+                        "message": str(sig.get("message", "")),
+                        "legacy": {
+                            "severity": sig.get("severity"),
+                            "check": sig.get("check"),
+                        },
+                    }
+                )
+
+            summary_counts[gate] += 1
+            for signal in signals_payload:
+                sclass = str(signal.get("signal_class", "")).strip()
+                if sclass:
+                    signal_class_counts[sclass] += 1
+            videos_payload.append(
+                {
+                    "video_id": vid,
+                    "source": source_by_vid.get(vid),
+                    "gate_decision": gate,
+                    "signals": signals_payload,
+                }
+            )
+
+        canonical_gate_payload = {
+            "version": 1,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "manifest": str(manifest_path),
+            "source_filter": args.source or None,
+            "summary": {
+                "video_count": len(manifest_ids),
+                "pass": summary_counts["pass"],
+                "review": summary_counts["review"],
+                "block": summary_counts["block"],
+                "signal_class_counts": dict(signal_class_counts),
+            },
+            "videos": videos_payload,
+        }
+        if canonical_gate_out_path is not None:
+            try:
+                canonical_gate_out_path.parent.mkdir(parents=True, exist_ok=True)
+                canonical_gate_out_path.write_text(
+                    json.dumps(canonical_gate_payload, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+            except Exception as exc:
+                print(
+                    f"{LOG_PREFIX} ERROR: Could not emit canonical gate file {canonical_gate_out_path}: {exc}",
+                    file=sys.stderr,
+                )
                 sys.exit(2)
 
     if args.emit_stage_reports and stage_reports_dir is not None:
@@ -2423,6 +2685,11 @@ def main() -> None:
             "input_video_ids": len(quarantine_video_ids),
             "applied": quarantine_applied,
         },
+        "canonical_gate": {
+            "enabled": emit_canonical_gate,
+            "out": str(canonical_gate_out_path) if canonical_gate_out_path else None,
+            "summary": (canonical_gate_payload or {}).get("summary"),
+        },
         "waivers": {
             "enabled": bool(waiver_rules or waiver_rules_expired),
             "file": str(waiver_file_path) if waiver_file_path else None,
@@ -2434,6 +2701,10 @@ def main() -> None:
         "issues_summary": {
             "errors": errors,
             "warnings": warnings,
+        },
+        "canonical_summary": {
+            "gate_decisions": dict(Counter(str(i.get("gate_decision", "")) for i in issues)),
+            "issue_severity": dict(Counter(str(i.get("issue_severity", "")) for i in issues)),
         },
         "stage07_drift": stage07_drift_summary,
         "check_counts": dict(check_counts),
@@ -2521,6 +2792,13 @@ def main() -> None:
                     else ""
                 )
                 + ")"
+            )
+        if emit_canonical_gate:
+            gate_summary = (canonical_gate_payload or {}).get("summary", {}) if canonical_gate_payload else {}
+            print(
+                f"{LOG_PREFIX} Canonical gate: enabled "
+                f"(pass={gate_summary.get('pass', 0)}, review={gate_summary.get('review', 0)}, "
+                f"block={gate_summary.get('block', 0)}, out={canonical_gate_out_path})"
             )
         if quarantine_video_ids and not emit_quarantine:
             print(

@@ -29,7 +29,6 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --allow-unstable-source-key
  *
  * Notes:
  *   - Manifest ingest uses per-video quarantine for Stage 08/Readiness failures when report detail is available.
@@ -80,9 +79,8 @@ type Args = {
   semanticMaxMajorErrorRate: number | null
   semanticMaxHallucinationRate: number | null
   semanticFailOnStale: boolean
-  allowUnstableSourceKey: boolean
   primaryConfidenceThreshold: number
-  ingestReviewLane: boolean
+  includeReview: boolean
 }
 
 type ChunkMetadata = {
@@ -187,10 +185,9 @@ Semantic Gate:
   --semantic-report-out <path>   Write semantic gate report to this path
 
 Other:
-  --allow-unstable-source-key    Allow legacy/unstable source keys (manifest mode)
   --primary-confidence-threshold <n>
-                            Primary ingest lane threshold for chunk confidence score (0..1, default: 0.7)
-  --ingest-review-lane      Also ingest review-lane chunks using source suffix '#review'
+                            Threshold for PASS vs REVIEW chunk split (0..1, default: 0.7)
+  --include-review          Also ingest REVIEW chunks using source suffix '#review'
   -h, --help                     Show this help
 `)
 }
@@ -205,8 +202,7 @@ function validateKnownArgs(argv: string[]): void {
     "--skip-readiness-gate",
     "--quality-gate",
     "--semantic-fail-on-stale",
-    "--allow-unstable-source-key",
-    "--ingest-review-lane",
+    "--include-review",
     "-h",
     "--help",
   ])
@@ -374,12 +370,11 @@ function parseArgs(argv: string[]): Args {
     semanticMaxMajorErrorRate,
     semanticMaxHallucinationRate,
     semanticFailOnStale: flags.has("--semantic-fail-on-stale"),
-    allowUnstableSourceKey: flags.has("--allow-unstable-source-key"),
     primaryConfidenceThreshold:
       typeof primaryConfidenceThreshold === "number" && Number.isFinite(primaryConfidenceThreshold)
         ? Math.max(0, Math.min(1, primaryConfidenceThreshold))
         : 0.7,
-    ingestReviewLane: flags.has("--ingest-review-lane"),
+    includeReview: flags.has("--include-review"),
   }
 }
 
@@ -397,8 +392,7 @@ function isStableSourceKey(raw: unknown): raw is string {
 
 function deriveSourceKey(
   chunksData: ChunksFile,
-  filePath: string,
-  allowUnstableSourceKey: boolean
+  filePath: string
 ): { sourceKey: string; stable: boolean; reason?: string } {
   if (typeof chunksData.sourceKey === "string" && chunksData.sourceKey.trim()) {
     const explicit = chunksData.sourceKey.trim()
@@ -410,9 +404,6 @@ function deriveSourceKey(
     if (channel && isValidVideoId(videoId)) {
       return { sourceKey: path.join(channel, `${videoId}.txt`), stable: true }
     }
-    if (allowUnstableSourceKey) {
-      return { sourceKey: explicit, stable: false, reason: "invalid_source_key" }
-    }
     return { sourceKey: "", stable: false, reason: "invalid_source_key" }
   }
 
@@ -422,25 +413,10 @@ function deriveSourceKey(
     if (isValidVideoId(videoId)) {
       return { sourceKey: path.join(channel, `${videoId}.txt`), stable: true }
     }
-    if (allowUnstableSourceKey) {
-      return {
-        sourceKey: path.join(channel, `${chunksData.videoTitle}.txt`),
-        stable: false,
-        reason: "missing_video_id",
-      }
-    }
     return {
       sourceKey: "",
       stable: false,
       reason: "missing_video_id",
-    }
-  }
-
-  if (allowUnstableSourceKey) {
-    return {
-      sourceKey: path.basename(filePath, ".chunks.json"),
-      stable: false,
-      reason: "missing_channel",
     }
   }
 
@@ -1620,32 +1596,17 @@ function checkTaxonomyGate(
   const expectedSource = source
     ? `manifest:${manifestBase}|source:${source}`
     : `manifest:${manifestBase}`
-  const legacyExpectedSource = `manifest:${manifestBase}`
   const reportStem = source ? `${stem}.${source}` : stem
-  let reportPath = path.join(
+  const reportPath = path.join(
     process.cwd(),
     "data",
     "08.DET.taxonomy-validation",
     `${safeReportName(reportStem)}.report.json`
   )
-  const legacyReportPath = path.join(
-    process.cwd(),
-    "data",
-    "08.DET.taxonomy-validation",
-    `${safeReportName(stem)}.report.json`
-  )
-
   if (!fs.existsSync(reportPath)) {
-    if (source && fs.existsSync(legacyReportPath)) {
-      console.warn(
-        `⚠️  Using legacy Stage 08 report path without source suffix: ${legacyReportPath}`
-      )
-      reportPath = legacyReportPath
-    } else {
-      console.error(`❌ Missing Stage 08 report: ${reportPath}`)
-      console.error(`   Run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
-      process.exit(1)
-    }
+    console.error(`❌ Missing Stage 08 report: ${reportPath}`)
+    console.error(`   Run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
+    process.exit(1)
   }
 
   let data: unknown
@@ -1669,11 +1630,9 @@ function checkTaxonomyGate(
 
   const reportSource = String(data.source ?? "")
   if (reportSource !== expectedSource) {
-    if (!(source && reportSource === legacyExpectedSource)) {
-      console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${reportSource}'`)
-      console.error(`   Re-run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
-      process.exit(1)
-    }
+    console.error(`❌ Stage 08 report source mismatch: expected '${expectedSource}', found '${reportSource}'`)
+    console.error(`   Re-run: python3 scripts/training-data/08.DET.taxonomy-validation --manifest ${manifestPath}`)
+    process.exit(1)
   }
 
   const scope = isObject(data.scope) ? (data.scope as Record<string, unknown>) : null
@@ -2221,8 +2180,8 @@ async function main() {
       continue
     }
 
-    const derived = deriveSourceKey(chunksData, filePath, args.allowUnstableSourceKey)
-    if (!derived.stable && !args.allowUnstableSourceKey) {
+    const derived = deriveSourceKey(chunksData, filePath)
+    if (!derived.stable) {
       skippedUnstableSourceKey++
       const reasonText = derived.reason === "missing_video_id"
         ? "missing valid videoId"
@@ -2231,14 +2190,6 @@ async function main() {
         : "missing channel/sourceKey"
       console.warn(`Warning: Skipping ${filePath}; ${reasonText} (would create unstable sourceKey).`)
       continue
-    }
-    if (!derived.stable && args.allowUnstableSourceKey) {
-      const fallbackText = derived.reason === "missing_video_id"
-        ? "falling back to channel/title sourceKey"
-        : derived.reason === "invalid_source_key"
-        ? "keeping provided unstable sourceKey"
-        : "falling back to filename-based sourceKey"
-      console.warn(`Warning: ${filePath}; ${fallbackText} (unstable).`)
     }
 
     const sourceKey = derived.sourceKey.trim()
@@ -2291,8 +2242,8 @@ async function main() {
   console.log(`To ingest:    ${toIngest.length}${args.force ? " (forced)" : ""}`)
   if (mtimeForced > 0) console.log(`Stale:        ${mtimeForced} file(s) with chunks newer than last ingest (auto-forced)`)
   console.log(`State file:   ${statePath}`)
-  console.log(`Primary lane: chunk_confidence_score >= ${args.primaryConfidenceThreshold.toFixed(2)}`)
-  console.log(`Review lane:  ${args.ingestReviewLane ? "ingest (#review source suffix)" : "skip"}`)
+  console.log(`Pass threshold:       chunk_confidence_score >= ${args.primaryConfidenceThreshold.toFixed(2)}`)
+  console.log(`Include review chunks:${args.includeReview ? " yes (#review source suffix)" : " no"}`)
 
   if (invalidChunkFiles > 0 && args.manifest) {
     console.error("")
@@ -2302,11 +2253,11 @@ async function main() {
     process.exit(1)
   }
 
-  if (skippedUnstableSourceKey > 0 && args.manifest && !args.allowUnstableSourceKey) {
+  if (skippedUnstableSourceKey > 0 && args.manifest) {
     console.error("")
     console.error(
       "❌ Refusing manifest ingest: one or more files had unstable source keys. " +
-      "Re-run Stage 09, or use --allow-unstable-source-key for legacy artifacts."
+      "Re-run Stage 09 to emit canonical source keys."
     )
     process.exit(1)
   }
@@ -2413,14 +2364,9 @@ async function main() {
       if (typeof chunk.metadata.worstArtifactSeverity === "string") {
         metadata.worstArtifactSeverity = chunk.metadata.worstArtifactSeverity
       }
-      // Resolve confidence score: prefer canonical name, fall back to legacy names
       const chunkConfidenceScore =
         (typeof chunk.metadata.chunk_confidence_score === "number" && Number.isFinite(chunk.metadata.chunk_confidence_score))
           ? chunk.metadata.chunk_confidence_score
-          : (typeof chunk.metadata.chunkConfidenceScore === "number" && Number.isFinite(chunk.metadata.chunkConfidenceScore))
-          ? chunk.metadata.chunkConfidenceScore
-          : (typeof chunk.metadata.chunkConfidence === "number" && Number.isFinite(chunk.metadata.chunkConfidence))
-          ? chunk.metadata.chunkConfidence
           : null
       const hasConfidenceScore = typeof chunkConfidenceScore === "number"
       if (!hasConfidenceScore) {
@@ -2434,17 +2380,13 @@ async function main() {
       if (chunk.metadata.problematicReason && chunk.metadata.problematicReason.length > 0) {
         metadata.problematicReason = chunk.metadata.problematicReason
       }
-      // Read canonical or legacy name, write only canonical
       const damagedSegmentIds = Array.isArray(chunk.metadata.damaged_segment_ids)
         ? chunk.metadata.damaged_segment_ids.filter((x): x is number => typeof x === "number")
-        : Array.isArray(chunk.metadata.damagedSegmentIds)
-        ? chunk.metadata.damagedSegmentIds.filter((x): x is number => typeof x === "number")
         : []
       if (damagedSegmentIds.length > 0) {
         metadata.damaged_segment_ids = damagedSegmentIds
       }
-      const containsRepairedText =
-        chunk.metadata.contains_repaired_text === true || chunk.metadata.containsRepairedText === true
+      const containsRepairedText = chunk.metadata.contains_repaired_text === true
       if (containsRepairedText) {
         metadata.contains_repaired_text = true
       }
@@ -2468,48 +2410,48 @@ async function main() {
         metadata.isSummary = true
       }
 
-      const lane: "primary" | "review" =
+      const ingestStatus: "pass" | "review" =
         hasConfidenceScore && (chunkConfidenceScore as number) >= args.primaryConfidenceThreshold
-          ? "primary"
+          ? "pass"
           : "review"
-      metadata.ingest_lane = lane
+      metadata.ingest_status = ingestStatus
 
       const row = {
         content: chunk.content,
-        source: lane === "primary" ? sourceKey : reviewSourceKey,
+        source: ingestStatus === "pass" ? sourceKey : reviewSourceKey,
         embedding: chunk.embedding,
         metadata,
       }
 
-      if (lane === "primary") {
+      if (ingestStatus === "pass") {
         rowsPrimary.push(row)
       } else {
         rowsReview.push(row)
       }
     }
 
-    const rows = args.ingestReviewLane
+    const rows = args.includeReview
       ? [...rowsPrimary, ...rowsReview]
       : rowsPrimary
 
     console.log(
-      `   📊 Lane split: primary=${rowsPrimary.length}, review=${rowsReview.length}, `
+      `   📊 Status split: pass=${rowsPrimary.length}, review=${rowsReview.length}, `
       + `missing_confidence=${missingConfidenceMetadata}`
     )
-    if (!args.ingestReviewLane && rowsReview.length > 0) {
-      console.log(`   ⏭️  Skipping ${rowsReview.length} review-lane chunk(s)`)
+    if (!args.includeReview && rowsReview.length > 0) {
+      console.log(`   ⏭️  Skipping ${rowsReview.length} review chunk(s)`)
     }
 
     console.log(`   💾 Replacing embeddings for source: ${sourceKey}`)
     await deleteEmbeddingsBySource(sourceKey)
-    if (args.ingestReviewLane) {
-      console.log(`   💾 Replacing embeddings for review lane source: ${reviewSourceKey}`)
+    if (args.includeReview) {
+      console.log(`   💾 Replacing embeddings for review source: ${reviewSourceKey}`)
       await deleteEmbeddingsBySource(reviewSourceKey)
     }
     if (rows.length > 0) {
       await storeEmbeddings(rows)
     } else {
-      console.log("   ℹ️  No rows selected for ingest after lane gating")
+      console.log("   ℹ️  No rows selected for ingest after status gating")
     }
 
     state.sources[sourceKey] = {

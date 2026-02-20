@@ -111,14 +111,19 @@ VALIDATE_SOURCE=""
 VALIDATE_WAIVER_FILE=""
 VALIDATE_QUARANTINE_FILE=""
 RUN_QUARANTINE_FILE=""
+CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE=""
+CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE=""
+MIN_CHUNK_CONFIDENCE_OVERRIDE=""
 PARALLEL=""
 
 # Config-driven defaults (loaded from pipeline.config.json)
 CFG_QUARANTINE_LEVEL="error"
-CFG_ALLOW_REVIEW_INGEST=false
 CFG_MAX_WARNING_CHECKS="3"
 CFG_MAX_WARNING_CHECKS_BY_TYPE=()
 CFG_BLOCK_WARNING_CHECKS=()
+CFG_MAX_WARNING_CHECKS_BY_CLASS=()
+CFG_BLOCK_WARNING_CLASSES=()
+CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()
 
 load_pipeline_config() {
   local config_file="$SCRIPT_DIR/pipeline.config.json"
@@ -138,7 +143,6 @@ v = cfg.get("validation", {})
 r = v.get("readiness", {})
 
 print(f'CFG_QUARANTINE_LEVEL="{v.get("quarantine_level", "error")}"')
-print(f'CFG_ALLOW_REVIEW_INGEST={"true" if r.get("allow_review_ingest") else "false"}')
 print(f'CFG_MAX_WARNING_CHECKS="{r.get("max_warning_checks", 3)}"')
 
 by_type = r.get("max_warning_checks_by_type", {})
@@ -154,6 +158,36 @@ if blocks:
     print(f'CFG_BLOCK_WARNING_CHECKS=({items})')
 else:
     print('CFG_BLOCK_WARNING_CHECKS=()')
+
+by_class = r.get("max_warning_checks_by_class", {})
+if by_class:
+    items = " ".join(f'"{k}={v}"' for k, v in by_class.items())
+    print(f'CFG_MAX_WARNING_CHECKS_BY_CLASS=({items})')
+else:
+    print('CFG_MAX_WARNING_CHECKS_BY_CLASS=()')
+
+block_classes = r.get("block_warning_classes", [])
+if block_classes:
+    items = " ".join(f'"{b}"' for b in block_classes)
+    print(f'CFG_BLOCK_WARNING_CLASSES=({items})')
+else:
+    print('CFG_BLOCK_WARNING_CLASSES=()')
+
+review_by_type = r.get("review_warning_class_budget_by_content_type", {})
+if isinstance(review_by_type, dict) and review_by_type:
+    items = []
+    for video_type, class_map in review_by_type.items():
+        if not isinstance(video_type, str) or not isinstance(class_map, dict):
+            continue
+        for warning_class, limit in class_map.items():
+            items.append(f'"{video_type}:{warning_class}={limit}"')
+    if items:
+        print(f'CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=({" ".join(items)})')
+    else:
+        print('CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()')
+else:
+    print('CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()')
+
 PYEOF
   )"
 }
@@ -185,6 +219,12 @@ Options:
   --source <name>          With --validate, only validate one source
   --quarantine-file <path> Override auto-detected quarantine file
   --waiver-file <path>     Override auto-detected waiver file
+  --confidence-band-high-threshold <0..1>
+                            Stage 06h high confidence band threshold override
+  --confidence-band-medium-threshold <0..1>
+                            Stage 06h medium confidence band threshold override
+  --min-chunk-confidence <0..1>
+                            Stage 09 chunk confidence floor override
 
 Config: scripts/training-data/batch/pipeline.config.json
   All validation thresholds and policies are configured there.
@@ -194,6 +234,56 @@ EOF
 error() {
   echo "ERROR: $*" >&2
   exit 1
+}
+
+stage_supports_quarantine() {
+  local stage="$1"
+  case "$stage" in
+    06c|06d|06e|06f|06g|06h|07|08|09) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+stage_supports_overwrite() {
+  local stage="$1"
+  case "$stage" in
+    06|06b|06c|06d|06e|06f|06g|06h|07) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+require_probability_01() {
+  local raw="$1"
+  python3 - "$raw" <<'PYEOF'
+import sys
+raw = sys.argv[1]
+try:
+    value = float(raw)
+except Exception:
+    raise SystemExit(1)
+if not (0.0 <= value <= 1.0):
+    raise SystemExit(1)
+print(f"{value:.4f}".rstrip("0").rstrip("."))
+PYEOF
+}
+
+run_stage_contract_preflight() {
+  local stage="$1"
+  local manifest="$2"
+  local quarantine_file="${3:-}"
+
+  local -a cmd=(
+    python3
+    "$REPO_ROOT/scripts/training-data/validation/validate_stage_contract.py"
+    --manifest "$manifest"
+    --stage "$stage"
+  )
+  if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
+    cmd+=(--quarantine-file "$quarantine_file")
+  fi
+
+  echo "--- Preflight contract: stage $stage ---"
+  "${cmd[@]}"
 }
 
 # Extract batch ID from sub-batch ID (P001.1 -> P001)
@@ -432,6 +522,11 @@ run_stage() {
 
   local stage_dir="${STAGE_DIRS[$stage]}"
   local -a stage_args=(--manifest "$manifest")
+  if stage_supports_overwrite "$stage"; then
+    # Single strict path: always refresh outputs for stages that expose
+    # --overwrite to avoid stale downstream artifacts after upstream changes.
+    stage_args+=(--overwrite)
+  fi
   local quarantine_file=""
   local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
 
@@ -439,21 +534,39 @@ run_stage() {
   echo "=== Running Stage $stage for $sub_id ==="
   echo ""
 
-  if [[ "$stage" == "07" || "$stage" == "08" ]]; then
-    quarantine_file="$RUN_QUARANTINE_FILE"
-    if [[ -z "$quarantine_file" ]]; then
-      if [[ -f "$auto_quarantine" ]]; then
-        quarantine_file="$auto_quarantine"
-      fi
+  quarantine_file="$RUN_QUARANTINE_FILE"
+  if [[ -z "$quarantine_file" ]]; then
+    if [[ -f "$auto_quarantine" ]]; then
+      quarantine_file="$auto_quarantine"
+    fi
+  fi
+
+  if [[ "$stage" == "06h" ]]; then
+    if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" ]]; then
+      stage_args+=(--confidence-band-high-threshold "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE")
+    fi
+    if [[ -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
+      stage_args+=(--confidence-band-medium-threshold "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE")
+    fi
+  fi
+
+  if [[ "$stage" == "09" ]]; then
+    if [[ -n "$MIN_CHUNK_CONFIDENCE_OVERRIDE" ]]; then
+      stage_args+=(--min-chunk-confidence "$MIN_CHUNK_CONFIDENCE_OVERRIDE")
     fi
   fi
 
   if [[ "$DRY_RUN" == true ]]; then
-    if [[ ("$stage" == "07" || "$stage" == "08") && -n "$quarantine_file" ]]; then
+    if stage_supports_quarantine "$stage" && [[ -n "$quarantine_file" ]]; then
       stage_args+=(--quarantine-file "$quarantine_file")
     fi
     echo "[DRY RUN] Would run: $script ${stage_args[*]}"
     return 0
+  fi
+
+  if ! run_stage_contract_preflight "$stage" "$manifest" "$quarantine_file"; then
+    echo "Stage $stage: CONTRACT PRECHECK FAILED"
+    return 1
   fi
 
   # Update status to in_progress
@@ -478,7 +591,7 @@ with open(status_file, "w") as f:
 PYEOF
   fi
 
-  if [[ "$stage" == "07" || "$stage" == "08" ]]; then
+  if stage_supports_quarantine "$stage"; then
     if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
       stage_args+=(--quarantine-file "$quarantine_file")
       echo "Using quarantine file: $quarantine_file"
@@ -632,8 +745,20 @@ run_pipeline() {
   # Parallel mode: delegate to pipeline-runner (conveyor-belt orchestrator)
   if [[ -n "$PARALLEL" ]]; then
     local runner_args=("$sub_id" --parallel "$PARALLEL" --from "$start_stage")
+    if [[ -n "$RUN_QUARANTINE_FILE" ]]; then
+      runner_args+=(--quarantine-file "$RUN_QUARANTINE_FILE")
+    fi
     if [[ "$DRY_RUN" == true ]]; then
       runner_args+=(--dry-run)
+    fi
+    if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" ]]; then
+      runner_args+=(--confidence-band-high-threshold "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE")
+    fi
+    if [[ -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
+      runner_args+=(--confidence-band-medium-threshold "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE")
+    fi
+    if [[ -n "$MIN_CHUNK_CONFIDENCE_OVERRIDE" ]]; then
+      runner_args+=(--min-chunk-confidence "$MIN_CHUNK_CONFIDENCE_OVERRIDE")
     fi
     "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}"
     return $?
@@ -853,10 +978,9 @@ create_stage_view() {
         done < <(find "$src_video_dir" -maxdepth 1 -type f -name "$pattern" -print0 2>/dev/null)
       fi
     else
-      # Source-scoped flat stage (06-07 family):
-      # - Preferred (future/canonical): data/<stage>/<source>/<video>/
-      # - Current (manifest runs):      data/<stage>/<source>/*.json
-      # - Legacy (ad-hoc runs):         data/<stage>/*.json
+      # Source-scoped stage layout:
+      # - Source/video layout: data/<stage>/<source>/<video>/
+      # - Source-flat layout:  data/<stage>/<source>/*.json
 
       # 1) Source-video layout (if present)
       local src_video_dir="$stage_data_root/$source/$folder"
@@ -884,17 +1008,6 @@ create_stage_view() {
         done < <(find "$src_source_dir" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
       fi
 
-      # 3) Root-flat fallback
-      if [[ "$found_file" == false && -d "$stage_data_root" ]]; then
-        while IFS= read -r -d '' f; do
-          found_file=true
-          local link_name=$(basename "$f")
-          local rel_target
-          rel_target=$(realpath --relative-to="$video_view_dir" "$f")
-          ln -sf "$rel_target" "$video_view_dir/$link_name" 2>/dev/null || true
-          ((++link_count))
-        done < <(find "$stage_data_root" -maxdepth 1 -type f -name "*${vid_id}*" -name "$pattern" -print0 2>/dev/null)
-      fi
     fi
 
     # Create .pending marker if no files found
@@ -998,6 +1111,7 @@ validate_sub_batch() {
 
   local rc=0
   local -a validate_args=(--manifest "$manifest")
+  local -a confidence_trace_args=(--manifest "$manifest" --strict-missing)
   local -a batch_report_args=()
   local -a stage_report_check_args=()
   local waiver_file="$VALIDATE_WAIVER_FILE"
@@ -1012,6 +1126,7 @@ validate_sub_batch() {
 
   if [[ -n "$VALIDATE_SOURCE" ]]; then
     validate_args+=(--source "$VALIDATE_SOURCE")
+    confidence_trace_args+=(--source "$VALIDATE_SOURCE")
     batch_report_args+=(--source "$VALIDATE_SOURCE")
     stage_report_check_args+=(--source "$VALIDATE_SOURCE")
     stage_reports_dir="$REPO_ROOT/data/validation/stage_reports/${sub_id}.${VALIDATE_SOURCE}"
@@ -1040,6 +1155,7 @@ validate_sub_batch() {
   fi
   if [[ -n "$quarantine_file" ]]; then
     validate_args+=(--quarantine-file "$quarantine_file")
+    confidence_trace_args+=(--quarantine-file "$quarantine_file")
   fi
 
   validate_args+=(--stage-reports-dir "$stage_reports_dir")
@@ -1048,23 +1164,37 @@ validate_sub_batch() {
   echo "=== Validation: $sub_id ==="
   [[ -n "$quarantine_file" ]] && echo "  Quarantine: $quarantine_file"
   [[ -n "$waiver_file" ]] && echo "  Waivers: $waiver_file"
+  echo "  Confidence trace policy: strict-only"
   echo ""
 
   # 1. Manifest + cross-stage validation
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
 
   # 2. Stage report contract validation + readiness
-  if [[ "$CFG_ALLOW_REVIEW_INGEST" == true ]]; then
-    stage_report_check_args+=(--allow-review-ingest)
-  fi
+  echo ""
+  echo "=== Confidence Trace Validation ==="
+  echo ""
+  python3 "$REPO_ROOT/scripts/training-data/validation/validate_confidence_trace.py" \
+    "${confidence_trace_args[@]}" || rc=$?
+
+  # 3. Stage report contract validation + readiness
   if [[ -n "$CFG_MAX_WARNING_CHECKS" ]]; then
     stage_report_check_args+=(--max-warning-checks "$CFG_MAX_WARNING_CHECKS")
   fi
   for rule in "${CFG_MAX_WARNING_CHECKS_BY_TYPE[@]}"; do
     stage_report_check_args+=(--max-warning-check "$rule")
   done
+  for rule in "${CFG_MAX_WARNING_CHECKS_BY_CLASS[@]}"; do
+    stage_report_check_args+=(--max-warning-class "$rule")
+  done
   for chk in "${CFG_BLOCK_WARNING_CHECKS[@]}"; do
     stage_report_check_args+=(--block-warning-check "$chk")
+  done
+  for cls in "${CFG_BLOCK_WARNING_CLASSES[@]}"; do
+    stage_report_check_args+=(--block-warning-class "$cls")
+  done
+  for rule in "${CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE[@]}"; do
+    stage_report_check_args+=(--review-warning-class-budget-by-content-type "$rule")
   done
 
   echo ""
@@ -1074,9 +1204,10 @@ validate_sub_batch() {
     --dir "$stage_reports_dir" \
     --manifest "$manifest" \
     "${stage_report_check_args[@]}" \
+    --emit-canonical-gate \
     --emit-readiness-summary || rc=$?
 
-  # 3. Batch report (statistics + drift detection, no semantic gate in auto mode)
+  # 4. Batch report (statistics + drift detection, no semantic gate in auto mode)
   echo ""
   echo "=== Batch Report ==="
   echo ""
@@ -1090,9 +1221,10 @@ validate_sub_batch() {
 print_pipeline_summary() {
   local sub_id="$1"
   local quarantine_file="$QUARANTINE_DIR/${sub_id}.json"
+  local canonical_gate_file="$REPO_ROOT/data/validation/gates/${sub_id}.gate.json"
   local manifest="$BATCHES_DIR/${sub_id}.txt"
 
-  python3 - "$manifest" "$quarantine_file" "$sub_id" <<'PYEOF'
+  python3 - "$manifest" "$quarantine_file" "$sub_id" "$canonical_gate_file" <<'PYEOF'
 import json
 import sys
 from pathlib import Path
@@ -1137,6 +1269,8 @@ if quarantined:
 print()
 if quarantine_path.exists():
     print(f"  Quarantine: {quarantine_path}")
+if Path(sys.argv[4]).exists():
+    print(f"  Canonical Gate: {sys.argv[4]}")
 print(f"  Reports:    data/validation/stage_reports/{sub_id}/")
 print("=" * 56)
 print()
@@ -1246,6 +1380,33 @@ while [[ $# -gt 0 ]]; do
       VALIDATE_WAIVER_FILE="$2"
       shift 2
       ;;
+    --confidence-band-high-threshold)
+      [[ $# -lt 2 ]] && error "--confidence-band-high-threshold requires a value in [0,1]"
+      CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE="$(require_probability_01 "$2")" || error "--confidence-band-high-threshold must be a number in [0,1]"
+      shift 2
+      ;;
+    --confidence-band-high-threshold=*)
+      CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE="$(require_probability_01 "${1#--confidence-band-high-threshold=}")" || error "--confidence-band-high-threshold must be a number in [0,1]"
+      shift
+      ;;
+    --confidence-band-medium-threshold)
+      [[ $# -lt 2 ]] && error "--confidence-band-medium-threshold requires a value in [0,1]"
+      CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE="$(require_probability_01 "$2")" || error "--confidence-band-medium-threshold must be a number in [0,1]"
+      shift 2
+      ;;
+    --confidence-band-medium-threshold=*)
+      CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE="$(require_probability_01 "${1#--confidence-band-medium-threshold=}")" || error "--confidence-band-medium-threshold must be a number in [0,1]"
+      shift
+      ;;
+    --min-chunk-confidence)
+      [[ $# -lt 2 ]] && error "--min-chunk-confidence requires a value in [0,1]"
+      MIN_CHUNK_CONFIDENCE_OVERRIDE="$(require_probability_01 "$2")" || error "--min-chunk-confidence must be a number in [0,1]"
+      shift 2
+      ;;
+    --min-chunk-confidence=*)
+      MIN_CHUNK_CONFIDENCE_OVERRIDE="$(require_probability_01 "${1#--min-chunk-confidence=}")" || error "--min-chunk-confidence must be a number in [0,1]"
+      shift
+      ;;
     --waiver-file=*)
       VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
       shift
@@ -1295,6 +1456,16 @@ if is_sub_batch "$SUB_BATCH_ID"; then
   BATCH_ID=$(get_batch_id "$SUB_BATCH_ID")
 else
   BATCH_ID="$SUB_BATCH_ID"
+fi
+
+if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" && -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
+  python3 - "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" <<'PYEOF' || error "confidence band thresholds invalid: medium threshold cannot exceed high threshold"
+import sys
+high = float(sys.argv[1])
+medium = float(sys.argv[2])
+if medium > high:
+    raise SystemExit(1)
+PYEOF
 fi
 
 

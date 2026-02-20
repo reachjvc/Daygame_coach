@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,6 +64,25 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
   // Reactivation
   const [isReactivating, setIsReactivating] = useState(false)
   const [reactivateError, setReactivateError] = useState<string | null>(null)
+
+  // Browser back: close edit form instead of leaving page
+  const handleBarrierBack = useCallback(() => {
+    if (editingApproachId !== null) {
+      setEditingApproachId(null)
+      setEditApproachData({})
+    } else if (isAddingApproach) {
+      setIsAddingApproach(false)
+      setNewApproachData({})
+      setNewApproachTimestamp("")
+    } else if (isEditingMetadata) {
+      setIsEditingMetadata(false)
+      setMetadataError(null)
+    }
+  }, [editingApproachId, isAddingApproach, isEditingMetadata])
+  useHistoryBarrier(
+    isEditingMetadata || editingApproachId !== null || isAddingApproach,
+    handleBarrierBack
+  )
 
   // Load session data
   useEffect(() => {

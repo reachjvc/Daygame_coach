@@ -639,17 +639,10 @@ class FasterWhisperEngine(BaseEngine):
 # Audio selection
 # --------------------------
 
-def _pick_best_audio_in_video_dir(video_dir: Path, prefer: str = "raw") -> Optional[Path]:
+def _pick_best_audio_in_video_dir(video_dir: Path) -> Optional[Path]:
     raw = sorted(video_dir.glob("*.audio.asr.raw16k.wav"))
-    legacy = sorted(video_dir.glob("*.wav"))
-
-    if prefer == "legacy" and legacy:
-        return legacy[0]
-
     if raw:
         return raw[0]
-    if legacy:
-        return legacy[0]
     return None
 
 
@@ -738,7 +731,6 @@ def batch_for_source(
     source_name: str,
     youtube_url: str,
     overwrite: bool,
-    prefer_audio: str,
     engine: BaseEngine,
     progress_interval: float,
     manifest_ids: Optional[Set[str]] = None,
@@ -770,9 +762,9 @@ def batch_for_source(
 
     for video_dir in video_dirs:
         try:
-            audio_path = _pick_best_audio_in_video_dir(video_dir, prefer=prefer_audio)
+            audio_path = _pick_best_audio_in_video_dir(video_dir)
             if audio_path is None:
-                log(f"[02.EXT.transcribe] WARN: No audio found in: {video_dir}")
+                log(f"[02.EXT.transcribe] WARN: No raw16k audio found in: {video_dir}")
                 continue
 
             out_video_dir = out_root / video_dir.name
@@ -864,7 +856,6 @@ if __name__ == "__main__":
     p.add_argument("--out", help="Single-file output .full.json.")
 
     p.add_argument("--overwrite", action="store_true", help="Overwrite existing outputs.")
-    p.add_argument("--prefer-audio", choices=["raw", "legacy"], default="raw")
 
     p.add_argument("--progress-interval", type=float, default=float(os.environ.get("TRANSCRIBE_PROGRESS_INTERVAL", "15")))
 
@@ -938,7 +929,6 @@ if __name__ == "__main__":
                 source_name=source_name,
                 youtube_url="",
                 overwrite=bool(args.overwrite),
-                prefer_audio=str(args.prefer_audio),
                 engine=engine,
                 progress_interval=args.progress_interval,
                 manifest_ids=vid_ids,
@@ -960,7 +950,6 @@ if __name__ == "__main__":
                 source_name=source_name,
                 youtube_url=youtube_url,
                 overwrite=bool(args.overwrite),
-                prefer_audio=str(args.prefer_audio),
                 engine=engine,
                 progress_interval=args.progress_interval,
             )
@@ -979,7 +968,6 @@ if __name__ == "__main__":
         source_name=str(args.source_name),
         youtube_url=str(args.youtube_url),
         overwrite=bool(args.overwrite),
-        prefer_audio=str(args.prefer_audio),
         engine=engine,
         progress_interval=args.progress_interval,
     )

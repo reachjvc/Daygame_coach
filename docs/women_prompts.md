@@ -83,8 +83,8 @@ The face descriptor is the primary differentiator. It must specify **sub-ethnici
 | 1 | Nordic/Slavic | DONE (40/40) | `scandinavian` | Hair color variety made faces diverse naturally |
 | 2 | Western European | DONE (40/40) | `western-european` | Sub-ethnicity face descriptors used for age 30+37 |
 | 3 | Mediterranean | DONE (40/40) | `mediterranean` | Sub-ethnicity mapping: Greek, Lebanese, Croatian, Turkish, S. Italian, Moroccan, Spanish, Cypriot, Albanian, Egyptian |
-| 4 | Latin American | TODO | `latin-american` | |
-| 5 | East Asian | TODO | `east-asian` | Low hair-color variety — face descriptor carries all differentiation |
+| 4 | Latin American | DONE (40/40) | `latin-american` | |
+| 5 | East Asian | DONE (40/40) | `east-asian` | Low hair-color variety — face descriptor carries all differentiation |
 | 6 | Southeast Asian | TODO | `southeast-asian` | Same as above |
 | 7 | South Asian | TODO | `south-asian` | Same as above |
 | 8 | African | DONE (40/40) | `african` | Faces lack diversity (pre-dates sub-ethnicity fix). May need regen. |

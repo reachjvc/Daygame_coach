@@ -83,7 +83,7 @@ const L2_TEMPLATES: GoalTemplate[] = [
   // New — Daygame-focused
   template("l2_overcome_aa", "Overcome Approach Anxiety Permanently", 2, "outcome"),
   template("l2_master_cold_approach", "Master Cold Approach", 2, "outcome"),
-  template("l2_great_talker", "Become Great at Talking to Women", 2, "outcome"),
+  template("l2_great_talker", "Master Conversational Game", 2, "outcome"),
   template("l2_master_seduction", "Master Seduction & Attraction", 2, "outcome"),
   template("l2_attract_any", "Be Able to Attract Any Woman I Want", 2, "outcome"),
   // New — Dating-focused
@@ -206,11 +206,6 @@ const L3_DIRTY_DOG: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
   }),
-  template("l3_rotation_size", "Rotation Size", 3, "outcome", {
-    displayCategory: "dirty_dog",
-    templateType: "milestone_ladder",
-    milestoneConfig: { start: 1, target: 3, steps: 3, curveTension: 0 },
-  }),
   template("l3_sustained_rotation", "Sustained Rotation", 3, "outcome", {
     displayCategory: "dirty_dog",
     templateType: "habit_ramp",
@@ -247,18 +242,13 @@ const L3_TEXTING: GoalTemplate[] = [
 
 // -- Dating: Dates --
 const L3_DATES: GoalTemplate[] = [
-  template("l3_dates_planned", "Dates Planned & Executed", 3, "input", {
+  template("l3_dates_planned", "Weekly Dating Activity", 3, "input", {
     displayCategory: "dates",
     templateType: "habit_ramp",
     rampSteps: [
       { frequencyPerWeek: 1, durationWeeks: 12 },
       { frequencyPerWeek: 2, durationWeeks: 24 },
     ],
-  }),
-  template("l3_date_to_second_date", "Second Dates Achieved", 3, "outcome", {
-    displayCategory: "dates",
-    templateType: "milestone_ladder",
-    milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
   }),
   template("l3_creative_dates", "Creative Date Ideas Tried", 3, "outcome", {
     displayCategory: "dates",
@@ -274,7 +264,7 @@ const L3_DATES: GoalTemplate[] = [
 
 // -- Dating: Relationship --
 const L3_RELATIONSHIP: GoalTemplate[] = [
-  template("l3_women_dating", "Women Currently Dating", 3, "outcome", {
+  template("l3_women_dating", "Active Rotation / Women Dating", 3, "outcome", {
     displayCategory: "relationship",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 5, steps: 5, curveTension: 0 },
@@ -1514,7 +1504,7 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency", "l3_consecutive_days",
     "l3_hours_in_field", "l3_voice_notes", "l3_approach_quality", "l3_open_in_3_seconds", "l3_solo_sessions",
     "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
-    "l3_kiss_closes", "l3_lays", "l3_rotation_size", "l3_sustained_rotation",
+    "l3_kiss_closes", "l3_lays", "l3_women_dating", "l3_sustained_rotation",
   ],
   // Become Confident — exposure/consistency-heavy
   l2_confident: [
@@ -1534,7 +1524,7 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // Become Great at Talking — conversation/conversion
   l2_great_talker: [
     "l3_phone_numbers", "l3_instadates", "l3_dates",
-    "l3_response_rate", "l3_voice_notes",
+    "l3_response_rate", "l3_voice_notes", "l3_approach_quality",
   ],
   // Master Seduction — escalation
   l2_master_seduction: [
@@ -1549,11 +1539,11 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   ],
   // Master Dating — date execution
   l2_master_dating: [
-    "l3_dates_planned", "l3_date_to_second_date", "l3_creative_dates", "l3_physical_escalation",
+    "l3_dates_planned", "l3_second_dates", "l3_creative_dates", "l3_physical_escalation",
   ],
   // Total Dating Freedom — abundance
   l2_dating_freedom: [
-    "l3_women_dating", "l3_dates_planned", "l3_rotation_size", "l3_sustained_rotation",
+    "l3_women_dating", "l3_dates_planned", "l3_sustained_rotation",
   ],
 
   // ---- PERSONAL GROWTH ----
@@ -1749,7 +1739,7 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_second_dates: 0.05,
     l3_kiss_closes: 0.05,
     l3_lays: 0.07,
-    l3_rotation_size: 0.035,
+    l3_women_dating: 0.035,
     l3_sustained_rotation: 0.035,
   },
   // Become Confident — exposure/consistency-heavy (10 L3s)
@@ -1782,11 +1772,12 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
   },
   // Become Great at Talking — conversion-heavy (5 L3s)
   l2_great_talker: {
-    l3_phone_numbers: 0.20,
-    l3_instadates: 0.20,
-    l3_dates: 0.25,
-    l3_response_rate: 0.20,
-    l3_voice_notes: 0.15,
+    l3_phone_numbers: 0.17,
+    l3_instadates: 0.17,
+    l3_dates: 0.21,
+    l3_response_rate: 0.17,
+    l3_voice_notes: 0.13,
+    l3_approach_quality: 0.15,
   },
   // Master Seduction — escalation-heavy (5 L3s)
   l2_master_seduction: {
@@ -1810,19 +1801,17 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_phone_numbers: 0.06,
     l3_instadates: 0.05,
     l3_dates: 0.05,
-    l3_second_dates: 0.04,
+    l3_second_dates: 0.08,
     l3_kiss_closes: 0.04,
     l3_lays: 0.06,
-    l3_rotation_size: 0.03,
     l3_sustained_rotation: 0.03,
     l3_texting_initiated: 0.03,
     l3_number_to_date_conversion: 0.04,
     l3_response_rate: 0.03,
     l3_dates_planned: 0.04,
-    l3_date_to_second_date: 0.04,
     l3_creative_dates: 0.03,
     l3_physical_escalation: 0.05,
-    l3_women_dating: 0.06,
+    l3_women_dating: 0.09,
   },
   // Master Texting — texting conversion (3 L3s)
   l2_master_texting: {
@@ -1833,15 +1822,14 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
   // Master Dating — date execution (4 L3s)
   l2_master_dating: {
     l3_dates_planned: 0.30,
-    l3_date_to_second_date: 0.25,
+    l3_second_dates: 0.25,
     l3_creative_dates: 0.15,
     l3_physical_escalation: 0.30,
   },
   // Total Dating Freedom — abundance (4 L3s)
   l2_dating_freedom: {
-    l3_women_dating: 0.30,
+    l3_women_dating: 0.55,
     l3_dates_planned: 0.25,
-    l3_rotation_size: 0.25,
     l3_sustained_rotation: 0.20,
   },
 

@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from batch.manifest_parser import load_manifest_sources, manifest_filter_files
+from batch.quarantine_helpers import get_quarantine_block_reason, load_quarantine_video_ids
 
 
 LOG_PREFIX = "[06d.DET.sanitize]"
@@ -125,13 +126,6 @@ def find_existing_output_path(
     )
     if preferred.exists():
         return preferred
-    source_flat = compute_output_path(input_path, preferred_output_dir)
-    if source_flat.exists():
-        return source_flat
-    if output_root_dir is not None:
-        root_flat = compute_output_path(input_path, output_root_dir)
-        if root_flat.exists():
-            return root_flat
     return None
 
 
@@ -933,14 +927,21 @@ def _run_directory_with_files(
 
     processed = 0
     skipped = 0
+    skipped_quarantine = 0
     failed = 0
     totals = {
         "teaser_duplicate_segments": 0,
         "mixed_mode_segments": 0,
         "excluded_from_stage07_evidence": 0,
     }
+    quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
 
     for input_file in files:
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
+            continue
         preferred_output = compute_output_path_with_layout(
             input_file,
             out_dir,
@@ -970,6 +971,7 @@ def _run_directory_with_files(
     print(f"\n{LOG_PREFIX} Done.")
     print(f"  Processed: {processed}")
     print(f"  Skipped:   {skipped}")
+    print(f"  Skipped (quarantine): {skipped_quarantine}")
     print(f"  Failed:    {failed}")
     print(f"  Teaser duplicates: {totals['teaser_duplicate_segments']}")
     print(f"  Mixed-mode:        {totals['mixed_mode_segments']}")
@@ -996,6 +998,11 @@ def _run_input(args: argparse.Namespace, in_base: Path, out_base: Path) -> None:
     input_path = input_path.resolve()
 
     if input_path.is_file():
+        quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
+        quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
+            return
         out_dir = Path(args.output) if args.output else out_base
         output_path = compute_output_path_with_layout(input_path, out_dir, input_root_dir=in_base)
         if output_path.exists() and not args.overwrite:
@@ -1099,7 +1106,21 @@ def main() -> None:
         action="store_true",
         help="Overwrite existing output files"
     )
+    parser.add_argument(
+        "--quarantine-file",
+        help="Optional JSON file listing quarantined video IDs to skip",
+    )
     args = parser.parse_args()
+
+    args._quarantine_ids = set()
+    if args.quarantine_file:
+        quarantine_path = Path(args.quarantine_file)
+        if not quarantine_path.is_absolute():
+            quarantine_path = repo_root() / quarantine_path
+        if not quarantine_path.exists():
+            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
+        args._quarantine_ids = load_quarantine_video_ids(quarantine_path)
+        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(args._quarantine_ids)} video ids)")
 
     if args.test:
         in_root = resolve_root_path(args.input_root, test_input_root())
