@@ -4,6 +4,20 @@ Validation runs **automatically** during pipeline execution. Post-stage hooks fi
 
 All thresholds and policies are configured in `scripts/training-data/batch/pipeline.config.json`.
 
+## LLM-Only Execution Rule
+
+- Required LLM stages must not use deterministic/heuristic/fallback bypasses to avoid LLM calls.
+- Stage `06`, `06b`, and `07` now require Claude preflight in normal execution (non-dry-run).
+- Parallel runner no longer injects preflight-skip flags into Stage `07`.
+- Read-only validators can stay deterministic, but they do not replace missing required LLM stage outputs.
+- Operator/runtime note: run Claude CLI for required LLM stages outside sandbox restrictions in this environment to avoid sandbox-induced timeout/hang false failures.
+
+## Canonical Flow Rule
+
+- Pipeline stage flow is single-path and fixed in production orchestration.
+- New stages are either adopted into the canonical flow for all applicable videos or rejected/removed.
+- Stage applicability differences are allowed only when encoded by video-type logic inside the stage itself.
+
 ## Plain Terms
 
 - `content type`: Stage 06 category (`infield`, `talking_head`, `podcast`, `compilation`).
@@ -13,7 +27,7 @@ All thresholds and policies are configured in `scripts/training-data/batch/pipel
   - `pass`: ingest-ready
   - `review`: hold for review
   - `block`: do not ingest
-- `canonical gate`: machine-readable file with final per-video gate decisions (`data/validation/gates/<subbatch>.gate.json`).
+- `canonical gate`: machine-readable file with final per-video gate decisions (`data/validation/gates/<subbatch>.gate.json`) and `summary.decision_source`.
 - `ingest status` (Stage 10 metadata): per-chunk split (`pass` or `review`) driven by chunk confidence threshold.
 
 ## Running the Pipeline (Validation Included)
@@ -38,6 +52,7 @@ Post-stage validation hooks:
 |-------------|-----------|---------------|
 | 06b | Check verification verdicts | REJECT verdict |
 | 07 | `validate_cross_stage.py` | error-severity issues |
+| 07b | `validate_stage07b.py` | block-level 07b gate decisions / invalid-missing 07b artifacts |
 | 09 | `validate_chunks.py` | error-severity issues |
 
 Stage 07/09 validator JSON now emits canonical signal fields per issue:
@@ -48,7 +63,7 @@ End-of-run validation: `validate_manifest.py` + `validate_confidence_trace.py` +
 
 Canonical gate authority in this flow:
 - `validate_manifest.py`: emits stage reports + quarantine context.
-- `validate_stage_report.py`: emits readiness summary and the final canonical gate (`data/validation/gates/<subbatch>.gate.json`).
+- `validate_stage_report.py`: emits readiness summary and the final canonical gate (`data/validation/gates/<subbatch>.gate.json`, `summary.decision_source=stage_report_readiness`).
 
 Failing videos are quarantined and skipped in subsequent stages. Pipeline continues with remaining good videos.
 In parallel runner mode, delegated end-of-run validation failures now propagate as non-zero runner exit status.
@@ -71,6 +86,7 @@ In parallel runner mode, delegated end-of-run validation failures now propagate 
 This is deterministic validation only: no LLM calls. Validation artifacts are refreshed (`stage_reports`, `readiness-summary`, `quarantine`, canonical gate).
 Deep checks (Stage 05 audio, Stage 08 report, Stage 09 chunks), stage reports, and quarantine emission are always on.
 Stage 08 contract checks are strict-only: no legacy path/scope fallback is accepted.
+Contract-only missing/invalid artifact checks fail validation but are not persisted as quarantine membership.
 
 ## Configuration
 
@@ -88,14 +104,24 @@ All validation thresholds live in `pipeline.config.json`:
       },
       "block_warning_checks": [],
       "max_warning_checks_by_class": {
+        "contamination_risk": 2,
         "transcript_quality": 12,
         "routing_mismatch": 2
       },
+      "block_warning_class_by_content_type": {
+        "podcast": ["routing_mismatch"],
+        "talking_head": ["routing_mismatch"]
+      },
       "review_warning_class_budget_by_content_type": {
         "infield": {
+          "contamination_risk": 0,
           "transcript_quality": 4
         },
+        "podcast": {
+          "contamination_risk": 0
+        },
         "talking_head": {
+          "contamination_risk": 0,
           "transcript_quality": 1,
           "routing_mismatch": 0
         }
@@ -108,16 +134,35 @@ All validation thresholds live in `pipeline.config.json`:
 
 Readiness warning-budget behavior:
 - `stage07_validation_warnings` is expanded into per-warning-type counts (e.g. `transcript_artifact`, `evidence_mismatch`)
+- `stage07_transcript_artifact_risk` carries unresolved artifact severity buckets (e.g. `transcript_artifact_high_unrepaired`)
 - Class-level policies are supported (`max_warning_checks_by_class`, `block_warning_classes`)
+- Content-type class blocking is supported (`block_warning_class_by_content_type`)
+- Current policy: `talking_head.routing_mismatch` and `podcast.routing_mismatch` escalate to `BLOCKED`.
+- Current policy: unresolved contamination uses class `contamination_risk` with `review budget = 0` (by content type) and hard class budget `max_warning_checks_by_class.contamination_risk = 2`.
 - Content-type review budgets are supported (`review_warning_class_budget_by_content_type`)
 - Readiness output now includes applied budget context per video:
   - `videos[].check_counts.content_type_review_budget`
-- Contextual warnings (`missing_stage01_audio`, `stage08_validation_warning`, `stage08_video_warning`, `stage07_normalization_repairs`) are excluded from the generic budget
+- Contextual warnings (`missing_stage01_audio`, `stage08_validation_warning`, `stage08_video_warning`, `stage07_normalization_repairs`, `stage07_validation_warnings`) are excluded from readiness policy budgets
 - Contextual warnings do not downgrade readiness from `READY` to `REVIEW` by themselves
 - Contextual checks can still be enforced via `block_warning_checks` in config
 
 Confidence-trace policy behavior:
 - strict-only: missing `*.confidence.trace.json` is a hard error.
+
+## Readiness To Ingest Mapping
+
+Manifest-level ingest decisions are derived from readiness status:
+
+| Readiness status | Gate decision | Stage 10 default behavior |
+|---|---|---|
+| `READY` | `pass` | ingest-eligible |
+| `REVIEW` | `review` | excluded by readiness gate |
+| `BLOCKED` | `block` | excluded by readiness gate |
+
+Notes:
+- Stage 10 reads readiness summary (`readiness-summary.json`) for gating.
+- Canonical gate decisions mirror this mapping in standard orchestration (`decision_source=stage_report_readiness`).
+- Readiness filtering is always applied in manifest-mode ingest.
 
 ## Re-run Loop (LLM + Validate)
 
@@ -134,21 +179,9 @@ For isolated experiment runs, root overrides are available on the stage scripts 
 - `06c.DET.patch`: `--input-root`, `--verification-root`
 - `07.LLM.content`: `--input-root`
 
-Calibration sweep knobs (orchestrator pass-through):
-- Stage `06h` confidence banding:
-  - `--confidence-band-high-threshold <0..1>`
-  - `--confidence-band-medium-threshold <0..1>`
-- Stage `09` chunk confidence floor:
-  - `--min-chunk-confidence <0..1>`
-
-Example:
-
-```bash
-./sub-batch-pipeline P002.9 --run --from 06h \
-  --confidence-band-high-threshold 0.85 \
-  --confidence-band-medium-threshold 0.65 \
-  --min-chunk-confidence 0.35
-```
+Orchestrator policy:
+- `sub-batch-pipeline` and `pipeline-runner` now use fixed stage defaults/config in production flow.
+- Stage-specific threshold experiments are run by calling the stage scripts directly in controlled test scopes, not by runner pass-through flags.
 
 Stage `09` chunks now include floor telemetry for auditability:
 - `minChunkConfidence`
@@ -187,7 +220,7 @@ python3 scripts/training-data/validation/validate_stage_report.py --dir data/val
 python3 scripts/training-data/validation/validate_stage_report.py --dir data/validation/stage_reports/P001.1 --manifest docs/pipeline/batches/P001.1.txt --emit-readiness-summary --emit-canonical-gate
 ```
 
-Key flags: `--max-warning-checks`, `--max-warning-check <check>=<n>`, `--max-warning-class <class>=<n>`, `--review-warning-class-budget-by-content-type <content_type>:<class>=<n>`, `--block-warning-check`, `--block-warning-class`, `--emit-canonical-gate`
+Key flags: `--max-warning-checks`, `--max-warning-check <check>=<n>`, `--max-warning-class <class>=<n>`, `--review-warning-class-budget-by-content-type <content_type>:<class>=<n>`, `--block-warning-class-by-content-type <content_type>:<class>`, `--block-warning-check`, `--block-warning-class`, `--emit-canonical-gate`
 
 ### validate_chunks.py
 

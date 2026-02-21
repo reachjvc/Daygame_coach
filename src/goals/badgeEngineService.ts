@@ -14,7 +14,7 @@ import {
   getAchievementWeights,
 } from "./data/goalGraph"
 import { computeAchievementProgress } from "./milestoneService"
-import type { GoalWithProgress, BadgeTier, BadgeStatus } from "./types"
+import type { GoalWithProgress, BadgeTier, BadgeStatus, TierUpgradeEvent, GoalPhase } from "./types"
 
 // ============================================================================
 // Tier Thresholds
@@ -37,6 +37,47 @@ export function progressToTier(progress: number): BadgeTier {
     if (progress >= min) return tier
   }
   return "none"
+}
+
+// ============================================================================
+// Self-Reported Gating
+// ============================================================================
+
+/**
+ * Check if any contributing L3 goal has a non-self-reported linked metric.
+ * If ALL goals are self-reported (linkedMetric === null), badge tier is capped at bronze.
+ */
+function hasNonSelfReportedGoal(l3Goals: GoalWithProgress[]): boolean {
+  return l3Goals.some((g) => {
+    if (!g.template_id) return false
+    const template = GOAL_TEMPLATE_MAP[g.template_id]
+    return template?.linkedMetric != null
+  })
+}
+
+// ============================================================================
+// Phase-Aware Progress
+// ============================================================================
+
+/**
+ * Build a progress map that accounts for goal phase.
+ * Goals in consolidation/graduated phase contribute 100% of their weight.
+ * Goals in acquisition (or no phase) contribute their actual progress_percentage.
+ */
+function buildPhaseAwareProgressMap(
+  l3Goals: GoalWithProgress[]
+): Map<string, number> {
+  const progressMap = new Map<string, number>()
+  for (const goal of l3Goals) {
+    if (goal.template_id) {
+      const phase = (goal as GoalWithProgress & { goal_phase?: GoalPhase | null }).goal_phase
+      const progress = (phase === "consolidation" || phase === "graduated")
+        ? 100
+        : goal.progress_percentage
+      progressMap.set(goal.template_id, progress)
+    }
+  }
+  return progressMap
 }
 
 // ============================================================================
@@ -67,16 +108,16 @@ function getAllL2Ids(): string[] {
  * @returns BadgeStatus[] - one entry per L2 that has at least one active contributing L3
  */
 export function computeAllBadges(l3Goals: GoalWithProgress[]): BadgeStatus[] {
-  // Build set of active template IDs and progress map
+  // Build set of active template IDs and phase-aware progress map
   const activeTemplateIds = new Set<string>()
-  const progressMap = new Map<string, number>()
-
   for (const goal of l3Goals) {
     if (goal.template_id) {
       activeTemplateIds.add(goal.template_id)
-      progressMap.set(goal.template_id, goal.progress_percentage)
     }
   }
+
+  const progressMap = buildPhaseAwareProgressMap(l3Goals)
+  const selfReportedOnly = !hasNonSelfReportedGoal(l3Goals)
 
   const allL2Ids = getAllL2Ids()
   const badges: BadgeStatus[] = []
@@ -88,7 +129,12 @@ export function computeAllBadges(l3Goals: GoalWithProgress[]): BadgeStatus[] {
     if (weights.length === 0) continue
 
     const result = computeAchievementProgress(weights, progressMap)
-    const tier = progressToTier(result.progressPercent)
+    let tier = progressToTier(result.progressPercent)
+
+    // Self-reported gating: cap at bronze if no linked metrics
+    if (selfReportedOnly && TIER_ORDER[tier] > TIER_ORDER["bronze"]) {
+      tier = "bronze"
+    }
 
     const template = GOAL_TEMPLATE_MAP[l2Id]
     const title = template?.title ?? l2Id
@@ -118,20 +164,24 @@ export function computeBadge(
   l3Goals: GoalWithProgress[]
 ): BadgeStatus | null {
   const activeTemplateIds = new Set<string>()
-  const progressMap = new Map<string, number>()
-
   for (const goal of l3Goals) {
     if (goal.template_id) {
       activeTemplateIds.add(goal.template_id)
-      progressMap.set(goal.template_id, goal.progress_percentage)
     }
   }
 
   const weights = getAchievementWeights(l2Id, activeTemplateIds)
   if (weights.length === 0) return null
 
+  const progressMap = buildPhaseAwareProgressMap(l3Goals)
   const result = computeAchievementProgress(weights, progressMap)
-  const tier = progressToTier(result.progressPercent)
+  let tier = progressToTier(result.progressPercent)
+
+  // Self-reported gating: cap at bronze if no linked metrics
+  const selfReportedOnly = !hasNonSelfReportedGoal(l3Goals)
+  if (selfReportedOnly && TIER_ORDER[tier] > TIER_ORDER["bronze"]) {
+    tier = "bronze"
+  }
 
   const template = GOAL_TEMPLATE_MAP[l2Id]
   const title = template?.title ?? l2Id
@@ -143,4 +193,44 @@ export function computeBadge(
     tier,
     unlocked: tier !== "none",
   }
+}
+
+// ============================================================================
+// Tier Upgrade Detection
+// ============================================================================
+
+/** Numeric order for tier comparison. Higher = better. */
+export const TIER_ORDER: Record<BadgeTier, number> = {
+  none: 0,
+  bronze: 1,
+  silver: 2,
+  gold: 3,
+  diamond: 4,
+}
+
+/**
+ * Detect upward tier changes between two badge snapshots.
+ * Only reports upgrades (not downgrades or unchanged tiers).
+ */
+export function detectTierUpgrades(
+  previousBadges: BadgeStatus[],
+  currentBadges: BadgeStatus[]
+): TierUpgradeEvent[] {
+  const prevMap = new Map(previousBadges.map((b) => [b.badgeId, b]))
+  const upgrades: TierUpgradeEvent[] = []
+
+  for (const current of currentBadges) {
+    const prev = prevMap.get(current.badgeId)
+    const prevTier = prev?.tier ?? "none"
+    if (TIER_ORDER[current.tier] > TIER_ORDER[prevTier]) {
+      upgrades.push({
+        badgeId: current.badgeId,
+        badgeTitle: current.title,
+        previousTier: prevTier,
+        newTier: current.tier,
+      })
+    }
+  }
+
+  return upgrades
 }

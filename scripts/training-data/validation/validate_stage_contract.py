@@ -34,6 +34,7 @@ STAGE_ARTIFACTS: Dict[str, Tuple[str, str, bool]] = {
     "06g": ("06g.LLM.damage-adjudicator", "*.damage-adjudication.json", False),
     "06h": ("06h.DET.confidence-propagation", "*.conversations.json", False),
     "07": ("07.LLM.content", "*.enriched.json", False),
+    "07b": ("07b.LLM.enrichment-verify", "*.enrichment-verify.json", False),
     "08": ("08.DET.taxonomy-validation", "*.report.json", False),
     "09": ("09.EXT.chunks", "*.chunks.json", True),
 }
@@ -48,8 +49,9 @@ STAGE_DEPENDENCIES: Dict[str, List[str]] = {
     "06g": ["06f"],
     "06h": ["06d", "06f"],
     "07": ["06h"],
-    "08": ["07"],
-    "09": ["07"],
+    "07b": ["07", "06c", "06e"],
+    "08": ["07", "07b"],
+    "09": ["07", "07b"],
 }
 
 

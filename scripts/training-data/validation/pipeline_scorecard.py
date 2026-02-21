@@ -39,6 +39,7 @@ STAGE_SPECS: Dict[str, Tuple[str, str]] = {
     "stage06g": ("06g.LLM.damage-adjudicator", "*.damage-adjudication.json"),
     "stage06h": ("06h.DET.confidence-propagation", "*.confidence.report.json"),
     "stage07": ("07.LLM.content", "*.enriched.json"),
+    "stage07b": ("07b.LLM.enrichment-verify", "*.enrichment-verify.json"),
     "stage09": ("09.EXT.chunks", "*.chunks.json"),
 }
 
@@ -618,6 +619,7 @@ def build_scorecard(
     review_budget_by_content_type: Dict[str, Dict[str, int]] = {}
     signal_class_counts: Counter[str] = Counter()
     gating_source = "none"
+    canonical_decision_source: Optional[str] = None
     if isinstance(readiness_summary, dict):
         policy = readiness_summary.get("policy")
         if isinstance(policy, dict):
@@ -686,6 +688,11 @@ def build_scorecard(
                             if count > 0:
                                 bucket[cls] += count
     if isinstance(canonical_gate_payload, dict):
+        summary = canonical_gate_payload.get("summary")
+        if isinstance(summary, dict):
+            source_raw = summary.get("decision_source")
+            if isinstance(source_raw, str) and source_raw.strip():
+                canonical_decision_source = source_raw.strip()
         videos = canonical_gate_payload.get("videos")
         if isinstance(videos, list):
             for row in videos:
@@ -720,7 +727,7 @@ def build_scorecard(
         pass_count = canonical_counts["pass"]
         review_count = canonical_counts["review"]
         block_count = canonical_counts["block"]
-        gating_source = "canonical_gate"
+        gating_source = canonical_decision_source or "canonical_gate"
 
     if readiness_by_vid and canonical_by_vid:
         shared = sorted(set(readiness_by_vid.keys()) & set(canonical_by_vid.keys()))
@@ -829,6 +836,7 @@ def build_scorecard(
             "pass_videos": pass_count,
             "signal_class_counts": dict(signal_class_counts),
             "decision_source": gating_source,
+            "canonical_decision_source": canonical_decision_source,
             "readiness_decision_counts": readiness_counts,
             "canonical_decision_counts": canonical_counts,
             "decision_mismatch_count": decision_mismatch_count,

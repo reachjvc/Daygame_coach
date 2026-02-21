@@ -1072,6 +1072,33 @@ export async function countMonthlyReviews(userId: string): Promise<number> {
   return count ?? 0
 }
 
+/**
+ * Get the average approach quality for a user in the current week.
+ * Returns rounded integer (1-10) or 0 if no rated approaches.
+ */
+export async function getWeeklyApproachQualityAvg(
+  userId: string,
+  weekStart: string
+): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("approaches")
+    .select("quality")
+    .eq("user_id", userId)
+    .not("quality", "is", null)
+    .gte("timestamp", weekStart)
+
+  if (error) {
+    throw new Error(`Failed to get approach quality avg: ${error.message}`)
+  }
+
+  if (!data || data.length === 0) return 0
+
+  const sum = data.reduce((acc, row) => acc + (row.quality as number), 0)
+  return Math.round(sum / data.length)
+}
+
 // ============================================
 // Milestones
 // ============================================

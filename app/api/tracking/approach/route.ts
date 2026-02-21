@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { session_id, outcome, set_type, tags, mood, note, latitude, longitude, timestamp, voice_note_url } = parsed.data
+    const { session_id, outcome, set_type, tags, mood, quality, note, latitude, longitude, timestamp, voice_note_url } = parsed.data
 
     const approach = await createApproach({
       user_id: user.id,
@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
       set_type: set_type ?? undefined,
       tags: tags ?? undefined,
       mood: mood ?? undefined,
+      quality: quality ?? undefined,
       note: note ?? undefined,
       latitude: latitude ?? undefined,
       longitude: longitude ?? undefined,

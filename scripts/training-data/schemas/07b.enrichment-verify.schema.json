@@ -1,0 +1,199 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Stage 07b Enrichment Verification",
+  "description": "Proposed quality-first verification artifact for Stage 07 enrichments (design spike schema).",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "video_id",
+    "source",
+    "status",
+    "gate_decision",
+    "reason_code",
+    "checks",
+    "issues",
+    "metrics"
+  ],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "video_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{11}$"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "WARN", "FAIL"]
+    },
+    "gate_decision": {
+      "type": "string",
+      "enum": ["pass", "review", "block"]
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "object",
+      "properties": {
+        "stage07_enriched": { "type": "string" },
+        "stage06_conversations": { "type": "string" },
+        "stage06e_quality_check": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "check", "message"],
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["error", "warning", "info"]
+          },
+          "check": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "signal_class": {
+            "type": "string",
+            "enum": [
+              "artifact_contract",
+              "conversation_structure",
+              "other_quality",
+              "quarantine_gate",
+              "routing_mismatch",
+              "taxonomy_coverage",
+              "transcript_quality"
+            ]
+          },
+          "remediation_path": {
+            "type": "string",
+            "enum": [
+              "contract_repair",
+              "conversation_review",
+              "manual_review",
+              "quarantine",
+              "routing_policy_review",
+              "taxonomy_review",
+              "transcript_review"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["issue_code", "issue_severity", "gate_decision", "signal_class", "message"],
+        "properties": {
+          "issue_code": { "type": "string", "minLength": 1 },
+          "issue_severity": {
+            "type": "string",
+            "enum": ["critical", "major", "minor", "info"]
+          },
+          "gate_decision": {
+            "type": "string",
+            "enum": ["pass", "review", "block"]
+          },
+          "signal_class": {
+            "type": "string",
+            "enum": [
+              "artifact_contract",
+              "conversation_structure",
+              "other_quality",
+              "quarantine_gate",
+              "routing_mismatch",
+              "taxonomy_coverage",
+              "transcript_quality"
+            ]
+          },
+          "remediation_path": {
+            "type": "string",
+            "enum": [
+              "contract_repair",
+              "conversation_review",
+              "manual_review",
+              "quarantine",
+              "routing_policy_review",
+              "taxonomy_review",
+              "transcript_review"
+            ]
+          },
+          "message": { "type": "string", "minLength": 1 },
+          "conversation_id": { "type": ["integer", "null"], "minimum": 1 },
+          "segment_id": { "type": ["integer", "null"], "minimum": 0 },
+          "evidence_segment_ids": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
+          },
+          "confidence": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "maximum": 1
+          },
+          "waived": { "type": "boolean" },
+          "waiver_note": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "waivers_applied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["check"],
+        "properties": {
+          "check": { "type": "string", "minLength": 1 },
+          "note": { "type": ["string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "checks_total",
+        "errors",
+        "warnings",
+        "infos"
+      ],
+      "properties": {
+        "checks_total": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "integer", "minimum": 0 },
+        "warnings": { "type": "integer", "minimum": 0 },
+        "infos": { "type": "integer", "minimum": 0 },
+        "evidence_coverage_ratio": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "hallucination_risk_ratio": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

@@ -33,7 +33,7 @@ const REGION_TO_IMAGE_FOLDER: Record<string, string> = {
 const DEFAULT_FOLDER = "scandinavian"
 
 /** Region folders that have images on disk. Add folder names here as image sets are generated. */
-const AVAILABLE_FOLDERS = new Set(["scandinavian", "african"])
+const AVAILABLE_FOLDERS = new Set(["scandinavian", "african", "western-european", "mediterranean", "latin-american", "east-asian", "southeast-asian", "south-asian"])
 
 const resolveAgeFolder = (avgAge: number) =>
   avgAge < 22 ? "18" : avgAge < 28 ? "25" : avgAge < 34 ? "30" : "37"

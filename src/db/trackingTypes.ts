@@ -109,6 +109,7 @@ export interface ApproachRow {
   set_type: SetType | null
   tags: string[] | null
   mood: number | null
+  quality: number | null
   latitude: number | null
   longitude: number | null
   note: string | null
@@ -124,6 +125,7 @@ export interface ApproachInsert {
   set_type?: SetType
   tags?: string[]
   mood?: number
+  quality?: number
   latitude?: number
   longitude?: number
   note?: string
@@ -135,6 +137,7 @@ export interface ApproachUpdate {
   set_type?: SetType
   tags?: string[]
   mood?: number
+  quality?: number
   note?: string
   voice_note_url?: string
 }
@@ -350,6 +353,7 @@ export interface UserTrackingStatsRow {
   current_week_approaches: number       // Approaches in current week
   current_week_numbers: number          // Phone numbers in current week
   current_week_instadates: number       // Instadates in current week
+  current_week_field_reports: number    // Field reports in current week
   // Weekly session streaks (2+ sessions OR 5+ approaches = active week)
   current_week_streak: number
   longest_week_streak: number
@@ -380,6 +384,7 @@ export interface UserTrackingStatsUpdate {
   current_week_approaches?: number
   current_week_numbers?: number
   current_week_instadates?: number
+  current_week_field_reports?: number
   current_week_streak?: number
   longest_week_streak?: number
   last_active_week?: string

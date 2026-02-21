@@ -67,6 +67,7 @@ export const CreateApproachSchema = z.object({
   set_type: SetTypeSchema.optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
   mood: z.number().int().min(1).max(5).optional(),
+  quality: z.number().int().min(1).max(10).optional(),
   note: z.string().max(2000).optional(),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
@@ -79,6 +80,7 @@ export const UpdateApproachSchema = z.object({
   set_type: SetTypeSchema.optional(),
   tags: z.array(z.string().max(50)).max(10).optional(),
   mood: z.number().int().min(1).max(5).optional(),
+  quality: z.number().int().min(1).max(10).optional(),
   note: z.string().max(2000).optional(),
   voice_note_url: z.string().url().optional(),
 })

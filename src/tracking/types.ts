@@ -31,6 +31,7 @@ export interface ApproachFormData {
   set_type?: SetType
   tags?: string[]
   mood?: number
+  quality?: number
   note?: string
   latitude?: number
   longitude?: number

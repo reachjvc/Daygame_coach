@@ -47,12 +47,12 @@
     "P002.9": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "05"
+      "current_stage": "07b"
     },
     "P002.10": {
       "status": "in_progress",
       "video_count": 7,
-      "current_stage": "05"
+      "current_stage": "09"
     }
   }
 }

@@ -1,24 +1,24 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2, Settings2, Library, Clock } from "lucide-react"
+import { Loader2, Settings2, Library, Clock } from "lucide-react"
 import { GoalIcon } from "@/components/ui/GoalIcon"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
+import { WeeklyReviewDialog } from "./WeeklyReviewDialog"
 import { ConfirmDeleteAllDialog } from "./ConfirmDeleteAllDialog"
 import { GoalCatalogPicker } from "./GoalCatalogPicker"
 import { GoalTimeSettingsDialog, type TimePreferences } from "./GoalTimeSettingsDialog"
 import { GoalHierarchyView } from "./GoalHierarchyView"
-import { DailyActionView } from "./DailyActionView"
-import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
-import { flattenTree, getCelebrationTier, generateDirtyDogInserts } from "../goalsService"
-import { isValidCurveThemeId, getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
-import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, CurveThemeId } from "../types"
+import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData } from "../goalsService"
+import type { GoalWithProgress, GoalTreeNode, CelebrationTier, MilestoneCelebrationData } from "../types"
 
-export function GoalsHubContent() {
+export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setupPath?: string } = {}) {
+  const router = useRouter()
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [tree, setTree] = useState<GoalTreeNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -26,18 +26,18 @@ export function GoalsHubContent() {
 
   const [celebration, setCelebration] = useState<{ tier: CelebrationTier; title: string } | null>(null)
   const [completingGoal, setCompletingGoal] = useState<GoalWithProgress | null>(null)
+  const [celebrationData, setCelebrationData] = useState<MilestoneCelebrationData | null>(null)
   const [isCompleting, setIsCompleting] = useState(false)
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingGoal, setEditingGoal] = useState<GoalWithProgress | undefined>()
   const [defaultParentGoalId, setDefaultParentGoalId] = useState<string | null>(null)
   const [isCustomizeMode, setIsCustomizeMode] = useState(false)
-  const [viewMode, setViewMode] = useState<GoalViewMode>("daily")
   const [showCatalog, setShowCatalog] = useState(false)
   const [isAddingDirtyDog, setIsAddingDirtyDog] = useState(false)
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false)
   const [isTimeSettingsOpen, setIsTimeSettingsOpen] = useState(false)
+  const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [timePrefs, setTimePrefs] = useState<TimePreferences | null>(null)
-  const [curveThemeId, setCurveThemeId] = useState<CurveThemeId>("zen")
   const [isDeletingAll, setIsDeletingAll] = useState(false)
   const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
   const toastId = useRef(0)
@@ -65,28 +65,12 @@ export function GoalsHubContent() {
     }
   }, [])
 
-  const handleCurveThemeChange = useCallback((id: CurveThemeId) => {
-    setCurveThemeId(id)
-    fetch("/api/settings/curve-style", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ curve_style: id }),
-    }).catch(() => {})
-  }, [])
 
   useEffect(() => {
     fetchGoals()
     fetch("/api/settings/time-preferences")
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setTimePrefs(data) })
-      .catch(() => {})
-    fetch("/api/settings/curve-style")
-      .then(r => r.ok ? r.json() : null)
-      .then(data => {
-        if (data?.curve_style && isValidCurveThemeId(data.curve_style)) {
-          setCurveThemeId(data.curve_style)
-        }
-      })
       .catch(() => {})
   }, [fetchGoals])
 
@@ -97,6 +81,7 @@ export function GoalsHubContent() {
 
   const handleComplete = useCallback((goal: GoalWithProgress) => {
     setCompletingGoal(goal)
+    setCelebrationData(buildMilestoneCelebrationData(goal))
   }, [])
 
   const handleConfirmComplete = async () => {
@@ -111,6 +96,7 @@ export function GoalsHubContent() {
       if (!response.ok) throw new Error("Failed to complete goal")
       triggerCelebration(completingGoal)
       setCompletingGoal(null)
+      setCelebrationData(null)
       await fetchGoals()
     } catch {
       showToast("Failed to complete goal — try again", "error")
@@ -198,12 +184,6 @@ export function GoalsHubContent() {
 
   const handleEdit = (goal: GoalWithProgress) => {
     setEditingGoal(goal)
-    setIsFormOpen(true)
-  }
-
-  const handleCreateGoal = () => {
-    setEditingGoal(undefined)
-    setDefaultParentGoalId(null)
     setIsFormOpen(true)
   }
 
@@ -317,78 +297,26 @@ export function GoalsHubContent() {
     )
   }
 
-  const cyberTheme = getCurveTheme("cyberpunk")
-  const isCyberPage = curveThemeId === "cyberpunk"
-
   return (
     <div
       className="space-y-6 p-6 -mx-2"
       data-testid="goals-page"
-      style={{
-        position: "relative",
-        overflow: "hidden",
-        background: isCyberPage ? cyberTheme.bg : undefined,
-        color: isCyberPage ? cyberTheme.text : undefined,
-        fontFamily: isCyberPage ? "var(--font-mono, 'Geist Mono', monospace)" : undefined,
-        borderRadius: isCyberPage ? 4 : 12,
-        border: isCyberPage ? `1px solid ${cyberTheme.border}` : undefined,
-        boxShadow: isCyberPage ? `0 0 30px rgba(255,0,51,0.08), inset 0 0 60px rgba(255,0,51,0.02)` : undefined,
-        transition: "background 300ms ease, color 300ms ease",
-      }}
+      style={{ borderRadius: 12 }}
     >
-      {/* Cyberpunk decorative overlays */}
-      {isCyberPage && (
-        <>
-          {/* Scanlines */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 1,
-              background:
-                "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,51,0.03) 2px, rgba(255,0,51,0.03) 4px)",
-            }}
-          />
-          {/* Corner brackets */}
-          <div style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTop: `2px solid ${cyberTheme.accent}`, borderLeft: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
-          <div style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTop: `2px solid ${cyberTheme.accent}`, borderRight: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottom: `2px solid ${cyberTheme.accent}`, borderLeft: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
-          <div style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottom: `2px solid ${cyberTheme.accent}`, borderRight: `2px solid ${cyberTheme.accent}`, zIndex: 2 }} />
-        </>
-      )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" style={{ position: "relative", zIndex: 5 }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <GoalIcon className="size-7" style={{ color: isCyberPage ? cyberTheme.accent : undefined }} />
+          <GoalIcon className="size-7" />
           <div>
-            <h1
-              className="text-2xl font-bold"
-              style={{
-                textTransform: isCyberPage ? "uppercase" : undefined,
-                letterSpacing: isCyberPage ? "0.08em" : undefined,
-                color: isCyberPage ? cyberTheme.text : undefined,
-              }}
-            >
-              Goals
-            </h1>
-            <p
-              className="text-sm hidden sm:block"
-              style={{
-                color: isCyberPage ? cyberTheme.muted : undefined,
-                textTransform: isCyberPage ? "uppercase" : undefined,
-                letterSpacing: isCyberPage ? "0.04em" : undefined,
-                fontSize: isCyberPage ? 10 : undefined,
-              }}
-            >
-              {isCyberPage ? "SYSTEM // GOAL TRACKING MODULE" : "Track progress across all areas of your life"}
+            <h1 className="text-2xl font-bold">Goals</h1>
+            <p className="text-sm hidden sm:block text-muted-foreground">
+              Track progress across all areas of your life
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {goals.length > 0 && (
             <>
-              <ViewSwitcher activeView={viewMode} onViewChange={(v) => { setViewMode(v); setIsCustomizeMode(false) }} />
               <Button
                 variant="ghost"
                 size="sm"
@@ -397,6 +325,13 @@ export function GoalsHubContent() {
               >
                 <Clock className="size-4 mr-1" />
                 Time
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsReviewOpen(true)}
+              >
+                Review
               </Button>
               <Button
                 variant={isCustomizeMode ? "secondary" : "ghost"}
@@ -411,88 +346,24 @@ export function GoalsHubContent() {
                 <Library className="size-4 mr-1" />
                 Browse Catalog
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(setupPath)}
+                data-testid="goals-setup-wizard"
+              >
+                Setup Wizard
+              </Button>
             </>
           )}
-          {/* Theme toggle */}
-          <div
-            className="flex overflow-hidden border"
-            data-testid="goals-theme-toggle"
-            style={{
-              borderRadius: isCyberPage ? 2 : 8,
-              borderColor: isCyberPage ? cyberTheme.border : undefined,
-              boxShadow: isCyberPage ? `0 0 8px rgba(255,0,51,0.15)` : undefined,
-            }}
-          >
-            {CURVE_THEME_IDS.map((id) => {
-              const t = getCurveTheme(id)
-              const isActive = id === curveThemeId
-              return (
-                <button
-                  key={id}
-                  onClick={() => handleCurveThemeChange(id)}
-                  data-testid={`theme-toggle-${id}`}
-                  className="cursor-pointer"
-                  style={{
-                    padding: "6px 14px",
-                    fontSize: 13,
-                    fontWeight: isActive ? 600 : 400,
-                    background: isActive ? t.accent : "transparent",
-                    color: isActive ? "#fff" : (isCyberPage ? cyberTheme.muted : undefined),
-                    border: "none",
-                    borderRight: id !== CURVE_THEME_IDS[CURVE_THEME_IDS.length - 1] ? `1px solid ${isCyberPage ? cyberTheme.border : "var(--border)"}` : "none",
-                    transition: "all 150ms ease",
-                    fontFamily: id === "cyberpunk" ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
-                    letterSpacing: id === "cyberpunk" ? "0.05em" : undefined,
-                    textTransform: id === "cyberpunk" ? "uppercase" : "none",
-                  }}
-                >
-                  {t.label}
-                </button>
-              )
-            })}
-          </div>
-          <Button
-            onClick={handleCreateGoal}
-            data-testid="goals-new-goal-button"
-            style={isCyberPage ? {
-              background: cyberTheme.accent,
-              color: "#fff",
-              borderColor: cyberTheme.accent,
-              borderRadius: 2,
-              textTransform: "uppercase",
-              letterSpacing: "0.06em",
-              fontFamily: "var(--font-mono, 'Geist Mono', monospace)",
-            } : undefined}
-          >
-            <Plus className="size-4 mr-1" />
-            {isCyberPage ? "NEW_GOAL" : "New Goal"}
-          </Button>
         </div>
       </div>
 
-      <div style={{ position: "relative", zIndex: 5 }}>
+      <div>
       {goals.length === 0 ? (
         <div data-testid="goals-empty-state">
-          <GoalCatalogPicker onTreeCreated={() => { setViewMode("strategic"); setIsLoading(true); fetchGoals() }} onCreateManual={handleCreateGoal} curveThemeId={curveThemeId} onCurveThemeChange={handleCurveThemeChange} />
+          <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
         </div>
-      ) : viewMode === "daily" ? (
-
-        <DailyActionView
-          goals={goals}
-          isCustomizeMode={isCustomizeMode}
-          onIncrement={handleIncrement}
-          onSetValue={handleSetValue}
-          onComplete={handleComplete}
-          onReset={handleReset}
-          onEdit={handleEdit}
-          onAddChild={handleAddChild}
-          onGoalToggle={handleGoalToggle}
-          onDeleteGoal={handleDeleteGoal}
-          onDeleteAllGoals={handleDeleteAllGoals}
-          onReorder={handleReorder}
-          onSwitchView={setViewMode}
-          onCreateGoal={handleCreateGoal}
-        />
       ) : (
         <GoalHierarchyView
           goals={goals}
@@ -511,7 +382,7 @@ export function GoalsHubContent() {
           isAddingDirtyDog={isAddingDirtyDog}
         />
       )}
-      </div>{/* close z-5 content wrapper */}
+      </div>
 
       <GoalTimeSettingsDialog
         open={isTimeSettingsOpen}
@@ -527,8 +398,6 @@ export function GoalsHubContent() {
         parentGoals={goals}
         onSuccess={handleFormSuccess}
         defaultParentGoalId={defaultParentGoalId}
-        curveThemeId={curveThemeId}
-        onCurveThemeChange={handleCurveThemeChange}
       />
 
       {/* Milestone completion confirmation */}
@@ -537,7 +406,8 @@ export function GoalsHubContent() {
           goal={completingGoal}
           isLoading={isCompleting}
           onConfirm={handleConfirmComplete}
-          onCancel={() => setCompletingGoal(null)}
+          onCancel={() => { setCompletingGoal(null); setCelebrationData(null) }}
+          celebrationData={celebrationData}
         />
       )}
 
@@ -570,10 +440,14 @@ export function GoalsHubContent() {
             fetchGoals()
           }}
           onClose={() => setShowCatalog(false)}
-          curveThemeId={curveThemeId}
-          onCurveThemeChange={handleCurveThemeChange}
         />
       )}
+
+      {/* Weekly review dialog */}
+      <WeeklyReviewDialog
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+      />
 
       {/* Action toasts */}
       {toasts.map((t, i) => (

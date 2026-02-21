@@ -206,6 +206,7 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
     setEditApproachData({
       outcome: approach.outcome || undefined,
       mood: approach.mood || undefined,
+      quality: approach.quality || undefined,
       tags: approach.tags || undefined,
       note: approach.note || undefined,
     })
@@ -793,6 +794,32 @@ function ApproachForm({
               title={option.label}
             >
               {option.emoji}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Approach Quality */}
+      <div>
+        <Label className="text-sm text-muted-foreground mb-2 block">Approach Quality</Label>
+        <div className="grid grid-cols-5 gap-1.5">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((value) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() =>
+                onChange({
+                  ...data,
+                  quality: data.quality === value ? undefined : value,
+                })
+              }
+              className={`py-1.5 rounded-lg border transition-colors text-sm font-medium ${
+                data.quality === value
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border hover:border-primary/50"
+              }`}
+            >
+              {value}
             </button>
           ))}
         </div>

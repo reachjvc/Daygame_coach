@@ -6,7 +6,7 @@ Targeted LLM adjudicator over Stage 06f damage-map seeds.
 
 Only runs for infield/compilation videos by default.
 Non-infield videos (talking_head, podcast, lecture) are skipped with a sentinel
-output file (skipped=true). Override with --skip-video-type-filter.
+output file (skipped=true) by stage applicability rule.
 
 Reads:
   - data/06f.DET.damage-map/<source>/<video>/*.damage-map.json
@@ -43,7 +43,7 @@ PIPELINE_VERSION = "06g.LLM.damage-adjudicator-v1.2"
 
 # Video types that contain infield conversations worth adjudicating.
 # Non-infield types (talking_head, podcast, lecture) have no conversation seeds
-# and are skipped unless --skip-video-type-filter is used.
+# and are skipped by default stage applicability.
 INFIELD_VIDEO_TYPES = {"infield", "compilation"}
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.prompt.md"
 SCHEMA_PATH = Path(__file__).resolve().parent / "prompts" / "06g.damage-adjudicator.schema.json"
@@ -766,7 +766,7 @@ def adjudicate_file(
 
     # R2: Skip non-infield videos — they have no conversation seeds to adjudicate.
     video_type = _get_video_type(context_data)
-    if video_type not in INFIELD_VIDEO_TYPES and not args.skip_video_type_filter:
+    if video_type not in INFIELD_VIDEO_TYPES:
         skip_output = {
             "video_id": damage_map.get("video_id"),
             "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -1269,11 +1269,6 @@ def main() -> None:
     parser.add_argument("--context-right", type=int, default=8, help="Context window right size in segments")
     parser.add_argument("--include-low-severity", action="store_true", help="Also adjudicate low-severity seeds")
     parser.add_argument("--include-raw-llm", action="store_true", help="Include raw LLM output in artifact (debug only)")
-    parser.add_argument(
-        "--skip-video-type-filter",
-        action="store_true",
-        help="Run adjudication on all video types (override default infield/compilation-only filter)",
-    )
     parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
     parser.add_argument(
         "--sources",

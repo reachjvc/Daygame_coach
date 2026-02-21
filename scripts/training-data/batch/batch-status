@@ -57,6 +57,7 @@ STAGES = [
     ("06b.LLM.verify", "verify", "*.verification.json"),
     ("06c.DET.patched", "patched", "*.conversations.json"),
     ("07.LLM.content", "content", "*.enriched.json"),
+    ("07b.LLM.enrichment-verify", "enrichment-verify", "*.enrichment-verify.json"),
 ]
 
 

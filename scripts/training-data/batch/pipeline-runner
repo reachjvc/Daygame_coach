@@ -2,7 +2,7 @@
 """
 pipeline-runner — Conveyor-belt pipeline orchestrator.
 
-Each video progresses through stages 06→09 sequentially, but multiple videos
+Each video progresses through stages 06→09 sequentially (including 07b), but multiple videos
 are in-flight simultaneously. A shared semaphore caps concurrent LLM calls.
 
 Usage:
@@ -22,7 +22,7 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 from quarantine_updater import extract_from_cross_stage_or_chunks
 
@@ -58,13 +58,14 @@ STAGES = [
     Stage("06g", "06g.LLM.damage-adjudicator",       needs_llm=True),
     Stage("06h", "06h.DET.confidence-propagation",    needs_llm=False),
     Stage("07",  "07.LLM.content",                   needs_llm=True),
+    Stage("07b", "07b.LLM.enrichment-verify",        needs_llm=True),
     Stage("08",  "08.DET.taxonomy-validation",        needs_llm=False),
     Stage("09",  "09.EXT.chunk-embed.ts",            needs_llm=False),
 ]
 
 STAGE_KEYS = [s.key for s in STAGES]
-STAGES_SUPPORTING_QUARANTINE = {"06c", "06d", "06e", "06f", "06g", "06h", "07", "08", "09"}
-STAGES_SUPPORTING_OVERWRITE = {"06", "06b", "06c", "06d", "06e", "06f", "06g", "06h", "07"}
+STAGES_SUPPORTING_QUARANTINE = {"06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"}
+STAGES_SUPPORTING_OVERWRITE = {"06", "06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b"}
 
 
 # ── Video state tracking ────────────────────────────────────────────────────
@@ -112,10 +113,7 @@ def load_manifest_videos(manifest_path: Path) -> List[VideoState]:
 def build_stage_command(
     stage: Stage,
     manifest_path: str,
-    quarantine_file: Optional[Path] = None,
-    confidence_band_high_threshold: Optional[float] = None,
-    confidence_band_medium_threshold: Optional[float] = None,
-    min_chunk_confidence: Optional[float] = None,
+    quarantine_file: Path | None = None,
 ) -> List[str]:
     """Build the command list to execute a stage script."""
     script_path = str(REPO_ROOT / "scripts" / "training-data" / stage.script)
@@ -131,24 +129,11 @@ def build_stage_command(
         # artifacts cannot drift from updated upstream inputs.
         cmd.append("--overwrite")
 
-    # In runner mode, Stage 07 executes per-video manifests. Its built-in
-    # Claude preflight runs before pending-work detection, so running preflight
-    # per video causes avoidable failures/churn when no LLM calls are needed.
-    if stage.key == "07":
-        cmd.append("--skip-llm-preflight")
     # Stage 08 per-video runs are only used for immediate gating progression.
     # Canonical manifest-level Stage 08 reporting is emitted in end-of-run
     # validation, so skip per-video report files to avoid temp-manifest clutter.
     if stage.key == "08":
         cmd.append("--no-report")
-
-    if stage.key == "06h":
-        if confidence_band_high_threshold is not None:
-            cmd.extend(["--confidence-band-high-threshold", str(confidence_band_high_threshold)])
-        if confidence_band_medium_threshold is not None:
-            cmd.extend(["--confidence-band-medium-threshold", str(confidence_band_medium_threshold)])
-    if stage.key == "09" and min_chunk_confidence is not None:
-        cmd.extend(["--min-chunk-confidence", str(min_chunk_confidence)])
 
     if stage.key in STAGES_SUPPORTING_QUARANTINE and quarantine_file and quarantine_file.exists():
         cmd.extend(["--quarantine-file", str(quarantine_file)])
@@ -181,7 +166,7 @@ async def run_subprocess(
 
 # ── Quarantine check ────────────────────────────────────────────────────────
 
-def load_quarantine_video_ids(quarantine_file: Optional[Path]) -> Set[str]:
+def load_quarantine_video_ids(quarantine_file: Path | None) -> Set[str]:
     if not quarantine_file or not quarantine_file.exists():
         return set()
     try:
@@ -211,7 +196,7 @@ def add_quarantine_reason(vs: VideoState, check: str, message: str) -> None:
 async def run_contract_preflight(
     stage: Stage,
     manifest_path: str,
-    quarantine_file: Optional[Path],
+    quarantine_file: Path | None,
     log_prefix: str,
 ) -> int:
     cmd = [
@@ -245,6 +230,7 @@ async def run_contract_preflight(
 async def run_stage_validator_errors(
     stage: Stage,
     manifest_path: str,
+    quarantine_file: Path | None,
     log_prefix: str,
 ) -> Set[str]:
     if stage.key == "07":
@@ -256,6 +242,17 @@ async def run_stage_validator_errors(
             manifest_path,
             "--json",
         ]
+    elif stage.key == "07b":
+        cmd = [
+            VENV_PYTHON,
+            "-u",
+            str(VALIDATION_DIR / "validate_stage07b.py"),
+            "--manifest",
+            manifest_path,
+            "--json",
+        ]
+        if quarantine_file and quarantine_file.exists():
+            cmd.extend(["--quarantine-file", str(quarantine_file)])
     elif stage.key == "09":
         cmd = [
             VENV_PYTHON,
@@ -368,11 +365,8 @@ async def run_video(
     vs: VideoState,
     stages: List[Stage],
     semaphore: asyncio.Semaphore,
-    quarantine_file: Optional[Path],
+    quarantine_file: Path | None,
     full_manifest_path: Path,
-    confidence_band_high_threshold: Optional[float],
-    confidence_band_medium_threshold: Optional[float],
-    min_chunk_confidence: Optional[float],
     dry_run: bool,
     progress: Dict[str, str],
 ) -> None:
@@ -400,9 +394,6 @@ async def run_video(
                 stage,
                 tmp_manifest,
                 quarantine_file,
-                confidence_band_high_threshold=confidence_band_high_threshold,
-                confidence_band_medium_threshold=confidence_band_medium_threshold,
-                min_chunk_confidence=min_chunk_confidence,
             )
 
             if dry_run:
@@ -444,8 +435,13 @@ async def run_video(
                     progress[vs.video_id] = "QUARANTINED"
                     return
 
-            if stage.key in ("07", "09"):
-                error_ids = await run_stage_validator_errors(stage, str(full_manifest_path), log_prefix)
+            if stage.key in ("07", "07b", "09"):
+                error_ids = await run_stage_validator_errors(
+                    stage,
+                    str(full_manifest_path),
+                    quarantine_file,
+                    log_prefix,
+                )
                 if vs.video_id in error_ids:
                     vs.status = "quarantined"
                     if stage.key == "07":
@@ -453,6 +449,12 @@ async def run_video(
                             vs,
                             "stage07_cross_stage_error",
                             "Stage 07 cross-stage validation reported error severity issues.",
+                        )
+                    elif stage.key == "07b":
+                        add_quarantine_reason(
+                            vs,
+                            "stage07b_enrichment_verify_error",
+                            "Stage 07b enrichment verification reported block-level issues.",
                         )
                     else:
                         add_quarantine_reason(
@@ -503,7 +505,7 @@ async def progress_reporter(
 
 async def run_end_of_run_validation(
     sub_id: str,
-    quarantine_file: Optional[Path],
+    quarantine_file: Path | None,
 ) -> int:
     """Run end-of-run validation through the same code path as sequential mode."""
     cmd = ["bash", str(SCRIPT_DIR / "sub-batch-pipeline"), sub_id, "--validate"]
@@ -570,9 +572,6 @@ async def run_pipeline(args: argparse.Namespace) -> int:
                 semaphore,
                 quarantine_file,
                 manifest_path,
-                args.confidence_band_high_threshold,
-                args.confidence_band_medium_threshold,
-                args.min_chunk_confidence,
                 args.dry_run,
                 progress,
             )
@@ -656,34 +655,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--quarantine-file",
-        help="Optional quarantine JSON path (default: data/validation/quarantine/<sub-batch>.json)",
-    )
-    parser.add_argument(
-        "--confidence-band-high-threshold",
-        type=float,
-        help="Optional Stage 06h high confidence band threshold override (0..1)",
-    )
-    parser.add_argument(
-        "--confidence-band-medium-threshold",
-        type=float,
-        help="Optional Stage 06h medium confidence band threshold override (0..1)",
-    )
-    parser.add_argument(
-        "--min-chunk-confidence",
-        type=float,
-        help="Optional Stage 09 chunk confidence floor override (0..1)",
+        help="Quarantine JSON path (default: data/validation/quarantine/<sub-batch>.json)",
     )
     args = parser.parse_args()
-    for name in ("confidence_band_high_threshold", "confidence_band_medium_threshold", "min_chunk_confidence"):
-        value = getattr(args, name)
-        if value is not None and not (0.0 <= float(value) <= 1.0):
-            parser.error(f"--{name.replace('_', '-')} must be within [0,1]")
-    if (
-        args.confidence_band_high_threshold is not None
-        and args.confidence_band_medium_threshold is not None
-        and args.confidence_band_medium_threshold > args.confidence_band_high_threshold
-    ):
-        parser.error("--confidence-band-medium-threshold cannot exceed --confidence-band-high-threshold")
     rc = asyncio.run(run_pipeline(args))
     sys.exit(rc)
 

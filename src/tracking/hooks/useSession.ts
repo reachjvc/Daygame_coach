@@ -264,6 +264,7 @@ export function useSession({ userId, onApproachAdded, onSessionEnded }: UseSessi
       outcome: data?.outcome || null,
       set_type: data?.set_type || null,
       mood: data?.mood || null,
+      quality: data?.quality || null,
       tags: data?.tags || null,
       latitude: data?.latitude || null,
       longitude: data?.longitude || null,

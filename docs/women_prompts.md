@@ -85,8 +85,8 @@ The face descriptor is the primary differentiator. It must specify **sub-ethnici
 | 3 | Mediterranean | DONE (40/40) | `mediterranean` | Sub-ethnicity mapping: Greek, Lebanese, Croatian, Turkish, S. Italian, Moroccan, Spanish, Cypriot, Albanian, Egyptian |
 | 4 | Latin American | DONE (40/40) | `latin-american` | |
 | 5 | East Asian | DONE (40/40) | `east-asian` | Low hair-color variety — face descriptor carries all differentiation |
-| 6 | Southeast Asian | TODO | `southeast-asian` | Same as above |
-| 7 | South Asian | TODO | `south-asian` | Same as above |
+| 6 | Southeast Asian | DONE (40/40) | `southeast-asian` | Sub-ethnicity mapping used for face differentiation |
+| 7 | South Asian | DONE (40/40) | `south-asian` | Sub-ethnicity: Punjabi, Bengali, Marathi, Tamil, Kashmiri, Nepali, Sinhalese, Gujarati, Pashtun, Kerala |
 | 8 | African | DONE (40/40) | `african` | Faces lack diversity (pre-dates sub-ethnicity fix). May need regen. |
 
 ### Skin tone rotation per region
@@ -105,35 +105,11 @@ Don't use one skin tone for all 40 prompts. Rotate across archetypes:
 
 ## ChatGPT Workflow
 
-### Batch template
+### Prompt format
 
-```
-I need you to generate {N} portrait photos one at a time.
-After each image, I'll say "next" and you generate the next one.
+**Each prompt must be fully self-contained.** ChatGPT generates one image at a time and does NOT remember global style instructions across prompts. Never use a "global style" header — embed everything into each prompt.
 
-GLOBAL STYLE (apply to ALL images):
-- Photorealistic portrait, square 1:1 aspect ratio
-- Each woman must look like a DIFFERENT person — vary face shape, bone structure, skin tone
-- Head-and-shoulders to upper-body framing
-- Shallow depth of field, soft bokeh background
-- Natural or soft lighting
-- No text, no watermarks, no logos
-- IMPORTANT: Natural skin with visible pores and subtle texture. No airbrushed or waxy skin. These should look like real photos, not retouched magazine covers.
-- Simulate being shot on a Canon EOS R5 with 85mm f/1.4 lens
-
-AGE GUIDE:
-- 18 = youthful, fresh-faced, minimal makeup
-- 25 = young professional, natural beauty
-- 30 = established, confident, polished
-- 37 = refined, mature elegance
-
-Here is the queue. Start with #1.
-
-#1 — {archetype} — age {age}
-{full prompt}
-
-#2 — ...
-```
+Each prompt already contains all style cues via the ending: `shallow depth of field, natural skin texture with visible pores, shot on Canon EOS R5 85mm f/1.4, 1:1`. No additional wrapper needed — just paste the prompt directly.
 
 ### Practical tips
 - ChatGPT generates ~10-15 per session before quality drops
@@ -158,7 +134,6 @@ const mappings = [
 "
 ```
 
-## Code Changes Needed (after images exist)
+## Code Status
 
-1. Update `archetypes.ts`: `getArchetypes(ageRange, region)` — add region param, map region IDs from `regions.ts` to folder names, fallback to scandinavian if region images missing
-2. Update callers: `OnboardingFlow.tsx`, `UserPreferences.tsx`, `ArchetypeSelector.tsx` — pass `preferred_region` from profile
+All 8 region image sets complete and enabled in `archetypes.ts` `AVAILABLE_FOLDERS`. Region-to-folder mapping live — users selecting any region get matched images. Fallback to `scandinavian` only for unknown/unmapped regions.

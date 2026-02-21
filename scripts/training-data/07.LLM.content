@@ -322,9 +322,9 @@ TOPIC_ALIASES: Dict[str, str] = {
 
 LOG_PREFIX = "[07.LLM.content]"
 
-PROMPT_VERSION = "1.8.0"  # v1.8.0: quality assessment moved to 06e
+PROMPT_VERSION = "1.9.0"  # v1.9.0: evidence_segment_ids contract emitted on all enrichments
 PROMPT_USES_GLOBAL_SEG_IDS = True
-PIPELINE_VERSION = "07.LLM.content-v1.15"
+PIPELINE_VERSION = "07.LLM.content-v1.16"
 
 ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
     "nonsense": "high", "language_confusion": "medium", "word_repetition": "low",
@@ -332,6 +332,7 @@ ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
 # Failure budget
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20
+MAX_EVIDENCE_SEGMENT_IDS = 200
 
 # Phase progression order (must go forward only)
 PHASE_ORDER = ["open", "pre_hook", "post_hook", "close"]
@@ -1844,6 +1845,55 @@ def validate_enrichment_output(
                     f"Enrichment {i}: topic '{topic_name}' not in taxonomy."
                 ))
 
+    # --- 2b. evidence_segment_ids contract ---
+    for i, enrichment in enumerate(enrichments):
+        if not isinstance(enrichment, dict):
+            continue
+
+        raw_evidence_ids = enrichment.get("evidence_segment_ids")
+        if not isinstance(raw_evidence_ids, list):
+            results.append(ValidationResult(
+                "warning", "missing_evidence_segment_ids",
+                f"Enrichment {i}: evidence_segment_ids missing or not a list"
+            ))
+            continue
+
+        valid_ids: Set[int] = set()
+        invalid_count = 0
+        for raw_sid in raw_evidence_ids:
+            sid = _coerce_segment_int(raw_sid)
+            if not isinstance(sid, int) or sid < 0:
+                invalid_count += 1
+                continue
+            seg = seg_by_id.get(sid)
+            if not isinstance(seg, dict) or bool(seg.get("synthetic_segment")):
+                invalid_count += 1
+                continue
+            valid_ids.add(sid)
+
+        if invalid_count > 0:
+            results.append(ValidationResult(
+                "warning", "invalid_evidence_segment_ids",
+                f"Enrichment {i}: {invalid_count} evidence_segment_ids entries are invalid"
+            ))
+
+        etype = enrichment.get("type")
+        has_anchor_fields = bool(
+            (enrichment.get("techniques_used") or [])
+            or (enrichment.get("turn_phases") or [])
+            or enrichment.get("hook_point")
+            or isinstance(enrichment.get("block_index"), int)
+            or (
+                enrichment.get("start_segment") is not None
+                and enrichment.get("end_segment") is not None
+            )
+        )
+        if etype in ("approach", "commentary", "talking_head_section") and has_anchor_fields and not valid_ids:
+            results.append(ValidationResult(
+                "warning", "empty_evidence_segment_ids",
+                f"Enrichment {i} ({etype}): evidence_segment_ids empty despite segment anchors"
+            ))
+
     # --- 3. Evidence string verification ---
     if full_transcript:
         evidence_mismatches = 0
@@ -2071,9 +2121,18 @@ def validate_enrichment_output(
             check = "transcript_artifact_repaired" if is_repaired else "transcript_artifact"
             repair_suffix = ""
             if is_repaired:
-                conf = artifact.get("repair_confidence", 0)
                 action = artifact.get("repair_action_applied") or artifact.get("action", "replace")
-                repair_suffix = f" [REPAIRED {action} conf={conf:.2f}]"
+                conf_raw = artifact.get("repair_confidence")
+                conf_val: Optional[float] = None
+                if isinstance(conf_raw, (int, float)):
+                    conf_val = float(conf_raw)
+                elif isinstance(conf_raw, str):
+                    try:
+                        conf_val = float(conf_raw.strip())
+                    except ValueError:
+                        conf_val = None
+                conf_text = f"{conf_val:.2f}" if conf_val is not None else "n/a"
+                repair_suffix = f" [REPAIRED {action} conf={conf_text}]"
             results.append(ValidationResult(
                 severity, check,
                 f"Seg {artifact.get('segment_index', '?')}: "
@@ -2227,7 +2286,7 @@ def run_claude_preflight(
     timeout_seconds: int,
     retries: int,
 ) -> Tuple[bool, str]:
-    """Probe Claude health with a tiny deterministic request."""
+    """Probe Claude health with a tiny fixed request."""
     cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
     if isinstance(model, str) and model.strip():
         cmd += ["--model", model.strip()]
@@ -2706,6 +2765,241 @@ def enforce_stage07_evidence_allowlist(
             )
 
     return dropped_candidates, repairs
+
+
+def _coerce_segment_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw and raw.lstrip("-").isdigit():
+            try:
+                return int(raw)
+            except Exception:
+                return None
+    return None
+
+
+def _collect_segment_refs_from_value(value: Any, out: Set[int]) -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            lk = str(key).strip().lower()
+            if lk in {
+                "segment",
+                "segment_id",
+                "segment_index",
+                "seg_id",
+                "start_segment",
+                "end_segment",
+                "start_segment_id",
+                "end_segment_id",
+            }:
+                sid = _coerce_segment_int(child)
+                if isinstance(sid, int) and sid >= 0:
+                    out.add(sid)
+            else:
+                _collect_segment_refs_from_value(child, out)
+        return
+    if isinstance(value, list):
+        for item in value:
+            _collect_segment_refs_from_value(item, out)
+
+
+def _evenly_spaced_segment_ids(ids: List[int], target: int) -> List[int]:
+    if target <= 0 or not ids:
+        return []
+    if len(ids) <= target:
+        return ids[:]
+    if target == 1:
+        return [ids[0]]
+    n = len(ids)
+    picks: List[int] = []
+    for i in range(target):
+        idx = int(round(i * (n - 1) / (target - 1)))
+        picks.append(ids[idx])
+    seen: Set[int] = set()
+    out: List[int] = []
+    for sid in picks:
+        if sid in seen:
+            continue
+        seen.add(sid)
+        out.append(sid)
+    if len(out) < target:
+        for sid in ids:
+            if sid in seen:
+                continue
+            out.append(sid)
+            seen.add(sid)
+            if len(out) >= target:
+                break
+    return out
+
+
+def assign_evidence_segment_ids(
+    enrichments: List[Dict[str, Any]],
+    *,
+    seg_by_id: Dict[int, Dict[str, Any]],
+    conversations: Optional[Dict[int, List[Dict[str, Any]]]] = None,
+    commentary_blocks: Optional[List[Dict[str, Any]]] = None,
+) -> List[str]:
+    """Populate canonical evidence_segment_ids for every enrichment row."""
+    repairs: List[str] = []
+
+    commentary_segment_ids: Dict[int, List[int]] = {}
+    if isinstance(commentary_blocks, list):
+        for block_idx, block in enumerate(commentary_blocks, start=1):
+            if not isinstance(block, dict):
+                continue
+            segs = block.get("segments")
+            if not isinstance(segs, list):
+                continue
+            ids: List[int] = []
+            for seg in segs:
+                if not isinstance(seg, dict):
+                    continue
+                sid = _coerce_segment_int(seg.get("id"))
+                if isinstance(sid, int):
+                    ids.append(sid)
+            if ids:
+                commentary_segment_ids[block_idx] = ids
+
+    def _is_valid_evidence_seg_id(seg_id: int) -> bool:
+        seg = seg_by_id.get(seg_id)
+        if not isinstance(seg, dict):
+            return False
+        return not bool(seg.get("synthetic_segment"))
+
+    for i, enrichment in enumerate(enrichments):
+        if not isinstance(enrichment, dict):
+            continue
+
+        etype = str(enrichment.get("type", "")).strip().lower()
+        evidence_ids: Set[int] = set()
+
+        if etype == "approach":
+            conv_seg_ids: List[int] = []
+            conv_id = _coerce_segment_int(enrichment.get("conversation_id"))
+            if isinstance(conversations, dict) and isinstance(conv_id, int) and conv_id > 0:
+                conv_seg_ids = sorted(
+                    sid
+                    for sid in (
+                        _coerce_segment_int(seg.get("id"))
+                        for seg in (conversations.get(conv_id) or [])
+                        if isinstance(seg, dict)
+                    )
+                    if isinstance(sid, int) and sid >= 0
+                )
+
+            for tech in enrichment.get("techniques_used", []) or []:
+                if not isinstance(tech, dict):
+                    continue
+                sid = _coerce_segment_int(tech.get("segment"))
+                if isinstance(sid, int) and sid >= 0:
+                    evidence_ids.add(sid)
+
+            for tp in enrichment.get("turn_phases", []) or []:
+                if not isinstance(tp, dict):
+                    continue
+                sid = _coerce_segment_int(tp.get("segment"))
+                if isinstance(sid, int) and sid >= 0:
+                    evidence_ids.add(sid)
+
+            hook = enrichment.get("hook_point")
+            if isinstance(hook, dict):
+                hook_sid = _coerce_segment_int(hook.get("segment"))
+                if isinstance(hook_sid, int) and hook_sid >= 0:
+                    evidence_ids.add(hook_sid)
+                else:
+                    hook_sid_alt = _coerce_segment_int(hook.get("segment_id"))
+                    if isinstance(hook_sid_alt, int) and hook_sid_alt >= 0:
+                        evidence_ids.add(hook_sid_alt)
+
+            # If explicit anchors are too sparse for a long conversation, supplement with
+            # evenly spaced conversation evidence so downstream QA can inspect broader support.
+            if conv_seg_ids:
+                if not evidence_ids:
+                    evidence_ids.update(conv_seg_ids)
+                else:
+                    target = min(12, len(conv_seg_ids))
+                    if len(evidence_ids) < target:
+                        for sid in _evenly_spaced_segment_ids(conv_seg_ids, target):
+                            evidence_ids.add(sid)
+                            if len(evidence_ids) >= target:
+                                break
+
+        elif etype == "commentary":
+            block_idx = _coerce_segment_int(enrichment.get("block_index"))
+            if isinstance(block_idx, int) and block_idx > 0:
+                evidence_ids.update(commentary_segment_ids.get(block_idx, []))
+
+        elif etype == "talking_head_section":
+            start_sid = _coerce_segment_int(enrichment.get("start_segment"))
+            end_sid = _coerce_segment_int(enrichment.get("end_segment"))
+            if start_sid is None:
+                start_sid = _coerce_segment_int(enrichment.get("start_segment_id"))
+            if end_sid is None:
+                end_sid = _coerce_segment_int(enrichment.get("end_segment_id"))
+
+            if isinstance(start_sid, int) and isinstance(end_sid, int):
+                lo, hi = (start_sid, end_sid) if start_sid <= end_sid else (end_sid, start_sid)
+                for sid in range(lo, hi + 1):
+                    evidence_ids.add(sid)
+            else:
+                if isinstance(start_sid, int):
+                    evidence_ids.add(start_sid)
+                if isinstance(end_sid, int):
+                    evidence_ids.add(end_sid)
+
+        # Defensive fallback for unknown/new enrichment types.
+        if not evidence_ids:
+            for key in (
+                "techniques_used",
+                "techniques_discussed",
+                "turn_phases",
+                "hook_point",
+                "start_segment",
+                "end_segment",
+                "start_segment_id",
+                "end_segment_id",
+            ):
+                _collect_segment_refs_from_value(enrichment.get(key), evidence_ids)
+
+        normalized_ids = sorted(
+            sid for sid in evidence_ids
+            if isinstance(sid, int) and sid >= 0 and _is_valid_evidence_seg_id(sid)
+        )[:MAX_EVIDENCE_SEGMENT_IDS]
+
+        existing_ids: List[int] = []
+        raw_existing = enrichment.get("evidence_segment_ids")
+        if isinstance(raw_existing, list):
+            for raw_sid in raw_existing:
+                sid = _coerce_segment_int(raw_sid)
+                if isinstance(sid, int) and sid >= 0 and _is_valid_evidence_seg_id(sid):
+                    existing_ids.append(sid)
+        existing_norm = sorted(set(existing_ids))[:MAX_EVIDENCE_SEGMENT_IDS]
+
+        enrichment["evidence_segment_ids"] = normalized_ids
+
+        if existing_norm != normalized_ids:
+            if not existing_norm and normalized_ids:
+                repairs.append(
+                    f"enrichment {i}: derived evidence_segment_ids ({len(normalized_ids)} ids)"
+                )
+            elif existing_norm and not normalized_ids:
+                repairs.append(
+                    f"enrichment {i}: cleared invalid evidence_segment_ids ({len(existing_norm)} -> 0)"
+                )
+            else:
+                repairs.append(
+                    f"enrichment {i}: normalized evidence_segment_ids "
+                    f"({len(existing_norm)} -> {len(normalized_ids)})"
+                )
+
+    return repairs
 
 
 def remap_enrichment_segment_indices(
@@ -3315,6 +3609,9 @@ FOR EACH APPROACH CONVERSATION (type: "approach"), analyze:
 9. UNLISTED CONCEPTS: Techniques or topics you observe that don't fit the taxonomy.
    Format: {{"techniques": ["name: description"], "topics": ["name: description"]}}
    Empty arrays if all concepts fit.
+10. EVIDENCE SEGMENT IDS: Include "evidence_segment_ids" as a deduplicated sorted array of SEG_IDs
+   that directly support the enrichment (techniques_used.segment, turn_phases.segment, hook_point.segment).
+   Include only segment IDs from this approach conversation.
 
 FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 
@@ -3326,6 +3623,8 @@ FOR EACH COMMENTARY BLOCK (type: "commentary"), analyze:
 5. TOPICS DISCUSSED: Topics from TOPIC REFERENCE only. Put unlisted ones in UNLISTED CONCEPTS.
    Similarly, if commentary references topics from a nearby approach, include them.
 6. UNLISTED CONCEPTS: Same format as above
+7. EVIDENCE SEGMENT IDS: Include "evidence_segment_ids" as a deduplicated sorted array of SEG_IDs
+   from this commentary block.
 
 OUTPUT FORMAT: Return a JSON object with this structure:
 {{
@@ -3344,7 +3643,8 @@ EXAMPLE:
       "description": "Coach introduces the session and explains his approach style",
       "techniques_discussed": [{{"technique": "direct_opener", "example": "I always open direct"}}],
       "topics_discussed": ["personality"],
-      "unlisted_concepts": {{"techniques": [], "topics": []}}
+      "unlisted_concepts": {{"techniques": [], "topics": []}},
+      "evidence_segment_ids": [101, 102, 103]
     }},
     {{
       "conversation_id": 1,
@@ -3365,7 +3665,8 @@ EXAMPLE:
       ],
       "hook_point": {{"signal": "she asked where he's from unprompted"}},
       "investment_level": "medium",
-      "unlisted_concepts": {{"techniques": [], "topics": []}}
+      "unlisted_concepts": {{"techniques": [], "topics": []}},
+      "evidence_segment_ids": [123, 124, 125, 126, 127, 128]
     }},
     {{
       "type": "commentary",
@@ -3373,7 +3674,8 @@ EXAMPLE:
       "description": "Coach breaks down the previous approach, highlights the cold read",
       "techniques_discussed": [{{"technique": "cold_read", "example": "When I said you look like a yoga teacher..."}}],
       "topics_discussed": ["behavior"],
-      "unlisted_concepts": {{"techniques": [], "topics": []}}
+      "unlisted_concepts": {{"techniques": [], "topics": []}},
+      "evidence_segment_ids": [129, 130]
     }}
   ]
 }}
@@ -3695,6 +3997,7 @@ OUTPUT FORMAT: Return a JSON object with this structure:
 The enrichments array should contain one object for each approach conversation
 AND each commentary block in the CORE CONTENT, in chronological order.
 CRITICAL: Do NOT include enrichments for segments in CONTEXT BEFORE or CONTEXT AFTER.
+CRITICAL: Every enrichment object must include "evidence_segment_ids" as a deduplicated sorted array of supporting SEG_IDs.
 Output ONLY valid JSON.
 
 YOUR JSON RESPONSE:"""
@@ -4004,6 +4307,8 @@ FOR EACH SECTION, analyze:
 8. UNLISTED CONCEPTS: Report any technique or topic that doesn't fit the taxonomy.
    Format: {{"techniques": ["concept_name: brief description"], "topics": ["concept_name: brief description"]}}
    Return empty arrays if all concepts fit.
+9. EVIDENCE SEGMENT IDS: Include "evidence_segment_ids" as a deduplicated sorted array of segment ids
+   covered by this section (normally all ids from START SEGMENT through END SEGMENT).
 
 OUTPUT FORMAT: Return a JSON object with this structure:
 {{
@@ -4025,7 +4330,8 @@ EXAMPLE:
         {{"technique": "direct_opener", "example": "You walk up and say I think you're cute"}}
       ],
       "topics_discussed": ["personality", "behavior"],
-      "unlisted_concepts": {{"techniques": [], "topics": []}}
+      "unlisted_concepts": {{"techniques": [], "topics": []}},
+      "evidence_segment_ids": [0, 1, 2, 3, 4, 5]
     }},
     {{
       "section_index": 2,
@@ -4037,7 +4343,8 @@ EXAMPLE:
         {{"technique": "cold_read", "example": "After the opener, throw out an assumption about her"}}
       ],
       "topics_discussed": ["hobby", "personality"],
-      "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}}
+      "unlisted_concepts": {{"techniques": ["assumption_stacking: Making multiple assumptions in rapid succession"], "topics": []}},
+      "evidence_segment_ids": [13, 14, 15, 16]
     }}
   ]
 }}
@@ -4197,6 +4504,20 @@ def _process_non_infield(
         suffix = "" if len(normalization_repairs) <= 3 else f" (+{len(normalization_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Normalized {len(normalization_repairs)} issue(s): {preview}{suffix}")
 
+    evidence_segment_id_repairs = assign_evidence_segment_ids(
+        enrichments,
+        seg_by_id=seg_by_id,
+        conversations=conversations,
+        commentary_blocks=commentary_blocks,
+    )
+    if evidence_segment_id_repairs:
+        preview = "; ".join(evidence_segment_id_repairs[:3])
+        suffix = "" if len(evidence_segment_id_repairs) <= 3 else f" (+{len(evidence_segment_id_repairs) - 3} more)"
+        print(
+            f"{LOG_PREFIX}   Evidence segment ids normalized "
+            f"{len(evidence_segment_id_repairs)} issue(s): {preview}{suffix}"
+        )
+
     # Quality data from 06h (already repaired by 06h)
     quality_data = data.get("quality_data", {})
     low_quality_segments = quality_data.get("low_quality_segments", []) if quality_data else []
@@ -4252,6 +4573,8 @@ def _process_non_infield(
             "upstream_flags_unfixed": upstream_patch.get("flags_not_fixed_count", 0),
             "normalization_repairs_count": len(normalization_repairs),
             "normalization_repairs_preview": normalization_repairs[:5],
+            "evidence_segment_id_repairs_count": len(evidence_segment_id_repairs),
+            "evidence_segment_id_repairs_preview": evidence_segment_id_repairs[:5],
             "conversations_confidence_flagged": sum(
                 1 for e in enrichments if e.get("confidence_flag")
             ),
@@ -4584,6 +4907,20 @@ def process_video_file(
         suffix = "" if len(evidence_allowlist_repairs) <= 3 else f" (+{len(evidence_allowlist_repairs) - 3} more)"
         print(f"{LOG_PREFIX}   Evidence allowlist filtered {len(evidence_allowlist_repairs)} issue(s): {preview}{suffix}")
 
+    evidence_segment_id_repairs = assign_evidence_segment_ids(
+        enrichments,
+        seg_by_id=seg_by_id,
+        conversations=conversations,
+        commentary_blocks=commentary_blocks,
+    )
+    if evidence_segment_id_repairs:
+        preview = "; ".join(evidence_segment_id_repairs[:3])
+        suffix = "" if len(evidence_segment_id_repairs) <= 3 else f" (+{len(evidence_segment_id_repairs) - 3} more)"
+        print(
+            f"{LOG_PREFIX}   Evidence segment ids normalized "
+            f"{len(evidence_segment_id_repairs)} issue(s): {preview}{suffix}"
+        )
+
     # Compute phase confidence for each approach enrichment (after normalization, since conv ids may have been remapped)
     speaker_labels = data.get("speaker_labels", {})
     add_phase_confidence_to_enrichments(
@@ -4655,6 +4992,8 @@ def process_video_file(
             "normalization_repairs_preview": normalization_repairs[:5],
             "evidence_allowlist_repairs_count": len(evidence_allowlist_repairs),
             "evidence_allowlist_repairs_preview": evidence_allowlist_repairs[:5],
+            "evidence_segment_id_repairs_count": len(evidence_segment_id_repairs),
+            "evidence_segment_id_repairs_preview": evidence_segment_id_repairs[:5],
             "dropped_candidates_count": len(dropped_candidates),
             "stage07_evidence_allowlist_conversations": len(stage07_evidence_allowlist),
             "stage07_evidence_allowlist_segments": allowlisted_segments_total,
@@ -4839,213 +5178,6 @@ def _summarize_enrichments(enrichments: List[Dict[str, Any]]) -> Dict[str, Any]:
         }
 
     return summary
-
-
-def revalidate_video_file(
-    input_path: Path,
-    output_path: Path,
-    dry_run: bool = False,
-) -> Dict[str, Any]:
-    """Re-run deterministic normalization + validation on an existing .enriched.json (no Claude call)."""
-    print(f"[07.LLM.content] Revalidating: {input_path.name}")
-
-    # Load Stage 06h input (ground truth for segments + roles).
-    with input_path.open("r", encoding="utf-8") as f:
-        stage06_data = json.load(f)
-
-    segments = stage06_data.get("segments", [])
-    if not segments:
-        print(f"[07.LLM.content] No segments found")
-        return {"conversations": 0, "enriched": 0, "validation_passed": False}
-
-    conversations = group_segments_by_conversation(segments)
-    commentary_blocks = group_commentary_blocks(segments)
-    conversation_meta_by_id = build_conversation_meta_index(stage06_data.get("conversations"))
-    confident_target_convs = sum(
-        1
-        for conv_meta in conversation_meta_by_id.values()
-        if get_confident_target_ids_from_meta(conv_meta)
-    )
-    stage07_evidence_allowlist = build_stage07_evidence_allowlist(
-        stage06_data.get("conversations"),
-        segments,
-    )
-    stage07_anchor_allowlist = build_stage07_anchor_allowlist(
-        stage06_data.get("conversations"),
-        stage07_evidence_allowlist,
-    )
-
-    # Load existing Stage 07 output.
-    if not output_path.exists():
-        print(f"{LOG_PREFIX}   Missing Stage 07 output (cannot revalidate): {output_path}")
-        return {
-            "conversations": len([c for c in conversations.keys() if c > 0]),
-            "enriched": 0,
-            "validation_passed": False,
-        }
-
-    with output_path.open("r", encoding="utf-8") as f:
-        output = json.load(f)
-
-    # Keep Stage 06h as the source of truth for transcript fields (Stage 07 should mirror it).
-    output["video_id"] = stage06_data.get("video_id", output.get("video_id"))
-    output["source"] = derive_source_from_path(input_path) or output.get("source") or "unknown"
-    output["video_title"] = extract_video_title_from_stem(input_path.stem)
-    output["video_type"] = stage06_data.get("video_type", output.get("video_type"))
-    output["speaker_labels"] = stage06_data.get("speaker_labels", output.get("speaker_labels"))
-    output["speaker_corrections"] = stage06_data.get("speaker_corrections", output.get("speaker_corrections", []))
-    output["segments"] = segments
-
-    enrichments: List[Dict[str, Any]] = output.get("enrichments", []) or []
-    # Quality data from 06h input (already repaired by 06h)
-    quality_data = stage06_data.get("quality_data", {})
-    low_quality_segments: List[Dict[str, Any]] = quality_data.get("low_quality_segments", []) if quality_data else []
-    transcript_artifacts: List[Dict[str, Any]] = quality_data.get("transcript_artifacts", []) if quality_data else []
-    seg_by_id = {
-        s.get("id"): s
-        for s in segments
-        if isinstance(s, dict) and isinstance(s.get("id"), int)
-    }
-    synthetic_segment_ids: Set[int] = {
-        int(sid)
-        for sid, seg in seg_by_id.items()
-        if isinstance(sid, int) and isinstance(seg, dict) and bool(seg.get("synthetic_segment"))
-    }
-    dropped_synthetic_quality = 0
-    dropped_synthetic_artifacts = 0
-    if synthetic_segment_ids:
-        filtered_lq: List[Dict[str, Any]] = []
-        for row in low_quality_segments:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_quality += 1
-                continue
-            filtered_lq.append(row)
-        low_quality_segments = filtered_lq
-        output["low_quality_segments"] = low_quality_segments
-
-        filtered_artifacts: List[Dict[str, Any]] = []
-        for row in transcript_artifacts:
-            if not isinstance(row, dict):
-                continue
-            sid = row.get("segment_index")
-            if isinstance(sid, int) and sid in synthetic_segment_ids:
-                dropped_synthetic_artifacts += 1
-                continue
-            filtered_artifacts.append(row)
-        transcript_artifacts = filtered_artifacts
-        output["transcript_artifacts"] = transcript_artifacts
-
-    # --- Stamp damage_severity on each artifact ---
-    for artifact in transcript_artifacts:
-        if not isinstance(artifact, dict):
-            continue
-        atype = artifact.get("artifact_type", "")
-        artifact["damage_severity"] = ARTIFACT_DAMAGE_SEVERITY.get(atype, "medium")
-
-    # Apply normalization (deterministic repairs before validation).
-    normalization_repairs = normalize_enrichments(
-        enrichments,
-        seg_by_id=seg_by_id,
-        conversations=conversations,
-        commentary_blocks=commentary_blocks,
-        conversation_meta_by_id=conversation_meta_by_id,
-    )
-    dropped_candidates, evidence_allowlist_repairs = enforce_stage07_evidence_allowlist(
-        enrichments,
-        seg_by_id,
-        stage07_evidence_allowlist,
-        stage07_anchor_allowlist=stage07_anchor_allowlist,
-        low_quality_segments=low_quality_segments,
-        transcript_artifacts=transcript_artifacts,
-    )
-
-    # Recompute phase confidence (deterministic) after normalization, since conv ids may have been remapped.
-    speaker_labels = stage06_data.get("speaker_labels", {})
-    add_phase_confidence_to_enrichments(
-        enrichments, conversations, low_quality_segments, speaker_labels
-    )
-
-    meta = output.get("metadata")
-    if not isinstance(meta, dict):
-        meta = {}
-        output["metadata"] = meta
-    meta["revalidated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ")
-    meta["revalidated_pipeline_version"] = PIPELINE_VERSION
-    meta["revalidated_prompt_version"] = PROMPT_VERSION
-    meta["normalization_repairs_count"] = len(normalization_repairs)
-    meta["normalization_repairs_preview"] = normalization_repairs[:5]
-    meta["evidence_allowlist_repairs_count"] = len(evidence_allowlist_repairs)
-    meta["evidence_allowlist_repairs_preview"] = evidence_allowlist_repairs[:5]
-    meta["dropped_candidates_count"] = len(dropped_candidates)
-    meta["stage07_evidence_allowlist_conversations"] = len(stage07_evidence_allowlist)
-    meta["stage07_evidence_allowlist_segments"] = sum(len(v) for v in stage07_evidence_allowlist.values())
-    meta["stage07_anchor_allowlist_conversations"] = len(stage07_anchor_allowlist)
-    meta["stage07_anchor_allowlist_segments"] = sum(len(v) for v in stage07_anchor_allowlist.values())
-    meta["target_confident_conversations"] = confident_target_convs
-    meta["synthetic_segment_count"] = len(synthetic_segment_ids)
-    meta["synthetic_low_quality_dropped"] = dropped_synthetic_quality
-    meta["synthetic_artifacts_dropped"] = dropped_synthetic_artifacts
-    meta["artifact_repairs_accepted"] = repairs_accepted
-    meta["artifact_repairs_rejected"] = repairs_rejected
-    meta["lq_repairs_accepted"] = lq_repairs_accepted
-    meta["lq_repairs_rejected"] = lq_repairs_rejected
-
-    summary = output.get("summary")
-    if not isinstance(summary, dict):
-        summary = {}
-        output["summary"] = summary
-    summary.update(_summarize_enrichments(enrichments))
-    summary["total_conversations"] = len([c for c in conversations.keys() if c > 0])
-    summary["dropped_candidates"] = {
-        "count": len(dropped_candidates),
-        "by_reason": dict(
-            sorted(
-                Counter(
-                    c.get("reason")
-                    for c in dropped_candidates
-                    if isinstance(c, dict) and isinstance(c.get("reason"), str)
-                ).items()
-            )
-        ),
-    }
-    output["dropped_candidates"] = dropped_candidates
-
-    # Top-level version tags (helps downstream drift detection; safe additive fields).
-    output["pipeline_version"] = PIPELINE_VERSION
-    output["prompt_version"] = PROMPT_VERSION
-
-    # Validate output against Stage 06c ground truth.
-    validation_results = validate_enrichment_output(output, stage06_data)
-    has_errors = any(r.severity == "error" for r in validation_results)
-
-    if dry_run:
-        print(f"{LOG_PREFIX}   [DRY RUN] Would write validation and rewrite output ({'errors' if has_errors else 'no errors'})")
-    else:
-        write_validation_results(
-            validation_results,
-            output_path,
-            output.get("video_id") or stage06_data.get("video_id") or "unknown",
-        )
-        if has_errors:
-            print(f"{LOG_PREFIX}   SKIPPING output rewrite due to validation errors")
-        else:
-            with output_path.open("w", encoding="utf-8") as f:
-                json.dump(output, f, ensure_ascii=False)
-            print(f"{LOG_PREFIX}   Rewrote: {output_path}")
-
-    print(f"{LOG_PREFIX}   Revalidation: {'FAILED' if has_errors else 'PASSED'}")
-
-    return {
-        "conversations": len([c for c in conversations.keys() if c > 0]),
-        "enriched": len(enrichments),
-        "validation_passed": not has_errors,
-        "validation_errors": sum(1 for r in validation_results if r.severity == "error"),
-        "validation_warnings": sum(1 for r in validation_results if r.severity == "warning"),
-        "normalization_repairs": len(normalization_repairs),
-    }
 
 
 # ---------------------------
@@ -5255,23 +5387,20 @@ def _run_named_source(
             out_dir.parent,
             input_root=in_dir,
         )
-        if not args.revalidate and existing_output and not args.overwrite:
+        if existing_output and not args.overwrite:
             continue
-        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-        if args.revalidate:
-            result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-        else:
-            result = process_video_file(
-                input_file,
-                output_file,
-                dry_run=args.dry_run,
-                claude_model=args.model,
-                llm_timeout_seconds=args.timeout_seconds,
-                llm_retries=args.llm_retries,
-                force_lane=args.force_lane,
-                window_size=args.window_size,
-                overlap=args.overlap,
-            )
+        output_file = preferred_output
+        result = process_video_file(
+            input_file,
+            output_file,
+            dry_run=args.dry_run,
+            claude_model=args.model,
+            llm_timeout_seconds=args.timeout_seconds,
+            llm_retries=args.llm_retries,
+            force_lane=args.force_lane,
+            window_size=args.window_size,
+            overlap=args.overlap,
+        )
         total_convs += result["conversations"]
         total_enriched += result["enriched"]
 
@@ -5330,11 +5459,6 @@ def main() -> None:
         help="Optional JSON file listing quarantined video IDs to skip",
     )
     parser.add_argument(
-        "--revalidate",
-        action="store_true",
-        help="Re-run deterministic normalization + validation on existing Stage 07 outputs (no Claude call)"
-    )
-    parser.add_argument(
         "--model",
         default="opus",
         help="Claude model alias or full name (default: opus)."
@@ -5350,11 +5474,6 @@ def main() -> None:
         type=int,
         default=3,
         help="Retry attempts per Claude call (default: 3).",
-    )
-    parser.add_argument(
-        "--skip-llm-preflight",
-        action="store_true",
-        help="Skip startup Claude health probe (not recommended).",
     )
     parser.add_argument(
         "--preflight-timeout-seconds",
@@ -5413,8 +5532,7 @@ def main() -> None:
         quarantine_ids = load_quarantine_video_ids(quarantine_path)
         print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(quarantine_ids)} video ids)")
 
-    # Only require Claude CLI when we will actually call it.
-    if not args.revalidate and not args.dry_run:
+    if not args.dry_run:
         claude_bin = find_claude_binary()
         if not claude_bin:
             print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
@@ -5440,24 +5558,20 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-        if not args.skip_llm_preflight:
-            ok, reason = run_claude_preflight(
-                claude_bin,
-                model=args.model,
-                timeout_seconds=args.preflight_timeout_seconds,
-                retries=args.preflight_retries,
-            )
-            if not ok:
-                print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
-                print(
-                    f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
-                    f"--skip-llm-preflight only for controlled debugging."
-                )
-                raise SystemExit(2)
-            print(
-                f"{LOG_PREFIX} Claude preflight: ok "
-                f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
-            )
+        ok, reason = run_claude_preflight(
+            claude_bin,
+            model=args.model,
+            timeout_seconds=args.preflight_timeout_seconds,
+            retries=args.preflight_retries,
+        )
+        if not ok:
+            print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
+            print(f"{LOG_PREFIX} Hint: verify Claude auth/network and retry.")
+            raise SystemExit(2)
+        print(
+            f"{LOG_PREFIX} Claude preflight: ok "
+            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+        )
 
     # Determine input/output paths.
     in_root = test_input_root() if args.test else input_root()
@@ -5489,25 +5603,22 @@ def main() -> None:
                 print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
                 return
 
-            if not args.revalidate and existing_output and not args.overwrite:
+            if existing_output and not args.overwrite:
                 print(f"[07.LLM.content] Output exists, skipping: {existing_output}")
                 return
 
-            output_path = existing_output if (args.revalidate and existing_output) else preferred_output
-            if args.revalidate:
-                result = revalidate_video_file(input_path, output_path, dry_run=args.dry_run)
-            else:
-                result = process_video_file(
-                    input_path,
-                    output_path,
-                    dry_run=args.dry_run,
-                    claude_model=args.model,
-                    llm_timeout_seconds=args.timeout_seconds,
-                    llm_retries=args.llm_retries,
-                    force_lane=args.force_lane,
-                    window_size=args.window_size,
-                    overlap=args.overlap,
-                )
+            output_path = preferred_output
+            result = process_video_file(
+                input_path,
+                output_path,
+                dry_run=args.dry_run,
+                claude_model=args.model,
+                llm_timeout_seconds=args.timeout_seconds,
+                llm_retries=args.llm_retries,
+                force_lane=args.force_lane,
+                window_size=args.window_size,
+                overlap=args.overlap,
+            )
             print(f"\n[07.LLM.content] Done. Enriched {result['enriched']}/{result['conversations']} conversations")
             return
 
@@ -5556,23 +5667,20 @@ def main() -> None:
                     out_base,
                     input_root=src_in_dir,
                 )
-                if not args.revalidate and existing_output and not args.overwrite:
+                if existing_output and not args.overwrite:
                     continue
-                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-                if args.revalidate:
-                    result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-                else:
-                    result = process_video_file(
-                        input_file,
-                        output_file,
-                        dry_run=args.dry_run,
-                        claude_model=args.model,
-                        llm_timeout_seconds=args.timeout_seconds,
-                        llm_retries=args.llm_retries,
-                        force_lane=args.force_lane,
-                        window_size=args.window_size,
-                        overlap=args.overlap,
-                    )
+                output_file = preferred_output
+                result = process_video_file(
+                    input_file,
+                    output_file,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
+                    force_lane=args.force_lane,
+                    window_size=args.window_size,
+                    overlap=args.overlap,
+                )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
@@ -5618,23 +5726,20 @@ def main() -> None:
                     out_base,
                     input_root=src_in_dir,
                 )
-                if not args.revalidate and existing_output and not args.overwrite:
+                if existing_output and not args.overwrite:
                     continue
-                output_file = existing_output if (args.revalidate and existing_output) else preferred_output
-                if args.revalidate:
-                    result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-                else:
-                    result = process_video_file(
-                        input_file,
-                        output_file,
-                        dry_run=args.dry_run,
-                        claude_model=args.model,
-                        llm_timeout_seconds=args.timeout_seconds,
-                        llm_retries=args.llm_retries,
-                        force_lane=args.force_lane,
-                        window_size=args.window_size,
-                        overlap=args.overlap,
-                    )
+                output_file = preferred_output
+                result = process_video_file(
+                    input_file,
+                    output_file,
+                    dry_run=args.dry_run,
+                    claude_model=args.model,
+                    llm_timeout_seconds=args.timeout_seconds,
+                    llm_retries=args.llm_retries,
+                    force_lane=args.force_lane,
+                    window_size=args.window_size,
+                    overlap=args.overlap,
+                )
                 total_convs += result["conversations"]
                 total_enriched += result["enriched"]
 
@@ -5685,7 +5790,7 @@ def main() -> None:
         file_key = str(input_file.relative_to(in_dir))
 
         # Skip if already completed
-        if not args.revalidate and file_key in state.completed_files and not args.overwrite:
+        if file_key in state.completed_files and not args.overwrite:
             skipped += 1
             continue
 
@@ -5702,33 +5807,30 @@ def main() -> None:
             input_root=in_dir,
         )
 
-        if not args.revalidate and existing_output and not args.overwrite:
+        if existing_output and not args.overwrite:
             skipped += 1
             state.completed_files.append(file_key)
             save_state(state_path, state)
             continue
 
-        output_file = existing_output if (args.revalidate and existing_output) else preferred_output
+        output_file = preferred_output
 
         # Mark as in progress
         state.in_progress = file_key
         save_state(state_path, state)
 
         try:
-            if args.revalidate:
-                result = revalidate_video_file(input_file, output_file, dry_run=args.dry_run)
-            else:
-                result = process_video_file(
-                    input_file,
-                    output_file,
-                    dry_run=args.dry_run,
-                    claude_model=args.model,
-                    llm_timeout_seconds=args.timeout_seconds,
-                    llm_retries=args.llm_retries,
-                    force_lane=args.force_lane,
-                    window_size=args.window_size,
-                    overlap=args.overlap,
-                )
+            result = process_video_file(
+                input_file,
+                output_file,
+                dry_run=args.dry_run,
+                claude_model=args.model,
+                llm_timeout_seconds=args.timeout_seconds,
+                llm_retries=args.llm_retries,
+                force_lane=args.force_lane,
+                window_size=args.window_size,
+                overlap=args.overlap,
+            )
             total_convs += result["conversations"]
             total_enriched += result["enriched"]
             processed += 1

@@ -1522,7 +1522,7 @@ function SummaryStep({
           </h2>
           <p className="text-white/30 text-sm">
             {totalGoals} goals across {totalAreas} life area{totalAreas > 1 ? "s" : ""}
-            {path && ` \u00B7 ${path === "fto" ? "Find The One" : "Abundance"} path`}
+            {path && ` · ${path === "fto" ? "Find The One" : "Abundance"} path`}
           </p>
         </div>
 
@@ -1809,8 +1809,8 @@ function OrreryStep({
             Your System
           </h2>
           <p className="text-white/40 text-sm">
-            {totalGoals} goals \u00B7 {activeAreas.size} life areas
-            {path && ` \u00B7 ${path === "fto" ? "Find The One" : "Abundance"}`}
+            {totalGoals} goals · {activeAreas.size} life areas
+            {path && ` · ${path === "fto" ? "Find The One" : "Abundance"}`}
           </p>
         </div>
 
@@ -2501,7 +2501,7 @@ export default function V8() {
         return {
           label: "Create Goals",
           disabled: false,
-          status: `${totalGoals} goals \u00B7 ${1 + selectedAreas.size} areas`,
+          status: `${totalGoals} goals · ${1 + selectedAreas.size} areas`,
         }
     }
   }, [step, path, selectedGoals.size, totalGoals, selectedAreas.size])

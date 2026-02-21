@@ -1,6 +1,7 @@
 import { describe, test, expect } from "vitest"
 import { buildPreviewState, applyPreviewState } from "@/src/goals/goalsService"
 import { generateGoalTreeInserts } from "@/src/goals/treeGenerationService"
+import { getDaygamePathL1 } from "@/src/goals/data/goalGraph"
 import type { BatchGoalInsert } from "@/src/goals/treeGenerationService"
 
 // ============================================================================
@@ -41,14 +42,22 @@ describe("buildPreviewState", () => {
     expect(state.get("__temp_l2")!.enabled).toBe(true)
   })
 
-  test("returns enabled=true for field_work and results L3 goals", () => {
+  test("returns enabled=true for core-priority L3 goals", () => {
     const inserts: BatchGoalInsert[] = [
-      createInsert({ _tempId: "__temp_fw", display_category: "field_work" }),
-      createInsert({ _tempId: "__temp_res", display_category: "results" }),
+      createInsert({ _tempId: "__temp_core", display_category: "field_work", template_id: "l3_approach_volume" }),
     ]
     const state = buildPreviewState(inserts)
-    expect(state.get("__temp_fw")!.enabled).toBe(true)
-    expect(state.get("__temp_res")!.enabled).toBe(true)
+    expect(state.get("__temp_core")!.enabled).toBe(true)
+  })
+
+  test("returns enabled=false for progressive/niche L3 goals", () => {
+    const inserts: BatchGoalInsert[] = [
+      createInsert({ _tempId: "__temp_prog", display_category: "field_work", template_id: "l3_consecutive_days" }),
+      createInsert({ _tempId: "__temp_niche", display_category: "field_work", template_id: "l3_venues_explored" }),
+    ]
+    const state = buildPreviewState(inserts)
+    expect(state.get("__temp_prog")!.enabled).toBe(false)
+    expect(state.get("__temp_niche")!.enabled).toBe(false)
   })
 
   test("returns enabled=false for dirty_dog L3 goals", () => {
@@ -90,14 +99,47 @@ describe("buildPreviewState", () => {
       }
     }
 
-    // Dirty dog L3s should be disabled
-    const dirtyDogL3s = inserts.filter(
-      (i) => (i.goal_level ?? 0) === 3 && i.display_category === "dirty_dog"
-    )
-    expect(dirtyDogL3s.length).toBeGreaterThan(0)
-    for (const dd of dirtyDogL3s) {
-      expect(state.get(dd._tempId)!.enabled).toBe(false)
+    // Only core L3s should be enabled
+    const l3s = inserts.filter((i) => (i.goal_level ?? 0) === 3)
+    const enabledL3s = l3s.filter((i) => state.get(i._tempId)!.enabled)
+    const disabledL3s = l3s.filter((i) => !state.get(i._tempId)!.enabled)
+
+    // Should have some enabled (core) and some disabled (progressive/niche/dirty_dog)
+    expect(enabledL3s.length).toBeGreaterThan(0)
+    expect(enabledL3s.length).toBeLessThanOrEqual(4) // max 4 core per area
+    expect(disabledL3s.length).toBeGreaterThan(0)
+
+    // All enabled L3s should be core priority (not dirty_dog)
+    for (const l3 of enabledL3s) {
+      expect(l3.display_category).not.toBe("dirty_dog")
     }
+  })
+})
+
+// ============================================================================
+// getDaygamePathL1 — opt-in filtering
+// ============================================================================
+
+describe("getDaygamePathL1", () => {
+  test("excludes requiresOptIn L1 templates from both paths", () => {
+    const ftoL1s = getDaygamePathL1("fto")
+    const abundanceL1s = getDaygamePathL1("abundance")
+    const allL1s = [...ftoL1s, ...abundanceL1s]
+
+    // l1_the_one and l1_family have requiresOptIn=true, should be excluded
+    for (const l1 of allL1s) {
+      expect(l1.requiresOptIn).toBe(false)
+    }
+    expect(allL1s.every((l) => l.id !== "l1_the_one")).toBe(true)
+    expect(allL1s.every((l) => l.id !== "l1_family")).toBe(true)
+  })
+
+  test("still returns non-opt-in L1s", () => {
+    const ftoL1s = getDaygamePathL1("fto")
+    const abundanceL1s = getDaygamePathL1("abundance")
+    // At least one L1 per path should remain
+    expect(ftoL1s.length).toBeGreaterThan(0)
+    expect(abundanceL1s.length).toBeGreaterThan(0)
   })
 })
 
@@ -160,7 +202,10 @@ describe("applyPreviewState", () => {
       createInsert({ _tempId: "__temp_parent", _tempParentId: null, goal_level: 1 }),
       createInsert({ _tempId: "__temp_child", _tempParentId: "__temp_parent" }),
     ]
-    const state = buildPreviewState(inserts)
+    const state = new Map([
+      ["__temp_parent", { enabled: true, targetValue: 100 }],
+      ["__temp_child", { enabled: true, targetValue: 100 }],
+    ])
     const result = applyPreviewState(inserts, state)
     expect(result[0]._tempId).toBe("__temp_parent")
     expect(result[1]._tempParentId).toBe("__temp_parent")

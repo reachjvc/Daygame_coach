@@ -9,6 +9,9 @@ import {
   getAchievementWeights,
   redistributeWeights,
   getTemplatesByCategory,
+  CROSS_AREA_EDGES,
+  getCrossAreaInfluence,
+  getCrossAreaContributors,
 } from "@/src/goals/data/goalGraph"
 import type { AchievementWeight } from "@/src/goals/types"
 
@@ -83,6 +86,69 @@ describe("goal catalog integrity", () => {
       expect(g.displayCategory).toBeNull()
     }
   })
+
+  test("every template has a valid priority", () => {
+    const validPriorities = new Set(["core", "progressive", "niche"])
+    for (const t of GOAL_TEMPLATES) {
+      expect(validPriorities.has(t.priority)).toBe(true)
+    }
+  })
+
+  test("L0/L1/L2 templates default to core priority", () => {
+    const upper = GOAL_TEMPLATES.filter((t) => t.level < 3)
+    for (const g of upper) {
+      expect(g.priority).toBe("core")
+    }
+  })
+
+  test("each life area has 2-4 core L3 templates", () => {
+    const l3s = GOAL_TEMPLATES.filter((t) => t.level === 3)
+    const coreByArea = new Map<string, number>()
+    for (const t of l3s) {
+      if (t.priority === "core") {
+        coreByArea.set(t.lifeArea, (coreByArea.get(t.lifeArea) || 0) + 1)
+      }
+    }
+    for (const [area, count] of coreByArea) {
+      expect(count).toBeGreaterThanOrEqual(2)
+      expect(count).toBeLessThanOrEqual(4)
+    }
+  })
+
+  test("opt-in L1 templates are flagged", () => {
+    const optInL1s = GOAL_TEMPLATES.filter((t) => t.level === 1 && t.requiresOptIn)
+    const ids = optInL1s.map((t) => t.id)
+    expect(ids).toContain("l1_the_one")
+    expect(ids).toContain("l1_family")
+    expect(optInL1s.length).toBe(2)
+  })
+
+  test("non-opt-in templates default to requiresOptIn=false", () => {
+    const nonOptIn = GOAL_TEMPLATES.filter((t) => !t.requiresOptIn)
+    expect(nonOptIn.length).toBeGreaterThan(0)
+    for (const t of nonOptIn) {
+      expect(t.requiresOptIn).toBe(false)
+    }
+  })
+
+  test("blind spot tools are correctly flagged", () => {
+    const blindSpotTools = GOAL_TEMPLATES.filter((t) => t.blindSpotTool)
+    const ids = blindSpotTools.map((t) => t.id)
+    expect(ids).toContain("l3_wing_feedback")
+    expect(ids).toContain("l3_video_review")
+    expect(blindSpotTools.length).toBe(2)
+  })
+
+  test("graduation_criteria is only set on core L3 templates", () => {
+    const withCriteria = GOAL_TEMPLATES.filter((t) => t.graduation_criteria !== null)
+    expect(withCriteria.length).toBeGreaterThan(0)
+    for (const t of withCriteria) {
+      expect(t.level).toBe(3)
+      expect(t.priority).toBe("core")
+      expect(typeof t.graduation_criteria).toBe("string")
+      expect(t.graduation_criteria!.length).toBeGreaterThan(10)
+    }
+  })
 })
 
 // ============================================================================
@@ -101,19 +167,22 @@ describe("getChildren", () => {
 
   test("L2 master_daygame fans into its connected L3 goals", () => {
     const children = getChildren("l2_master_daygame")
-    expect(children.length).toBe(17) // 9 field_work + 4 results + 4 dirty_dog
+    expect(children.length).toBe(20) // 9 field_work + 4 results + 3 dirty_dog + 3 gap (venues, review, video)
     const ids = children.map((c) => c.id)
     expect(ids).toContain("l3_approach_volume")
     expect(ids).toContain("l3_lays")
+    expect(ids).toContain("l3_venues_explored")
   })
 
-  test("L2 overcome_aa fans into 3 exposure-focused L3s", () => {
+  test("L2 overcome_aa fans into 7 exposure-focused L3s", () => {
     const children = getChildren("l2_overcome_aa")
-    expect(children.length).toBe(3)
+    expect(children.length).toBe(7)
     const ids = children.map((c) => c.id)
     expect(ids).toContain("l3_approach_volume")
     expect(ids).toContain("l3_consecutive_days")
     expect(ids).toContain("l3_solo_sessions")
+    expect(ids).toContain("l3_eye_contact_holds")
+    expect(ids).toContain("l3_aa_comfort_rating")
   })
 
   test("L2 master_texting fans into texting L3s", () => {
@@ -151,9 +220,9 @@ describe("getLeafGoals", () => {
     }
   })
 
-  test("L2 master_daygame returns its 17 L3 goals", () => {
+  test("L2 master_daygame returns its 20 L3 goals", () => {
     const leaves = getLeafGoals("l2_master_daygame")
-    expect(leaves.length).toBe(17)
+    expect(leaves.length).toBe(20)
   })
 
   test("L3 goal returns itself", () => {
@@ -239,26 +308,25 @@ describe("redistributeWeights", () => {
     expect(result[2].weight).toBeCloseTo(0.20, 5)
   })
 
-  test("redistributes proportionally when one goal is removed", () => {
-    // Remove "c" (0.20) → a and b share its weight proportionally
+  test("preserves original weights when goals are removed (no renormalization)", () => {
+    // Remove "c" (0.20) → a and b keep their original weights, total < 1
     const active = new Set(["a", "b"])
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(2)
 
     const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(1.0, 5)
+    expect(total).toBeCloseTo(0.80, 5)
 
-    // a had 0.50 of 0.80 remaining → 0.50/0.80 = 0.625
-    expect(result[0].weight).toBeCloseTo(0.625, 3)
-    // b had 0.30 of 0.80 remaining → 0.30/0.80 = 0.375
-    expect(result[1].weight).toBeCloseTo(0.375, 3)
+    // Original weights preserved
+    expect(result[0].weight).toBeCloseTo(0.50, 5)
+    expect(result[1].weight).toBeCloseTo(0.30, 5)
   })
 
-  test("single remaining goal gets 100%", () => {
+  test("single remaining goal keeps its original weight", () => {
     const active = new Set(["b"])
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(1)
-    expect(result[0].weight).toBeCloseTo(1.0, 5)
+    expect(result[0].weight).toBeCloseTo(0.30, 5)
   })
 
   test("returns empty array when no goals are active", () => {
@@ -272,7 +340,7 @@ describe("redistributeWeights", () => {
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(2)
     const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(1.0, 5)
+    expect(total).toBeCloseTo(0.80, 5)
   })
 
   test("real scenario: user removes dirty dog goals from master_daygame", () => {
@@ -282,11 +350,16 @@ describe("redistributeWeights", () => {
 
     const result = redistributeWeights(allWeights, activeIds)
     const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(1.0, 2)
+    // Total should be < 1 (dirty dog weight is not redistributed)
+    expect(total).toBeLessThan(1.0)
+    expect(total).toBeGreaterThan(0.5)
 
-    // Approach volume should now be more than its base weight (since dirty dog weight redistributed)
+    // Approach volume keeps its original weight (no inflation from redistribution)
     const approaches = result.find((w) => w.goalId === "l3_approach_volume")
-    expect(approaches!.weight).toBeGreaterThan(0.15)
+    expect(approaches).toBeDefined()
+    // Original weight preserved, not inflated
+    const originalApproaches = allWeights.find((w) => w.goalId === "l3_approach_volume")
+    expect(approaches!.weight).toBeCloseTo(originalApproaches!.weight, 5)
   })
 })
 
@@ -365,5 +438,85 @@ describe("getTemplatesByCategory", () => {
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     expect(allIds.length).toBe(l3Goals.length)
     expect(new Set(allIds).size).toBe(allIds.length)
+  })
+})
+
+// ============================================================================
+// Cross-Area Connections (Phase 3.4)
+// ============================================================================
+
+describe("CROSS_AREA_EDGES", () => {
+  test("all source IDs are valid template IDs", () => {
+    for (const edge of CROSS_AREA_EDGES) {
+      expect(GOAL_TEMPLATE_MAP[edge.sourceId]).toBeDefined()
+    }
+  })
+
+  test("all target IDs are valid template IDs", () => {
+    for (const edge of CROSS_AREA_EDGES) {
+      expect(GOAL_TEMPLATE_MAP[edge.targetId]).toBeDefined()
+    }
+  })
+
+  test("no self-edges", () => {
+    for (const edge of CROSS_AREA_EDGES) {
+      expect(edge.sourceId).not.toBe(edge.targetId)
+    }
+  })
+
+  test("no same-area edges (source and target must be from different life areas)", () => {
+    for (const edge of CROSS_AREA_EDGES) {
+      const source = GOAL_TEMPLATE_MAP[edge.sourceId]
+      const target = GOAL_TEMPLATE_MAP[edge.targetId]
+      expect(source.lifeArea).not.toBe(target.lifeArea)
+    }
+  })
+
+  test("all weights are between 0 and 1", () => {
+    for (const edge of CROSS_AREA_EDGES) {
+      expect(edge.weight).toBeGreaterThan(0)
+      expect(edge.weight).toBeLessThanOrEqual(1)
+    }
+  })
+
+  test("all relationships are valid", () => {
+    const validRelationships = new Set(["supports", "reinforces", "enables"])
+    for (const edge of CROSS_AREA_EDGES) {
+      expect(validRelationships.has(edge.relationship)).toBe(true)
+    }
+  })
+})
+
+describe("getCrossAreaInfluence", () => {
+  test("returns edges where template is source", () => {
+    const edges = getCrossAreaInfluence("l3_pg_meditation")
+    expect(edges.length).toBeGreaterThan(0)
+    expect(edges.some((e) => e.sourceId === "l3_pg_meditation")).toBe(true)
+  })
+
+  test("returns edges where template is target", () => {
+    const edges = getCrossAreaInfluence("l2_overcome_aa")
+    expect(edges.length).toBeGreaterThan(0)
+    expect(edges.some((e) => e.targetId === "l2_overcome_aa")).toBe(true)
+  })
+
+  test("returns empty for template with no cross-area connections", () => {
+    const edges = getCrossAreaInfluence("l3_f_deadlift")
+    expect(edges).toEqual([])
+  })
+})
+
+describe("getCrossAreaContributors", () => {
+  test("returns only edges where template is the target", () => {
+    const edges = getCrossAreaContributors("l2_confident")
+    expect(edges.length).toBeGreaterThan(0)
+    for (const edge of edges) {
+      expect(edge.targetId).toBe("l2_confident")
+    }
+  })
+
+  test("returns empty for template that is never a target", () => {
+    const edges = getCrossAreaContributors("l3_pg_meditation")
+    expect(edges).toEqual([])
   })
 })

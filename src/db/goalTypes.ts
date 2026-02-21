@@ -8,6 +8,7 @@ export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
 export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
 export type GoalType = "recurring" | "milestone" | "habit_ramp"
 export type GoalNature = "input" | "outcome"
+export type GoalPhase = "acquisition" | "consolidation" | "graduated"
 export type GoalDisplayCategory =
   // Daygame
   | "field_work" | "results" | "dirty_dog" | "texting" | "dates" | "relationship"
@@ -32,10 +33,13 @@ export type LinkedMetric =
   | "sessions_weekly"
   | "numbers_weekly"
   | "instadates_weekly"
+  | "field_reports_weekly"
   | "approaches_cumulative"
   | "sessions_cumulative"
   | "numbers_cumulative"
   | "instadates_cumulative"
+  | "field_reports_cumulative"
+  | "approach_quality_avg_weekly"
   | null
 
 /**
@@ -71,6 +75,11 @@ export interface UserGoalRow {
   template_id: string | null
   milestone_config: Record<string, unknown> | null
   ramp_steps: Record<string, unknown>[] | null
+  motivation_note: string | null
+  streak_freezes_available: number
+  streak_freezes_used: number
+  last_freeze_date: string | null
+  goal_phase: GoalPhase | null
 }
 
 /**
@@ -96,6 +105,8 @@ export interface UserGoalInsert {
   template_id?: string
   milestone_config?: Record<string, unknown> | null
   ramp_steps?: Record<string, unknown>[] | null
+  motivation_note?: string | null
+  goal_phase?: GoalPhase | null
 }
 
 /**
@@ -123,6 +134,8 @@ export interface UserGoalUpdate {
   template_id?: string | null
   milestone_config?: Record<string, unknown> | null
   ramp_steps?: Record<string, unknown>[] | null
+  motivation_note?: string | null
+  goal_phase?: GoalPhase | null
 }
 
 /**
@@ -139,6 +152,36 @@ export interface GoalWithProgress extends UserGoalRow {
  */
 export interface GoalTreeNode extends GoalWithProgress {
   children: GoalTreeNode[]
+}
+
+/**
+ * Database row type for daily_goal_snapshots table.
+ * Captures goal state before period resets — enables heatmap, weekly review, trends.
+ */
+export interface DailyGoalSnapshotRow {
+  id: string
+  user_id: string
+  goal_id: string
+  snapshot_date: string
+  current_value: number
+  target_value: number
+  was_complete: boolean
+  current_streak: number
+  best_streak: number
+  period: string
+  created_at: string
+}
+
+export interface DailyGoalSnapshotInsert {
+  user_id: string
+  goal_id: string
+  snapshot_date: string
+  current_value: number
+  target_value: number
+  was_complete: boolean
+  current_streak: number
+  best_streak: number
+  period: string
 }
 
 /**

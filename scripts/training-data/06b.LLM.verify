@@ -403,7 +403,7 @@ def run_claude_preflight(
     timeout_seconds: int,
     retries: int,
 ) -> Tuple[bool, str]:
-    """Probe Claude health with a tiny deterministic request."""
+    """Probe Claude health with a tiny fixed request."""
     cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
     if isinstance(model, str) and model.strip():
         cmd += ["--model", model.strip()]
@@ -848,8 +848,17 @@ def extract_video_title(filename: str) -> str:
 
 
 def extract_video_id(filename: str) -> str:
-    match = re.search(r"\[([^\]]+)\]", filename)
-    return match.group(1) if match else Path(filename).stem
+    # Only parse bracketed IDs from the basename to avoid picking channel/playlist
+    # IDs from parent folders like "Source [UC...]/...".
+    basename = Path(filename).name
+    matches = re.findall(r"\[([^\]]+)\]", basename)
+    if matches:
+        # Prefer canonical YouTube video IDs when present.
+        for candidate in reversed(matches):
+            if re.fullmatch(r"[A-Za-z0-9_-]{11}", candidate):
+                return candidate
+        return matches[-1]
+    return Path(filename).stem
 
 
 def build_verification_prompt(data: Dict) -> str:
@@ -1268,11 +1277,6 @@ def main() -> None:
         help="Retry attempts per verification call before failing (default: 3).",
     )
     parser.add_argument(
-        "--skip-llm-preflight",
-        action="store_true",
-        help="Skip startup Claude health probe (not recommended).",
-    )
-    parser.add_argument(
         "--preflight-timeout-seconds",
         type=int,
         default=20,
@@ -1321,7 +1325,7 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    if not args.dry_run and not args.skip_llm_preflight:
+    if not args.dry_run:
         ok, reason = run_claude_preflight(
             claude_bin,
             model=args.model,
@@ -1330,10 +1334,7 @@ def main() -> None:
         )
         if not ok:
             print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
-            print(
-                f"{LOG_PREFIX} Hint: verify Claude auth/network, or use "
-                f"--skip-llm-preflight only for controlled debugging."
-            )
+            print(f"{LOG_PREFIX} Hint: verify Claude auth/network and retry.")
             raise SystemExit(2)
         model_label = (args.model or "").strip() or "default"
         print(

@@ -13,7 +13,9 @@ import type {
   DefaultAchievementWeight,
   GoalDisplayCategory,
   GoalGraphLevel,
+  CrossAreaEdge,
   GoalTemplateType,
+  GoalPriority,
   MilestoneLadderConfig,
   HabitRampStep,
   AchievementWeight,
@@ -36,8 +38,15 @@ function template(
     milestoneConfig?: MilestoneLadderConfig
     rampSteps?: HabitRampStep[]
     linkedMetric?: LinkedMetric
+    priority?: GoalPriority
+    requiresOptIn?: boolean
+    graduation_criteria?: string | null
+    blindSpotTool?: boolean
   } = {}
 ): GoalTemplate {
+  // L0/L1/L2 are structural — always "core". L3 defaults to "progressive".
+  const defaultPriority: GoalPriority = level < 3 ? "core" : "progressive"
+
   return {
     id,
     title,
@@ -49,6 +58,10 @@ function template(
     defaultMilestoneConfig: opts.milestoneConfig ?? null,
     defaultRampSteps: opts.rampSteps ?? null,
     linkedMetric: opts.linkedMetric ?? null,
+    priority: opts.priority ?? defaultPriority,
+    requiresOptIn: opts.requiresOptIn ?? false,
+    graduation_criteria: opts.graduation_criteria ?? null,
+    blindSpotTool: opts.blindSpotTool ?? false,
   }
 }
 
@@ -62,8 +75,8 @@ const L1_ONE_PERSON: GoalTemplate[] = [
   template("l1_dream_girl", "Find my dream girl", 1, "outcome"),
   template("l1_engaged", "Get engaged to my dream girl", 1, "outcome"),
   template("l1_relationship", "Be in a deeply fulfilling relationship", 1, "outcome"),
-  template("l1_the_one", "Get married", 1, "outcome"),
-  template("l1_family", "Start a happy and loving family", 1, "outcome"),
+  template("l1_the_one", "Get married", 1, "outcome", { requiresOptIn: true }),
+  template("l1_family", "Start a happy and loving family", 1, "outcome", { requiresOptIn: true }),
 ]
 
 const L1_ABUNDANCE: GoalTemplate[] = [
@@ -86,6 +99,7 @@ const L2_TEMPLATES: GoalTemplate[] = [
   template("l2_great_talker", "Master Conversational Game", 2, "outcome"),
   template("l2_master_seduction", "Master Seduction & Attraction", 2, "outcome"),
   template("l2_attract_any", "Be Able to Attract Any Woman I Want", 2, "outcome"),
+  template("l2_inner_game", "Master Inner Game", 2, "outcome"),
   // New — Dating-focused
   template("l2_master_dating", "Master Dating", 2, "outcome"),
   template("l2_master_texting", "Master Texting Game", 2, "outcome"),
@@ -102,6 +116,8 @@ const L3_FIELD_WORK: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 1000, steps: 15, curveTension: CURVE_TENSION },
     linkedMetric: "approaches_cumulative",
+    priority: "core",
+    graduation_criteria: "Reached 1000+ lifetime approaches",
   }),
   template("l3_approach_frequency", "Approach Frequency", 3, "input", {
     displayCategory: "field_work",
@@ -112,6 +128,8 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 25, durationWeeks: 24 },
     ],
     linkedMetric: "approaches_weekly",
+    priority: "core",
+    graduation_criteria: "Consistently averaging 20+ approaches/week for 8+ weeks",
   }),
   template("l3_session_frequency", "Session Frequency", 3, "input", {
     displayCategory: "field_work",
@@ -120,6 +138,8 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 48 },
     ],
     linkedMetric: "sessions_weekly",
+    priority: "core",
+    graduation_criteria: "Consistently hitting 3+ sessions/week for 8+ weeks",
   }),
   template("l3_consecutive_days", "Consecutive Days Approaching", 3, "input", {
     displayCategory: "field_work",
@@ -139,14 +159,13 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    linkedMetric: "field_reports_weekly",
   }),
   template("l3_approach_quality", "Approach Quality Self-Rating", 3, "input", {
     displayCategory: "field_work",
-    templateType: "habit_ramp",
-    rampSteps: [
-      { frequencyPerWeek: 3, durationWeeks: 12 },
-      { frequencyPerWeek: 5, durationWeeks: 24 },
-    ],
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 3, target: 8, steps: 5, curveTension: CURVE_TENSION },
+    linkedMetric: "approach_quality_avg_weekly",
   }),
   template("l3_open_in_3_seconds", "Open in <3 Seconds", 3, "input", {
     displayCategory: "field_work",
@@ -166,6 +185,82 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
   }),
+  // Gap templates — available in catalog, default OFF in preview
+  template("l3_venues_explored", "New Approach Venues Tried", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+    priority: "niche",
+  }),
+  template("l3_eye_contact_holds", "Eye Contact Holds with Strangers", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 5, durationWeeks: 8 },
+      { frequencyPerWeek: 10, durationWeeks: 12 },
+      { frequencyPerWeek: 20, durationWeeks: 24 },
+    ],
+    priority: "niche",
+  }),
+  template("l3_aa_comfort_rating", "Pre-Session Anxiety Level", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+    priority: "niche",
+  }),
+  template("l3_positive_references", "Positive Reference Experiences Logged", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+    priority: "niche",
+  }),
+  template("l3_warmup_routine", "Warm-Up Routine Completed", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 3, durationWeeks: 48 },
+    ],
+    priority: "niche",
+  }),
+  template("l3_vocal_practice", "Vocal Tonality Drills", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 8 },
+      { frequencyPerWeek: 3, durationWeeks: 12 },
+      { frequencyPerWeek: 5, durationWeeks: 24 },
+    ],
+    priority: "niche",
+  }),
+  template("l3_wing_feedback", "Wing Feedback Sessions", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 48 },
+    ],
+    blindSpotTool: true,
+  }),
+  template("l3_video_review", "Approach Video Reviews", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 48 },
+    ],
+    blindSpotTool: true,
+  }),
+  template("l3_daygame_weekly_review", "Daygame Weekly Reviews", 3, "input", {
+    displayCategory: "field_work",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 48 },
+    ],
+  }),
 ]
 
 // -- Daygame: Results --
@@ -175,6 +270,7 @@ const L3_RESULTS: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 25, steps: 6, curveTension: CURVE_TENSION },
     linkedMetric: "numbers_cumulative",
+    priority: "core",
   }),
   template("l3_instadates", "Instadates", 3, "outcome", {
     displayCategory: "results",
@@ -260,6 +356,22 @@ const L3_DATES: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
   }),
+  // Gap templates
+  template("l3_date_spots", "Date Spot Repertoire", 3, "input", {
+    displayCategory: "dates",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 15, steps: 6, curveTension: CURVE_TENSION },
+    priority: "niche",
+  }),
+  template("l3_date_leadership", "Dates Where I Led All Logistics", 3, "input", {
+    displayCategory: "dates",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+    ],
+    priority: "niche",
+  }),
 ]
 
 // -- Dating: Relationship --
@@ -268,6 +380,13 @@ const L3_RELATIONSHIP: GoalTemplate[] = [
     displayCategory: "relationship",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 5, steps: 5, curveTension: 0 },
+  }),
+  // Gap templates
+  template("l3_boundaries_set", "Boundaries Clearly Set", 3, "input", {
+    displayCategory: "relationship",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
 ]
 
@@ -308,6 +427,8 @@ const L3_PG_MINDFULNESS: GoalTemplate[] = [
       { frequencyPerWeek: 7, durationWeeks: 8 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Daily meditation habit sustained for 8+ consecutive weeks",
   }),
   template("l3_pg_gratitude", "Gratitude Practice", 3, "input", {
     lifeArea: PG, displayCategory: "mindfulness",
@@ -336,6 +457,7 @@ const L3_PG_MINDFULNESS: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -349,6 +471,8 @@ const L3_PG_RESILIENCE: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Averaging 3+ comfort zone challenges/week for 8+ weeks",
   }),
   template("l3_pg_cold_exposure", "Cold Exposure", 3, "input", {
     lifeArea: PG, displayCategory: "resilience",
@@ -409,6 +533,8 @@ const L3_PG_REFLECTION: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Daily journaling habit sustained for 8+ consecutive weeks",
   }),
   template("l3_pg_weekly_reviews", "Weekly Reviews Completed", 3, "input", {
     lifeArea: PG, displayCategory: "reflection",
@@ -433,6 +559,7 @@ const L3_PG_REFLECTION: GoalTemplate[] = [
     lifeArea: PG, displayCategory: "reflection",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
 ]
 
@@ -446,6 +573,8 @@ const L3_PG_DISCIPLINE: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 8 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Daily morning routine sustained for 8+ consecutive weeks",
   }),
   template("l3_pg_routine_streak", "Consecutive Perfect Routine Days", 3, "outcome", {
     lifeArea: PG, displayCategory: "discipline",
@@ -494,6 +623,8 @@ const L3_SOC_ACTIVITY: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Consistently attending 3+ social events/week for 8+ weeks",
   }),
   template("l3_s_new_conversations", "Conversations with New People", 3, "input", {
     lifeArea: SOC, displayCategory: "social_activity",
@@ -503,6 +634,7 @@ const L3_SOC_ACTIVITY: GoalTemplate[] = [
       { frequencyPerWeek: 7, durationWeeks: 12 },
       { frequencyPerWeek: 14, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_s_group_activities", "Group Activities", 3, "input", {
     lifeArea: SOC, displayCategory: "social_activity",
@@ -539,6 +671,7 @@ const L3_SOC_FRIENDSHIPS: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_s_old_friends", "Reach Out to Old Friends", 3, "input", {
     lifeArea: SOC, displayCategory: "friendships",
@@ -666,6 +799,7 @@ const L3_SOC_MENTORSHIP: GoalTemplate[] = [
       { frequencyPerWeek: 1, durationWeeks: 12 },
       { frequencyPerWeek: 2, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_s_mentoring_received", "Mentoring Sessions Received", 3, "input", {
     lifeArea: SOC, displayCategory: "mentorship",
@@ -673,6 +807,7 @@ const L3_SOC_MENTORSHIP: GoalTemplate[] = [
     rampSteps: [
       { frequencyPerWeek: 1, durationWeeks: 48 },
     ],
+    priority: "niche",
   }),
   template("l3_s_volunteering", "Community & Volunteering Hours", 3, "input", {
     lifeArea: SOC, displayCategory: "mentorship",
@@ -682,6 +817,7 @@ const L3_SOC_MENTORSHIP: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -720,6 +856,7 @@ const L3_FIT_STRENGTH: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 40, target: 140, steps: 12, curveTension: CURVE_TENSION },
+    priority: "core",
   }),
   template("l3_f_squat", "Squat 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
@@ -735,6 +872,7 @@ const L3_FIT_STRENGTH: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 20, target: 100, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_f_pullups", "Pull-ups Max Reps", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
@@ -754,6 +892,8 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 6, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Consistently hitting 5+ gym sessions/week for 8+ weeks",
   }),
   template("l3_f_total_sessions", "Total Training Sessions", 3, "input", {
     lifeArea: FIT, displayCategory: "training",
@@ -787,6 +927,7 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 4, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -794,6 +935,8 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
 const L3_FIT_NUTRITION: GoalTemplate[] = [
   template("l3_f_protein", "Protein Target Hit", 3, "input", {
     lifeArea: FIT, displayCategory: "nutrition",
+    priority: "core",
+    graduation_criteria: "Hitting protein target 7 days/week for 8+ consecutive weeks",
     templateType: "habit_ramp",
     rampSteps: [
       { frequencyPerWeek: 5, durationWeeks: 4 },
@@ -864,6 +1007,7 @@ const L3_FIT_FLEXIBILITY: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_f_yoga", "Yoga Sessions", 3, "input", {
     lifeArea: FIT, displayCategory: "flexibility",
@@ -873,11 +1017,13 @@ const L3_FIT_FLEXIBILITY: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_f_flexibility_hours", "Total Flexibility Hours", 3, "outcome", {
     lifeArea: FIT, displayCategory: "flexibility",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 200, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
 ]
 
@@ -963,6 +1109,7 @@ const L3_WLT_INCOME: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
 ]
 
@@ -981,6 +1128,7 @@ const L3_WLT_SAVING: GoalTemplate[] = [
       { frequencyPerWeek: 1, durationWeeks: 12 },
       { frequencyPerWeek: 2, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_w_emergency_fund", "Emergency Fund (Months)", 3, "outcome", {
     lifeArea: WLT, displayCategory: "saving",
@@ -1051,6 +1199,8 @@ const L3_WLT_CAREER: GoalTemplate[] = [
       { frequencyPerWeek: 4, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Consistently hitting 5+ deep work sessions/week for 8+ weeks",
   }),
   template("l3_w_learning", "Career Learning Sessions", 3, "input", {
     lifeArea: WLT, displayCategory: "career_growth",
@@ -1074,16 +1224,19 @@ const L3_WLT_ENTREPRENEURSHIP: GoalTemplate[] = [
     lifeArea: WLT, displayCategory: "entrepreneurship",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 100, target: 10000, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_w_customers", "Paying Customers", 3, "outcome", {
     lifeArea: WLT, displayCategory: "entrepreneurship",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 100, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_w_products_launched", "Products/Services Launched", 3, "outcome", {
     lifeArea: WLT, displayCategory: "entrepreneurship",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 5, steps: 4, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_w_entrepreneurship_hours", "Entrepreneurship Hours", 3, "input", {
     lifeArea: WLT, displayCategory: "entrepreneurship",
@@ -1093,6 +1246,7 @@ const L3_WLT_ENTREPRENEURSHIP: GoalTemplate[] = [
       { frequencyPerWeek: 10, durationWeeks: 12 },
       { frequencyPerWeek: 15, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -1130,6 +1284,8 @@ const L3_VIC_PORN: GoalTemplate[] = [
     lifeArea: VIC, displayCategory: "porn_freedom",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+    priority: "core",
+    graduation_criteria: "90+ consecutive porn-free days sustained",
   }),
   template("l3_v_nofap_streak", "NoFap Streak", 3, "outcome", {
     lifeArea: VIC, displayCategory: "porn_freedom",
@@ -1164,6 +1320,8 @@ const L3_VIC_DIGITAL: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "core",
+    graduation_criteria: "Under screen time target 7 days/week for 8+ consecutive weeks",
   }),
   template("l3_v_social_media_free", "Social Media Free Days", 3, "input", {
     lifeArea: VIC, displayCategory: "digital_discipline",
@@ -1191,6 +1349,7 @@ const L3_VIC_DIGITAL: GoalTemplate[] = [
       { frequencyPerWeek: 1, durationWeeks: 12 },
       { frequencyPerWeek: 2, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_v_screen_streak", "Consecutive Days Under Screen Limit", 3, "outcome", {
     lifeArea: VIC, displayCategory: "digital_discipline",
@@ -1209,16 +1368,19 @@ const L3_VIC_SUBSTANCE: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_v_sober_days", "Consecutive Sober Days", 3, "outcome", {
     lifeArea: VIC, displayCategory: "substance_control",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_v_smoke_free", "Smoke-Free Days", 3, "outcome", {
     lifeArea: VIC, displayCategory: "substance_control",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 365, steps: 10, curveTension: CURVE_TENSION },
+    priority: "niche",
   }),
   template("l3_v_clean_eating", "Clean Eating Days", 3, "input", {
     lifeArea: VIC, displayCategory: "substance_control",
@@ -1228,6 +1390,7 @@ const L3_VIC_SUBSTANCE: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -1306,6 +1469,7 @@ const L3_LIFE_HOBBIES: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_li_instrument_hours", "Musical Instrument Hours", 3, "outcome", {
     lifeArea: LIFE, displayCategory: "hobbies_skills",
@@ -1339,6 +1503,7 @@ const L3_LIFE_HOBBIES: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -1352,6 +1517,7 @@ const L3_LIFE_COOKING: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_li_recipes", "Recipes Mastered", 3, "outcome", {
     lifeArea: LIFE, displayCategory: "cooking_domestic",
@@ -1382,6 +1548,7 @@ const L3_LIFE_ADVENTURE: GoalTemplate[] = [
       { frequencyPerWeek: 1, durationWeeks: 12 },
       { frequencyPerWeek: 2, durationWeeks: 24 },
     ],
+    priority: "core",
   }),
   template("l3_li_places_visited", "Countries or Cities Visited", 3, "outcome", {
     lifeArea: LIFE, displayCategory: "adventure_travel",
@@ -1505,34 +1672,46 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_hours_in_field", "l3_voice_notes", "l3_approach_quality", "l3_open_in_3_seconds", "l3_solo_sessions",
     "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
     "l3_kiss_closes", "l3_lays", "l3_women_dating", "l3_sustained_rotation",
+    "l3_venues_explored", "l3_daygame_weekly_review", "l3_video_review",
   ],
   // Become Confident — exposure/consistency-heavy
   l2_confident: [
     "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency", "l3_consecutive_days",
     "l3_hours_in_field", "l3_solo_sessions",
     "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
+    "l3_eye_contact_holds", "l3_positive_references", "l3_warmup_routine",
   ],
   // Overcome AA — pure exposure
   l2_overcome_aa: [
     "l3_approach_volume", "l3_consecutive_days", "l3_solo_sessions",
+    "l3_eye_contact_holds", "l3_aa_comfort_rating", "l3_positive_references", "l3_warmup_routine",
   ],
   // Master Cold Approach — technique + quality
   l2_master_cold_approach: [
     "l3_approach_volume", "l3_approach_frequency", "l3_approach_quality", "l3_open_in_3_seconds",
     "l3_phone_numbers", "l3_instadates",
+    "l3_vocal_practice", "l3_eye_contact_holds", "l3_video_review", "l3_wing_feedback",
   ],
-  // Become Great at Talking — conversation/conversion
+  // Master Conversational Game — conversation/conversion
   l2_great_talker: [
     "l3_phone_numbers", "l3_instadates", "l3_dates",
     "l3_response_rate", "l3_voice_notes", "l3_approach_quality",
+    "l3_vocal_practice",
   ],
   // Master Seduction — escalation
   l2_master_seduction: [
     "l3_kiss_closes", "l3_lays", "l3_physical_escalation",
     "l3_dates", "l3_second_dates",
+    "l3_date_leadership",
   ],
   // Attract Any Woman — broadest, everything
   l2_attract_any: ALL_L3_DAYGAME.map((t) => t.id),
+  // Master Inner Game — mindset, resilience, anti-anxiety
+  l2_inner_game: [
+    "l3_consecutive_days", "l3_solo_sessions",
+    "l3_eye_contact_holds", "l3_aa_comfort_rating", "l3_positive_references",
+    "l3_warmup_routine", "l3_approach_volume", "l3_daygame_weekly_review",
+  ],
   // Master Texting — texting metrics
   l2_master_texting: [
     "l3_texting_initiated", "l3_response_rate", "l3_number_to_date_conversion",
@@ -1540,10 +1719,12 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // Master Dating — date execution
   l2_master_dating: [
     "l3_dates_planned", "l3_second_dates", "l3_creative_dates", "l3_physical_escalation",
+    "l3_date_spots", "l3_date_leadership",
   ],
   // Total Dating Freedom — abundance
   l2_dating_freedom: [
     "l3_women_dating", "l3_dates_planned", "l3_sustained_rotation",
+    "l3_boundaries_set",
   ],
 
   // ---- PERSONAL GROWTH ----
@@ -1722,96 +1903,124 @@ export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
 // ============================================================================
 
 const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
-  // Master Daygame — results-heavy (17 L3s)
+  // Master Daygame — results-heavy (20 L3s)
   l2_master_daygame: {
-    l3_approach_volume: 0.15,
-    l3_approach_frequency: 0.06,
+    l3_approach_volume: 0.14,
+    l3_approach_frequency: 0.05,
     l3_session_frequency: 0.04,
     l3_consecutive_days: 0.03,
-    l3_hours_in_field: 0.06,
+    l3_hours_in_field: 0.05,
     l3_voice_notes: 0.03,
     l3_approach_quality: 0.05,
     l3_open_in_3_seconds: 0.03,
     l3_solo_sessions: 0.03,
-    l3_phone_numbers: 0.12,
-    l3_instadates: 0.08,
-    l3_dates: 0.08,
+    l3_phone_numbers: 0.11,
+    l3_instadates: 0.07,
+    l3_dates: 0.07,
     l3_second_dates: 0.05,
     l3_kiss_closes: 0.05,
     l3_lays: 0.07,
-    l3_women_dating: 0.035,
-    l3_sustained_rotation: 0.035,
+    l3_women_dating: 0.03,
+    l3_sustained_rotation: 0.03,
+    l3_venues_explored: 0.02,
+    l3_daygame_weekly_review: 0.03,
+    l3_video_review: 0.02,
   },
-  // Become Confident — exposure/consistency-heavy (10 L3s)
+  // Become Confident — exposure/consistency-heavy (13 L3s)
   l2_confident: {
-    l3_approach_volume: 0.20,
-    l3_approach_frequency: 0.10,
-    l3_session_frequency: 0.10,
-    l3_consecutive_days: 0.10,
-    l3_hours_in_field: 0.10,
-    l3_solo_sessions: 0.10,
-    l3_phone_numbers: 0.10,
-    l3_instadates: 0.07,
-    l3_dates: 0.07,
-    l3_second_dates: 0.06,
+    l3_approach_volume: 0.17,
+    l3_approach_frequency: 0.09,
+    l3_session_frequency: 0.08,
+    l3_consecutive_days: 0.09,
+    l3_hours_in_field: 0.08,
+    l3_solo_sessions: 0.08,
+    l3_phone_numbers: 0.09,
+    l3_instadates: 0.06,
+    l3_dates: 0.06,
+    l3_second_dates: 0.05,
+    l3_eye_contact_holds: 0.06,
+    l3_positive_references: 0.05,
+    l3_warmup_routine: 0.04,
   },
-  // Overcome AA — exposure-heavy (3 L3s)
+  // Overcome AA — exposure-heavy (7 L3s)
   l2_overcome_aa: {
-    l3_approach_volume: 0.50,
-    l3_consecutive_days: 0.30,
-    l3_solo_sessions: 0.20,
+    l3_approach_volume: 0.35,
+    l3_consecutive_days: 0.18,
+    l3_solo_sessions: 0.12,
+    l3_eye_contact_holds: 0.12,
+    l3_aa_comfort_rating: 0.10,
+    l3_positive_references: 0.07,
+    l3_warmup_routine: 0.06,
   },
-  // Master Cold Approach — technique + quality (6 L3s)
+  // Master Cold Approach — technique + quality (10 L3s)
   l2_master_cold_approach: {
-    l3_approach_volume: 0.15,
-    l3_approach_frequency: 0.15,
-    l3_approach_quality: 0.25,
-    l3_open_in_3_seconds: 0.20,
-    l3_phone_numbers: 0.15,
-    l3_instadates: 0.10,
+    l3_approach_volume: 0.12,
+    l3_approach_frequency: 0.11,
+    l3_approach_quality: 0.18,
+    l3_open_in_3_seconds: 0.15,
+    l3_phone_numbers: 0.12,
+    l3_instadates: 0.08,
+    l3_vocal_practice: 0.07,
+    l3_eye_contact_holds: 0.06,
+    l3_video_review: 0.05,
+    l3_wing_feedback: 0.06,
   },
-  // Become Great at Talking — conversion-heavy (5 L3s)
+  // Master Conversational Game — conversion-heavy (7 L3s)
   l2_great_talker: {
-    l3_phone_numbers: 0.17,
-    l3_instadates: 0.17,
-    l3_dates: 0.21,
-    l3_response_rate: 0.17,
-    l3_voice_notes: 0.13,
-    l3_approach_quality: 0.15,
+    l3_phone_numbers: 0.15,
+    l3_instadates: 0.15,
+    l3_dates: 0.18,
+    l3_response_rate: 0.15,
+    l3_voice_notes: 0.12,
+    l3_approach_quality: 0.13,
+    l3_vocal_practice: 0.12,
   },
-  // Master Seduction — escalation-heavy (5 L3s)
+  // Master Seduction — escalation-heavy (6 L3s)
   l2_master_seduction: {
-    l3_kiss_closes: 0.15,
-    l3_lays: 0.25,
-    l3_physical_escalation: 0.25,
-    l3_dates: 0.20,
-    l3_second_dates: 0.15,
+    l3_kiss_closes: 0.14,
+    l3_lays: 0.23,
+    l3_physical_escalation: 0.23,
+    l3_dates: 0.18,
+    l3_second_dates: 0.13,
+    l3_date_leadership: 0.09,
   },
-  // Attract Any Woman — broad (all 25 L3s)
+  // Attract Any Woman — broad (all daygame L3s)
   l2_attract_any: {
-    l3_approach_volume: 0.06,
-    l3_approach_frequency: 0.04,
+    l3_approach_volume: 0.05,
+    l3_approach_frequency: 0.03,
     l3_session_frequency: 0.03,
     l3_consecutive_days: 0.03,
-    l3_hours_in_field: 0.04,
+    l3_hours_in_field: 0.03,
     l3_voice_notes: 0.02,
-    l3_approach_quality: 0.04,
-    l3_open_in_3_seconds: 0.03,
-    l3_solo_sessions: 0.03,
-    l3_phone_numbers: 0.06,
-    l3_instadates: 0.05,
+    l3_approach_quality: 0.03,
+    l3_open_in_3_seconds: 0.02,
+    l3_solo_sessions: 0.02,
+    l3_venues_explored: 0.02,
+    l3_eye_contact_holds: 0.02,
+    l3_aa_comfort_rating: 0.01,
+    l3_positive_references: 0.01,
+    l3_warmup_routine: 0.01,
+    l3_vocal_practice: 0.02,
+    l3_wing_feedback: 0.01,
+    l3_video_review: 0.01,
+    l3_daygame_weekly_review: 0.02,
+    l3_phone_numbers: 0.05,
+    l3_instadates: 0.04,
     l3_dates: 0.05,
-    l3_second_dates: 0.08,
+    l3_second_dates: 0.06,
     l3_kiss_closes: 0.04,
-    l3_lays: 0.06,
-    l3_sustained_rotation: 0.03,
-    l3_texting_initiated: 0.03,
-    l3_number_to_date_conversion: 0.04,
-    l3_response_rate: 0.03,
-    l3_dates_planned: 0.04,
-    l3_creative_dates: 0.03,
-    l3_physical_escalation: 0.05,
-    l3_women_dating: 0.09,
+    l3_lays: 0.05,
+    l3_sustained_rotation: 0.02,
+    l3_texting_initiated: 0.02,
+    l3_number_to_date_conversion: 0.03,
+    l3_response_rate: 0.02,
+    l3_dates_planned: 0.03,
+    l3_creative_dates: 0.02,
+    l3_physical_escalation: 0.04,
+    l3_women_dating: 0.08,
+    l3_date_spots: 0.02,
+    l3_date_leadership: 0.02,
+    l3_boundaries_set: 0.02,
   },
   // Master Texting — texting conversion (3 L3s)
   l2_master_texting: {
@@ -1819,18 +2028,21 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_response_rate: 0.30,
     l3_number_to_date_conversion: 0.40,
   },
-  // Master Dating — date execution (4 L3s)
+  // Master Dating — date execution (6 L3s)
   l2_master_dating: {
-    l3_dates_planned: 0.30,
-    l3_second_dates: 0.25,
-    l3_creative_dates: 0.15,
-    l3_physical_escalation: 0.30,
+    l3_dates_planned: 0.23,
+    l3_second_dates: 0.20,
+    l3_creative_dates: 0.12,
+    l3_physical_escalation: 0.23,
+    l3_date_spots: 0.10,
+    l3_date_leadership: 0.12,
   },
   // Total Dating Freedom — abundance (4 L3s)
   l2_dating_freedom: {
-    l3_women_dating: 0.55,
-    l3_dates_planned: 0.25,
-    l3_sustained_rotation: 0.20,
+    l3_women_dating: 0.48,
+    l3_dates_planned: 0.22,
+    l3_sustained_rotation: 0.17,
+    l3_boundaries_set: 0.13,
   },
 
   // ---- PERSONAL GROWTH WEIGHTS ----
@@ -2140,6 +2352,20 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_li_recipes: 0.40,
     l3_li_new_experiences: 0.20,
   },
+
+  // ---- DAYGAME: INNER GAME WEIGHTS ----
+
+  // Master Inner Game — identity/mindset (8 L3s)
+  l2_inner_game: {
+    l3_positive_references: 0.20,
+    l3_aa_comfort_rating: 0.18,
+    l3_consecutive_days: 0.12,
+    l3_eye_contact_holds: 0.12,
+    l3_solo_sessions: 0.10,
+    l3_approach_volume: 0.10,
+    l3_warmup_routine: 0.10,
+    l3_daygame_weekly_review: 0.08,
+  },
 }
 
 export const DEFAULT_ACHIEVEMENT_WEIGHTS: DefaultAchievementWeight[] =
@@ -2218,23 +2444,15 @@ export function getAchievementWeights(
 }
 
 /**
- * Redistribute weights proportionally when some goals are removed.
- * Removed goals' weight is redistributed across remaining goals so total = 1.
+ * Filter weights to active goals only, preserving original weight values.
+ * Removed goals' weight is NOT redistributed — the total will be < 1.
+ * This prevents "fewer goals = faster badges" gaming.
  */
 export function redistributeWeights(
   weights: AchievementWeight[],
   activeGoalIds: Set<string>
 ): AchievementWeight[] {
-  const active = weights.filter((w) => activeGoalIds.has(w.goalId))
-  if (active.length === 0) return []
-
-  const totalActive = active.reduce((sum, w) => sum + w.weight, 0)
-  if (totalActive === 0) return active
-
-  return active.map((w) => ({
-    goalId: w.goalId,
-    weight: w.weight / totalActive,
-  }))
+  return weights.filter((w) => activeGoalIds.has(w.goalId))
 }
 
 /**
@@ -2392,4 +2610,81 @@ export function getCatalogTiers(): {
     tier2: L2_TEMPLATES,
     tier3: getTemplatesByCategoryForArea("daygame"),
   }
+}
+
+// ============================================================================
+// Cross-Area Connections (Phase 3.4)
+// ============================================================================
+
+/**
+ * Cross-area edges connect goals from different life areas.
+ * Used for weekly review insights and "whole-man" progress visualization.
+ */
+export const CROSS_AREA_EDGES: CrossAreaEdge[] = [
+  // Personal Growth → Daygame
+  { sourceId: "l3_pg_meditation", targetId: "l2_overcome_aa", weight: 0.7, relationship: "supports" },
+  { sourceId: "l3_pg_comfort_zone", targetId: "l3_approach_volume", weight: 0.6, relationship: "enables" },
+  { sourceId: "l3_pg_cold_exposure", targetId: "l2_overcome_aa", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_pg_journal", targetId: "l3_aa_comfort_rating", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_pg_books", targetId: "l2_great_talker", weight: 0.4, relationship: "reinforces" },
+  { sourceId: "l3_pg_morning_routine", targetId: "l3_session_frequency", weight: 0.4, relationship: "enables" },
+
+  // Social → Daygame
+  { sourceId: "l3_s_new_conversations", targetId: "l3_approach_volume", weight: 0.6, relationship: "reinforces" },
+  { sourceId: "l3_s_social_events", targetId: "l2_confident", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_s_deep_conversations", targetId: "l2_great_talker", weight: 0.5, relationship: "reinforces" },
+
+  // Fitness → Daygame
+  { sourceId: "l3_f_gym_frequency", targetId: "l2_confident", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_f_gym_frequency", targetId: "l2_inner_game", weight: 0.4, relationship: "supports" },
+
+  // Vices → Daygame
+  { sourceId: "l3_v_porn_free_days", targetId: "l2_inner_game", weight: 0.6, relationship: "enables" },
+  { sourceId: "l3_v_screen_time", targetId: "l3_session_frequency", weight: 0.3, relationship: "enables" },
+
+  // Lifestyle → Daygame
+  { sourceId: "l3_li_grooming", targetId: "l2_confident", weight: 0.3, relationship: "supports" },
+  { sourceId: "l3_li_dance_classes", targetId: "l2_master_seduction", weight: 0.3, relationship: "reinforces" },
+
+  // Fitness → Personal Growth
+  { sourceId: "l3_f_gym_frequency", targetId: "l2_pg_discipline", weight: 0.5, relationship: "reinforces" },
+
+  // Personal Growth → Vices
+  { sourceId: "l3_pg_meditation", targetId: "l2_v_willpower", weight: 0.5, relationship: "supports" },
+]
+
+/**
+ * Get all cross-area edges where this template is either source or target.
+ */
+export function getCrossAreaInfluence(templateId: string): CrossAreaEdge[] {
+  return CROSS_AREA_EDGES.filter((e) => e.sourceId === templateId || e.targetId === templateId)
+}
+
+/**
+ * Get cross-area edges where this template is the target (influenced BY other areas).
+ */
+export function getCrossAreaContributors(templateId: string): CrossAreaEdge[] {
+  return CROSS_AREA_EDGES.filter((e) => e.targetId === templateId)
+}
+
+/**
+ * Get immediate parents of a template in the goal graph (reverse of getChildren).
+ */
+export function getParents(childId: string): GoalTemplate[] {
+  const parentIds = GOAL_GRAPH_EDGES
+    .filter((e) => e.childId === childId)
+    .map((e) => e.parentId)
+  return parentIds.map((id) => GOAL_TEMPLATE_MAP[id]).filter(Boolean)
+}
+
+/** FTO L1 IDs (Find The One path). */
+const FTO_L1_IDS = new Set(L1_ONE_PERSON.map((t) => t.id))
+
+/**
+ * Get daygame L1 goals for a specific path (FTO or Abundance).
+ */
+export function getDaygamePathL1(path: "fto" | "abundance"): GoalTemplate[] {
+  const l1s = GOAL_TEMPLATES.filter((t) => t.lifeArea === "daygame" && t.level === 1 && !t.requiresOptIn)
+  if (path === "fto") return l1s.filter((t) => FTO_L1_IDS.has(t.id))
+  return l1s.filter((t) => !FTO_L1_IDS.has(t.id))
 }

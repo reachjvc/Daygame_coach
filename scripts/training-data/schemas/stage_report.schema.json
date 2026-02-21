@@ -52,6 +52,7 @@
             "type": "string",
             "enum": [
               "artifact_contract",
+              "contamination_risk",
               "conversation_structure",
               "other_quality",
               "quarantine_gate",

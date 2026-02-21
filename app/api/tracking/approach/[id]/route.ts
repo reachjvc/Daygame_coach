@@ -39,13 +39,14 @@ export async function PATCH(
       )
     }
 
-    const { outcome, set_type, tags, mood, note, voice_note_url } = parsed.data
+    const { outcome, set_type, tags, mood, quality, note, voice_note_url } = parsed.data
 
     const updated = await updateApproach(id, {
       outcome: outcome ?? undefined,
       set_type: set_type ?? undefined,
       tags: tags ?? undefined,
       mood: mood ?? undefined,
+      quality: quality ?? undefined,
       note: note ?? undefined,
       voice_note_url: voice_note_url ?? undefined,
     })

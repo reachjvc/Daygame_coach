@@ -162,7 +162,7 @@ export async function endSession(sessionId: string): Promise<SessionRow> {
   })
 
   // Sync linked goals with updated tracking stats
-  await syncLinkedGoals(session.user_id).catch(() => {})
+  await syncLinkedGoals(session.user_id).catch((e) => console.error("syncLinkedGoals failed:", e))
 
   return updatedSession
 }
@@ -249,8 +249,23 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
   // Update field report count and check milestones (only for non-drafts)
   if (!report.is_draft) {
     const stats = await repoGetOrCreateUserTrackingStats(report.user_id)
+    const currentWeek = getISOWeekString(new Date())
+    const weekChanged = stats.current_week !== currentWeek
     const newCount = (stats.total_field_reports || 0) + 1
-    await repoUpdateUserTrackingStats(report.user_id, { total_field_reports: newCount })
+    const weeklyReports = weekChanged ? 1 : (stats.current_week_field_reports ?? 0) + 1
+    const fieldReportUpdates: UserTrackingStatsUpdate = {
+      total_field_reports: newCount,
+      current_week: currentWeek,
+      current_week_field_reports: weeklyReports,
+    }
+    // Reset ALL other weekly counters when week rolls over
+    if (weekChanged) {
+      fieldReportUpdates.current_week_sessions = 0
+      fieldReportUpdates.current_week_approaches = 0
+      fieldReportUpdates.current_week_numbers = 0
+      fieldReportUpdates.current_week_instadates = 0
+    }
+    await repoUpdateUserTrackingStats(report.user_id, fieldReportUpdates)
 
     const potentialMilestones: Array<{ type: MilestoneType; value?: number }> = []
     if (newCount === 1) potentialMilestones.push({ type: "first_field_report" })
@@ -260,7 +275,7 @@ export async function createFieldReport(report: FieldReportInsert): Promise<Fiel
     await repoCheckAndAwardMilestones(report.user_id, potentialMilestones, report.session_id)
 
     // Sync linked goals with updated tracking stats
-    await syncLinkedGoals(report.user_id).catch(() => {})
+    await syncLinkedGoals(report.user_id).catch((e) => console.error("syncLinkedGoals failed:", e))
   }
 
   return row
@@ -611,12 +626,8 @@ async function updateSessionStats(
   const currentWeek = getISOWeekString(new Date())
 
   // Track weekly sessions
-  let weeklySessions = stats.current_week_sessions || 0
-  if (stats.current_week === currentWeek) {
-    weeklySessions++
-  } else {
-    weeklySessions = 1
-  }
+  const weekChanged = stats.current_week !== currentWeek
+  let weeklySessions = weekChanged ? 1 : (stats.current_week_sessions || 0) + 1
 
   // Update unique locations
   let uniqueLocations = stats.unique_locations || []
@@ -626,12 +637,22 @@ async function updateSessionStats(
 
   const newSessionCount = stats.total_sessions + 1
 
-  await repoUpdateUserTrackingStats(userId, {
+  const updates: UserTrackingStatsUpdate = {
     total_sessions: newSessionCount,
     current_week: currentWeek,
     current_week_sessions: weeklySessions,
     unique_locations: uniqueLocations,
-  })
+  }
+
+  // Reset ALL other weekly counters when week rolls over
+  if (weekChanged) {
+    updates.current_week_approaches = 0
+    updates.current_week_numbers = 0
+    updates.current_week_instadates = 0
+    updates.current_week_field_reports = 0
+  }
+
+  await repoUpdateUserTrackingStats(userId, updates)
 
   await checkAndUpdateWeeklyStreak(userId, currentWeek)
 
@@ -733,12 +754,8 @@ async function incrementApproachStats(
   }
 
   // Track weekly approaches
-  let weeklyApproaches = stats.current_week_approaches || 0
-  if (stats.current_week === currentWeek) {
-    weeklyApproaches++
-  } else {
-    weeklyApproaches = 1
-  }
+  const weekChanged = stats.current_week !== currentWeek
+  const weeklyApproaches = weekChanged ? 1 : (stats.current_week_approaches || 0) + 1
 
   const updates: UserTrackingStatsUpdate = {
     total_approaches: stats.total_approaches + 1,
@@ -749,27 +766,27 @@ async function incrementApproachStats(
     current_week_approaches: weeklyApproaches,
   }
 
+  // Reset ALL other weekly counters when week rolls over
+  if (weekChanged) {
+    updates.current_week_sessions = 0
+    updates.current_week_numbers = 0
+    updates.current_week_instadates = 0
+    updates.current_week_field_reports = 0
+  }
+
   let newNumbers = stats.total_numbers
   let newInstadates = stats.total_instadates
 
   if (outcome === "number") {
     newNumbers = stats.total_numbers + 1
     updates.total_numbers = newNumbers
-    // Track weekly numbers
-    const weeklyNumbers = stats.current_week === currentWeek ? (stats.current_week_numbers ?? 0) : 0
+    const weeklyNumbers = weekChanged ? 0 : (stats.current_week_numbers ?? 0)
     updates.current_week_numbers = weeklyNumbers + 1
   } else if (outcome === "instadate") {
     newInstadates = stats.total_instadates + 1
     updates.total_instadates = newInstadates
-    // Track weekly instadates
-    const weeklyInstadates = stats.current_week === currentWeek ? (stats.current_week_instadates ?? 0) : 0
+    const weeklyInstadates = weekChanged ? 0 : (stats.current_week_instadates ?? 0)
     updates.current_week_instadates = weeklyInstadates + 1
-  }
-
-  // Reset weekly numbers/instadates if week changed (no number/instadate this approach)
-  if (stats.current_week !== currentWeek) {
-    if (outcome !== "number") updates.current_week_numbers = 0
-    if (outcome !== "instadate") updates.current_week_instadates = 0
   }
 
   await repoUpdateUserTrackingStats(userId, updates)

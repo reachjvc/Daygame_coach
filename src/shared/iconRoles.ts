@@ -88,6 +88,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Milestone: ["milestone goal type"],
   Repeat: ["recurring goal type"],
   Scale: ["balance", "calibration", "key stats"],
+  SlidersHorizontal: ["milestone curve customization", "calibration principles"],
   ShieldCheck: ["safety", "protection", "key stats"],
   BarChart3: ["feature highlight", "marketing stats"],
   CircleDot: ["individual L1 goal header", "goal widgets empty state", "generic objective icon"],
@@ -113,7 +114,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Trophy: ["achievement badges", "completion step"],
   Users: ["social life area", "common humanity"],
   Wand2: ["AI enhancement"],
-  Zap: ["energy", "quick actions"],
+  Zap: ["energy", "quick actions", "onboarding"],
 }
 
 // All registered icon names (utility + semantic) for test enforcement

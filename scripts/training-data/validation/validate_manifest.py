@@ -6,7 +6,7 @@ Manifest/sub-batch validation harness (read-only).
 
 Given a batch/sub-batch manifest (docs/pipeline/batches/*.txt), this script:
   - Checks 06b.LLM.verify coverage + verdict distribution
-  - Checks presence of 06c.DET.patched and 07.LLM.content artifacts for each video
+  - Checks presence of 06c.DET.patched, 07.LLM.content, and 07b.LLM.enrichment-verify artifacts for each video
   - Runs cross-stage validation (06/06c vs 07) for all available pairs
 
 This is intended to be the "one command" sanity check after running LLM stages.
@@ -114,6 +114,10 @@ def _canonical_signal_class(issue: Dict[str, Any]) -> str:
         return "transcript_quality"
     if issue_code in {"segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
         return "transcript_quality"
+    if check == "stage07_transcript_artifact_risk" or issue_code == "stage07_transcript_artifact_risk":
+        return "contamination_risk"
+    if check.startswith("transcript_artifact_") or issue_code.startswith("transcript_artifact_"):
+        return "contamination_risk"
 
     if check in {"conversation_not_contiguous", "compilation_with_single_conversation"}:
         return "conversation_structure"
@@ -136,6 +140,8 @@ def _canonical_remediation_path(signal_class: str) -> str:
         return "quarantine"
     if signal_class == "artifact_contract":
         return "contract_repair"
+    if signal_class == "contamination_risk":
+        return "transcript_review"
     if signal_class == "routing_mismatch":
         return "routing_policy_review"
     if signal_class == "taxonomy_coverage":
@@ -145,6 +151,24 @@ def _canonical_remediation_path(signal_class: str) -> str:
     if signal_class == "conversation_structure":
         return "conversation_review"
     return "manual_review"
+
+
+def _is_contract_only_issue(check: str, issue_code: str, signal_class: str) -> bool:
+    """
+    Contract-only issues indicate missing/invalid artifacts for this run state.
+    They should fail validation, but they should not be persisted as quarantine
+    membership because that can deadlock recovery reruns.
+    """
+    chk = str(check or "").strip().lower()
+    code = str(issue_code or "").strip().lower()
+    sig = str(signal_class or "").strip().lower()
+    if sig == "artifact_contract":
+        return True
+    if chk.startswith("missing_") or chk.startswith("invalid_"):
+        return True
+    if code.startswith("missing_") or code.startswith("invalid_"):
+        return True
+    return False
 
 
 def _annotate_issue_canonical(issue: Dict[str, Any], origin_stage: str = "manifest-validation") -> None:
@@ -837,6 +861,8 @@ def _compute_stage07_damage_metrics(s07_data: Dict[str, Any]) -> Dict[str, Any]:
     artifact_ids: Set[int] = set()
     for row in s07_data.get("transcript_artifacts", []) or []:
         if isinstance(row, dict):
+            if bool(row.get("repaired")):
+                continue
             sid = row.get("segment_index")
             if isinstance(sid, int):
                 artifact_ids.add(sid)
@@ -919,6 +945,72 @@ def _compute_stage07_damage_metrics(s07_data: Dict[str, Any]) -> Dict[str, Any]:
         "segments_total": segments_total,
         "token_total": token_total,
         "damaged_token_total": damaged_token_total,
+    }
+
+
+def _compute_stage07_transcript_artifact_risk(s07_data: Dict[str, Any]) -> Dict[str, Any]:
+    artifacts = s07_data.get("transcript_artifacts")
+    if not isinstance(artifacts, list):
+        return {
+            "repaired_total": 0,
+            "unrepaired_total": 0,
+            "high_unrepaired": 0,
+            "medium_unrepaired": 0,
+            "low_unrepaired": 0,
+            "unknown_unrepaired": 0,
+            "risk_score": 0,
+            "breakdown": {},
+        }
+
+    repaired_total = 0
+    high_unrepaired = 0
+    medium_unrepaired = 0
+    low_unrepaired = 0
+    unknown_unrepaired = 0
+    by_type_unrepaired: Counter[str] = Counter()
+
+    for row in artifacts:
+        if not isinstance(row, dict):
+            continue
+        if bool(row.get("repaired")):
+            repaired_total += 1
+            continue
+        sev = str(row.get("damage_severity", "")).strip().lower()
+        if sev == "high":
+            high_unrepaired += 1
+        elif sev == "medium":
+            medium_unrepaired += 1
+        elif sev == "low":
+            low_unrepaired += 1
+        else:
+            unknown_unrepaired += 1
+        atype = str(row.get("artifact_type", "")).strip().lower()
+        if atype:
+            by_type_unrepaired[atype] += 1
+
+    unrepaired_total = high_unrepaired + medium_unrepaired + low_unrepaired + unknown_unrepaired
+    # Weight unresolved artifacts by potential contamination impact.
+    risk_score = (3 * high_unrepaired) + (2 * medium_unrepaired) + low_unrepaired + (2 * unknown_unrepaired)
+    breakdown: Dict[str, int] = {}
+    if high_unrepaired > 0:
+        breakdown["transcript_artifact_high_unrepaired"] = high_unrepaired
+    if medium_unrepaired > 0:
+        breakdown["transcript_artifact_medium_unrepaired"] = medium_unrepaired
+    if low_unrepaired > 0:
+        breakdown["transcript_artifact_low_unrepaired"] = low_unrepaired
+    if unknown_unrepaired > 0:
+        breakdown["transcript_artifact_unknown_unrepaired"] = unknown_unrepaired
+
+    return {
+        "repaired_total": repaired_total,
+        "unrepaired_total": unrepaired_total,
+        "high_unrepaired": high_unrepaired,
+        "medium_unrepaired": medium_unrepaired,
+        "low_unrepaired": low_unrepaired,
+        "unknown_unrepaired": unknown_unrepaired,
+        "risk_score": risk_score,
+        "by_type_unrepaired": dict(by_type_unrepaired),
+        "breakdown": breakdown,
     }
 
 
@@ -1251,6 +1343,7 @@ def main() -> None:
     s06_root = data_root / "06.LLM.video-type"
     s06c_root = data_root / "06c.DET.patched"
     s07_root = data_root / "07.LLM.content"
+    s07b_root = data_root / "07b.LLM.enrichment-verify"
     s06b_root = data_root / "06b.LLM.verify"
     s09_root = data_root / "09.EXT.chunks"
 
@@ -1259,6 +1352,7 @@ def main() -> None:
     idx_s06 = _index_paths_by_video_id(s06_root, "*.conversations.json", manifest_ids)
     idx_s06c = _index_paths_by_video_id(s06c_root, "*.conversations.json", manifest_ids)
     idx_s07 = _index_paths_by_video_id(s07_root, "*.enriched.json", manifest_ids)
+    idx_s07b = _index_paths_by_video_id(s07b_root, "*.enrichment-verify.json", manifest_ids)
     idx_s07_val = _index_paths_by_video_id(s07_root, "*.validation.json", manifest_ids)
     idx_s06b = _index_paths_by_video_id(s06b_root, "*.verification.json", manifest_ids)
     idx_s09 = _index_paths_by_video_id(s09_root, "*.chunks.json", manifest_ids) if args.check_stage09_chunks else {}
@@ -1270,6 +1364,7 @@ def main() -> None:
     missing_s05: List[str] = []
     missing_s06c: List[str] = []
     missing_s07: List[str] = []
+    missing_s07b: List[str] = []
     missing_s09: List[str] = []
 
     issues: List[Dict[str, Any]] = []
@@ -1319,6 +1414,7 @@ def main() -> None:
     stage_reports_dir: Optional[Path] = None
     quarantine_out_path: Optional[Path] = None
     quarantined_videos: List[str] = []
+    preserve_input_quarantine_ids = True
 
     start = time.time()
     started_at_iso = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(start))
@@ -1336,6 +1432,13 @@ def main() -> None:
                 quarantine_out_path = repo_root() / quarantine_out_path
         else:
             quarantine_out_path = _default_quarantine_path(manifest_path, args.source)
+        if quarantine_file_path and quarantine_out_path:
+            try:
+                preserve_input_quarantine_ids = (
+                    quarantine_file_path.resolve() != quarantine_out_path.resolve()
+                )
+            except Exception:
+                preserve_input_quarantine_ids = True
 
     if args.check_stage08_report:
         stage08_checked = True
@@ -1718,6 +1821,7 @@ def main() -> None:
         s06c_candidates = idx_s06c.get(vid) or []
         s06_candidates = idx_s06.get(vid) or []
         s07_candidates = idx_s07.get(vid) or []
+        s07b_candidates = idx_s07b.get(vid) or []
         s07v_candidates = idx_s07_val.get(vid) or []
         v_candidates = idx_s06b.get(vid) or []
         s09_candidates = idx_s09.get(vid) or []
@@ -1727,6 +1831,7 @@ def main() -> None:
         s06c_path = _pick_best_candidate(s06c_candidates, src) if s06c_candidates else None
         s06_path = _pick_best_candidate(s06_candidates, src) if s06_candidates else None
         s07_path = _pick_best_candidate(s07_candidates, src) if s07_candidates else None
+        s07b_path = _pick_best_candidate(s07b_candidates, src) if s07b_candidates else None
         s07v_path = _pick_best_candidate(s07v_candidates, src) if s07v_candidates else None
         v_path = _pick_best_candidate(v_candidates, src) if v_candidates else None
         s09_path = _pick_best_candidate(s09_candidates, src) if s09_candidates else None
@@ -1736,6 +1841,7 @@ def main() -> None:
             "s06": str(s06_path) if s06_path else None,
             "s06c": str(s06c_path) if s06c_path else None,
             "s07": str(s07_path) if s07_path else None,
+            "s07b": str(s07b_path) if s07b_path else None,
             "s07_validation": str(s07v_path) if s07v_path else None,
             "verify": str(v_path) if v_path else None,
             "s09": str(s09_path) if s09_path else None,
@@ -1745,6 +1851,17 @@ def main() -> None:
             missing_s06c.append(vid)
         if not s07_path:
             missing_s07.append(vid)
+        if not s07b_path:
+            missing_s07b.append(vid)
+            issues.append({
+                "video_id": vid,
+                "source": src,
+                "severity": "error",
+                "check": "missing_stage07b_enrichment_verify",
+                "message": "No Stage 07b enrichment-verify artifact found for this video_id",
+                "manifest_folder": folder_text,
+            })
+            check_counts["error:missing_stage07b_enrichment_verify"] += 1
         if args.check_stage05_audio and not s05_path:
             missing_s05.append(vid)
             issues.append({
@@ -1961,6 +2078,34 @@ def main() -> None:
                     "dropped_anchor_total": int(anchor_metrics.get("dropped_anchor_total", 0) or 0),
                     "kept_anchor_total": int(anchor_metrics.get("kept_anchor_total", 0) or 0),
                 })
+
+                artifact_risk = _compute_stage07_transcript_artifact_risk(s07_data)
+                unrepaired_total = int(artifact_risk.get("unrepaired_total", 0) or 0)
+                if unrepaired_total > 0:
+                    high_unrepaired = int(artifact_risk.get("high_unrepaired", 0) or 0)
+                    medium_unrepaired = int(artifact_risk.get("medium_unrepaired", 0) or 0)
+                    risk_score = int(artifact_risk.get("risk_score", 0) or 0)
+                    # Escalate unresolved transcript contamination only when risk is meaningful.
+                    risk_severity = (
+                        "warning"
+                        if (high_unrepaired > 0 or risk_score >= 6 or (high_unrepaired + medium_unrepaired) >= 3)
+                        else "info"
+                    )
+                    breakdown = artifact_risk.get("breakdown", {})
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": risk_severity,
+                        "check": "stage07_transcript_artifact_risk",
+                        "message": (
+                            "Stage 07 unresolved transcript artifact risk: "
+                            f"{breakdown} (risk_score={risk_score}, unrepaired_total={unrepaired_total}, "
+                            f"repaired_total={int(artifact_risk.get('repaired_total', 0) or 0)})"
+                        ),
+                        "s07": str(s07_path),
+                    })
+                    if risk_severity in {"error", "warning"}:
+                        check_counts[f"{risk_severity}:stage07_transcript_artifact_risk"] += 1
 
                 if (
                     args.max_damaged_token_ratio is not None
@@ -2217,30 +2362,59 @@ def main() -> None:
                     checks_raw = existing_item.get("checks")
                     checks_set: Set[str] = set()
                     if isinstance(checks_raw, list):
-                        checks_set = {
-                            str(v).strip()
-                            for v in checks_raw
-                            if isinstance(v, str) and str(v).strip()
-                        }
+                        for raw_check in checks_raw:
+                            if not isinstance(raw_check, str):
+                                continue
+                            check_name = raw_check.strip()
+                            if not check_name:
+                                continue
+                            if (
+                                not preserve_input_quarantine_ids
+                                and check_name == "preexisting_quarantine"
+                            ):
+                                continue
+                            if _is_contract_only_issue(check_name, check_name, ""):
+                                continue
+                            checks_set.add(check_name)
                     reasons_raw = existing_item.get("reasons")
                     reasons_list: List[Dict[str, str]] = []
                     if isinstance(reasons_raw, list):
                         for reason in reasons_raw:
                             if not isinstance(reason, dict):
                                 continue
+                            reason_check = str(reason.get("check", "unknown"))
+                            reason_issue_code = str(reason.get("issue_code", ""))
+                            reason_signal_class = str(reason.get("signal_class", ""))
+                            if (
+                                not preserve_input_quarantine_ids
+                                and reason_check == "preexisting_quarantine"
+                            ):
+                                continue
+                            if _is_contract_only_issue(reason_check, reason_issue_code, reason_signal_class):
+                                continue
                             reasons_list.append(
                                 {
                                     "severity": str(reason.get("severity", "")),
-                                    "check": str(reason.get("check", "unknown")),
+                                    "check": reason_check,
                                     "message": str(reason.get("message", ""))[:300],
                                     "issue_severity": str(reason.get("issue_severity", "")),
                                     "gate_decision": str(reason.get("gate_decision", "")),
                                     "scope_type": str(reason.get("scope_type", "")),
-                                    "issue_code": str(reason.get("issue_code", "")),
-                                    "signal_class": str(reason.get("signal_class", "")),
+                                    "issue_code": reason_issue_code,
+                                    "signal_class": reason_signal_class,
                                     "remediation_path": str(reason.get("remediation_path", "")),
                                 }
                             )
+                    # Rebuild checks from filtered reasons to avoid retaining
+                    # contract-only checks that were dropped above.
+                    if reasons_list:
+                        checks_set.update(
+                            str(r.get("check", "unknown")).strip()
+                            for r in reasons_list
+                            if str(r.get("check", "")).strip()
+                        )
+                    if not checks_set and not reasons_list:
+                        continue
                     quarantine_items[vid] = {
                         "video_id": vid,
                         "source": existing_item.get("source") or source_by_vid.get(vid),
@@ -2248,38 +2422,45 @@ def main() -> None:
                         "reasons": reasons_list,
                     }
 
-        for vid in sorted(quarantine_video_ids):
-            if vid not in manifest_ids:
-                continue
-            item = quarantine_items.setdefault(
-                vid,
-                {
-                    "video_id": vid,
-                    "source": source_by_vid.get(vid),
-                    "checks": set(),
-                    "reasons": [],
-                },
-            )
-            if "preexisting_quarantine" not in item["checks"]:
-                item["checks"].add("preexisting_quarantine")
-                item["reasons"].append(
+        if preserve_input_quarantine_ids:
+            for vid in sorted(quarantine_video_ids):
+                if vid not in manifest_ids:
+                    continue
+                item = quarantine_items.setdefault(
+                    vid,
                     {
-                        "severity": "error",
-                        "check": "preexisting_quarantine",
-                        "message": "Video is quarantined by prior run input.",
-                        "issue_severity": "",
-                        "gate_decision": "block",
-                        "scope_type": "video",
-                        "issue_code": "preexisting_quarantine",
-                        "signal_class": "quarantine_gate",
-                        "remediation_path": "quarantine",
-                    }
+                        "video_id": vid,
+                        "source": source_by_vid.get(vid),
+                        "checks": set(),
+                        "reasons": [],
+                    },
                 )
+                if "preexisting_quarantine" not in item["checks"]:
+                    item["checks"].add("preexisting_quarantine")
+                    item["reasons"].append(
+                        {
+                            "severity": "error",
+                            "check": "preexisting_quarantine",
+                            "message": "Video is quarantined by prior run input.",
+                            "issue_severity": "",
+                            "gate_decision": "block",
+                            "scope_type": "video",
+                            "issue_code": "preexisting_quarantine",
+                            "signal_class": "quarantine_gate",
+                            "remediation_path": "quarantine",
+                        }
+                    )
 
     if emit_quarantine:
         for issue in issues:
             sev = str(issue.get("severity", "")).strip().lower()
             if sev not in quarantine_severities:
+                continue
+            if _is_contract_only_issue(
+                str(issue.get("check", "")),
+                str(issue.get("issue_code", "")),
+                str(issue.get("signal_class", "")),
+            ):
                 continue
             vid = str(issue.get("video_id", "")).strip()
             if not vid or vid == "*" or vid not in manifest_ids:
@@ -2413,6 +2594,7 @@ def main() -> None:
                 "review": summary_counts["review"],
                 "block": summary_counts["block"],
                 "signal_class_counts": dict(signal_class_counts),
+                "decision_source": "manifest_validation",
             },
             "videos": videos_payload,
         }
@@ -2451,7 +2633,7 @@ def main() -> None:
                         artifact_paths.add(p)
 
                 for issue in raw_issues:
-                    for key in ("s01", "s05", "s06", "s06c", "s07", "s07_validation", "verify", "s09", "stage08_report"):
+                    for key in ("s01", "s05", "s06", "s06c", "s07", "s07b", "s07_validation", "verify", "s09", "stage08_report"):
                         p = issue.get(key)
                         if isinstance(p, str) and p.strip():
                             artifact_paths.add(p)
@@ -2492,6 +2674,7 @@ def main() -> None:
     missing_s05_effective = sum(1 for vid in missing_s05 if vid in effective_manifest_ids)
     missing_s06c_effective = sum(1 for vid in missing_s06c if vid in effective_manifest_ids)
     missing_s07_effective = sum(1 for vid in missing_s07 if vid in effective_manifest_ids)
+    missing_s07b_effective = sum(1 for vid in missing_s07b if vid in effective_manifest_ids)
     missing_s09_effective = sum(1 for vid in missing_s09 if vid in effective_manifest_ids)
 
     complete = (
@@ -2499,6 +2682,7 @@ def main() -> None:
         and (not args.check_stage05_audio or missing_s05_effective == 0)
         and missing_s06c_effective == 0
         and missing_s07_effective == 0
+        and missing_s07b_effective == 0
         and (not args.check_stage09_chunks or missing_s09_effective == 0)
     )
     passed = complete and errors == 0 and (warnings == 0 if args.strict else True)
@@ -2621,6 +2805,7 @@ def main() -> None:
             **({"missing_05_audio_features": len(missing_s05)} if args.check_stage05_audio else {}),
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
+            "missing_07b_enrichment_verify": len(missing_s07b),
             **({"missing_09_chunks": len(missing_s09)} if args.check_stage09_chunks else {}),
         },
         "stage01_presence_required": not bool(args.skip_stage01_presence),
@@ -2751,7 +2936,8 @@ def main() -> None:
         print(
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
             f"missing 06b.LLM.verify={len(missing_verify)}, invalid 06b.LLM.verify={len(invalid_verify)}, "
-            f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}"
+            f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}, "
+            f"missing 07b.LLM.enrichment-verify={len(missing_s07b)}"
             + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
             + (f", missing 09.EXT.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )

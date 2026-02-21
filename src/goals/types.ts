@@ -18,6 +18,7 @@ export type {
   UserGoalUpdate,
   GoalWithProgress,
   GoalTreeNode,
+  GoalPhase,
 } from "@/src/db/goalTypes"
 
 /**
@@ -193,6 +194,14 @@ export type GoalGraphLevel = 0 | 1 | 2 | 3
 export type GoalTemplateType = "milestone_ladder" | "habit_ramp"
 
 /**
+ * Priority classification for onboarding — controls which goals are auto-enabled.
+ * core: first 3-4 foundational goals per area (auto-enabled)
+ * progressive: intermediate goals (shown but off by default)
+ * niche: specialized goals (collapsed/hidden until expanded)
+ */
+export type GoalPriority = "core" | "progressive" | "niche"
+
+/**
  * A goal template in the static goal graph catalog.
  * Used by "Just get me started" to generate user goals from a template.
  */
@@ -207,6 +216,10 @@ export interface GoalTemplate {
   defaultMilestoneConfig: MilestoneLadderConfig | null
   defaultRampSteps: HabitRampStep[] | null
   linkedMetric: LinkedMetric
+  priority: GoalPriority
+  requiresOptIn: boolean
+  graduation_criteria: string | null
+  blindSpotTool: boolean
 }
 
 /**
@@ -265,4 +278,145 @@ export interface BadgeStatus {
   progress: number
   tier: BadgeTier
   unlocked: boolean
+}
+
+// ============================================================================
+// Time-of-Day Types (Phase 6.5)
+// ============================================================================
+
+export type TimeOfDayBracket = "morning" | "afternoon" | "evening" | "night"
+
+export interface WeeklyRhythm {
+  activeDays: number
+  peakBracket: TimeOfDayBracket | null
+  bracketCounts: Record<TimeOfDayBracket, number>
+}
+
+// ============================================================================
+// Pacing Types (Phase 6.7)
+// ============================================================================
+
+export type PacingStatus = "ahead" | "on-pace" | "behind"
+
+export interface PacingInfo {
+  actualRate: number
+  projectedRate: number
+  pacingRatio: number
+  status: PacingStatus
+  daysActive: number
+}
+
+// ============================================================================
+// Tier Upgrade Types (Phase 6.8)
+// ============================================================================
+
+export interface TierUpgradeEvent {
+  badgeId: string
+  badgeTitle: string
+  previousTier: BadgeTier
+  newTier: BadgeTier
+}
+
+// ============================================================================
+// Milestone Celebration Types (Phase 6.3)
+// ============================================================================
+
+export interface MilestoneCelebrationData {
+  milestoneNumber: number
+  totalMilestones: number
+  ladderPosition: number
+  currentValue: number
+  milestoneValue: number
+  projectedNext: string | null
+  badgeTierUpgrade: TierUpgradeEvent | null
+}
+
+// ============================================================================
+// Weekly Review Types (Phase 6.9)
+// ============================================================================
+
+export interface WeeklyGoalMomentum {
+  goalId: string
+  title: string
+  completionRate: number
+  trend: "improving" | "stable" | "declining"
+  goalNature: "input" | "outcome" | null
+}
+
+export interface PhaseTransitionEvent {
+  goalId: string
+  goalTitle: string
+  previousPhase: GoalPhase | null
+  newPhase: GoalPhase
+}
+
+export interface WeeklyReviewData {
+  overallMomentumScore: number
+  goalsCompleted: number
+  goalsTotal: number
+  bestDay: string | null
+  worstDay: string | null
+  milestonesHit: number
+  goalMomentum: WeeklyGoalMomentum[]
+  tierUpgrades: TierUpgradeEvent[]
+  phaseTransitions: PhaseTransitionEvent[]
+}
+
+// ============================================================================
+// Cross-Area Connection Types (Phase 3.4)
+// ============================================================================
+
+export type CrossAreaRelationship = "supports" | "reinforces" | "enables"
+
+export interface CrossAreaEdge {
+  sourceId: string
+  targetId: string
+  weight: number
+  relationship: CrossAreaRelationship
+}
+
+// ============================================================================
+// Goal Setup Wizard Types (Phase 4)
+// ============================================================================
+
+export type DaygamePath = "fto" | "abundance"
+
+export interface SetupCustomGoal {
+  id: string
+  title: string
+  categoryId: string
+  target: number
+  period: string
+}
+
+export interface SetupCustomCategory {
+  id: string
+  name: string
+}
+
+export interface GoalSetupSelections {
+  path: DaygamePath
+  selectedAreas: Set<string>
+  selectedGoalIds: Set<string>
+  targets: Record<string, number>
+  curveConfigs: Record<string, MilestoneLadderConfig>
+  customGoals: SetupCustomGoal[]
+  customCategories: SetupCustomCategory[]
+}
+
+// ============================================================================
+// Will Gate & Bottleneck Types (Diagnostic Layer)
+// ============================================================================
+
+export interface WillGateResult {
+  gateTriggered: boolean
+  ratio: number
+  message: string
+}
+
+export interface BottleneckResult {
+  willGate: WillGateResult | null
+  bottleneckGoalId: string | null
+  description: string
+  recommendedFocus: string
 }

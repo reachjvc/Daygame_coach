@@ -154,9 +154,10 @@ Stage notes (what each stage is for):
 - `06d.DET.sanitize`: deterministic contamination handling and Stage 07 evidence allowlists.
 - `06e.LLM.quality-check`: focused transcript quality assessment (ASR artifact detection, damage severity, repair suggestions).
 - `06f.DET.damage-map`: normalize segment damage reasons and coverage metrics (reads 06e quality data).
-- `06g.LLM.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments. Batches 5-10 seeds per prompt (~5x fewer calls). Skips non-infield videos automatically (`--skip-video-type-filter` to override).
+- `06g.LLM.damage-adjudicator`: targeted LLM adjudication only for risky seeded segments. Batches 5-10 seeds per prompt (~5x fewer calls). Skips non-infield videos by stage applicability rule.
 - `06h.DET.confidence-propagation`: turn damage/adjudication into per-segment/per-conversation confidence.
 - `07.LLM.content`: apply 06e transcript repairs + produce enrichments; REJECT videos already quarantined upstream, FLAG/APPROVE both proceed.
+- `07b.LLM.enrichment-verify`: LLM quality gate over Stage 07 enrichments; emits canonical pass/review/block artifact and quarantines block decisions before Stage 08/09.
 - `08.DET.taxonomy-validation`: deterministic taxonomy drift gate with per-video quarantine semantics.
 - `09.EXT.chunk-embed`: convert enrichments to retrieval chunks + embeddings (Ollama). Confidence floor (0.3) drops low-quality chunks pre-embed. Mtime-based stale output detection auto-forces re-chunk when input is newer than output.
 - `10.EXT.ingest`: ingest eligible chunks to DB with readiness/taxonomy/semantic gates. Mtime-based stale output detection auto-forces re-ingest when chunks are newer than last ingest.

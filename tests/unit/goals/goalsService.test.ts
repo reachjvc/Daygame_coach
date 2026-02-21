@@ -19,8 +19,14 @@ import {
   computeProjectedDate,
   findExistingByTemplate,
   generateDirtyDogInserts,
+  getTimeOfDayBracket,
+  isAlmostComplete,
+  getWeeklyRhythm,
+  computePacing,
+  buildMilestoneCelebrationData,
 } from "@/src/goals/goalsService"
-import type { GoalWithProgress, GoalFilterState } from "@/src/goals/types"
+import type { GoalWithProgress, GoalFilterState, BadgeStatus } from "@/src/goals/types"
+import type { DailyGoalSnapshotRow } from "@/src/db/goalTypes"
 
 // ============================================================================
 // Test Fixtures
@@ -57,6 +63,10 @@ function createGoalWithProgress(overrides: Partial<GoalWithProgress> = {}): Goal
     template_id: null,
     milestone_config: null,
     ramp_steps: null,
+    motivation_note: null,
+    streak_freezes_available: 0,
+    streak_freezes_used: 0,
+    last_freeze_date: null,
     progress_percentage: 0,
     is_complete: false,
     days_remaining: null,
@@ -1119,5 +1129,360 @@ describe("deriveTimeHorizon", () => {
       const templateIds = inserts.map((i) => i.template_id)
       expect(templateIds).toContain("l3_sustained_rotation")
     })
+  })
+})
+
+// ============================================================================
+// Time-of-Day Helpers (Phase 6.5)
+// ============================================================================
+
+describe("getTimeOfDayBracket", () => {
+  test("returns morning for hours 5-11", () => {
+    expect(getTimeOfDayBracket(5)).toBe("morning")
+    expect(getTimeOfDayBracket(8)).toBe("morning")
+    expect(getTimeOfDayBracket(11)).toBe("morning")
+  })
+
+  test("returns afternoon for hours 12-16", () => {
+    expect(getTimeOfDayBracket(12)).toBe("afternoon")
+    expect(getTimeOfDayBracket(14)).toBe("afternoon")
+    expect(getTimeOfDayBracket(16)).toBe("afternoon")
+  })
+
+  test("returns evening for hours 17-20", () => {
+    expect(getTimeOfDayBracket(17)).toBe("evening")
+    expect(getTimeOfDayBracket(19)).toBe("evening")
+    expect(getTimeOfDayBracket(20)).toBe("evening")
+  })
+
+  test("returns night for hours 21-4", () => {
+    expect(getTimeOfDayBracket(21)).toBe("night")
+    expect(getTimeOfDayBracket(23)).toBe("night")
+    expect(getTimeOfDayBracket(0)).toBe("night")
+    expect(getTimeOfDayBracket(3)).toBe("night")
+    expect(getTimeOfDayBracket(4)).toBe("night")
+  })
+
+  test("boundary: 4→night, 5→morning", () => {
+    expect(getTimeOfDayBracket(4)).toBe("night")
+    expect(getTimeOfDayBracket(5)).toBe("morning")
+  })
+
+  test("boundary: 11→morning, 12→afternoon", () => {
+    expect(getTimeOfDayBracket(11)).toBe("morning")
+    expect(getTimeOfDayBracket(12)).toBe("afternoon")
+  })
+
+  test("boundary: 16→afternoon, 17→evening", () => {
+    expect(getTimeOfDayBracket(16)).toBe("afternoon")
+    expect(getTimeOfDayBracket(17)).toBe("evening")
+  })
+
+  test("boundary: 20→evening, 21→night", () => {
+    expect(getTimeOfDayBracket(20)).toBe("evening")
+    expect(getTimeOfDayBracket(21)).toBe("night")
+  })
+})
+
+describe("isAlmostComplete", () => {
+  test("returns true when progress is at threshold", () => {
+    const goal = createGoalWithProgress({ current_value: 8, target_value: 10 })
+    expect(isAlmostComplete(goal)).toBe(true)
+  })
+
+  test("returns true when progress is above threshold but not complete", () => {
+    const goal = createGoalWithProgress({ current_value: 9, target_value: 10 })
+    expect(isAlmostComplete(goal)).toBe(true)
+  })
+
+  test("returns false when goal is complete", () => {
+    const goal = createGoalWithProgress({ current_value: 10, target_value: 10 })
+    expect(isAlmostComplete(goal)).toBe(false)
+  })
+
+  test("returns false when progress is below threshold", () => {
+    const goal = createGoalWithProgress({ current_value: 7, target_value: 10 })
+    expect(isAlmostComplete(goal)).toBe(false)
+  })
+
+  test("returns false when target_value is 0", () => {
+    const goal = createGoalWithProgress({ current_value: 5, target_value: 0 })
+    expect(isAlmostComplete(goal)).toBe(false)
+  })
+
+  test("respects custom threshold", () => {
+    const goal = createGoalWithProgress({ current_value: 7, target_value: 10 })
+    expect(isAlmostComplete(goal, 0.7)).toBe(true)
+    expect(isAlmostComplete(goal, 0.8)).toBe(false)
+  })
+})
+
+describe("getWeeklyRhythm", () => {
+  function createSnapshot(overrides: Partial<DailyGoalSnapshotRow> = {}): DailyGoalSnapshotRow {
+    return {
+      id: "snap-1",
+      user_id: "user-1",
+      goal_id: "goal-1",
+      snapshot_date: "2026-02-21",
+      current_value: 10,
+      target_value: 10,
+      was_complete: true,
+      current_streak: 3,
+      best_streak: 5,
+      period: "daily",
+      created_at: "2026-02-21T10:00:00Z",
+      ...overrides,
+    }
+  }
+
+  test("counts active days from unique snapshot dates", () => {
+    const snapshots = [
+      createSnapshot({ snapshot_date: "2026-02-17", created_at: "2026-02-17T09:00:00Z" }),
+      createSnapshot({ snapshot_date: "2026-02-18", created_at: "2026-02-18T14:00:00Z" }),
+      createSnapshot({ snapshot_date: "2026-02-19", created_at: "2026-02-19T18:00:00Z" }),
+    ]
+    const rhythm = getWeeklyRhythm(snapshots)
+    expect(rhythm.activeDays).toBe(3)
+  })
+
+  test("only counts completed goals as active", () => {
+    const snapshots = [
+      createSnapshot({ snapshot_date: "2026-02-17", was_complete: true }),
+      createSnapshot({ snapshot_date: "2026-02-18", was_complete: false }),
+      createSnapshot({ snapshot_date: "2026-02-19", was_complete: true }),
+    ]
+    const rhythm = getWeeklyRhythm(snapshots)
+    expect(rhythm.activeDays).toBe(2)
+  })
+
+  test("identifies peak bracket", () => {
+    const snapshots = [
+      createSnapshot({ created_at: "2026-02-17T09:00:00Z" }), // morning
+      createSnapshot({ created_at: "2026-02-18T10:00:00Z", snapshot_date: "2026-02-18" }), // morning
+      createSnapshot({ created_at: "2026-02-19T15:00:00Z", snapshot_date: "2026-02-19" }), // afternoon
+    ]
+    const rhythm = getWeeklyRhythm(snapshots)
+    expect(rhythm.peakBracket).toBe("morning")
+    expect(rhythm.bracketCounts.morning).toBe(2)
+    expect(rhythm.bracketCounts.afternoon).toBe(1)
+  })
+
+  test("returns null peakBracket when no completed snapshots", () => {
+    const snapshots = [
+      createSnapshot({ was_complete: false }),
+    ]
+    const rhythm = getWeeklyRhythm(snapshots)
+    expect(rhythm.peakBracket).toBeNull()
+    expect(rhythm.activeDays).toBe(0)
+  })
+
+  test("handles empty snapshots", () => {
+    const rhythm = getWeeklyRhythm([])
+    expect(rhythm.activeDays).toBe(0)
+    expect(rhythm.peakBracket).toBeNull()
+    expect(rhythm.bracketCounts).toEqual({ morning: 0, afternoon: 0, evening: 0, night: 0 })
+  })
+
+  test("deduplicates same-day snapshots for active days count", () => {
+    const snapshots = [
+      createSnapshot({ goal_id: "g1", snapshot_date: "2026-02-17", created_at: "2026-02-17T09:00:00Z" }),
+      createSnapshot({ goal_id: "g2", snapshot_date: "2026-02-17", created_at: "2026-02-17T10:00:00Z" }),
+    ]
+    const rhythm = getWeeklyRhythm(snapshots)
+    expect(rhythm.activeDays).toBe(1)
+    expect(rhythm.bracketCounts.morning).toBe(2) // both snapshots contribute to bracket counts
+  })
+})
+
+// ============================================================================
+// Projection Pacing (Phase 6.7)
+// ============================================================================
+
+describe("computePacing", () => {
+  const rampSteps = [
+    { frequencyPerWeek: 5, durationWeeks: 4 },
+    { frequencyPerWeek: 10, durationWeeks: 4 },
+    { frequencyPerWeek: 15, durationWeeks: 4 },
+  ] as unknown as Record<string, unknown>[]
+
+  test("returns null for non-habit_ramp goals", () => {
+    const goal = createGoalWithProgress({ goal_type: "recurring", ramp_steps: rampSteps })
+    expect(computePacing(goal)).toBeNull()
+  })
+
+  test("returns null when no ramp_steps", () => {
+    const goal = createGoalWithProgress({ goal_type: "habit_ramp", ramp_steps: null })
+    expect(computePacing(goal)).toBeNull()
+  })
+
+  test("returns null for empty ramp_steps array", () => {
+    const goal = createGoalWithProgress({ goal_type: "habit_ramp", ramp_steps: [] })
+    expect(computePacing(goal)).toBeNull()
+  })
+
+  test("behind: actual rate below 85% of projected", () => {
+    const now = new Date("2026-02-21T12:00:00Z")
+    const goal = createGoalWithProgress({
+      goal_type: "habit_ramp",
+      ramp_steps: rampSteps,
+      current_value: 5,
+      period_start_date: "2026-02-01", // ~20 days = ~2.86 weeks
+      created_at: "2026-02-01T00:00:00Z",
+    })
+    const pacing = computePacing(goal, now)
+    expect(pacing).not.toBeNull()
+    expect(pacing!.projectedRate).toBe(5) // still in step 1
+    expect(pacing!.status).toBe("behind") // 5/2.86 ≈ 1.75, ratio ≈ 0.35
+  })
+
+  test("on-pace: actual rate within 85-115% of projected", () => {
+    const now = new Date("2026-02-21T12:00:00Z")
+    const goal = createGoalWithProgress({
+      goal_type: "habit_ramp",
+      ramp_steps: rampSteps,
+      current_value: 14, // 14 / 2.86 weeks ≈ 4.9 per week, projected 5 → ratio ≈ 0.98
+      period_start_date: "2026-02-01",
+      created_at: "2026-02-01T00:00:00Z",
+    })
+    const pacing = computePacing(goal, now)
+    expect(pacing).not.toBeNull()
+    expect(pacing!.status).toBe("on-pace")
+  })
+
+  test("ahead: actual rate above 115% of projected", () => {
+    const now = new Date("2026-02-21T12:00:00Z")
+    const goal = createGoalWithProgress({
+      goal_type: "habit_ramp",
+      ramp_steps: rampSteps,
+      current_value: 25, // 25 / 2.86 ≈ 8.75, projected 5 → ratio ≈ 1.75
+      period_start_date: "2026-02-01",
+      created_at: "2026-02-01T00:00:00Z",
+    })
+    const pacing = computePacing(goal, now)
+    expect(pacing).not.toBeNull()
+    expect(pacing!.status).toBe("ahead")
+  })
+
+  test("uses correct ramp step based on weeks elapsed", () => {
+    // 35 days = 5 weeks → into step 2 (after 4 weeks of step 1)
+    const now = new Date("2026-03-08T12:00:00Z")
+    const goal = createGoalWithProgress({
+      goal_type: "habit_ramp",
+      ramp_steps: rampSteps,
+      current_value: 50,
+      period_start_date: "2026-02-01",
+      created_at: "2026-02-01T00:00:00Z",
+    })
+    const pacing = computePacing(goal, now)
+    expect(pacing).not.toBeNull()
+    expect(pacing!.projectedRate).toBe(10) // step 2
+  })
+
+  test("falls back to created_at when no period_start_date", () => {
+    const now = new Date("2026-02-15T12:00:00Z")
+    const goal = createGoalWithProgress({
+      goal_type: "habit_ramp",
+      ramp_steps: rampSteps,
+      current_value: 10,
+      period_start_date: "",
+      created_at: "2026-02-01T00:00:00Z",
+    })
+    const pacing = computePacing(goal, now)
+    expect(pacing).not.toBeNull()
+    expect(pacing!.daysActive).toBe(14)
+  })
+})
+
+// ============================================================================
+// Milestone Celebration Data (Phase 6.3)
+// ============================================================================
+
+describe("buildMilestoneCelebrationData", () => {
+  const milestoneConfig = {
+    start: 1,
+    target: 100,
+    steps: 5,
+    curveTension: 0.5,
+  } as unknown as Record<string, unknown>
+
+  test("returns null when no milestone_config", () => {
+    const goal = createGoalWithProgress({ milestone_config: null })
+    expect(buildMilestoneCelebrationData(goal)).toBeNull()
+  })
+
+  test("returns null when current_value is below first milestone", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 0,
+    })
+    expect(buildMilestoneCelebrationData(goal)).toBeNull()
+  })
+
+  test("returns celebration data for mid-ladder milestone", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 50,
+      target_value: 100,
+    })
+    const data = buildMilestoneCelebrationData(goal)
+    expect(data).not.toBeNull()
+    expect(data!.currentValue).toBe(50)
+    expect(data!.totalMilestones).toBe(5)
+    expect(data!.milestoneNumber).toBeGreaterThan(0)
+    expect(data!.ladderPosition).toBeGreaterThan(0)
+    expect(data!.ladderPosition).toBeLessThanOrEqual(100)
+  })
+
+  test("returns 100% ladder position for final milestone", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 100,
+      target_value: 100,
+    })
+    const data = buildMilestoneCelebrationData(goal)
+    expect(data).not.toBeNull()
+    expect(data!.milestoneNumber).toBe(data!.totalMilestones)
+    expect(data!.ladderPosition).toBe(100)
+  })
+
+  test("includes badge tier upgrade when provided", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 50,
+    })
+    const prevBadges: BadgeStatus[] = [
+      { badgeId: "b1", title: "Badge 1", progress: 20, tier: "none", unlocked: false },
+    ]
+    const currBadges: BadgeStatus[] = [
+      { badgeId: "b1", title: "Badge 1", progress: 30, tier: "bronze", unlocked: true },
+    ]
+    const data = buildMilestoneCelebrationData(goal, prevBadges, currBadges)
+    expect(data).not.toBeNull()
+    expect(data!.badgeTierUpgrade).not.toBeNull()
+    expect(data!.badgeTierUpgrade!.newTier).toBe("bronze")
+  })
+
+  test("returns null badgeTierUpgrade when no upgrades", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 50,
+    })
+    const prevBadges: BadgeStatus[] = [
+      { badgeId: "b1", title: "Badge 1", progress: 30, tier: "bronze", unlocked: true },
+    ]
+    const data = buildMilestoneCelebrationData(goal, prevBadges, prevBadges)
+    expect(data).not.toBeNull()
+    expect(data!.badgeTierUpgrade).toBeNull()
+  })
+
+  test("projectedNext is null without ramp_steps", () => {
+    const goal = createGoalWithProgress({
+      milestone_config: milestoneConfig,
+      current_value: 50,
+      ramp_steps: null,
+    })
+    const data = buildMilestoneCelebrationData(goal)
+    expect(data).not.toBeNull()
+    expect(data!.projectedNext).toBeNull()
   })
 })

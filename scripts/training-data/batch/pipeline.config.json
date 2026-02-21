@@ -9,14 +9,28 @@
       },
       "block_warning_checks": [],
       "max_warning_checks_by_class": {
+        "contamination_risk": 2,
         "transcript_quality": 12,
         "routing_mismatch": 2
       },
+      "block_warning_class_by_content_type": {
+        "podcast": [
+          "routing_mismatch"
+        ],
+        "talking_head": [
+          "routing_mismatch"
+        ]
+      },
       "review_warning_class_budget_by_content_type": {
         "infield": {
-          "transcript_quality": 4
+          "transcript_quality": 4,
+          "contamination_risk": 0
+        },
+        "podcast": {
+          "contamination_risk": 0
         },
         "talking_head": {
+          "contamination_risk": 0,
           "transcript_quality": 1,
           "routing_mismatch": 0
         }

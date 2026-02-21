@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, Target, Layers, Star, Globe, Play, Rocket, Brain } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, BarChart3, Wand2, Zap, PenTool, Crosshair, LayoutGrid, Archive, ImageIcon, Eye, Palette, Target, Layers, Star, Globe, Play, Rocket, Brain, FlaskConical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -76,6 +76,12 @@ const testPages = [
     href: "/test/old-goals",
     description: "Original goals hub (archived from Phase 4 transition)",
     icon: Archive,
+  },
+  {
+    name: "Goals Old (Current Hub)",
+    href: "/test/goals-old",
+    description: "Current production goals hub — daily/strategic views, themes, catalog, celebrations",
+    icon: LayoutGrid,
   },
   {
     name: "Archetype Image Picker",
@@ -168,6 +174,12 @@ const testPages = [
     icon: Sparkles,
   },
   {
+    name: "Goal Flow V9",
+    href: "/test/goalsv9",
+    description: "4 visual directions: Living Nebula, Deep Ocean, Aurora Borealis, Cosmic Web — background & orrery focus",
+    icon: Sparkles,
+  },
+  {
     name: "Competitor Sites",
     href: "/test/competitors",
     description: "21 competitor & inspiration sites with screenshots, notes, and recommendations",
@@ -178,6 +190,12 @@ const testPages = [
     href: "/test/animations",
     description: "Animated product showcase for demos and investor reviews",
     icon: Play,
+  },
+  {
+    name: "Goal Achievement Model",
+    href: "/test/goal-model",
+    description: "Universal goal framework with 8-panelist debate — decomposition tree + action/skills formula",
+    icon: FlaskConical,
   },
 ]
 

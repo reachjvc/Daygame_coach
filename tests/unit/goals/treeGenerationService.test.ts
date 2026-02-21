@@ -160,9 +160,9 @@ describe("generateGoalTreeInserts", () => {
       expect(inserts[0]._tempParentId).toBeNull()
     })
 
-    it("creates 17 L3 children beneath it", () => {
+    it("creates 20 L3 children beneath it", () => {
       const l3s = inserts.filter((i) => i.goal_level === 3)
-      expect(l3s.length).toBe(17) // 9 field_work + 4 results + 4 dirty_dog
+      expect(l3s.length).toBe(20) // 9+9 field_work + 4 results + 3 dirty_dog + gap templates
     })
   })
 

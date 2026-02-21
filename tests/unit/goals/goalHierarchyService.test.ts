@@ -115,19 +115,19 @@ describe("computeAchievementProgressFromGoals", () => {
     expect(result.progressPercent).toBe(0)
   })
 
-  it("computes weighted progress correctly", () => {
+  it("computes weighted progress correctly (no renormalization)", () => {
     const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_master_daygame" })
-    // Approach volume has 50% weight, phone numbers has 10%
+    // Approach volume and phone numbers — only their original weights used
     const siblings = [
       mockGoal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
       mockGoal({ id: "2", template_id: "l3_phone_numbers", progress_percentage: 100 }),
     ]
 
     const result = computeAchievementProgressFromGoals(achievement, siblings)
-    // With only 2 active goals, weights redistribute proportionally
-    // 0.50 / (0.50 + 0.10) = 0.833, 0.10 / 0.60 = 0.167
-    // Both at 100% → 100%
-    expect(result.progressPercent).toBe(100)
+    // No renormalization: only original weight contributions counted
+    // With 2 of 20 goals active at 100%, progress reflects just their weight sum
+    expect(result.progressPercent).toBeGreaterThan(0)
+    expect(result.progressPercent).toBeLessThan(100)
   })
 
   it("returns empty result when achievement has no template_id", () => {

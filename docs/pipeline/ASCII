@@ -165,8 +165,8 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  prompt (same-conv seeds)|
 |                          |
 |  Skips non-infield videos|    video_type from 06d
-|  (no conversations to    |    --skip-video-type-filter
-|  adjudicate)             |    to override
+|  (no conversations to    |    strict applicability
+|  adjudicate)             |    rule
 +--------------------------+
              |
              |  data/06g.LLM.damage-adjudicator/.../*.damage-adjudication.json
@@ -177,8 +177,8 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  Propagates confidence   |    Reads 06g adjudications
 |  scores from adjudicated |    Stamps per-segment
 |  seeds to all segments   |    confidence scores
-|  Band thresholds tunable |    --confidence-band-high-threshold
-|                          |    --confidence-band-medium-threshold
+|  Band thresholds fixed   |    runner path uses
+|                          |    canonical defaults
 +--------------------------+
              |
              |  data/06h.DET.confidence-propagation/.../*.confidence.report.json
@@ -212,6 +212,23 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 +--------------------------+
              |
              |  data/07.LLM.content/.../*.enriched.json
+             v
++--------------------------+
+| 07b.LLM. ENRICH VERIFY   |    Canonical LLM QA gate
+|  (quality gate)          |    between 07 and 08
+|                          |
+|  LLM-only policy:        |    no deterministic/
+|   no bypass shortcuts    |    heuristic/fallback bypass
+|  Checks:                 |    evidence alignment,
+|   - hallucination risk   |    phase coherence,
+|   - weak evidence claims |    unsafe overreach
+|                          |
+|  Output:                 |    data/07b.LLM.enrichment-verify/
+|   pass/review/block      |    *.enrichment-verify.json
+|   with canonical issues  |    quarantine on block
++--------------------------+
+             |
+             |  data/07b.LLM.enrichment-verify/.../*.enrichment-verify.json
              v
 +--------------------------+
 | 08.DET. TAXONOMY VALID.  |    No LLM — pure aggregation
@@ -257,7 +274,7 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  Confidence floor:       |    Chunks with score < 0.3
 |   Filters low-quality    |    dropped before embedding
 |   chunks pre-embed       |
-|  Floor tunable           |    --min-chunk-confidence
+|  Floor fixed in runner   |    canonical path default
 |  Emits floor telemetry   |    minChunkConfidence
 |                          |    preFilterChunkCount
 |                          |    droppedChunksBelowFloor
@@ -283,6 +300,20 @@ Never trade quality for speed. Never lower gates to "get content flowing."
 |  unchanged chunks        |    detection + mtime
 |  + stale output detect   |    safety net
 +--------------------------+
+             |
+             |  Validation control plane (deterministic)
+             |  - readiness policy supports:
+             |      max_warning_checks_by_class
+             |      review_warning_class_budget_by_content_type
+             |      block_warning_class_by_content_type
+             |  - canonical gate writer in --validate flow:
+             |      validate_stage_report.py
+             |  - canonical gate marker:
+             |      summary.decision_source=stage_report_readiness
+             v
+     validation artifacts
+  data/validation/stage_reports/
+  data/validation/gates/*.gate.json
              |
              v
      Supabase embeddings

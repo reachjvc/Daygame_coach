@@ -3,13 +3,14 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock } from "lucide-react"
+import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock, ShieldCheck } from "lucide-react"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import { getGoalAccentColor } from "../goalHierarchyService"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
 import { GoalInputWidget } from "./GoalInputWidget"
+import { ProjectionTimeline } from "./ProjectionTimeline"
 import type { GoalWithProgress } from "../types"
-import { getMilestoneLadderValues } from "../goalsService"
+import { getMilestoneLadderValues, isAlmostComplete, getGoalStaleness } from "../goalsService"
 import type { ProjectedDateInfo } from "../goalsService"
 
 function formatDaysRemaining(days: number): string {
@@ -151,6 +152,13 @@ export function GoalCard({
             )}
           </div>
 
+          {/* Motivation note — shown when goal is stale or streak broke */}
+          {goal.motivation_note && (goal.current_streak === 0 || getGoalStaleness(goal.updated_at) >= 7) && (
+            <p className="mt-1 text-xs text-muted-foreground italic">
+              &ldquo;{goal.motivation_note}&rdquo;
+            </p>
+          )}
+
           {/* Progress bar */}
           <div className="mt-2 flex items-center gap-2">
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
@@ -172,6 +180,17 @@ export function GoalCard({
 
           {/* Meta row */}
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+            {goal.goal_phase && goal.goal_type === "habit_ramp" && goal.goal_level === 3 && (
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${
+                goal.goal_phase === "graduated"
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                  : goal.goal_phase === "consolidation"
+                  ? "bg-blue-500/10 text-blue-400 border-blue-500/25"
+                  : "bg-muted text-muted-foreground border-border"
+              }`}>
+                {goal.goal_phase === "graduated" ? "Graduated" : goal.goal_phase === "consolidation" ? "Consolidating" : "Learning"}
+              </span>
+            )}
             {goal.current_streak > 0 && (
               <span className="flex items-center gap-1">
                 <Flame className="size-3 text-orange-500" />
@@ -203,6 +222,17 @@ export function GoalCard({
               <span className="flex items-center gap-1 text-blue-400">
                 <Link className="size-3" />
                 Auto-synced
+              </span>
+            )}
+            {goal.streak_freezes_available > 0 && (
+              <span className="flex items-center gap-1 text-sky-400">
+                <ShieldCheck className="size-3" />
+                {goal.streak_freezes_available} {goal.streak_freezes_available === 1 ? "freeze" : "freezes"}
+              </span>
+            )}
+            {isAlmostComplete(goal) && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/25">
+                Almost there!
               </span>
             )}
           </div>
@@ -258,6 +288,11 @@ export function GoalCard({
               </div>
             )
           })()}
+
+          {/* Projection timeline for milestone goals */}
+          {goal.milestone_config && (
+            <ProjectionTimeline goal={goal} />
+          )}
 
           {/* Actions */}
           <div className="space-y-2">

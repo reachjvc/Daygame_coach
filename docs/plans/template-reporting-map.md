@@ -23,8 +23,8 @@ Maps every L3 goal template to its data source and input method.
 | l3_session_frequency | Session Frequency | Auto-sync (session) | `linkedMetric: sessions_weekly` | Weekly reset |
 | l3_consecutive_days | Consecutive Days Approaching | Manual counter | GoalInputWidget | User logs streak |
 | l3_hours_in_field | Hours in Field | Manual entry | GoalInputWidget | No auto-tracking |
-| l3_voice_notes | Voice Notes / Field Reports | NEEDS BUILD | Field report count | Phase 5: field report integration |
-| l3_approach_quality | Approach Quality Self-Rating | NEEDS BUILD | Field report quality | Phase 5: extract from reports |
+| l3_voice_notes | Voice Notes / Field Reports | Auto-sync (metric) | `linkedMetric: field_reports_weekly` | Weekly reset |
+| l3_approach_quality | Approach Quality Self-Rating | Auto-sync (metric) | `linkedMetric: approach_quality_avg_weekly` | Avg quality from Quick Log (1-10) |
 | l3_open_in_3_seconds | Open in <3 Seconds | Manual counter | GoalInputWidget | User logs |
 | l3_solo_sessions | Solo Sessions | Manual counter | GoalInputWidget | User logs |
 
@@ -244,17 +244,16 @@ All manual input.
 
 | Input Method | Count | Notes |
 |---|---|---|
-| Auto-sync (session/metrics) | 5 | Daygame only: approaches, sessions, numbers, instadates |
+| Auto-sync (session/metrics) | 7 | Daygame: approaches, sessions, numbers, instadates, field reports, quality |
 | Manual counter | ~70 | +1/+5/+10 buttons |
 | Manual entry | ~30 | Direct numeric input |
 | Boolean check | ~25 | Daily/weekly "Mark Done" |
-| **NEEDS BUILD** | **~11** | Phase 5 widgets required |
+| **NEEDS BUILD** | **~9** | Phase 5 widgets required |
 
 ### Phase 5 Build Dependencies
 
 | Widget | Templates It Feeds | Phase |
 |---|---|---|
-| Field report integration | l3_voice_notes, l3_approach_quality | 5.1 |
 | Meditation timer | l3_pg_meditation_hours, l3_pg_meditation_streak | 5.3 |
 | Workout logger | l3_f_consecutive_weeks, l3_f_cardio_weeks | 5.1 |
 | Vice streak tracker | l3_v_nofap_streak, l3_v_sober_days, l3_v_screen_streak | 5.4 |

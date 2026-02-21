@@ -47,6 +47,7 @@ STATUS_ALLOWED = {"PASS", "WARN", "FAIL"}
 CHECK_SEVERITY_ALLOWED = {"error", "warning", "info"}
 SIGNAL_CLASS_ALLOWED = {
     "artifact_contract",
+    "contamination_risk",
     "conversation_structure",
     "other_quality",
     "quarantine_gate",
@@ -68,6 +69,7 @@ POLICY_WARNING_BUDGET_EXCLUDED_CHECKS: Set[str] = {
     "missing_stage01_audio",
     "segment_text_modified",
     "stage07_normalization_repairs",
+    "stage07_validation_warnings",
     "stage08_validation_warning",
     "stage08_video_warning",
 }
@@ -137,6 +139,7 @@ def _canonical_issue_code(raw: str) -> str:
 def _remediation_path_for_signal_class(signal_class: str) -> str:
     mapping = {
         "artifact_contract": "contract_repair",
+        "contamination_risk": "transcript_review",
         "conversation_structure": "conversation_review",
         "other_quality": "manual_review",
         "quarantine_gate": "quarantine",
@@ -174,6 +177,8 @@ def _parse_counter_mapping(raw: Any) -> Counter[str]:
 
 def _signal_class_for_readiness_reason(reason_code: str, warning_classes: Counter[str]) -> str:
     reason = str(reason_code or "").strip()
+    if reason in {"preexisting_quarantine", "stage06b_reject", "quarantined"}:
+        return "quarantine_gate"
     if reason in SIGNAL_CLASS_ALLOWED:
         return reason
     if reason.startswith("policy_block_warning_class:"):
@@ -184,6 +189,10 @@ def _signal_class_for_readiness_reason(reason_code: str, warning_classes: Counte
         parts = reason.split(":")
         if len(parts) >= 2 and parts[1] in SIGNAL_CLASS_ALLOWED:
             return parts[1]
+    if reason.startswith("policy_block_warning_class_by_content_type:"):
+        parts = reason.split(":")
+        if len(parts) >= 3 and parts[2] in SIGNAL_CLASS_ALLOWED:
+            return parts[2]
     if reason.startswith("policy_block_warning_check:"):
         chk = reason.split(":", 1)[1].strip()
         return _warning_class_for_check(chk)
@@ -336,6 +345,57 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
+def _default_quarantine_candidates(manifest_path: Path, source_filter: Optional[str]) -> List[Path]:
+    root = _repo_root() / "data" / "validation" / "quarantine"
+    stem = _safe_name(manifest_path.stem)
+    candidates: List[Path] = []
+    if source_filter:
+        candidates.append(root / f"{stem}.{_safe_name(source_filter)}.json")
+    candidates.append(root / f"{stem}.json")
+    return candidates
+
+
+def _load_quarantine_ids(quarantine_path: Path) -> Set[str]:
+    payload = _load_json(quarantine_path)
+    if not isinstance(payload, dict):
+        raise ValueError("quarantine file is not a JSON object")
+
+    for key in ("quarantined_video_ids", "video_ids"):
+        raw = payload.get(key)
+        if isinstance(raw, list):
+            out: Set[str] = set()
+            for item in raw:
+                if not isinstance(item, str):
+                    continue
+                vid = item.strip()
+                if VIDEO_ID_RE.fullmatch(vid):
+                    out.add(vid)
+            return out
+    return set()
+
+
+def _resolve_quarantine_ids(
+    *,
+    manifest_path: Optional[Path],
+    source_filter: Optional[str],
+    explicit_quarantine_path: Optional[Path],
+) -> Tuple[Set[str], Optional[Path]]:
+    candidates: List[Path] = []
+    if explicit_quarantine_path is not None:
+        candidates.append(explicit_quarantine_path)
+    elif manifest_path is not None:
+        candidates.extend(_default_quarantine_candidates(manifest_path, source_filter))
+
+    for path in candidates:
+        if not path.exists():
+            if explicit_quarantine_path is not None:
+                raise ValueError(f"Quarantine file not found: {path}")
+            continue
+        ids = _load_quarantine_ids(path)
+        return ids, path
+    return set(), None
+
+
 def _load_content_type_from_conversations(path: Path) -> Optional[str]:
     data = _load_json(path)
     if not isinstance(data, dict):
@@ -443,6 +503,25 @@ def _parse_content_type_warning_class_budget(raw: str) -> Tuple[str, str, int]:
     return content_type, warning_class, int(budget_raw)
 
 
+def _parse_content_type_warning_class(raw: str) -> Tuple[str, str]:
+    """
+    Parse '<content_type>:<warning_class>' into (content_type, warning_class).
+    """
+    text = str(raw).strip()
+    if not text:
+        raise ValueError("empty value")
+    if ":" not in text:
+        raise ValueError("expected '<content_type>:<warning_class>'")
+    content_type, warning_class = text.split(":", 1)
+    content_type = content_type.strip()
+    warning_class = warning_class.strip()
+    if not content_type:
+        raise ValueError("missing content_type")
+    if not warning_class:
+        raise ValueError("missing warning_class")
+    return content_type, warning_class
+
+
 def _parse_stage07_warning_breakdown(message: str) -> Counter[str]:
     """
     Parse Stage 07 warning breakdowns encoded in the check message, e.g.:
@@ -491,8 +570,12 @@ def _warning_class_for_check(check: str) -> str:
     chk = str(check or "").strip().lower()
     if not chk:
         return "other_quality"
+    if chk.startswith("transcript_artifact_"):
+        return "contamination_risk"
     if chk in {"transcript_artifact", "segment_text_modified", "stage07_normalization_repairs", "stage07_validation_warnings"}:
         return "transcript_quality"
+    if chk in {"stage07_transcript_artifact_risk"}:
+        return "contamination_risk"
     if chk in {"prompt_variant_mismatch", "video_type_mismatch"}:
         return "routing_mismatch"
     if chk.startswith("stage08_"):
@@ -666,11 +749,14 @@ def _compute_readiness(
     source_filter: Optional[str],
     manifest_ids: Optional[Set[str]],
     missing_manifest_ids: Set[str],
+    quarantine_ids: Set[str],
+    quarantine_file: Optional[Path],
     block_warning_checks: Set[str],
     block_warning_classes: Set[str],
     max_warning_checks: Optional[int],
     max_warning_checks_by_type: Dict[str, int],
     max_warning_checks_by_class: Dict[str, int],
+    block_warning_class_by_content_type: Dict[str, Set[str]],
     review_warning_class_budget_by_content_type: Dict[str, Dict[str, int]],
 ) -> Dict[str, Any]:
     reports_by_vid: Dict[str, List[ReportRecord]] = defaultdict(list)
@@ -697,6 +783,7 @@ def _compute_readiness(
         unreadable = unreadable_by_vid.get(vid, 0)
         invalid_reports = unreadable + sum(1 for r in recs if not r.valid)
         content_type = _resolve_content_type(vid, recs)
+        is_quarantined = vid in quarantine_ids
 
         fail_reports = 0
         warn_reports = 0
@@ -754,7 +841,7 @@ def _compute_readiness(
                         else ""
                     )
                     expanded_warning_counts: Counter[str] = Counter()
-                    if chk_name == "stage07_validation_warnings" and isinstance(msg, str):
+                    if chk_name in {"stage07_validation_warnings", "stage07_transcript_artifact_risk"} and isinstance(msg, str):
                         expanded_warning_counts = _parse_stage07_warning_breakdown(msg)
 
                     if expanded_warning_counts:
@@ -762,7 +849,10 @@ def _compute_readiness(
                             warning_signal_counts[sub_check] += sub_count
                             signal_class = _warning_class_for_check(sub_check)
                             warning_signal_class_counts[signal_class] += sub_count
-                            if sub_check not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
+                            if (
+                                chk_name not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS
+                                and sub_check not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS
+                            ):
                                 policy_warning_signal_counts[sub_check] += sub_count
                                 policy_warning_signal_class_counts[signal_class] += sub_count
                                 policy_warning_checks += sub_count
@@ -788,6 +878,11 @@ def _compute_readiness(
             if content_type
             else {}
         )
+        block_warning_classes_for_type = sorted(
+            block_warning_class_by_content_type.get(content_type, set())
+            if content_type
+            else set()
+        )
         applied_review_budget = {
             cls: int(limit)
             for cls, limit in sorted(review_budget_for_type.items())
@@ -801,7 +896,10 @@ def _compute_readiness(
                 review_warning_class_excess[cls] = excess
         review_warning_checks = sum(review_warning_class_excess.values())
 
-        if vid in missing_manifest_ids:
+        if is_quarantined:
+            status = "BLOCKED"
+            reason_code = "preexisting_quarantine"
+        elif vid in missing_manifest_ids:
             status = "BLOCKED"
             reason_code = "missing_stage_report"
         elif invalid_reports > 0:
@@ -852,34 +950,49 @@ def _compute_readiness(
                     status = "BLOCKED"
                     reason_code = f"policy_block_warning_class:{blocked_warning_class_hit}"
                 else:
-                    per_class_exceeded = next(
+                    blocked_warning_class_for_type = next(
                         (
-                            (cls, warning_signal_class_counts.get(cls, 0), limit)
-                            for cls, limit in sorted(max_warning_checks_by_class.items(), key=lambda item: item[0])
-                            if warning_signal_class_counts.get(cls, 0) > limit
+                            cls
+                            for cls in block_warning_classes_for_type
+                            if warning_signal_class_counts.get(cls, 0) > 0
                         ),
                         None,
                     )
-                    if per_class_exceeded is not None:
-                        cls, seen, limit = per_class_exceeded
+                    if blocked_warning_class_for_type is not None:
                         status = "BLOCKED"
-                        reason_code = f"policy_warning_class_budget_exceeded:{cls}:{seen}>{limit}"
+                        reason_code = (
+                            "policy_block_warning_class_by_content_type:"
+                            f"{content_type or 'unknown'}:{blocked_warning_class_for_type}"
+                        )
                     else:
-                        per_check_exceeded = next(
+                        per_class_exceeded = next(
                             (
-                                (chk, warning_signal_counts.get(chk, 0), limit)
-                                for chk, limit in sorted(max_warning_checks_by_type.items(), key=lambda item: item[0])
-                                if warning_signal_counts.get(chk, 0) > limit
+                                (cls, warning_signal_class_counts.get(cls, 0), limit)
+                                for cls, limit in sorted(max_warning_checks_by_class.items(), key=lambda item: item[0])
+                                if warning_signal_class_counts.get(cls, 0) > limit
                             ),
                             None,
                         )
-                        if per_check_exceeded is not None:
-                            chk, seen, limit = per_check_exceeded
+                        if per_class_exceeded is not None:
+                            cls, seen, limit = per_class_exceeded
                             status = "BLOCKED"
-                            reason_code = f"policy_warning_check_budget_exceeded:{chk}:{seen}>{limit}"
-                        elif max_warning_checks is not None and policy_warning_checks > max_warning_checks:
-                            status = "BLOCKED"
-                            reason_code = "policy_warning_budget_exceeded"
+                            reason_code = f"policy_warning_class_budget_exceeded:{cls}:{seen}>{limit}"
+                        else:
+                            per_check_exceeded = next(
+                                (
+                                    (chk, warning_signal_counts.get(chk, 0), limit)
+                                    for chk, limit in sorted(max_warning_checks_by_type.items(), key=lambda item: item[0])
+                                    if warning_signal_counts.get(chk, 0) > limit
+                                ),
+                                None,
+                            )
+                            if per_check_exceeded is not None:
+                                chk, seen, limit = per_check_exceeded
+                                status = "BLOCKED"
+                                reason_code = f"policy_warning_check_budget_exceeded:{chk}:{seen}>{limit}"
+                            elif max_warning_checks is not None and policy_warning_checks > max_warning_checks:
+                                status = "BLOCKED"
+                                reason_code = "policy_warning_budget_exceeded"
 
         ready_for_ingest = status in allow_ingest_statuses
         gate_decision = _canonical_gate_from_status(status)
@@ -893,6 +1006,7 @@ def _compute_readiness(
             "status": status,
             "gate_decision": gate_decision,
             "ready_for_ingest": ready_for_ingest,
+            "quarantined": is_quarantined,
             "reason_code": reason_code,
             "report_counts": {
                 "total": len(recs) + unreadable,
@@ -914,6 +1028,7 @@ def _compute_readiness(
                 "policy_warning_classes": dict(policy_warning_signal_class_counts),
                 "review_warning_class_excess": dict(review_warning_class_excess),
                 "content_type_review_budget": applied_review_budget,
+                "content_type_block_warning_classes": block_warning_classes_for_type,
             },
             "content_type": content_type,
             "sources": sorted(sources),
@@ -927,17 +1042,26 @@ def _compute_readiness(
             "source_filter": source_filter or None,
             "report_dir": str(report_dir) if report_dir else None,
             "video_count": len(candidate_ids),
+            "quarantine_file": str(quarantine_file) if quarantine_file else None,
+            "quarantined_video_count": len(set(candidate_ids) & quarantine_ids),
         },
         "policy": {
             "ready": "all reports valid and PASS with no error/warning checks",
             "review": "reports valid with WARN/warning checks but no FAIL/error checks",
-            "blocked": "missing report coverage, invalid report, FAIL status, or error checks",
+            "blocked": (
+                "missing report coverage, explicit quarantine membership, invalid report, "
+                "FAIL status, or error checks"
+            ),
             "allow_ingest_statuses": sorted(allow_ingest_statuses),
             "block_warning_checks": sorted(block_warning_checks),
             "block_warning_classes": sorted(block_warning_classes),
             "max_warning_checks": max_warning_checks,
             "max_warning_checks_by_type": {k: max_warning_checks_by_type[k] for k in sorted(max_warning_checks_by_type)},
             "max_warning_checks_by_class": {k: max_warning_checks_by_class[k] for k in sorted(max_warning_checks_by_class)},
+            "block_warning_class_by_content_type": {
+                content_type: sorted(block_warning_class_by_content_type[content_type])
+                for content_type in sorted(block_warning_class_by_content_type)
+            },
             "review_warning_class_budget_by_content_type": {
                 vt: {k: v for k, v in sorted(class_map.items())}
                 for vt, class_map in sorted(review_warning_class_budget_by_content_type.items())
@@ -962,6 +1086,13 @@ def main() -> None:
     parser.add_argument("--glob", default="*.report.json", help="Glob pattern for --dir scan (default: *.report.json)")
     parser.add_argument("--manifest", help="Optional manifest file to enforce stage-report coverage")
     parser.add_argument("--source", help="Optional source filter applied to --manifest")
+    parser.add_argument(
+        "--quarantine-file",
+        help=(
+            "Optional quarantine JSON path. "
+            "If omitted and --manifest is set, auto-detects data/validation/quarantine/<manifest>[.<source>].json"
+        ),
+    )
     parser.add_argument(
         "--emit-readiness-summary",
         action="store_true",
@@ -1025,6 +1156,15 @@ def main() -> None:
         help=(
             "Treat class warnings up to budget as PASS for that content type. "
             "Format: <content_type>:<class>=<max>, repeatable."
+        ),
+    )
+    parser.add_argument(
+        "--block-warning-class-by-content-type",
+        action="append",
+        default=[],
+        help=(
+            "Escalate to BLOCKED when a warning class appears for a content type. "
+            "Format: <content_type>:<class>, repeatable."
         ),
     )
     parser.add_argument("--json", action="store_true", help="Output JSON report")
@@ -1099,6 +1239,26 @@ def main() -> None:
             sys.exit(2)
         per_type[warning_class] = budget
 
+    block_warning_class_by_content_type: Dict[str, Set[str]] = {}
+    for raw in args.block_warning_class_by_content_type or []:
+        try:
+            content_type, warning_class = _parse_content_type_warning_class(raw)
+        except ValueError as exc:
+            print(
+                f"{LOG_PREFIX} ERROR: invalid --block-warning-class-by-content-type value '{raw}': {exc}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        if warning_class not in SIGNAL_CLASS_ALLOWED:
+            print(
+                f"{LOG_PREFIX} ERROR: invalid warning class '{warning_class}' for "
+                f"--block-warning-class-by-content-type; expected one of {sorted(SIGNAL_CLASS_ALLOWED)}",
+                file=sys.stderr,
+            )
+            sys.exit(2)
+        per_type = block_warning_class_by_content_type.setdefault(content_type, set())
+        per_type.add(warning_class)
+
     files: List[Path] = []
     if args.file:
         files.extend(Path(p) for p in args.file)
@@ -1163,6 +1323,21 @@ def main() -> None:
                 )
             )
 
+    explicit_quarantine_path: Optional[Path] = None
+    if args.quarantine_file:
+        explicit_quarantine_path = Path(args.quarantine_file)
+        if not explicit_quarantine_path.is_absolute():
+            explicit_quarantine_path = _repo_root() / explicit_quarantine_path
+    try:
+        quarantine_ids, quarantine_path = _resolve_quarantine_ids(
+            manifest_path=manifest_path,
+            source_filter=args.source,
+            explicit_quarantine_path=explicit_quarantine_path,
+        )
+    except ValueError as exc:
+        print(f"{LOG_PREFIX} ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
+
     readiness_summary = _compute_readiness(
         report_records=report_records,
         unreadable_by_vid=dict(unreadable_by_vid),
@@ -1171,11 +1346,14 @@ def main() -> None:
         source_filter=args.source,
         manifest_ids=manifest_ids,
         missing_manifest_ids=missing_manifest_ids,
+        quarantine_ids=quarantine_ids,
+        quarantine_file=quarantine_path,
         block_warning_checks=block_warning_checks,
         block_warning_classes=block_warning_classes,
         max_warning_checks=args.max_warning_checks,
         max_warning_checks_by_type=max_warning_checks_by_type,
         max_warning_checks_by_class=max_warning_checks_by_class,
+        block_warning_class_by_content_type=block_warning_class_by_content_type,
         review_warning_class_budget_by_content_type=review_warning_class_budget_by_content_type,
     )
     readiness_out: Optional[Path] = None
@@ -1313,6 +1491,10 @@ def main() -> None:
             if manifest_ids is not None
             else None
         ),
+        "quarantine": {
+            "file": str(quarantine_path) if quarantine_path else None,
+            "video_ids": len(quarantine_ids),
+        },
         "readiness_summary": readiness_summary,
         "readiness_summary_out": str(readiness_out) if readiness_out else None,
         "canonical_gate_out": str(canonical_gate_out) if canonical_gate_out else None,

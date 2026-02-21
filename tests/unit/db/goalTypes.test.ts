@@ -1,6 +1,6 @@
 import { describe, test, expect, vi, beforeEach, afterEach } from "vitest"
 import { computeGoalProgress } from "@/src/db/goalTypes"
-import type { UserGoalRow } from "@/src/db/goalTypes"
+import type { UserGoalRow, DailyGoalSnapshotInsert } from "@/src/db/goalTypes"
 
 // ============================================================================
 // Test Fixtures
@@ -31,6 +31,16 @@ function createGoalRow(overrides: Partial<UserGoalRow> = {}): UserGoalRow {
     target_date: null,
     description: null,
     goal_type: "recurring",
+    goal_nature: null,
+    display_category: null,
+    goal_level: null,
+    template_id: null,
+    milestone_config: null,
+    ramp_steps: null,
+    motivation_note: null,
+    streak_freezes_available: 0,
+    streak_freezes_used: 0,
+    last_freeze_date: null,
     ...overrides,
   }
 }
@@ -258,5 +268,81 @@ describe("computeGoalProgress", () => {
       expect(result.category).toBe("eating")
       expect(result.current_streak).toBe(5)
     })
+  })
+})
+
+// ============================================================================
+// DailyGoalSnapshotInsert — type construction
+// ============================================================================
+
+describe("DailyGoalSnapshotInsert", () => {
+  test("constructs snapshot from goal pre-reset state", () => {
+    const goal = createGoalRow({
+      id: "goal-42",
+      current_value: 8,
+      target_value: 10,
+      current_streak: 3,
+      best_streak: 7,
+      period: "daily",
+    })
+
+    const snapshot: DailyGoalSnapshotInsert = {
+      user_id: goal.user_id,
+      goal_id: goal.id,
+      snapshot_date: "2026-02-21",
+      current_value: goal.current_value,
+      target_value: goal.target_value,
+      was_complete: goal.current_value >= goal.target_value,
+      current_streak: goal.current_streak,
+      best_streak: goal.best_streak,
+      period: goal.period,
+    }
+
+    expect(snapshot.was_complete).toBe(false)
+    expect(snapshot.current_value).toBe(8)
+    expect(snapshot.current_streak).toBe(3)
+  })
+
+  test("marks was_complete true when goal met target", () => {
+    const goal = createGoalRow({
+      current_value: 10,
+      target_value: 10,
+      current_streak: 5,
+    })
+
+    const snapshot: DailyGoalSnapshotInsert = {
+      user_id: goal.user_id,
+      goal_id: goal.id,
+      snapshot_date: "2026-02-21",
+      current_value: goal.current_value,
+      target_value: goal.target_value,
+      was_complete: goal.current_value >= goal.target_value,
+      current_streak: goal.current_streak,
+      best_streak: goal.best_streak,
+      period: goal.period,
+    }
+
+    expect(snapshot.was_complete).toBe(true)
+  })
+
+  test("marks was_complete true when goal exceeds target", () => {
+    const goal = createGoalRow({
+      current_value: 15,
+      target_value: 10,
+    })
+
+    const snapshot: DailyGoalSnapshotInsert = {
+      user_id: goal.user_id,
+      goal_id: goal.id,
+      snapshot_date: "2026-02-21",
+      current_value: goal.current_value,
+      target_value: goal.target_value,
+      was_complete: goal.current_value >= goal.target_value,
+      current_streak: goal.current_streak,
+      best_streak: goal.best_streak,
+      period: goal.period,
+    }
+
+    expect(snapshot.was_complete).toBe(true)
   })
 })

@@ -6,7 +6,7 @@
 # post-stage validation and quarantine-and-continue on failures.
 #
 # Usage:
-#   A) Run full pipeline (stages 06→09 with validation):
+#   A) Run full pipeline (stages 06→09, including 07b, with validation):
 #      ./sub-batch-pipeline P001.1 --run
 #      ./sub-batch-pipeline P001.1 --run --from 07    # resume from stage 07
 #
@@ -53,6 +53,7 @@ declare -A STAGE_DIRS=(
   ["06g"]="06g.LLM.damage-adjudicator"
   ["06h"]="06h.DET.confidence-propagation"
   ["07"]="07.LLM.content"
+  ["07b"]="07b.LLM.enrichment-verify"
   ["08"]="08.DET.taxonomy-validation"
   ["09"]="09.EXT.chunks"
 )
@@ -71,6 +72,7 @@ declare -A STAGE_SCRIPTS=(
   ["06g"]="$REPO_ROOT/scripts/training-data/06g.LLM.damage-adjudicator"
   ["06h"]="$REPO_ROOT/scripts/training-data/06h.DET.confidence-propagation"
   ["07"]="$REPO_ROOT/scripts/training-data/07.LLM.content"
+  ["07b"]="$REPO_ROOT/scripts/training-data/07b.LLM.enrichment-verify"
   ["08"]="$REPO_ROOT/scripts/training-data/08.DET.taxonomy-validation"
   ["09"]="$REPO_ROOT/scripts/training-data/09.EXT.chunk-embed.ts"
 )
@@ -89,15 +91,16 @@ declare -A STAGE_PATTERNS=(
   ["06g"]="*.damage-adjudication.json"
   ["06h"]="*.confidence.report.json"
   ["07"]="*.enriched.json"
+  ["07b"]="*.enrichment-verify.json"
   ["08"]="*.report.json"
   ["09"]="*.chunks.json"
 )
 # Stages that can be run via this pipeline
-RUNNABLE_STAGES=("06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "08" "09")
+RUNNABLE_STAGES=("06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "07b" "08" "09")
 # Ordered stage sequence for --from-stage
-STAGE_ORDER=("06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "08" "09")
+STAGE_ORDER=("06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "07b" "08" "09")
 # All stages for view generation
-ALL_STAGES=("01" "02" "03" "04" "05" "06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "08" "09")
+ALL_STAGES=("01" "02" "03" "04" "05" "06" "06b" "06c" "06d" "06e" "06f" "06g" "06h" "07" "07b" "08" "09")
 
 # Modes
 MODE=""
@@ -111,9 +114,6 @@ VALIDATE_SOURCE=""
 VALIDATE_WAIVER_FILE=""
 VALIDATE_QUARANTINE_FILE=""
 RUN_QUARANTINE_FILE=""
-CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE=""
-CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE=""
-MIN_CHUNK_CONFIDENCE_OVERRIDE=""
 PARALLEL=""
 
 # Config-driven defaults (loaded from pipeline.config.json)
@@ -123,6 +123,7 @@ CFG_MAX_WARNING_CHECKS_BY_TYPE=()
 CFG_BLOCK_WARNING_CHECKS=()
 CFG_MAX_WARNING_CHECKS_BY_CLASS=()
 CFG_BLOCK_WARNING_CLASSES=()
+CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()
 CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()
 
 load_pipeline_config() {
@@ -173,6 +174,29 @@ if block_classes:
 else:
     print('CFG_BLOCK_WARNING_CLASSES=()')
 
+block_by_type = r.get("block_warning_class_by_content_type", {})
+if isinstance(block_by_type, dict) and block_by_type:
+    items = []
+    for video_type, class_list in block_by_type.items():
+        if not isinstance(video_type, str):
+            continue
+        if not isinstance(class_list, list):
+            continue
+        for warning_class in class_list:
+            if not isinstance(warning_class, str):
+                continue
+            vt = video_type.strip()
+            wc = warning_class.strip()
+            if not vt or not wc:
+                continue
+            items.append(f'"{vt}:{wc}"')
+    if items:
+        print(f'CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=({" ".join(items)})')
+    else:
+        print('CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()')
+else:
+    print('CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()')
+
 review_by_type = r.get("review_warning_class_budget_by_content_type", {})
 if isinstance(review_by_type, dict) and review_by_type:
     items = []
@@ -198,7 +222,7 @@ load_pipeline_config
 usage() {
   cat <<'EOF'
 Usage:
-  ./sub-batch-pipeline P001.1 --run              Run stages 06→09 with auto-validation
+  ./sub-batch-pipeline P001.1 --run              Run stages 06→09 (incl. 07b) with auto-validation
   ./sub-batch-pipeline P001.1 --run --from 07    Resume from stage 07
   ./sub-batch-pipeline P001.1 --run --parallel 10  Conveyor-belt parallel mode
   ./sub-batch-pipeline P001 --run-all            Run all incomplete sub-batches
@@ -219,12 +243,6 @@ Options:
   --source <name>          With --validate, only validate one source
   --quarantine-file <path> Override auto-detected quarantine file
   --waiver-file <path>     Override auto-detected waiver file
-  --confidence-band-high-threshold <0..1>
-                            Stage 06h high confidence band threshold override
-  --confidence-band-medium-threshold <0..1>
-                            Stage 06h medium confidence band threshold override
-  --min-chunk-confidence <0..1>
-                            Stage 09 chunk confidence floor override
 
 Config: scripts/training-data/batch/pipeline.config.json
   All validation thresholds and policies are configured there.
@@ -239,7 +257,7 @@ error() {
 stage_supports_quarantine() {
   local stage="$1"
   case "$stage" in
-    06c|06d|06e|06f|06g|06h|07|08|09) return 0 ;;
+    06c|06d|06e|06f|06g|06h|07|07b|08|09) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -247,24 +265,9 @@ stage_supports_quarantine() {
 stage_supports_overwrite() {
   local stage="$1"
   case "$stage" in
-    06|06b|06c|06d|06e|06f|06g|06h|07) return 0 ;;
+    06|06b|06c|06d|06e|06f|06g|06h|07|07b) return 0 ;;
     *) return 1 ;;
   esac
-}
-
-require_probability_01() {
-  local raw="$1"
-  python3 - "$raw" <<'PYEOF'
-import sys
-raw = sys.argv[1]
-try:
-    value = float(raw)
-except Exception:
-    raise SystemExit(1)
-if not (0.0 <= value <= 1.0):
-    raise SystemExit(1)
-print(f"{value:.4f}".rstrip("0").rstrip("."))
-PYEOF
 }
 
 run_stage_contract_preflight() {
@@ -541,21 +544,6 @@ run_stage() {
     fi
   fi
 
-  if [[ "$stage" == "06h" ]]; then
-    if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" ]]; then
-      stage_args+=(--confidence-band-high-threshold "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE")
-    fi
-    if [[ -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
-      stage_args+=(--confidence-band-medium-threshold "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE")
-    fi
-  fi
-
-  if [[ "$stage" == "09" ]]; then
-    if [[ -n "$MIN_CHUNK_CONFIDENCE_OVERRIDE" ]]; then
-      stage_args+=(--min-chunk-confidence "$MIN_CHUNK_CONFIDENCE_OVERRIDE")
-    fi
-  fi
-
   if [[ "$DRY_RUN" == true ]]; then
     if stage_supports_quarantine "$stage" && [[ -n "$quarantine_file" ]]; then
       stage_args+=(--quarantine-file "$quarantine_file")
@@ -692,6 +680,32 @@ print(f'  Cross-stage: {status} ({total} checks, {errors} errors, {warnings} war
 " 2>/dev/null || true
       fi
       ;;
+    07b)
+      echo ""
+      echo "--- Post-stage validation: 07b enrichment verification ---"
+      local verify07b_json
+      verify07b_json=$(python3 "$REPO_ROOT/scripts/training-data/validation/validate_stage07b.py" \
+        --manifest "$manifest" \
+        --quarantine-file "$quarantine_file" \
+        --json 2>/dev/null) || true
+      if [[ -n "$verify07b_json" ]]; then
+        echo "$verify07b_json" | python3 "$SCRIPT_DIR/quarantine_updater.py" \
+          --quarantine-file "$quarantine_file" \
+          --stage 07b 2>&1 || true
+        echo "$verify07b_json" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+s = data.get('summary', {})
+errors = s.get('errors', 0)
+warnings = s.get('warnings', 0)
+blocked = s.get('blocked_videos', 0)
+review = s.get('review_videos', 0)
+checked = s.get('checked_files', 0)
+status = 'PASS' if errors == 0 else 'FAIL'
+print(f'  07b verify: {status} ({checked} files, {errors} errors, {warnings} warnings, block={blocked}, review={review})')
+" 2>/dev/null || true
+      fi
+      ;;
     09)
       echo ""
       echo "--- Post-stage validation: chunk integrity ---"
@@ -750,15 +764,6 @@ run_pipeline() {
     fi
     if [[ "$DRY_RUN" == true ]]; then
       runner_args+=(--dry-run)
-    fi
-    if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" ]]; then
-      runner_args+=(--confidence-band-high-threshold "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE")
-    fi
-    if [[ -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
-      runner_args+=(--confidence-band-medium-threshold "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE")
-    fi
-    if [[ -n "$MIN_CHUNK_CONFIDENCE_OVERRIDE" ]]; then
-      runner_args+=(--min-chunk-confidence "$MIN_CHUNK_CONFIDENCE_OVERRIDE")
     fi
     "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}"
     return $?
@@ -1193,6 +1198,9 @@ validate_sub_batch() {
   for cls in "${CFG_BLOCK_WARNING_CLASSES[@]}"; do
     stage_report_check_args+=(--block-warning-class "$cls")
   done
+  for rule in "${CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE[@]}"; do
+    stage_report_check_args+=(--block-warning-class-by-content-type "$rule")
+  done
   for rule in "${CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE[@]}"; do
     stage_report_check_args+=(--review-warning-class-budget-by-content-type "$rule")
   done
@@ -1380,33 +1388,6 @@ while [[ $# -gt 0 ]]; do
       VALIDATE_WAIVER_FILE="$2"
       shift 2
       ;;
-    --confidence-band-high-threshold)
-      [[ $# -lt 2 ]] && error "--confidence-band-high-threshold requires a value in [0,1]"
-      CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE="$(require_probability_01 "$2")" || error "--confidence-band-high-threshold must be a number in [0,1]"
-      shift 2
-      ;;
-    --confidence-band-high-threshold=*)
-      CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE="$(require_probability_01 "${1#--confidence-band-high-threshold=}")" || error "--confidence-band-high-threshold must be a number in [0,1]"
-      shift
-      ;;
-    --confidence-band-medium-threshold)
-      [[ $# -lt 2 ]] && error "--confidence-band-medium-threshold requires a value in [0,1]"
-      CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE="$(require_probability_01 "$2")" || error "--confidence-band-medium-threshold must be a number in [0,1]"
-      shift 2
-      ;;
-    --confidence-band-medium-threshold=*)
-      CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE="$(require_probability_01 "${1#--confidence-band-medium-threshold=}")" || error "--confidence-band-medium-threshold must be a number in [0,1]"
-      shift
-      ;;
-    --min-chunk-confidence)
-      [[ $# -lt 2 ]] && error "--min-chunk-confidence requires a value in [0,1]"
-      MIN_CHUNK_CONFIDENCE_OVERRIDE="$(require_probability_01 "$2")" || error "--min-chunk-confidence must be a number in [0,1]"
-      shift 2
-      ;;
-    --min-chunk-confidence=*)
-      MIN_CHUNK_CONFIDENCE_OVERRIDE="$(require_probability_01 "${1#--min-chunk-confidence=}")" || error "--min-chunk-confidence must be a number in [0,1]"
-      shift
-      ;;
     --waiver-file=*)
       VALIDATE_WAIVER_FILE="${1#--waiver-file=}"
       shift
@@ -1457,17 +1438,6 @@ if is_sub_batch "$SUB_BATCH_ID"; then
 else
   BATCH_ID="$SUB_BATCH_ID"
 fi
-
-if [[ -n "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" && -n "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" ]]; then
-  python3 - "$CONFIDENCE_BAND_HIGH_THRESHOLD_OVERRIDE" "$CONFIDENCE_BAND_MEDIUM_THRESHOLD_OVERRIDE" <<'PYEOF' || error "confidence band thresholds invalid: medium threshold cannot exceed high threshold"
-import sys
-high = float(sys.argv[1])
-medium = float(sys.argv[2])
-if medium > high:
-    raise SystemExit(1)
-PYEOF
-fi
-
 
 # Execute based on mode
 case "$MODE" in

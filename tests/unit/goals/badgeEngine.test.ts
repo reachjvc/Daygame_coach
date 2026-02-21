@@ -3,10 +3,12 @@ import {
   progressToTier,
   computeAllBadges,
   computeBadge,
+  detectTierUpgrades,
+  TIER_ORDER,
 } from "@/src/goals/badgeEngineService"
 import { computeAchievementProgress } from "@/src/goals/milestoneService"
 import { getAchievementWeights, DEFAULT_ACHIEVEMENT_WEIGHTS } from "@/src/goals/data/goalGraph"
-import type { GoalWithProgress, BadgeTier } from "@/src/goals/types"
+import type { GoalWithProgress, BadgeTier, BadgeStatus } from "@/src/goals/types"
 
 // ============================================================================
 // Test Helpers
@@ -46,6 +48,11 @@ function mockL3Goal(
     ramp_steps: null,
     is_complete: false,
     days_remaining: null,
+    motivation_note: null,
+    streak_freezes_available: 0,
+    streak_freezes_used: 0,
+    last_freeze_date: null,
+    goal_phase: null,
     ...overrides,
   }
 }
@@ -120,7 +127,7 @@ describe("computeBadge", () => {
     expect(badge).toBeNull()
   })
 
-  it("computes correct badge for l2_overcome_aa with all 3 goals at 100%", () => {
+  it("computes correct badge for l2_overcome_aa with 3 of 7 goals at 100%", () => {
     const goals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
       mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 100 }),
@@ -130,8 +137,10 @@ describe("computeBadge", () => {
     expect(badge).not.toBeNull()
     expect(badge!.badgeId).toBe("l2_overcome_aa")
     expect(badge!.title).toBe("Overcome Approach Anxiety Permanently")
-    expect(badge!.progress).toBe(100)
-    expect(badge!.tier).toBe("diamond")
+    // Only 3 of 7 weights active — no renormalization, so progress < 100
+    // approach_volume has linkedMetric so self-reported gating doesn't apply
+    expect(badge!.progress).toBeLessThan(100)
+    expect(badge!.progress).toBeGreaterThan(50)
     expect(badge!.unlocked).toBe(true)
   })
 
@@ -148,35 +157,37 @@ describe("computeBadge", () => {
     expect(badge!.unlocked).toBe(false)
   })
 
-  it("computes correct progress with partial completion", () => {
-    // l2_overcome_aa weights: approach_volume=0.50, consecutive_days=0.30, solo_sessions=0.20
+  it("computes correct progress with partial completion (no renormalization)", () => {
+    // Provide ALL 7 l2_overcome_aa goals at 50% so weights sum to 1
     const goals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50 }),
       mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 50 }),
       mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 50 }),
+      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 50 }),
+      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 50 }),
+      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 50 }),
+      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 50 }),
     ]
     const badge = computeBadge("l2_overcome_aa", goals)
     expect(badge).not.toBeNull()
-    // 0.50*50 + 0.30*50 + 0.20*50 = 25+15+10 = 50
+    // All weights sum to 1, each goal at 50% → progress = 50
     expect(badge!.progress).toBe(50)
     expect(badge!.tier).toBe("silver")
     expect(badge!.unlocked).toBe(true)
   })
 
-  it("redistributes weights when only some contributing goals are active", () => {
-    // l2_overcome_aa: approach_volume=0.50, consecutive_days=0.30, solo_sessions=0.20
-    // Only provide 2 of 3 — weights redistribute to sum to 1
+  it("fewer active goals = lower max progress (no renormalization)", () => {
+    // l2_overcome_aa has 7 L3s — provide only 2, weights keep original values
     const goals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
       mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 0 }),
-      // l3_solo_sessions not present
     ]
     const badge = computeBadge("l2_overcome_aa", goals)
     expect(badge).not.toBeNull()
-    // Redistributed: approach_volume = 0.50/0.80 = 0.625, consecutive_days = 0.30/0.80 = 0.375
-    // Progress: 0.625*100 + 0.375*0 = 62.5 → rounds to 63
-    expect(badge!.progress).toBe(63)
-    expect(badge!.tier).toBe("silver")
+    // Only original weights for these 2 goals used — no redistribution
+    // Progress reflects only what these 2 weights contribute
+    expect(badge!.progress).toBeGreaterThan(20)
+    expect(badge!.progress).toBeLessThan(50)
   })
 })
 
@@ -374,36 +385,193 @@ describe("computeAllBadges", () => {
 // ============================================================================
 
 describe("tier boundaries", () => {
-  it("badges correctly reflect tier at exact boundaries", () => {
-    // l2_overcome_aa: approach_volume=0.50, consecutive_days=0.30, solo_sessions=0.20
-    // With all 3 goals at 25%: 0.50*25 + 0.30*25 + 0.20*25 = 25 → bronze
-    const goals25 = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 25 }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 25 }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 25 }),
+  it("badges correctly reflect tier at exact boundaries (all 7 goals provided)", () => {
+    // Provide ALL 7 l2_overcome_aa L3s so weights sum to 1 and progress maps directly
+    const makeAll7 = (pct: number) => [
+      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: pct }),
+      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: pct }),
+      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: pct }),
+      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: pct }),
+      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: pct }),
+      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: pct }),
+      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: pct }),
     ]
-    const badge25 = computeBadge("l2_overcome_aa", goals25)
+
+    const badge25 = computeBadge("l2_overcome_aa", makeAll7(25))
     expect(badge25!.progress).toBe(25)
     expect(badge25!.tier).toBe("bronze")
 
-    // All at 50%: progress = 50 → silver
-    const goals50 = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50 }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 50 }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 50 }),
-    ]
-    const badge50 = computeBadge("l2_overcome_aa", goals50)
+    const badge50 = computeBadge("l2_overcome_aa", makeAll7(50))
     expect(badge50!.progress).toBe(50)
     expect(badge50!.tier).toBe("silver")
 
-    // All at 75%: progress = 75 → gold
-    const goals75 = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 75 }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 75 }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 75 }),
-    ]
-    const badge75 = computeBadge("l2_overcome_aa", goals75)
+    const badge75 = computeBadge("l2_overcome_aa", makeAll7(75))
     expect(badge75!.progress).toBe(75)
     expect(badge75!.tier).toBe("gold")
+
+    const badge100 = computeBadge("l2_overcome_aa", makeAll7(100))
+    expect(badge100!.progress).toBe(100)
+    expect(badge100!.tier).toBe("diamond")
+  })
+})
+
+// ============================================================================
+// Self-Reported Gating
+// ============================================================================
+
+describe("self-reported gating", () => {
+  it("caps tier at bronze when all goals are self-reported", () => {
+    // Use goals with templates that have NO linkedMetric
+    const goals = [
+      mockL3Goal({ id: "1", template_id: "l3_consecutive_days", progress_percentage: 100 }),
+      mockL3Goal({ id: "2", template_id: "l3_solo_sessions", progress_percentage: 100 }),
+    ]
+    const badge = computeBadge("l2_overcome_aa", goals)
+    expect(badge).not.toBeNull()
+    // Even with high progress, tier capped at bronze
+    expect(badge!.tier).toBe("bronze")
+  })
+
+  it("allows higher tiers when at least one goal has linked metric", () => {
+    // l3_approach_volume has linkedMetric: "approaches_cumulative"
+    // Use correct 7 L3 IDs for l2_overcome_aa
+    const allGoals = [
+      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
+      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 100 }),
+      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 100 }),
+      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 100 }),
+      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 100 }),
+      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 100 }),
+      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 100 }),
+    ]
+    const badge = computeBadge("l2_overcome_aa", allGoals)
+    expect(badge).not.toBeNull()
+    // approach_volume has linked metric, so gating doesn't apply
+    expect(badge!.tier).toBe("diamond")
+  })
+})
+
+// ============================================================================
+// Phase-Aware Progress
+// ============================================================================
+
+describe("phase-aware progress", () => {
+  it("treats consolidated goals as 100% progress", () => {
+    const goals = [
+      mockL3Goal({
+        id: "1", template_id: "l3_approach_volume", progress_percentage: 50,
+        goal_phase: "consolidation",
+      } as any),
+      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 50 }),
+      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 50 }),
+      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 50 }),
+      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 50 }),
+      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 50 }),
+      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 50 }),
+    ]
+    const badgeWithPhase = computeBadge("l2_overcome_aa", goals)
+
+    // Without phase, approach_volume contributes 50% of its weight
+    // With consolidation phase, approach_volume contributes 100% of its weight
+    const goalsWithoutPhase = goals.map(g => ({ ...g, goal_phase: null }))
+    const badgeWithoutPhase = computeBadge("l2_overcome_aa", goalsWithoutPhase)
+
+    expect(badgeWithPhase!.progress).toBeGreaterThan(badgeWithoutPhase!.progress)
+  })
+
+  it("treats graduated goals as 100% progress", () => {
+    const goals = [
+      mockL3Goal({
+        id: "1", template_id: "l3_approach_volume", progress_percentage: 30,
+        goal_phase: "graduated",
+      } as any),
+      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 30 }),
+      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 30 }),
+      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 30 }),
+      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 30 }),
+      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 30 }),
+      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 30 }),
+    ]
+    const badge = computeBadge("l2_overcome_aa", goals)
+
+    // Graduated goal contributes 100% instead of 30%, so progress > 30
+    expect(badge!.progress).toBeGreaterThan(30)
+  })
+})
+
+// ============================================================================
+// Tier Upgrade Detection (Phase 6.8)
+// ============================================================================
+
+describe("TIER_ORDER", () => {
+  it("none < bronze < silver < gold < diamond", () => {
+    expect(TIER_ORDER.none).toBeLessThan(TIER_ORDER.bronze)
+    expect(TIER_ORDER.bronze).toBeLessThan(TIER_ORDER.silver)
+    expect(TIER_ORDER.silver).toBeLessThan(TIER_ORDER.gold)
+    expect(TIER_ORDER.gold).toBeLessThan(TIER_ORDER.diamond)
+  })
+})
+
+describe("detectTierUpgrades", () => {
+  function badge(id: string, tier: BadgeTier, progress = 50): BadgeStatus {
+    return { badgeId: id, title: `Badge ${id}`, progress, tier, unlocked: tier !== "none" }
+  }
+
+  it("returns empty array when no tier changes", () => {
+    const prev = [badge("a", "bronze"), badge("b", "silver")]
+    const curr = [badge("a", "bronze"), badge("b", "silver")]
+    expect(detectTierUpgrades(prev, curr)).toEqual([])
+  })
+
+  it("detects single upgrade", () => {
+    const prev = [badge("a", "bronze")]
+    const curr = [badge("a", "silver")]
+    const upgrades = detectTierUpgrades(prev, curr)
+    expect(upgrades).toHaveLength(1)
+    expect(upgrades[0]).toEqual({
+      badgeId: "a",
+      badgeTitle: "Badge a",
+      previousTier: "bronze",
+      newTier: "silver",
+    })
+  })
+
+  it("detects skip-tier upgrade (bronze → gold)", () => {
+    const prev = [badge("a", "bronze")]
+    const curr = [badge("a", "gold")]
+    const upgrades = detectTierUpgrades(prev, curr)
+    expect(upgrades).toHaveLength(1)
+    expect(upgrades[0].previousTier).toBe("bronze")
+    expect(upgrades[0].newTier).toBe("gold")
+  })
+
+  it("does not report downgrades", () => {
+    const prev = [badge("a", "gold")]
+    const curr = [badge("a", "silver")]
+    expect(detectTierUpgrades(prev, curr)).toEqual([])
+  })
+
+  it("handles new badge not in previous list (none → tier)", () => {
+    const prev: BadgeStatus[] = []
+    const curr = [badge("a", "bronze")]
+    const upgrades = detectTierUpgrades(prev, curr)
+    expect(upgrades).toHaveLength(1)
+    expect(upgrades[0].previousTier).toBe("none")
+    expect(upgrades[0].newTier).toBe("bronze")
+  })
+
+  it("detects multiple upgrades simultaneously", () => {
+    const prev = [badge("a", "bronze"), badge("b", "silver"), badge("c", "gold")]
+    const curr = [badge("a", "silver"), badge("b", "gold"), badge("c", "gold")]
+    const upgrades = detectTierUpgrades(prev, curr)
+    expect(upgrades).toHaveLength(2) // a and b upgraded, c unchanged
+    expect(upgrades.map((u) => u.badgeId)).toContain("a")
+    expect(upgrades.map((u) => u.badgeId)).toContain("b")
+  })
+
+  it("does not report none → none as upgrade", () => {
+    const prev = [badge("a", "none")]
+    const curr = [badge("a", "none")]
+    expect(detectTierUpgrades(prev, curr)).toEqual([])
   })
 })

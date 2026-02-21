@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Pipeline Gate Summary",
-  "description": "Canonical manifest-level gate decision artifact.",
+  "description": "Canonical manifest-level gate decision artifact. In standard orchestration, summary.decision_source must be stage_report_readiness.",
   "type": "object",
   "required": ["version", "generated_at", "manifest", "summary", "videos"],
   "properties": {
@@ -22,12 +22,16 @@
     },
     "summary": {
       "type": "object",
-      "required": ["video_count", "pass", "review", "block"],
+      "required": ["video_count", "pass", "review", "block", "decision_source"],
       "properties": {
         "video_count": { "type": "integer", "minimum": 0 },
         "pass": { "type": "integer", "minimum": 0 },
         "review": { "type": "integer", "minimum": 0 },
-        "block": { "type": "integer", "minimum": 0 }
+        "block": { "type": "integer", "minimum": 0 },
+        "decision_source": {
+          "type": "string",
+          "enum": ["stage_report_readiness", "manifest_validation"]
+        }
       },
       "additionalProperties": true
     },

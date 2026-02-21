@@ -2,6 +2,7 @@ import { createServerSupabaseClient } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
 import { redirect } from "next/navigation"
 import { GoalsHubPage } from "@/src/goals/components/GoalsHubPage"
+import { getUserGoalCount } from "@/src/db/goalRepo"
 
 export default async function GoalsPage() {
   const supabase = await createServerSupabaseClient()
@@ -22,6 +23,11 @@ export default async function GoalsPage() {
 
   if (!profile?.has_purchased) {
     redirect("/dashboard")
+  }
+
+  const goalCount = await getUserGoalCount(user.id)
+  if (goalCount === 0) {
+    redirect("/dashboard/goals/setup")
   }
 
   return (

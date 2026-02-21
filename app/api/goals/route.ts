@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals } from "@/src/db/goalRepo"
+import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, DuplicateGoalError } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
 import type { UserGoalInsert } from "@/src/db/goalTypes"
 
@@ -43,5 +43,10 @@ export async function POST(request: Request) {
     if (!body.category && body.life_area) body.category = body.life_area
     const tz = await getUserTimezone(auth.userId)
     return NextResponse.json(await createGoal(auth.userId, body, tz), { status: 201 })
-  } catch (e) { console.error("Error creating goal:", e); return err("Failed to create goal") }
+  } catch (e) {
+    if (e instanceof DuplicateGoalError) {
+      return NextResponse.json({ error: "Goal already exists", reason: e.reason, existingGoalId: e.existingGoalId }, { status: 409 })
+    }
+    console.error("Error creating goal:", e); return err("Failed to create goal")
+  }
 }

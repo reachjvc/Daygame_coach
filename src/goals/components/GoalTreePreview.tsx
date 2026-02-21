@@ -9,9 +9,9 @@ import { Calendar as CalendarWidget } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { buildPreviewState, applyPreviewState } from "../goalsService"
 import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
-import { getCurveTheme, CURVE_THEME_IDS } from "../curveThemes"
+import { getCurveTheme } from "../curveThemes"
 import type { BatchGoalInsert } from "../treeGenerationService"
-import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig, CurveThemeId } from "../types"
+import type { PreviewGoalState, GoalDisplayCategory, MilestoneLadderConfig } from "../types"
 import { CATEGORY_LABELS, CATEGORY_ORDER } from "../config"
 
 interface GoalTreePreviewProps {
@@ -19,14 +19,10 @@ interface GoalTreePreviewProps {
   existingTemplateIds?: Set<string>
   onConfirm: (filteredInserts: BatchGoalInsert[]) => void
   onBack: () => void
-  curveThemeId?: CurveThemeId
-  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
-export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBack, curveThemeId, onCurveThemeChange }: GoalTreePreviewProps) {
-  const theme = getCurveTheme(curveThemeId ?? "zen")
-  const isCyber = (curveThemeId ?? "zen") === "cyberpunk"
-  const inputStyle = isCyber ? { background: theme.cardBg, color: theme.text, borderColor: theme.border } as const : undefined
+export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBack }: GoalTreePreviewProps) {
+  const theme = getCurveTheme("zen")
 
   const [targetDate, setTargetDate] = useState<Date | null>(null)
   const [dateText, setDateText] = useState("")
@@ -182,33 +178,10 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
         border: `1px solid ${theme.border}`,
         position: "relative",
         overflow: "hidden",
-        fontFamily: isCyber ? "var(--font-mono, 'Geist Mono', monospace)" : "inherit",
         textTransform: theme.textTransform,
       }}
     >
-      {/* Cyberpunk decorative overlays */}
-      {theme.scanlines && (
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            pointerEvents: "none",
-            zIndex: 10,
-            background:
-              "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,0,51,0.03) 2px, rgba(255,0,51,0.03) 4px)",
-          }}
-        />
-      )}
-      {theme.cornerBrackets && (
-        <>
-          <div style={{ position: "absolute", top: 0, left: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
-          <div style={{ position: "absolute", top: 0, right: 0, width: 16, height: 16, borderTop: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
-          <div style={{ position: "absolute", bottom: 0, left: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderLeft: `2px solid ${theme.accent}`, zIndex: 11 }} />
-          <div style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, borderBottom: `2px solid ${theme.accent}`, borderRight: `2px solid ${theme.accent}`, zIndex: 11 }} />
-        </>
-      )}
-
-      <div style={{ position: "relative", zIndex: 5 }}>
+      <div>
       {/* Header */}
       <div>
         <div className="flex items-center justify-between mb-3">
@@ -221,35 +194,6 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
             <ArrowLeft className="size-3.5" />
             Back to catalog
           </button>
-          {/* Theme switcher */}
-          {onCurveThemeChange && (
-            <div className="flex items-center gap-1.5">
-              {CURVE_THEME_IDS.map((id) => {
-                const t = getCurveTheme(id)
-                const isActive = id === (curveThemeId ?? "zen")
-                return (
-                  <button
-                    key={id}
-                    onClick={() => onCurveThemeChange(id)}
-                    title={t.label}
-                    style={{
-                      width: 16,
-                      height: 16,
-                      borderRadius: isCyber ? 2 : 8,
-                      background: t.accent,
-                      border: `2px solid ${isActive ? theme.text : "transparent"}`,
-                      cursor: "pointer",
-                      boxShadow: isActive
-                        ? `0 0 0 1px ${theme.bg}, 0 0 6px ${t.accent}60`
-                        : "none",
-                      opacity: isActive ? 1 : 0.4,
-                      transition: "all 150ms ease",
-                    }}
-                  />
-                )
-              })}
-            </div>
-          )}
         </div>
         <h2 className="text-xl font-bold" style={{ color: theme.text }}>Customize Your Goals</h2>
         <p className="text-sm mt-1" style={{ color: theme.muted }}>
@@ -327,7 +271,6 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
                   }
                 }}
                 className="w-36"
-                style={inputStyle}
               />
               {dateText.length > 0 && dateText.length < 10 && (
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm pointer-events-none select-none" style={{ color: `${theme.muted}66` }}>
@@ -395,8 +338,6 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
               onUpdateTarget={updateTarget}
               onUpdateMilestoneConfig={updateMilestoneConfig}
               disabledL2s={disabledL2Set}
-              curveThemeId={curveThemeId}
-              onCurveThemeChange={onCurveThemeChange}
             />
           )
         })}
@@ -415,7 +356,6 @@ export function GoalTreePreview({ inserts, existingTemplateIds, onConfirm, onBac
           onClick={handleConfirm}
           className="flex-1"
           data-testid="catalog-confirm-button"
-          style={isCyber ? { background: theme.accent, color: "#fff", borderColor: theme.accent } : undefined}
         >
           Create {enabledCount} {enabledCount === 1 ? "Goal" : "Goals"}
         </Button>
@@ -443,8 +383,6 @@ interface CategorySectionProps {
   onUpdateTarget: (tempId: string, value: number) => void
   onUpdateMilestoneConfig: (tempId: string, config: MilestoneLadderConfig) => void
   disabledL2s: Set<string>
-  curveThemeId?: CurveThemeId
-  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
 function CategorySection({
@@ -458,12 +396,10 @@ function CategorySection({
   onUpdateTarget,
   onUpdateMilestoneConfig,
   disabledL2s,
-  curveThemeId,
-  onCurveThemeChange,
 }: CategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const label = CATEGORY_LABELS[category]
-  const theme = getCurveTheme(curveThemeId ?? "zen")
+  const theme = getCurveTheme("zen")
 
   const enabledInCategory = goals.filter(
     (g) => previewState.get(g._tempId)?.enabled
@@ -503,8 +439,6 @@ function CategorySection({
                     onToggle={() => onToggle(goal._tempId)}
                     onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
                     onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
-                    curveThemeId={curveThemeId}
-                    onCurveThemeChange={onCurveThemeChange}
                   />
                 )
               })}
@@ -579,8 +513,6 @@ function CategorySection({
                 onToggle={() => onToggle(goal._tempId)}
                 onUpdateTarget={(val) => onUpdateTarget(goal._tempId, val)}
                 onUpdateMilestoneConfig={(config) => onUpdateMilestoneConfig(goal._tempId, config)}
-                curveThemeId={curveThemeId}
-                onCurveThemeChange={onCurveThemeChange}
               />
             )
           })}
@@ -602,16 +534,14 @@ interface GoalPreviewRowProps {
   onToggle: () => void
   onUpdateTarget: (value: number) => void
   onUpdateMilestoneConfig: (config: MilestoneLadderConfig) => void
-  curveThemeId?: CurveThemeId
-  onCurveThemeChange?: (id: CurveThemeId) => void
 }
 
-function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = false, onToggle, onUpdateTarget, onUpdateMilestoneConfig, curveThemeId, onCurveThemeChange }: GoalPreviewRowProps) {
+function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = false, onToggle, onUpdateTarget, onUpdateMilestoneConfig }: GoalPreviewRowProps) {
   const [showCurve, setShowCurve] = useState(false)
   const isRamp = goal.goal_type === "habit_ramp"
   const isMilestone = !isRamp && !!state.milestoneConfig
   const effectivelyOff = parentDisabled || !state.enabled
-  const theme = getCurveTheme(curveThemeId ?? "zen")
+  const theme = getCurveTheme("zen")
 
   return (
     <div
@@ -702,8 +632,6 @@ function GoalPreviewRow({ goal, state, isExisting = false, parentDisabled = fals
               <MilestoneCurveEditor
                 config={{ ...state.milestoneConfig, target: state.targetValue }}
                 onChange={onUpdateMilestoneConfig}
-                themeId={curveThemeId}
-                onThemeChange={onCurveThemeChange}
                 allowDirectEdit
               />
             </div>

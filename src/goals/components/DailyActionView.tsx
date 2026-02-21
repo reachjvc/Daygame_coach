@@ -1,14 +1,15 @@
 "use client"
 
 import { useMemo, useState, useCallback } from "react"
-import { Sun, Calendar, GripVertical, ChevronRight, ChevronDown, Trash2 } from "lucide-react"
+import { Sun, GripVertical, ChevronRight, ChevronDown, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import { GoalCard } from "./GoalCard"
 import { GoalToggle } from "./GoalToggle"
-import { isDailyActionable, isDailyMilestone, getNextMilestoneInfo, formatStreakLabel, getDaysLeftInWeek, computeProjectedDate } from "../goalsService"
+import { TodaysPulse } from "./TodaysPulse"
+import { isDailyActionable, isDailyMilestone, getNextMilestoneInfo, computeProjectedDate, getTimeOfDayBracket } from "../goalsService"
 import type { GoalWithProgress, GoalViewMode } from "../types"
 
 interface DailyActionViewProps {
@@ -137,29 +138,10 @@ export function DailyActionView({
 }: DailyActionViewProps) {
   const [localOrder, setLocalOrder] = useState<string[] | null>(null)
 
-  const { actionableGoals, archivedActionableGoals, milestoneGoals, goalSummaries, streakLabel, daysLeft, hasWeeklyGoals, sectionTitle } = useMemo(() => {
+  const { actionableGoals, archivedActionableGoals, milestoneGoals, sectionTitle } = useMemo(() => {
     const actionable = goals.filter((g) => !g.is_archived && isDailyActionable(g))
     const archivedActionable = goals.filter((g) => g.is_archived && isDailyActionable(g))
     const milestones = goals.filter(isDailyMilestone)
-
-    // Per-goal summary lines with period-aware labels
-    const summaries = actionable
-      .filter((g) => g.tracking_type === "counter" && !g.is_complete)
-      .map((g) => {
-        const isCumulative = g.goal_type === "milestone"
-        const periodLabel = isCumulative
-          ? (g.target_date ? `by ${new Date(g.target_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}` : "all-time")
-          : g.period === "daily" ? "today"
-          : g.period === "weekly" ? "this week"
-          : g.period === "monthly" ? "this month"
-          : ""
-        return {
-          title: g.title,
-          current: g.current_value,
-          target: g.target_value,
-          periodLabel,
-        }
-      })
 
     // Dynamic section title based on goal mix
     const periods = new Set(actionable.map(g => g.period))
@@ -167,17 +149,10 @@ export function DailyActionView({
       : periods.size === 1 && periods.has("weekly") ? "This Week"
       : "Active Goals"
 
-    // Streak: use highest current_streak among all goals
-    const maxStreak = Math.max(0, ...goals.map((g) => g.current_streak))
-
     return {
       actionableGoals: actionable,
       archivedActionableGoals: archivedActionable,
       milestoneGoals: milestones,
-      goalSummaries: summaries,
-      streakLabel: formatStreakLabel(maxStreak),
-      daysLeft: getDaysLeftInWeek(),
-      hasWeeklyGoals: actionable.some(g => g.period === "weekly"),
       sectionTitle: title,
     }
   }, [goals])
@@ -229,29 +204,14 @@ export function DailyActionView({
 
   return (
     <div className="space-y-5">
-      {/* Summary header — hidden when no streak and no counter summaries, or in customize mode */}
-      {!isCustomizeMode && (streakLabel || goalSummaries.length > 0) && (
-        <div className="rounded-lg border border-border bg-card p-4">
-          {streakLabel && (
-            <p className="text-sm font-medium text-primary mb-1">{streakLabel}</p>
-          )}
-          {goalSummaries.length > 0 && (
-            <div className="space-y-1">
-              {goalSummaries.map((s) => (
-                <div key={s.title} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Calendar className="size-3.5" />
-                  <span>{s.title}: <span className="font-medium text-foreground">{s.current}/{s.target}</span> {s.periodLabel}</span>
-                </div>
-              ))}
-              {hasWeeklyGoals && daysLeft > 0 && (
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  {daysLeft} day{daysLeft === 1 ? "" : "s"} left this week
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+      {/* Today's Pulse — aggregate progress ring + time-of-day context */}
+      {!isCustomizeMode && actionableGoals.length > 0 && (
+        <TodaysPulse
+          goals={actionableGoals}
+          timeOfDay={getTimeOfDayBracket(new Date().getHours())}
+        />
       )}
+
 
       {isCustomizeMode && (
         <div className="flex items-center justify-between">

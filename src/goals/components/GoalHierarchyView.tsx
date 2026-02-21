@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { CircleDot, Clock, Plus, Star, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AchievementBadge } from "./AchievementBadge"
+import { HeatmapCalendar } from "./HeatmapCalendar"
 import { GoalCategorySection } from "./GoalCategorySection"
 import { GoalCard } from "./GoalCard"
 import { groupGoalsByHierarchy } from "../goalHierarchyService"
@@ -93,6 +94,9 @@ export function GoalHierarchyView({
           </Button>
         </div>
       )}
+
+      {/* Activity heatmap — only outside customize mode */}
+      {!isCustomizeMode && <HeatmapCalendar />}
 
       {/* L0 dream goal context banner */}
       {goals.filter(g => g.goal_level === 0).map(dream => (

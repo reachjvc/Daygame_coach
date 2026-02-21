@@ -194,6 +194,7 @@ CREATE TABLE approaches (
   longitude DOUBLE PRECISION,
   note TEXT,
   voice_note_url TEXT,
+  quality INTEGER CHECK (quality >= 1 AND quality <= 10),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -424,12 +425,47 @@ CREATE TABLE user_goals (
   template_id TEXT,
   milestone_config JSONB,
   ramp_steps JSONB,
+  motivation_note TEXT,
+  streak_freezes_available INTEGER NOT NULL DEFAULT 0,
+  streak_freezes_used INTEGER NOT NULL DEFAULT 0,
+  last_freeze_date DATE,
+  goal_phase TEXT CHECK (goal_phase IS NULL OR goal_phase IN ('acquisition', 'consolidation', 'graduated')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_user_goals_user_id ON user_goals(user_id);
 CREATE INDEX idx_user_goals_parent ON user_goals(parent_goal_id);
 CREATE INDEX idx_user_goals_template ON user_goals(template_id);
+
+-- Duplicate prevention: partial unique indexes (active goals only)
+CREATE UNIQUE INDEX uq_user_goals_template
+  ON user_goals (user_id, template_id)
+  WHERE template_id IS NOT NULL AND is_archived = false;
+CREATE UNIQUE INDEX uq_user_goals_linked_metric
+  ON user_goals (user_id, linked_metric)
+  WHERE linked_metric IS NOT NULL AND is_archived = false;
+
+-- ============================================
+-- Daily goal snapshots (heatmap + weekly review)
+-- Added 21-02-2026 for Phase 6 daily experience
+-- ============================================
+
+CREATE TABLE daily_goal_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  goal_id UUID NOT NULL REFERENCES user_goals(id) ON DELETE CASCADE,
+  snapshot_date DATE NOT NULL,
+  current_value INTEGER NOT NULL,
+  target_value INTEGER NOT NULL,
+  was_complete BOOLEAN NOT NULL,
+  current_streak INTEGER NOT NULL DEFAULT 0,
+  best_streak INTEGER NOT NULL DEFAULT 0,
+  period TEXT NOT NULL DEFAULT 'daily',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(goal_id, snapshot_date)
+);
+
+CREATE INDEX idx_snapshots_user_date ON daily_goal_snapshots(user_id, snapshot_date);
 
 -- ============================================
 -- Values table (reference data for inner game)

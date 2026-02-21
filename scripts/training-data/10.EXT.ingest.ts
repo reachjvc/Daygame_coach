@@ -24,15 +24,16 @@
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --dry-run
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --verify
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --full
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-taxonomy-gate
- *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --skip-readiness-gate
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-min-mean-overall 75 --semantic-max-major-error-rate 0.20 --semantic-fail-on-stale
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --semantic-min-fresh 5 --semantic-report-out data/validation/semantic_gate/CANARY.1.custom.report.json
  *   node node_modules/tsx/dist/cli.mjs scripts/training-data/10.EXT.ingest.ts --manifest docs/pipeline/batches/CANARY.1.txt --quality-gate
  *
  * Notes:
  *   - Manifest ingest uses per-video quarantine for Stage 08/Readiness failures when report detail is available.
- *   - Default readiness ingest policy is READY-only.
+ *   - Default readiness ingest policy is READY-only:
+ *       READY   -> pass   -> ingest-eligible
+ *       REVIEW  -> review -> excluded by readiness gate
+ *       BLOCKED -> block  -> excluded by readiness gate
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -67,8 +68,6 @@ type Args = {
   qualityGate: boolean
   source: string | null
   manifest: string | null
-  skipTaxonomyGate: boolean
-  skipReadinessGate: boolean
   readinessSummary: string | null
   quarantineReportOut: string | null
   quarantineFile: string | null
@@ -141,7 +140,7 @@ type ChunksFile = {
   // YouTube video id (11 chars). Newer Stage 09 artifacts include this.
   videoId?: string
   videoTitle: string
-  // Stage 07 stem (title + [video_id] + audio variant suffix). Optional.
+  // Stage 07 stem (title + [video_id] + audio variant suffix). Older files may omit this key.
   videoStem?: string
   generatedAt: string
   chunks: Chunk[]
@@ -162,11 +161,10 @@ Core:
   --verify                  Verify-only mode
   --full, --force           Force re-ingest even when state appears unchanged
 
-Gates:
-  --skip-taxonomy-gate      Skip Stage 08 taxonomy gate (manifest mode)
-  --skip-readiness-gate     Skip readiness summary gate (manifest mode)
+Gates (always-on in manifest mode):
   --readiness-summary <p>   Override readiness summary path
-                            (default readiness policy is READY-only)
+                            (default readiness policy: READY/pass only;
+                             REVIEW/review and BLOCKED/block are excluded)
   --quarantine-file <path>  Upstream quarantine JSON — quarantined video IDs are excluded from ingest
   --quarantine-report-out <p>
                             Override manifest quarantine report output path
@@ -198,8 +196,6 @@ function validateKnownArgs(argv: string[]): void {
     "--verify",
     "--full",
     "--force",
-    "--skip-taxonomy-gate",
-    "--skip-readiness-gate",
     "--quality-gate",
     "--semantic-fail-on-stale",
     "--include-review",
@@ -358,8 +354,6 @@ function parseArgs(argv: string[]): Args {
     qualityGate: flags.has("--quality-gate"),
     source,
     manifest,
-    skipTaxonomyGate: flags.has("--skip-taxonomy-gate"),
-    skipReadinessGate: flags.has("--skip-readiness-gate"),
     readinessSummary,
     quarantineReportOut,
     quarantineFile,
@@ -2008,7 +2002,7 @@ async function main() {
       }
     }
 
-    if (!args.skipTaxonomyGate) {
+    if (expectedVideoIds.size > 0) {
       taxonomyGateExecuted = true
       taxonomyGateResult = checkTaxonomyGate(args.manifest, args.source, expectedVideoIds, expectedManifestVideos)
       if (taxonomyGateResult.blockedVideoIds.size > 0) {
@@ -2028,7 +2022,7 @@ async function main() {
       postTaxonomyVideoIds = new Set(expectedVideoIds)
     }
 
-    if (expectedVideoIds.size > 0 && !args.skipReadinessGate) {
+    if (expectedVideoIds.size > 0) {
       readinessGateExecuted = true
       readinessGateResult = checkReadinessGate(args.manifest, expectedVideoIds, args.source, args.readinessSummary)
       expectedVideoIds = readinessGateResult.eligibleVideoIds
@@ -2077,7 +2071,7 @@ async function main() {
     console.log(`Quarantine report: ${quarantineReportPath}`)
 
     if (eligibleManifestVideoIds && eligibleManifestVideoIds.size <= 0) {
-      if (!args.skipTaxonomyGate && postTaxonomyVideoIds.size <= 0) {
+      if (postTaxonomyVideoIds.size <= 0) {
         console.error("❌ All manifest videos were blocked by Stage 08 taxonomy quarantine.")
       } else {
         console.error("❌ All manifest videos were blocked by readiness policy.")

@@ -1,0 +1,1411 @@
+#!/usr/bin/env python3
+"""
+scripts/training-data/07b.LLM.enrichment-verify
+
+Stage 07b LLM enrichment verification gate.
+
+Reads:
+  - data/07.LLM.content/<source>/<video>/*.enriched.json
+  - data/06c.DET.patched/<source>/<video>/*.conversations.json
+  - data/06e.LLM.quality-check/<source>/<video>/*.quality-check.json
+
+Writes:
+  - data/07b.LLM.enrichment-verify/<source>/<video>/*.enrichment-verify.json
+
+This stage is LLM-first by design:
+  - non-dry-run execution always performs Claude preflight.
+  - no deterministic shortcut path may replace required LLM verification calls.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import shlex
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+from batch.manifest_parser import load_manifest_sources, manifest_filter_files
+from batch.quarantine_helpers import (
+    extract_video_id_from_path,
+    get_quarantine_block_reason,
+    load_quarantine_video_ids,
+)
+
+try:
+    import jsonschema  # type: ignore
+except Exception:  # pragma: no cover
+    jsonschema = None
+
+
+LOG_PREFIX = "[07b.LLM.enrichment-verify]"
+PIPELINE_VERSION = "07b.LLM.enrichment-verify-v1.2"
+PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "07b.enrichment-verify.prompt.md"
+SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "07b.enrichment-verify.schema.json"
+
+CLAUDE_BINARY_PATHS = [
+    "claude",
+    Path.home() / ".vscode-server/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
+    "/usr/local/bin/claude",
+]
+
+MAX_ENRICHMENTS_IN_PROMPT = 200
+MAX_SEGMENTS_IN_PROMPT = 220
+MAX_TEXT_LEN = 260
+
+CHECK_SEVERITIES = {"error", "warning", "info"}
+ISSUE_SEVERITIES = {"critical", "major", "minor", "info"}
+GATE_DECISIONS = {"pass", "review", "block"}
+STATUS_BY_GATE = {"pass": "PASS", "review": "WARN", "block": "FAIL"}
+SIGNAL_CLASSES = {
+    "artifact_contract",
+    "conversation_structure",
+    "other_quality",
+    "quarantine_gate",
+    "routing_mismatch",
+    "taxonomy_coverage",
+    "transcript_quality",
+}
+REMEDIATION_PATHS = {
+    "contract_repair",
+    "conversation_review",
+    "manual_review",
+    "quarantine",
+    "routing_policy_review",
+    "taxonomy_review",
+    "transcript_review",
+}
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def input_root() -> Path:
+    return repo_root() / "data" / "07.LLM.content"
+
+
+def output_root() -> Path:
+    return repo_root() / "data" / "07b.LLM.enrichment-verify"
+
+
+def stage06c_root() -> Path:
+    return repo_root() / "data" / "06c.DET.patched"
+
+
+def stage06e_root() -> Path:
+    return repo_root() / "data" / "06e.LLM.quality-check"
+
+
+def test_input_root() -> Path:
+    return repo_root() / "data" / "test" / "07.LLM.content"
+
+
+def test_output_root() -> Path:
+    return repo_root() / "data" / "test" / "07b.LLM.enrichment-verify"
+
+
+def test_stage06c_root() -> Path:
+    return repo_root() / "data" / "test" / "06c.DET.patched"
+
+
+def test_stage06e_root() -> Path:
+    return repo_root() / "data" / "test" / "06e.LLM.quality-check"
+
+
+def resolve_root_path(raw_path: Optional[str], default_root: Path) -> Path:
+    if not raw_path:
+        return default_root
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = repo_root() / path
+    return path
+
+
+def parse_sources_file(path: Path) -> List[Tuple[str, str]]:
+    out: List[Tuple[str, str]] = []
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "|" in line:
+            name, url = line.split("|", 1)
+            out.append((name.strip(), url.strip()))
+            continue
+        parts = shlex.split(line)
+        if len(parts) >= 2:
+            out.append((parts[0], parts[1]))
+    return out
+
+
+def find_input_files(in_dir: Path) -> List[Path]:
+    return sorted(in_dir.rglob("*.enriched.json"))
+
+
+def _base_name_without_enriched(path: Path) -> str:
+    stem = path.stem
+    if stem.endswith(".enriched"):
+        return stem[: -len(".enriched")]
+    return stem
+
+
+def compute_output_path(input_path: Path, out_dir: Path) -> Path:
+    base = _base_name_without_enriched(input_path)
+    return out_dir / f"{base}.enrichment-verify.json"
+
+
+def compute_output_path_with_layout(
+    input_path: Path,
+    output_dir: Path,
+    input_root_dir: Optional[Path] = None,
+) -> Path:
+    canonical = compute_output_path(input_path, output_dir)
+    if input_root_dir is not None:
+        try:
+            rel_parent = input_path.parent.relative_to(input_root_dir)
+            if rel_parent != Path("."):
+                return output_dir / rel_parent / canonical.name
+        except ValueError:
+            pass
+    return canonical
+
+
+def find_existing_output_path(
+    input_path: Path,
+    preferred_output_dir: Path,
+    *,
+    input_root_dir: Optional[Path] = None,
+) -> Optional[Path]:
+    preferred = compute_output_path_with_layout(
+        input_path,
+        preferred_output_dir,
+        input_root_dir=input_root_dir,
+    )
+    if preferred.exists():
+        return preferred
+    return None
+
+
+def _read_json(path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _safe_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float) and value.is_integer():
+        return int(value)
+    if isinstance(value, str):
+        raw = value.strip()
+        if raw and raw.isdigit():
+            try:
+                return int(raw)
+            except Exception:
+                return None
+    return None
+
+
+def _safe_probability(value: Any) -> Optional[float]:
+    if not isinstance(value, (int, float)):
+        return None
+    v = float(value)
+    if not (0.0 <= v <= 1.0):
+        return None
+    return v
+
+
+def _truncate(value: Any, limit: int = MAX_TEXT_LEN) -> str:
+    text = str(value or "").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def _load_prompt_template() -> str:
+    if not PROMPT_PATH.exists():
+        raise RuntimeError(f"Prompt template missing: {PROMPT_PATH}")
+    return PROMPT_PATH.read_text(encoding="utf-8")
+
+
+def _load_schema() -> Optional[Dict[str, Any]]:
+    if not SCHEMA_PATH.exists():
+        return None
+    try:
+        schema = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return schema if isinstance(schema, dict) else None
+
+
+def find_claude_binary() -> Optional[str]:
+    for cand in CLAUDE_BINARY_PATHS:
+        p = Path(cand)
+        if str(cand) == "claude":
+            try:
+                res = subprocess.run(["which", "claude"], capture_output=True, text=True)
+            except Exception:
+                res = None
+            if res and res.returncode == 0:
+                return "claude"
+            continue
+        if p.exists() and p.is_file():
+            return str(p)
+    return None
+
+
+def run_claude_preflight(
+    claude_bin: str,
+    *,
+    model: Optional[str],
+    timeout_seconds: int,
+    retries: int,
+) -> Tuple[bool, str]:
+    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
+    if isinstance(model, str) and model.strip():
+        cmd += ["--model", model.strip()]
+
+    last_reason = "unknown"
+    attempts = max(1, int(retries))
+    for attempt in range(attempts):
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=max(1, int(timeout_seconds)),
+            )
+            stdout = (result.stdout or "").strip().lower()
+            if result.returncode == 0 and stdout == "ok":
+                return True, "ok"
+            stderr = (result.stderr or "").strip()
+            if result.returncode != 0:
+                last_reason = f"non_zero_exit={result.returncode} stderr={stderr[:200]}"
+            else:
+                last_reason = f"unexpected_output={stdout[:80]!r}"
+        except subprocess.TimeoutExpired:
+            last_reason = f"timeout_after_{int(timeout_seconds)}s"
+        except FileNotFoundError:
+            return False, "claude_binary_not_found"
+
+        if attempt < attempts - 1:
+            time.sleep(min(5, 2 ** attempt))
+    return False, last_reason
+
+
+def call_claude(
+    prompt: str,
+    *,
+    model: Optional[str],
+    timeout_seconds: int,
+    retries: int,
+) -> Optional[str]:
+    claude_bin = find_claude_binary()
+    if not claude_bin:
+        print(f"{LOG_PREFIX} ERROR: Claude CLI binary not found")
+        return None
+
+    attempts = max(1, int(retries))
+    for attempt in range(attempts):
+        try:
+            cmd = [claude_bin]
+            if isinstance(model, str) and model.strip():
+                cmd += ["--model", model.strip()]
+            cmd += ["-p", prompt, "--output-format", "text"]
+            res = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=max(1, int(timeout_seconds)),
+            )
+            if res.returncode == 0:
+                return (res.stdout or "").strip()
+            if attempt < attempts - 1:
+                wait = 2 ** attempt
+                print(f"{LOG_PREFIX} Claude CLI non-zero exit, retrying in {wait}s...")
+                time.sleep(wait)
+        except subprocess.TimeoutExpired:
+            if attempt < attempts - 1:
+                wait = 2 ** attempt
+                print(f"{LOG_PREFIX} Claude CLI timeout, retrying in {wait}s...")
+                time.sleep(wait)
+    return None
+
+
+def _extract_json_object(text: str) -> Optional[Dict[str, Any]]:
+    raw = (text or "").strip()
+    if not raw:
+        return None
+
+    if raw.startswith("```"):
+        raw = re.sub(r"^```(?:json)?\s*", "", raw, flags=re.IGNORECASE)
+        raw = re.sub(r"\s*```$", "", raw)
+
+    try:
+        obj = json.loads(raw)
+        if isinstance(obj, dict):
+            return obj
+    except Exception:
+        pass
+
+    start = raw.find("{")
+    end = raw.rfind("}")
+    if start >= 0 and end > start:
+        snippet = raw[start : end + 1]
+        try:
+            obj = json.loads(snippet)
+            if isinstance(obj, dict):
+                return obj
+        except Exception:
+            return None
+    return None
+
+
+def _validate_schema(payload: Dict[str, Any], schema: Optional[Dict[str, Any]]) -> bool:
+    if schema is None or jsonschema is None:
+        return True
+    try:
+        jsonschema.validate(instance=payload, schema=schema)
+        return True
+    except Exception:
+        return False
+
+
+def _collect_segment_refs(value: Any, out: Set[int]) -> None:
+    if isinstance(value, dict):
+        for key, v in value.items():
+            if key in {"seg_id", "segment_id", "segment", "segment_index"}:
+                sid = _safe_int(v)
+                if sid is not None and sid >= 0:
+                    out.add(sid)
+            _collect_segment_refs(v, out)
+        return
+    if isinstance(value, list):
+        for item in value:
+            _collect_segment_refs(item, out)
+
+
+def _index_segments(segments: List[Dict[str, Any]]) -> Dict[int, Dict[str, Any]]:
+    out: Dict[int, Dict[str, Any]] = {}
+    for seg in segments:
+        if not isinstance(seg, dict):
+            continue
+        sid = _safe_int(seg.get("id"))
+        if sid is None or sid < 0:
+            continue
+        out[sid] = seg
+    return out
+
+
+def _select_evidence_segments(
+    segments_by_id: Dict[int, Dict[str, Any]],
+    ref_ids: Set[int],
+) -> List[Dict[str, Any]]:
+    if not segments_by_id:
+        return []
+
+    def _evenly_spaced_ids(ids: List[int], target: int) -> List[int]:
+        if target <= 0 or not ids:
+            return []
+        if len(ids) <= target:
+            return ids[:]
+        if target == 1:
+            return [ids[0]]
+        n = len(ids)
+        picks: List[int] = []
+        for i in range(target):
+            idx = int(round(i * (n - 1) / (target - 1)))
+            picks.append(ids[idx])
+        # De-dupe while preserving order.
+        seen: Set[int] = set()
+        out: List[int] = []
+        for sid in picks:
+            if sid in seen:
+                continue
+            seen.add(sid)
+            out.append(sid)
+        # Backfill in ascending order if rounding collisions reduced count.
+        if len(out) < target:
+            for sid in ids:
+                if sid in seen:
+                    continue
+                out.append(sid)
+                seen.add(sid)
+                if len(out) >= target:
+                    break
+        return out
+
+    selected_ids: Set[int] = set()
+    ref_sorted = sorted(sid for sid in ref_ids if sid in segments_by_id)
+    if ref_sorted:
+        # Use direct refs with broad temporal coverage first.
+        for sid in _evenly_spaced_ids(ref_sorted, MAX_SEGMENTS_IN_PROMPT):
+            selected_ids.add(sid)
+
+        # If refs are sparse, add immediate neighbors for local context.
+        if len(selected_ids) <= (MAX_SEGMENTS_IN_PROMPT // 3):
+            for sid in list(selected_ids):
+                for cand in (sid - 1, sid + 1):
+                    if cand in segments_by_id:
+                        selected_ids.add(cand)
+                        if len(selected_ids) >= MAX_SEGMENTS_IN_PROMPT:
+                            break
+                if len(selected_ids) >= MAX_SEGMENTS_IN_PROMPT:
+                    break
+
+        # If still underfilled, add global even samples across the transcript.
+        if len(selected_ids) < MAX_SEGMENTS_IN_PROMPT:
+            all_ids = sorted(segments_by_id.keys())
+            for sid in _evenly_spaced_ids(all_ids, MAX_SEGMENTS_IN_PROMPT):
+                if sid in selected_ids:
+                    continue
+                selected_ids.add(sid)
+                if len(selected_ids) >= MAX_SEGMENTS_IN_PROMPT:
+                    break
+    else:
+        # No refs: provide broad transcript coverage instead of low-id prefix only.
+        for sid in _evenly_spaced_ids(sorted(segments_by_id.keys()), MAX_SEGMENTS_IN_PROMPT):
+            selected_ids.add(sid)
+
+    rows: List[Dict[str, Any]] = []
+    for sid in sorted(selected_ids)[:MAX_SEGMENTS_IN_PROMPT]:
+        seg = segments_by_id[sid]
+        rows.append(
+            {
+                "id": sid,
+                "conversation_id": _safe_int(seg.get("conversation_id")),
+                "speaker_role": str(seg.get("speaker_role", "")).strip() or "unknown",
+                "text": _truncate(seg.get("text", ""), MAX_TEXT_LEN),
+            }
+        )
+    return rows
+
+
+def _compact_enrichments(enrichments: Any) -> List[Dict[str, Any]]:
+    if not isinstance(enrichments, list):
+        return []
+
+    out: List[Dict[str, Any]] = []
+    for row in enrichments[:MAX_ENRICHMENTS_IN_PROMPT]:
+        if not isinstance(row, dict):
+            continue
+
+        techniques: List[str] = []
+        for key in ("techniques", "techniques_used", "techniques_discussed"):
+            raw = row.get(key)
+            if not isinstance(raw, list):
+                continue
+            for item in raw:
+                if isinstance(item, dict):
+                    name = item.get("technique")
+                    if isinstance(name, str) and name.strip():
+                        techniques.append(name.strip())
+                elif isinstance(item, str) and item.strip():
+                    techniques.append(item.strip())
+
+        topics: List[str] = []
+        for key in ("topics", "topics_discussed"):
+            raw = row.get(key)
+            if not isinstance(raw, list):
+                continue
+            for item in raw:
+                if isinstance(item, str) and item.strip():
+                    topics.append(item.strip())
+
+        evidence_ids: List[int] = []
+        raw_evidence = row.get("evidence_segment_ids")
+        if isinstance(raw_evidence, list):
+            for item in raw_evidence:
+                sid = _safe_int(item)
+                if sid is not None and sid >= 0:
+                    evidence_ids.append(sid)
+
+        hook_segment: Optional[int] = None
+        hook_point = row.get("hook_point")
+        if isinstance(hook_point, dict):
+            hook_segment = _safe_int(hook_point.get("segment_id"))
+            if hook_segment is None:
+                hook_segment = _safe_int(hook_point.get("segment"))
+
+        out.append(
+            {
+                "type": str(row.get("type", "")).strip() or None,
+                "conversation_id": _safe_int(row.get("conversation_id")),
+                "segment_id": _safe_int(row.get("segment_id")),
+                "description": _truncate(row.get("description", ""), MAX_TEXT_LEN),
+                "techniques": sorted(set(techniques))[:40],
+                "topics": sorted(set(topics))[:40],
+                "evidence_segment_ids": sorted(set(evidence_ids))[:80],
+                "hook_segment_id": hook_segment if hook_segment is not None and hook_segment >= 0 else None,
+            }
+        )
+    return out
+
+
+def _find_upstream_path(
+    *,
+    enriched_path: Path,
+    in_root: Path,
+    stage_root: Path,
+    suffix: str,
+    video_id: str,
+    source: str,
+) -> Optional[Path]:
+    base = _base_name_without_enriched(enriched_path)
+    candidate: Optional[Path] = None
+    try:
+        rel_parent = enriched_path.parent.relative_to(in_root)
+        candidate = stage_root / rel_parent / f"{base}{suffix}"
+    except ValueError:
+        candidate = None
+
+    if candidate and candidate.exists():
+        return candidate
+
+    source_dir = stage_root / source
+    if source_dir.exists():
+        matches = sorted(source_dir.rglob(f"*{video_id}*{suffix}"))
+        if matches:
+            return matches[0]
+
+    matches = sorted(stage_root.rglob(f"*{video_id}*{suffix}"))
+    if matches:
+        return matches[0]
+    return None
+
+
+def _build_prompt_package(
+    *,
+    video_id: str,
+    source: str,
+    enriched_data: Dict[str, Any],
+    conversations_data: Dict[str, Any],
+    quality_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    enrichments = _compact_enrichments(enriched_data.get("enrichments"))
+    ref_ids: Set[int] = set()
+    _collect_segment_refs(enriched_data.get("enrichments"), ref_ids)
+    segments = conversations_data.get("segments")
+    seg_rows = segments if isinstance(segments, list) else []
+    by_id = _index_segments(seg_rows)
+    evidence_segments = _select_evidence_segments(by_id, ref_ids)
+
+    low_quality_segments: List[int] = []
+    for row in (quality_data.get("low_quality_segments") or [])[:120]:
+        if not isinstance(row, dict):
+            continue
+        sid = _safe_int(row.get("segment"))
+        if sid is not None and sid >= 0:
+            low_quality_segments.append(sid)
+
+    transcript_artifact_segments: List[int] = []
+    for row in (quality_data.get("transcript_artifacts") or [])[:120]:
+        if not isinstance(row, dict):
+            continue
+        sid = _safe_int(row.get("segment_index"))
+        if sid is not None and sid >= 0:
+            transcript_artifact_segments.append(sid)
+
+    metadata = enriched_data.get("metadata")
+    metadata_payload = metadata if isinstance(metadata, dict) else {}
+
+    return {
+        "video_id": video_id,
+        "source": source,
+        "video_type": str(enriched_data.get("video_type", "")).strip() or None,
+        "prompt_version": str(enriched_data.get("prompt_version", "")).strip() or None,
+        "summary": enriched_data.get("summary") if isinstance(enriched_data.get("summary"), dict) else {},
+        "metadata": {
+            "prompt_variant_used": metadata_payload.get("prompt_variant_used"),
+            "route_reason": metadata_payload.get("route_reason"),
+            "quality_repair_summary": metadata_payload.get("quality_repair_summary"),
+        },
+        "quality_summary": quality_data.get("summary") if isinstance(quality_data.get("summary"), dict) else {},
+        "quality_flags": {
+            "low_quality_segments": sorted(set(low_quality_segments)),
+            "transcript_artifact_segments": sorted(set(transcript_artifact_segments)),
+        },
+        "enrichments": enrichments,
+        "evidence_segments": evidence_segments,
+    }
+
+
+def _normalize_gate_decision(raw: Any) -> str:
+    gate = str(raw or "").strip().lower()
+    return gate if gate in GATE_DECISIONS else "pass"
+
+
+def _normalize_signal_class(raw: Any) -> Optional[str]:
+    value = str(raw or "").strip()
+    return value if value in SIGNAL_CLASSES else None
+
+
+def _normalize_remediation_path(raw: Any) -> Optional[str]:
+    value = str(raw or "").strip()
+    return value if value in REMEDIATION_PATHS else None
+
+
+def _normalize_check(row: Any) -> Optional[Dict[str, Any]]:
+    if not isinstance(row, dict):
+        return None
+    severity = str(row.get("severity", "")).strip().lower()
+    if severity not in CHECK_SEVERITIES:
+        severity = "info"
+    check_name = str(row.get("check", "")).strip() or "unknown_check"
+    message = _truncate(row.get("message", "No details provided"), 300) or "No details provided"
+    out: Dict[str, Any] = {
+        "severity": severity,
+        "check": check_name,
+        "message": message,
+    }
+    signal_class = _normalize_signal_class(row.get("signal_class"))
+    remediation_path = _normalize_remediation_path(row.get("remediation_path"))
+    if signal_class:
+        out["signal_class"] = signal_class
+    if remediation_path:
+        out["remediation_path"] = remediation_path
+    return out
+
+
+def _default_issue_severity_for_gate(gate: str) -> str:
+    if gate == "block":
+        return "major"
+    if gate == "review":
+        return "minor"
+    return "info"
+
+
+def _normalize_issue(row: Any) -> Optional[Dict[str, Any]]:
+    if not isinstance(row, dict):
+        return None
+
+    gate = _normalize_gate_decision(row.get("gate_decision"))
+    issue_code = str(row.get("issue_code", "")).strip() or "stage07b_issue"
+    issue_severity = str(row.get("issue_severity", "")).strip().lower()
+    if issue_severity not in ISSUE_SEVERITIES:
+        issue_severity = _default_issue_severity_for_gate(gate)
+
+    signal_class = _normalize_signal_class(row.get("signal_class")) or "other_quality"
+    remediation_path = _normalize_remediation_path(row.get("remediation_path")) or "manual_review"
+    message = _truncate(row.get("message", "No details provided"), 300) or "No details provided"
+
+    conversation_id = _safe_int(row.get("conversation_id"))
+    if conversation_id is not None and conversation_id < 1:
+        conversation_id = None
+    segment_id = _safe_int(row.get("segment_id"))
+    if segment_id is not None and segment_id < 0:
+        segment_id = None
+
+    evidence_segment_ids: List[int] = []
+    raw_evidence = row.get("evidence_segment_ids")
+    if isinstance(raw_evidence, list):
+        for item in raw_evidence:
+            sid = _safe_int(item)
+            if sid is not None and sid >= 0:
+                evidence_segment_ids.append(sid)
+
+    issue: Dict[str, Any] = {
+        "issue_code": issue_code,
+        "issue_severity": issue_severity,
+        "gate_decision": gate,
+        "signal_class": signal_class,
+        "remediation_path": remediation_path,
+        "message": message,
+        "conversation_id": conversation_id,
+        "segment_id": segment_id,
+        "evidence_segment_ids": sorted(set(evidence_segment_ids)),
+    }
+
+    confidence = _safe_probability(row.get("confidence"))
+    if confidence is not None:
+        issue["confidence"] = confidence
+
+    waived = row.get("waived")
+    if isinstance(waived, bool):
+        issue["waived"] = waived
+        waiver_note = row.get("waiver_note")
+        if waiver_note is None or isinstance(waiver_note, str):
+            issue["waiver_note"] = waiver_note
+
+    return issue
+
+
+def _derive_gate_from_checks_and_issues(
+    checks: List[Dict[str, Any]],
+    issues: List[Dict[str, Any]],
+    llm_gate: str,
+) -> str:
+    rank = {"pass": 0, "review": 1, "block": 2}
+    derived = "pass"
+
+    for issue in issues:
+        gate = _normalize_gate_decision(issue.get("gate_decision"))
+        if rank[gate] > rank[derived]:
+            derived = gate
+
+    if any(c.get("severity") == "error" for c in checks):
+        derived = "block" if rank["block"] > rank[derived] else derived
+    elif any(c.get("severity") == "warning" for c in checks):
+        derived = "review" if rank["review"] > rank[derived] else derived
+
+    return llm_gate if rank[llm_gate] >= rank[derived] else derived
+
+
+def _sanitize_reason_code(raw: Any, gate: str) -> str:
+    reason = str(raw or "").strip().lower()
+    reason = re.sub(r"[^a-z0-9_:-]+", "_", reason).strip("_")
+    if reason:
+        return reason
+    if gate == "block":
+        return "blocking_issue_detected"
+    if gate == "review":
+        return "review_required"
+    return "all_checks_passed"
+
+
+def _normalize_waivers(raw: Any) -> List[Dict[str, Any]]:
+    if not isinstance(raw, list):
+        return []
+    out: List[Dict[str, Any]] = []
+    for row in raw:
+        if not isinstance(row, dict):
+            continue
+        check = str(row.get("check", "")).strip()
+        if not check:
+            continue
+        note = row.get("note")
+        if note is not None and not isinstance(note, str):
+            note = str(note)
+        out.append({"check": check, "note": note})
+    return out
+
+
+def _normalize_metrics(
+    checks: List[Dict[str, Any]],
+    raw_metrics: Any,
+) -> Dict[str, Any]:
+    errors = sum(1 for c in checks if c.get("severity") == "error")
+    warnings = sum(1 for c in checks if c.get("severity") == "warning")
+    infos = sum(1 for c in checks if c.get("severity") == "info")
+
+    metrics: Dict[str, Any] = {
+        "checks_total": len(checks),
+        "errors": errors,
+        "warnings": warnings,
+        "infos": infos,
+        "evidence_coverage_ratio": None,
+        "hallucination_risk_ratio": None,
+    }
+
+    if isinstance(raw_metrics, dict):
+        cov = _safe_probability(raw_metrics.get("evidence_coverage_ratio"))
+        risk = _safe_probability(raw_metrics.get("hallucination_risk_ratio"))
+        if cov is not None:
+            metrics["evidence_coverage_ratio"] = cov
+        if risk is not None:
+            metrics["hallucination_risk_ratio"] = risk
+    return metrics
+
+
+def _normalize_artifact(
+    parsed: Dict[str, Any],
+    *,
+    video_id: str,
+    source: str,
+    input_paths: Dict[str, str],
+) -> Dict[str, Any]:
+    raw_checks = parsed.get("checks")
+    checks: List[Dict[str, Any]] = []
+    if isinstance(raw_checks, list):
+        for row in raw_checks:
+            norm = _normalize_check(row)
+            if norm:
+                checks.append(norm)
+
+    raw_issues = parsed.get("issues")
+    issues: List[Dict[str, Any]] = []
+    if isinstance(raw_issues, list):
+        for row in raw_issues:
+            norm = _normalize_issue(row)
+            if norm:
+                issues.append(norm)
+
+    llm_gate = _normalize_gate_decision(parsed.get("gate_decision"))
+    gate = _derive_gate_from_checks_and_issues(checks, issues, llm_gate)
+    status = STATUS_BY_GATE[gate]
+    reason_code = _sanitize_reason_code(parsed.get("reason_code"), gate)
+    metrics = _normalize_metrics(checks, parsed.get("metrics"))
+
+    out = {
+        "version": 1,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "video_id": video_id,
+        "source": source,
+        "status": status,
+        "gate_decision": gate,
+        "reason_code": reason_code,
+        "inputs": input_paths,
+        "checks": checks,
+        "issues": issues,
+        "waivers_applied": _normalize_waivers(parsed.get("waivers_applied")),
+        "metrics": metrics,
+        "pipeline_version": PIPELINE_VERSION,
+    }
+    return out
+
+
+def _build_prompt(template: str, payload: Dict[str, Any]) -> str:
+    return template.replace(
+        "{{INPUT_JSON}}",
+        json.dumps(payload, ensure_ascii=False, indent=2),
+    )
+
+
+def verify_file(
+    input_path: Path,
+    output_path: Path,
+    *,
+    args: argparse.Namespace,
+    in_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> Dict[str, int]:
+    enriched_data = _read_json(input_path)
+    if not enriched_data:
+        raise RuntimeError(f"Could not read Stage 07 enriched JSON: {input_path}")
+
+    video_id = str(enriched_data.get("video_id", "")).strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        video_id = extract_video_id_from_path(input_path) or ""
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        raise RuntimeError(f"Missing/invalid video_id in Stage 07 enriched artifact: {input_path.name}")
+
+    source = ""
+    try:
+        rel = input_path.relative_to(in_root)
+        if len(rel.parts) >= 2:
+            source = rel.parts[0]
+    except ValueError:
+        source = ""
+    if not source:
+        source = str(enriched_data.get("source", "")).strip()
+    if not source:
+        raise RuntimeError(f"Could not infer source for {input_path.name}")
+
+    s06c_path = _find_upstream_path(
+        enriched_path=input_path,
+        in_root=in_root,
+        stage_root=s06c_root,
+        suffix=".conversations.json",
+        video_id=video_id,
+        source=source,
+    )
+    s06e_path = _find_upstream_path(
+        enriched_path=input_path,
+        in_root=in_root,
+        stage_root=s06e_root,
+        suffix=".quality-check.json",
+        video_id=video_id,
+        source=source,
+    )
+    if not s06c_path:
+        raise RuntimeError(f"Missing required Stage 06c artifact for video_id={video_id}")
+    if not s06e_path:
+        raise RuntimeError(f"Missing required Stage 06e artifact for video_id={video_id}")
+
+    s06c_data = _read_json(s06c_path)
+    if not s06c_data:
+        raise RuntimeError(f"Could not read Stage 06c artifact: {s06c_path}")
+    s06e_data = _read_json(s06e_path)
+    if not s06e_data:
+        raise RuntimeError(f"Could not read Stage 06e artifact: {s06e_path}")
+
+    payload = _build_prompt_package(
+        video_id=video_id,
+        source=source,
+        enriched_data=enriched_data,
+        conversations_data=s06c_data,
+        quality_data=s06e_data,
+    )
+
+    if args.dry_run:
+        print(
+            f"{LOG_PREFIX} [DRY RUN] {input_path.name}: "
+            f"enrichments={len(payload.get('enrichments', []))}, "
+            f"evidence_segments={len(payload.get('evidence_segments', []))}"
+        )
+        return {"processed": 1, "pass": 0, "review": 0, "block": 0}
+
+    prompt = _build_prompt(prompt_template, payload)
+    raw = call_claude(
+        prompt,
+        model=args.model,
+        timeout_seconds=args.timeout_seconds,
+        retries=args.retries,
+    )
+    if not raw:
+        raise RuntimeError("Claude returned no output")
+
+    parsed = _extract_json_object(raw)
+    if not isinstance(parsed, dict):
+        raise RuntimeError("Could not parse JSON object from Claude response")
+
+    input_paths = {
+        "stage07_enriched": str(input_path),
+        "stage06_conversations": str(s06c_path),
+        "stage06e_quality_check": str(s06e_path),
+    }
+    out = _normalize_artifact(
+        parsed,
+        video_id=video_id,
+        source=source,
+        input_paths=input_paths,
+    )
+    if not _validate_schema(out, schema):
+        raise RuntimeError("Normalized output failed 07b schema validation")
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+    gate = out["gate_decision"]
+    print(f"{LOG_PREFIX} {input_path.name}: gate={gate} reason={out['reason_code']}")
+    return {
+        "processed": 1,
+        "pass": 1 if gate == "pass" else 0,
+        "review": 1 if gate == "review" else 0,
+        "block": 1 if gate == "block" else 0,
+    }
+
+
+def _run_directory_with_files(
+    files: List[Path],
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    in_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    if not files:
+        return
+    print(f"{LOG_PREFIX} Input : {in_dir}")
+    print(f"{LOG_PREFIX} Output: {out_dir}")
+    print(f"{LOG_PREFIX} Files : {len(files)}")
+
+    processed = 0
+    skipped = 0
+    skipped_quarantine = 0
+    failed = 0
+    pass_count = 0
+    review_count = 0
+    block_count = 0
+    quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
+
+    for input_file in files:
+        quarantine_reason = get_quarantine_block_reason(input_file, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_file.name} - {quarantine_reason}")
+            skipped_quarantine += 1
+            continue
+
+        preferred_output = compute_output_path_with_layout(
+            input_file,
+            out_dir,
+            input_root_dir=in_dir,
+        )
+        existing_output = find_existing_output_path(
+            input_file,
+            out_dir,
+            input_root_dir=in_dir,
+        )
+        if existing_output and not args.overwrite:
+            skipped += 1
+            continue
+
+        try:
+            counts = verify_file(
+                input_file,
+                preferred_output,
+                args=args,
+                in_root=in_root,
+                s06c_root=s06c_root,
+                s06e_root=s06e_root,
+                prompt_template=prompt_template,
+                schema=schema,
+            )
+            processed += int(counts.get("processed", 0))
+            pass_count += int(counts.get("pass", 0))
+            review_count += int(counts.get("review", 0))
+            block_count += int(counts.get("block", 0))
+        except Exception as exc:
+            failed += 1
+            print(f"{LOG_PREFIX} ERROR: {input_file} -> {exc}")
+
+    print(f"\n{LOG_PREFIX} Done.")
+    print(f"  Processed:       {processed}")
+    print(f"  Skipped:         {skipped}")
+    print(f"  Skipped (quarantine): {skipped_quarantine}")
+    print(f"  Failed:          {failed}")
+    print(f"  Gate PASS:       {pass_count}")
+    print(f"  Gate REVIEW:     {review_count}")
+    print(f"  Gate BLOCK:      {block_count}")
+    if failed > 0:
+        sys.exit(1)
+
+
+def _run_directory(
+    in_dir: Path,
+    out_dir: Path,
+    args: argparse.Namespace,
+    *,
+    in_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    files = find_input_files(in_dir)
+    if not files:
+        print(f"{LOG_PREFIX} No .enriched.json files found in: {in_dir}")
+        return
+    _run_directory_with_files(
+        files,
+        in_dir,
+        out_dir,
+        args,
+        in_root=in_root,
+        s06c_root=s06c_root,
+        s06e_root=s06e_root,
+        prompt_template=prompt_template,
+        schema=schema,
+    )
+
+
+def _run_input(
+    args: argparse.Namespace,
+    in_root: Path,
+    out_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    input_path = Path(args.input)
+    if not input_path.exists():
+        input_path = repo_root() / args.input
+    if not input_path.exists():
+        raise SystemExit(f"Input not found: {args.input}")
+    input_path = input_path.resolve()
+
+    if input_path.is_file():
+        quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
+        quarantine_reason = get_quarantine_block_reason(input_path, quarantine_ids)
+        if quarantine_reason:
+            print(f"{LOG_PREFIX} SKIP: {input_path.name} - {quarantine_reason}")
+            return
+        out_dir = Path(args.output) if args.output else out_root
+        output_path = compute_output_path_with_layout(input_path, out_dir, input_root_dir=in_root)
+        if output_path.exists() and not args.overwrite:
+            print(f"{LOG_PREFIX} Output exists, skipping: {output_path}")
+            return
+        verify_file(
+            input_path,
+            output_path,
+            args=args,
+            in_root=in_root,
+            s06c_root=s06c_root,
+            s06e_root=s06e_root,
+            prompt_template=prompt_template,
+            schema=schema,
+        )
+        return
+
+    out_dir = Path(args.output) if args.output else out_root
+    _run_directory(
+        input_path,
+        out_dir,
+        args,
+        in_root=in_root,
+        s06c_root=s06c_root,
+        s06e_root=s06e_root,
+        prompt_template=prompt_template,
+        schema=schema,
+    )
+
+
+def _run_sources(
+    args: argparse.Namespace,
+    in_root: Path,
+    out_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    sources_path = repo_root() / args.sources
+    if not sources_path.exists():
+        raise SystemExit(f"Sources file not found: {sources_path}")
+    for src_name, _ in parse_sources_file(sources_path):
+        src_in = in_root / src_name
+        if not src_in.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no Stage 07 enriched output")
+            continue
+        src_out = out_root / src_name
+        files = find_input_files(src_in)
+        _run_directory_with_files(
+            files,
+            src_in,
+            src_out,
+            args,
+            in_root=in_root,
+            s06c_root=s06c_root,
+            s06e_root=s06e_root,
+            prompt_template=prompt_template,
+            schema=schema,
+        )
+
+
+def _run_manifest(
+    args: argparse.Namespace,
+    in_root: Path,
+    out_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    manifest_path = Path(args.manifest)
+    if not manifest_path.is_absolute():
+        manifest_path = repo_root() / manifest_path
+    if not manifest_path.exists():
+        raise SystemExit(f"Manifest file not found: {manifest_path}")
+
+    sources_map = load_manifest_sources(manifest_path)
+    for src_name, vid_ids in sorted(sources_map.items()):
+        src_in = in_root / src_name
+        if not src_in.exists():
+            print(f"{LOG_PREFIX} Skipping {src_name}: no Stage 07 enriched output")
+            continue
+        src_out = out_root / src_name
+        files = manifest_filter_files(find_input_files(src_in), vid_ids)
+        if not files:
+            print(f"{LOG_PREFIX} Skipping {src_name}: no manifest videos found in Stage 07")
+            continue
+        print(f"{LOG_PREFIX} Manifest: {src_name} ({len(files)} videos)")
+        _run_directory_with_files(
+            files,
+            src_in,
+            src_out,
+            args,
+            in_root=in_root,
+            s06c_root=s06c_root,
+            s06e_root=s06e_root,
+            prompt_template=prompt_template,
+            schema=schema,
+        )
+
+
+def _run_named_source(
+    args: argparse.Namespace,
+    in_root: Path,
+    out_root: Path,
+    s06c_root: Path,
+    s06e_root: Path,
+    prompt_template: str,
+    schema: Optional[Dict[str, Any]],
+) -> None:
+    src = args.name
+    in_dir = in_root / src
+    if not in_dir.exists():
+        raise SystemExit(f"Input directory not found: {in_dir}")
+    out_dir = Path(args.output) if args.output else out_root / src
+    _run_directory(
+        in_dir,
+        out_dir,
+        args,
+        in_root=in_root,
+        s06c_root=s06c_root,
+        s06e_root=s06e_root,
+        prompt_template=prompt_template,
+        schema=schema,
+    )
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Stage 07b LLM enrichment verification")
+    parser.add_argument("name", nargs="?", help="Source name (folder under data/07.LLM.content)")
+    parser.add_argument("youtube_url", nargs="?", help="Unused (pipeline compatibility)")
+    parser.add_argument("--input", help="Input .enriched.json file or directory")
+    parser.add_argument(
+        "--input-root",
+        help="Root directory for source/manifest runs (default: data/07.LLM.content)",
+    )
+    parser.add_argument(
+        "--stage06c-root",
+        help="Stage 06c root directory (default: data/06c.DET.patched)",
+    )
+    parser.add_argument(
+        "--stage06e-root",
+        help="Stage 06e root directory (default: data/06e.LLM.quality-check)",
+    )
+    parser.add_argument(
+        "--output",
+        help="Output directory (default: data/07b.LLM.enrichment-verify)",
+    )
+    parser.add_argument("--model", default="opus", help="Claude model (default: opus)")
+    parser.add_argument("--timeout-seconds", type=int, default=900, help="Per-call timeout seconds")
+    parser.add_argument("--retries", type=int, default=2, help="Retries per LLM call")
+    parser.add_argument(
+        "--llm-retries",
+        type=int,
+        help="Alias for --retries (for consistency with other LLM stages)",
+    )
+    parser.add_argument(
+        "--preflight-timeout-seconds",
+        type=int,
+        default=20,
+        help="Per-attempt timeout for startup Claude health probe (default: 20).",
+    )
+    parser.add_argument(
+        "--preflight-retries",
+        type=int,
+        default=2,
+        help="Retry attempts for startup Claude health probe (default: 2).",
+    )
+    parser.add_argument("--test", action="store_true", help="Use test roots under data/test/")
+    parser.add_argument(
+        "--sources",
+        nargs="?",
+        const="docs/pipeline/sources.txt",
+        help="Process all sources from a sources file",
+    )
+    parser.add_argument("--manifest", help="Manifest file: process listed videos only")
+    parser.add_argument("--dry-run", action="store_true", help="Preview without writing files")
+    parser.add_argument("--overwrite", action="store_true", help="Overwrite existing output files")
+    parser.add_argument("--quarantine-file", help="JSON file listing quarantined video IDs to skip")
+    args = parser.parse_args()
+
+    if args.llm_retries is not None:
+        args.retries = args.llm_retries
+    if args.timeout_seconds <= 0:
+        raise SystemExit("--timeout-seconds must be >= 1")
+    if args.retries <= 0:
+        raise SystemExit("--retries must be >= 1")
+    if args.preflight_timeout_seconds <= 0:
+        raise SystemExit("--preflight-timeout-seconds must be >= 1")
+    if args.preflight_retries <= 0:
+        raise SystemExit("--preflight-retries must be >= 1")
+
+    args._quarantine_ids = set()
+    if args.quarantine_file:
+        quarantine_path = Path(args.quarantine_file)
+        if not quarantine_path.is_absolute():
+            quarantine_path = repo_root() / quarantine_path
+        if not quarantine_path.exists():
+            raise SystemExit(f"Quarantine file not found: {quarantine_path}")
+        args._quarantine_ids = load_quarantine_video_ids(quarantine_path)
+        print(f"{LOG_PREFIX} Loaded quarantine file: {quarantine_path} ({len(args._quarantine_ids)} video ids)")
+
+    prompt_template = _load_prompt_template()
+    schema = _load_schema()
+
+    if args.test:
+        in_root = resolve_root_path(args.input_root, test_input_root())
+        out_root = Path(args.output) if args.output else test_output_root()
+        s06c_root = resolve_root_path(args.stage06c_root, test_stage06c_root())
+        s06e_root = resolve_root_path(args.stage06e_root, test_stage06e_root())
+    else:
+        in_root = resolve_root_path(args.input_root, input_root())
+        out_root = Path(args.output) if args.output else output_root()
+        s06c_root = resolve_root_path(args.stage06c_root, stage06c_root())
+        s06e_root = resolve_root_path(args.stage06e_root, stage06e_root())
+
+    if not args.dry_run:
+        claude_bin = find_claude_binary()
+        if not claude_bin:
+            raise SystemExit(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+        ok, reason = run_claude_preflight(
+            claude_bin,
+            model=args.model,
+            timeout_seconds=args.preflight_timeout_seconds,
+            retries=args.preflight_retries,
+        )
+        if not ok:
+            raise SystemExit(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
+        print(
+            f"{LOG_PREFIX} Claude preflight: ok "
+            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+        )
+
+    if args.test:
+        _run_directory(
+            in_root,
+            out_root,
+            args,
+            in_root=in_root,
+            s06c_root=s06c_root,
+            s06e_root=s06e_root,
+            prompt_template=prompt_template,
+            schema=schema,
+        )
+    elif args.manifest:
+        _run_manifest(
+            args,
+            in_root,
+            out_root,
+            s06c_root,
+            s06e_root,
+            prompt_template,
+            schema,
+        )
+    elif args.input:
+        _run_input(
+            args,
+            in_root,
+            out_root,
+            s06c_root,
+            s06e_root,
+            prompt_template,
+            schema,
+        )
+    elif args.sources:
+        _run_sources(
+            args,
+            in_root,
+            out_root,
+            s06c_root,
+            s06e_root,
+            prompt_template,
+            schema,
+        )
+    elif args.name:
+        _run_named_source(
+            args,
+            in_root,
+            out_root,
+            s06c_root,
+            s06e_root,
+            prompt_template,
+            schema,
+        )
+    else:
+        raise SystemExit("Provide a source name, --input, --test, --manifest, or --sources")
+
+
+if __name__ == "__main__":
+    main()

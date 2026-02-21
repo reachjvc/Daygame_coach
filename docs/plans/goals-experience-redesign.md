@@ -290,95 +290,20 @@ After Batch 1 review, build the remaining 6 variants. User feedback may repriori
 
 ## Phase 2: Goal Template & Data Overhaul
 
-### 2.1a — L2 Badge Engine Prototype (Architecture Proof)
-**Resolve the circular dependency**: V5 variants test whether L2 extraction *feels* right. This step proves it *works* technically. Done before any visual work.
+### 2.1a — L2 Badge Engine Prototype — DONE
+Shipped. `src/goals/badgeEngineService.ts` + `tests/unit/goals/badgeEngine.test.ts`. Parity with `computeAchievementProgress()` verified.
 
-Build a standalone service (`src/goals/badgeEngineService.ts`) that:
-1. Takes a flat list of L3 goals with progress
-2. Reads `PER_L2_WEIGHTS` from goalGraph
-3. Computes L2 badge progress for each L2 (same math as `computeAchievementProgress()`)
-4. Returns badge status: { badgeId, progress%, tier (bronze/silver/gold/platinum), unlocked: boolean }
+### 2.1b — Deep Audit of Dating Templates — DONE
+Completed. See `docs/plans/dating-template-audit.md`.
 
-This proves L2 extraction is architecturally viable WITHOUT changing any existing code. Pure additive — if it works, V5 flat+badge variants can use it. If it doesn't, we know before investing in 5 variants.
+### 2.2 — Restructure Dating Templates — DONE
+All merges, renames, rewires implemented. 12 gap L3s added, l2_inner_game added, per-L2 weights redistributed, `buildPreviewState()` accepts FTO/Abundance path. HIGH priority gap templates default ON, NICHE templates default OFF. 1130 tests passing.
 
-**Files**: `src/goals/badgeEngineService.ts` (new), `tests/unit/badgeEngine.test.ts` (new)
-**Validation**: Unit tests pass. Same progress % as existing `computeAchievementProgress()` for identical inputs.
+### 2.3 — Expand All Non-Daygame Equally — DONE
+All 7 life areas have full L2+L3+weight coverage in goalGraph.ts: PG (20 L3s), Social (24), Fitness (27), Wealth (20), Vices (17), Lifestyle (17).
 
-### 2.1b — Deep Audit of Dating Templates
-
-**Methodology** (step-by-step, AI-implementable):
-
-1. **Extract full inventory**: Read `goalGraph.ts`. For every daygame L3 template, record:
-   - Template ID, title, display_category
-   - tracking_type (counter/percentage/streak/boolean)
-   - templateType (milestone_ladder / habit_ramp / null)
-   - linkedMetric (if any)
-   - defaultMilestoneConfig or defaultRampSteps (if any)
-   - Which L2s it feeds (via edges) and at what weight
-
-2. **Real-world action mapping**: For each L3, answer:
-   - What specific real-world action does the user perform?
-   - How frequently? (daily/weekly/monthly)
-   - Can this be auto-tracked from existing data? (sessions, approaches, field reports)
-   - If not auto-tracked, what INPUT METHOD makes sense? (manual counter, timer, boolean check, etc.)
-
-3. **Overlap detection**: Find L3 pairs where:
-   - Same real-world action with different template IDs (e.g., "Second Dates" in two categories)
-   - One is a subset of another (e.g., "Approach Volume" and "Session Frequency" both measure approaching)
-   - Redundant at the tracking level (user would increment both from the same action)
-
-4. **Gap detection**: Identify missing goals using Claude's knowledge of dating coaching curricula + web research for major coaching programs. **FLAG: All gap suggestions must be reviewed by user before adding — Claude's gaps are educated guesses, not authoritative.** Categories to check:
-   - **Inner game**: Anxiety management, self-talk, state control, frame
-   - **Outer game**: Body language, eye contact, vocal tonality, fashion/grooming
-   - **Logistics**: Venue knowledge, date spot rotation, scheduling efficiency
-   - **Relationship skills**: Emotional intelligence, conflict resolution, boundary setting
-   - **Meta-skills**: Review discipline, peer feedback, coaching sessions attended
-
-5. **L1 path evaluation**: For FTO vs Abundance, document:
-   - Which L3s are shared vs path-specific (currently: ALL shared)
-   - Which L3s SHOULD be path-specific (e.g., "Rotation Size" = Abundance only, "Deep Connection Score" = FTO only)
-   - Proposed default enablement per path
-
-6. **L2 evaluation**: For each daygame L2 achievement:
-   - Is it a meaningful milestone, or just a grouping label?
-   - What would it mean to "earn" this as a badge?
-   - Does it overlap with existing milestones in `milestones.ts`?
-   - Proposed unlock threshold (what % of weighted L3 progress = badge earned?)
-
-**Deliverable**: `docs/plans/dating-template-audit.md` containing all findings + specific recommendations (merge/split/add/remove/rewire)
-
-### 2.2 — Restructure Dating Templates
-
-**Decision framework** (apply to each audit finding):
-
-| Finding Type | Action | Example |
-|-------------|--------|---------|
-| Duplicate L3 | Merge into one, update all edges | "Second Dates" → single `l3_second_dates` in `dates` category |
-| Subset L3 | Keep the broader one, remove subset | If "Session Frequency" is subset of "Approach Frequency", remove one |
-| Missing gap | Add new L3 template with: ID, title, category, tracking_type, linkedMetric, default config | "Vocal Tonality Practice" → `l3_vocal_tonality`, `field_work`, counter, weekly |
-| Shared L3 that should be path-specific | Keep L3, add path-specific default enablement in `buildPreviewState()` | "Rotation Size" → enabled by default for Abundance, disabled for FTO |
-| L2 that overlaps with milestone | Merge L2 badge with existing milestone, or keep if meaningfully different | If `l2_overcome_aa` overlaps `approach_anxiety_conquered` milestone → merge |
-| L2 that's just a label | Either make it meaningful (define unlock criteria) or remove | If "Master Texting" has only 3 L3s and weak differentiation → evaluate |
-
-**Concrete code changes**:
-- `goalGraph.ts`: Add/remove/rename template constants, update `GOAL_GRAPH_EDGES`, update `PER_L2_WEIGHTS`
-- `goalTypes.ts`: Add new `GoalDisplayCategory` values if needed (e.g., `inner_game`, `logistics`)
-- `goalsService.ts`: Modify `buildPreviewState()` to accept `path: 'fto' | 'abundance'` parameter
-- `lifeAreas.ts`: Remove deprecated flat `suggestions` for daygame (replaced by goalGraph)
-
-**Validation**: After restructure, run `npm test`. Architecture tests must pass. No duplicate template IDs.
-
-### 2.3 — Expand All Non-Daygame Equally
-Bring every area to comparable depth:
-- Fitness: workout metrics, nutrition, body comp, flexibility, cardio
-- Personal Growth: meditation, reading, journaling, emotional regulation
-- Social: events, friendships, hosting, public speaking
-- Career: deep work, revenue, skills, networking
-- Lifestyle: creative, cooking, travel, style, home
-- Vices: porn freedom, screen time, dopamine, alcohol, sleep
-
-### 2.4 — Template-Reporting Map
-Document for every L3: what feeds it? Session tracker (exists), field reports (exists), goal increment (exists), workout logger (needs build), meditation timer (needs build), etc.
+### 2.4 — Template-Reporting Map — DONE
+See `docs/plans/template-reporting-map.md`. 131 L3s mapped. 11 NEEDS BUILD items linked to Phase 5.
 
 ---
 
@@ -422,28 +347,19 @@ Meditation → Overcome AA. Gym → Confidence. `cross_area_edges` in goalGraph.
 
 ## Execution Order
 
-**Templates + architecture proof first, then visuals in two batches.**
+**Completed phases marked with ✅. Active exploration via V7/V8 test pages.**
 
 ```
-Phase 2.1a (L2 badge engine prototype — prove extraction works) ←── START HERE
-  ↓ parallel:
-Phase 2.1b (dating template deep audit)
+Phase 2.1a ✅ (badge engine prototype)
+Phase 2.1b ✅ (dating template audit)
+Phase 2.2  ✅ (dating template restructure + gap templates + l2_inner_game + path defaults)
+Phase 2.3  ✅ (all non-daygame areas expanded)
+Phase 2.4  ✅ (template-reporting map)
   ↓
-Phase 2.2 (dating template restructure — get one area right)
-  ↓
-Phase 2.4 (template-reporting map — know what feeds what)
-  ↓
-Phase 1.0a (extract shared theme components to app/test/shared-themes/)
-Phase 1.0b (scaffolding — hub page + shared data layer)
-  ↓
-Phase 1 Batch 1 (4 variants: A, D, F, + one wild card)
-  ↓ user reviews Batch 1
-Phase 1 Batch 2 (remaining variants, informed by feedback — may skip some)
-  ↓ user reviews all, picks direction
-Phase 1.12 (V5.1 mashup iterations)
-  ↓ user confirms direction + hierarchy model
-Phase 2.3 (expand all non-daygame areas equally)
-  ↓
+Phase 1 — Creative exploration happening organically via V7/V8 test pages ←── CURRENT
+  V7: VariantA (Aurora-Orrery), VariantD (Living Dashboard)
+  V8: Evolved variant with orrery visualization
+  ↓ user picks direction + hierarchy model
 Phase 4 (production consolidation — winning variant + complete templates)
   ↓ parallel:
 Phase 3.1-3.2 (LinkedMetric + auto-sync)
