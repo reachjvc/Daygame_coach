@@ -9,6 +9,7 @@ import type { CelebrationTier } from "../types"
 interface CelebrationOverlayProps {
   tier: CelebrationTier
   goalTitle: string
+  source?: "setup" | "goal"
   onDismiss: () => void
 }
 
@@ -36,7 +37,7 @@ const TIER_CONFIG: Record<CelebrationTier, {
   },
 }
 
-export function CelebrationOverlay({ tier, goalTitle, onDismiss }: CelebrationOverlayProps) {
+export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss }: CelebrationOverlayProps) {
   const config = TIER_CONFIG[tier]
 
   const fireConfetti = useCallback(() => {
@@ -119,7 +120,7 @@ export function CelebrationOverlay({ tier, goalTitle, onDismiss }: CelebrationOv
 
         <p className="text-muted-foreground mb-6">{goalTitle}</p>
 
-        {tier === "confetti-epic" && (
+        {tier === "confetti-epic" && source === "goal" && (
           <p className="text-amber-400 text-sm font-medium mb-6">
             You completed a long-term goal. That takes real commitment.
           </p>

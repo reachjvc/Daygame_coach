@@ -3,21 +3,19 @@
 # scripts/training-data/batch/sub-batch-pipeline
 #
 # Pipeline orchestrator for sub-batches. Runs stages with automatic
-# post-stage validation and quarantine-and-continue on failures.
+# post-stage validation, bounded auto-repair retries, and quarantine-and-continue.
 #
 # Usage:
-#   A) Run full pipeline (stages 06→09, including 07b, with validation):
-#      ./sub-batch-pipeline P001.1 --run
-#      ./sub-batch-pipeline P001.1 --run --from 07    # resume from stage 07
+#   A) Standard production path (implicit run mode):
+#      ./sub-batch-pipeline P001.1                   # runs stages 06→09 + validation + auto-repair retries
+#      ./sub-batch-pipeline P001.1 --from 07         # resume from stage 07
 #
-#   B) Run all sub-batches in a batch:
+#   B) Batch execution:
 #      ./sub-batch-pipeline P001 --run-all
 #      ./sub-batch-pipeline P001 --run-all --count 3  # next 3 incomplete
 #
-#   C) Run a single stage (with post-stage validation):
+#   C) Operator/debug modes (not the standard production path):
 #      ./sub-batch-pipeline P001.1 --stage 06
-#
-#   D) List / status / view / validate / approve:
 #      ./sub-batch-pipeline --list
 #      ./sub-batch-pipeline P001.1 --status
 #      ./sub-batch-pipeline P001 --status
@@ -26,6 +24,8 @@
 #      ./sub-batch-pipeline P001.1 --approve
 
 set -euo pipefail
+
+ORIG_ARGS=("$@")
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
@@ -125,6 +125,25 @@ CFG_MAX_WARNING_CHECKS_BY_CLASS=()
 CFG_BLOCK_WARNING_CLASSES=()
 CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()
 CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()
+CFG_ALLOW_INGEST_STATUSES=("READY")
+CFG_REVIEW_VIDEO_DAMAGE_SCORE=""
+CFG_BLOCK_VIDEO_DAMAGE_SCORE=""
+CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
+CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
+CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()
+CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()
+CFG_REVIEW_SEVERE_DAMAGE_CHUNK_RATIO=""
+CFG_BLOCK_SEVERE_DAMAGE_CHUNK_RATIO=""
+CFG_MAX_POSITIVE_DAMAGE_WINDOWLESS_RATIO=""
+CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE="0.03"
+CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()
+CFG_REPAIR_CONTEXT_RADIUS="0"
+CFG_READY_SPOTCHECK_CONTEXT_RADIUS="0"
+CFG_AUTO_REPAIR_ENABLED="true"
+CFG_AUTO_REPAIR_MAX_ATTEMPTS="1"
+CFG_AUTO_REPAIR_RERUN_FROM_STAGE="06b"
+AUTO_REPAIR_ATTEMPTS_RAN_LAST="0"
+AUTO_REPAIR_LAST_REVALIDATE_RC=""
 
 load_pipeline_config() {
   local config_file="$SCRIPT_DIR/pipeline.config.json"
@@ -212,6 +231,144 @@ if isinstance(review_by_type, dict) and review_by_type:
 else:
     print('CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()')
 
+allow_statuses = r.get("allow_ingest_statuses", ["READY"])
+if isinstance(allow_statuses, list) and allow_statuses:
+    items = []
+    for status in allow_statuses:
+        if not isinstance(status, str):
+            continue
+        st = status.strip().upper()
+        if st in {"READY", "REVIEW", "BLOCKED"}:
+            items.append(f'"{st}"')
+    if items:
+        print(f'CFG_ALLOW_INGEST_STATUSES=({" ".join(items)})')
+    else:
+        print('CFG_ALLOW_INGEST_STATUSES=("READY")')
+else:
+    print('CFG_ALLOW_INGEST_STATUSES=("READY")')
+
+def emit_optional_ratio(var_name: str, raw: object) -> None:
+    if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+        value = float(raw)
+        if 0.0 <= value <= 1.0:
+            print(f'{var_name}="{value}"')
+            return
+    print(f'{var_name}=""')
+
+def emit_non_negative_int(var_name: str, raw: object, default: int = 0) -> None:
+    if isinstance(raw, bool):
+        print(f'{var_name}="{default}"')
+        return
+    if isinstance(raw, int):
+        value = raw
+    elif isinstance(raw, float) and raw.is_integer():
+        value = int(raw)
+    else:
+        print(f'{var_name}="{default}"')
+        return
+    if value < 0:
+        value = default
+    print(f'{var_name}="{value}"')
+
+def emit_bool_string(var_name: str, raw: object, default: bool) -> None:
+    if isinstance(raw, bool):
+        print(f'{var_name}="{"true" if raw else "false"}"')
+        return
+    print(f'{var_name}="{"true" if default else "false"}"')
+
+emit_optional_ratio("CFG_REVIEW_VIDEO_DAMAGE_SCORE", r.get("review_video_damage_score"))
+emit_optional_ratio("CFG_BLOCK_VIDEO_DAMAGE_SCORE", r.get("block_video_damage_score"))
+emit_optional_ratio(
+    "CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE",
+    r.get("review_windowless_video_damage_score"),
+)
+emit_optional_ratio(
+    "CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE",
+    r.get("block_windowless_video_damage_score"),
+)
+review_windowless_by_type = r.get("review_windowless_video_damage_score_by_content_type", {})
+if isinstance(review_windowless_by_type, dict) and review_windowless_by_type:
+    items = []
+    for video_type, threshold in review_windowless_by_type.items():
+        if not isinstance(video_type, str):
+            continue
+        if isinstance(threshold, bool):
+            continue
+        if isinstance(threshold, (int, float)):
+            value = float(threshold)
+            if 0.0 <= value <= 1.0:
+                items.append(f'"{video_type.strip()}={value}"')
+    if items:
+        print(f'CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=({" ".join(items)})')
+    else:
+        print('CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+else:
+    print('CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+block_windowless_by_type = r.get("block_windowless_video_damage_score_by_content_type", {})
+if isinstance(block_windowless_by_type, dict) and block_windowless_by_type:
+    items = []
+    for video_type, threshold in block_windowless_by_type.items():
+        if not isinstance(video_type, str):
+            continue
+        if isinstance(threshold, bool):
+            continue
+        if isinstance(threshold, (int, float)):
+            value = float(threshold)
+            if 0.0 <= value <= 1.0:
+                items.append(f'"{video_type.strip()}={value}"')
+    if items:
+        print(f'CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=({" ".join(items)})')
+    else:
+        print('CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+else:
+    print('CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+emit_optional_ratio("CFG_REVIEW_SEVERE_DAMAGE_CHUNK_RATIO", r.get("review_severe_damage_chunk_ratio"))
+emit_optional_ratio("CFG_BLOCK_SEVERE_DAMAGE_CHUNK_RATIO", r.get("block_severe_damage_chunk_ratio"))
+emit_optional_ratio(
+    "CFG_MAX_POSITIVE_DAMAGE_WINDOWLESS_RATIO",
+    r.get("max_positive_damage_windowless_ratio"),
+)
+emit_optional_ratio(
+    "CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE",
+    r.get("ready_spotcheck_min_video_damage_score", 0.03),
+)
+ready_spotcheck_by_type = r.get("ready_spotcheck_min_video_damage_score_by_content_type", {})
+if isinstance(ready_spotcheck_by_type, dict) and ready_spotcheck_by_type:
+    items = []
+    for video_type, threshold in ready_spotcheck_by_type.items():
+        if not isinstance(video_type, str):
+            continue
+        if isinstance(threshold, bool):
+            continue
+        if isinstance(threshold, (int, float)):
+            value = float(threshold)
+            if 0.0 <= value <= 1.0:
+                items.append(f'"{video_type.strip()}={value}"')
+    if items:
+        print(f'CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=({" ".join(items)})')
+    else:
+        print('CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+else:
+    print('CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()')
+emit_non_negative_int("CFG_REPAIR_CONTEXT_RADIUS", r.get("repair_context_radius", 0), default=0)
+emit_non_negative_int(
+    "CFG_READY_SPOTCHECK_CONTEXT_RADIUS",
+    r.get("ready_spotcheck_context_radius", 0),
+    default=0,
+)
+automation = cfg.get("automation", {})
+auto_repair = automation.get("auto_repair", {}) if isinstance(automation, dict) else {}
+if not isinstance(auto_repair, dict):
+    auto_repair = {}
+emit_bool_string("CFG_AUTO_REPAIR_ENABLED", auto_repair.get("enabled"), True)
+emit_non_negative_int("CFG_AUTO_REPAIR_MAX_ATTEMPTS", auto_repair.get("max_attempts", 1), default=1)
+rerun_from_stage = auto_repair.get("rerun_from_stage", "06b")
+valid_stages = {"06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"}
+if isinstance(rerun_from_stage, str) and rerun_from_stage in valid_stages:
+    print(f'CFG_AUTO_REPAIR_RERUN_FROM_STAGE="{rerun_from_stage}"')
+else:
+    print('CFG_AUTO_REPAIR_RERUN_FROM_STAGE="06b"')
+
 PYEOF
   )"
 }
@@ -219,30 +376,52 @@ PYEOF
 # Load config at startup
 load_pipeline_config
 
+maybe_reroute_to_ops_wrapper() {
+  if [[ "${SUB_BATCH_PIPELINE_ALLOW_OPS_DIRECT:-}" == "1" ]]; then
+    return 0
+  fi
+  local ops_wrapper="$SCRIPT_DIR/sub-batch-ops"
+  [[ -x "$ops_wrapper" ]] || return 0
+
+  local arg
+  for arg in "${ORIG_ARGS[@]}"; do
+    case "$arg" in
+      --list|--status|--view|--approve|--validate|--stage|--stage=*)
+        echo "WARNING: ${arg%%=*} is an operator/debug mode. Rerouting to ./scripts/training-data/batch/sub-batch-ops." >&2
+        exec "$ops_wrapper" "${ORIG_ARGS[@]}"
+        ;;
+    esac
+  done
+}
+
+maybe_reroute_to_ops_wrapper
+
 usage() {
   cat <<'EOF'
 Usage:
-  ./sub-batch-pipeline P001.1 --run              Run stages 06→09 (incl. 07b) with auto-validation
-  ./sub-batch-pipeline P001.1 --run --from 07    Resume from stage 07
-  ./sub-batch-pipeline P001.1 --run --parallel 10  Conveyor-belt parallel mode
-  ./sub-batch-pipeline P001 --run-all            Run all incomplete sub-batches
-  ./sub-batch-pipeline P001 --run-all --count 3  Run next 3 incomplete sub-batches
-  ./sub-batch-pipeline --list                    List all batches and sub-batches
-  ./sub-batch-pipeline P001.1 --status           Per-stage status
-  ./sub-batch-pipeline P001 --status             Batch-level status
-  ./sub-batch-pipeline P001.1 --stage 06         Run single stage (with post-stage validation)
-  ./sub-batch-pipeline P001.1 --view             Create symlink view
-  ./sub-batch-pipeline P001.1 --validate         Run end-of-pipeline validation only
-  ./sub-batch-pipeline P001.1 --approve          Mark as approved
+  Standard pipeline (recommended):
+    ./sub-batch-pipeline P001.1                  Run the normal pipeline (06→09 + validation + auto-repair retries + artifacts)
+    ./sub-batch-pipeline P001.1 --from 07        Resume the normal pipeline from stage 07
+    ./sub-batch-pipeline P001.1 --parallel 10    Normal pipeline in conveyor-belt mode
+    ./sub-batch-pipeline P001 --run-all          Run normal pipeline for all incomplete sub-batches
+    ./sub-batch-pipeline P001 --run-all --count 3  Run next 3 incomplete sub-batches
+
+  Operator / debug tools:
+    Use ./sub-batch-ops (separate interface for --status/--stage/--validate/--view/--approve/--list)
 
 Options:
   --dry-run                Preview without running
-  --from <stage>           With --run, start from this stage (default: 06)
+  --from <stage>           Start the standard pipeline from this stage (default: 06)
   --parallel <n>           Conveyor-belt mode: videos run in parallel, n max LLM calls
   --count <n>              With --run-all, limit to n sub-batches
-  --source <name>          With --validate, only validate one source
-  --quarantine-file <path> Override auto-detected quarantine file
-  --waiver-file <path>     Override auto-detected waiver file
+  --source <name>          Operator/debug only (when routed via sub-batch-ops)
+  --quarantine-file <path> Override auto-detected quarantine file (run/validate)
+  --waiver-file <path>     Operator/debug only (when routed via sub-batch-ops)
+
+Notes:
+  `--run` is optional. If you pass a sub-batch ID and no explicit mode, the standard pipeline runs.
+  Direct operator/debug modes on `sub-batch-pipeline` are deprecated; use `sub-batch-ops`.
+  Validation/repair/spotcheck/auto-repair policy is config-driven via pipeline.config.json.
 
 Config: scripts/training-data/batch/pipeline.config.json
   All validation thresholds and policies are configured there.
@@ -252,6 +431,14 @@ EOF
 error() {
   echo "ERROR: $*" >&2
   exit 1
+}
+
+warn_operator_mode_direct_use() {
+  local flag="$1"
+  if [[ "${SUB_BATCH_PIPELINE_ALLOW_OPS_DIRECT:-}" == "1" ]]; then
+    return 0
+  fi
+  echo "WARNING: $flag is an operator/debug mode. Use ./scripts/training-data/batch/sub-batch-ops instead." >&2
 }
 
 stage_supports_quarantine() {
@@ -266,6 +453,14 @@ stage_supports_overwrite() {
   local stage="$1"
   case "$stage" in
     06|06b|06c|06d|06e|06f|06g|06h|07|07b) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+stage_supports_apply_repairs() {
+  local stage="$1"
+  case "$stage" in
+    06h) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -287,6 +482,831 @@ run_stage_contract_preflight() {
 
   echo "--- Preflight contract: stage $stage ---"
   "${cmd[@]}"
+}
+
+build_auto_repair_retry_manifest() {
+  local sub_id="$1"
+  local attempt="$2"
+  local manifest="$BATCHES_DIR/${sub_id}.txt"
+  local label="$sub_id"
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    label="${sub_id}.${VALIDATE_SOURCE}"
+  fi
+
+  local repair_worklist="$REPO_ROOT/data/validation/repair_worklists/${label}.repair-worklist.json"
+  local fallback_manifest="$REPO_ROOT/data/validation/repair_worklists/${label}.repair-windowless-fallback.json"
+  local out_manifest="$REPO_ROOT/data/validation/repair_worklists/${label}.auto-repair.attempt${attempt}.manifest.txt"
+  local out_meta="$REPO_ROOT/data/validation/repair_worklists/${label}.auto-repair.attempt${attempt}.targets.json"
+
+  python3 - "$manifest" "$repair_worklist" "$fallback_manifest" "$out_manifest" "$out_meta" "$sub_id" "$attempt" <<'PYEOF'
+import json
+import re
+import sys
+import time
+from pathlib import Path
+
+VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+RERUN_STAGE_ORDER = ["06b", "06e", "07"]
+
+def stage_index(stage: str) -> int:
+    try:
+        return RERUN_STAGE_ORDER.index(stage)
+    except ValueError:
+        return 0
+
+def worst_status(a: str | None, b: str | None) -> str | None:
+    order = {"READY": 0, "REVIEW": 1, "BLOCKED": 2}
+    if not a:
+        return b
+    if not b:
+        return a
+    return a if order.get(a, -1) >= order.get(b, -1) else b
+
+def normalize_reason(raw: object) -> str | None:
+    if not isinstance(raw, str):
+        return None
+    s = raw.strip()
+    return s if s else None
+
+def suggest_rerun_stage_from_reason(reason: str | None) -> str | None:
+    if not reason:
+        return None
+    r = reason.lower()
+    if "routing_mismatch" in r or "prompt_variant_mismatch" in r:
+        return "07"
+    if "misattribution" in r or "speaker" in r or "diar" in r:
+        return "06b"
+    if (
+        "contamination_risk" in r
+        or "transcript_quality" in r
+        or "damage" in r
+        or "other_quality" in r
+        or "windowless" in r
+    ):
+        return "06e"
+    return None
+
+def suggest_rerun_stage_from_strategy(strategy: str | None) -> str | None:
+    if not strategy:
+        return None
+    s = strategy.strip()
+    if s in {"chunk_probe_reverify", "chunk_scan_reverify", "segment_sweep_reverify"}:
+        return "06e"
+    return None
+
+def choose_target_rerun_stage(target: dict) -> str:
+    candidates: list[str] = []
+    for reason in sorted(target.get("reasons") or []):
+        stage = suggest_rerun_stage_from_reason(reason)
+        if stage:
+            candidates.append(stage)
+    for strategy in sorted(target.get("fallback_strategies") or []):
+        stage = suggest_rerun_stage_from_strategy(strategy)
+        if stage:
+            candidates.append(stage)
+    if not candidates:
+        if target.get("localized_repair") or target.get("windowless_auto_fallback"):
+            return "06e"
+        return "06b"
+    candidates.sort(key=stage_index)
+    return candidates[0]
+
+manifest_path = Path(sys.argv[1])
+repair_worklist_path = Path(sys.argv[2])
+fallback_manifest_path = Path(sys.argv[3])
+out_manifest_path = Path(sys.argv[4])
+out_meta_path = Path(sys.argv[5])
+sub_id = sys.argv[6]
+attempt = sys.argv[7]
+
+def load_json(path: Path):
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+repair = load_json(repair_worklist_path)
+fallback = load_json(fallback_manifest_path)
+
+localized_video_ids: set[str] = set()
+targets_meta: dict[str, dict] = {}
+
+def ensure_target(vid: str) -> dict:
+    tgt = targets_meta.get(vid)
+    if tgt is None:
+        tgt = {
+            "video_id": vid,
+            "status": None,
+            "source": None,
+            "content_type": None,
+            "reasons": set(),
+            "localized_repair": False,
+            "windowless_auto_fallback": False,
+            "fallback_strategies": set(),
+        }
+        targets_meta[vid] = tgt
+    return tgt
+
+if isinstance(repair, dict):
+    rows = repair.get("segment_windows")
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            vid = row.get("video_id")
+            status = str(row.get("status") or "").strip().upper()
+            if not isinstance(vid, str):
+                continue
+            if status == "READY":
+                continue
+            localized_video_ids.add(vid)
+            tgt = ensure_target(vid)
+            tgt["localized_repair"] = True
+            tgt["status"] = worst_status(tgt.get("status"), status)
+            reason = normalize_reason(row.get("reason"))
+            if reason:
+                tgt["reasons"].add(reason)
+            if isinstance(row.get("source"), str) and row.get("source").strip():
+                tgt["source"] = row["source"].strip()
+            if isinstance(row.get("content_type"), str) and row.get("content_type").strip():
+                tgt["content_type"] = row["content_type"].strip()
+    videos = repair.get("videos")
+    if isinstance(videos, list):
+        for row in videos:
+            if not isinstance(row, dict):
+                continue
+            vid = row.get("video_id")
+            status = str(row.get("status") or "").strip().upper()
+            if not isinstance(vid, str):
+                continue
+            if status == "READY":
+                continue
+            # Include videos bucket too so a malformed/empty windows list does not hide a target.
+            if status in {"REVIEW", "BLOCKED"}:
+                localized_video_ids.add(vid)
+                tgt = ensure_target(vid)
+                tgt["localized_repair"] = True
+                tgt["status"] = worst_status(tgt.get("status"), status)
+                reason = normalize_reason(row.get("reason"))
+                if reason:
+                    tgt["reasons"].add(reason)
+                if isinstance(row.get("source"), str) and row.get("source").strip():
+                    tgt["source"] = row["source"].strip()
+                if isinstance(row.get("content_type"), str) and row.get("content_type").strip():
+                    tgt["content_type"] = row["content_type"].strip()
+
+fallback_auto_ids: set[str] = set()
+fallback_manual_ids: set[str] = set()
+if isinstance(fallback, dict):
+    tasks = fallback.get("tasks")
+    if isinstance(tasks, list):
+        for row in tasks:
+            if not isinstance(row, dict):
+                continue
+            vid = row.get("video_id")
+            strategy = str(row.get("strategy") or "").strip()
+            status = str(row.get("status") or "").strip().upper()
+            if not isinstance(vid, str):
+                continue
+            if status == "READY":
+                continue
+            if strategy == "manual_full_video_review":
+                fallback_manual_ids.add(vid)
+            else:
+                fallback_auto_ids.add(vid)
+                tgt = ensure_target(vid)
+                tgt["windowless_auto_fallback"] = True
+                tgt["status"] = worst_status(tgt.get("status"), status)
+                if strategy:
+                    tgt["fallback_strategies"].add(strategy)
+                reason = normalize_reason(row.get("reason"))
+                if reason:
+                    tgt["reasons"].add(reason)
+                if isinstance(row.get("source"), str) and row.get("source").strip():
+                    tgt["source"] = row["source"].strip()
+                if isinstance(row.get("content_type"), str) and row.get("content_type").strip():
+                    tgt["content_type"] = row["content_type"].strip()
+
+target_video_ids = localized_video_ids | fallback_auto_ids
+
+selected_lines: list[str] = []
+original_lines = manifest_path.read_text(encoding="utf-8").splitlines()
+for raw in original_lines:
+    line = raw.rstrip("\n")
+    if not line.strip() or line.lstrip().startswith("#"):
+        continue
+    m = VIDEO_ID_RE.search(line)
+    if not m:
+        continue
+    if m.group(1) in target_video_ids:
+        selected_lines.append(line)
+
+generated_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+out_manifest_written = False
+line_by_vid: dict[str, str] = {}
+for line in selected_lines:
+    m = VIDEO_ID_RE.search(line)
+    if m:
+        line_by_vid[m.group(1)] = line
+if selected_lines:
+    out_manifest_path.parent.mkdir(parents=True, exist_ok=True)
+    header = [
+        f"# Auto-repair retry manifest for {sub_id}",
+        f"# Attempt: {attempt}",
+        f"# Generated: {generated_at}",
+        f"# Videos: {len(selected_lines)}",
+        "#",
+        "# Source: repair-worklist + windowless fallback manifest (non-READY only)",
+    ]
+    out_manifest_path.write_text("\n".join(header + selected_lines) + "\n", encoding="utf-8")
+    out_manifest_written = True
+
+target_rows: list[dict] = []
+stage_groups: dict[str, list[str]] = {}
+for vid in sorted(target_video_ids):
+    tgt = ensure_target(vid)
+    final_stage = choose_target_rerun_stage(tgt)
+    tgt["recommended_rerun_from_stage"] = final_stage
+    if vid in line_by_vid:
+        stage_groups.setdefault(final_stage, []).append(line_by_vid[vid])
+    target_rows.append(
+        {
+            "video_id": vid,
+            "status": tgt.get("status"),
+            "source": tgt.get("source"),
+            "content_type": tgt.get("content_type"),
+            "localized_repair": bool(tgt.get("localized_repair")),
+            "windowless_auto_fallback": bool(tgt.get("windowless_auto_fallback")),
+            "reasons": sorted(str(x) for x in (tgt.get("reasons") or set())),
+            "fallback_strategies": sorted(str(x) for x in (tgt.get("fallback_strategies") or set())),
+            "recommended_rerun_from_stage": final_stage,
+        }
+    )
+
+stage_group_rows: list[dict] = []
+base_name = out_meta_path.name
+if base_name.endswith(".targets.json"):
+    base_name = base_name[:-len(".targets.json")]
+else:
+    base_name = out_meta_path.stem
+for stage in sorted(stage_groups.keys(), key=stage_index):
+    group_lines = stage_groups.get(stage) or []
+    if not group_lines:
+        continue
+    group_path = out_meta_path.parent / f"{base_name}.from-{stage}.manifest.txt"
+    header = [
+        f"# Auto-repair stage-group manifest for {sub_id}",
+        f"# Attempt: {attempt}",
+        f"# Rerun from stage: {stage}",
+        f"# Generated: {generated_at}",
+        f"# Videos: {len(group_lines)}",
+    ]
+    group_path.write_text("\n".join(header + ["#"] + group_lines) + "\n", encoding="utf-8")
+    stage_group_rows.append(
+        {
+            "rerun_from_stage": stage,
+            "video_count": len(group_lines),
+            "manifest": str(group_path),
+            "video_ids": sorted(
+                [
+                    row["video_id"]
+                    for row in target_rows
+                    if row.get("recommended_rerun_from_stage") == stage
+                ]
+            ),
+        }
+    )
+
+manual_only_ids = sorted(fallback_manual_ids - target_video_ids)
+meta = {
+    "version": 1,
+    "generated_at": generated_at,
+    "sub_batch_id": sub_id,
+    "attempt": int(attempt),
+    "inputs": {
+        "manifest": str(manifest_path),
+        "repair_worklist": str(repair_worklist_path) if repair_worklist_path.exists() else None,
+        "repair_windowless_fallback": str(fallback_manifest_path) if fallback_manifest_path.exists() else None,
+    },
+    "outputs": {
+        "retry_manifest": str(out_manifest_path) if out_manifest_written else None,
+    },
+    "summary": {
+        "target_videos": len(selected_lines),
+        "localized_repair_videos": len(localized_video_ids),
+        "windowless_auto_fallback_videos": len(fallback_auto_ids),
+        "windowless_manual_only_videos": len(manual_only_ids),
+        "rerun_from_stage_counts": {
+            row["rerun_from_stage"]: row["video_count"] for row in stage_group_rows
+        },
+    },
+    "target_video_ids": sorted(target_video_ids),
+    "targets": target_rows,
+    "stage_groups": stage_group_rows,
+    "manual_only_video_ids": manual_only_ids[:200],
+}
+out_meta_path.parent.mkdir(parents=True, exist_ok=True)
+out_meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+
+print(f"TARGET_MANIFEST={str(out_manifest_path) if out_manifest_written else ''}")
+print(f"TARGET_META={out_meta_path}")
+print(f"TARGET_COUNT={len(selected_lines)}")
+print(f"LOCALIZED_REPAIR_VIDEOS={len(localized_video_ids)}")
+print(f"WINDOWLESS_AUTO_FALLBACK_VIDEOS={len(fallback_auto_ids)}")
+print(f"WINDOWLESS_MANUAL_ONLY_VIDEOS={len(manual_only_ids)}")
+PYEOF
+}
+
+auto_repair_readiness_summary_path() {
+  local sub_id="$1"
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    echo "$REPO_ROOT/data/validation/stage_reports/${sub_id}.${VALIDATE_SOURCE}/readiness-summary.json"
+  else
+    echo "$REPO_ROOT/data/validation/stage_reports/${sub_id}/readiness-summary.json"
+  fi
+}
+
+compare_auto_repair_attempt_readiness() {
+  local before_summary="$1"
+  local after_summary="$2"
+  local target_meta="$3"
+  local out_json="$4"
+
+  python3 - "$before_summary" "$after_summary" "$target_meta" "$out_json" <<'PYEOF'
+import json
+import sys
+import time
+from pathlib import Path
+
+before_path = Path(sys.argv[1])
+after_path = Path(sys.argv[2])
+meta_path = Path(sys.argv[3])
+out_path = Path(sys.argv[4])
+
+def load_json(path: Path):
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+def status_severity(status: object) -> int:
+    s = str(status or "").strip().upper()
+    return {"READY": 0, "REVIEW": 1, "BLOCKED": 2}.get(s, 3)
+
+def parse_score(row: dict) -> float | None:
+    if not isinstance(row, dict):
+        return None
+    dp = row.get("damage_profile")
+    if not isinstance(dp, dict):
+        return None
+    raw = dp.get("video_damage_score")
+    if isinstance(raw, bool):
+        return None
+    if isinstance(raw, (int, float)):
+        val = float(raw)
+        if val == val and val not in {float("inf"), float("-inf")}:
+            return val
+    return None
+
+def index_videos(summary: dict | None) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    if not isinstance(summary, dict):
+        return out
+    rows = summary.get("videos")
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        vid = row.get("video_id")
+        if isinstance(vid, str) and vid:
+            out[vid] = row
+    return out
+
+before = load_json(before_path)
+after = load_json(after_path)
+meta = load_json(meta_path)
+target_ids: list[str] = []
+if isinstance(meta, dict):
+    ids = meta.get("target_video_ids")
+    if isinstance(ids, list):
+        target_ids = [x for x in ids if isinstance(x, str) and x]
+
+before_idx = index_videos(before)
+after_idx = index_videos(after)
+EPS = 0.005
+
+rows = []
+improved = 0
+regressed = 0
+unchanged = 0
+status_improved = 0
+status_regressed = 0
+damage_improved = 0
+damage_regressed = 0
+resolved_to_ready = 0
+still_non_ready = 0
+
+for vid in sorted(set(target_ids)):
+    b = before_idx.get(vid) or {}
+    a = after_idx.get(vid) or {}
+    b_status = str(b.get("status") or "MISSING").strip().upper()
+    a_status = str(a.get("status") or "MISSING").strip().upper()
+    b_sev = status_severity(b_status)
+    a_sev = status_severity(a_status)
+    b_score = parse_score(b)
+    a_score = parse_score(a)
+    delta = None
+    if b_score is not None and a_score is not None:
+        delta = a_score - b_score
+
+    verdict = "unchanged"
+    notes = []
+    if a_sev < b_sev:
+        verdict = "improved"
+        improved += 1
+        status_improved += 1
+        notes.append("status_improved")
+    elif a_sev > b_sev:
+        verdict = "regressed"
+        regressed += 1
+        status_regressed += 1
+        notes.append("status_regressed")
+    else:
+        if delta is not None and delta <= -EPS:
+            verdict = "improved"
+            improved += 1
+            damage_improved += 1
+            notes.append("damage_score_improved")
+        elif delta is not None and delta >= EPS:
+            verdict = "regressed"
+            regressed += 1
+            damage_regressed += 1
+            notes.append("damage_score_regressed")
+        else:
+            unchanged += 1
+
+    if a_status == "READY":
+        resolved_to_ready += 1
+    if a_status in {"REVIEW", "BLOCKED"}:
+        still_non_ready += 1
+
+    rows.append({
+        "video_id": vid,
+        "before_status": b_status,
+        "after_status": a_status,
+        "before_damage_score": round(b_score, 6) if b_score is not None else None,
+        "after_damage_score": round(a_score, 6) if a_score is not None else None,
+        "damage_score_delta": round(delta, 6) if delta is not None else None,
+        "verdict": verdict,
+        "notes": notes,
+        "before_reason_code": b.get("reason_code") if isinstance(b.get("reason_code"), str) else None,
+        "after_reason_code": a.get("reason_code") if isinstance(a.get("reason_code"), str) else None,
+    })
+
+payload = {
+    "version": 1,
+    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "inputs": {
+        "before_readiness_summary": str(before_path),
+        "after_readiness_summary": str(after_path),
+        "target_meta": str(meta_path),
+    },
+    "summary": {
+        "target_videos": len(rows),
+        "improved": improved,
+        "regressed": regressed,
+        "unchanged": unchanged,
+        "status_improved": status_improved,
+        "status_regressed": status_regressed,
+        "damage_improved": damage_improved,
+        "damage_regressed": damage_regressed,
+        "resolved_to_ready": resolved_to_ready,
+        "still_non_ready": still_non_ready,
+    },
+    "videos": rows,
+}
+
+out_path.parent.mkdir(parents=True, exist_ok=True)
+out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+print(f"IMPROVED={improved}")
+print(f"REGRESSED={regressed}")
+print(f"UNCHANGED={unchanged}")
+print(f"RESOLVED_TO_READY={resolved_to_ready}")
+print(f"STILL_NON_READY={still_non_ready}")
+print(f"OUT_JSON={out_path}")
+PYEOF
+}
+
+stage_order_index() {
+  local needle="$1"
+  local i
+  for i in "${!STAGE_ORDER[@]}"; do
+    if [[ "${STAGE_ORDER[$i]}" == "$needle" ]]; then
+      echo "$i"
+      return 0
+    fi
+  done
+  echo "-1"
+  return 1
+}
+
+later_stage_by_order() {
+  local a="$1"
+  local b="$2"
+  local ia ib
+  ia="$(stage_order_index "$a")"
+  ib="$(stage_order_index "$b")"
+  if ! [[ "$ia" =~ ^-?[0-9]+$ ]]; then ia=-1; fi
+  if ! [[ "$ib" =~ ^-?[0-9]+$ ]]; then ib=-1; fi
+  if [[ "$ia" -lt 0 ]]; then
+    echo "$b"
+    return 0
+  fi
+  if [[ "$ib" -lt 0 ]]; then
+    echo "$a"
+    return 0
+  fi
+  if [[ "$ia" -ge "$ib" ]]; then
+    echo "$a"
+  else
+    echo "$b"
+  fi
+}
+
+iter_auto_repair_stage_groups() {
+  local target_meta="$1"
+  python3 - "$target_meta" <<'PYEOF'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    sys.exit(0)
+groups = data.get("stage_groups")
+if not isinstance(groups, list):
+    sys.exit(0)
+order = {"06b": 0, "06e": 1, "07": 2}
+rows = []
+for row in groups:
+    if not isinstance(row, dict):
+        continue
+    stage = row.get("rerun_from_stage")
+    manifest = row.get("manifest")
+    count = row.get("video_count")
+    if not isinstance(stage, str) or not stage:
+        continue
+    if not isinstance(manifest, str) or not manifest:
+        continue
+    if not isinstance(count, int):
+        if isinstance(count, float) and count.is_integer():
+            count = int(count)
+        else:
+            count = 0
+    rows.append((order.get(stage, 99), stage, manifest, max(0, int(count))))
+for _, stage, manifest, count in sorted(rows):
+    print(f"{stage}\t{manifest}\t{count}")
+PYEOF
+}
+
+run_stage_range_for_manifest() {
+  local sub_id="$1"
+  local manifest_path="$2"
+  local start_stage="$3"
+  local end_stage="${4:-09}"
+
+  if [[ ! -f "$manifest_path" ]]; then
+    error "Retry manifest not found: $manifest_path"
+  fi
+
+  local start_idx=-1
+  local end_idx=-1
+  local i
+  for i in "${!STAGE_ORDER[@]}"; do
+    if [[ "${STAGE_ORDER[$i]}" == "$start_stage" ]]; then
+      start_idx=$i
+    fi
+    if [[ "${STAGE_ORDER[$i]}" == "$end_stage" ]]; then
+      end_idx=$i
+    fi
+  done
+  if [[ $start_idx -lt 0 ]]; then
+    error "Unknown auto-repair start stage: $start_stage"
+  fi
+  if [[ $end_idx -lt 0 ]]; then
+    error "Unknown auto-repair end stage: $end_stage"
+  fi
+  if [[ $start_idx -gt $end_idx ]]; then
+    error "Invalid auto-repair stage range: $start_stage..$end_stage"
+  fi
+
+  local stages=("${STAGE_ORDER[@]:$start_idx:$((end_idx - start_idx + 1))}")
+  echo ""
+  echo "=== Auto-repair stage rerun ($sub_id) ==="
+  echo "  Manifest: $manifest_path"
+  echo "  Stages:   ${stages[*]}"
+  echo ""
+
+  local stage
+  for stage in "${stages[@]}"; do
+    run_stage "$sub_id" "$stage" "$manifest_path"
+    local rc=$?
+    if [[ $rc -eq 2 ]]; then
+      echo "Auto-repair rerun: all retry-target videos quarantined at stage $stage"
+      return 0
+    fi
+    if [[ $rc -ne 0 ]]; then
+      echo "Auto-repair rerun failed at stage $stage (exit $rc)"
+      return "$rc"
+    fi
+  done
+  return 0
+}
+
+auto_repair_sub_batch() {
+  local sub_id="$1"
+  AUTO_REPAIR_ATTEMPTS_RAN_LAST="0"
+  AUTO_REPAIR_LAST_REVALIDATE_RC=""
+  if [[ "$DRY_RUN" == true ]]; then
+    return 0
+  fi
+  if [[ "${CFG_AUTO_REPAIR_ENABLED:-true}" != "true" ]]; then
+    return 0
+  fi
+
+  local max_attempts="${CFG_AUTO_REPAIR_MAX_ATTEMPTS:-1}"
+  if ! [[ "$max_attempts" =~ ^[0-9]+$ ]]; then
+    max_attempts="1"
+  fi
+  if [[ "$max_attempts" -le 0 ]]; then
+    return 0
+  fi
+
+  local rerun_from="${CFG_AUTO_REPAIR_RERUN_FROM_STAGE:-06b}"
+  local prev_target_count=""
+  local prev_attempt_improved_count=""
+  local attempt
+  local attempts_ran=0
+
+  for (( attempt=1; attempt<=max_attempts; attempt++ )); do
+    local target_manifest=""
+    local target_meta=""
+    local target_count="0"
+    local localized_count="0"
+    local windowless_auto_count="0"
+    local windowless_manual_only_count="0"
+    while IFS='=' read -r key value; do
+      case "$key" in
+        TARGET_MANIFEST) target_manifest="$value" ;;
+        TARGET_META) target_meta="$value" ;;
+        TARGET_COUNT) target_count="$value" ;;
+        LOCALIZED_REPAIR_VIDEOS) localized_count="$value" ;;
+        WINDOWLESS_AUTO_FALLBACK_VIDEOS) windowless_auto_count="$value" ;;
+        WINDOWLESS_MANUAL_ONLY_VIDEOS) windowless_manual_only_count="$value" ;;
+      esac
+    done < <(build_auto_repair_retry_manifest "$sub_id" "$attempt")
+
+    if ! [[ "$target_count" =~ ^[0-9]+$ ]]; then
+      target_count="0"
+    fi
+    if [[ "$target_count" -le 0 ]]; then
+      if [[ "$attempt" -eq 1 ]]; then
+        echo ""
+        echo "[sub-batch-pipeline] Auto-repair: no fixable non-READY targets for $sub_id"
+      else
+        echo ""
+        echo "[sub-batch-pipeline] Auto-repair: no remaining fixable non-READY targets after attempt $((attempt - 1))"
+      fi
+      if [[ "$windowless_manual_only_count" =~ ^[0-9]+$ ]] && [[ "$windowless_manual_only_count" -gt 0 ]]; then
+        echo "[sub-batch-pipeline] Auto-repair: $windowless_manual_only_count windowless video(s) still require manual review"
+      fi
+      break
+    fi
+
+    if [[ -n "$prev_target_count" && "$target_count" -ge "$prev_target_count" ]]; then
+      local no_prior_improvement=false
+      if [[ -z "$prev_attempt_improved_count" ]]; then
+        no_prior_improvement=true
+      elif [[ "$prev_attempt_improved_count" =~ ^[0-9]+$ && "$prev_attempt_improved_count" -eq 0 ]]; then
+        no_prior_improvement=true
+      fi
+      if [[ "$no_prior_improvement" == true ]]; then
+      echo ""
+      echo "[sub-batch-pipeline] Auto-repair: stopping (no improvement after previous attempt; targets=${target_count}, prev=${prev_target_count})"
+      [[ -n "$target_meta" ]] && echo "[sub-batch-pipeline] Auto-repair target summary: $target_meta"
+      break
+      fi
+    fi
+
+    echo ""
+    echo "[sub-batch-pipeline] Auto-repair attempt $attempt/$max_attempts for $sub_id"
+    echo "[sub-batch-pipeline]   targets=${target_count} localized=${localized_count} windowless_auto=${windowless_auto_count} windowless_manual_only=${windowless_manual_only_count}"
+    [[ -n "$target_meta" ]] && echo "[sub-batch-pipeline]   target summary: $target_meta"
+    if [[ -n "$target_meta" && -f "$target_meta" ]]; then
+      python3 - "$target_meta" <<'PYEOF' || true
+import json
+import sys
+from pathlib import Path
+path = Path(sys.argv[1])
+try:
+    data = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    sys.exit(0)
+counts = (data.get("summary") or {}).get("rerun_from_stage_counts")
+if isinstance(counts, dict) and counts:
+    print(f"[sub-batch-pipeline]   stage-group targets: {counts}")
+PYEOF
+    fi
+
+    if [[ -z "$target_manifest" || ! -f "$target_manifest" ]]; then
+      echo "[sub-batch-pipeline] Auto-repair: target manifest missing (skipping retries)"
+      break
+    fi
+
+    local readiness_before_path
+    readiness_before_path="$(auto_repair_readiness_summary_path "$sub_id")"
+    local attempt_before_snapshot="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.auto-repair.attempt${attempt}.before.readiness-summary.json"
+    if [[ -n "$VALIDATE_SOURCE" ]]; then
+      attempt_before_snapshot="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.${VALIDATE_SOURCE}.auto-repair.attempt${attempt}.before.readiness-summary.json"
+    fi
+    if [[ -f "$readiness_before_path" ]]; then
+      cp -f "$readiness_before_path" "$attempt_before_snapshot" || true
+    fi
+
+    local ran_grouped_retry=false
+    local group_stage group_manifest group_count
+    if [[ -n "$target_meta" && -f "$target_meta" ]]; then
+      while IFS=$'\t' read -r group_stage group_manifest group_count; do
+        [[ -n "$group_stage" ]] || continue
+        [[ -n "$group_manifest" ]] || continue
+        local effective_group_stage
+        effective_group_stage="$(later_stage_by_order "$group_stage" "$rerun_from")"
+        echo "[sub-batch-pipeline] Auto-repair group: stage=${group_stage} effective_start=${effective_group_stage} videos=${group_count}"
+        run_stage_range_for_manifest "$sub_id" "$group_manifest" "$effective_group_stage" "09" || return $?
+        ran_grouped_retry=true
+      done < <(iter_auto_repair_stage_groups "$target_meta")
+    fi
+    if [[ "$ran_grouped_retry" != true ]]; then
+      run_stage_range_for_manifest "$sub_id" "$target_manifest" "$rerun_from" "09" || return $?
+    fi
+    attempts_ran=$attempt
+    prev_target_count="$target_count"
+
+    echo ""
+    echo "[sub-batch-pipeline] Auto-repair: revalidating full sub-batch after attempt $attempt"
+    local revalidate_rc=0
+    validate_sub_batch "$sub_id" || revalidate_rc=$?
+    AUTO_REPAIR_LAST_REVALIDATE_RC="$revalidate_rc"
+    if [[ "$revalidate_rc" -ne 0 ]]; then
+      return "$revalidate_rc"
+    fi
+
+    prev_attempt_improved_count="0"
+    local readiness_after_path
+    readiness_after_path="$(auto_repair_readiness_summary_path "$sub_id")"
+    local attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.auto-repair.attempt${attempt}.result.json"
+    if [[ -n "$VALIDATE_SOURCE" ]]; then
+      attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.${VALIDATE_SOURCE}.auto-repair.attempt${attempt}.result.json"
+    fi
+    if [[ -f "$attempt_before_snapshot" && -f "$readiness_after_path" && -n "$target_meta" && -f "$target_meta" ]]; then
+      local attempt_improved="0"
+      local attempt_regressed="0"
+      local attempt_unchanged="0"
+      local attempt_resolved_ready="0"
+      local attempt_still_non_ready="0"
+      local attempt_result_path=""
+      while IFS='=' read -r key value; do
+        case "$key" in
+          IMPROVED) attempt_improved="$value" ;;
+          REGRESSED) attempt_regressed="$value" ;;
+          UNCHANGED) attempt_unchanged="$value" ;;
+          RESOLVED_TO_READY) attempt_resolved_ready="$value" ;;
+          STILL_NON_READY) attempt_still_non_ready="$value" ;;
+          OUT_JSON) attempt_result_path="$value" ;;
+        esac
+      done < <(compare_auto_repair_attempt_readiness "$attempt_before_snapshot" "$readiness_after_path" "$target_meta" "$attempt_result_out")
+      prev_attempt_improved_count="$attempt_improved"
+      echo "[sub-batch-pipeline] Auto-repair attempt $attempt result: improved=${attempt_improved} regressed=${attempt_regressed} unchanged=${attempt_unchanged} resolved_to_ready=${attempt_resolved_ready} still_non_ready=${attempt_still_non_ready}"
+      [[ -n "$attempt_result_path" ]] && echo "[sub-batch-pipeline]   attempt result artifact: $attempt_result_path"
+    else
+      echo "[sub-batch-pipeline] Auto-repair attempt $attempt result: readiness diff unavailable"
+    fi
+  done
+
+  if [[ "$attempts_ran" -gt 0 ]]; then
+    AUTO_REPAIR_ATTEMPTS_RAN_LAST="$attempts_ran"
+    echo "[sub-batch-pipeline] Auto-repair attempts completed: $attempts_ran"
+  fi
+  return 0
 }
 
 # Extract batch ID from sub-batch ID (P001.1 -> P001)
@@ -510,10 +1530,14 @@ PYEOF
 run_stage() {
   local sub_id="$1"
   local stage="$2"
+  local manifest_override="${3:-}"
   local batch_id
   batch_id=$(get_batch_id "$sub_id")
 
   local manifest="$BATCHES_DIR/${sub_id}.txt"
+  if [[ -n "$manifest_override" ]]; then
+    manifest="$manifest_override"
+  fi
   if [[ ! -f "$manifest" ]]; then
     error "Sub-batch manifest not found: $manifest"
   fi
@@ -529,6 +1553,9 @@ run_stage() {
     # Single strict path: always refresh outputs for stages that expose
     # --overwrite to avoid stale downstream artifacts after upstream changes.
     stage_args+=(--overwrite)
+  fi
+  if stage_supports_apply_repairs "$stage"; then
+    stage_args+=(--apply-repairs)
   fi
   local quarantine_file=""
   local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
@@ -765,8 +1792,34 @@ run_pipeline() {
     if [[ "$DRY_RUN" == true ]]; then
       runner_args+=(--dry-run)
     fi
-    "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}"
-    return $?
+    local runner_rc=0
+    "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}" || runner_rc=$?
+    if [[ "$DRY_RUN" == true ]]; then
+      return "$runner_rc"
+    fi
+    if [[ $runner_rc -ne 0 && $runner_rc -ne 2 ]]; then
+      return "$runner_rc"
+    fi
+
+    local auto_repair_rc=0
+    auto_repair_sub_batch "$sub_id" || auto_repair_rc=$?
+    local recovered_validation_failure=false
+    if [[ $runner_rc -eq 2 && $auto_repair_rc -eq 0 && "${AUTO_REPAIR_ATTEMPTS_RAN_LAST:-0}" =~ ^[0-9]+$ && "${AUTO_REPAIR_ATTEMPTS_RAN_LAST:-0}" -gt 0 ]]; then
+      if [[ "${AUTO_REPAIR_LAST_REVALIDATE_RC:-}" == "0" ]]; then
+        recovered_validation_failure=true
+      fi
+    fi
+
+    echo ""
+    print_pipeline_summary "$sub_id"
+
+    if [[ $auto_repair_rc -ne 0 ]]; then
+      return 1
+    fi
+    if [[ $runner_rc -eq 2 && "$recovered_validation_failure" != true ]]; then
+      return 1
+    fi
+    return 0
   fi
 
   # --- Sequential mode (original behavior) ---
@@ -816,12 +1869,23 @@ run_pipeline() {
   echo ""
   echo "=== End-of-run validation: $sub_id ==="
   echo ""
-  validate_sub_batch "$sub_id"
+  local validate_rc=0
+  validate_sub_batch "$sub_id" || validate_rc=$?
+
+  local auto_repair_rc=0
+  if [[ "$pipeline_failed" != true ]]; then
+    auto_repair_sub_batch "$sub_id" || auto_repair_rc=$?
+    if [[ $auto_repair_rc -eq 0 && "${AUTO_REPAIR_ATTEMPTS_RAN_LAST:-0}" =~ ^[0-9]+$ && "${AUTO_REPAIR_ATTEMPTS_RAN_LAST:-0}" -gt 0 ]]; then
+      if [[ "${AUTO_REPAIR_LAST_REVALIDATE_RC:-}" == "0" ]]; then
+        validate_rc=0
+      fi
+    fi
+  fi
 
   echo ""
   print_pipeline_summary "$sub_id"
 
-  if [[ "$pipeline_failed" == true ]]; then
+  if [[ "$pipeline_failed" == true || $validate_rc -ne 0 || $auto_repair_rc -ne 0 ]]; then
     return 1
   fi
   return 0
@@ -1204,6 +2268,33 @@ validate_sub_batch() {
   for rule in "${CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE[@]}"; do
     stage_report_check_args+=(--review-warning-class-budget-by-content-type "$rule")
   done
+  for status in "${CFG_ALLOW_INGEST_STATUSES[@]}"; do
+    stage_report_check_args+=(--allow-ingest-status "$status")
+  done
+  if [[ -n "$CFG_REVIEW_VIDEO_DAMAGE_SCORE" ]]; then
+    stage_report_check_args+=(--review-video-damage-score "$CFG_REVIEW_VIDEO_DAMAGE_SCORE")
+  fi
+  if [[ -n "$CFG_BLOCK_VIDEO_DAMAGE_SCORE" ]]; then
+    stage_report_check_args+=(--block-video-damage-score "$CFG_BLOCK_VIDEO_DAMAGE_SCORE")
+  fi
+  if [[ -n "$CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE" ]]; then
+    stage_report_check_args+=(--review-windowless-video-damage-score "$CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE")
+  fi
+  if [[ -n "$CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE" ]]; then
+    stage_report_check_args+=(--block-windowless-video-damage-score "$CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE")
+  fi
+  for rule in "${CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE[@]}"; do
+    stage_report_check_args+=(--review-windowless-video-damage-score-by-content-type "$rule")
+  done
+  for rule in "${CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE[@]}"; do
+    stage_report_check_args+=(--block-windowless-video-damage-score-by-content-type "$rule")
+  done
+  if [[ -n "$CFG_REVIEW_SEVERE_DAMAGE_CHUNK_RATIO" ]]; then
+    stage_report_check_args+=(--review-severe-damage-chunk-ratio "$CFG_REVIEW_SEVERE_DAMAGE_CHUNK_RATIO")
+  fi
+  if [[ -n "$CFG_BLOCK_SEVERE_DAMAGE_CHUNK_RATIO" ]]; then
+    stage_report_check_args+=(--block-severe-damage-chunk-ratio "$CFG_BLOCK_SEVERE_DAMAGE_CHUNK_RATIO")
+  fi
 
   echo ""
   echo "=== Stage Report Validation ==="
@@ -1221,6 +2312,249 @@ validate_sub_batch() {
   echo ""
   python3 "$REPO_ROOT/scripts/training-data/validation/batch_report.py" \
     "${batch_report_args[@]}" --manifest "$manifest" --batch-id "$sub_id" --no-write || rc=$?
+
+  # 5. Pipeline scorecard (single JSON artifact for trend tracking / throughput targets)
+  local scorecard_label="$sub_id"
+  local -a scorecard_args=(--manifest "$manifest")
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    scorecard_label="${sub_id}.${VALIDATE_SOURCE}"
+    scorecard_args+=(--source "$VALIDATE_SOURCE")
+  fi
+  if [[ -n "$quarantine_file" ]]; then
+    scorecard_args+=(--quarantine-file "$quarantine_file")
+  fi
+  if [[ -n "$CFG_MAX_POSITIVE_DAMAGE_WINDOWLESS_RATIO" ]]; then
+    scorecard_args+=(--max-positive-damage-windowless-ratio "$CFG_MAX_POSITIVE_DAMAGE_WINDOWLESS_RATIO")
+  fi
+  local scorecard_out="$REPO_ROOT/data/validation/scorecards/${scorecard_label}.scorecard.json"
+  scorecard_args+=(--out "$scorecard_out")
+
+  echo ""
+  echo "=== Pipeline Scorecard ==="
+  echo ""
+  python3 "$REPO_ROOT/scripts/training-data/validation/pipeline_scorecard.py" \
+    "${scorecard_args[@]}" >/dev/null || rc=$?
+  if [[ -f "$scorecard_out" ]]; then
+    python3 - "$scorecard_out" <<'PYEOF' || true
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+except Exception:
+    sys.exit(0)
+alerts = payload.get("alerts")
+if not isinstance(alerts, list) or not alerts:
+    sys.exit(0)
+print(f"[sub-batch-pipeline] Scorecard alerts: {len(alerts)} (monitoring only; batch not blocked)")
+for row in alerts[:3]:
+    if not isinstance(row, dict):
+        continue
+    metric_path = row.get("metric_path")
+    metric_value = row.get("metric_value")
+    threshold_max = row.get("threshold_max")
+    rid = row.get("id")
+    print(
+        f"[sub-batch-pipeline]   {rid}: {metric_path}={metric_value} "
+        f"(threshold_max={threshold_max})"
+    )
+PYEOF
+  fi
+
+  # 6. Ingest quarantine report (dry-run only, no DB writes) so repair/fallback exports
+  # always have a current manifest-scoped source of readiness/taxonomy gating outcomes.
+  local repair_label="$sub_id"
+  local ingest_quarantine_glob="$REPO_ROOT/data/validation/ingest_quarantine/${sub_id}.*.report.json"
+  local ingest_quarantine_report_for_repairs=""
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    repair_label="${sub_id}.${VALIDATE_SOURCE}"
+    ingest_quarantine_glob="$REPO_ROOT/data/validation/ingest_quarantine/${sub_id}.${VALIDATE_SOURCE}.*.report.json"
+  fi
+  ingest_quarantine_report_for_repairs="$REPO_ROOT/data/validation/ingest_quarantine/${repair_label}.auto.report.json"
+
+  echo ""
+  echo "=== Ingest Readiness/Taxonomy Report (Stage 10 dry-run) ==="
+  echo ""
+  local tsx_loader="$REPO_ROOT/node_modules/tsx/dist/loader.mjs"
+  local ingest10_script="$REPO_ROOT/scripts/training-data/10.EXT.ingest.ts"
+  if [[ -f "$tsx_loader" && -f "$ingest10_script" ]]; then
+    local -a ingest_gate_cmd=(node --import "$tsx_loader" "$ingest10_script" --manifest "$manifest" --dry-run --quarantine-report-out "$ingest_quarantine_report_for_repairs")
+    if [[ -n "$VALIDATE_SOURCE" ]]; then
+      ingest_gate_cmd+=(--source "$VALIDATE_SOURCE")
+    fi
+    if [[ -n "$quarantine_file" && -f "$quarantine_file" ]]; then
+      ingest_gate_cmd+=(--quarantine-file "$quarantine_file")
+    fi
+    if ! "${ingest_gate_cmd[@]}"; then
+      local ingest_gate_rc=$?
+      echo "[sub-batch-pipeline] Stage 10 dry-run returned non-zero ($ingest_gate_rc); continuing if quarantine report was written."
+    fi
+    if [[ ! -f "$ingest_quarantine_report_for_repairs" ]]; then
+      echo "[sub-batch-pipeline] Stage 10 dry-run did not emit expected report: $ingest_quarantine_report_for_repairs"
+      ingest_quarantine_report_for_repairs=""
+    fi
+  else
+    echo "[sub-batch-pipeline] Skipping Stage 10 dry-run report generation (missing tsx loader or ingest script)."
+  fi
+
+  # 7. Segment repair worklist (best-effort; uses fresh Stage 10 dry-run report when available)
+  local -a repair_args=(--manifest "$manifest")
+  local -a ready_spotcheck_threshold_args=()
+  if [[ -n "$CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE" ]]; then
+    ready_spotcheck_threshold_args+=(--min-video-damage-score "$CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE")
+  fi
+  for rule in "${CFG_READY_SPOTCHECK_MIN_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE[@]}"; do
+    ready_spotcheck_threshold_args+=(--min-video-damage-score-by-content-type "$rule")
+  done
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    repair_args+=(--source "$VALIDATE_SOURCE")
+  fi
+  if [[ -n "$ingest_quarantine_report_for_repairs" && -f "$ingest_quarantine_report_for_repairs" ]]; then
+    repair_args=(--report "$ingest_quarantine_report_for_repairs")
+  fi
+  if compgen -G "$ingest_quarantine_glob" >/dev/null; then
+    local repair_json_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.repair-worklist.json"
+    local repair_csv_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.repair-worklist.csv"
+    local repair_context_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.repair-context.json"
+    local repair_windowless_fallback_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.repair-windowless-fallback.json"
+    echo ""
+    echo "=== Segment Repair Worklist ==="
+    echo ""
+    python3 "$REPO_ROOT/scripts/training-data/validation/export_segment_repair_worklist.py" \
+      "${repair_args[@]}" \
+      --out "$repair_json_out" \
+      --csv-out "$repair_csv_out" || rc=$?
+    if [[ -f "$repair_json_out" ]]; then
+      python3 "$REPO_ROOT/scripts/training-data/validation/materialize_segment_repair_context.py" \
+        --worklist "$repair_json_out" \
+        --radius "$CFG_REPAIR_CONTEXT_RADIUS" \
+        --out "$repair_context_out" || rc=$?
+      python3 "$REPO_ROOT/scripts/training-data/validation/export_windowless_damage_fallback_manifest.py" \
+        --worklist "$repair_json_out" \
+        --out "$repair_windowless_fallback_out" || rc=$?
+    fi
+
+    # READY spotcheck packet: low-damage READY windows worth manual inspection.
+    # This is intentionally separate from the repair worklist so we can inspect
+    # "apparently fine" videos and catch hidden issues before moving on.
+    local ready_spotcheck_json_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.ready-spotcheck.json"
+    local ready_spotcheck_csv_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.ready-spotcheck.csv"
+    local ready_spotcheck_context_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.ready-spotcheck-context.json"
+    local ready_spotcheck_windowless_fallback_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.ready-spotcheck-windowless-fallback.json"
+    echo ""
+    echo "=== READY Spotcheck Pack ==="
+    echo ""
+    python3 "$REPO_ROOT/scripts/training-data/validation/export_segment_repair_worklist.py" \
+      "${repair_args[@]}" \
+      --status READY \
+      "${ready_spotcheck_threshold_args[@]}" \
+      --out "$ready_spotcheck_json_out" \
+      --csv-out "$ready_spotcheck_csv_out" || rc=$?
+    if [[ -f "$ready_spotcheck_json_out" ]]; then
+      python3 "$REPO_ROOT/scripts/training-data/validation/materialize_segment_repair_context.py" \
+        --worklist "$ready_spotcheck_json_out" \
+        --radius "$CFG_READY_SPOTCHECK_CONTEXT_RADIUS" \
+        --out "$ready_spotcheck_context_out" || rc=$?
+      python3 "$REPO_ROOT/scripts/training-data/validation/export_windowless_damage_fallback_manifest.py" \
+        --worklist "$ready_spotcheck_json_out" \
+        --out "$ready_spotcheck_windowless_fallback_out" || rc=$?
+    fi
+
+    # Consolidated action summary: one artifact with counts/paths for localized
+    # repairs, windowless fallback tasks, and READY spotchecks.
+    local action_summary_out="$REPO_ROOT/data/validation/repair_worklists/${repair_label}.action-summary.json"
+    python3 - "$action_summary_out" \
+      "$repair_json_out" \
+      "$repair_context_out" \
+      "$repair_windowless_fallback_out" \
+      "$ready_spotcheck_json_out" \
+      "$ready_spotcheck_context_out" \
+      "$ready_spotcheck_windowless_fallback_out" <<'PYEOF' || rc=$?
+import json
+import sys
+import time
+from pathlib import Path
+
+out_path = Path(sys.argv[1])
+paths = {
+    "repair_worklist": Path(sys.argv[2]),
+    "repair_context": Path(sys.argv[3]),
+    "repair_windowless_fallback": Path(sys.argv[4]),
+    "ready_spotcheck_worklist": Path(sys.argv[5]),
+    "ready_spotcheck_context": Path(sys.argv[6]),
+    "ready_spotcheck_windowless_fallback": Path(sys.argv[7]),
+}
+
+def load_json(path: Path):
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+def dict_val(d, *keys, default=None):
+    cur = d
+    for k in keys:
+        if not isinstance(cur, dict):
+            return default
+        cur = cur.get(k)
+    return cur if cur is not None else default
+
+repair_worklist = load_json(paths["repair_worklist"]) or {}
+repair_context = load_json(paths["repair_context"]) or {}
+repair_windowless = load_json(paths["repair_windowless_fallback"]) or {}
+ready_worklist = load_json(paths["ready_spotcheck_worklist"]) or {}
+ready_context = load_json(paths["ready_spotcheck_context"]) or {}
+ready_windowless = load_json(paths["ready_spotcheck_windowless_fallback"]) or {}
+
+payload = {
+    "version": 1,
+    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "paths": {k: str(v) for k, v in paths.items() if v.exists()},
+    "summary": {
+        "repair": {
+            "localized_windows": int(dict_val(repair_worklist, "summary", "segment_windows", default=0) or 0),
+            "localized_videos": int(dict_val(repair_worklist, "summary", "videos", default=0) or 0),
+            "windowless_videos": int(dict_val(repair_worklist, "summary", "windowless_damage_videos", default=0) or 0),
+            "context_windows_materialized": int(dict_val(repair_context, "materialization", "windows_materialized", default=0) or 0),
+            "windowless_fallback_tasks": int(dict_val(repair_windowless, "summary", "windowless_damage_videos", default=0) or 0),
+            "windowless_fallback_by_strategy": dict_val(repair_windowless, "summary", "by_strategy", default={}) or {},
+        },
+        "ready_spotcheck": {
+            "localized_windows": int(dict_val(ready_worklist, "summary", "segment_windows", default=0) or 0),
+            "localized_videos": int(dict_val(ready_worklist, "summary", "videos", default=0) or 0),
+            "windowless_videos": int(dict_val(ready_worklist, "summary", "windowless_damage_videos", default=0) or 0),
+            "context_windows_materialized": int(dict_val(ready_context, "materialization", "windows_materialized", default=0) or 0),
+            "windowless_fallback_tasks": int(dict_val(ready_windowless, "summary", "windowless_damage_videos", default=0) or 0),
+            "windowless_fallback_by_strategy": dict_val(ready_windowless, "summary", "by_strategy", default={}) or {},
+        },
+    },
+}
+
+out_path.parent.mkdir(parents=True, exist_ok=True)
+out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(f"[sub-batch-pipeline] Action summary written: {out_path}")
+print(
+    "[sub-batch-pipeline]   repair: "
+    f"localized_windows={payload['summary']['repair']['localized_windows']}, "
+    f"windowless_fallback_tasks={payload['summary']['repair']['windowless_fallback_tasks']}"
+)
+print(
+    "[sub-batch-pipeline]   ready_spotcheck: "
+    f"localized_windows={payload['summary']['ready_spotcheck']['localized_windows']}, "
+    f"windowless_fallback_tasks={payload['summary']['ready_spotcheck']['windowless_fallback_tasks']}"
+)
+PYEOF
+  else
+    echo ""
+    echo "=== Segment Repair Worklist ==="
+    echo ""
+    echo "No ingest quarantine report found yet for $repair_label (skipping repair worklist export)."
+  fi
 
   return "$rc"
 }
@@ -1293,6 +2627,7 @@ while [[ $# -gt 0 ]]; do
       exit 0
       ;;
     --list)
+      warn_operator_mode_direct_use "--list"
       MODE="list"
       shift
       ;;
@@ -1301,18 +2636,22 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --status)
+      warn_operator_mode_direct_use "--status"
       MODE="status"
       shift
       ;;
     --view)
+      warn_operator_mode_direct_use "--view"
       MODE="view"
       shift
       ;;
     --approve)
+      warn_operator_mode_direct_use "--approve"
       MODE="approve"
       shift
       ;;
     --validate)
+      warn_operator_mode_direct_use "--validate"
       MODE="validate"
       shift
       ;;
@@ -1343,11 +2682,13 @@ while [[ $# -gt 0 ]]; do
       shift
       ;;
     --stage)
+      warn_operator_mode_direct_use "--stage"
       MODE="run_stage"
       STAGE="$2"
       shift 2
       ;;
     --stage=*)
+      warn_operator_mode_direct_use "--stage"
       MODE="run_stage"
       STAGE="${1#--stage=}"
       shift
@@ -1420,6 +2761,17 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# Default mode cleanup:
+# - Sub-batch ID with no explicit mode => standard pipeline run.
+# - Batch ID with no explicit mode => status (avoid accidental run-all).
+if [[ -z "$MODE" && -n "$SUB_BATCH_ID" ]]; then
+  if is_sub_batch "$SUB_BATCH_ID"; then
+    MODE="run_pipeline"
+  else
+    MODE="status"
+  fi
+fi
+
 # Handle --list (no sub-batch needed)
 if [[ "$MODE" == "list" ]]; then
   list_batches
@@ -1437,6 +2789,16 @@ if is_sub_batch "$SUB_BATCH_ID"; then
   BATCH_ID=$(get_batch_id "$SUB_BATCH_ID")
 else
   BATCH_ID="$SUB_BATCH_ID"
+fi
+
+# Keep the standard pipeline interface clean: these flags are operator-only.
+if [[ "$MODE" == "run_pipeline" || "$MODE" == "run_all" ]]; then
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    error "--source is operator/debug-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --source ...)"
+  fi
+  if [[ -n "$VALIDATE_WAIVER_FILE" ]]; then
+    error "--waiver-file is operator/debug-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --waiver-file ...)"
+  fi
 fi
 
 # Execute based on mode
@@ -1485,7 +2847,7 @@ case "$MODE" in
     validate_sub_batch "$SUB_BATCH_ID"
     ;;
   *)
-    # Default: show status
+    # Fallback: show status
     if is_sub_batch "$SUB_BATCH_ID"; then
       show_sub_batch_status "$SUB_BATCH_ID"
     else

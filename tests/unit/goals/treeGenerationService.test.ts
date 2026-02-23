@@ -2,17 +2,16 @@ import { describe, it, expect } from "vitest"
 import { generateGoalTreeInserts, type BatchGoalInsert } from "@/src/goals/treeGenerationService"
 import { GOAL_TEMPLATES, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 
-// Daygame-specific counts (l1_girlfriend fans into daygame L2s only)
-const DAYGAME_L2_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 2 && t.lifeArea === "daygame").length
+// Daygame-specific counts
 const DAYGAME_L3_COUNT = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
 
 describe("generateGoalTreeInserts", () => {
   describe("L1 pick (most common)", () => {
     const inserts = generateGoalTreeInserts("l1_girlfriend")
 
-    it("returns correct number of inserts: 1 L1 + all L2 + all unique L3", () => {
-      // L1 fans into all L2s, l2_attract_any fans into all L3s, so union = all L3s
-      expect(inserts.length).toBe(1 + DAYGAME_L2_COUNT + DAYGAME_L3_COUNT)
+    it("returns correct number of inserts: 1 L1 + all L3 (no L2 in hierarchy)", () => {
+      // L1 fans directly into all L3s
+      expect(inserts.length).toBe(1 + DAYGAME_L3_COUNT)
     })
 
     it("first insert is the picked L1 goal", () => {
@@ -21,29 +20,20 @@ describe("generateGoalTreeInserts", () => {
       expect(inserts[0]._tempParentId).toBeNull()
     })
 
-    it("L2 achievements follow the L1", () => {
+    it("no L2 achievements in tree (L2s are standalone badges)", () => {
       const l2s = inserts.filter((i) => i.goal_level === 2)
-      expect(l2s.length).toBe(DAYGAME_L2_COUNT)
-      expect(l2s.map((i) => i.template_id)).toContain("l2_master_daygame")
-      expect(l2s.map((i) => i.template_id)).toContain("l2_confident")
+      expect(l2s.length).toBe(0)
     })
 
-    it("L2s reference the L1 as parent", () => {
-      const l2s = inserts.filter((i) => i.goal_level === 2)
-      for (const l2 of l2s) {
-        expect(l2._tempParentId).toBe("__temp_l1_girlfriend")
-      }
-    })
-
-    it("L3 goals reference an L2 as parent", () => {
+    it("L3 goals reference the L1 as parent (not L2)", () => {
       const l3s = inserts.filter((i) => i.goal_level === 3)
       expect(l3s.length).toBe(DAYGAME_L3_COUNT)
       for (const l3 of l3s) {
-        expect(l3._tempParentId).toMatch(/^__temp_l2_/)
+        expect(l3._tempParentId).toBe("__temp_l1_girlfriend")
       }
     })
 
-    it("no duplicate L3 goals (deduplication across L2 fan-outs)", () => {
+    it("no duplicate L3 goals", () => {
       const l3Ids = inserts.filter((i) => i.goal_level === 3).map((i) => i.template_id)
       expect(new Set(l3Ids).size).toBe(l3Ids.length)
     })
@@ -155,14 +145,10 @@ describe("generateGoalTreeInserts", () => {
   describe("L2 pick", () => {
     const inserts = generateGoalTreeInserts("l2_master_daygame")
 
-    it("creates L2 as root", () => {
+    it("creates standalone L2 as root (no children — L2s are badges)", () => {
+      expect(inserts.length).toBe(1)
       expect(inserts[0].template_id).toBe("l2_master_daygame")
       expect(inserts[0]._tempParentId).toBeNull()
-    })
-
-    it("creates 20 L3 children beneath it", () => {
-      const l3s = inserts.filter((i) => i.goal_level === 3)
-      expect(l3s.length).toBe(20) // 9+9 field_work + 4 results + 3 dirty_dog + gap templates
     })
   })
 

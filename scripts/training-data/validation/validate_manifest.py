@@ -2021,6 +2021,26 @@ def main() -> None:
                 check_counts["error:stage06b_verification_invalid"] += 1
             if verdict:
                 verdict_counts[verdict] += 1
+                if verdict == "REJECT":
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "stage06b_reject",
+                        "message": "Stage 06b verdict: REJECT",
+                        "verify": str(v_path),
+                    })
+                    check_counts["error:stage06b_reject"] += 1
+                elif verdict == "FLAG":
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "warning",
+                        "check": "stage06b_flag",
+                        "message": "Stage 06b verdict: FLAG (manual review recommended)",
+                        "verify": str(v_path),
+                    })
+                    check_counts["warning:stage06b_flag"] += 1
 
         s07_data: Optional[Dict[str, Any]] = None
         stage07_content_unreadable = False

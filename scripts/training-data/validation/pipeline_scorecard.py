@@ -296,6 +296,68 @@ def _load_json(path: Optional[Path]) -> Optional[Dict[str, Any]]:
     return data if isinstance(data, dict) else None
 
 
+def _parse_finite_float(value: Any) -> Optional[float]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        num = float(value)
+        if num == num and num not in {float("inf"), float("-inf")}:
+            return num
+    return None
+
+
+def _parse_ratio(value: Any) -> Optional[float]:
+    num = _parse_finite_float(value)
+    if num is None:
+        return None
+    if num < 0.0:
+        return 0.0
+    if num > 1.0:
+        return 1.0
+    return num
+
+
+def _parse_non_negative_int(value: Any) -> Optional[int]:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    if isinstance(value, float) and value.is_integer():
+        iv = int(value)
+        return iv if iv >= 0 else None
+    return None
+
+
+def _count_damage_localizations(profile: Any) -> Tuple[int, int]:
+    if not isinstance(profile, dict):
+        return (0, 0)
+
+    window_count = 0
+    raw_windows = profile.get("damage_segment_windows")
+    if isinstance(raw_windows, list):
+        for row in raw_windows:
+            if not isinstance(row, dict):
+                continue
+            start = _parse_non_negative_int(row.get("start_segment_id"))
+            end = _parse_non_negative_int(row.get("end_segment_id"))
+            if start is None or end is None:
+                continue
+            window_count += 1
+
+    id_count = 0
+    raw_ids = profile.get("damaged_segment_ids")
+    if isinstance(raw_ids, list):
+        seen: Set[int] = set()
+        for raw in raw_ids:
+            sid = _parse_non_negative_int(raw)
+            if sid is None:
+                continue
+            seen.add(sid)
+        id_count = len(seen)
+
+    return (window_count, id_count)
+
+
 def _collect_confidence_stats(target_ids: Set[str]) -> Dict[str, Any]:
     stage_dir, pattern = STAGE_SPECS["stage06h"]
     root = repo_root() / "data" / stage_dir
@@ -617,12 +679,46 @@ def build_scorecard(
     review_videos_by_content_type: Counter[str] = Counter()
     warning_class_counts_by_content_type: Dict[str, Counter[str]] = {}
     review_budget_by_content_type: Dict[str, Dict[str, int]] = {}
+    allow_ingest_statuses: Set[str] = {"READY"}
+    readiness_ingest_eligible_count = 0
+    readiness_ingest_eligible_by_status: Counter[str] = Counter()
     signal_class_counts: Counter[str] = Counter()
+    readiness_damage_profile_count = 0
+    readiness_damage_score_sum = 0.0
+    readiness_damage_score_max = 0.0
+    readiness_severe_ratio_sum = 0.0
+    readiness_severe_ratio_max = 0.0
+    readiness_damage_review_threshold: Optional[float] = None
+    readiness_damage_block_threshold: Optional[float] = None
+    readiness_severe_review_threshold: Optional[float] = None
+    readiness_severe_block_threshold: Optional[float] = None
+    readiness_damage_review_threshold_exceeded = 0
+    readiness_damage_block_threshold_exceeded = 0
+    readiness_severe_review_threshold_exceeded = 0
+    readiness_severe_block_threshold_exceeded = 0
+    readiness_damage_positive_score_count = 0
+    readiness_damage_positive_score_localized_count = 0
+    readiness_damage_positive_score_windowless_count = 0
+    readiness_damage_localized_window_video_count = 0
+    readiness_damage_localized_id_only_video_count = 0
+    readiness_damage_top_videos: List[Dict[str, Any]] = []
+    readiness_damage_windowless_top_videos: List[Dict[str, Any]] = []
     gating_source = "none"
     canonical_decision_source: Optional[str] = None
     if isinstance(readiness_summary, dict):
         policy = readiness_summary.get("policy")
         if isinstance(policy, dict):
+            raw_allow = policy.get("allow_ingest_statuses")
+            if isinstance(raw_allow, list):
+                parsed_allow: Set[str] = set()
+                for raw_status in raw_allow:
+                    if not isinstance(raw_status, str):
+                        continue
+                    status_norm = raw_status.strip().upper()
+                    if status_norm in {"READY", "REVIEW", "BLOCKED"}:
+                        parsed_allow.add(status_norm)
+                if parsed_allow:
+                    allow_ingest_statuses = parsed_allow
             raw_budget = policy.get("review_warning_class_budget_by_content_type")
             if isinstance(raw_budget, dict):
                 for raw_ct, raw_map in raw_budget.items():
@@ -645,6 +741,10 @@ def build_scorecard(
                         parsed[cls] = limit
                     if parsed:
                         review_budget_by_content_type[ct] = parsed
+            readiness_damage_review_threshold = _parse_ratio(policy.get("review_video_damage_score"))
+            readiness_damage_block_threshold = _parse_ratio(policy.get("block_video_damage_score"))
+            readiness_severe_review_threshold = _parse_ratio(policy.get("review_severe_damage_chunk_ratio"))
+            readiness_severe_block_threshold = _parse_ratio(policy.get("block_severe_damage_chunk_ratio"))
         videos = readiness_summary.get("videos")
         if isinstance(videos, list):
             for row in videos:
@@ -670,6 +770,97 @@ def build_scorecard(
                 if gate:
                     readiness_counts[gate] += 1
                     readiness_by_vid[vid] = gate
+                ready_raw = row.get("ready_for_ingest")
+                ready_for_ingest = (
+                    bool(ready_raw)
+                    if isinstance(ready_raw, bool)
+                    else status in allow_ingest_statuses
+                )
+                if ready_for_ingest:
+                    readiness_ingest_eligible_count += 1
+                    readiness_ingest_eligible_by_status[status or "UNKNOWN"] += 1
+                damage_profile = row.get("damage_profile")
+                if isinstance(damage_profile, dict):
+                    video_damage_score = _parse_ratio(damage_profile.get("video_damage_score"))
+                    severe_ratio = _parse_ratio(damage_profile.get("severe_damage_chunk_ratio"))
+                    damaged_segment_count_raw = damage_profile.get("damaged_segment_count")
+                    localized_window_count, localized_id_count = _count_damage_localizations(damage_profile)
+                    has_localized_windows = localized_window_count > 0
+                    has_localized_ids_only = (localized_window_count == 0 and localized_id_count > 0)
+                    has_any_localization = has_localized_windows or has_localized_ids_only
+                    damaged_segment_count = None
+                    if isinstance(damaged_segment_count_raw, int) and damaged_segment_count_raw >= 0:
+                        damaged_segment_count = damaged_segment_count_raw
+
+                    if video_damage_score is not None or severe_ratio is not None:
+                        readiness_damage_profile_count += 1
+                        score_val = float(video_damage_score or 0.0)
+                        severe_val = float(severe_ratio or 0.0)
+                        readiness_damage_score_sum += score_val
+                        readiness_damage_score_max = max(readiness_damage_score_max, score_val)
+                        readiness_severe_ratio_sum += severe_val
+                        readiness_severe_ratio_max = max(readiness_severe_ratio_max, severe_val)
+                        if has_localized_windows:
+                            readiness_damage_localized_window_video_count += 1
+                        elif has_localized_ids_only:
+                            readiness_damage_localized_id_only_video_count += 1
+                        if score_val > 0.0:
+                            readiness_damage_positive_score_count += 1
+                            if has_any_localization:
+                                readiness_damage_positive_score_localized_count += 1
+                            else:
+                                readiness_damage_positive_score_windowless_count += 1
+                                readiness_damage_windowless_top_videos.append(
+                                    {
+                                        "video_id": vid,
+                                        "content_type": content_type,
+                                        "status": status or "UNKNOWN",
+                                        "reason_code": str(row.get("reason_code", "") or ""),
+                                        "video_damage_score": round(score_val, 6),
+                                        "severe_damage_chunk_ratio": round(severe_val, 6),
+                                        "damaged_segment_count": (
+                                            damaged_segment_count if damaged_segment_count is not None else 0
+                                        ),
+                                        "localized_window_count": localized_window_count,
+                                        "localized_segment_id_count": localized_id_count,
+                                    }
+                                )
+                        if (
+                            readiness_damage_review_threshold is not None
+                            and video_damage_score is not None
+                            and video_damage_score > readiness_damage_review_threshold
+                        ):
+                            readiness_damage_review_threshold_exceeded += 1
+                        if (
+                            readiness_damage_block_threshold is not None
+                            and video_damage_score is not None
+                            and video_damage_score > readiness_damage_block_threshold
+                        ):
+                            readiness_damage_block_threshold_exceeded += 1
+                        if (
+                            readiness_severe_review_threshold is not None
+                            and severe_ratio is not None
+                            and severe_ratio > readiness_severe_review_threshold
+                        ):
+                            readiness_severe_review_threshold_exceeded += 1
+                        if (
+                            readiness_severe_block_threshold is not None
+                            and severe_ratio is not None
+                            and severe_ratio > readiness_severe_block_threshold
+                        ):
+                            readiness_severe_block_threshold_exceeded += 1
+
+                        readiness_damage_top_videos.append(
+                            {
+                                "video_id": vid,
+                                "content_type": content_type,
+                                "status": status or "UNKNOWN",
+                                "reason_code": str(row.get("reason_code", "") or ""),
+                                "video_damage_score": round(score_val, 6),
+                                "severe_damage_chunk_ratio": round(severe_val, 6),
+                                "damaged_segment_count": damaged_segment_count if damaged_segment_count is not None else 0,
+                            }
+                        )
                 check_counts = row.get("check_counts")
                 if isinstance(check_counts, dict):
                     warning_classes = check_counts.get("warning_classes")
@@ -817,6 +1008,43 @@ def build_scorecard(
         readiness_summary=readiness_summary,
     )
 
+    readiness_damage_top_videos_sorted = sorted(
+        readiness_damage_top_videos,
+        key=lambda row: float(row.get("video_damage_score", 0.0) or 0.0),
+        reverse=True,
+    )[:10]
+    readiness_damage_windowless_top_videos_sorted = sorted(
+        readiness_damage_windowless_top_videos,
+        key=lambda row: float(row.get("video_damage_score", 0.0) or 0.0),
+        reverse=True,
+    )[:10]
+    readiness_damage_mean_score = (
+        round(readiness_damage_score_sum / float(readiness_damage_profile_count), 6)
+        if readiness_damage_profile_count > 0
+        else 0.0
+    )
+    readiness_damage_mean_severe_ratio = (
+        round(readiness_severe_ratio_sum / float(readiness_damage_profile_count), 6)
+        if readiness_damage_profile_count > 0
+        else 0.0
+    )
+    readiness_damage_windowless_positive_score_ratio = round(
+        (
+            readiness_damage_positive_score_windowless_count / float(readiness_damage_positive_score_count)
+            if readiness_damage_positive_score_count > 0
+            else 0.0
+        ),
+        6,
+    )
+    if readiness_by_vid:
+        ingest_eligible_videos = readiness_ingest_eligible_count
+    else:
+        ingest_eligible_videos = pass_count
+    ingest_eligible_ratio = round(
+        (ingest_eligible_videos / float(len(non_quarantined_ids))) if non_quarantined_ids else 0.0,
+        6,
+    )
+
     manifest_rel = manifest_path
     try:
         manifest_rel = manifest_path.relative_to(repo_root())
@@ -834,6 +1062,8 @@ def build_scorecard(
             "blocked_videos": block_count,
             "review_videos": review_count,
             "pass_videos": pass_count,
+            "ingest_eligible_videos": ingest_eligible_videos,
+            "ingest_eligible_ratio": ingest_eligible_ratio,
             "signal_class_counts": dict(signal_class_counts),
             "decision_source": gating_source,
             "canonical_decision_source": canonical_decision_source,
@@ -857,6 +1087,38 @@ def build_scorecard(
                     for cls, limit in sorted(class_map.items())
                 }
                 for ct, class_map in sorted(review_budget_by_content_type.items())
+            },
+            "allow_ingest_statuses": sorted(allow_ingest_statuses),
+            "readiness_ingest_eligible_by_status": {
+                status: int(readiness_ingest_eligible_by_status.get(status, 0))
+                for status in sorted(readiness_ingest_eligible_by_status)
+            },
+            "readiness_damage": {
+                "videos_with_profile": readiness_damage_profile_count,
+                "mean_video_damage_score": readiness_damage_mean_score,
+                "max_video_damage_score": round(readiness_damage_score_max, 6),
+                "mean_severe_damage_chunk_ratio": readiness_damage_mean_severe_ratio,
+                "max_severe_damage_chunk_ratio": round(readiness_severe_ratio_max, 6),
+                "videos_with_positive_damage_score": readiness_damage_positive_score_count,
+                "videos_with_localized_damage_windows": readiness_damage_localized_window_video_count,
+                "videos_with_localized_damage_segment_ids_only": readiness_damage_localized_id_only_video_count,
+                "positive_damage_videos_with_localization": readiness_damage_positive_score_localized_count,
+                "positive_damage_videos_without_localized_windows": readiness_damage_positive_score_windowless_count,
+                "positive_damage_windowless_ratio": readiness_damage_windowless_positive_score_ratio,
+                "policy_thresholds": {
+                    "review_video_damage_score": readiness_damage_review_threshold,
+                    "block_video_damage_score": readiness_damage_block_threshold,
+                    "review_severe_damage_chunk_ratio": readiness_severe_review_threshold,
+                    "block_severe_damage_chunk_ratio": readiness_severe_block_threshold,
+                },
+                "threshold_exceeded_videos": {
+                    "review_video_damage_score": readiness_damage_review_threshold_exceeded,
+                    "block_video_damage_score": readiness_damage_block_threshold_exceeded,
+                    "review_severe_damage_chunk_ratio": readiness_severe_review_threshold_exceeded,
+                    "block_severe_damage_chunk_ratio": readiness_severe_block_threshold_exceeded,
+                },
+                "top_windowless_damage_scores": readiness_damage_windowless_top_videos_sorted,
+                "top_video_damage_scores": readiness_damage_top_videos_sorted,
             },
         },
         "quality": {
@@ -897,11 +1159,61 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-id", help="Optional run identifier for provenance")
     parser.add_argument("--out", help="Output path for scorecard JSON")
     parser.add_argument("--quarantine-file", help="Explicit quarantine file path")
+    parser.add_argument(
+        "--max-positive-damage-windowless-ratio",
+        type=float,
+        help="Alert/fail threshold for readiness_damage.positive_damage_windowless_ratio (0..1).",
+    )
+    parser.add_argument(
+        "--fail-on-alerts",
+        action="store_true",
+        help="Exit non-zero if any configured alert threshold is exceeded.",
+    )
     return parser.parse_args()
+
+
+def _apply_alerts(
+    scorecard: Dict[str, Any],
+    *,
+    max_positive_damage_windowless_ratio: Optional[float],
+) -> List[Dict[str, Any]]:
+    alerts: List[Dict[str, Any]] = []
+    gating = scorecard.get("gating")
+    gating = gating if isinstance(gating, dict) else {}
+    readiness_damage = gating.get("readiness_damage")
+    if not isinstance(readiness_damage, dict):
+        readiness_damage = {}
+
+    metric = _parse_ratio(readiness_damage.get("positive_damage_windowless_ratio"))
+    if max_positive_damage_windowless_ratio is not None and metric is not None and metric > max_positive_damage_windowless_ratio:
+        alerts.append(
+            {
+                "id": "positive_damage_windowless_ratio",
+                "severity": "review",
+                "metric_path": "gating.readiness_damage.positive_damage_windowless_ratio",
+                "metric_value": round(metric, 6),
+                "threshold_max": round(float(max_positive_damage_windowless_ratio), 6),
+                "message": (
+                    "Positive-damage videos without localized windows exceed threshold; "
+                    "localization coverage likely regressed."
+                ),
+            }
+        )
+
+    readiness_damage["alerts"] = alerts
+    gating["readiness_damage"] = readiness_damage
+    scorecard["gating"] = gating
+    scorecard["alerts"] = alerts
+    return alerts
 
 
 def main() -> None:
     args = parse_args()
+    if (
+        args.max_positive_damage_windowless_ratio is not None
+        and not (0.0 <= float(args.max_positive_damage_windowless_ratio) <= 1.0)
+    ):
+        raise SystemExit(f"{LOG_PREFIX} --max-positive-damage-windowless-ratio must be within [0,1]")
 
     manifest_path = Path(args.manifest)
     if not manifest_path.is_absolute():
@@ -921,6 +1233,14 @@ def main() -> None:
         run_id=args.run_id,
         explicit_quarantine_path=quarantine_path,
     )
+    alerts = _apply_alerts(
+        scorecard,
+        max_positive_damage_windowless_ratio=(
+            float(args.max_positive_damage_windowless_ratio)
+            if args.max_positive_damage_windowless_ratio is not None
+            else None
+        ),
+    )
 
     output_path: Optional[Path] = None
     if args.out:
@@ -936,6 +1256,9 @@ def main() -> None:
         print(f"{LOG_PREFIX} Scorecard written: {output_path}", file=sys.stderr)
 
     print(json.dumps(scorecard, indent=2))
+    if args.fail_on_alerts and alerts:
+        print(f"{LOG_PREFIX} Alerts triggered: {len(alerts)}", file=sys.stderr)
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":

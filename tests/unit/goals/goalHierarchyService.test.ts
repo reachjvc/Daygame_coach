@@ -84,22 +84,47 @@ describe("groupGoalsByHierarchy", () => {
     expect(sections[0].categories.dirty_dog?.length).toBe(1)
   })
 
-  it("handles standalone L2 picks (no L1 parent)", () => {
+  it("handles standalone L2 picks (no L1 in same area)", () => {
     const goals = [
-      mockGoal({ id: "2", goal_level: 2, template_id: "l2_master_daygame" }),
-      mockGoal({ id: "3", goal_level: 3, parent_goal_id: "2", display_category: "field_work" }),
+      mockGoal({ id: "2", goal_level: 2, template_id: "l2_master_daygame", life_area: "daygame", category: "daygame" }),
     ]
 
     const { sections } = groupGoalsByHierarchy(goals)
     expect(sections.length).toBe(1)
     expect(sections[0].l1Goal.id).toBe("2") // L2 treated as section header
-    expect(sections[0].categories.field_work?.length).toBe(1)
   })
 
   it("handles empty goals array", () => {
     const { sections, customGoals } = groupGoalsByHierarchy([])
     expect(sections.length).toBe(0)
     expect(customGoals.length).toBe(0)
+  })
+
+  it("routes goals with unknown display_category to unknownCategories", () => {
+    const goals = [
+      mockGoal({ id: "l1", goal_level: 1, template_id: "l1_girlfriend" }),
+      mockGoal({ id: "unk", goal_level: 3, parent_goal_id: "l1", display_category: "obsolete_cat" as never }),
+    ]
+
+    const { sections } = groupGoalsByHierarchy(goals)
+    expect(sections.length).toBe(1)
+    expect(sections[0].unknownCategories).toHaveProperty("obsolete_cat")
+    expect(sections[0].unknownCategories["obsolete_cat"].length).toBe(1)
+    expect(sections[0].unknownCategories["obsolete_cat"][0].id).toBe("unk")
+    // Should not appear in known categories or uncategorized
+    expect(Object.keys(sections[0].categories).length).toBe(0)
+    expect(sections[0].uncategorized.length).toBe(0)
+  })
+
+  it("routes goals with known display_category to categories (not unknownCategories)", () => {
+    const goals = [
+      mockGoal({ id: "l1", goal_level: 1, template_id: "l1_girlfriend" }),
+      mockGoal({ id: "fw", goal_level: 3, parent_goal_id: "l1", display_category: "field_work" }),
+    ]
+
+    const { sections } = groupGoalsByHierarchy(goals)
+    expect(sections[0].categories.field_work?.length).toBe(1)
+    expect(Object.keys(sections[0].unknownCategories).length).toBe(0)
   })
 })
 

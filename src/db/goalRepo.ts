@@ -257,12 +257,26 @@ export async function createGoal(
     .single()
 
   if (error) {
-    // Race condition fallback: DB constraint caught a duplicate
+    // Race condition fallback: DB constraint caught a duplicate — look up the real ID
     if (error.code === "23505") {
-      const reason = error.message.includes("uq_user_goals_template") ? "template_exists"
-        : error.message.includes("uq_user_goals_linked_metric") ? "linked_metric_exists"
-        : "template_exists"
-      throw new DuplicateGoalError(reason, "unknown")
+      let existingId = "unknown"
+      if (error.message.includes("uq_user_goals_template") && goal.template_id) {
+        const { data: dup } = await supabase
+          .from("user_goals").select("id")
+          .eq("user_id", userId).eq("template_id", goal.template_id).eq("is_archived", false)
+          .limit(1).maybeSingle()
+        if (dup) existingId = dup.id
+        throw new DuplicateGoalError("template_exists", existingId)
+      }
+      if (error.message.includes("uq_user_goals_linked_metric") && goal.linked_metric) {
+        const { data: dup } = await supabase
+          .from("user_goals").select("id")
+          .eq("user_id", userId).eq("linked_metric", goal.linked_metric).eq("is_archived", false)
+          .limit(1).maybeSingle()
+        if (dup) existingId = dup.id
+        throw new DuplicateGoalError("linked_metric_exists", existingId)
+      }
+      throw new DuplicateGoalError("template_exists", existingId)
     }
     throw new Error(`Failed to create goal: ${error.message}`)
   }
@@ -279,34 +293,141 @@ export async function createGoal(
  * Inserts must be ordered so that parents appear before children.
  * Idempotent: duplicates are silently skipped and the existing goal is used
  * for parent ID resolution, so re-running the same batch is safe.
+ *
+ * Optimized: uses a single Supabase client, pre-fetches existing goals for
+ * duplicate checking, and gets max position once upfront.
  */
 export async function createGoalBatch(
   userId: string,
   goals: (UserGoalInsert & { _tempId: string; _tempParentId: string | null })[],
   timezone: string | null = null
 ): Promise<GoalWithProgress[]> {
+  const supabase = await createServerSupabaseClient()
   const tempToReal = new Map<string, string>()
   const created: GoalWithProgress[] = []
+
+  // Pre-fetch all existing active goals for duplicate checking (single query)
+  const { data: existingGoals } = await supabase
+    .from("user_goals")
+    .select("id, template_id, linked_metric, title, life_area")
+    .eq("user_id", userId)
+    .eq("is_archived", false)
+
+  const existingByTemplate = new Map<string, string>()
+  const existingByMetric = new Map<string, string>()
+  const existingByTitleArea = new Map<string, string>()
+  for (const eg of existingGoals ?? []) {
+    if (eg.template_id) existingByTemplate.set(eg.template_id, eg.id)
+    if (eg.linked_metric) existingByMetric.set(eg.linked_metric, eg.id)
+    existingByTitleArea.set(`${eg.title}::${eg.life_area}`, eg.id)
+  }
+
+  // Get max position once upfront
+  const { data: maxPosData } = await supabase
+    .from("user_goals")
+    .select("position")
+    .eq("user_id", userId)
+    .eq("is_archived", false)
+    .order("position", { ascending: false })
+    .limit(1)
+    .single()
+
+  let nextPosition = maxPosData ? maxPosData.position + 1 : 0
 
   for (const goal of goals) {
     const realParentId = goal._tempParentId ? tempToReal.get(goal._tempParentId) ?? null : null
     const { _tempId, _tempParentId, ...insert } = goal
     insert.parent_goal_id = realParentId ?? undefined
 
-    try {
-      const result = await createGoal(userId, insert, timezone)
-      tempToReal.set(_tempId, result.id)
-      created.push(result)
-    } catch (err) {
-      if (err instanceof DuplicateGoalError && err.existingGoalId !== "unknown") {
-        // Skip duplicate — map temp ID to existing goal so children resolve correctly
-        tempToReal.set(_tempId, err.existingGoalId)
-        const existing = await getGoalById(userId, err.existingGoalId, timezone)
-        if (existing) created.push(existing)
-      } else {
-        throw err
-      }
+    const lifeArea = insert.life_area ?? insert.category
+    const category = insert.category ?? insert.life_area ?? "custom"
+
+    // In-memory duplicate check
+    let dupId: string | undefined
+    if (insert.template_id && existingByTemplate.has(insert.template_id)) {
+      dupId = existingByTemplate.get(insert.template_id)
+    } else if (insert.linked_metric && existingByMetric.has(insert.linked_metric)) {
+      dupId = existingByMetric.get(insert.linked_metric)
+    } else if (!insert.template_id) {
+      const key = `${insert.title}::${lifeArea}`
+      if (existingByTitleArea.has(key)) dupId = existingByTitleArea.get(key)
     }
+
+    if (dupId) {
+      // Duplicate found — map temp ID to existing and skip insert
+      tempToReal.set(_tempId, dupId)
+      const { data: existing } = await supabase
+        .from("user_goals").select("*").eq("id", dupId).eq("user_id", userId).single()
+      if (existing) created.push(computeGoalProgress(existing as UserGoalRow, timezone))
+      continue
+    }
+
+    // Insert the goal
+    const { data, error } = await supabase
+      .from("user_goals")
+      .insert({
+        user_id: userId,
+        title: insert.title,
+        category,
+        tracking_type: insert.tracking_type ?? "counter",
+        period: insert.period ?? "weekly",
+        target_value: insert.target_value,
+        custom_end_date: insert.custom_end_date ?? null,
+        linked_metric: insert.linked_metric ?? null,
+        position: insert.position ?? nextPosition,
+        life_area: lifeArea,
+        parent_goal_id: insert.parent_goal_id ?? null,
+        target_date: insert.target_date ?? null,
+        description: insert.description ?? null,
+        goal_type: insert.goal_type ?? "recurring",
+        goal_nature: insert.goal_nature ?? null,
+        display_category: insert.display_category ?? null,
+        goal_level: insert.goal_level ?? null,
+        template_id: insert.template_id ?? null,
+        milestone_config: insert.milestone_config ?? null,
+        ramp_steps: insert.ramp_steps ?? null,
+        goal_phase: insert.goal_phase ?? null,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      // Race condition fallback: DB constraint caught a duplicate
+      if (error.code === "23505") {
+        let existingId = "unknown"
+        if (error.message.includes("uq_user_goals_template") && insert.template_id) {
+          const { data: dup } = await supabase
+            .from("user_goals").select("id")
+            .eq("user_id", userId).eq("template_id", insert.template_id).eq("is_archived", false)
+            .limit(1).maybeSingle()
+          if (dup) existingId = dup.id
+        } else if (error.message.includes("uq_user_goals_linked_metric") && insert.linked_metric) {
+          const { data: dup } = await supabase
+            .from("user_goals").select("id")
+            .eq("user_id", userId).eq("linked_metric", insert.linked_metric).eq("is_archived", false)
+            .limit(1).maybeSingle()
+          if (dup) existingId = dup.id
+        }
+        if (existingId !== "unknown") {
+          tempToReal.set(_tempId, existingId)
+          const { data: existing } = await supabase
+            .from("user_goals").select("*").eq("id", existingId).eq("user_id", userId).single()
+          if (existing) created.push(computeGoalProgress(existing as UserGoalRow, timezone))
+        }
+        continue
+      }
+      throw new Error(`Failed to create goal: ${error.message}`)
+    }
+
+    const result = computeGoalProgress(data as UserGoalRow, timezone)
+    tempToReal.set(_tempId, result.id)
+    created.push(result)
+    nextPosition++
+
+    // Track newly created goal for subsequent duplicate checks within the batch
+    if (insert.template_id) existingByTemplate.set(insert.template_id, result.id)
+    if (insert.linked_metric) existingByMetric.set(insert.linked_metric, result.id)
+    existingByTitleArea.set(`${insert.title}::${lifeArea}`, result.id)
   }
 
   return created
@@ -600,6 +721,8 @@ export function getMetricValue(
   metric: LinkedMetric,
   timezone: string | null = null
 ): number {
+  if (metric === null) return 0
+
   const currentWeek = getISOWeekString(getNowInTimezone(timezone))
   const isCurrentWeek = stats.current_week === currentWeek
 
@@ -624,7 +747,11 @@ export function getMetricValue(
       return stats.total_instadates
     case "field_reports_cumulative":
       return stats.total_field_reports
+    case "approach_quality_avg_weekly":
+      console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
+      return 0
     default:
+      console.warn(`[getMetricValue] Unknown linked_metric "${metric}". Returning 0 — goal progress may be incorrect.`)
       return 0
   }
 }

@@ -1,46 +1,31 @@
 /**
  * Goal tracking types for the user_goals table
+ *
+ * Enum types are defined in goalEnums.ts (single source of truth)
+ * and re-exported here for backwards compatibility.
  */
 
 import { getTodayInTimezone } from "../shared/dateUtils"
 
-export type GoalTrackingType = "counter" | "percentage" | "streak" | "boolean"
-export type GoalPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly" | "custom"
-export type GoalType = "recurring" | "milestone" | "habit_ramp"
-export type GoalNature = "input" | "outcome"
-export type GoalPhase = "acquisition" | "consolidation" | "graduated"
-export type GoalDisplayCategory =
-  // Daygame
-  | "field_work" | "results" | "dirty_dog" | "texting" | "dates" | "relationship"
-  // Personal Growth
-  | "mindfulness" | "resilience" | "learning" | "reflection" | "discipline"
-  // Social
-  | "social_activity" | "friendships" | "hosting" | "social_skills" | "network_expansion" | "mentorship"
-  // Fitness
-  | "strength" | "training" | "nutrition" | "body_comp" | "flexibility" | "endurance"
-  // Wealth
-  | "income" | "saving" | "investing" | "career_growth" | "entrepreneurship"
-  // Vices & Elimination
-  | "porn_freedom" | "digital_discipline" | "substance_control" | "self_control"
-  // Lifestyle
-  | "hobbies_skills" | "cooking_domestic" | "adventure_travel" | "style_grooming"
+export type {
+  GoalTrackingType,
+  GoalPeriod,
+  GoalType,
+  GoalNature,
+  GoalPhase,
+  GoalDisplayCategory,
+  LinkedMetric,
+} from "./goalEnums"
 
-/**
- * Metrics that can be linked to goals for auto-sync with tracking data
- */
-export type LinkedMetric =
-  | "approaches_weekly"
-  | "sessions_weekly"
-  | "numbers_weekly"
-  | "instadates_weekly"
-  | "field_reports_weekly"
-  | "approaches_cumulative"
-  | "sessions_cumulative"
-  | "numbers_cumulative"
-  | "instadates_cumulative"
-  | "field_reports_cumulative"
-  | "approach_quality_avg_weekly"
-  | null
+import type {
+  GoalTrackingType,
+  GoalPeriod,
+  GoalType,
+  GoalNature,
+  GoalPhase,
+  GoalDisplayCategory,
+  LinkedMetric,
+} from "./goalEnums"
 
 /**
  * Database row type for user_goals table

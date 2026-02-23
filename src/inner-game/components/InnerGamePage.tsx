@@ -5,8 +5,7 @@ import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
-import { X, Loader2, Heart } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, X, Loader2, Heart } from "lucide-react"
 
 import {
   InnerGameStep,
@@ -454,7 +453,7 @@ export function InnerGamePage({ isPreviewMode = false }: InnerGamePageProps) {
               Values
             </TabsTrigger>
             <TabsTrigger value="goals" className="gap-2">
-              <GoalIcon className="h-4 w-4" />
+              <Aperture className="h-4 w-4" />
               Goals
             </TabsTrigger>
           </TabsList>

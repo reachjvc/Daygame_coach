@@ -3,10 +3,10 @@
 import { useState, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowUpDown, Flame, Calendar, Plus } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, ArrowUpDown, Flame, Calendar, Plus } from "lucide-react"
 import { getLifeAreaConfig } from "../../data/lifeAreas"
 import { deriveTimeHorizon } from "../../goalsService"
+import { getGoalTypeLabel, getPeriodLabel } from "../../goalDisplayService"
 import type { GoalWithProgress } from "../../types"
 
 interface ListViewProps {
@@ -76,7 +76,7 @@ export function ListView({ goals, allGoals, onIncrement, onReset, onEdit, onCrea
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <GoalIcon className="size-7 text-primary" />
+          <Aperture className="size-7 text-primary" />
         </div>
         <h3 className="text-lg font-semibold mb-2">
           {filterAreaName ? `No ${filterAreaName} goals` : "No goals yet"}
@@ -159,8 +159,8 @@ export function ListView({ goals, allGoals, onIncrement, onReset, onEdit, onCrea
               </Badge>
 
               {/* Type + Period */}
-              <span className="text-xs text-muted-foreground capitalize">
-                {goal.goal_type === "recurring" ? goal.period : "Milestone"}
+              <span className="text-xs text-muted-foreground">
+                {goal.goal_type === "recurring" ? getPeriodLabel(goal.period) : getGoalTypeLabel(goal.goal_type)}
               </span>
 
               {/* Progress */}

@@ -6,7 +6,7 @@ import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, Celebr
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric } from "@/src/db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
-import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getParents, getDaygamePathL1 } from "./data/goalGraph"
+import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getDaygamePathL1 } from "./data/goalGraph"
 import { LIFE_AREAS } from "./data/lifeAreas"
 import { detectTierUpgrades } from "./badgeEngineService"
 
@@ -1074,31 +1074,24 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
       const l1TempId = TEMP_PREFIX + l1.id
       inserts.push(templateToSetupInsert(l1, null))
 
-      // Collect unique L2 parents of all selected L3s
+      // Collect unique L2 achievements referenced by selected L3s (standalone badges)
       const l2Map = new Map<string, typeof GOAL_TEMPLATE_MAP[string]>()
-      const l3ToL2 = new Map<string, string>()
-
       for (const l3Id of selectedL3Ids) {
-        const parents = getParents(l3Id)
-        const l2Parent = parents.find((p) => p.level === 2)
-        if (l2Parent) {
-          l2Map.set(l2Parent.id, l2Parent)
-          l3ToL2.set(l3Id, l2Parent.id)
+        for (const l2 of getL2AchievementsForL3(l3Id)) {
+          l2Map.set(l2.id, l2)
         }
       }
 
-      // Emit unique L2s
+      // Emit unique L2s as standalone (no parent — they're badges, not hierarchy nodes)
       for (const [, l2] of l2Map) {
-        inserts.push(templateToSetupInsert(l2, l1TempId))
+        inserts.push(templateToSetupInsert(l2, null))
       }
 
-      // Emit L3s
+      // Emit L3s — parent directly to L1
       for (const l3Id of selectedL3Ids) {
         const tmpl = GOAL_TEMPLATE_MAP[l3Id]
         if (!tmpl) continue
-        const l2Id = l3ToL2.get(l3Id)
-        const parentTempId = l2Id ? TEMP_PREFIX + l2Id : l1TempId
-        const insert = templateToSetupInsert(tmpl, parentTempId)
+        const insert = templateToSetupInsert(tmpl, l1TempId)
 
         // Apply user overrides
         if (selections.targets[l3Id] !== undefined) {

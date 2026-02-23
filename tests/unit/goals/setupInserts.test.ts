@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest"
 import { buildSetupInserts } from "@/src/goals/goalsService"
-import { getParents, getDaygamePathL1, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
+import { getParents, getDaygamePathL1, getL2AchievementsForL3, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import { LIFE_AREAS } from "@/src/goals/data/lifeAreas"
 import type { GoalSetupSelections, MilestoneLadderConfig } from "@/src/goals/types"
 
@@ -22,14 +22,27 @@ function createSelections(overrides: Partial<GoalSetupSelections> = {}): GoalSet
 // ============================================================================
 
 describe("getParents", () => {
-  test("returns L2 parents of an L3 template", () => {
+  test("returns L1 parents of an L3 template (L1→L3 direct)", () => {
     const parents = getParents("l3_approach_volume")
     expect(parents.length).toBeGreaterThan(0)
-    expect(parents.every((p) => p.level === 2)).toBe(true)
+    expect(parents.every((p) => p.level === 1)).toBe(true)
   })
 
   test("returns empty for unknown ID", () => {
     expect(getParents("nonexistent")).toEqual([])
+  })
+})
+
+describe("getL2AchievementsForL3", () => {
+  test("returns L2 achievements that reference an L3 in their weights", () => {
+    const l2s = getL2AchievementsForL3("l3_approach_volume")
+    expect(l2s.length).toBeGreaterThan(0)
+    expect(l2s.every((t) => t.level === 2)).toBe(true)
+    expect(l2s.some((t) => t.id === "l2_master_daygame")).toBe(true)
+  })
+
+  test("returns empty for unknown ID", () => {
+    expect(getL2AchievementsForL3("nonexistent")).toEqual([])
   })
 })
 
@@ -67,14 +80,12 @@ describe("buildSetupInserts", () => {
     expect(result).toEqual([])
   })
 
-  test("builds tree from 2 L3s sharing 1 L2", () => {
-    // l3_approach_volume and l3_approach_frequency both under l2_master_daygame
+  test("builds tree from 2 L3s: L1 + standalone L2 badges + L3s parented to L1", () => {
     const selections = createSelections({
       selectedGoalIds: new Set(["l3_approach_volume", "l3_approach_frequency"]),
     })
     const result = buildSetupInserts(selections)
 
-    // Should have: 1 L1 + at least 1 L2 + 2 L3s
     const l1s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 1)
     const l3s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 3)
     expect(l1s).toHaveLength(1)
@@ -82,31 +93,38 @@ describe("buildSetupInserts", () => {
 
     // L1 should be from FTO path
     expect(l1s[0]._tempParentId).toBeNull()
+
+    // L3s parent directly to L1
+    for (const l3 of l3s) {
+      expect(l3._tempParentId).toMatch(/^__temp_l1_/)
+    }
   })
 
-  test("deduplicates L2 parents when L3s share same L2", () => {
-    // Both under l2_master_daygame
+  test("emits standalone L2 badges (no parent) for referenced achievements", () => {
     const selections = createSelections({
       selectedGoalIds: new Set(["l3_approach_volume", "l3_session_frequency"]),
     })
     const result = buildSetupInserts(selections)
 
     const l2s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 2)
-    const l2Ids = new Set(l2s.map((r) => r.template_id))
+    // L2s exist as standalone badges
+    expect(l2s.length).toBeGreaterThan(0)
+    // All L2s have no parent (standalone)
+    for (const l2 of l2s) {
+      expect(l2._tempParentId).toBeNull()
+    }
     // No duplicate L2 IDs
+    const l2Ids = new Set(l2s.map((r) => r.template_id))
     expect(l2s.length).toBe(l2Ids.size)
   })
 
-  test("creates multiple L2s for L3s from different L2s", () => {
-    // l3_approach_volume → l2_master_daygame (among others)
-    // l3_eye_contact_holds → l2_overcome_aa (among others)
+  test("emits L2 badges from different areas when L3s reference multiple L2s", () => {
     const selections = createSelections({
       selectedGoalIds: new Set(["l3_approach_volume", "l3_eye_contact_holds"]),
     })
     const result = buildSetupInserts(selections)
 
     const l2s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 2)
-    // Should have at least 1 L2 (might be more if they share)
     expect(l2s.length).toBeGreaterThanOrEqual(1)
   })
 
@@ -251,8 +269,8 @@ describe("buildSetupInserts", () => {
     })
     const result = buildSetupInserts(selections)
 
-    // Should have: L1 + L2(s) + L3(template) + suggestion + custom
-    expect(result.length).toBeGreaterThanOrEqual(4) // at minimum: L1 + L2 + L3 + suggestion + custom = 5
+    // Should have: L1 + L2 badges + L3(template) + suggestion + custom
+    expect(result.length).toBeGreaterThanOrEqual(4)
     const titles = result.map((r) => r.title)
     expect(titles).toContain("Custom goal")
   })

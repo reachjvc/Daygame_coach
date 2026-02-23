@@ -30,10 +30,8 @@
  *
  * Notes:
  *   - Manifest ingest uses per-video quarantine for Stage 08/Readiness failures when report detail is available.
- *   - Default readiness ingest policy is READY-only:
- *       READY   -> pass   -> ingest-eligible
- *       REVIEW  -> review -> excluded by readiness gate
- *       BLOCKED -> block  -> excluded by readiness gate
+ *   - Readiness ingest policy is driven by readiness-summary `policy.allow_ingest_statuses`.
+ *     If missing, fallback is READY-only.
  *
  * Environment:
  *   - Loads `.env.local` (if present)
@@ -108,6 +106,12 @@ type ChunkMetadata = {
   chunkConfidenceVersion?: number
   problematicReason?: string[]
   damaged_segment_ids?: number[]
+  damage_score?: number
+  damage_segment_windows?: Array<{
+    start_segment_id: number
+    end_segment_id: number
+    damaged_segment_count: number
+  }>
   // Legacy field names (read for backward compat)
   damagedSegmentIds?: number[]
   contains_repaired_text?: boolean
@@ -142,6 +146,18 @@ type ChunksFile = {
   videoTitle: string
   // Stage 07 stem (title + [video_id] + audio variant suffix). Older files may omit this key.
   videoStem?: string
+  qualityProfile?: {
+    chunk_count?: number
+    damaged_chunk_count?: number
+    damaged_chunk_ratio?: number
+    video_damage_score?: number
+    damaged_segment_ids?: number[]
+    damage_segment_windows?: Array<{
+      start_segment_id: number
+      end_segment_id: number
+      damaged_segment_count: number
+    }>
+  }
   generatedAt: string
   chunks: Chunk[]
 }
@@ -163,8 +179,8 @@ Core:
 
 Gates (always-on in manifest mode):
   --readiness-summary <p>   Override readiness summary path
-                            (default readiness policy: READY/pass only;
-                             REVIEW/review and BLOCKED/block are excluded)
+                            (ingest eligibility follows readiness-summary
+                             policy.allow_ingest_statuses; fallback: READY-only)
   --quarantine-file <path>  Upstream quarantine JSON — quarantined video IDs are excluded from ingest
   --quarantine-report-out <p>
                             Override manifest quarantine report output path
@@ -902,6 +918,140 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object"
 }
 
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
+
+function parseFiniteNumber(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null
+}
+
+function parseNonNegativeInteger(value: unknown): number | null {
+  return Number.isInteger(value) && (value as number) >= 0 ? (value as number) : null
+}
+
+type ReadinessDamageWindow = {
+  start_segment_id: number
+  end_segment_id: number
+  damaged_segment_count: number
+}
+
+type ReadinessDamageProfile = {
+  profile_source?: string | null
+  chunks_path?: string | null
+  channel?: string | null
+  chunk_count?: number
+  scored_chunk_count?: number
+  missing_score_chunk_count?: number
+  score_coverage?: number
+  video_damage_score?: number
+  damaged_chunk_count?: number
+  damaged_chunk_ratio?: number
+  moderate_damage_chunk_count?: number
+  moderate_damage_chunk_ratio?: number
+  severe_damage_chunk_count?: number
+  severe_damage_chunk_ratio?: number
+  damaged_segment_count?: number
+  damaged_segment_ids?: number[]
+  damage_segment_windows?: ReadinessDamageWindow[]
+}
+
+function parseReadinessDamageSegmentWindows(raw: unknown): ReadinessDamageWindow[] {
+  if (!Array.isArray(raw)) {
+    return []
+  }
+  const out: ReadinessDamageWindow[] = []
+  for (const item of raw) {
+    if (!isObject(item)) {
+      continue
+    }
+    const start = parseNonNegativeInteger(item.start_segment_id)
+    const end = parseNonNegativeInteger(item.end_segment_id)
+    if (start === null || end === null) {
+      continue
+    }
+    const startNorm = Math.min(start, end)
+    const endNorm = Math.max(start, end)
+    const rawCount = parseNonNegativeInteger(item.damaged_segment_count)
+    const damagedCount = rawCount !== null && rawCount > 0
+      ? rawCount
+      : Math.max(1, endNorm - startNorm + 1)
+    out.push({
+      start_segment_id: startNorm,
+      end_segment_id: endNorm,
+      damaged_segment_count: damagedCount,
+    })
+  }
+  return out
+}
+
+function parseReadinessDamageProfile(raw: unknown): ReadinessDamageProfile | null {
+  if (!isObject(raw)) {
+    return null
+  }
+  const out: ReadinessDamageProfile = {}
+  let seen = false
+
+  for (const key of ["profile_source", "chunks_path", "channel"] as const) {
+    const value = raw[key]
+    if (typeof value === "string" && value.trim()) {
+      out[key] = value.trim()
+      seen = true
+    }
+  }
+
+  for (const key of [
+    "chunk_count",
+    "scored_chunk_count",
+    "missing_score_chunk_count",
+    "damaged_chunk_count",
+    "moderate_damage_chunk_count",
+    "severe_damage_chunk_count",
+    "damaged_segment_count",
+  ] as const) {
+    const value = parseNonNegativeInteger(raw[key])
+    if (value !== null) {
+      out[key] = value
+      seen = true
+    }
+  }
+
+  for (const key of [
+    "score_coverage",
+    "video_damage_score",
+    "damaged_chunk_ratio",
+    "moderate_damage_chunk_ratio",
+    "severe_damage_chunk_ratio",
+  ] as const) {
+    const value = parseFiniteNumber(raw[key])
+    if (value !== null) {
+      out[key] = clamp01(value)
+      seen = true
+    }
+  }
+
+  const rawIds = raw.damaged_segment_ids
+  if (Array.isArray(rawIds)) {
+    const ids = Array.from(new Set(
+      rawIds
+        .map((id) => parseNonNegativeInteger(id))
+        .filter((id): id is number => id !== null)
+    )).sort((a, b) => a - b)
+    if (ids.length > 0) {
+      out.damaged_segment_ids = ids
+      seen = true
+    }
+  }
+
+  const windows = parseReadinessDamageSegmentWindows(raw.damage_segment_windows)
+  if (windows.length > 0) {
+    out.damage_segment_windows = windows
+    seen = true
+  }
+
+  return seen ? out : null
+}
+
 function defaultStageReportsDir(manifestPath: string, source: string | null): string {
   const stem = path.basename(manifestPath, path.extname(manifestPath))
   const suffix = source ? `.${source}` : ""
@@ -999,6 +1149,56 @@ async function writeManifestQuarantineReport({
     ...Array.from(readinessBlocked.keys()),
   ])).sort((a, b) => a.localeCompare(b))
 
+  const readinessReviewVideos: ManifestReadinessReviewVideo[] = (readinessGate?.review ?? [])
+    .map((item) => ({
+      video_id: item.videoId,
+      source: sourceByVideo.get(item.videoId) ?? item.source ?? null,
+      ingest_eligible: item.readyForIngest,
+      readiness: {
+        status: "REVIEW",
+        reason: item.reason || "review",
+        source: item.source ?? null,
+        report: item.report ?? null,
+        ...(item.damageProfile ? { damage_profile: item.damageProfile } : {}),
+      },
+    }))
+    .sort((a, b) => a.video_id.localeCompare(b.video_id))
+  const readinessReviewIngestEligibleVideoIds = readinessReviewVideos
+    .filter((item) => item.ingest_eligible)
+    .map((item) => item.video_id)
+
+  const toRepairWindows = (profile: ReadinessDamageProfile | null | undefined): ReadinessDamageWindow[] => {
+    if (!profile) {
+      return []
+    }
+    const fromWindows = Array.isArray(profile.damage_segment_windows)
+      ? profile.damage_segment_windows
+          .filter((row) =>
+            Number.isInteger(row.start_segment_id)
+            && Number.isInteger(row.end_segment_id)
+          )
+          .map((row) => ({
+            start_segment_id: Math.min(row.start_segment_id, row.end_segment_id),
+            end_segment_id: Math.max(row.start_segment_id, row.end_segment_id),
+            damaged_segment_count:
+              Number.isInteger(row.damaged_segment_count) && row.damaged_segment_count > 0
+                ? row.damaged_segment_count
+                : Math.max(1, Math.abs(row.end_segment_id - row.start_segment_id) + 1),
+          }))
+      : []
+    if (fromWindows.length > 0) {
+      return fromWindows
+    }
+    const ids = Array.isArray(profile.damaged_segment_ids)
+      ? profile.damaged_segment_ids.filter((id) => Number.isInteger(id) && id >= 0).sort((a, b) => a - b)
+      : []
+    return ids.map((id) => ({
+      start_segment_id: id,
+      end_segment_id: id,
+      damaged_segment_count: 1,
+    }))
+  }
+
   const blockedVideos: ManifestQuarantineReportVideo[] = blockedIds.map((vid) => {
     const readiness = readinessBlocked.get(vid)
     const taxonomyReason = taxonomyBlocked.get(vid)
@@ -1024,10 +1224,54 @@ async function writeManifestQuarantineReport({
               reason: readiness.reason || "not_ingest_ready",
               source: readiness.source ?? null,
               report: readiness.report ?? null,
+              ...(readiness.damageProfile ? { damage_profile: readiness.damageProfile } : {}),
             },
           }
         : {}),
     }
+  })
+
+  const segmentRepairCandidates: ManifestSegmentRepairCandidate[] = []
+  for (const item of readinessGate?.blocked ?? []) {
+    for (const window of toRepairWindows(item.damageProfile)) {
+      segmentRepairCandidates.push({
+        video_id: item.videoId,
+        source: sourceByVideo.get(item.videoId) ?? item.source ?? null,
+        status: "BLOCKED",
+        ingest_eligible: false,
+        reason: item.reason || "blocked",
+        video_damage_score:
+          typeof item.damageProfile?.video_damage_score === "number"
+            ? item.damageProfile.video_damage_score
+            : null,
+        start_segment_id: window.start_segment_id,
+        end_segment_id: window.end_segment_id,
+        damaged_segment_count: window.damaged_segment_count,
+      })
+    }
+  }
+  for (const item of readinessGate?.review ?? []) {
+    for (const window of toRepairWindows(item.damageProfile)) {
+      segmentRepairCandidates.push({
+        video_id: item.videoId,
+        source: sourceByVideo.get(item.videoId) ?? item.source ?? null,
+        status: "REVIEW",
+        ingest_eligible: item.readyForIngest,
+        reason: item.reason || "review",
+        video_damage_score:
+          typeof item.damageProfile?.video_damage_score === "number"
+            ? item.damageProfile.video_damage_score
+            : null,
+        start_segment_id: window.start_segment_id,
+        end_segment_id: window.end_segment_id,
+        damaged_segment_count: window.damaged_segment_count,
+      })
+    }
+  }
+  segmentRepairCandidates.sort((a, b) => {
+    if (a.video_id !== b.video_id) return a.video_id.localeCompare(b.video_id)
+    if (a.start_segment_id !== b.start_segment_id) return a.start_segment_id - b.start_segment_id
+    return a.end_segment_id - b.end_segment_id
   })
 
   const eligibleVideoIds = Array.from(postReadinessVideoIds).sort((a, b) => a.localeCompare(b))
@@ -1043,6 +1287,9 @@ async function writeManifestQuarantineReport({
       post_readiness_videos: postReadinessVideoIds.size,
       blocked_videos: blockedIds.length,
       eligible_videos: eligibleVideoIds.length,
+      readiness_review_videos: readinessReviewVideos.length,
+      readiness_review_ingest_eligible_videos: readinessReviewIngestEligibleVideoIds.length,
+      segment_repair_candidates: segmentRepairCandidates.length,
     },
     stages: {
       taxonomy: {
@@ -1056,11 +1303,17 @@ async function writeManifestQuarantineReport({
         enabled: readinessGateEnabled,
         summary: readinessGate?.summaryPath ?? null,
         blocked_videos: readinessGate?.blocked.length ?? 0,
+        review_videos: readinessGate?.review.length ?? 0,
+        review_ingest_eligible_videos: readinessReviewIngestEligibleVideoIds.length,
       },
     },
     blocked_video_ids: blockedIds,
     eligible_video_ids: eligibleVideoIds,
+    readiness_review_video_ids: readinessReviewVideos.map((item) => item.video_id),
+    readiness_review_ingest_eligible_video_ids: readinessReviewIngestEligibleVideoIds,
     blocked_videos: blockedVideos,
+    readiness_review_videos: readinessReviewVideos,
+    segment_repair_candidates: segmentRepairCandidates,
   }
 
   const reportPath = resolveManifestQuarantineReportPath(manifestPath, source, generatedAt, overridePath)
@@ -1085,11 +1338,23 @@ type ReadinessBlockedItem = {
   reason: string
   source?: string | null
   report?: string | null
+  damageProfile?: ReadinessDamageProfile | null
+}
+
+type ReadinessReviewItem = {
+  videoId: string
+  status: "REVIEW"
+  reason: string
+  readyForIngest: boolean
+  source?: string | null
+  report?: string | null
+  damageProfile?: ReadinessDamageProfile | null
 }
 
 type ReadinessGateResult = {
   eligibleVideoIds: Set<string>
   blocked: ReadinessBlockedItem[]
+  review: ReadinessReviewItem[]
   summaryPath: string
 }
 
@@ -1114,7 +1379,33 @@ type ManifestQuarantineReportVideo = {
     reason: string
     source: string | null
     report: string | null
+    damage_profile?: ReadinessDamageProfile | null
   }
+}
+
+type ManifestReadinessReviewVideo = {
+  video_id: string
+  source: string | null
+  ingest_eligible: boolean
+  readiness: {
+    status: "REVIEW"
+    reason: string
+    source: string | null
+    report: string | null
+    damage_profile?: ReadinessDamageProfile | null
+  }
+}
+
+type ManifestSegmentRepairCandidate = {
+  video_id: string
+  source: string | null
+  status: "REVIEW" | "BLOCKED"
+  ingest_eligible: boolean
+  reason: string
+  video_damage_score: number | null
+  start_segment_id: number
+  end_segment_id: number
+  damaged_segment_count: number
 }
 
 function checkReadinessGate(
@@ -1123,7 +1414,12 @@ function checkReadinessGate(
   source: string | null,
   readinessSummaryOverride: string | null
 ) : ReadinessGateResult {
-  const emptyResult: ReadinessGateResult = { eligibleVideoIds: new Set<string>(), blocked: [], summaryPath: "" }
+  const emptyResult: ReadinessGateResult = {
+    eligibleVideoIds: new Set<string>(),
+    blocked: [],
+    review: [],
+    summaryPath: "",
+  }
   if (expectedVideoIds.size <= 0) {
     return emptyResult
   }
@@ -1235,6 +1531,7 @@ function checkReadinessGate(
     reason: string
     source: string | null
     report: string | null
+    damageProfile: ReadinessDamageProfile | null
   }>()
   for (const item of (data as any).videos as unknown[]) {
     if (!isObject(item)) {
@@ -1285,13 +1582,21 @@ function checkReadinessGate(
         reportPath = firstReport.trim()
       }
     }
-
-    byVideo.set(rawVid, { status, readyForIngest, reason, source: sourceLabel, report: reportPath })
+    const damageProfile = parseReadinessDamageProfile(item.damage_profile)
+    byVideo.set(rawVid, {
+      status,
+      readyForIngest,
+      reason,
+      source: sourceLabel,
+      report: reportPath,
+      damageProfile,
+    })
   }
 
   const eligibleVideoIds = new Set<string>()
   const missing: string[] = []
   const blocked: ReadinessBlockedItem[] = []
+  const review: ReadinessReviewItem[] = []
   const blockedByStatus: Record<"READY" | "REVIEW" | "BLOCKED", number> = { READY: 0, REVIEW: 0, BLOCKED: 0 }
   let reviewCount = 0
 
@@ -1303,6 +1608,15 @@ function checkReadinessGate(
     }
     if (item.status === "REVIEW") {
       reviewCount += 1
+      review.push({
+        videoId: vid,
+        status: "REVIEW",
+        reason: item.reason,
+        readyForIngest: item.readyForIngest,
+        source: item.source,
+        report: item.report,
+        damageProfile: item.damageProfile,
+      })
     }
     if (item.status === "BLOCKED" || item.readyForIngest === false) {
       blockedByStatus[item.status] += 1
@@ -1312,6 +1626,7 @@ function checkReadinessGate(
         reason: item.reason,
         source: item.source,
         report: item.report,
+        damageProfile: item.damageProfile,
       })
     } else {
       eligibleVideoIds.add(vid)
@@ -1342,7 +1657,7 @@ function checkReadinessGate(
       `⚠️  Readiness gate quarantined ${blocked.length} video(s): `
       + `under allow_ingest_statuses=${policyLabel} (${breakdown}; e.g. ${sample}${suffix}).`
     )
-    console.warn(`   Ingest scope reduced to ${eligibleVideoIds.size}/${expectedVideoIds.size} READY video(s).`)
+    console.warn(`   Ingest scope reduced to ${eligibleVideoIds.size}/${expectedVideoIds.size} ingest-eligible video(s).`)
     console.warn(`   Readiness summary: ${summaryPath}`)
     for (const row of blocked.slice(0, 12)) {
       const details = [
@@ -1362,9 +1677,30 @@ function checkReadinessGate(
   const reviewAllowed = allowIngestStatuses ? allowIngestStatuses.has("REVIEW") : false
   if (reviewCount > 0 && reviewAllowed) {
     console.warn(`⚠️  Readiness gate: ${reviewCount} video(s) are REVIEW (ingest allowed).`)
+    const reviewWithDamage = review
+      .filter((item) => item.readyForIngest)
+      .map((item) => ({
+        item,
+        score:
+          typeof item.damageProfile?.video_damage_score === "number"
+            ? item.damageProfile.video_damage_score
+            : -1,
+      }))
+      .sort((a, b) => b.score - a.score)
+    for (const row of reviewWithDamage.slice(0, 8)) {
+      const firstWindow = row.item.damageProfile?.damage_segment_windows?.[0] ?? null
+      const windowLabel = firstWindow
+        ? `${firstWindow.start_segment_id}-${firstWindow.end_segment_id}`
+        : "n/a"
+      const scoreLabel = row.score >= 0 ? row.score.toFixed(3) : "n/a"
+      console.warn(
+        `   - ${row.item.videoId} reason=${row.item.reason || "review"} `
+        + `damage_score=${scoreLabel} first_window=${windowLabel}`
+      )
+    }
   }
 
-  return { eligibleVideoIds, blocked, summaryPath }
+  return { eligibleVideoIds, blocked, review, summaryPath }
 }
 
 function checkSemanticGate(
@@ -2379,6 +2715,29 @@ async function main() {
         : []
       if (damagedSegmentIds.length > 0) {
         metadata.damaged_segment_ids = damagedSegmentIds
+      }
+      if (typeof chunk.metadata.damage_score === "number" && Number.isFinite(chunk.metadata.damage_score)) {
+        metadata.damage_score = Math.max(0, Math.min(1, chunk.metadata.damage_score))
+      }
+      const damageWindowsRaw = Array.isArray(chunk.metadata.damage_segment_windows)
+        ? chunk.metadata.damage_segment_windows
+        : []
+      const damageWindows = damageWindowsRaw
+        .filter((raw): raw is { start_segment_id: number; end_segment_id: number; damaged_segment_count?: number } => (
+          !!raw
+          && typeof raw === "object"
+          && typeof (raw as any).start_segment_id === "number"
+          && typeof (raw as any).end_segment_id === "number"
+        ))
+        .map((raw) => ({
+          start_segment_id: raw.start_segment_id,
+          end_segment_id: raw.end_segment_id,
+          damaged_segment_count: typeof raw.damaged_segment_count === "number"
+            ? raw.damaged_segment_count
+            : Math.max(1, raw.end_segment_id - raw.start_segment_id + 1),
+        }))
+      if (damageWindows.length > 0) {
+        metadata.damage_segment_windows = damageWindows
       }
       const containsRepairedText = chunk.metadata.contains_repaired_text === true
       if (containsRepairedText) {

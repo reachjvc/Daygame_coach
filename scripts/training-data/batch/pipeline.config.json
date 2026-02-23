@@ -35,7 +35,30 @@
           "routing_mismatch": 0
         }
       },
+      "allow_ingest_statuses": [
+        "READY",
+        "REVIEW"
+      ],
+      "review_video_damage_score": 0.18,
+      "block_video_damage_score": 0.35,
+      "review_windowless_video_damage_score_by_content_type": {},
+      "block_windowless_video_damage_score": 0.3,
+      "block_windowless_video_damage_score_by_content_type": {},
+      "review_severe_damage_chunk_ratio": 0.4,
+      "block_severe_damage_chunk_ratio": 0.7,
+      "max_positive_damage_windowless_ratio": 0.3,
+      "ready_spotcheck_min_video_damage_score": 0.03,
+      "ready_spotcheck_min_video_damage_score_by_content_type": {},
+      "repair_context_radius": 0,
+      "ready_spotcheck_context_radius": 0,
       "block_warning_classes": []
+    }
+  },
+  "automation": {
+    "auto_repair": {
+      "enabled": true,
+      "max_attempts": 1,
+      "rerun_from_stage": "06b"
     }
   }
 }

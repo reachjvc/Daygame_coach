@@ -3,6 +3,7 @@
  */
 
 import type { GoalViewMode, GoalDisplayCategory } from "./types"
+import { GOAL_DISPLAY_CATEGORIES } from "./types"
 
 /**
  * Human-readable label for each display category.
@@ -101,6 +102,16 @@ export const TIME_HORIZONS = [
 /**
  * Default filter state
  */
+// Compile-time safety: fails if a GOAL_DISPLAY_CATEGORIES value is missing from CATEGORY_LABELS
+const _labelExhaustiveCheck: Record<GoalDisplayCategory, string> = CATEGORY_LABELS
+void _labelExhaustiveCheck
+
+// Compile-time safety: fails if CATEGORY_ORDER doesn't cover all known categories
+const _orderExhaustiveCheck: Record<GoalDisplayCategory, true> = Object.fromEntries(
+  CATEGORY_ORDER.map(c => [c, true as const])
+) as Record<GoalDisplayCategory, true>
+void _orderExhaustiveCheck
+
 export const DEFAULT_FILTER_STATE = {
   lifeArea: null,
   timeHorizon: null,

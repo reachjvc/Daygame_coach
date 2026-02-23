@@ -625,7 +625,11 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         if validation_rc != 0:
             print(f"[pipeline-runner] End-of-run validation failed (exit {validation_rc})", file=sys.stderr)
 
-    return 1 if fail_count > 0 or validation_rc != 0 else 0
+    if fail_count > 0:
+        return 1
+    if validation_rc != 0:
+        return 2
+    return 0
 
 
 def main() -> None:

@@ -3,8 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, CheckCircle2, Circle, Flame, Calendar, ArrowRight, ChevronDown, ChevronUp } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, Loader2, CheckCircle2, Circle, Flame, Calendar, ArrowRight, ChevronDown, ChevronUp } from "lucide-react"
 import { getCategoryConfig } from "@/src/lair/data/goalCategories"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 
@@ -131,7 +130,7 @@ export function GoalsSummarySection({
       <Card className="p-4 mb-6 bg-muted/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <GoalIcon className="size-4 text-primary" />
+            <Aperture className="size-4 text-primary" />
             <span className="text-sm font-medium">Goals Progress</span>
           </div>
           <div className="flex items-center gap-2">
@@ -229,7 +228,7 @@ export function GoalsSummarySection({
       <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="font-semibold text-lg flex items-center gap-2">
-            <GoalIcon className="size-5 text-primary" />
+            <Aperture className="size-5 text-primary" />
             Your Goals This Week
           </h2>
           <p className="text-sm text-muted-foreground mt-1">

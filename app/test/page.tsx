@@ -197,6 +197,12 @@ const testPages = [
     description: "Universal goal framework with 8-panelist debate — decomposition tree + action/skills formula",
     icon: FlaskConical,
   },
+  {
+    name: "Goal Icon Candidates",
+    href: "/test/goal-icons",
+    description: "10 unused lucide alternatives to the current flag GoalIcon — 3 sizes, light + dark",
+    icon: Eye,
+  },
 ]
 
 export default function TestPagesIndex() {

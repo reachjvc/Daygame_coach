@@ -171,21 +171,28 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
         customGoals,
         customCategories,
       })
-      if (inserts.length === 0) return
+      if (inserts.length === 0) {
+        setError("No goals selected — go back and pick at least one")
+        return
+      }
 
       const response = await fetch("/api/goals/batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goals: inserts }),
       })
-      if (!response.ok) throw new Error("Failed to create goals")
-      router.push(returnPath)
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}))
+        throw new Error(body.error || "Failed to create goals")
+      }
+      const separator = returnPath.includes("?") ? "&" : "?"
+      router.push(`${returnPath}${separator}fromSetup=true`)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create goals")
     } finally {
       setIsCreating(false)
     }
-  }, [path, selectedAreas, selectedGoals, targets, curveConfigs, customGoals, customCategories, router])
+  }, [path, selectedAreas, selectedGoals, targets, curveConfigs, customGoals, customCategories, router, returnPath])
 
   // --- CTA navigation ---
   const goNext = useCallback(() => {

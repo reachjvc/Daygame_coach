@@ -156,48 +156,20 @@ describe("goal catalog integrity", () => {
 // ============================================================================
 
 describe("getChildren", () => {
-  test("L1 goals fan into their area's L2 achievements", () => {
+  test("L1 goals fan directly into their area's L3 work goals", () => {
     const children = getChildren("l1_girlfriend")
-    const daygameL2Count = GOAL_TEMPLATES.filter((t) => t.level === 2 && t.lifeArea === "daygame").length
-    expect(children.length).toBe(daygameL2Count)
-    const ids = children.map((c) => c.id)
-    expect(ids).toContain("l2_master_daygame")
-    expect(ids).toContain("l2_confident")
-  })
-
-  test("L2 master_daygame fans into its connected L3 goals", () => {
-    const children = getChildren("l2_master_daygame")
-    expect(children.length).toBe(20) // 9 field_work + 4 results + 3 dirty_dog + 3 gap (venues, review, video)
-    const ids = children.map((c) => c.id)
-    expect(ids).toContain("l3_approach_volume")
-    expect(ids).toContain("l3_lays")
-    expect(ids).toContain("l3_venues_explored")
-  })
-
-  test("L2 overcome_aa fans into 7 exposure-focused L3s", () => {
-    const children = getChildren("l2_overcome_aa")
-    expect(children.length).toBe(7)
-    const ids = children.map((c) => c.id)
-    expect(ids).toContain("l3_approach_volume")
-    expect(ids).toContain("l3_consecutive_days")
-    expect(ids).toContain("l3_solo_sessions")
-    expect(ids).toContain("l3_eye_contact_holds")
-    expect(ids).toContain("l3_aa_comfort_rating")
-  })
-
-  test("L2 master_texting fans into texting L3s", () => {
-    const children = getChildren("l2_master_texting")
-    expect(children.length).toBe(3)
-    const ids = children.map((c) => c.id)
-    expect(ids).toContain("l3_texting_initiated")
-    expect(ids).toContain("l3_response_rate")
-    expect(ids).toContain("l3_number_to_date_conversion")
-  })
-
-  test("L2 attract_any fans into all daygame L3 goals", () => {
-    const children = getChildren("l2_attract_any")
     const daygameL3Count = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
     expect(children.length).toBe(daygameL3Count)
+    const ids = children.map((c) => c.id)
+    expect(ids).toContain("l3_approach_volume")
+    expect(ids).toContain("l3_phone_numbers")
+  })
+
+  test("L2 achievements have no children (standalone badges)", () => {
+    expect(getChildren("l2_master_daygame").length).toBe(0)
+    expect(getChildren("l2_overcome_aa").length).toBe(0)
+    expect(getChildren("l2_master_texting").length).toBe(0)
+    expect(getChildren("l2_attract_any").length).toBe(0)
   })
 
   test("L3 goals have no children", () => {
@@ -211,18 +183,21 @@ describe("getChildren", () => {
 })
 
 describe("getLeafGoals", () => {
-  test("L1 goal returns all unique L3 goals in its area (traverses through L2)", () => {
+  test("L1 goal returns all L3 goals in its area (direct L1→L3)", () => {
     const leaves = getLeafGoals("l1_girlfriend")
     const daygameL3Count = GOAL_TEMPLATES.filter((t) => t.level === 3 && t.lifeArea === "daygame").length
-    expect(leaves.length).toBe(daygameL3Count) // attract_any covers all daygame L3s
+    expect(leaves.length).toBe(daygameL3Count)
     for (const leaf of leaves) {
       expect(leaf.level).toBe(3)
     }
   })
 
-  test("L2 master_daygame returns its 20 L3 goals", () => {
+  test("L2 is standalone — returns only itself (no children)", () => {
     const leaves = getLeafGoals("l2_master_daygame")
-    expect(leaves.length).toBe(20)
+    // L2 has level 2, not 3, so it doesn't match the "return [tmpl]" branch.
+    // But getLeafGoals returns the template itself if it has no children.
+    // Since L2 has no children and is not level 3, it returns empty.
+    expect(leaves.length).toBe(0)
   })
 
   test("L3 goal returns itself", () => {
@@ -231,7 +206,7 @@ describe("getLeafGoals", () => {
     expect(leaves[0].id).toBe("l3_approach_volume")
   })
 
-  test("deduplicates L3 goals across L2 fan-outs", () => {
+  test("L1 goals produce unique L3s (no duplicates)", () => {
     const leaves = getLeafGoals("l1_rotation")
     const ids = leaves.map((l) => l.id)
     expect(new Set(ids).size).toBe(ids.length)

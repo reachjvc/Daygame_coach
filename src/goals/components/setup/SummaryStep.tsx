@@ -4,17 +4,17 @@ import { useMemo } from "react"
 import { Trophy } from "lucide-react"
 import { GlassCard } from "./GlassCard"
 import { CATEGORY_COLORS, SETUP_TIER_ORDER } from "./setupConstants"
-import { CATEGORY_LABELS, CATEGORY_ORDER } from "@/src/goals/config"
+import { CATEGORY_ORDER } from "@/src/goals/config"
+import { getCategoryLabel } from "@/src/goals/goalDisplayService"
 import type {
   GoalTemplate,
   LifeAreaConfig,
-  GoalDisplayCategory,
   BadgeStatus,
   SetupCustomGoal,
   SetupCustomCategory,
   DaygamePath,
 } from "@/src/goals/types"
-import { getParents } from "@/src/goals/data/goalGraph"
+import { getL2AchievementsForL3 } from "@/src/goals/data/goalGraph"
 
 export function SummaryStep({
   daygameL3Goals,
@@ -72,15 +72,12 @@ export function SummaryStep({
     namedCustomGoals.length
   const totalAreas = 1 + otherAreaData.length
 
-  // Compute L2 achievements preview from selected L3 goals
+  // Compute L2 achievements preview from selected L3 goals (via weight-based lookup)
   const sortedBadges = useMemo(() => {
     const l2Map = new Map<string, GoalTemplate>()
     for (const g of selectedDaygameL3s) {
-      const parents = getParents(g.id)
-      for (const p of parents) {
-        if (p.level === 2 && !l2Map.has(p.id)) {
-          l2Map.set(p.id, p)
-        }
+      for (const l2 of getL2AchievementsForL3(g.id)) {
+        if (!l2Map.has(l2.id)) l2Map.set(l2.id, l2)
       }
     }
     const badges: BadgeStatus[] = Array.from(l2Map.values()).map((l2) => ({
@@ -211,7 +208,7 @@ export function SummaryStep({
                 style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}
               >
                 <span className="text-sm font-semibold uppercase tracking-wider" style={{ color: `${catColor}` }}>
-                  {CATEGORY_LABELS[category] ?? category.replace(/_/g, " ")}
+                  {getCategoryLabel(category)}
                 </span>
                 <span className="text-xs text-white/25">{goals.length} goals</span>
               </div>
@@ -293,7 +290,7 @@ export function SummaryStep({
           return entries.map(([catId, goals], cIdx) => {
             const catLabel =
               customCategories.find((c) => c.id === catId)?.name ||
-              CATEGORY_LABELS[catId as GoalDisplayCategory] ||
+              getCategoryLabel(catId) ||
               catId
             return (
               <div key={catId} className="mb-3 rounded-xl overflow-hidden v9c-stagger-enter"

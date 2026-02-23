@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+# scripts/training-data/batch/sub-batch-ops
+#
+# Operator/debug wrapper for sub-batch pipeline tooling.
+# Standard production runs should use:
+#   ./sub-batch-pipeline <sub-batch> [--from <stage>] [--parallel <n>]
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PIPELINE="$SCRIPT_DIR/sub-batch-pipeline"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  ./sub-batch-ops --list
+  ./sub-batch-ops P001.1 --status
+  ./sub-batch-ops P001 --status
+  ./sub-batch-ops P001.1 --stage 06
+  ./sub-batch-ops P001.1 --validate
+  ./sub-batch-ops P001.1 --validate --source <name>
+  ./sub-batch-ops P001.1 --view
+  ./sub-batch-ops P001.1 --approve
+
+Notes:
+  This is the operator/debug interface.
+  Use `./sub-batch-pipeline P001.1` for the standard production pipeline path.
+EOF
+}
+
+if [[ ! -x "$PIPELINE" ]]; then
+  echo "ERROR: pipeline script not found or not executable: $PIPELINE" >&2
+  exit 1
+fi
+
+if [[ $# -eq 0 ]]; then
+  usage
+  exit 1
+fi
+
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+  esac
+done
+
+has_operator_mode=false
+for arg in "$@"; do
+  case "$arg" in
+    --list|--status|--stage|--stage=*|--validate|--view|--approve)
+      has_operator_mode=true
+      break
+      ;;
+  esac
+done
+
+if [[ "$has_operator_mode" != true ]]; then
+  echo "ERROR: no operator/debug mode supplied. Use ./sub-batch-pipeline for standard runs." >&2
+  usage >&2
+  exit 2
+fi
+
+SUB_BATCH_PIPELINE_ALLOW_OPS_DIRECT=1 exec "$PIPELINE" "$@"
+

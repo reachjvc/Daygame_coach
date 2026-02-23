@@ -109,6 +109,8 @@ type ChunkMetadata = {
   // Quality flags - if present, chunk contains problematic segments
   problematicReason?: string[]
   damaged_segment_ids?: number[]
+  damage_score?: number
+  damage_segment_windows?: DamageWindow[]
   contains_repaired_text?: boolean
   // Section/conversation summary from Stage 07 enrichment
   description?: string
@@ -120,6 +122,12 @@ type ChunkMetadata = {
   blockIndex?: number
   relatedConversationId?: number | null
   relatedCommentaryBlockIndices?: number[]
+}
+
+type DamageWindow = {
+  start_segment_id: number
+  end_segment_id: number
+  damaged_segment_count: number
 }
 
 type Chunk = {
@@ -144,6 +152,14 @@ type ChunksFile = {
   preFilterChunkCount: number
   // Number of non-summary chunks dropped by confidence-floor filtering.
   droppedChunksBelowFloor: number
+  qualityProfile?: {
+    chunk_count: number
+    damaged_chunk_count: number
+    damaged_chunk_ratio: number
+    video_damage_score: number
+    damaged_segment_ids: number[]
+    damage_segment_windows: DamageWindow[]
+  }
   videoType: string
   channel: string
   // YouTube video id (11 chars). Primary key for videos.
@@ -273,6 +289,8 @@ type InternalChunk = {
   // Quality flags
   problematicReason?: string[]
   damaged_segment_ids?: number[]
+  damage_score?: number
+  damage_segment_windows?: DamageWindow[]
   contains_repaired_text?: boolean
   description?: string
   section_index?: number
@@ -648,6 +666,45 @@ function collectConfidenceDamageStats(
     lowTierCount,
     mediumTierCount,
   }
+}
+
+function buildDamageSegmentWindows(
+  damagedSegmentIds: number[],
+  contextRadius = 1
+): DamageWindow[] {
+  const ids = [...new Set(damagedSegmentIds.filter((x) => Number.isInteger(x)))].sort((a, b) => a - b)
+  if (ids.length === 0) return []
+
+  const windows: DamageWindow[] = []
+  let currentStart = ids[0] - contextRadius
+  let currentEnd = ids[0] + contextRadius
+  let count = 1
+
+  for (let i = 1; i < ids.length; i++) {
+    const sid = ids[i]
+    const start = sid - contextRadius
+    const end = sid + contextRadius
+    if (start <= currentEnd + 1) {
+      currentEnd = Math.max(currentEnd, end)
+      count += 1
+      continue
+    }
+    windows.push({
+      start_segment_id: currentStart,
+      end_segment_id: currentEnd,
+      damaged_segment_count: count,
+    })
+    currentStart = start
+    currentEnd = end
+    count = 1
+  }
+
+  windows.push({
+    start_segment_id: currentStart,
+    end_segment_id: currentEnd,
+    damaged_segment_count: count,
+  })
+  return windows
 }
 
 const CHUNK_CONFIDENCE_VERSION = 2  // v2: graduated artifact severity penalty (was flat x0.75)
@@ -2101,6 +2158,13 @@ async function main() {
       // Summary chunks keep their pre-set 1.0 confidence (no ASR source)
       if (!chunk.isSummary) {
         chunk.chunk_confidence_score = computeChunkConfidence(chunk)
+      } else if (chunk.chunk_confidence_score === undefined) {
+        chunk.chunk_confidence_score = 1.0
+      }
+      const confidence = typeof chunk.chunk_confidence_score === "number" ? clamp01(chunk.chunk_confidence_score) : 1.0
+      chunk.damage_score = clamp01(1 - confidence)
+      if (chunk.damaged_segment_ids && chunk.damaged_segment_ids.length > 0) {
+        chunk.damage_segment_windows = buildDamageSegmentWindows(chunk.damaged_segment_ids, 1)
       }
       chunk.chunkConfidenceVersion = CHUNK_CONFIDENCE_VERSION
       return chunk
@@ -2208,6 +2272,12 @@ async function main() {
       if (chunk.damaged_segment_ids && chunk.damaged_segment_ids.length > 0) {
         metadata.damaged_segment_ids = chunk.damaged_segment_ids
       }
+      if (typeof chunk.damage_score === "number") {
+        metadata.damage_score = chunk.damage_score
+      }
+      if (chunk.damage_segment_windows && chunk.damage_segment_windows.length > 0) {
+        metadata.damage_segment_windows = chunk.damage_segment_windows
+      }
       if (chunk.contains_repaired_text !== undefined) {
         metadata.contains_repaired_text = chunk.contains_repaired_text
       }
@@ -2249,6 +2319,24 @@ async function main() {
     await fsp.mkdir(outputDir, { recursive: true })
 
     const outputPath = path.join(outputDir, `${videoId}.chunks.json`)
+    const chunkDamageScores = chunks
+      .map((row) => (typeof row.metadata.damage_score === "number" ? clamp01(row.metadata.damage_score) : 0))
+    const damagedChunkCount = chunkDamageScores.filter((score) => score > 0).length
+    const uniqueDamagedSegmentIds = [...new Set(
+      chunks.flatMap((row) => Array.isArray(row.metadata.damaged_segment_ids) ? row.metadata.damaged_segment_ids : [])
+    )]
+      .filter((sid): sid is number => Number.isInteger(sid))
+      .sort((a, b) => a - b)
+    const qualityProfile = {
+      chunk_count: chunks.length,
+      damaged_chunk_count: damagedChunkCount,
+      damaged_chunk_ratio: chunks.length > 0 ? damagedChunkCount / chunks.length : 0,
+      video_damage_score: chunkDamageScores.length > 0
+        ? chunkDamageScores.reduce((acc, score) => acc + score, 0) / chunkDamageScores.length
+        : 0,
+      damaged_segment_ids: uniqueDamagedSegmentIds,
+      damage_segment_windows: buildDamageSegmentWindows(uniqueDamagedSegmentIds, 1),
+    }
     const chunksFile: ChunksFile = {
       version: 1,
       sourceKey,
@@ -2260,6 +2348,7 @@ async function main() {
       minChunkConfidence: args.minChunkConfidence,
       preFilterChunkCount: beforeFilterCount,
       droppedChunksBelowFloor: droppedCount,
+      qualityProfile,
       videoType,
       channel,
       videoId,

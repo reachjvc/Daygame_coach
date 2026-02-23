@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
 import { getUserGoals, getGoalsByCategory, getGoalsByLifeArea, createGoal, deleteAllGoals, DuplicateGoalError } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
-import type { UserGoalInsert } from "@/src/db/goalTypes"
+import { CreateGoalSchema } from "@/src/db/goalSchemas"
 
 const err = (msg: string, s = 500) => NextResponse.json({ error: msg }, { status: s })
 
@@ -34,19 +34,16 @@ export async function POST(request: Request) {
   const auth = await requireAuth()
   if (!auth.success) return auth.response
   try {
-    const body: UserGoalInsert = await request.json()
-    if (!body.title || (!body.category && !body.life_area) || !body.target_value)
-      return err("Missing required fields", 400)
-    if (body.target_value < 1) return err("Target value must be at least 1", 400)
-    if (body.goal_type && !["recurring", "milestone", "habit_ramp"].includes(body.goal_type))
-      return err("Invalid goal_type", 400)
+    const result = CreateGoalSchema.safeParse(await request.json())
+    if (!result.success)
+      return NextResponse.json({ error: "Validation failed", details: result.error.flatten().fieldErrors }, { status: 400 })
+    const body = result.data
     if (!body.category && body.life_area) body.category = body.life_area
     const tz = await getUserTimezone(auth.userId)
     return NextResponse.json(await createGoal(auth.userId, body, tz), { status: 201 })
   } catch (e) {
-    if (e instanceof DuplicateGoalError) {
+    if (e instanceof DuplicateGoalError)
       return NextResponse.json({ error: "Goal already exists", reason: e.reason, existingGoalId: e.existingGoalId }, { status: 409 })
-    }
     console.error("Error creating goal:", e); return err("Failed to create goal")
   }
 }

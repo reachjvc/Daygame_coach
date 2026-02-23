@@ -127,10 +127,36 @@ describe("getMetricValue", () => {
     })
   })
 
-  describe("null/unknown metric", () => {
-    test("returns 0 for null metric", () => {
+  describe("unknown metric handling", () => {
+    test("returns 0 for unknown metric and logs warning", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
       const stats = createStats()
-      expect(getMetricValue(stats, null)).toBe(0)
+      const result = getMetricValue(stats, "some_future_metric" as any)
+      expect(result).toBe(0)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Unknown linked_metric")
+      )
+      consoleSpy.mockRestore()
+    })
+
+    test("approach_quality_avg_weekly returns 0 with warning when called directly", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const stats = createStats()
+      const result = getMetricValue(stats, "approach_quality_avg_weekly")
+      expect(result).toBe(0)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("approach_quality_avg_weekly")
+      )
+      consoleSpy.mockRestore()
+    })
+
+    test("returns 0 for null metric without warning", () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      const stats = createStats()
+      const result = getMetricValue(stats, null)
+      expect(result).toBe(0)
+      expect(consoleSpy).not.toHaveBeenCalled()
+      consoleSpy.mockRestore()
     })
   })
 })

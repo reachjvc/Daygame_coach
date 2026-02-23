@@ -1,6 +1,5 @@
 import Link from "next/link"
-import { Beaker, BookOpen, Castle, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, Beaker, BookOpen, Castle, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { MobileNav, type MobileNavItem } from "@/components/MobileNav"
@@ -76,7 +75,7 @@ export function AppHeader({
         type: "link",
         href: "/dashboard/goals",
         label: "Goals",
-        icon: <GoalIcon className="size-4 mr-2" />,
+        icon: <Aperture className="size-4 mr-2" />,
         variant: "ghost",
         className: "text-foreground hover:text-primary",
         testId: "header-goals-link",

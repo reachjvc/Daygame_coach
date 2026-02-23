@@ -96,11 +96,15 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Crosshair: ["site logo/branding", "evaluator calibration"],
   Dumbbell: ["fitness life area", "technique focus"],
   Crown: ["level progress", "level-up display"],
-  // Flag: replaced by custom GoalIcon component (components/ui/GoalIcon.tsx)
+  Aperture: ["goals feature icon — headers, nav, empty states"],
+  // Flag: replaced by Aperture (was custom GoalIcon component)
   Footprints: ["tracking approaches stat", "session context"],
+  GitFork: ["tree view"],
   Gauge: ["level progress meter"],
+  Layers: ["hierarchy view"],
   Library: ["catalog browse", "content browse"],
   Medal: ["milestone completion", "milestone badges", "streak milestones"],
+  Orbit: ["orrery/planetary view"],
   PartyPopper: ["celebration overlay", "completion celebration"],
   Puzzle: ["custom/miscellaneous life area"],
   Rocket: ["onboarding"],
@@ -134,11 +138,7 @@ export const CUSTOM_ICON_COMPONENTS: Record<string, { importPattern: string; all
   GoalIcon: {
     importPattern: "GoalIcon",
     allowedPathPatterns: [
-      /src\/goals\//,         // goal CRUD, views, tree
-      /src\/tracking\//,      // field reports reference goals
-      /src\/inner-game\//,    // GoalsTab within inner-game
-      /components\/AppHeader/, // goals nav item
-      /app\/test\//,          // dev preview pages
+      /app\/test\//,          // icon comparison test page only
     ],
   },
 }

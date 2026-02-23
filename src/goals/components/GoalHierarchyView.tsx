@@ -107,15 +107,16 @@ export function GoalHierarchyView({
       ))}
 
       {sections.map((section) => {
-        // L3 goals that belong to this section's achievements
+        // L3 goals in this section (direct children of L1, or legacy L3→L2 parentage)
         const sectionL3s = allL3Goals.filter((g) => {
-          const achievementIds = new Set(section.achievements.map((a) => a.id))
-          return g.parent_goal_id && achievementIds.has(g.parent_goal_id)
+          if (g.parent_goal_id === section.l1Goal.id) return true
+          // Legacy: L3s that parent to an L2 under this L1
+          return section.achievements.some((a) => g.parent_goal_id === a.id)
         })
 
-        // Filter out achievements with 0 L3 children
-        const achievementsWithChildren = section.achievements.filter((ach) =>
-          sectionL3s.some((g) => g.parent_goal_id === ach.id)
+        // Show all achievements that have at least one contributing L3 in this section
+        const achievementsWithChildren = section.achievements.filter(
+          () => sectionL3s.length > 0
         )
 
         return (
@@ -198,6 +199,30 @@ export function GoalHierarchyView({
                   </div>
                 )
               })}
+
+              {/* Unknown categories (future/stale enum values) */}
+              {Object.entries(section.unknownCategories).map(([cat, catGoals]) => (
+                <div key={cat}>
+                  <GoalCategorySection
+                    category={cat}
+                    goals={catGoals}
+                    allGoals={goals}
+                    defaultCollapsed={false}
+                    isCustomizeMode={isCustomizeMode}
+                    projections={projectionMap}
+                    milestones={milestoneMap}
+                    onIncrement={onIncrement}
+                    onSetValue={onSetValue}
+                    onComplete={onComplete}
+                    onReset={onReset}
+                    onEdit={onEdit}
+                    onAddChild={onAddChild}
+                    onGoalToggle={onGoalToggle}
+                    onDeleteGoal={onDeleteGoal}
+                    onReorder={onReorder}
+                  />
+                </div>
+              ))}
 
               {/* Dirty Dog opt-in placeholder */}
               {(!section.categories.dirty_dog || section.categories.dirty_dog.length === 0) && onAddDirtyDogGoals && (

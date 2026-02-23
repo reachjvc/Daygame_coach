@@ -5,8 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Plus, Loader2, Search, RefreshCw, Pencil } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, ArrowLeft, Plus, Loader2, Search, RefreshCw, Pencil } from "lucide-react"
 import { GoalFormModal } from "@/src/goals/components/GoalFormModal"
 import { CelebrationOverlay } from "@/src/goals/components/CelebrationOverlay"
 import { MilestoneCompleteDialog } from "@/src/goals/components/MilestoneCompleteDialog"
@@ -225,7 +224,7 @@ function OldGoalsHubContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <GoalIcon className="size-7 text-primary" />
+          <Aperture className="size-7 text-primary" />
           <div>
             <h1 className="text-2xl font-bold">Goals</h1>
             <p className="text-sm text-muted-foreground">Track progress across all areas of your life</p>

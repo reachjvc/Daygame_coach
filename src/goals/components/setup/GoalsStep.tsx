@@ -12,7 +12,7 @@ import {
 } from "lucide-react"
 import { CATEGORY_COLORS } from "./setupConstants"
 import { MilestoneCurveEditor } from "@/src/goals/components/MilestoneCurveEditor"
-import { CATEGORY_LABELS } from "@/src/goals/config"
+import { getCategoryLabel } from "@/src/goals/goalDisplayService"
 import type {
   GoalTemplate,
   LifeAreaConfig,
@@ -161,7 +161,7 @@ export function GoalsStep({
                       <ChevronRight className="size-3.5" style={{ color: `${catColor}99` }} />
                     )}
                     <span className="text-sm text-white/80 flex-1 text-left">
-                      {CATEGORY_LABELS[category] ?? category.replace(/_/g, " ")}
+                      {getCategoryLabel(category)}
                     </span>
                     <span className="text-[10px] text-white/30">
                       {selectedCount}/{goals.length}

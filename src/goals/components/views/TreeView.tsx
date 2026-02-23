@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ChevronRight, ChevronDown, ChevronsDownUp, ChevronsUpDown, Flame, Calendar, Plus, RotateCcw, Check } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Aperture, ChevronRight, ChevronDown, ChevronsDownUp, ChevronsUpDown, Flame, Calendar, Plus, RotateCcw, Check } from "lucide-react"
 import { getLifeAreaConfig } from "../../data/lifeAreas"
 import type { GoalTreeNode, GoalWithProgress } from "../../types"
 
@@ -12,8 +11,11 @@ interface TreeViewProps {
   tree: GoalTreeNode[]
   allGoals: GoalWithProgress[]
   onIncrement: (goalId: string, amount: number) => Promise<void>
+  onSetValue?: (goalId: string, value: number) => Promise<void>
+  onComplete?: (goal: GoalWithProgress) => void
   onReset: (goalId: string) => Promise<void>
   onEdit: (goal: GoalWithProgress) => void
+  onAddChild?: (parentGoal: GoalWithProgress) => void
   onCreateGoal?: () => void
   filterAreaName?: string | null
 }
@@ -56,7 +58,7 @@ export function TreeView({ tree, allGoals, onIncrement, onReset, onEdit, onCreat
     return (
       <div className="text-center py-16">
         <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <GoalIcon className="size-7 text-primary" />
+          <Aperture className="size-7 text-primary" />
         </div>
         <h3 className="text-lg font-semibold mb-2">
           {filterAreaName ? `No ${filterAreaName} goals` : "No goals yet"}

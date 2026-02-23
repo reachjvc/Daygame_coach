@@ -3,9 +3,10 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock, ShieldCheck } from "lucide-react"
+import { RotateCcw, ChevronDown, ChevronUp, Flame, Calendar, Loader2, GitBranch, Link, Plus, TrendingUp, Clock, ShieldCheck, Check } from "lucide-react"
 import { getLifeAreaConfig } from "../data/lifeAreas"
 import { getGoalAccentColor } from "../goalHierarchyService"
+import { getGoalPhaseLabel, getGoalPhaseStyle, getPeriodLabel } from "../goalDisplayService"
 import { GoalHierarchyBreadcrumb } from "./GoalHierarchyBreadcrumb"
 import { GoalInputWidget } from "./GoalInputWidget"
 import { ProjectionTimeline } from "./ProjectionTimeline"
@@ -181,14 +182,8 @@ export function GoalCard({
           {/* Meta row */}
           <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
             {goal.goal_phase && goal.goal_type === "habit_ramp" && goal.goal_level === 3 && (
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${
-                goal.goal_phase === "graduated"
-                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
-                  : goal.goal_phase === "consolidation"
-                  ? "bg-blue-500/10 text-blue-400 border-blue-500/25"
-                  : "bg-muted text-muted-foreground border-border"
-              }`}>
-                {goal.goal_phase === "graduated" ? "Graduated" : goal.goal_phase === "consolidation" ? "Consolidating" : "Learning"}
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border ${getGoalPhaseStyle(goal.goal_phase)}`}>
+                {getGoalPhaseLabel(goal.goal_phase)}
               </span>
             )}
             {goal.current_streak > 0 && (
@@ -204,7 +199,7 @@ export function GoalCard({
               </span>
             )}
             {goal.goal_type === "recurring" && (
-              <span className="capitalize">{goal.period}</span>
+              <span>{getPeriodLabel(goal.period)}</span>
             )}
             {nextMilestone && (
               <span className="flex items-center gap-1 text-emerald-400">
@@ -237,6 +232,35 @@ export function GoalCard({
             )}
           </div>
         </div>
+
+        {/* Quick-increment (collapsed only, non-linked, non-complete) */}
+        {!isExpanded && !goal.is_complete && !goal.linked_metric && onIncrement && (
+          isBoolean ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-green-500"
+              onClick={(e) => { e.stopPropagation(); onComplete ? onComplete(goal) : handleIncrement(1) }}
+              disabled={isIncrementing}
+              title="Mark done"
+              data-testid={`goal-quick-check-${goal.id}`}
+            >
+              {isIncrementing ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-primary"
+              onClick={(e) => { e.stopPropagation(); handleIncrement(1) }}
+              disabled={isIncrementing}
+              title="+1"
+              data-testid={`goal-quick-increment-${goal.id}`}
+            >
+              {isIncrementing ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+            </Button>
+          )
+        )}
 
         {/* Expand toggle */}
         <Button

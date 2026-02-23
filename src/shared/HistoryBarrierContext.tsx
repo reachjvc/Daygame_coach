@@ -25,6 +25,13 @@ interface HistoryBarrierContextValue {
    * by popstate), no-ops.
    */
   remove: (id: number) => void
+  /**
+   * Discard a barrier from the internal stack WITHOUT calling history.back().
+   * Use this on component unmount during page navigation — the navigation
+   * itself handles the history stack, and calling history.back() would
+   * undo the navigation.
+   */
+  discard: (id: number) => void
 }
 
 const HistoryBarrierContext = createContext<HistoryBarrierContextValue | null>(null)
@@ -70,7 +77,14 @@ export function HistoryBarrierProvider({ children }: { children: ReactNode }) {
     window.history.back()
   }, [])
 
-  const value = useMemo(() => ({ push, remove }), [push, remove])
+  const discard = useCallback((id: number) => {
+    const stack = stackRef.current
+    const index = stack.findIndex((b) => b.id === id)
+    if (index === -1) return
+    stack.splice(index, 1)
+  }, [])
+
+  const value = useMemo(() => ({ push, remove, discard }), [push, remove, discard])
 
   return (
     <HistoryBarrierContext.Provider value={value}>
@@ -113,13 +127,15 @@ export function useHistoryBarrier(active: boolean, onBack: () => void) {
     }
   }, [active, ctx])
 
-  // Cleanup on unmount while active
+  // Cleanup on unmount: discard barrier from stack without calling
+  // history.back(). During navigation (e.g. server action redirect),
+  // calling history.back() would undo the navigation itself.
   useEffect(() => {
     return () => {
       if (barrierIdRef.current !== null) {
         const id = barrierIdRef.current
         barrierIdRef.current = null
-        ctx.remove(id)
+        ctx.discard(id)
       }
     }
   }, [ctx])

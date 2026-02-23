@@ -6,6 +6,7 @@
 
 import { getAchievementWeights } from "./data/goalGraph"
 import { computeAchievementProgress } from "./milestoneService"
+import { isKnownDisplayCategory } from "@/src/db/goalEnums"
 import type {
   GoalWithProgress,
   GoalDisplayCategory,
@@ -21,8 +22,11 @@ const OUTCOME_COLOR = "#ef4444" // red-500
  * Group flat goals into hierarchy sections for display.
  *
  * Returns:
- * - sections: one per L1 goal, each with L2 achievements and L3 goals by category
+ * - sections: one per L1 goal, with L3 goals grouped by category
  * - customGoals: goals without goal_level (manually created before Phase 4)
+ *
+ * L2 achievements are standalone badges — not part of the parent-child hierarchy.
+ * They're included in each section's `achievements` array by matching life_area.
  */
 export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
   sections: HierarchySection[]
@@ -30,9 +34,6 @@ export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
 } {
   const sections: HierarchySection[] = []
   const customGoals: GoalWithProgress[] = []
-
-  // Index goals by id for parent lookups
-  const goalMap = new Map(goals.map((g) => [g.id, g]))
 
   // Separate by level
   const l1Goals = goals.filter((g) => g.goal_level === 1)
@@ -43,57 +44,54 @@ export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
 
   // Build sections for L1 goals
   for (const l1 of l1Goals) {
-    const achievements = l2Goals.filter((g) => g.parent_goal_id === l1.id)
-    const achievementIds = new Set(achievements.map((a) => a.id))
+    // L3 goals that parent directly to this L1
+    // Also support legacy L3→L2 parentage by checking if parent is an L2 under this L1
+    const legacyL2Ids = new Set(
+      l2Goals.filter((g) => g.parent_goal_id === l1.id).map((a) => a.id)
+    )
+    const l3ForSection = l3Goals.filter(
+      (g) => g.parent_goal_id === l1.id || (g.parent_goal_id && legacyL2Ids.has(g.parent_goal_id))
+    )
 
-    // L3 goals that parent to any of this L1's achievements
-    const l3ForSection = l3Goals.filter((g) => g.parent_goal_id && achievementIds.has(g.parent_goal_id))
+    // L2 achievements matching this L1's life area (standalone badges)
+    const achievements = l2Goals.filter((g) => g.life_area === l1.life_area || g.category === l1.category)
 
     const categories: Partial<Record<GoalDisplayCategory, GoalWithProgress[]>> = {}
+    const unknownCategories: Record<string, GoalWithProgress[]> = {}
     const uncategorized: GoalWithProgress[] = []
 
     for (const l3 of l3ForSection) {
-      const cat = l3.display_category as GoalDisplayCategory | null
-      if (cat) {
+      const cat = l3.display_category
+      if (cat && isKnownDisplayCategory(cat)) {
         if (!categories[cat]) categories[cat] = []
         categories[cat]!.push(l3)
+      } else if (cat) {
+        if (!unknownCategories[cat]) unknownCategories[cat] = []
+        unknownCategories[cat].push(l3)
       } else {
         uncategorized.push(l3)
       }
     }
 
-    sections.push({ l1Goal: l1, achievements, categories, uncategorized })
+    sections.push({ l1Goal: l1, achievements, categories, unknownCategories, uncategorized })
   }
 
   // L0 goals with L1 children — create sections for their L1 children
   for (const l0 of l0Goals) {
     const l1Children = l1Goals.filter((g) => g.parent_goal_id === l0.id)
-    // If L1 children were already processed above, skip
-    // The L0 goal itself is shown as context but L1s are the real sections
     if (l1Children.length === 0) {
       customGoals.push(l0)
     }
-    // L1 children are already handled above as sections
   }
 
-  // L2 goals without an L1 parent (standalone picks)
-  const assignedL2Ids = new Set(sections.flatMap((s) => s.achievements.map((a) => a.id)))
-  const standaloneL2 = l2Goals.filter((g) => !assignedL2Ids.has(g.id))
+  // Standalone L2 goals (no L1 in same area) — treat as section headers
+  const coveredAreas = new Set(l1Goals.map((g) => g.life_area ?? g.category))
+  const standaloneL2 = l2Goals.filter((g) => {
+    const area = g.life_area ?? g.category
+    return !coveredAreas.has(area)
+  })
   for (const l2 of standaloneL2) {
-    const l3ForL2 = l3Goals.filter((g) => g.parent_goal_id === l2.id)
-    const categories: Partial<Record<GoalDisplayCategory, GoalWithProgress[]>> = {}
-    const uncategorized: GoalWithProgress[] = []
-    for (const l3 of l3ForL2) {
-      const cat = l3.display_category as GoalDisplayCategory | null
-      if (cat) {
-        if (!categories[cat]) categories[cat] = []
-        categories[cat]!.push(l3)
-      } else {
-        uncategorized.push(l3)
-      }
-    }
-    // Treat L2 as the "L1" for display purposes
-    sections.push({ l1Goal: l2, achievements: [], categories, uncategorized })
+    sections.push({ l1Goal: l2, achievements: [], categories: {}, unknownCategories: {}, uncategorized: [] })
   }
 
   // Goals without goal_level are legacy/custom
@@ -139,5 +137,8 @@ export function computeAchievementProgressFromGoals(
 export function getGoalAccentColor(goal: GoalWithProgress): string | null {
   if (goal.goal_nature === "input") return INPUT_COLOR
   if (goal.goal_nature === "outcome") return OUTCOME_COLOR
+  if (goal.goal_nature !== null && goal.goal_nature !== undefined) {
+    console.warn(`[goalHierarchyService] Unknown goal_nature "${goal.goal_nature}" for goal ${goal.id}`)
+  }
   return null
 }

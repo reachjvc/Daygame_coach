@@ -160,16 +160,26 @@ describe("useHistoryBarrier", () => {
     expect(onBack).not.toHaveBeenCalled()
   })
 
-  it("cleans up barrier on unmount while active", () => {
+  it("discards barrier on unmount without calling history.back()", () => {
+    const onBack = vi.fn()
     const { unmount } = renderHook(
-      () => useHistoryBarrier(true, vi.fn()),
+      () => useHistoryBarrier(true, onBack),
       { wrapper }
     )
 
     unmount()
 
-    // Should clean up the history entry
-    expect(backSpy).toHaveBeenCalledTimes(1)
+    // Should NOT call history.back() on unmount — during page navigation
+    // (e.g. server action redirect), calling history.back() would undo
+    // the navigation itself
+    expect(backSpy).not.toHaveBeenCalled()
+
+    // Barrier should be removed from the stack, so popstate should not
+    // trigger the onBack callback
+    act(() => {
+      window.dispatchEvent(new PopStateEvent("popstate"))
+    })
+    expect(onBack).not.toHaveBeenCalled()
   })
 
   it("uses latest onBack callback via ref", () => {

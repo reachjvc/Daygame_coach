@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Loader2, Settings2, Library, Clock } from "lucide-react"
-import { GoalIcon } from "@/components/ui/GoalIcon"
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
+import { Aperture, Loader2, Settings2, Library, Clock, MoreVertical, Plus, CalendarCheck } from "lucide-react"
 import { GoalFormModal } from "./GoalFormModal"
 import { CelebrationOverlay } from "./CelebrationOverlay"
 import { MilestoneCompleteDialog } from "./MilestoneCompleteDialog"
@@ -13,18 +13,35 @@ import { ConfirmDeleteAllDialog } from "./ConfirmDeleteAllDialog"
 import { GoalCatalogPicker } from "./GoalCatalogPicker"
 import { GoalTimeSettingsDialog, type TimePreferences } from "./GoalTimeSettingsDialog"
 import { GoalHierarchyView } from "./GoalHierarchyView"
+import { DailyActionView } from "./DailyActionView"
+import { TreeView } from "./views/TreeView"
+import { OrreryView } from "./views/OrreryView"
+import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData } from "../goalsService"
-import type { GoalWithProgress, GoalTreeNode, CelebrationTier, MilestoneCelebrationData } from "../types"
+import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
+
+const VIEW_STORAGE_KEY = "goals-view-mode"
+const VALID_VIEWS: GoalViewMode[] = ["today", "hierarchy", "tree", "orrery"]
+
+function getInitialView(): GoalViewMode {
+  if (typeof window === "undefined") return "today"
+  const stored = localStorage.getItem(VIEW_STORAGE_KEY) as GoalViewMode
+  if (stored && VALID_VIEWS.includes(stored)) return stored
+  return "today"
+}
 
 export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setupPath?: string } = {}) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [goals, setGoals] = useState<GoalWithProgress[]>([])
   const [tree, setTree] = useState<GoalTreeNode[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const [celebration, setCelebration] = useState<{ tier: CelebrationTier; title: string } | null>(null)
+  const [viewMode, setViewMode] = useState<GoalViewMode>(getInitialView)
+
+  const [celebration, setCelebration] = useState<{ tier: CelebrationTier; title: string; source?: "setup" | "goal" } | null>(null)
   const [completingGoal, setCompletingGoal] = useState<GoalWithProgress | null>(null)
   const [celebrationData, setCelebrationData] = useState<MilestoneCelebrationData | null>(null)
   const [isCompleting, setIsCompleting] = useState(false)
@@ -47,6 +64,11 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
   }, [])
   const dismissToast = useCallback((id: number) => {
     setToasts(prev => prev.filter(t => t.id !== id))
+  }, [])
+
+  const handleViewChange = useCallback((mode: GoalViewMode) => {
+    setViewMode(mode)
+    localStorage.setItem(VIEW_STORAGE_KEY, mode)
   }, [])
 
   const fetchGoals = useCallback(async () => {
@@ -73,6 +95,17 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
       .then(data => { if (data) setTimePrefs(data) })
       .catch(() => {})
   }, [fetchGoals])
+
+  // Show celebration when arriving from setup wizard
+  useEffect(() => {
+    if (searchParams.get("fromSetup") === "true") {
+      setCelebration({ tier: "confetti-epic", title: "Your goals are ready — let's go!", source: "setup" })
+      // Clean up the URL
+      const url = new URL(window.location.href)
+      url.searchParams.delete("fromSetup")
+      window.history.replaceState({}, "", url.pathname + url.search)
+    }
+  }, [searchParams])
 
   const triggerCelebration = useCallback((goal: GoalWithProgress) => {
     const tier = getCelebrationTier(goal)
@@ -193,6 +226,12 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
     setIsFormOpen(true)
   }
 
+  const handleCreateGoal = () => {
+    setEditingGoal(undefined)
+    setDefaultParentGoalId(null)
+    setIsFormOpen(true)
+  }
+
   const handleGoalToggle = async (goalId: string, active: boolean) => {
     try {
       const response = await fetch(`/api/goals/${goalId}`, {
@@ -297,6 +336,73 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
     )
   }
 
+  const renderActiveView = () => {
+    if (goals.length === 0) {
+      return (
+        <div data-testid="goals-empty-state">
+          <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
+        </div>
+      )
+    }
+
+    switch (viewMode) {
+      case "today":
+        return (
+          <DailyActionView
+            goals={goals}
+            isCustomizeMode={isCustomizeMode}
+            onIncrement={handleIncrement}
+            onSetValue={handleSetValue}
+            onComplete={handleComplete}
+            onReset={handleReset}
+            onEdit={handleEdit}
+            onAddChild={handleAddChild}
+            onGoalToggle={handleGoalToggle}
+            onDeleteGoal={handleDeleteGoal}
+            onDeleteAllGoals={handleDeleteAllGoals}
+            onReorder={handleReorder}
+            onSwitchView={handleViewChange}
+            onCreateGoal={handleCreateGoal}
+          />
+        )
+      case "tree":
+        return (
+          <TreeView
+            tree={tree}
+            allGoals={goals}
+            onIncrement={handleIncrement}
+            onReset={handleReset}
+            onEdit={handleEdit}
+            onCreateGoal={handleCreateGoal}
+          />
+        )
+      case "orrery":
+        return (
+          <OrreryView goals={goals} />
+        )
+      case "hierarchy":
+      default:
+        return (
+          <GoalHierarchyView
+            goals={goals}
+            isCustomizeMode={isCustomizeMode}
+            onIncrement={handleIncrement}
+            onSetValue={handleSetValue}
+            onComplete={handleComplete}
+            onReset={handleReset}
+            onEdit={handleEdit}
+            onAddChild={handleAddChild}
+            onGoalToggle={handleGoalToggle}
+            onDeleteGoal={handleDeleteGoal}
+            onDeleteAllGoals={handleDeleteAllGoals}
+            onReorder={handleReorder}
+            onAddDirtyDogGoals={handleAddDirtyDogGoals}
+            isAddingDirtyDog={isAddingDirtyDog}
+          />
+        )
+    }
+  }
+
   return (
     <div
       className="space-y-6 p-6 -mx-2"
@@ -306,7 +412,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <GoalIcon className="size-7" />
+          <Aperture className="size-7" />
           <div>
             <h1 className="text-2xl font-bold">Goals</h1>
             <p className="text-sm hidden sm:block text-muted-foreground">
@@ -314,74 +420,76 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {goals.length > 0 && (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsTimeSettingsOpen(true)}
-                title="Time settings"
-              >
-                <Clock className="size-4 mr-1" />
-                Time
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsReviewOpen(true)}
-              >
-                Review
-              </Button>
-              <Button
-                variant={isCustomizeMode ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setIsCustomizeMode(!isCustomizeMode)}
-                data-testid="goals-customize-button"
-              >
-                <Settings2 className="size-4 mr-1" />
-                {isCustomizeMode ? "Done" : "Customize"}
-              </Button>
-              <Button variant="outline" onClick={() => setShowCatalog(true)} data-testid="goals-browse-catalog">
-                <Library className="size-4 mr-1" />
-                Browse Catalog
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push(setupPath)}
-                data-testid="goals-setup-wizard"
-              >
-                Setup Wizard
-              </Button>
-            </>
-          )}
-        </div>
+        {goals.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <ViewSwitcher activeView={viewMode} onViewChange={handleViewChange} />
+            <Button
+              size="sm"
+              onClick={handleCreateGoal}
+              data-testid="goals-new-goal"
+            >
+              <Plus className="size-4 mr-1" />
+              New Goal
+            </Button>
+            <Button
+              variant={isCustomizeMode ? "secondary" : "ghost"}
+              size="icon"
+              className="h-9 w-9"
+              onClick={() => setIsCustomizeMode(!isCustomizeMode)}
+              title={isCustomizeMode ? "Exit Customize" : "Customize Goals"}
+              data-testid="goals-customize-toggle"
+            >
+              <Settings2 className="size-4" />
+            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9" data-testid="goals-more-menu">
+                  <MoreVertical className="size-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-48 p-1">
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setIsReviewOpen(true)}>
+                  <CalendarCheck className="size-4" />
+                  Weekly Review
+                </button>
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setShowCatalog(true)}>
+                  <Library className="size-4" />
+                  Browse Catalog
+                </button>
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => router.push(setupPath)}>
+                  <Aperture className="size-4" />
+                  Setup Wizard
+                </button>
+                <div className="my-1 border-t border-border" />
+                <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors" onClick={() => setIsTimeSettingsOpen(true)}>
+                  <Clock className="size-4" />
+                  Time Settings
+                </button>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
       </div>
 
-      <div>
-      {goals.length === 0 ? (
-        <div data-testid="goals-empty-state">
-          <GoalCatalogPicker onTreeCreated={() => { setIsLoading(true); fetchGoals() }} />
+      {/* Customize mode banner */}
+      {isCustomizeMode && (
+        <div className="flex items-center justify-between rounded-lg border border-border bg-muted/50 px-4 py-2">
+          <p className="text-xs text-muted-foreground">
+            Drag to reorder. Toggle to show/hide. Trash to permanently delete.
+          </p>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setIsCustomizeMode(false)}
+          >
+            Done
+          </Button>
         </div>
-      ) : (
-        <GoalHierarchyView
-          goals={goals}
-          isCustomizeMode={isCustomizeMode}
-          onIncrement={handleIncrement}
-          onSetValue={handleSetValue}
-          onComplete={handleComplete}
-          onReset={handleReset}
-          onEdit={handleEdit}
-          onAddChild={handleAddChild}
-          onGoalToggle={handleGoalToggle}
-          onDeleteGoal={handleDeleteGoal}
-          onDeleteAllGoals={handleDeleteAllGoals}
-          onReorder={handleReorder}
-          onAddDirtyDogGoals={handleAddDirtyDogGoals}
-          isAddingDirtyDog={isAddingDirtyDog}
-        />
       )}
+
+      {/* Active view */}
+      <div>
+        {renderActiveView()}
       </div>
 
       <GoalTimeSettingsDialog
@@ -426,6 +534,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
         <CelebrationOverlay
           tier={celebration.tier}
           goalTitle={celebration.title}
+          source={celebration.source ?? "goal"}
           onDismiss={() => setCelebration(null)}
         />
       )}

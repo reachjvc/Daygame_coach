@@ -416,8 +416,8 @@ function GoalItemList({
 // ============================================================================
 
 /**
- * Remap parent IDs in inserts so that new L3 goals reference existing L2 parents
- * instead of temp IDs that point to duplicate L2 goals.
+ * Remap parent IDs in inserts so that new L3 goals reference existing L1 parents
+ * instead of temp IDs that point to duplicate L1 goals.
  */
 function remapExistingParents(
   inserts: BatchGoalInsert[],
@@ -425,10 +425,10 @@ function remapExistingParents(
 ): BatchGoalInsert[] {
   if (existingGoals.length === 0) return inserts
 
-  const existingL2Map = new Map<string, string>()
+  const existingL1Map = new Map<string, string>()
   for (const g of existingGoals) {
-    if (g.goal_level === 2 && g.template_id) {
-      existingL2Map.set(g.template_id, g.id)
+    if (g.goal_level === 1 && g.template_id) {
+      existingL1Map.set(g.template_id, g.id)
     }
   }
 
@@ -443,11 +443,11 @@ function remapExistingParents(
     if (!insert._tempParentId) return insert
 
     const parentTemplateId = tempIdToTemplate.get(insert._tempParentId)
-    if (parentTemplateId && existingL2Map.has(parentTemplateId)) {
+    if (parentTemplateId && existingL1Map.has(parentTemplateId)) {
       return {
         ...insert,
         _tempParentId: null,
-        parent_goal_id: existingL2Map.get(parentTemplateId)!,
+        parent_goal_id: existingL1Map.get(parentTemplateId)!,
       }
     }
 

@@ -9,7 +9,7 @@ import { GoalCard } from "./GoalCard"
 import { GoalToggle } from "./GoalToggle"
 import type { GoalWithProgress, GoalDisplayCategory } from "../types"
 import type { ProjectedDateInfo } from "../goalsService"
-import { CATEGORY_LABELS } from "../config"
+import { getCategoryLabel } from "../goalDisplayService"
 
 function SortableCategoryGoal({
   goal,
@@ -104,7 +104,7 @@ function SortableCategoryGoal({
 }
 
 interface GoalCategorySectionProps {
-  category: GoalDisplayCategory
+  category: GoalDisplayCategory | string
   goals: GoalWithProgress[]
   allGoals: GoalWithProgress[]
   defaultCollapsed?: boolean
@@ -142,7 +142,7 @@ export function GoalCategorySection({
 }: GoalCategorySectionProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed)
   const [localOrder, setLocalOrder] = useState<string[] | null>(null)
-  const label = CATEGORY_LABELS[category]
+  const label = getCategoryLabel(category)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

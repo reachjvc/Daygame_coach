@@ -1636,34 +1636,36 @@ export const GOAL_TEMPLATE_MAP: Record<string, GoalTemplate> =
 // Fan-Out Edges
 // ============================================================================
 
-// L1 → L2: all L1 goals fan into all achievements (per area)
-const L1_TO_L2_DAYGAME: GoalGraphEdge[] = [...L1_ONE_PERSON, ...L1_ABUNDANCE].flatMap((l1) =>
-  L2_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+// L1 → L3: all L1 goals fan directly into all L3 work goals (per area)
+// L2 achievements are standalone badges — not in the parent-child hierarchy.
+const L1_TO_L3_DAYGAME: GoalGraphEdge[] = [...L1_ONE_PERSON, ...L1_ABUNDANCE].flatMap((l1) =>
+  ALL_L3_DAYGAME.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_PG: GoalGraphEdge[] = L1_PERSONAL_GROWTH.flatMap((l1) =>
-  L2_PG_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_PG: GoalGraphEdge[] = L1_PERSONAL_GROWTH.flatMap((l1) =>
+  ALL_L3_PG.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_SOC: GoalGraphEdge[] = L1_SOCIAL.flatMap((l1) =>
-  L2_SOC_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_SOC: GoalGraphEdge[] = L1_SOCIAL.flatMap((l1) =>
+  ALL_L3_SOC.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_FIT: GoalGraphEdge[] = L1_FITNESS.flatMap((l1) =>
-  L2_FIT_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_FIT: GoalGraphEdge[] = L1_FITNESS.flatMap((l1) =>
+  ALL_L3_FIT.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_WLT: GoalGraphEdge[] = L1_WEALTH.flatMap((l1) =>
-  L2_WLT_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_WLT: GoalGraphEdge[] = L1_WEALTH.flatMap((l1) =>
+  ALL_L3_WLT.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_VIC: GoalGraphEdge[] = L1_VICES.flatMap((l1) =>
-  L2_VIC_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_VIC: GoalGraphEdge[] = L1_VICES.flatMap((l1) =>
+  ALL_L3_VIC.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_LIFE: GoalGraphEdge[] = L1_LIFESTYLE.flatMap((l1) =>
-  L2_LIFE_TEMPLATES.map((l2) => ({ parentId: l1.id, childId: l2.id }))
+const L1_TO_L3_LIFE: GoalGraphEdge[] = L1_LIFESTYLE.flatMap((l1) =>
+  ALL_L3_LIFE.map((l3) => ({ parentId: l1.id, childId: l3.id }))
 )
-const L1_TO_L2_EDGES: GoalGraphEdge[] = [
-  ...L1_TO_L2_DAYGAME, ...L1_TO_L2_PG, ...L1_TO_L2_SOC, ...L1_TO_L2_FIT, ...L1_TO_L2_WLT,
-  ...L1_TO_L2_VIC, ...L1_TO_L2_LIFE,
+const L1_TO_L3_EDGES: GoalGraphEdge[] = [
+  ...L1_TO_L3_DAYGAME, ...L1_TO_L3_PG, ...L1_TO_L3_SOC, ...L1_TO_L3_FIT, ...L1_TO_L3_WLT,
+  ...L1_TO_L3_VIC, ...L1_TO_L3_LIFE,
 ]
 
-// L2 → L3: per-L2 connections — each L2 links to the L3s relevant to that transformation
+// L2 → L3 connections — used ONLY for achievement weight lookups (badge engine).
+// NOT included in GOAL_GRAPH_EDGES — L2s are standalone, not in the parent-child hierarchy.
 const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // ---- DAYGAME ----
   // Master Daygame — broad, results-heavy
@@ -1894,8 +1896,7 @@ const L2_TO_L3_EDGES: GoalGraphEdge[] = Object.entries(L2_L3_CONNECTIONS).flatMa
 )
 
 export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
-  ...L1_TO_L2_EDGES,
-  ...L2_TO_L3_EDGES,
+  ...L1_TO_L3_EDGES,
 ]
 
 // ============================================================================
@@ -2453,6 +2454,20 @@ export function redistributeWeights(
   activeGoalIds: Set<string>
 ): AchievementWeight[] {
   return weights.filter((w) => activeGoalIds.has(w.goalId))
+}
+
+/**
+ * Get all L2 achievements that reference a given L3 goal in their weights.
+ * Used by setup wizard to show which badges a selected L3 contributes to.
+ */
+export function getL2AchievementsForL3(l3Id: string): GoalTemplate[] {
+  const l2Ids = new Set<string>()
+  for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
+    if (w.goalId === l3Id) {
+      l2Ids.add(w.achievementId)
+    }
+  }
+  return Array.from(l2Ids).map((id) => GOAL_TEMPLATE_MAP[id]).filter(Boolean)
 }
 
 /**

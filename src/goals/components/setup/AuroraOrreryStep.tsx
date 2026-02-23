@@ -11,7 +11,7 @@ import {
   SETUP_TIER_ORDER,
 } from "./setupConstants"
 import type { LifeAreaConfig, BadgeStatus, DaygamePath } from "@/src/goals/types"
-import { getParents, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
+import { getL2AchievementsForL3, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 
 // ============================================================================
 // Props
@@ -63,15 +63,12 @@ export function AuroraOrreryStep({
     return counts
   }, [selectedGoals, lifeAreas])
 
-  // Compute L2 achievements from selected L3 goals (same pattern as SummaryStep)
+  // Compute L2 achievements from selected L3 goals (via weight-based lookup)
   const badges: BadgeStatus[] = useMemo(() => {
     const l2Set = new Set<string>()
     for (const goalId of selectedGoals) {
-      const parents = getParents(goalId)
-      for (const parent of parents) {
-        if (parent.level === 2) {
-          l2Set.add(parent.id)
-        }
+      for (const l2 of getL2AchievementsForL3(goalId)) {
+        l2Set.add(l2.id)
       }
     }
     return Array.from(l2Set).map((l2Id) => {

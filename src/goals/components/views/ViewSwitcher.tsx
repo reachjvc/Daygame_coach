@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Sun, Map } from "lucide-react"
+import { Sun, Layers, GitFork, Orbit } from "lucide-react"
 import type { GoalViewMode } from "../../types"
 
 interface ViewSwitcherProps {
@@ -10,8 +10,10 @@ interface ViewSwitcherProps {
 }
 
 const VIEW_OPTIONS: { mode: GoalViewMode; icon: typeof Sun; label: string }[] = [
-  { mode: "daily", icon: Sun, label: "Daily" },
-  { mode: "strategic", icon: Map, label: "Strategic" },
+  { mode: "today", icon: Sun, label: "Today" },
+  { mode: "hierarchy", icon: Layers, label: "Hierarchy" },
+  { mode: "tree", icon: GitFork, label: "Tree" },
+  { mode: "orrery", icon: Orbit, label: "Orrery" },
 ]
 
 export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
@@ -32,7 +34,7 @@ export function ViewSwitcher({ activeView, onViewChange }: ViewSwitcherProps) {
             data-testid={`goals-view-${mode}`}
           >
             <Icon className="size-4" />
-            <span className="text-xs">{label}</span>
+            <span className="text-xs hidden sm:inline">{label}</span>
           </Button>
         )
       })}

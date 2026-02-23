@@ -24,13 +24,13 @@ export interface BatchGoalInsert extends UserGoalInsert {
 /**
  * Generate an ordered array of goal inserts from a template ID.
  *
- * Traverses the goal graph: picked goal → L2 achievements → L3 work goals.
- * Returns inserts in creation order (L1 first, then L2s, then L3s) so parent
+ * Traverses the goal graph: picked goal → L3 work goals (L2 achievements are standalone).
+ * Returns inserts in creation order (L1 first, then L3s) so parent
  * IDs can be resolved sequentially.
  *
- * For L0 picks: creates the L0 goal, one default L1 child, then L2+L3 beneath it.
- * For L1 picks: creates L1, then L2+L3 beneath.
- * For L2 picks: creates L2, then L3 beneath (no parent above).
+ * For L0 picks: creates the L0 goal, one default L1 child, then L3s beneath it.
+ * For L1 picks: creates L1, then L3s beneath.
+ * For L2 picks: creates standalone L2 (no children — L2s are badges, not hierarchy nodes).
  */
 export function generateGoalTreeInserts(templateId: string): BatchGoalInsert[] {
   const root = GOAL_TEMPLATE_MAP[templateId]
@@ -39,22 +39,21 @@ export function generateGoalTreeInserts(templateId: string): BatchGoalInsert[] {
   const inserts: BatchGoalInsert[] = []
 
   if (root.level === 0) {
-    // L0: create the dream, then pick first L1 child and build beneath it
+    // L0: create the dream, then pick first L1 child and build L3s beneath it
     inserts.push(templateToInsert(root, null))
     const l1Children = getChildren(root.id).filter((c) => c.level === 1)
     if (l1Children.length > 0) {
       const l1 = l1Children[0]
       inserts.push(templateToInsert(l1, TEMP_PREFIX + root.id))
-      appendL2andL3(inserts, l1, TEMP_PREFIX + l1.id)
+      appendL3Direct(inserts, l1, TEMP_PREFIX + l1.id)
     }
   } else if (root.level === 1) {
-    // L1: create it, then L2+L3 beneath
+    // L1: create it, then L3s directly beneath
     inserts.push(templateToInsert(root, null))
-    appendL2andL3(inserts, root, TEMP_PREFIX + root.id)
+    appendL3Direct(inserts, root, TEMP_PREFIX + root.id)
   } else if (root.level === 2) {
-    // L2: create it, then L3 beneath
+    // L2: standalone badge, no children
     inserts.push(templateToInsert(root, null))
-    appendL3(inserts, root, TEMP_PREFIX + root.id)
   } else {
     // L3: just create it standalone
     inserts.push(templateToInsert(root, null))
@@ -63,28 +62,10 @@ export function generateGoalTreeInserts(templateId: string): BatchGoalInsert[] {
   return inserts
 }
 
-function appendL2andL3(inserts: BatchGoalInsert[], l1: GoalTemplate, l1TempId: string): void {
-  const l2Children = getChildren(l1.id).filter((c) => c.level === 2)
-  const seenL3 = new Set<string>()
-
-  for (const l2 of l2Children) {
-    inserts.push(templateToInsert(l2, l1TempId))
-    const l2TempId = TEMP_PREFIX + l2.id
-
-    const l3Children = getChildren(l2.id).filter((c) => c.level === 3)
-    for (const l3 of l3Children) {
-      if (seenL3.has(l3.id)) continue
-      seenL3.add(l3.id)
-      // L3 goals parent to the first L2 that references them
-      inserts.push(templateToInsert(l3, l2TempId))
-    }
-  }
-}
-
-function appendL3(inserts: BatchGoalInsert[], l2: GoalTemplate, l2TempId: string): void {
-  const l3Children = getChildren(l2.id).filter((c) => c.level === 3)
+function appendL3Direct(inserts: BatchGoalInsert[], l1: GoalTemplate, l1TempId: string): void {
+  const l3Children = getChildren(l1.id).filter((c) => c.level === 3)
   for (const l3 of l3Children) {
-    inserts.push(templateToInsert(l3, l2TempId))
+    inserts.push(templateToInsert(l3, l1TempId))
   }
 }
 

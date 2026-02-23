@@ -21,6 +21,16 @@ export type {
   GoalPhase,
 } from "@/src/db/goalTypes"
 
+// Re-export const arrays, Zod schemas, and type guards from goalEnums
+export {
+  GOAL_TYPES, GOAL_DISPLAY_CATEGORIES, LINKED_METRICS, GOAL_NATURES,
+  GOAL_PERIODS, GOAL_TRACKING_TYPES, GOAL_PHASES,
+  GoalTypeSchema, GoalDisplayCategorySchema, LinkedMetricSchema,
+  GoalNatureSchema, GoalPeriodSchema, GoalTrackingTypeSchema, GoalPhaseSchema,
+  isKnownDisplayCategory, isKnownGoalType, isKnownGoalPhase,
+  isKnownLinkedMetric, isKnownGoalPeriod, isKnownTrackingType, isKnownGoalNature,
+} from "@/src/db/goalEnums"
+
 /**
  * Predefined life area IDs
  */
@@ -74,7 +84,7 @@ export type CelebrationTier = "subtle" | "toast" | "confetti-small" | "confetti-
 /**
  * View modes for the Goals Hub
  */
-export type GoalViewMode = "daily" | "strategic" | "standard" | "time-horizon"
+export type GoalViewMode = "today" | "hierarchy" | "tree" | "orrery" | "daily" | "strategic" | "standard" | "time-horizon"
 
 /**
  * Filter state for goals list/views
@@ -246,6 +256,7 @@ export interface HierarchySection {
   l1Goal: GoalWithProgress
   achievements: GoalWithProgress[]
   categories: Partial<Record<GoalDisplayCategory, GoalWithProgress[]>>
+  unknownCategories: Record<string, GoalWithProgress[]>
   uncategorized: GoalWithProgress[]
 }
 
