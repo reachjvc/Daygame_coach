@@ -133,10 +133,9 @@ describe("computeBadge", () => {
     expect(badge!.progress).toBe(100)
   })
 
-  it("stays at diamond when missing one mythic requirement", () => {
+  it("stays at diamond when below mythic threshold", () => {
     const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100, current_value: 3000 }),
-      mockL3Goal({ id: "2", template_id: "l3_venues_explored", progress_percentage: 100, current_value: 30 }),
+      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100, current_value: 1200 }),
     ]
     const badge = computeBadge("l2_approach", goals)
     expect(badge).not.toBeNull()
@@ -228,7 +227,7 @@ describe("computeAllBadges", () => {
   })
 
   it("returns badges only for L2s with active contributing goals", () => {
-    // l3_approach_volume contributes to: l2_approach, l2_tongue, l2_inner
+    // l3_approach_volume contributes to: l2_approach, l2_inner (not l2_tongue anymore)
     const goals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50, current_value: 100 }),
     ]
@@ -237,12 +236,12 @@ describe("computeAllBadges", () => {
     const badgeIds = badges.map((b) => b.badgeId)
     // Daygame threshold badges that reference l3_approach_volume
     expect(badgeIds).toContain("l2_approach")
-    expect(badgeIds).toContain("l2_tongue")
     expect(badgeIds).toContain("l2_inner")
 
     // Should NOT have badges that don't reference l3_approach_volume
     expect(badgeIds).not.toContain("l2_text")
     expect(badgeIds).not.toContain("l2_date")
+    expect(badgeIds).not.toContain("l2_tongue")
   })
 
   it("every badge has correct structure", () => {
@@ -379,19 +378,19 @@ describe("tier boundaries", () => {
   })
 
   it("evolving names match tier for each badge", () => {
-    // Test l2_tongue evolving names
-    const goals = (approaches: number, numbers: number, instadates: number) => [
-      mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 0, current_value: approaches }),
-      mockL3Goal({ id: "2", template_id: "l3_phone_numbers", progress_percentage: 0, current_value: numbers }),
-      mockL3Goal({ id: "3", template_id: "l3_instadates", progress_percentage: 0, current_value: instadates }),
+    // Test l2_tongue evolving names — now uses phone_numbers, instadates, same_day_lays
+    const goals = (numbers: number, instadates: number, sdl: number) => [
+      mockL3Goal({ id: "1", template_id: "l3_phone_numbers", progress_percentage: 0, current_value: numbers }),
+      mockL3Goal({ id: "2", template_id: "l3_instadates", progress_percentage: 0, current_value: instadates }),
+      mockL3Goal({ id: "3", template_id: "l3_same_day_lays", progress_percentage: 0, current_value: sdl }),
     ]
 
-    expect(computeBadge("l2_tongue", goals(30, 3, 0))!.tierName).toBe("Nervous Tongue")
-    expect(computeBadge("l2_tongue", goals(100, 10, 2))!.tierName).toBe("Smooth Tongue")
-    expect(computeBadge("l2_tongue", goals(300, 25, 8))!.tierName).toBe("Silver Tongue")
-    expect(computeBadge("l2_tongue", goals(600, 50, 18))!.tierName).toBe("Golden Tongue")
-    expect(computeBadge("l2_tongue", goals(1200, 100, 35))!.tierName).toBe("Diamond Tongue")
-    expect(computeBadge("l2_tongue", goals(3000, 200, 70))!.tierName).toBe("Mythic Tongue")
+    expect(computeBadge("l2_tongue", goals(5, 0, 0))!.tierName).toBe("Nervous Tongue")
+    expect(computeBadge("l2_tongue", goals(15, 3, 0))!.tierName).toBe("Smooth Tongue")
+    expect(computeBadge("l2_tongue", goals(40, 10, 1))!.tierName).toBe("Silver Tongue")
+    expect(computeBadge("l2_tongue", goals(80, 25, 3))!.tierName).toBe("Golden Tongue")
+    expect(computeBadge("l2_tongue", goals(150, 50, 8))!.tierName).toBe("Diamond Tongue")
+    expect(computeBadge("l2_tongue", goals(300, 100, 20))!.tierName).toBe("Mythic Tongue")
   })
 })
 

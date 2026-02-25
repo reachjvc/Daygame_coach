@@ -4,14 +4,11 @@
  * Pure functions, no DB calls.
  */
 
-import { getAchievementWeights } from "./data/goalGraph"
-import { computeAchievementProgress } from "./milestoneService"
 import { isKnownDisplayCategory } from "@/src/db/goalEnums"
 import type {
   GoalWithProgress,
   GoalDisplayCategory,
   HierarchySection,
-  AchievementProgressResult,
 } from "./types"
 
 // Colors for input (green) and outcome (red) goal natures
@@ -98,35 +95,6 @@ export function groupGoalsByHierarchy(goals: GoalWithProgress[]): {
   customGoals.push(...noLevel)
 
   return { sections, customGoals }
-}
-
-/**
- * Compute achievement progress from sibling goals.
- *
- * Uses the goal graph's achievement weights and the milestoneService's
- * weighted progress calculator.
- */
-export function computeAchievementProgressFromGoals(
-  achievement: GoalWithProgress,
-  siblingGoals: GoalWithProgress[]
-): AchievementProgressResult {
-  const activeTemplateIds = new Set(
-    siblingGoals.filter((g) => g.template_id).map((g) => g.template_id!)
-  )
-
-  const weights = achievement.template_id
-    ? getAchievementWeights(achievement.template_id, activeTemplateIds)
-    : []
-
-  // Build progress map: template_id → progress percentage
-  const progressMap = new Map<string, number>()
-  for (const goal of siblingGoals) {
-    if (goal.template_id) {
-      progressMap.set(goal.template_id, goal.progress_percentage)
-    }
-  }
-
-  return computeAchievementProgress(weights, progressMap)
 }
 
 /**

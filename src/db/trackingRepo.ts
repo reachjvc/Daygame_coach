@@ -1099,6 +1099,25 @@ export async function getWeeklyApproachQualityAvg(
   return Math.round(sum / data.length)
 }
 
+/**
+ * Count all approaches with quality rating >= 7 (cumulative, all-time).
+ */
+export async function getHighQualityApproachCount(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+
+  const { count, error } = await supabase
+    .from("approaches")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .gte("quality", 7)
+
+  if (error) {
+    throw new Error(`Failed to get high quality approach count: ${error.message}`)
+  }
+
+  return count ?? 0
+}
+
 // ============================================
 // Milestones
 // ============================================

@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Loader2, Plus, Minus, Lightbulb, Calendar, Trash2, Archive } from "lucide-react"
+import { FutureDateInput } from "./FutureDateInput"
 import { LIFE_AREAS, getLifeAreaConfig } from "../data/lifeAreas"
 import { MilestoneCurveEditor } from "./MilestoneCurveEditor"
 import { HabitRampEditor } from "./HabitRampEditor"
@@ -762,13 +763,10 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 <Calendar className="size-3 inline mr-1" />
                 Target Date (optional)
               </Label>
-              <Input
-                id="target-date"
-                type="date"
+              <FutureDateInput
                 value={targetDate}
-                onChange={(e) => setTargetDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
-  
+                onChange={setTargetDate}
+                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
               />
               {targetDate && (
                 <p className="text-xs" style={{ color: theme.muted }}>

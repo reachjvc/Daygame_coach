@@ -10,8 +10,6 @@ import type {
   GeneratedMilestone,
   HabitRampStep,
   RampMilestoneDate,
-  AchievementWeight,
-  AchievementProgressResult,
 } from "./types"
 
 // ============================================================================
@@ -455,40 +453,3 @@ export function computeRampMilestoneDates(
   return results
 }
 
-// ============================================================================
-// Achievement Progress Calculator
-// ============================================================================
-
-/**
- * Compute weighted achievement progress from contributing goal completions.
- *
- * Each contributing goal has a weight (should sum to 1) and a progress
- * percentage (0–100). The achievement progress is the weighted sum.
- *
- * @param weights - which goals contribute and how much
- * @param goalProgressMap - map of goalId → progress percentage (0–100)
- */
-export function computeAchievementProgress(
-  weights: AchievementWeight[],
-  goalProgressMap: Map<string, number>
-): AchievementProgressResult {
-  const contributingGoals = weights.map((w) => {
-    const goalProgress = goalProgressMap.get(w.goalId) ?? 0
-    const contribution = w.weight * goalProgress
-    return {
-      goalId: w.goalId,
-      weight: w.weight,
-      goalProgress,
-      contribution,
-    }
-  })
-
-  const progressPercent = Math.round(
-    contributingGoals.reduce((sum, g) => sum + g.contribution, 0)
-  )
-
-  return {
-    progressPercent: Math.min(100, Math.max(0, progressPercent)),
-    contributingGoals,
-  }
-}

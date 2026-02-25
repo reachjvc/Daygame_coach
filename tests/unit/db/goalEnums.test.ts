@@ -25,8 +25,8 @@ describe("const arrays", () => {
     expect(GOAL_DISPLAY_CATEGORIES.length).toBe(27)
   })
 
-  test("LINKED_METRICS has 14 values", () => {
-    expect(LINKED_METRICS.length).toBe(14)
+  test("LINKED_METRICS has 15 values", () => {
+    expect(LINKED_METRICS.length).toBe(15)
   })
 
   test("GOAL_PERIODS has 6 values", () => {

@@ -225,10 +225,22 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   }, [])
 
   const updateTargetDate = useCallback((areaId: string, date: string) => {
+    // Safety net: never accept past/today dates
+    if (date) {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      if (date < tomorrow.toISOString().split("T")[0]) return
+    }
     setTargetDates((prev) => ({ ...prev, [areaId]: date }))
   }, [])
 
   const updateGoalDate = useCallback((goalId: string, date: string) => {
+    // Safety net: never accept past/today dates
+    if (date) {
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      if (date < tomorrow.toISOString().split("T")[0]) return
+    }
     setGoalDates((prev) => ({ ...prev, [goalId]: date }))
   }, [])
 

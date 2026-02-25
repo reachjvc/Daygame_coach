@@ -11,6 +11,7 @@ import {
   CircleHelp,
   X,
 } from "lucide-react"
+import { FutureDateInput } from "../FutureDateInput"
 import { CATEGORY_COLORS } from "./setupConstants"
 import { MilestoneCurveEditor } from "@/src/goals/components/MilestoneCurveEditor"
 import { HabitRampEditor } from "@/src/goals/components/HabitRampEditor"
@@ -217,12 +218,9 @@ function GoalDateButton({
           <label className="text-[10px] text-white/40 uppercase tracking-wider block">
             Target date
           </label>
-          <input
-            type="date"
+          <FutureDateInput
             value={effectiveDate}
-            onChange={(e) => {
-              onUpdate(goalId, e.target.value)
-            }}
+            onChange={(date) => onUpdate(goalId, date)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault()
@@ -534,6 +532,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                     onClick={() => toggleSection(sectionId)}
                     data-tour={expandedRank === 0 ? "category-1" : expandedRank === 1 ? "category-2" : undefined}
                     data-tour-role="category"
+                    data-expanded={isExpanded ? "" : undefined}
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
                     style={{
                       background:

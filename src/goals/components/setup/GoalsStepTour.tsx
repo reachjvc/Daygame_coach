@@ -51,6 +51,12 @@ interface TourPhase {
   label: (index: number, total: number) => string
   /** Max number of annotation labels to show (rest get ring only). Default: all */
   maxLabels?: number
+  /** Called when this phase activates (phases 1+). Return promise to wait before applying. */
+  onEnter?: (handle: GoalsStepTourHandle) => Promise<void>
+  /** If true, don't scroll when this phase activates */
+  skipScroll?: boolean
+  /** Override auto-advance duration for this phase (ms). Default: PHASE_DURATION_MS */
+  durationMs?: number
 }
 
 interface TourStep {
@@ -123,26 +129,68 @@ function buildSteps(opts: BuildStepsOpts): TourStep[] {
     },
     {
       id: "expand-all",
+      // Safe target — always exists; scrollTo directs to collapsed area
       target: '[data-tour-role="category"]',
-      scrollTo: '[data-tour-scroll-mid]',
-      caption: "Each category has its own goals — explore them all.",
-      setup: async (handle) => {
-        handle.expandAllSections()
-        await new Promise<void>((r) => setTimeout(r, 400))
-        // Tag the middle category so scrollTo can find it
-        const cats = document.querySelectorAll('[data-tour-role="category"]')
-        const mid = cats[Math.floor(cats.length / 2)] as HTMLElement | null
-        mid?.setAttribute("data-tour-scroll-mid", "")
+      scrollTo: '[data-tour-expand-scroll]',
+      caption: "More sub-categories to discover below.",
+      setup: async () => {
+        // Tag a collapsed category for scroll — reveals hidden sections
+        const collapsed = document.querySelectorAll(
+          '[data-tour-role="category"]:not([data-expanded])',
+        )
+        if (collapsed.length > 0) {
+          // Pick 2nd collapsed (or 1st if only one) so user sees context above
+          const target = collapsed[Math.min(1, collapsed.length - 1)] as HTMLElement
+          target.setAttribute("data-tour-expand-scroll", "")
+        } else {
+          // All already expanded — fall back to middle category
+          const cats = document.querySelectorAll('[data-tour-role="category"]')
+          const mid = cats[Math.floor(cats.length / 2)] as HTMLElement | null
+          mid?.setAttribute("data-tour-expand-scroll", "")
+        }
       },
       teardown: (handle) => {
         handle.collapseNonPreselected()
-        document.querySelector("[data-tour-scroll-mid]")?.removeAttribute("data-tour-scroll-mid")
+        document
+          .querySelector("[data-tour-expand-scroll]")
+          ?.removeAttribute("data-tour-expand-scroll")
       },
-      phases: [{
-        caption: "Each category has its own goals — explore them all.",
-        selector: '[data-tour-role="category"]',
-        label: (i) => `${ordinal(i + 1)} sub-category`,
-      }],
+      phases: [
+        {
+          // Phase 0: Show collapsed categories (scroll brought them into view)
+          caption: "More sub-categories to discover below.",
+          selector: '[data-tour-role="category"]:not([data-expanded])',
+          label: (i) => {
+            const expandedCount = document.querySelectorAll(
+              '[data-tour-role="category"][data-expanded]',
+            ).length
+            return `${ordinal(expandedCount + i + 1)} sub-category`
+          },
+          // Longer pause so user absorbs the closed categories before they open
+          durationMs: 3500,
+        },
+        {
+          // Phase 1: Expand all — CSS slide-down animation plays
+          caption: "Each category has its own goals — explore them all.",
+          selector: '[data-tour-role="category"]',
+          label: (i) => `${ordinal(i + 1)} sub-category`,
+          skipScroll: true,
+          onEnter: async (handle) => {
+            handle.expandAllSections()
+            await new Promise<void>((r) => setTimeout(r, 600))
+          },
+          // Pause to let user see the newly expanded sections
+          durationMs: 3500,
+        },
+        {
+          // Phase 2: Highlight newly visible unselected goals
+          caption: "Toggle any of these on to add them to your plan.",
+          selector: '[data-tour-role="unselected-goal"]',
+          label: (_, total) => `${total} more available`,
+          maxLabels: 1,
+          skipScroll: true,
+        },
+      ],
     },
   ]
 
@@ -547,9 +595,10 @@ export function GoalsStepTour({
     if (!step?.phases) return
     if (phaseIndex >= step.phases.length - 1) return // stay on last phase
 
+    const duration = step.phases[phaseIndex].durationMs ?? PHASE_DURATION_MS
     const timer = setTimeout(() => {
       setPhaseIndex((p) => p + 1)
-    }, PHASE_DURATION_MS)
+    }, duration)
 
     return () => clearTimeout(timer)
   }, [state.status, state.stepIndex, phaseIndex])
@@ -562,37 +611,49 @@ export function GoalsStepTour({
 
     const phase = step.phases[phaseIndex]
     if (!phase) return
+    let cancelled = false
 
     // Clear previous phase rings
     annotationRingsRef.current.forEach((el) => removeRing(el))
     annotationRingsRef.current = []
     setAnnotationPositions([])
 
-    // Find elements for this phase
-    const elements = Array.from(document.querySelectorAll(phase.selector)) as HTMLElement[]
-
-    // Skip empty phases
-    if (elements.length === 0) {
-      setPhaseCaption(phase.caption)
-      if (phaseIndex < step.phases.length - 1) {
-        setPhaseIndex((p) => p + 1)
+    const apply = async () => {
+      // Run onEnter if provided (e.g. expand sections)
+      if (phase.onEnter) {
+        const handle = tourRef.current
+        if (handle) await phase.onEnter(handle)
+        if (cancelled) return
       }
-      return
-    }
 
-    // Scroll first element into view
-    elements[0].scrollIntoView({ behavior: "smooth", block: "nearest" })
+      // Find elements for this phase
+      const elements = Array.from(document.querySelectorAll(phase.selector)) as HTMLElement[]
 
-    // Small delay for scroll, then apply
-    const applyTimer = setTimeout(() => {
+      // Skip empty phases
+      if (elements.length === 0) {
+        setPhaseCaption(phase.caption)
+        if (phaseIndex < step.phases!.length - 1) {
+          setPhaseIndex((p) => p + 1)
+        }
+        return
+      }
+
+      // Scroll first element into view (unless skipScroll)
+      if (!phase.skipScroll) {
+        elements[0].scrollIntoView({ behavior: "smooth", block: "nearest" })
+        await new Promise<void>((r) => setTimeout(r, 350))
+        if (cancelled) return
+      }
+
       const { positions, tooltipPos: tp } = applyPhase(phase, annotationRingsRef)
       setAnnotationPositions(positions)
       if (tp) setTooltipPos(tp)
       setPhaseCaption(phase.caption)
-    }, 350)
+    }
 
-    return () => clearTimeout(applyTimer)
-  }, [state.status, state.stepIndex, phaseIndex])
+    apply()
+    return () => { cancelled = true }
+  }, [state.status, state.stepIndex, phaseIndex, tourRef])
 
   // Recalculate positions on scroll/resize
   useEffect(() => {

@@ -12,8 +12,7 @@ import {
 } from "../setup/setupConstants"
 import { LIFE_AREAS } from "../../data/lifeAreas"
 import { computeLifeAreaProgress } from "../../goalsService"
-import { computeAchievementProgressFromGoals } from "../../goalHierarchyService"
-import { progressToTier } from "../../badgeEngineService"
+import { computeBadge } from "../../badgeEngineService"
 import type { GoalWithProgress, BadgeTier } from "../../types"
 
 interface OrreryViewProps {
@@ -72,13 +71,12 @@ export function OrreryView({ goals }: OrreryViewProps) {
     const l2Goals = goals.filter(g => g.goal_level === 2 && !g.is_archived)
     const l3Goals = goals.filter(g => g.goal_level === 3 && !g.is_archived)
     return l2Goals.map(ach => {
-      const { progressPercent } = computeAchievementProgressFromGoals(ach, l3Goals)
-      const tier = progressToTier(Math.round(progressPercent))
+      const badge = ach.template_id ? computeBadge(ach.template_id, l3Goals) : null
       return {
         id: ach.id,
         title: ach.title,
-        progress: Math.round(progressPercent),
-        tier,
+        progress: badge?.progress ?? 0,
+        tier: badge?.tier ?? "none",
       }
     })
   }, [goals])

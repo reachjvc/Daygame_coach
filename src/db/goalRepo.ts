@@ -16,7 +16,7 @@ import type {
 } from "./goalTypes"
 import { computeGoalProgress } from "./goalTypes"
 import type { UserTrackingStatsRow } from "./trackingTypes"
-import { getOrCreateUserTrackingStats, getWeeklyApproachQualityAvg } from "./trackingRepo"
+import { getOrCreateUserTrackingStats, getWeeklyApproachQualityAvg, getHighQualityApproachCount } from "./trackingRepo"
 import { getScenarioStats, type ScenarioStats } from "./scenarioRepo"
 import { getISOWeekString } from "../tracking/trackingService"
 import { getTodayInTimezone, getNowInTimezone } from "../shared/dateUtils"
@@ -751,6 +751,9 @@ export function getMetricValue(
     case "approach_quality_avg_weekly":
       console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
       return 0
+    case "high_quality_approaches_cumulative":
+      console.warn(`[getMetricValue] high_quality_approaches_cumulative should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
+      return 0
     case "scenario_sessions_cumulative":
     case "scenario_types_cumulative":
     case "scenario_high_scores_cumulative":
@@ -841,6 +844,12 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     qualityAvg = await getWeeklyApproachQualityAvg(userId, monday.toISOString())
   }
 
+  const needsHighQuality = goals.some(g => g.linked_metric === "high_quality_approaches_cumulative")
+  let highQualityCount = 0
+  if (needsHighQuality) {
+    highQualityCount = await getHighQualityApproachCount(userId)
+  }
+
   const SCENARIO_METRICS = ["scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative"]
   const needsScenarioStats = goals.some(g => SCENARIO_METRICS.includes(g.linked_metric ?? ""))
   let scenarioStats: ScenarioStats | null = null
@@ -854,13 +863,15 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     const metric = goal.linked_metric as LinkedMetric
     const newValue = metric === "approach_quality_avg_weekly"
       ? qualityAvg
-      : metric === "scenario_sessions_cumulative"
-        ? (scenarioStats?.totalSessions ?? 0)
-        : metric === "scenario_types_cumulative"
-          ? (scenarioStats?.uniqueTypes ?? 0)
-          : metric === "scenario_high_scores_cumulative"
-            ? (scenarioStats?.highScoreCount ?? 0)
-            : getMetricValue(stats, metric, timezone)
+      : metric === "high_quality_approaches_cumulative"
+        ? highQualityCount
+        : metric === "scenario_sessions_cumulative"
+          ? (scenarioStats?.totalSessions ?? 0)
+          : metric === "scenario_types_cumulative"
+            ? (scenarioStats?.uniqueTypes ?? 0)
+            : metric === "scenario_high_scores_cumulative"
+              ? (scenarioStats?.highScoreCount ?? 0)
+              : getMetricValue(stats, metric, timezone)
 
     // Only update if value changed
     if (newValue !== goal.current_value) {

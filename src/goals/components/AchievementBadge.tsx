@@ -1,8 +1,7 @@
 "use client"
 
 import { Trophy } from "lucide-react"
-import { computeAchievementProgressFromGoals } from "../goalHierarchyService"
-import { progressToTier } from "../badgeEngineService"
+import { computeBadge } from "../badgeEngineService"
 import type { GoalWithProgress, BadgeTier } from "../types"
 
 const TIER_COLORS: Record<BadgeTier, { border: string; bg: string; icon: string; bar: string }> = {
@@ -19,9 +18,9 @@ interface AchievementBadgeProps {
 }
 
 export function AchievementBadge({ achievement, siblingGoals }: AchievementBadgeProps) {
-  const { progressPercent } = computeAchievementProgressFromGoals(achievement, siblingGoals)
-  const rounded = Math.round(progressPercent)
-  const tier = progressToTier(rounded)
+  const badge = achievement.template_id ? computeBadge(achievement.template_id, siblingGoals) : null
+  const rounded = badge?.progress ?? 0
+  const tier = badge?.tier ?? "none"
 
   return (
     <div

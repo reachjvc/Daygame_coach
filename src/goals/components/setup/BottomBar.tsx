@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronLeft } from "lucide-react"
+import { Check, ChevronsLeft, ChevronsRight } from "lucide-react"
 
 export interface BottomBarProps {
   currentStep: number
@@ -22,6 +22,7 @@ export function BottomBar({
   onBack,
 }: BottomBarProps) {
   const showBack = onBack && currentStep > 0
+  const showForward = currentStep < steps.length - 1
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-40"
@@ -57,23 +58,28 @@ export function BottomBar({
           {ctaLabel}
         </button>
       </div>
-      <div className="mx-auto max-w-3xl flex items-center justify-center px-6 pb-3 gap-1">
-        {/* Back arrow before step indicators */}
-        {showBack && (
-          <button
-            onClick={onBack}
-            className="flex items-center justify-center rounded-full mr-3 transition-all hover:scale-110"
-            style={{
-              width: 24,
-              height: 24,
-              background: "linear-gradient(135deg, #00E676, #7C4DFF)",
-              color: "white",
-              boxShadow: "0 0 8px rgba(0,230,118,0.2), 0 0 16px rgba(124,77,255,0.1)",
-            }}
-          >
-            <ChevronLeft className="size-3.5" />
-          </button>
-        )}
+      <div className="mx-auto max-w-3xl flex items-start justify-center px-6 pb-3 gap-1">
+        {/* Back arrows before step indicators */}
+        <div className="flex flex-col items-center gap-1 mr-3">
+          {showBack ? (
+            <button
+              onClick={onBack}
+              className="flex items-center justify-center rounded-full transition-all hover:scale-110"
+              style={{
+                width: 20,
+                height: 20,
+                background: "linear-gradient(135deg, #00E676, #7C4DFF)",
+                color: "white",
+                boxShadow: "0 0 8px rgba(0,230,118,0.2), 0 0 16px rgba(124,77,255,0.1)",
+              }}
+            >
+              <ChevronsLeft className="size-3" />
+            </button>
+          ) : (
+            <div style={{ width: 20, height: 20 }} />
+          )}
+          <span className="text-[9px] hidden sm:block" style={{ visibility: "hidden" }}>&nbsp;</span>
+        </div>
         {steps.map((label, i) => {
           const isActive = i === currentStep
           const isDone = i < currentStep
@@ -133,6 +139,30 @@ export function BottomBar({
             </div>
           )
         })}
+        {/* Forward arrows after step indicators */}
+        <div className="flex flex-col items-center gap-1 ml-3">
+          {showForward ? (
+            <button
+              onClick={onCta}
+              disabled={ctaDisabled}
+              className="flex items-center justify-center rounded-full transition-all hover:scale-110 disabled:opacity-30 disabled:hover:scale-100"
+              style={{
+                width: 20,
+                height: 20,
+                background: ctaDisabled
+                  ? "rgba(20, 30, 40, 0.5)"
+                  : "linear-gradient(135deg, #00E676, #7C4DFF)",
+                color: ctaDisabled ? "rgba(0,255,127,0.3)" : "white",
+                boxShadow: ctaDisabled ? "none" : "0 0 8px rgba(0,230,118,0.2), 0 0 16px rgba(124,77,255,0.1)",
+              }}
+            >
+              <ChevronsRight className="size-3" />
+            </button>
+          ) : (
+            <div style={{ width: 20, height: 20 }} />
+          )}
+          <span className="text-[9px] hidden sm:block" style={{ visibility: "hidden" }}>&nbsp;</span>
+        </div>
       </div>
       <style>{`
         @keyframes v9c-stepPulse {

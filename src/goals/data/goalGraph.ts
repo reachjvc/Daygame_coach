@@ -10,7 +10,6 @@
 import type {
   GoalTemplate,
   GoalGraphEdge,
-  DefaultAchievementWeight,
   GoalDisplayCategory,
   GoalGraphLevel,
   CrossAreaEdge,
@@ -18,7 +17,6 @@ import type {
   GoalPriority,
   MilestoneLadderConfig,
   HabitRampStep,
-  AchievementWeight,
   BadgeConfig,
 } from "../types"
 import type { LinkedMetric } from "@/src/db/goalTypes"
@@ -159,7 +157,7 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 4, durationWeeks: 12 },
       { frequencyPerWeek: 6, durationWeeks: 24 },
     ],
-    linkedMetric: "approach_quality_avg_weekly",
+    linkedMetric: "high_quality_approaches_cumulative",
   }),
   template("l3_open_in_3_seconds", "Open in <3 Seconds", 3, "input", {
     displayCategory: "field_work",
@@ -1216,16 +1214,16 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // ---- DAYGAME ----
   // All badges use threshold-based requirements (BADGE_REQUIREMENTS).
   // L2_L3_CONNECTIONS only needed for badge→L3 discovery (getL2AchievementsForL3).
-  l2_approach: ["l3_approach_volume", "l3_venues_explored"],
-  l2_results: ["l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates"],
-  l2_tongue: ["l3_approach_volume", "l3_phone_numbers", "l3_instadates"],
+  l2_approach: ["l3_approach_volume"],
+  l2_results: ["l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates", "l3_lays"],
+  l2_tongue: ["l3_phone_numbers", "l3_instadates", "l3_same_day_lays"],
   l2_text: ["l3_response_rate", "l3_number_to_date_conversion"],
   l2_date: ["l3_dates", "l3_second_dates", "l3_creative_dates", "l3_date_spots"],
   l2_seduction: ["l3_kiss_closes", "l3_lays", "l3_same_day_lays"],
   l2_inner: ["l3_approach_volume", "l3_venues_explored", "l3_instadates", "l3_creative_dates"],
   l2_life: ["l3_dates", "l3_number_to_date_conversion", "l3_second_dates", "l3_lays"],
   l2_grinder: ["l3_session_frequency", "l3_solo_sessions", "l3_approach_frequency"],
-  l2_self: ["l3_voice_notes", "l3_daygame_weekly_review", "l3_visualization"],
+  l2_self: ["l3_daygame_weekly_review", "l3_visualization"],
   l2_opener: ["l3_approach_quality", "l3_open_in_3_seconds"],
   l2_pipeline: ["l3_texting_initiated", "l3_dates_planned", "l3_pull_attempts", "l3_date_leadership", "l3_women_dating"],
   l2_training: ["l3_scenario_sessions", "l3_scenario_types_tried", "l3_scenario_high_scores"],
@@ -1357,11 +1355,11 @@ export const DAYGAME_BADGE_REQUIREMENTS: BadgeConfig[] = [
     l2Id: "l2_approach",
     tiers: [
       { tier: "iron",    name: "Approach Newbie",   requirements: [r("l3_approach_volume", 20)] },
-      { tier: "bronze",  name: "Approach Warrior",  requirements: [r("l3_approach_volume", 75), r("l3_venues_explored", 3)] },
-      { tier: "silver",  name: "Approach Veteran",  requirements: [r("l3_approach_volume", 200), r("l3_venues_explored", 7)] },
-      { tier: "gold",    name: "Approach Machine",  requirements: [r("l3_approach_volume", 500), r("l3_venues_explored", 15)] },
-      { tier: "diamond", name: "Approach Legend",    requirements: [r("l3_approach_volume", 1200), r("l3_venues_explored", 25)] },
-      { tier: "mythic",  name: "Approach Myth",     requirements: [r("l3_approach_volume", 3000), r("l3_venues_explored", 50)] },
+      { tier: "bronze",  name: "Approach Warrior",  requirements: [r("l3_approach_volume", 75)] },
+      { tier: "silver",  name: "Approach Veteran",  requirements: [r("l3_approach_volume", 200)] },
+      { tier: "gold",    name: "Approach Machine",  requirements: [r("l3_approach_volume", 500)] },
+      { tier: "diamond", name: "Approach Legend",    requirements: [r("l3_approach_volume", 1200)] },
+      { tier: "mythic",  name: "Approach Myth",     requirements: [r("l3_approach_volume", 3000)] },
     ],
   },
   {
@@ -1371,19 +1369,19 @@ export const DAYGAME_BADGE_REQUIREMENTS: BadgeConfig[] = [
       { tier: "bronze",  name: "Results Hunter",    requirements: [r("l3_phone_numbers", 10), r("l3_instadates", 2)] },
       { tier: "silver",  name: "Results Machine",   requirements: [r("l3_phone_numbers", 25), r("l3_instadates", 8), r("l3_dates", 3)] },
       { tier: "gold",    name: "Results King",      requirements: [r("l3_phone_numbers", 60), r("l3_instadates", 20), r("l3_dates", 12), r("l3_second_dates", 5)] },
-      { tier: "diamond", name: "Results Legend",     requirements: [r("l3_phone_numbers", 120), r("l3_instadates", 40), r("l3_dates", 30), r("l3_second_dates", 12)] },
-      { tier: "mythic",  name: "Results Myth",      requirements: [r("l3_phone_numbers", 250), r("l3_instadates", 80), r("l3_dates", 60), r("l3_second_dates", 30)] },
+      { tier: "diamond", name: "Results Legend",     requirements: [r("l3_phone_numbers", 120), r("l3_instadates", 40), r("l3_dates", 30), r("l3_second_dates", 12), r("l3_lays", 5)] },
+      { tier: "mythic",  name: "Results Myth",      requirements: [r("l3_phone_numbers", 250), r("l3_instadates", 80), r("l3_dates", 60), r("l3_second_dates", 30), r("l3_lays", 10)] },
     ],
   },
   {
     l2Id: "l2_tongue",
     tiers: [
-      { tier: "iron",    name: "Nervous Tongue",    requirements: [r("l3_approach_volume", 30), r("l3_phone_numbers", 3)] },
-      { tier: "bronze",  name: "Smooth Tongue",     requirements: [r("l3_approach_volume", 100), r("l3_phone_numbers", 10), r("l3_instadates", 2)] },
-      { tier: "silver",  name: "Silver Tongue",     requirements: [r("l3_approach_volume", 300), r("l3_phone_numbers", 25), r("l3_instadates", 8)] },
-      { tier: "gold",    name: "Golden Tongue",     requirements: [r("l3_approach_volume", 600), r("l3_phone_numbers", 50), r("l3_instadates", 18)] },
-      { tier: "diamond", name: "Diamond Tongue",    requirements: [r("l3_approach_volume", 1200), r("l3_phone_numbers", 100), r("l3_instadates", 35)] },
-      { tier: "mythic",  name: "Mythic Tongue",     requirements: [r("l3_approach_volume", 3000), r("l3_phone_numbers", 200), r("l3_instadates", 70)] },
+      { tier: "iron",    name: "Nervous Tongue",    requirements: [r("l3_phone_numbers", 5)] },
+      { tier: "bronze",  name: "Smooth Tongue",     requirements: [r("l3_phone_numbers", 15), r("l3_instadates", 3)] },
+      { tier: "silver",  name: "Silver Tongue",     requirements: [r("l3_phone_numbers", 40), r("l3_instadates", 10), r("l3_same_day_lays", 1)] },
+      { tier: "gold",    name: "Golden Tongue",     requirements: [r("l3_phone_numbers", 80), r("l3_instadates", 25), r("l3_same_day_lays", 3)] },
+      { tier: "diamond", name: "Diamond Tongue",    requirements: [r("l3_phone_numbers", 150), r("l3_instadates", 50), r("l3_same_day_lays", 8)] },
+      { tier: "mythic",  name: "Mythic Tongue",     requirements: [r("l3_phone_numbers", 300), r("l3_instadates", 100), r("l3_same_day_lays", 20)] },
     ],
   },
   {
@@ -1456,12 +1454,12 @@ export const DAYGAME_BADGE_REQUIREMENTS: BadgeConfig[] = [
   {
     l2Id: "l2_self",
     tiers: [
-      { tier: "iron",    name: "Self Starter",      requirements: [r("l3_voice_notes", 10), r("l3_daygame_weekly_review", 4)] },
-      { tier: "bronze",  name: "Self Aware",        requirements: [r("l3_voice_notes", 30), r("l3_daygame_weekly_review", 12), r("l3_visualization", 20)] },
-      { tier: "silver",  name: "Self Coach",        requirements: [r("l3_voice_notes", 75), r("l3_daygame_weekly_review", 30), r("l3_visualization", 50)] },
-      { tier: "gold",    name: "Self Master",       requirements: [r("l3_voice_notes", 150), r("l3_daygame_weekly_review", 48), r("l3_visualization", 100)] },
-      { tier: "diamond", name: "Self Sensei",       requirements: [r("l3_voice_notes", 300), r("l3_daygame_weekly_review", 96), r("l3_visualization", 200)] },
-      { tier: "mythic",  name: "Self Myth",         requirements: [r("l3_voice_notes", 600), r("l3_daygame_weekly_review", 192), r("l3_visualization", 400)] },
+      { tier: "iron",    name: "Self Starter",      requirements: [r("l3_daygame_weekly_review", 4)] },
+      { tier: "bronze",  name: "Self Aware",        requirements: [r("l3_daygame_weekly_review", 12), r("l3_visualization", 20)] },
+      { tier: "silver",  name: "Self Coach",        requirements: [r("l3_daygame_weekly_review", 30), r("l3_visualization", 50)] },
+      { tier: "gold",    name: "Self Master",       requirements: [r("l3_daygame_weekly_review", 48), r("l3_visualization", 100)] },
+      { tier: "diamond", name: "Self Sensei",       requirements: [r("l3_daygame_weekly_review", 96), r("l3_visualization", 200)] },
+      { tier: "mythic",  name: "Self Myth",         requirements: [r("l3_daygame_weekly_review", 192), r("l3_visualization", 400)] },
     ],
   },
   {
@@ -1741,231 +1739,6 @@ export const ALL_BADGE_REQUIREMENTS: BadgeConfig[] = [
 export const THRESHOLD_L2_IDS = new Set(ALL_BADGE_REQUIREMENTS.map((b) => b.l2Id))
 
 // ============================================================================
-// Achievement Weights — per-L2, each sums to 1.0 (non-daygame areas only)
-// ============================================================================
-
-const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
-
-  // ---- PERSONAL GROWTH WEIGHTS ----
-
-  // Master Mindfulness & Presence (8 L3s)
-  l2_pg_mindfulness: {
-    l3_pg_meditation: 0.20,
-    l3_pg_gratitude: 0.13,
-    l3_pg_meditation_hours: 0.16,
-    l3_pg_meditation_streak: 0.13,
-    l3_pg_journal: 0.09,
-    l3_pg_weekly_reviews: 0.09,
-    l3_pg_therapy: 0.08,
-    l3_pg_breathwork: 0.12,
-  },
-  // Build Mental Toughness & Resilience (6 L3s)
-  l2_pg_toughness: {
-    l3_pg_comfort_zone: 0.20,
-    l3_pg_cold_exposure: 0.15,
-    l3_pg_challenges_completed: 0.20,
-    l3_pg_cold_streak: 0.15,
-    l3_pg_morning_routine: 0.15,
-    l3_pg_routine_streak: 0.15,
-  },
-  // Become Well-Read & Knowledgeable (6 L3s)
-  l2_pg_well_read: {
-    l3_pg_books: 0.25,
-    l3_pg_courses: 0.15,
-    l3_pg_study_hours: 0.20,
-    l3_pg_reading_hours: 0.20,
-    l3_pg_journal: 0.10,
-    l3_pg_journal_entries: 0.10,
-  },
-  // Master Journaling & Self-Reflection (7 L3s)
-  l2_pg_reflection: {
-    l3_pg_journal: 0.20,
-    l3_pg_weekly_reviews: 0.13,
-    l3_pg_therapy: 0.12,
-    l3_pg_journal_entries: 0.17,
-    l3_pg_gratitude: 0.13,
-    l3_pg_meditation: 0.13,
-    l3_pg_retreats: 0.12,
-  },
-  // Develop Emotional Intelligence (7 L3s)
-  l2_pg_eq: {
-    l3_pg_meditation: 0.17,
-    l3_pg_gratitude: 0.13,
-    l3_pg_meditation_hours: 0.13,
-    l3_pg_journal: 0.17,
-    l3_pg_therapy: 0.13,
-    l3_pg_journal_entries: 0.13,
-    l3_pg_breathwork: 0.14,
-  },
-  // Build Iron Discipline (6 L3s)
-  l2_pg_discipline: {
-    l3_pg_morning_routine: 0.20,
-    l3_pg_routine_streak: 0.20,
-    l3_pg_cold_exposure: 0.15,
-    l3_pg_cold_streak: 0.15,
-    l3_pg_comfort_zone: 0.15,
-    l3_pg_challenges_completed: 0.15,
-  },
-
-  // ---- FITNESS WEIGHTS ----
-
-  // Build Real Strength (10 L3s)
-  l2_f_strength: {
-    l3_f_bench_press: 0.16,
-    l3_f_squat: 0.16,
-    l3_f_deadlift: 0.16,
-    l3_f_overhead_press: 0.09,
-    l3_f_pullups: 0.09,
-    l3_f_gym_frequency: 0.08,
-    l3_f_total_sessions: 0.07,
-    l3_f_consecutive_weeks: 0.06,
-    l3_f_training_hours: 0.05,
-    l3_f_combat_sports: 0.08,
-  },
-  // Transform Body Composition (9 L3s)
-  l2_f_body_comp: {
-    l3_f_weight_lost: 0.18,
-    l3_f_muscle_gained: 0.18,
-    l3_f_body_measurements: 0.11,
-    l3_f_progress_photos: 0.07,
-    l3_f_gym_frequency: 0.11,
-    l3_f_total_sessions: 0.07,
-    l3_f_protein: 0.09,
-    l3_f_calorie_target: 0.09,
-    l3_f_cardio_sessions: 0.10,
-  },
-  // Master Nutrition & Recovery (7 L3s)
-  l2_f_nutrition: {
-    l3_f_protein: 0.22,
-    l3_f_meals_prepped: 0.18,
-    l3_f_water: 0.13,
-    l3_f_calorie_target: 0.17,
-    l3_f_weight_lost: 0.12,
-    l3_f_muscle_gained: 0.10,
-    l3_f_consecutive_weeks: 0.08,
-  },
-  // Build Unbreakable Training Discipline (18 L3s)
-  l2_f_training_discipline: {
-    l3_f_gym_frequency: 0.09,
-    l3_f_total_sessions: 0.08,
-    l3_f_consecutive_weeks: 0.08,
-    l3_f_training_hours: 0.06,
-    l3_f_cardio_sessions: 0.05,
-    l3_f_combat_sports: 0.05,
-    l3_f_protein: 0.05,
-    l3_f_weight_lost: 0.06,
-    l3_f_muscle_gained: 0.06,
-    l3_f_body_measurements: 0.04,
-    l3_f_progress_photos: 0.03,
-    l3_f_bench_press: 0.06,
-    l3_f_squat: 0.06,
-    l3_f_deadlift: 0.05,
-    l3_f_mobility_sessions: 0.05,
-    l3_f_yoga: 0.04,
-    l3_f_flexibility_hours: 0.04,
-    l3_f_running_sessions: 0.05,
-  },
-
-  // ---- WEALTH WEIGHTS ----
-
-  // Master Budgeting & Saving (6 L3s)
-  l2_w_budgeting: {
-    l3_w_net_worth: 0.20,
-    l3_w_savings_rate: 0.18,
-    l3_w_emergency_fund: 0.22,
-    l3_w_spending_discipline: 0.15,
-    l3_w_income_streams: 0.10,
-    l3_w_monthly_income: 0.15,
-  },
-  // Maximize Earning Power (10 L3s)
-  l2_w_earning: {
-    l3_w_monthly_income: 0.16,
-    l3_w_side_income: 0.13,
-    l3_w_networking: 0.07,
-    l3_w_skills: 0.12,
-    l3_w_deep_work: 0.10,
-    l3_w_income_streams: 0.08,
-    l3_w_public_speaking: 0.08,
-    l3_w_side_revenue: 0.10,
-    l3_w_customers: 0.08,
-    l3_w_entrepreneurship_hours: 0.08,
-  },
-  // Build Investment Portfolio (5 L3s)
-  l2_w_investing: {
-    l3_w_portfolio: 0.30,
-    l3_w_education: 0.15,
-    l3_w_diversification: 0.20,
-    l3_w_returns_tracked: 0.15,
-    l3_w_net_worth: 0.20,
-  },
-  // Become Completely Debt Free (4 L3s)
-  l2_w_debt_free: {
-    l3_w_savings_rate: 0.25,
-    l3_w_spending_discipline: 0.30,
-    l3_w_emergency_fund: 0.25,
-    l3_w_net_worth: 0.20,
-  },
-
-  // ---- VICES & ELIMINATION WEIGHTS ----
-
-  // Overcome Porn Addiction (6 L3s)
-  l2_v_porn_free: {
-    l3_v_porn_free_days: 0.25,
-    l3_v_nofap_streak: 0.20,
-    l3_v_porn_free_sustained: 0.20,
-    l3_v_urge_journal: 0.15,
-    l3_v_no_late_scrolling: 0.10,
-    l3_v_dopamine_detox: 0.10,
-  },
-  // Master Digital Discipline (6 L3s)
-  l2_v_digital: {
-    l3_v_screen_time: 0.22,
-    l3_v_social_media_free: 0.18,
-    l3_v_no_gaming: 0.15,
-    l3_v_dopamine_detox: 0.13,
-    l3_v_screen_streak: 0.17,
-    l3_v_no_late_scrolling: 0.15,
-  },
-  // Conquer Substance Habits (5 L3s)
-  l2_v_substance: {
-    l3_v_alcohol_free: 0.25,
-    l3_v_sober_days: 0.25,
-    l3_v_smoke_free: 0.20,
-    l3_v_clean_eating: 0.15,
-    l3_v_junk_food_free: 0.15,
-  },
-  // Build Unbreakable Self-Control (all 17 L3s)
-  l2_v_willpower: {
-    l3_v_porn_free_days: 0.07,
-    l3_v_nofap_streak: 0.06,
-    l3_v_porn_free_sustained: 0.06,
-    l3_v_urge_journal: 0.05,
-    l3_v_screen_time: 0.07,
-    l3_v_social_media_free: 0.06,
-    l3_v_no_gaming: 0.05,
-    l3_v_dopamine_detox: 0.05,
-    l3_v_screen_streak: 0.06,
-    l3_v_alcohol_free: 0.07,
-    l3_v_sober_days: 0.06,
-    l3_v_smoke_free: 0.05,
-    l3_v_clean_eating: 0.05,
-    l3_v_junk_food_free: 0.06,
-    l3_v_impulse_free: 0.06,
-    l3_v_no_late_scrolling: 0.06,
-    l3_v_budget_days: 0.06,
-  },
-}
-
-export const DEFAULT_ACHIEVEMENT_WEIGHTS: DefaultAchievementWeight[] =
-  Object.entries(PER_L2_WEIGHTS).flatMap(([l2Id, weights]) =>
-    Object.entries(weights).map(([goalId, weight]) => ({
-      achievementId: l2Id,
-      goalId,
-      weight,
-    }))
-  )
-
-// ============================================================================
 // Graph Traversal Helpers
 // ============================================================================
 
@@ -2011,55 +1784,11 @@ export function getLeafGoals(templateId: string): GoalTemplate[] {
 }
 
 /**
- * Get achievement weights for an L2 goal, with auto-redistribution.
- * Pass activeGoalIds to exclude removed goals — weights redistribute proportionally.
- */
-export function getAchievementWeights(
-  achievementId: string,
-  activeGoalIds?: Set<string>
-): AchievementWeight[] {
-  const allWeights = DEFAULT_ACHIEVEMENT_WEIGHTS
-    .filter((w) => w.achievementId === achievementId)
-
-  if (!activeGoalIds) {
-    return allWeights.map((w) => ({ goalId: w.goalId, weight: w.weight }))
-  }
-
-  return redistributeWeights(
-    allWeights.map((w) => ({ goalId: w.goalId, weight: w.weight })),
-    activeGoalIds
-  )
-}
-
-/**
- * Filter weights to active goals only and redistribute so they sum to 1.0.
- * Users who opt out of certain goals (e.g. dirty dog) can still reach 100%
- * on any badge — progress is always relative to the goals they picked.
- */
-export function redistributeWeights(
-  weights: AchievementWeight[],
-  activeGoalIds: Set<string>
-): AchievementWeight[] {
-  const active = weights.filter((w) => activeGoalIds.has(w.goalId))
-  if (active.length === 0) return []
-  const total = active.reduce((sum, w) => sum + w.weight, 0)
-  if (total === 0) return active
-  return active.map((w) => ({ goalId: w.goalId, weight: w.weight / total }))
-}
-
-/**
- * Get all L2 achievements that reference a given L3 goal in their weights.
+ * Get all L2 achievements that reference a given L3 goal.
  * Used by setup wizard to show which badges a selected L3 contributes to.
  */
 export function getL2AchievementsForL3(l3Id: string): GoalTemplate[] {
   const l2Ids = new Set<string>()
-  // Search weighted badges (non-daygame)
-  for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
-    if (w.goalId === l3Id) {
-      l2Ids.add(w.achievementId)
-    }
-  }
-  // Search threshold badges (daygame) via L2_L3_CONNECTIONS
   for (const [l2Id, l3Ids] of Object.entries(L2_L3_CONNECTIONS)) {
     if (l3Ids.includes(l3Id)) {
       l2Ids.add(l2Id)

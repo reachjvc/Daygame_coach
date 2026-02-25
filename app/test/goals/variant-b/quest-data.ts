@@ -8,7 +8,6 @@ import {
   GOAL_TEMPLATES,
   getCatalogTiers,
   getChildren,
-  getAchievementWeights,
 } from "@/src/goals/data/goalGraph"
 import type { GoalTemplate, GoalDisplayCategory, LifeAreaConfig } from "@/src/goals/types"
 
@@ -189,29 +188,24 @@ export function getDaygameQuests(): Quest[] {
     const objectives: QuestObjective[] = []
 
     for (const l2 of l2Children) {
-      const weights = getAchievementWeights(l2.id)
       const l3Children = getChildren(l2.id).filter((c) => c.level === 3)
 
       for (const l3 of l3Children) {
         if (seenL3.has(l3.id)) continue
         seenL3.add(l3.id)
 
-        const w = weights.find((w) => w.goalId === l3.id)
         objectives.push({
           id: l3.id,
           title: l3.title,
           category: l3.displayCategory,
           template: l3,
-          weight: w?.weight ?? 0,
+          weight: 0,
           isMilestone: l3.templateType === "milestone_ladder",
           targetValue: l3.defaultMilestoneConfig?.target ?? l3.defaultRampSteps?.[0]?.frequencyPerWeek ?? 1,
           unit: UNIT_MAP[l3.id] ?? "",
         })
       }
     }
-
-    // Sort by weight descending (most important first)
-    objectives.sort((a, b) => b.weight - a.weight)
 
     const difficulty = DIFFICULTY_MAP[l1.id] ?? "intermediate"
 
@@ -234,23 +228,17 @@ export function getAchievementQuests(): Quest[] {
 
   return tiers.tier2.map((l2) => {
     const l3Children = getChildren(l2.id).filter((c) => c.level === 3)
-    const weights = getAchievementWeights(l2.id)
 
-    const objectives: QuestObjective[] = l3Children.map((l3) => {
-      const w = weights.find((w) => w.goalId === l3.id)
-      return {
-        id: l3.id,
-        title: l3.title,
-        category: l3.displayCategory,
-        template: l3,
-        weight: w?.weight ?? 0,
-        isMilestone: l3.templateType === "milestone_ladder",
-        targetValue: l3.defaultMilestoneConfig?.target ?? l3.defaultRampSteps?.[0]?.frequencyPerWeek ?? 1,
-        unit: UNIT_MAP[l3.id] ?? "",
-      }
-    })
-
-    objectives.sort((a, b) => b.weight - a.weight)
+    const objectives: QuestObjective[] = l3Children.map((l3) => ({
+      id: l3.id,
+      title: l3.title,
+      category: l3.displayCategory,
+      template: l3,
+      weight: 0,
+      isMilestone: l3.templateType === "milestone_ladder",
+      targetValue: l3.defaultMilestoneConfig?.target ?? l3.defaultRampSteps?.[0]?.frequencyPerWeek ?? 1,
+      unit: UNIT_MAP[l3.id] ?? "",
+    }))
 
     return {
       id: l2.id,

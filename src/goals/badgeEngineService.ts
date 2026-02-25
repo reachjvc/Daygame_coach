@@ -24,15 +24,6 @@ import type {
 /** Ordered tiers from highest to lowest for threshold checking. */
 const TIERS_DESC: BadgeTier[] = ["mythic", "diamond", "gold", "silver", "bronze", "iron"]
 
-/** Map a progress percentage (0–100) to a display tier. */
-export function progressToTier(percent: number): BadgeTier {
-  if (percent >= 100) return "diamond"
-  if (percent >= 75) return "gold"
-  if (percent >= 50) return "silver"
-  if (percent >= 25) return "bronze"
-  return "none"
-}
-
 /** Numeric order for tier comparison. Higher = better. */
 export const TIER_ORDER: Record<BadgeTier, number> = {
   none: 0,

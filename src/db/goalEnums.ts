@@ -34,7 +34,7 @@ export const LINKED_METRICS = [
   "approaches_weekly", "sessions_weekly", "numbers_weekly", "instadates_weekly",
   "field_reports_weekly", "approaches_cumulative", "sessions_cumulative",
   "numbers_cumulative", "instadates_cumulative", "field_reports_cumulative",
-  "approach_quality_avg_weekly",
+  "approach_quality_avg_weekly", "high_quality_approaches_cumulative",
   "scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative",
 ] as const
 

@@ -162,32 +162,6 @@ export interface RampMilestoneDate {
 }
 
 // ============================================================================
-// Achievement Types
-// ============================================================================
-
-/**
- * How much a single L3 goal contributes to an L2 achievement.
- * Weights across all contributing goals should sum to 1.
- */
-export interface AchievementWeight {
-  goalId: string
-  weight: number
-}
-
-/**
- * Computed progress for an achievement badge.
- */
-export interface AchievementProgressResult {
-  progressPercent: number
-  contributingGoals: {
-    goalId: string
-    weight: number
-    goalProgress: number
-    contribution: number
-  }[]
-}
-
-// ============================================================================
 // Goal Graph & Template Types
 // ============================================================================
 
@@ -237,15 +211,6 @@ export interface GoalTemplate {
 export interface GoalGraphEdge {
   parentId: string
   childId: string
-}
-
-/**
- * Default achievement weight for an L3 goal contributing to an L2 achievement.
- */
-export interface DefaultAchievementWeight {
-  achievementId: string
-  goalId: string
-  weight: number
 }
 
 /**

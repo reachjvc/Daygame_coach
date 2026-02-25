@@ -1,6 +1,7 @@
 "use client"
 
 import { Check, Plus, Sparkles, Star, X } from "lucide-react"
+import { FutureDateInput } from "../FutureDateInput"
 import {
   Dialog,
   DialogContent,
@@ -128,10 +129,9 @@ export function AreaConfigDialog({
               <label className="text-sm text-white/50 block mb-2">
                 Target date (optional)
               </label>
-              <input
-                type="date"
+              <FutureDateInput
                 value={targetDates[area.id] ?? ""}
-                onChange={(e) => onUpdateTargetDate(area.id, e.target.value)}
+                onChange={(date) => onUpdateTargetDate(area.id, date)}
                 className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-white/25 [color-scheme:dark]"
               />
             </div>

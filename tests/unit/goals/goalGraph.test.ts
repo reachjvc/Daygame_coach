@@ -3,17 +3,13 @@ import {
   GOAL_TEMPLATES,
   GOAL_TEMPLATE_MAP,
   GOAL_GRAPH_EDGES,
-  DEFAULT_ACHIEVEMENT_WEIGHTS,
   getChildren,
   getLeafGoals,
-  getAchievementWeights,
-  redistributeWeights,
   getTemplatesByCategory,
   CROSS_AREA_EDGES,
   getCrossAreaInfluence,
   getCrossAreaContributors,
 } from "@/src/goals/data/goalGraph"
-import type { AchievementWeight } from "@/src/goals/types"
 
 // ============================================================================
 // Catalog Integrity
@@ -209,126 +205,6 @@ describe("getLeafGoals", () => {
 
   test("unknown ID returns empty array", () => {
     expect(getLeafGoals("nonexistent")).toEqual([])
-  })
-})
-
-// ============================================================================
-// Achievement Weights
-// ============================================================================
-
-describe("achievement weights (legacy — non-daygame L2s)", () => {
-  // Weighted L2 IDs derived from the weights data itself
-  const weightedL2Ids = [...new Set(DEFAULT_ACHIEVEMENT_WEIGHTS.map((w) => w.achievementId))]
-
-  test("every weighted L2 has weights that sum to ~1.0", () => {
-    for (const l2Id of weightedL2Ids) {
-      const weights = getAchievementWeights(l2Id)
-      expect(weights.length).toBeGreaterThan(0)
-      const total = weights.reduce((sum, w) => sum + w.weight, 0)
-      expect(total).toBeCloseTo(1.0, 2)
-    }
-  })
-
-  test("per-L2 weights differ across personal growth L2s", () => {
-    const mindfulness = getAchievementWeights("l2_pg_mindfulness")
-    const toughness = getAchievementWeights("l2_pg_toughness")
-    expect(mindfulness.length).not.toBe(toughness.length)
-  })
-
-  test("meditation weight varies by L2 context", () => {
-    const mindfulnessWeights = getAchievementWeights("l2_pg_mindfulness")
-    const reflectionWeights = getAchievementWeights("l2_pg_reflection")
-    const mindfulnessMed = mindfulnessWeights.find((w) => w.goalId === "l3_pg_meditation")
-    const reflectionMed = reflectionWeights.find((w) => w.goalId === "l3_pg_meditation")
-    expect(mindfulnessMed).toBeDefined()
-    expect(reflectionMed).toBeDefined()
-    expect(mindfulnessMed!.weight).toBeGreaterThan(reflectionMed!.weight)
-  })
-
-  test("all L3 goal IDs in weights exist in catalog", () => {
-    for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
-      expect(GOAL_TEMPLATE_MAP[w.goalId]).toBeDefined()
-    }
-  })
-
-  test("all L2 IDs in weights exist in catalog", () => {
-    for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
-      expect(GOAL_TEMPLATE_MAP[w.achievementId]).toBeDefined()
-    }
-  })
-})
-
-// ============================================================================
-// Weight Redistribution
-// ============================================================================
-
-describe("redistributeWeights", () => {
-  const baseWeights: AchievementWeight[] = [
-    { goalId: "a", weight: 0.50 },
-    { goalId: "b", weight: 0.30 },
-    { goalId: "c", weight: 0.20 },
-  ]
-
-  test("returns all weights unchanged when all goals are active", () => {
-    const active = new Set(["a", "b", "c"])
-    const result = redistributeWeights(baseWeights, active)
-    expect(result).toHaveLength(3)
-    expect(result[0].weight).toBeCloseTo(0.50, 5)
-    expect(result[1].weight).toBeCloseTo(0.30, 5)
-    expect(result[2].weight).toBeCloseTo(0.20, 5)
-  })
-
-  test("redistributes weights proportionally when goals are removed", () => {
-    // Remove "c" (0.20) → a and b get redistributed so they sum to 1.0
-    const active = new Set(["a", "b"])
-    const result = redistributeWeights(baseWeights, active)
-    expect(result).toHaveLength(2)
-
-    const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(1.0, 5)
-
-    // Weights redistributed proportionally: 0.50/0.80 and 0.30/0.80
-    expect(result[0].weight).toBeCloseTo(0.50 / 0.80, 5)
-    expect(result[1].weight).toBeCloseTo(0.30 / 0.80, 5)
-  })
-
-  test("single remaining goal gets weight of 1.0", () => {
-    const active = new Set(["b"])
-    const result = redistributeWeights(baseWeights, active)
-    expect(result).toHaveLength(1)
-    expect(result[0].weight).toBeCloseTo(1.0, 5)
-  })
-
-  test("returns empty array when no goals are active", () => {
-    const active = new Set<string>()
-    const result = redistributeWeights(baseWeights, active)
-    expect(result).toEqual([])
-  })
-
-  test("ignores unknown IDs in active set", () => {
-    const active = new Set(["a", "b", "unknown"])
-    const result = redistributeWeights(baseWeights, active)
-    expect(result).toHaveLength(2)
-    const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(1.0, 5)
-  })
-
-  test("real scenario: user removes some goals from l2_pg_mindfulness", () => {
-    const allWeights = getAchievementWeights("l2_pg_mindfulness")
-    // Remove a couple of goals
-    const removedIds = new Set(["l3_pg_therapy", "l3_pg_breathwork"])
-    const activeIds = new Set(allWeights.map((w) => w.goalId).filter((id) => !removedIds.has(id)))
-
-    const result = redistributeWeights(allWeights, activeIds)
-    const total = result.reduce((s, w) => s + w.weight, 0)
-    // Total should be 1.0 after redistribution
-    expect(total).toBeCloseTo(1.0, 2)
-
-    // Each remaining weight should be proportionally larger than the original
-    const originalMed = allWeights.find((w) => w.goalId === "l3_pg_meditation")
-    const resultMed = result.find((w) => w.goalId === "l3_pg_meditation")
-    expect(resultMed).toBeDefined()
-    expect(resultMed!.weight).toBeGreaterThan(originalMed!.weight)
   })
 })
 

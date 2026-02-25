@@ -5,13 +5,11 @@ import {
   roundToNiceNumber,
   generateMilestoneLadder,
   computeRampMilestoneDates,
-  computeAchievementProgress,
 } from "@/src/goals/milestoneService"
 import type {
   MilestoneLadderConfig,
   CurveControlPoint,
   HabitRampStep,
-  AchievementWeight,
 } from "@/src/goals/types"
 
 // ============================================================================
@@ -494,103 +492,3 @@ describe("computeRampMilestoneDates", () => {
   })
 })
 
-// ============================================================================
-// computeAchievementProgress
-// ============================================================================
-
-describe("computeAchievementProgress", () => {
-  test("returns 0% when no goals have progress", () => {
-    const weights: AchievementWeight[] = [
-      { goalId: "approaches", weight: 0.4 },
-      { goalId: "numbers", weight: 0.3 },
-      { goalId: "instadates", weight: 0.3 },
-    ]
-    const progress = new Map<string, number>()
-
-    const result = computeAchievementProgress(weights, progress)
-
-    expect(result.progressPercent).toBe(0)
-    expect(result.contributingGoals).toHaveLength(3)
-    expect(result.contributingGoals.every((g) => g.contribution === 0)).toBe(true)
-  })
-
-  test("computes weighted progress correctly", () => {
-    const weights: AchievementWeight[] = [
-      { goalId: "approaches", weight: 0.5 },
-      { goalId: "numbers", weight: 0.3 },
-      { goalId: "instadates", weight: 0.2 },
-    ]
-    const progress = new Map([
-      ["approaches", 80],
-      ["numbers", 60],
-      ["instadates", 40],
-    ])
-
-    const result = computeAchievementProgress(weights, progress)
-
-    // 0.5*80 + 0.3*60 + 0.2*40 = 40 + 18 + 8 = 66
-    expect(result.progressPercent).toBe(66)
-  })
-
-  test("caps at 100%", () => {
-    const weights: AchievementWeight[] = [{ goalId: "a", weight: 1.0 }]
-    const progress = new Map([["a", 150]])
-
-    const result = computeAchievementProgress(weights, progress)
-    expect(result.progressPercent).toBe(100)
-  })
-
-  test("handles missing goals gracefully (defaults to 0)", () => {
-    const weights: AchievementWeight[] = [
-      { goalId: "exists", weight: 0.5 },
-      { goalId: "missing", weight: 0.5 },
-    ]
-    const progress = new Map([["exists", 100]])
-
-    const result = computeAchievementProgress(weights, progress)
-
-    // 0.5*100 + 0.5*0 = 50
-    expect(result.progressPercent).toBe(50)
-  })
-
-  test("returns contributing goal details", () => {
-    const weights: AchievementWeight[] = [
-      { goalId: "approaches", weight: 0.6 },
-      { goalId: "numbers", weight: 0.4 },
-    ]
-    const progress = new Map([
-      ["approaches", 50],
-      ["numbers", 75],
-    ])
-
-    const result = computeAchievementProgress(weights, progress)
-
-    expect(result.contributingGoals).toHaveLength(2)
-
-    const approaches = result.contributingGoals.find((g) => g.goalId === "approaches")!
-    expect(approaches.weight).toBe(0.6)
-    expect(approaches.goalProgress).toBe(50)
-    expect(approaches.contribution).toBe(30) // 0.6 * 50
-
-    const numbers = result.contributingGoals.find((g) => g.goalId === "numbers")!
-    expect(numbers.weight).toBe(0.4)
-    expect(numbers.goalProgress).toBe(75)
-    expect(numbers.contribution).toBe(30) // 0.4 * 75
-
-    expect(result.progressPercent).toBe(60)
-  })
-
-  test("100% when all goals are complete", () => {
-    const weights: AchievementWeight[] = [
-      { goalId: "a", weight: 0.5 },
-      { goalId: "b", weight: 0.5 },
-    ]
-    const progress = new Map([
-      ["a", 100],
-      ["b", 100],
-    ])
-
-    const result = computeAchievementProgress(weights, progress)
-    expect(result.progressPercent).toBe(100)
-  })
-})

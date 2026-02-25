@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Check, ChevronRight, Plus, Sparkles, Star, X } from "lucide-react"
+import { FutureDateInput } from "../FutureDateInput"
 import { getDaygamePathL1, getAreaCatalog } from "@/src/goals/data/goalGraph"
 import type { DaygamePath, LifeAreaConfig } from "@/src/goals/types"
 
@@ -225,10 +226,9 @@ export function DirectionStep({
                 <label className="text-sm text-white/50 block mb-2">
                   Target date (optional)
                 </label>
-                <input
-                  type="date"
+                <FutureDateInput
                   value={targetDates[expandedArea.id] ?? ""}
-                  onChange={(e) => onUpdateTargetDate(expandedArea.id, e.target.value)}
+                  onChange={(date) => onUpdateTargetDate(expandedArea.id, date)}
                   className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-white/25 [color-scheme:dark]"
                 />
               </div>
@@ -468,10 +468,9 @@ function DaygameSection({
             <label className="text-sm text-white/50 block mb-2">
               Target date (optional)
             </label>
-            <input
-              type="date"
+            <FutureDateInput
               value={targetDate}
-              onChange={(e) => onUpdateTargetDate(e.target.value)}
+              onChange={(date) => onUpdateTargetDate(date)}
               className="w-full rounded-lg bg-white/5 border border-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-white/25 [color-scheme:dark]"
             />
           </div>

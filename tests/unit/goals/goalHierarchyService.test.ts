@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest"
 import {
   groupGoalsByHierarchy,
-  computeAchievementProgressFromGoals,
   getGoalAccentColor,
 } from "@/src/goals/goalHierarchyService"
 import type { GoalWithProgress } from "@/src/goals/types"
@@ -125,43 +124,6 @@ describe("groupGoalsByHierarchy", () => {
     const { sections } = groupGoalsByHierarchy(goals)
     expect(sections[0].categories.field_work?.length).toBe(1)
     expect(Object.keys(sections[0].unknownCategories).length).toBe(0)
-  })
-})
-
-describe("computeAchievementProgressFromGoals", () => {
-  it("returns 0 when all sibling goals are at 0", () => {
-    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_pg_mindfulness" })
-    const siblings = [
-      mockGoal({ id: "1", template_id: "l3_pg_meditation", progress_percentage: 0 }),
-      mockGoal({ id: "2", template_id: "l3_pg_gratitude", progress_percentage: 0 }),
-    ]
-
-    const result = computeAchievementProgressFromGoals(achievement, siblings)
-    expect(result.progressPercent).toBe(0)
-  })
-
-  it("computes weighted progress correctly (with redistribution)", () => {
-    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_pg_mindfulness" })
-    // Provide only 2 of 8 mindfulness L3s at 100%
-    const siblings = [
-      mockGoal({ id: "1", template_id: "l3_pg_meditation", progress_percentage: 100 }),
-      mockGoal({ id: "2", template_id: "l3_pg_gratitude", progress_percentage: 100 }),
-    ]
-
-    const result = computeAchievementProgressFromGoals(achievement, siblings)
-    // With redistribution: 2 goals at 100% → weights redistribute to sum to 1.0 → progress = 100
-    expect(result.progressPercent).toBeGreaterThan(0)
-    expect(result.progressPercent).toBe(100)
-  })
-
-  it("returns empty result when achievement has no template_id", () => {
-    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: null })
-    const siblings = [
-      mockGoal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50 }),
-    ]
-
-    const result = computeAchievementProgressFromGoals(achievement, siblings)
-    expect(result.progressPercent).toBe(0)
   })
 })
 
