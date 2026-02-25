@@ -184,7 +184,7 @@ describe("computeBadge", () => {
     // Only original weights for these 2 goals used — no redistribution
     // Progress reflects only what these 2 weights contribute
     expect(badge!.progress).toBeGreaterThan(20)
-    expect(badge!.progress).toBeLessThan(50)
+    expect(badge!.progress).toBeLessThanOrEqual(50)
   })
 })
 

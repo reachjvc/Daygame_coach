@@ -28,6 +28,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  Flame,
   Loader2,
 } from "lucide-react"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS, DEFAULT_SESSION_SUGGESTIONS } from "../config"
@@ -35,6 +36,7 @@ import { getOutcomeLabel, getOutcomeColor } from "../trackingDisplayService"
 import type { ApproachFormData, VoiceRecorderResult, SessionRow } from "../types"
 import { VoiceRecorderButton, TranscriptionPreview } from "./VoiceRecorderButton"
 import Link from "next/link"
+import { FireStreakBadge } from "./FireStreakBadge"
 
 // Combobox input component with dropdown suggestions
 interface ComboboxInputProps {
@@ -157,6 +159,9 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
   const [ifThenPlan, setIfThenPlan] = useState("")
   const [customIntention, setCustomIntention] = useState("")
 
+  // Fire streak state
+  const [weekStreak, setWeekStreak] = useState(0)
+
   // Suggestions from previous sessions merged with defaults
   const [suggestions, setSuggestions] = useState<{
     sessionFocus: string[]
@@ -193,6 +198,14 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
       }
     }
     fetchSuggestions()
+  }, [])
+
+  // Fetch fire streak on mount
+  useEffect(() => {
+    fetch("/api/tracking/stats")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setWeekStreak(data.current_week_streak || 0) })
+      .catch(() => {})
   }, [])
 
   // Warn user when navigating away from an active session with unsaved progress
@@ -775,6 +788,13 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
             <div data-testid="approach-counter" className="text-7xl font-bold mb-2">{liveStats.totalApproaches}</div>
             <div className="text-muted-foreground">approaches</div>
 
+            {/* Fire Streak */}
+            {weekStreak >= 2 && (
+              <div className="mt-3">
+                <FireStreakBadge streak={weekStreak} />
+              </div>
+            )}
+
             {/* Goal Progress */}
             {liveStats.goalProgress.target && (
               <div className="mt-6">
@@ -1079,6 +1099,12 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
               {liveStats.goalProgress.target && liveStats.goalProgress.percentage >= 100 && (
                 <span className="block mt-2 text-green-500">
                   You hit your goal!
+                </span>
+              )}
+              {weekStreak >= 2 && (
+                <span className="flex items-center gap-1.5 mt-2 text-orange-500 font-medium">
+                  <Flame className="size-4" />
+                  Your {weekStreak}-week streak continues!
                 </span>
               )}
             </DialogDescription>

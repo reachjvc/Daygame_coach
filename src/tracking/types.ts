@@ -259,3 +259,13 @@ export interface UseVoiceRecorderReturn {
   isSupported: boolean
   isTranscriptionSupported: boolean
 }
+
+// FireStreakBadge
+export interface FireStreakBadgeProps {
+  /** Current consecutive-week streak */
+  streak: number
+  /** Personal best streak (optional, shown when provided) */
+  bestStreak?: number
+  /** "pill" = compact inline, "card" = full-width milestone-style card */
+  variant?: "pill" | "card"
+}

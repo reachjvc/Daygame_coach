@@ -18,6 +18,7 @@ import { TreeView } from "./views/TreeView"
 import { OrreryView } from "./views/OrreryView"
 import { ViewSwitcher } from "./views/ViewSwitcher"
 import { ActionToast } from "./ActionToast"
+import { FireStreakBadge } from "@/src/tracking/components/FireStreakBadge"
 import { flattenTree, getCelebrationTier, generateDirtyDogInserts, buildMilestoneCelebrationData } from "../goalsService"
 import type { GoalWithProgress, GoalTreeNode, GoalViewMode, CelebrationTier, MilestoneCelebrationData } from "../types"
 
@@ -56,6 +57,8 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
   const [isReviewOpen, setIsReviewOpen] = useState(false)
   const [timePrefs, setTimePrefs] = useState<TimePreferences | null>(null)
   const [isDeletingAll, setIsDeletingAll] = useState(false)
+  const [weekStreak, setWeekStreak] = useState(0)
+  const [bestWeekStreak, setBestWeekStreak] = useState(0)
   const [toasts, setToasts] = useState<{ id: number; message: string; variant: "error" | "success" }[]>([])
   const toastId = useRef(0)
   const showToast = useCallback((message: string, variant: "error" | "success") => {
@@ -93,6 +96,15 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
     fetch("/api/settings/time-preferences")
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setTimePrefs(data) })
+      .catch(() => {})
+    fetch("/api/tracking/stats")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data) {
+          setWeekStreak(data.current_week_streak || 0)
+          setBestWeekStreak(data.longest_week_streak || 0)
+        }
+      })
       .catch(() => {})
   }, [fetchGoals])
 
@@ -485,6 +497,11 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
             Done
           </Button>
         </div>
+      )}
+
+      {/* Fire Streak Badge */}
+      {weekStreak >= 2 && (
+        <FireStreakBadge streak={weekStreak} bestStreak={bestWeekStreak} variant="card" />
       )}
 
       {/* Active view */}

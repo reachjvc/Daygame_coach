@@ -478,6 +478,7 @@ export function GoalsStep({
                                     config={curveConfigs[l3.id] ?? meta.defaultCurve}
                                     onChange={(config) => onUpdateCurve(l3.id, config)}
                                     allowDirectEdit
+                                    themeId="orrery"
                                   />
                                   <button
                                     onClick={() => setExpandedCurve(null)}

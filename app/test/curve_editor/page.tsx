@@ -44,10 +44,10 @@ export default function CurveEditorTestPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-emerald-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
-                Curve Editor — Orrery Theme
+                Curve Editor — Zen Theme
               </h1>
               <p className="text-white/40 text-sm mt-0.5">
-                Milestone curve editor reskinned with aurora orrery aesthetic
+                Original zen theme preserved for reference
               </p>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function CurveEditorTestPage() {
           config={config}
           onChange={setConfig}
           allowDirectEdit
-          themeId="orrery"
+          themeId="zen"
         />
       </div>
     </div>

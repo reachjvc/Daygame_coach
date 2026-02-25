@@ -198,11 +198,6 @@ const L3_FIELD_WORK: GoalTemplate[] = [
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
   }),
-  template("l3_consecutive_weeks", "Consecutive Weeks Approaching", 3, "outcome", {
-    displayCategory: "field_work",
-    templateType: "milestone_ladder",
-    milestoneConfig: { start: 1, target: 52, steps: 10, curveTension: CURVE_TENSION },
-  }),
 ]
 
 // -- Daygame: Results --
@@ -1174,19 +1169,18 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
     "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
     "l3_lays", "l3_women_dating",
     "l3_venues_explored", "l3_daygame_weekly_review",
-    "l3_visualization", "l3_consecutive_weeks",
+    "l3_visualization",
   ],
   // Become Confident — exposure/consistency-heavy
   l2_confident: [
     "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency",
     "l3_solo_sessions",
     "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
-    "l3_consecutive_weeks",
   ],
   // Overcome AA — pure exposure
   l2_overcome_aa: [
     "l3_approach_volume", "l3_solo_sessions",
-    "l3_consecutive_weeks", "l3_visualization",
+    "l3_visualization",
   ],
   // Master Cold Approach — technique + quality
   l2_master_cold_approach: [
@@ -1210,7 +1204,7 @@ const L2_L3_CONNECTIONS: Record<string, string[]> = {
   l2_inner_game: [
     "l3_solo_sessions",
     "l3_approach_volume", "l3_daygame_weekly_review",
-    "l3_visualization", "l3_consecutive_weeks",
+    "l3_visualization",
   ],
   // Master Texting — texting metrics
   l2_master_texting: [
@@ -1343,13 +1337,13 @@ export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
 // ============================================================================
 
 const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
-  // Master Daygame — results-heavy (17 L3s)
+  // Master Daygame — results-heavy (16 L3s)
   l2_master_daygame: {
-    l3_approach_volume: 0.17,
-    l3_approach_frequency: 0.06,
+    l3_approach_volume: 0.18,
+    l3_approach_frequency: 0.07,
     l3_session_frequency: 0.06,
     l3_voice_notes: 0.03,
-    l3_approach_quality: 0.06,
+    l3_approach_quality: 0.07,
     l3_open_in_3_seconds: 0.03,
     l3_solo_sessions: 0.03,
     l3_phone_numbers: 0.12,
@@ -1359,28 +1353,25 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_lays: 0.07,
     l3_women_dating: 0.03,
     l3_venues_explored: 0.02,
-    l3_daygame_weekly_review: 0.03,
-    l3_visualization: 0.03,
-    l3_consecutive_weeks: 0.05,
+    l3_daygame_weekly_review: 0.04,
+    l3_visualization: 0.04,
   },
-  // Become Confident — exposure/consistency-heavy (9 L3s)
+  // Become Confident — exposure/consistency-heavy (8 L3s)
   l2_confident: {
-    l3_approach_volume: 0.22,
-    l3_approach_frequency: 0.13,
-    l3_session_frequency: 0.12,
-    l3_solo_sessions: 0.12,
-    l3_phone_numbers: 0.12,
+    l3_approach_volume: 0.24,
+    l3_approach_frequency: 0.14,
+    l3_session_frequency: 0.13,
+    l3_solo_sessions: 0.13,
+    l3_phone_numbers: 0.13,
     l3_instadates: 0.09,
-    l3_dates: 0.08,
-    l3_second_dates: 0.04,
-    l3_consecutive_weeks: 0.08,
+    l3_dates: 0.09,
+    l3_second_dates: 0.05,
   },
-  // Overcome AA — exposure-heavy (5 L3s)
+  // Overcome AA — exposure-heavy (3 L3s)
   l2_overcome_aa: {
-    l3_approach_volume: 0.45,
-    l3_solo_sessions: 0.25,
-    l3_consecutive_weeks: 0.15,
-    l3_visualization: 0.15,
+    l3_approach_volume: 0.50,
+    l3_solo_sessions: 0.30,
+    l3_visualization: 0.20,
   },
   // Master Cold Approach — technique + quality (6 L3s)
   l2_master_cold_approach: {
@@ -1409,18 +1400,17 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
   },
   // Attract Any Woman — broad (all daygame L3s)
   l2_attract_any: {
-    l3_approach_volume: 0.10,
-    l3_approach_frequency: 0.04,
+    l3_approach_volume: 0.11,
+    l3_approach_frequency: 0.05,
     l3_session_frequency: 0.05,
     l3_voice_notes: 0.02,
-    l3_approach_quality: 0.03,
+    l3_approach_quality: 0.04,
     l3_open_in_3_seconds: 0.02,
     l3_solo_sessions: 0.02,
     l3_venues_explored: 0.02,
     l3_daygame_weekly_review: 0.02,
     l3_visualization: 0.02,
-    l3_consecutive_weeks: 0.05,
-    l3_phone_numbers: 0.06,
+    l3_phone_numbers: 0.07,
     l3_instadates: 0.05,
     l3_dates: 0.08,
     l3_second_dates: 0.06,
@@ -1430,7 +1420,7 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_response_rate: 0.02,
     l3_dates_planned: 0.03,
     l3_creative_dates: 0.02,
-    l3_women_dating: 0.11,
+    l3_women_dating: 0.12,
     l3_date_spots: 0.02,
     l3_date_leadership: 0.02,
   },
@@ -1665,13 +1655,12 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
 
   // ---- DAYGAME: INNER GAME WEIGHTS ----
 
-  // Master Inner Game — identity/mindset (6 L3s)
+  // Master Inner Game — identity/mindset (4 L3s)
   l2_inner_game: {
-    l3_solo_sessions: 0.20,
-    l3_approach_volume: 0.25,
-    l3_daygame_weekly_review: 0.20,
-    l3_visualization: 0.20,
-    l3_consecutive_weeks: 0.15,
+    l3_solo_sessions: 0.25,
+    l3_approach_volume: 0.30,
+    l3_daygame_weekly_review: 0.22,
+    l3_visualization: 0.23,
   },
 }
 
