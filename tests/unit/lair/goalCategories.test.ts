@@ -37,12 +37,12 @@ describe("getCategoryConfig", () => {
       expect(result.color).toBe("text-purple-500")
     })
 
-    test("should return config for social life area", () => {
+    test("should return config for unknown life area via fallback", () => {
       const result = getCategoryConfig("social")
 
       expect(result.id).toBe("social")
-      expect(result.name).toBe("Social Life")
-      expect(result.color).toBe("text-blue-500")
+      expect(result.name).toBe("Social")
+      expect(result.color).toBe("text-gray-400")
     })
 
     test("should return all defined properties for known life area", () => {
@@ -99,8 +99,8 @@ describe("getCategoryConfig", () => {
 // ============================================================================
 
 describe("GOAL_CATEGORIES", () => {
-  test("should have 8 predefined categories (matching LIFE_AREAS)", () => {
-    expect(GOAL_CATEGORIES.length).toBe(8)
+  test("should have 6 predefined categories (matching LIFE_AREAS)", () => {
+    expect(GOAL_CATEGORIES.length).toBe(6)
   })
 
   test("should have unique IDs", () => {

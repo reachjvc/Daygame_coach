@@ -12,14 +12,177 @@ import {
 } from "lucide-react"
 import { CATEGORY_COLORS } from "./setupConstants"
 import { MilestoneCurveEditor } from "@/src/goals/components/MilestoneCurveEditor"
+import { HabitRampEditor } from "@/src/goals/components/HabitRampEditor"
 import { getCategoryLabel } from "@/src/goals/goalDisplayService"
 import type {
   GoalTemplate,
+  HabitRampStep,
   LifeAreaConfig,
   MilestoneLadderConfig,
   SetupCustomGoal,
   SetupCustomCategory,
 } from "@/src/goals/types"
+
+/* ── Target Stepper ────────────────────────────────────── */
+
+function TargetStepper({
+  value,
+  period,
+  onUpdate,
+  curveButton,
+}: {
+  value: number
+  period: string
+  onUpdate: (v: number) => void
+  curveButton?: React.ReactNode
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState("")
+
+  const commitEdit = () => {
+    const parsed = parseInt(draft, 10)
+    if (!isNaN(parsed) && parsed >= 1) onUpdate(parsed)
+    setEditing(false)
+  }
+
+  return (
+    <div
+      className="flex items-center gap-0.5 shrink-0 rounded-md px-1 py-0.5"
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.08)",
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {curveButton}
+      <button
+        onClick={() => onUpdate(Math.max(1, value - 1))}
+        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+      >
+        <Minus className="size-2.5 text-white/60" />
+      </button>
+      {editing ? (
+        <input
+          type="text"
+          inputMode="numeric"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
+          onBlur={commitEdit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commitEdit()
+            if (e.key === "Escape") setEditing(false)
+          }}
+          className="text-xs font-semibold text-white text-center bg-transparent outline-none"
+          style={{ width: `${Math.max(2, String(value).length + 1)}ch` }}
+          autoFocus
+        />
+      ) : (
+        <button
+          onClick={() => {
+            setDraft(String(value))
+            setEditing(true)
+          }}
+          className="text-xs font-semibold text-white text-center px-1 min-w-[2ch] rounded hover:bg-white/10 transition-colors"
+          title="Click to edit"
+        >
+          {value}
+        </button>
+      )}
+      <button
+        onClick={() => onUpdate(value + 1)}
+        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+      >
+        <Plus className="size-2.5 text-white/60" />
+      </button>
+      <span className="text-[9px] text-white/30 pl-0.5 pr-1 whitespace-nowrap">
+        {period}
+      </span>
+    </div>
+  )
+}
+
+/* ── Custom Goal Stepper (no period label, has delete) ── */
+
+function CustomGoalStepper({
+  value,
+  onUpdate,
+  onRemove,
+}: {
+  value: number
+  onUpdate: (v: number) => void
+  onRemove: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState("")
+
+  const commitEdit = () => {
+    const parsed = parseInt(draft, 10)
+    if (!isNaN(parsed) && parsed >= 1) onUpdate(parsed)
+    setEditing(false)
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 shrink-0">
+      <div
+        className="flex items-center gap-0.5 rounded-md px-1 py-0.5"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <button
+          onClick={() => onUpdate(Math.max(1, value - 1))}
+          className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+        >
+          <Minus className="size-2.5 text-white/60" />
+        </button>
+        {editing ? (
+          <input
+            type="text"
+            inputMode="numeric"
+            value={draft}
+            onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, ""))}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitEdit()
+              if (e.key === "Escape") setEditing(false)
+            }}
+            className="text-xs font-semibold text-white text-center bg-transparent outline-none"
+            style={{ width: `${Math.max(2, String(value).length + 1)}ch` }}
+            autoFocus
+          />
+        ) : (
+          <button
+            onClick={() => {
+              setDraft(String(value))
+              setEditing(true)
+            }}
+            className="text-xs font-semibold text-white text-center px-1 min-w-[2ch] rounded hover:bg-white/10 transition-colors"
+            title="Click to edit"
+          >
+            {value}
+          </button>
+        )}
+        <button
+          onClick={() => onUpdate(value + 1)}
+          className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+        >
+          <Plus className="size-2.5 text-white/60" />
+        </button>
+      </div>
+      <button
+        onClick={onRemove}
+        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-red-500/20"
+        style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+        title="Remove"
+      >
+        <X className="size-2.5 text-white/40" />
+      </button>
+    </div>
+  )
+}
+
+/* ── GoalsStep ─────────────────────────────────────────── */
 
 interface GoalsStepProps {
   daygameByCategory: { category: string; goals: GoalTemplate[] }[]
@@ -29,11 +192,13 @@ interface GoalsStepProps {
   selectedGoals: Set<string>
   targets: Record<string, number>
   curveConfigs: Record<string, MilestoneLadderConfig>
+  rampConfigs: Record<string, HabitRampStep[]>
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
   onToggle: (id: string) => void
   onUpdateTarget: (id: string, value: number) => void
   onUpdateCurve: (id: string, config: MilestoneLadderConfig) => void
+  onUpdateRamp: (id: string, steps: HabitRampStep[]) => void
   onAddCustomGoal: (categoryId: string) => void
   onRemoveCustomGoal: (goalId: string) => void
   onUpdateCustomGoalTitle: (goalId: string, title: string) => void
@@ -50,11 +215,13 @@ export function GoalsStep({
   selectedGoals,
   targets,
   curveConfigs,
+  rampConfigs,
   customGoals,
   customCategories,
   onToggle,
   onUpdateTarget,
   onUpdateCurve,
+  onUpdateRamp,
   onAddCustomGoal,
   onRemoveCustomGoal,
   onUpdateCustomGoalTitle,
@@ -64,6 +231,7 @@ export function GoalsStep({
 }: GoalsStepProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set())
   const [expandedCurve, setExpandedCurve] = useState<string | null>(null)
+  const [expandedRamp, setExpandedRamp] = useState<string | null>(null)
   const prevCustomCatCount = useRef(customCategories.length)
 
   const toggleSection = (id: string) => {
@@ -74,14 +242,34 @@ export function GoalsStep({
     })
   }
 
+  // Auto-expand any category that has preselected goals
   useEffect(() => {
-    if (daygameByCategory.length > 0) {
-      const firstCat = daygameByCategory[0]?.goals[0]?.displayCategory ?? "field_work"
-      setExpandedSections((prev) => {
-        if (prev.size === 0) return new Set([`dg_${firstCat}`])
-        return prev
-      })
-    }
+    if (daygameByCategory.length === 0) return
+    setExpandedSections((prev) => {
+      const next = new Set(prev)
+      for (const { category, goals } of daygameByCategory) {
+        if (goals.some((g) => selectedGoals.has(g.id))) {
+          next.add(`dg_${category}`)
+        }
+      }
+      // Also auto-expand life area sections with selected suggestions
+      for (const area of lifeAreas) {
+        if (!selectedAreas.has(area.id) || area.id === "daygame" || area.id === "custom") continue
+        const suggestions = area.suggestions
+        if (!suggestions) continue
+        if (suggestions.some((_, i) => selectedGoals.has(`${area.id}_s${i}`))) {
+          next.add(area.id)
+        }
+      }
+      // If nothing was preselected, expand first category as fallback
+      if (next.size === 0) {
+        const firstCat = daygameByCategory[0]?.goals[0]?.displayCategory ?? "field_work"
+        next.add(`dg_${firstCat}`)
+      }
+      return next
+    })
+  // Only run on mount — we don't want toggling a goal to re-expand collapsed sections
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [daygameByCategory])
 
   useEffect(() => {
@@ -109,6 +297,9 @@ export function GoalsStep({
       hasCurve:
         g.templateType === "milestone_ladder" && g.defaultMilestoneConfig != null,
       defaultCurve: g.defaultMilestoneConfig,
+      hasRamp:
+        g.templateType === "habit_ramp" && g.defaultRampSteps != null && g.defaultRampSteps.length > 1,
+      defaultRampSteps: g.defaultRampSteps,
     }
   }
 
@@ -176,7 +367,8 @@ export function GoalsStep({
                         return (
                           <div key={l3.id}>
                             <div
-                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200"
+                              onClick={() => onToggle(l3.id)}
+                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
                               style={{
                                 background: isOn ? `${catColor}0f` : "transparent",
                                 border: isOn
@@ -184,8 +376,7 @@ export function GoalsStep({
                                   : "1px solid transparent",
                               }}
                             >
-                              <button
-                                onClick={() => onToggle(l3.id)}
+                              <div
                                 className="size-4 rounded flex items-center justify-center shrink-0 transition-all duration-200"
                                 style={{
                                   background: isOn ? catColor : "rgba(255,255,255,0.1)",
@@ -194,7 +385,7 @@ export function GoalsStep({
                                 }}
                               >
                                 {isOn && <Check className="size-2.5 text-white" />}
-                              </button>
+                              </div>
                               <span
                                 className={`text-sm flex-1 min-w-0 ${isOn ? "text-white" : "text-white/50"}`}
                               >
@@ -206,61 +397,76 @@ export function GoalsStep({
                                 </span>
                               )}
                               {isOn && (
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  {meta.hasCurve && (
-                                    <button
-                                      onClick={() =>
-                                        setExpandedCurve(
-                                          expandedCurve === l3.id ? null : l3.id
-                                        )
-                                      }
-                                      className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                      style={{
-                                        border:
-                                          expandedCurve === l3.id
-                                            ? `1px solid ${catColor}66`
-                                            : "1px solid rgba(255,255,255,0.1)",
-                                        background:
-                                          expandedCurve === l3.id
-                                            ? `${catColor}1a`
-                                            : "transparent",
-                                      }}
-                                      title="Customize milestone curve"
-                                    >
-                                      <SlidersHorizontal
-                                        className="size-2.5"
-                                        style={{
-                                          color:
-                                            expandedCurve === l3.id
-                                              ? catColor
-                                              : "rgba(255,255,255,0.5)",
+                                <TargetStepper
+                                  value={meta.target}
+                                  period={meta.period}
+                                  onUpdate={(v) => onUpdateTarget(l3.id, v)}
+                                  curveButton={
+                                    meta.hasCurve ? (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setExpandedCurve(
+                                            expandedCurve === l3.id ? null : l3.id
+                                          )
                                         }}
-                                      />
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() =>
-                                      onUpdateTarget(l3.id, Math.max(1, meta.target - 1))
-                                    }
-                                    className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                    style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                                  >
-                                    <Minus className="size-2.5 text-white/50" />
-                                  </button>
-                                  <span className="text-xs font-semibold text-white w-6 text-center">
-                                    {meta.target}
-                                  </span>
-                                  <button
-                                    onClick={() => onUpdateTarget(l3.id, meta.target + 1)}
-                                    className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                    style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                                  >
-                                    <Plus className="size-2.5 text-white/50" />
-                                  </button>
-                                  <span className="text-[9px] text-white/25 w-10 text-right">
-                                    {meta.period}
-                                  </span>
-                                </div>
+                                        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+                                        style={{
+                                          border:
+                                            expandedCurve === l3.id
+                                              ? `1px solid ${catColor}66`
+                                              : "1px solid rgba(255,255,255,0.1)",
+                                          background:
+                                            expandedCurve === l3.id
+                                              ? `${catColor}1a`
+                                              : "transparent",
+                                        }}
+                                        title="Customize milestone curve"
+                                      >
+                                        <SlidersHorizontal
+                                          className="size-2.5"
+                                          style={{
+                                            color:
+                                              expandedCurve === l3.id
+                                                ? catColor
+                                                : "rgba(255,255,255,0.5)",
+                                          }}
+                                        />
+                                      </button>
+                                    ) : meta.hasRamp ? (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          setExpandedRamp(
+                                            expandedRamp === l3.id ? null : l3.id
+                                          )
+                                        }}
+                                        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+                                        style={{
+                                          border:
+                                            expandedRamp === l3.id
+                                              ? `1px solid ${catColor}66`
+                                              : "1px solid rgba(255,255,255,0.1)",
+                                          background:
+                                            expandedRamp === l3.id
+                                              ? `${catColor}1a`
+                                              : "transparent",
+                                        }}
+                                        title="Customize ramp schedule"
+                                      >
+                                        <SlidersHorizontal
+                                          className="size-2.5"
+                                          style={{
+                                            color:
+                                              expandedRamp === l3.id
+                                                ? catColor
+                                                : "rgba(255,255,255,0.5)",
+                                          }}
+                                        />
+                                      </button>
+                                    ) : undefined
+                                  }
+                                />
                               )}
                             </div>
                             {isOn &&
@@ -284,6 +490,39 @@ export function GoalsStep({
                                   >
                                     <Check className="size-3" />
                                     Accept Curve
+                                  </button>
+                                </div>
+                              )}
+                            {isOn &&
+                              meta.hasRamp &&
+                              expandedRamp === l3.id &&
+                              meta.defaultRampSteps && (
+                                <div className="mt-1 ml-7 mr-2 mb-2">
+                                  <div
+                                    className="rounded-xl p-4"
+                                    style={{
+                                      background: "rgba(0, 0, 0, 0.5)",
+                                      backdropFilter: "blur(12px)",
+                                      border: "1px solid rgba(255,255,255,0.08)",
+                                    }}
+                                  >
+                                    <HabitRampEditor
+                                      steps={rampConfigs[l3.id] ?? meta.defaultRampSteps}
+                                      onChange={(steps) => onUpdateRamp(l3.id, steps)}
+                                      accentColor={catColor}
+                                    />
+                                  </div>
+                                  <button
+                                    onClick={() => setExpandedRamp(null)}
+                                    className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors"
+                                    style={{
+                                      background: `${catColor}14`,
+                                      border: `1px solid ${catColor}40`,
+                                      color: catColor,
+                                    }}
+                                  >
+                                    <Check className="size-3" />
+                                    Accept Ramp
                                   </button>
                                 </div>
                               )}
@@ -314,40 +553,11 @@ export function GoalsStep({
                             className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
                             autoFocus={!cg.title}
                           />
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              onClick={() =>
-                                onUpdateTarget(
-                                  cg.id,
-                                  Math.max(1, (targets[cg.id] ?? cg.target) - 1)
-                                )
-                              }
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                            >
-                              <Minus className="size-2.5 text-white/50" />
-                            </button>
-                            <span className="text-xs font-semibold text-white w-6 text-center">
-                              {targets[cg.id] ?? cg.target}
-                            </span>
-                            <button
-                              onClick={() =>
-                                onUpdateTarget(cg.id, (targets[cg.id] ?? cg.target) + 1)
-                              }
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                            >
-                              <Plus className="size-2.5 text-white/50" />
-                            </button>
-                            <button
-                              onClick={() => onRemoveCustomGoal(cg.id)}
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-red-500/20"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                              title="Remove"
-                            >
-                              <X className="size-2.5 text-white/40" />
-                            </button>
-                          </div>
+                          <CustomGoalStepper
+                            value={targets[cg.id] ?? cg.target}
+                            onUpdate={(v) => onUpdateTarget(cg.id, v)}
+                            onRemove={() => onRemoveCustomGoal(cg.id)}
+                          />
                         </div>
                       ))}
 
@@ -439,40 +649,11 @@ export function GoalsStep({
                             className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
                             autoFocus={!cg.title}
                           />
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <button
-                              onClick={() =>
-                                onUpdateTarget(
-                                  cg.id,
-                                  Math.max(1, (targets[cg.id] ?? cg.target) - 1)
-                                )
-                              }
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                            >
-                              <Minus className="size-2.5 text-white/50" />
-                            </button>
-                            <span className="text-xs font-semibold text-white w-6 text-center">
-                              {targets[cg.id] ?? cg.target}
-                            </span>
-                            <button
-                              onClick={() =>
-                                onUpdateTarget(cg.id, (targets[cg.id] ?? cg.target) + 1)
-                              }
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                            >
-                              <Plus className="size-2.5 text-white/50" />
-                            </button>
-                            <button
-                              onClick={() => onRemoveCustomGoal(cg.id)}
-                              className="size-6 rounded flex items-center justify-center transition-colors hover:bg-red-500/20"
-                              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                              title="Remove"
-                            >
-                              <X className="size-2.5 text-white/40" />
-                            </button>
-                          </div>
+                          <CustomGoalStepper
+                            value={targets[cg.id] ?? cg.target}
+                            onUpdate={(v) => onUpdateTarget(cg.id, v)}
+                            onRemove={() => onRemoveCustomGoal(cg.id)}
+                          />
                         </div>
                       ))}
 
@@ -544,7 +725,8 @@ export function GoalsStep({
                       return (
                         <div
                           key={id}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200"
+                          onClick={() => onToggle(id)}
+                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
                           style={{
                             background: isOn ? `${area.hex}06` : "transparent",
                             border: isOn
@@ -552,8 +734,7 @@ export function GoalsStep({
                               : "1px solid transparent",
                           }}
                         >
-                          <button
-                            onClick={() => onToggle(id)}
+                          <div
                             className="size-4 rounded flex items-center justify-center shrink-0 transition-all duration-200"
                             style={{
                               background: isOn ? area.hex : "rgba(255,255,255,0.1)",
@@ -562,7 +743,7 @@ export function GoalsStep({
                             }}
                           >
                             {isOn && <Check className="size-2.5 text-white" />}
-                          </button>
+                          </div>
                           <span
                             className={`text-sm flex-1 ${isOn ? "text-white" : "text-white/50"}`}
                           >
@@ -570,28 +751,11 @@ export function GoalsStep({
                           </span>
 
                           {isOn && (
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <button
-                                onClick={() => onUpdateTarget(id, Math.max(1, target - 1))}
-                                className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                              >
-                                <Minus className="size-2.5 text-white/50" />
-                              </button>
-                              <span className="text-xs font-semibold text-white w-6 text-center">
-                                {target}
-                              </span>
-                              <button
-                                onClick={() => onUpdateTarget(id, target + 1)}
-                                className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                              >
-                                <Plus className="size-2.5 text-white/50" />
-                              </button>
-                              <span className="text-[9px] text-white/25 w-10 text-right">
-                                {s.defaultPeriod}
-                              </span>
-                            </div>
+                            <TargetStepper
+                              value={target}
+                              period={s.defaultPeriod}
+                              onUpdate={(v) => onUpdateTarget(id, v)}
+                            />
                           )}
                         </div>
                       )
@@ -620,40 +784,11 @@ export function GoalsStep({
                           className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
                           autoFocus={!cg.title}
                         />
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            onClick={() =>
-                              onUpdateTarget(
-                                cg.id,
-                                Math.max(1, (targets[cg.id] ?? cg.target) - 1)
-                              )
-                            }
-                            className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                          >
-                            <Minus className="size-2.5 text-white/50" />
-                          </button>
-                          <span className="text-xs font-semibold text-white w-6 text-center">
-                            {targets[cg.id] ?? cg.target}
-                          </span>
-                          <button
-                            onClick={() =>
-                              onUpdateTarget(cg.id, (targets[cg.id] ?? cg.target) + 1)
-                            }
-                            className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                          >
-                            <Plus className="size-2.5 text-white/50" />
-                          </button>
-                          <button
-                            onClick={() => onRemoveCustomGoal(cg.id)}
-                            className="size-6 rounded flex items-center justify-center transition-colors hover:bg-red-500/20"
-                            style={{ border: "1px solid rgba(255,255,255,0.1)" }}
-                            title="Remove"
-                          >
-                            <X className="size-2.5 text-white/40" />
-                          </button>
-                        </div>
+                        <CustomGoalStepper
+                          value={targets[cg.id] ?? cg.target}
+                          onUpdate={(v) => onUpdateTarget(cg.id, v)}
+                          onRemove={() => onRemoveCustomGoal(cg.id)}
+                        />
                       </div>
                     ))}
 

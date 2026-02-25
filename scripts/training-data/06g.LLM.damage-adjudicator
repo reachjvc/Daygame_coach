@@ -332,6 +332,21 @@ def _dry_run_seed_payload(seg_id: int, severity: str) -> Dict[str, Any]:
     return base
 
 
+def _failed_seed_payload(seg_id: int, reason: str) -> Dict[str, Any]:
+    """Conservative no-repair adjudication used when LLM output is unrecoverable."""
+    payload = {
+        "transcript_confidence": 0.0,
+        "speaker_confidence": 0.0,
+        "phase_confidence": 0.0,
+        "repair_possible": False,
+        "repaired_text": None,
+        "contamination_start_segment_id": seg_id,
+        "contamination_end_segment_id": seg_id,
+        "confidence_rationale": f"llm_failure:{reason[:200]}",
+    }
+    return payload
+
+
 def _build_context_window(
     *,
     context_data: Dict[str, Any],
@@ -550,6 +565,21 @@ def _process_single_adjudication(
     }
 
 
+def _process_single_llm_failure(
+    seed: Dict[str, Any],
+    *,
+    context_ids: List[int],
+    args: argparse.Namespace,
+    reason: str,
+) -> Dict[str, Any]:
+    sid = _safe_int(seed.get("segment_id"))
+    adjudication = _failed_seed_payload(sid, reason)
+    row = _process_single_adjudication(adjudication, seed, context_ids, args)
+    row["llm_failed"] = True
+    row["llm_error"] = reason
+    return row
+
+
 def _adjudicate_single_seed(
     seed: Dict[str, Any],
     *,
@@ -646,8 +676,26 @@ def _adjudicate_batch(
     args: argparse.Namespace,
     batch_prompt_template: str,
     batch_schema: Optional[Dict[str, Any]],
-) -> Tuple[List[Dict[str, Any]], int]:
-    """Adjudicate a batch of seeds in a single LLM call. Returns (rows, llm_failures)."""
+    single_prompt_template: Optional[str] = None,
+    single_schema: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[Dict[str, Any]], int, int]:
+    """Adjudicate a batch of seeds in a single LLM call.
+
+    Returns:
+      (rows, llm_failures, llm_calls)
+
+    If a batched response is malformed in a recoverable way (JSON/schema/row coverage),
+    split the batch and retry smaller groups to salvage the file without relaxing strictness.
+    """
+    def _is_recoverable_batch_shape_failure(exc: Exception) -> bool:
+        msg = str(exc)
+        markers = (
+            "Batch response was not valid JSON",
+            "Batch response failed schema validation",
+            "Batch response missing required segment_id=",
+        )
+        return any(marker in msg for marker in markers)
+
     conv_id = _safe_int(batch[0].get("conversation_id")) or 0
     seed_ids = []
     for s in batch:
@@ -692,48 +740,112 @@ def _adjudicate_batch(
             payload = _dry_run_seed_payload(sid, sev)
             row = _process_single_adjudication(payload, seed, context_ids, args)
             rows.append(row)
-        return rows, 0
+        return rows, 0, 0
 
-    raw = _call_claude(
-        prompt,
-        model=args.model,
-        timeout_seconds=args.timeout_seconds,
-        retries=args.retries,
-    )
-
-    if not raw:
-        raise RuntimeError(
-            f"Batch LLM call failed for {len(batch)} seeds (strict mode: no synthetic adjudication)"
+    try:
+        raw = _call_claude(
+            prompt,
+            model=args.model,
+            timeout_seconds=args.timeout_seconds,
+            retries=args.retries,
         )
 
-    parsed = _extract_json(raw)
-    if not isinstance(parsed, dict):
-        raise RuntimeError("Batch response was not valid JSON (strict mode)")
-    if not _validate_schema(parsed, batch_schema):
-        raise RuntimeError("Batch response failed schema validation (strict mode)")
+        if not raw:
+            raise RuntimeError(
+                f"Batch LLM call failed for {len(batch)} seeds (strict mode: no synthetic adjudication)"
+            )
 
-    adj_list = parsed.get("adjudications", [])
-    if not isinstance(adj_list, list):
-        adj_list = []
+        parsed = _extract_json(raw)
+        if not isinstance(parsed, dict):
+            raise RuntimeError("Batch response was not valid JSON (strict mode)")
+        if not _validate_schema(parsed, batch_schema):
+            raise RuntimeError("Batch response failed schema validation (strict mode)")
 
-    # Index LLM results by segment_id for matching
-    adj_by_id: Dict[int, Dict[str, Any]] = {}
-    for adj in adj_list:
-        if isinstance(adj, dict):
-            adj_sid = _safe_int(adj.get("segment_id"))
-            if adj_sid is not None:
-                adj_by_id[adj_sid] = adj
+        adj_list = parsed.get("adjudications", [])
+        if not isinstance(adj_list, list):
+            adj_list = []
 
-    for seed in batch:
-        sid = _safe_int(seed.get("segment_id"))
-        matched = adj_by_id.get(sid)
-        if matched is None:
-            raise RuntimeError(f"Batch response missing required segment_id={sid} (strict mode)")
-        adjudication = _normalize_adjudication(matched)
-        row = _process_single_adjudication(adjudication, seed, context_ids, args)
-        rows.append(row)
+        # Index LLM results by segment_id for matching
+        adj_by_id: Dict[int, Dict[str, Any]] = {}
+        for adj in adj_list:
+            if isinstance(adj, dict):
+                adj_sid = _safe_int(adj.get("segment_id"))
+                if adj_sid is not None:
+                    adj_by_id[adj_sid] = adj
 
-    return rows, 0
+        for seed in batch:
+            sid = _safe_int(seed.get("segment_id"))
+            matched = adj_by_id.get(sid)
+            if matched is None:
+                raise RuntimeError(f"Batch response missing required segment_id={sid} (strict mode)")
+            adjudication = _normalize_adjudication(matched)
+            row = _process_single_adjudication(adjudication, seed, context_ids, args)
+            rows.append(row)
+
+        return rows, 0, 1
+    except Exception as exc:
+        if not _is_recoverable_batch_shape_failure(exc):
+            raise
+        if len(batch) <= 1:
+            if not single_prompt_template:
+                raise
+            sid = _safe_int(batch[0].get("segment_id"))
+            print(
+                f"{LOG_PREFIX} Batch parse/schema failure for singleton seed {sid}; "
+                f"falling back to single-seed adjudication: {exc}"
+            )
+            try:
+                row, llm_failed = _adjudicate_single_seed(
+                    batch[0],
+                    context_data=context_data,
+                    args=args,
+                    prompt_template=single_prompt_template,
+                    schema=single_schema,
+                )
+                # Count both the failed batch call and the single-seed retry call.
+                return [row], (1 + int(bool(llm_failed))), 2
+            except Exception as single_exc:
+                print(
+                    f"{LOG_PREFIX} Singleton fallback failed for segment_id={sid}; "
+                    f"recording llm_failure row: {single_exc}"
+                )
+                fail_row = _process_single_llm_failure(
+                    batch[0],
+                    context_ids=context_ids,
+                    args=args,
+                    reason=str(single_exc),
+                )
+                # Count both the failed batch call and the failed singleton retry call.
+                return [fail_row], 2, 2
+        mid = max(1, len(batch) // 2)
+        left = batch[:mid]
+        right = batch[mid:]
+        left_ids = [str(_safe_int(s.get("segment_id"))) for s in left]
+        right_ids = [str(_safe_int(s.get("segment_id"))) for s in right]
+        print(
+            f"{LOG_PREFIX} Batch parse/schema failure for {len(batch)} seeds; "
+            f"splitting into {len(left)}+{len(right)} "
+            f"(left={','.join(left_ids)} right={','.join(right_ids)}): {exc}"
+        )
+        left_rows, left_fails, left_calls = _adjudicate_batch(
+            left,
+            context_data=context_data,
+            args=args,
+            batch_prompt_template=batch_prompt_template,
+            batch_schema=batch_schema,
+            single_prompt_template=single_prompt_template,
+            single_schema=single_schema,
+        )
+        right_rows, right_fails, right_calls = _adjudicate_batch(
+            right,
+            context_data=context_data,
+            args=args,
+            batch_prompt_template=batch_prompt_template,
+            batch_schema=batch_schema,
+            single_prompt_template=single_prompt_template,
+            single_schema=single_schema,
+        )
+        return left_rows + right_rows, (1 + left_fails + right_fails), (1 + left_calls + right_calls)
 
 
 def adjudicate_file(
@@ -842,14 +954,16 @@ def adjudicate_file(
             f"{len(batches)} batches (batch_size={args.batch_size})"
         )
         for batch in batches:
-            batch_rows, batch_llm_fails = _adjudicate_batch(
+            batch_rows, batch_llm_fails, batch_llm_calls = _adjudicate_batch(
                 batch,
                 context_data=context_data,
                 args=args,
                 batch_prompt_template=batch_prompt_template,
                 batch_schema=batch_schema,
+                single_prompt_template=prompt_template,
+                single_schema=schema,
             )
-            llm_calls += 1
+            llm_calls += max(1, int(batch_llm_calls))
             llm_failures += batch_llm_fails
             for row in batch_rows:
                 if row.get("repair_accepted"):
@@ -868,13 +982,36 @@ def adjudicate_file(
             sid = _safe_int(seed.get("segment_id"))
             if sid is None:
                 continue
-            row, llm_failed = _adjudicate_single_seed(
-                seed,
-                context_data=context_data,
-                args=args,
-                prompt_template=prompt_template,
-                schema=schema,
-            )
+            try:
+                row, llm_failed = _adjudicate_single_seed(
+                    seed,
+                    context_data=context_data,
+                    args=args,
+                    prompt_template=prompt_template,
+                    schema=schema,
+                )
+            except Exception as exc:
+                print(
+                    f"{LOG_PREFIX} Single-seed adjudication failed for segment_id={sid}; "
+                    f"recording llm_failure row: {exc}"
+                )
+                context_window = _build_context_window(
+                    context_data=context_data,
+                    seed_segment_id=sid,
+                    conversation_id=_safe_int(seed.get("conversation_id")) or 0,
+                    left=args.context_left,
+                    right=args.context_right,
+                )
+                context_ids = [
+                    x for x in (_safe_int(r.get("id")) for r in context_window) if isinstance(x, int)
+                ]
+                row = _process_single_llm_failure(
+                    seed,
+                    context_ids=context_ids,
+                    args=args,
+                    reason=str(exc),
+                )
+                llm_failed = True
             llm_calls += 1
             if llm_failed:
                 llm_failures += 1

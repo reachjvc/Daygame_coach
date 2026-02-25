@@ -11,13 +11,15 @@ import {
   roundToNiceNumber,
 } from "../milestoneService"
 import { getCurveTheme } from "../curveThemes"
-import type { MilestoneLadderConfig, GeneratedMilestone } from "../types"
+import type { MilestoneLadderConfig, GeneratedMilestone, CurveThemeId } from "../types"
 
 interface MilestoneCurveEditorProps {
   config: MilestoneLadderConfig
   onChange: (config: MilestoneLadderConfig) => void
   /** Allow editing individual milestone values in the list */
   allowDirectEdit?: boolean
+  /** Visual theme — defaults to "zen" */
+  themeId?: CurveThemeId
 }
 
 /* ── SVG layout ── */
@@ -51,8 +53,9 @@ export function MilestoneCurveEditor({
   config,
   onChange,
   allowDirectEdit = false,
+  themeId = "zen",
 }: MilestoneCurveEditorProps) {
-  const theme = getCurveTheme("zen")
+  const theme = getCurveTheme(themeId)
 
   // Stable unique ID for SVG defs (avoids collisions with multiple instances)
   const svgId = useRef(`mce-${Math.random().toString(36).slice(2, 8)}`).current

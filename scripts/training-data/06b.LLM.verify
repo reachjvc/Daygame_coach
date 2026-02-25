@@ -973,7 +973,17 @@ def verify_file(
     with input_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
 
-    video_id = data.get("video_id", extract_video_id(str(input_path)))
+    raw_video_id = str(data.get("video_id", "") or "").strip()
+    file_video_id = extract_video_id(str(input_path))
+    if re.fullmatch(r"[A-Za-z0-9_-]{11}", raw_video_id):
+        video_id = raw_video_id
+    else:
+        video_id = file_video_id
+        if raw_video_id and raw_video_id != file_video_id:
+            print(
+                f"{LOG_PREFIX}   WARNING: invalid upstream video_id={raw_video_id!r}; "
+                f"using file-derived id={file_video_id!r}"
+            )
     video_title = extract_video_title(data.get("source_file", str(input_path)))
     segments = data.get("segments", [])
     conversations = data.get("conversations", [])
@@ -1288,6 +1298,11 @@ def main() -> None:
         default=2,
         help="Retry attempts for startup Claude health probe (default: 2).",
     )
+    parser.add_argument(
+        "--skip-preflight",
+        action="store_true",
+        help="Skip startup Claude health probe (useful when orchestration runs many workers in parallel).",
+    )
 
     args = parser.parse_args()
 
@@ -1325,7 +1340,7 @@ def main() -> None:
     except subprocess.TimeoutExpired:
         print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-    if not args.dry_run:
+    if not args.dry_run and not args.skip_preflight:
         ok, reason = run_claude_preflight(
             claude_bin,
             model=args.model,
@@ -1341,6 +1356,8 @@ def main() -> None:
             f"{LOG_PREFIX} Claude preflight: ok on model={model_label} "
             f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
         )
+    elif not args.dry_run and args.skip_preflight:
+        print(f"{LOG_PREFIX} Claude preflight: skipped")
 
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")

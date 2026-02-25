@@ -1,13 +1,32 @@
 /**
  * Database types for the progress tracking system.
  * Tables: sessions, approaches, field_reports, reviews, etc.
+ *
+ * Enum types are defined in trackingEnums.ts (single source of truth)
+ * and re-exported here for backwards compatibility.
  */
+
+export type {
+  ApproachOutcome,
+  SetType,
+  ReviewType,
+  FieldType,
+  StickingPointStatus,
+  SessionEndReason,
+} from "./trackingEnums"
+
+import type {
+  ApproachOutcome,
+  SetType,
+  ReviewType,
+  FieldType,
+  StickingPointStatus,
+  SessionEndReason,
+} from "./trackingEnums"
 
 // ============================================
 // Sessions
 // ============================================
-
-export type SessionEndReason = 'completed' | 'abandoned'
 
 export interface SessionRow {
   id: string
@@ -80,26 +99,6 @@ export interface LocationPoint {
 // Approaches
 // ============================================
 
-export type ApproachOutcome = 'blowout' | 'short' | 'good' | 'number' | 'instadate'
-
-// Set types for tracking unique approach situations (unlocks achievements)
-export type SetType =
-  | 'solo'              // Standard 1-on-1
-  | 'two_set'           // Two girls together
-  | 'three_plus'        // Group of 3+
-  | 'mixed_group'       // Group with guys and girls
-  | 'mom_daughter'      // Mother-daughter pair
-  | 'sisters'           // Sisters
-  | 'tourist'           // Tourist/traveler
-  | 'moving'            // Walking/jogging (had to stop them)
-  | 'seated'            // Seated at cafe/bench
-  | 'working'           // At work (barista, retail, etc.)
-  | 'gym'               // At the gym
-  | 'foreign_language'  // Different language
-  | 'celebrity_vibes'   // Model/celebrity lookalike
-  | 'double_set'        // With wingman (2v2)
-  | 'triple_set'        // With wing (2v3+)
-
 export interface ApproachRow {
   id: string
   user_id: string
@@ -145,8 +144,6 @@ export interface ApproachUpdate {
 // ============================================
 // Field Report Templates
 // ============================================
-
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'multiselect' | 'scale' | 'slider' | 'datetime' | 'list' | 'tags' | 'audio'
 
 export interface TemplateField {
   id: string
@@ -254,8 +251,6 @@ export interface FieldReportUpdate {
 // ============================================
 // Review Templates
 // ============================================
-
-export type ReviewType = 'weekly' | 'monthly' | 'quarterly'
 
 export interface ReviewTemplateRow {
   id: string
@@ -540,8 +535,6 @@ export interface MilestoneInsert {
 // ============================================
 // Sticking Points
 // ============================================
-
-export type StickingPointStatus = 'active' | 'working_on' | 'resolved'
 
 export interface StickingPointRow {
   id: string

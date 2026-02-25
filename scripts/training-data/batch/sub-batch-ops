@@ -24,7 +24,7 @@ Usage:
   ./sub-batch-ops P001.1 --approve
 
 Notes:
-  This is the operator/debug interface.
+  This is the ops/inspection interface.
   Use `./sub-batch-pipeline P001.1` for the standard production pipeline path.
 EOF
 }
@@ -59,10 +59,9 @@ for arg in "$@"; do
 done
 
 if [[ "$has_operator_mode" != true ]]; then
-  echo "ERROR: no operator/debug mode supplied. Use ./sub-batch-pipeline for standard runs." >&2
+  echo "ERROR: no ops/inspection mode supplied. Use ./sub-batch-pipeline for standard runs." >&2
   usage >&2
   exit 2
 fi
 
 SUB_BATCH_PIPELINE_ALLOW_OPS_DIRECT=1 exec "$PIPELINE" "$@"
-

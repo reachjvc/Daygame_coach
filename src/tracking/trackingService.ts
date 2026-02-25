@@ -561,7 +561,11 @@ export async function getApproachesPerHour(
 
 export async function getUserMilestones(userId: string, limit?: number): Promise<MilestoneRow[]> {
   const milestones = await repoGetUserMilestones(userId, limit)
-  return milestones.filter(m => m.milestone_type in ALL_MILESTONES)
+  return milestones.filter(m => {
+    if (m.milestone_type in ALL_MILESTONES) return true
+    console.warn(`[trackingService] Unknown milestone_type "${m.milestone_type}" — skipping`)
+    return false
+  })
 }
 
 // ============================================

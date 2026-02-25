@@ -31,6 +31,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS, DEFAULT_SESSION_SUGGESTIONS } from "../config"
+import { getOutcomeLabel, getOutcomeColor } from "../trackingDisplayService"
 import type { ApproachFormData, VoiceRecorderResult, SessionRow } from "../types"
 import { VoiceRecorderButton, TranscriptionPreview } from "./VoiceRecorderButton"
 import Link from "next/link"
@@ -909,11 +910,9 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
                       {approach.outcome && (
                         <Badge
                           variant="outline"
-                          className={
-                            OUTCOME_OPTIONS.find((o) => o.value === approach.outcome)?.color
-                          }
+                          className={getOutcomeColor(approach.outcome)}
                         >
-                          {OUTCOME_OPTIONS.find((o) => o.value === approach.outcome)?.label}
+                          {getOutcomeLabel(approach.outcome)}
                         </Badge>
                       )}
                     </div>

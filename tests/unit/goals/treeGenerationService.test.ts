@@ -84,7 +84,6 @@ describe("generateGoalTreeInserts", () => {
       const validCategories = [
         "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
         "mindfulness", "resilience", "learning", "reflection", "discipline",
-        "social_activity", "friendships", "hosting", "social_skills", "network_expansion",
         "strength", "training", "nutrition", "body_comp",
         "income", "saving", "investing", "career_growth",
       ]

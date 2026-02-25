@@ -22,16 +22,12 @@ export const GOAL_DISPLAY_CATEGORIES = [
   "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
   // Personal Growth
   "mindfulness", "resilience", "learning", "reflection", "discipline",
-  // Social
-  "social_activity", "friendships", "hosting", "social_skills", "network_expansion", "mentorship",
   // Fitness
   "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
   // Wealth
   "income", "saving", "investing", "career_growth", "entrepreneurship",
   // Vices & Elimination
   "porn_freedom", "digital_discipline", "substance_control", "self_control",
-  // Lifestyle
-  "hobbies_skills", "cooking_domestic", "adventure_travel", "style_grooming",
 ] as const
 
 export const LINKED_METRICS = [

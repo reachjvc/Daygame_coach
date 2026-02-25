@@ -8,6 +8,7 @@ import {
   deriveTimeHorizon,
   isDailyActionable,
   isDailyMilestone,
+  filterScorecardGoals,
   getMilestoneLadderValues,
   getInputMode,
   getButtonIncrements,
@@ -1066,17 +1067,15 @@ describe("deriveTimeHorizon", () => {
   // ============================================================================
 
   describe("generateDirtyDogInserts", () => {
-    test("returns 3 dirty dog goals when none exist and L2 parent present", () => {
+    test("returns 1 dirty dog goal when none exist and L2 parent present", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
         createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
-      expect(inserts.length).toBe(3)
+      expect(inserts.length).toBe(1)
       const templateIds = inserts.map((i) => i.template_id)
-      expect(templateIds).toContain("l3_kiss_closes")
       expect(templateIds).toContain("l3_lays")
-      expect(templateIds).toContain("l3_sustained_rotation")
     })
 
     test("all inserts have _tempId starting with __temp_", () => {
@@ -1121,13 +1120,10 @@ describe("deriveTimeHorizon", () => {
     test("skips dirty dog goals that already exist", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
-        createGoalWithProgress({ id: "dd-1", goal_level: 3, template_id: "l3_kiss_closes" }),
-        createGoalWithProgress({ id: "dd-2", goal_level: 3, template_id: "l3_lays" }),
+        createGoalWithProgress({ id: "dd-1", goal_level: 3, template_id: "l3_lays" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
-      expect(inserts.length).toBe(1)
-      const templateIds = inserts.map((i) => i.template_id)
-      expect(templateIds).toContain("l3_sustained_rotation")
+      expect(inserts.length).toBe(0)
     })
   })
 })
@@ -1484,5 +1480,63 @@ describe("buildMilestoneCelebrationData", () => {
     const data = buildMilestoneCelebrationData(goal)
     expect(data).not.toBeNull()
     expect(data!.projectedNext).toBeNull()
+  })
+})
+
+// ============================================================================
+// filterScorecardGoals
+// ============================================================================
+
+describe("filterScorecardGoals", () => {
+  test("keeps active L3 recurring goals", () => {
+    const goals = [createGoalWithProgress({ goal_level: 3, goal_type: "recurring" })]
+    expect(filterScorecardGoals(goals)).toHaveLength(1)
+  })
+
+  test("keeps active L3 milestone goals", () => {
+    const goals = [createGoalWithProgress({ goal_level: 3, goal_type: "milestone" })]
+    expect(filterScorecardGoals(goals)).toHaveLength(1)
+  })
+
+  test("keeps standalone goals (goal_level null)", () => {
+    const goals = [createGoalWithProgress({ goal_level: null })]
+    expect(filterScorecardGoals(goals)).toHaveLength(1)
+  })
+
+  test("excludes completed goals", () => {
+    const goals = [createGoalWithProgress({ is_complete: true })]
+    expect(filterScorecardGoals(goals)).toHaveLength(0)
+  })
+
+  test("excludes archived goals", () => {
+    const goals = [createGoalWithProgress({ is_archived: true })]
+    expect(filterScorecardGoals(goals)).toHaveLength(0)
+  })
+
+  test("excludes graduated goals", () => {
+    const goals = [createGoalWithProgress({ goal_phase: "graduated" })]
+    expect(filterScorecardGoals(goals)).toHaveLength(0)
+  })
+
+  test("excludes L0, L1, L2 structural goals", () => {
+    const goals = [
+      createGoalWithProgress({ goal_level: 0 }),
+      createGoalWithProgress({ goal_level: 1 }),
+      createGoalWithProgress({ goal_level: 2 }),
+    ]
+    expect(filterScorecardGoals(goals)).toHaveLength(0)
+  })
+
+  test("filters mixed set correctly", () => {
+    const goals = [
+      createGoalWithProgress({ id: "keep-1", goal_level: 3, goal_type: "recurring" }),
+      createGoalWithProgress({ id: "keep-2", goal_level: null, goal_type: "milestone" }),
+      createGoalWithProgress({ id: "drop-1", is_complete: true }),
+      createGoalWithProgress({ id: "drop-2", goal_level: 1 }),
+      createGoalWithProgress({ id: "drop-3", goal_phase: "graduated" }),
+    ]
+    const result = filterScorecardGoals(goals)
+    expect(result).toHaveLength(2)
+    expect(result.map(g => g.id)).toEqual(["keep-1", "keep-2"])
   })
 })

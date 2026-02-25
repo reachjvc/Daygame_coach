@@ -6,36 +6,11 @@
 import { z } from "zod"
 
 // ============================================
-// Shared Enums
+// Shared Enums (re-exported from canonical source)
 // ============================================
 
-export const ApproachOutcomeSchema = z.enum([
-  "blowout",
-  "short",
-  "good",
-  "number",
-  "instadate",
-])
-
-export const SetTypeSchema = z.enum([
-  "solo",
-  "two_set",
-  "three_plus",
-  "mixed_group",
-  "mom_daughter",
-  "sisters",
-  "tourist",
-  "moving",
-  "seated",
-  "working",
-  "gym",
-  "foreign_language",
-  "celebrity_vibes",
-  "double_set",
-  "triple_set",
-])
-
-export const ReviewTypeSchema = z.enum(["weekly", "monthly", "quarterly"])
+export { ApproachOutcomeSchema, SetTypeSchema, ReviewTypeSchema } from "@/src/db/trackingEnums"
+import { ApproachOutcomeSchema, SetTypeSchema, ReviewTypeSchema } from "@/src/db/trackingEnums"
 
 // ============================================
 // Session Schemas

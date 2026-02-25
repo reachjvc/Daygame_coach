@@ -13,6 +13,7 @@ function createSelections(overrides: Partial<GoalSetupSelections> = {}): GoalSet
     curveConfigs: {},
     customGoals: [],
     customCategories: [],
+    targetDates: {},
     ...overrides,
   }
 }

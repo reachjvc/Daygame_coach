@@ -510,16 +510,21 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
         )
       }
 
-      default:
+      default: {
+        console.warn(`[FieldRenderer] Unknown field type "${field.type}" for field "${field.id}". Rendering as text input.`)
         return (
-          <Input
-            id={field.id}
-            placeholder={field.placeholder}
-            value={(value as string) || ""}
-            onChange={(e) => onChange(e.target.value)}
-            className={inputClassName}
-          />
+          <div>
+            <Label htmlFor={field.id}>{field.label}</Label>
+            <Input
+              id={field.id}
+              placeholder={field.placeholder ?? `Unknown field type: ${field.type}`}
+              value={String(value ?? "")}
+              onChange={(e) => onChange(e.target.value)}
+              className={inputClassName}
+            />
+          </div>
         )
+      }
     }
   }
 

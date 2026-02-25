@@ -29,6 +29,7 @@ import Link from "next/link"
 import type { SessionWithApproaches, ApproachRow } from "@/src/db/trackingTypes"
 import type { ApproachFormData } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, APPROACH_TAGS } from "../config"
+import { getOutcomeLabel, getOutcomeColor, getOutcomeEmoji } from "../trackingDisplayService"
 
 interface SessionDetailPageProps {
   userId: string
@@ -123,7 +124,11 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
     let moodSum = 0
     let moodCount = 0
     for (const a of approaches) {
-      if (a.outcome) outcomes[a.outcome]++
+      if (a.outcome) {
+        // Safely increment: initialize unknown outcomes to 0 first
+        if (!(a.outcome in outcomes)) outcomes[a.outcome] = 0
+        outcomes[a.outcome]++
+      }
       if (a.mood !== null) { moodSum += a.mood; moodCount++ }
     }
     return {
@@ -411,12 +416,11 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
       {/* Outcome breakdown */}
       {stats && stats.totalApproaches > 0 && (
         <div className="flex flex-wrap gap-2 mb-6">
-          {OUTCOME_OPTIONS.map(option => {
-            const count = stats.outcomes[option.value] || 0
+          {Object.entries(stats.outcomes).map(([outcome, count]) => {
             if (count === 0) return null
             return (
-              <Badge key={option.value} variant="secondary" className={option.color}>
-                {option.emoji} {option.label}: {count}
+              <Badge key={outcome} variant="secondary" className={getOutcomeColor(outcome)}>
+                {getOutcomeEmoji(outcome)} {getOutcomeLabel(outcome)}: {count}
               </Badge>
             )
           })}
@@ -543,7 +547,6 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
           <div className="space-y-2">
             {sortedApproaches.map((approach, index) => {
               const isEditing = editingApproachId === approach.id
-              const outcomeOption = OUTCOME_OPTIONS.find(o => o.value === approach.outcome)
               const moodOption = MOOD_OPTIONS.find(m => m.value === approach.mood)
 
               return (
@@ -563,9 +566,9 @@ export function SessionDetailPage({ userId, sessionId }: SessionDetailPageProps)
                           minute: "2-digit",
                         })}
                       </span>
-                      {outcomeOption && (
-                        <Badge variant="outline" className={outcomeOption.color}>
-                          {outcomeOption.emoji} {outcomeOption.label}
+                      {approach.outcome && (
+                        <Badge variant="outline" className={getOutcomeColor(approach.outcome)}>
+                          {getOutcomeEmoji(approach.outcome)} {getOutcomeLabel(approach.outcome)}
                         </Badge>
                       )}
                       {moodOption && (

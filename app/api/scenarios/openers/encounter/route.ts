@@ -3,8 +3,7 @@ import { z } from "zod"
 
 import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
 import { generateOpenerEncounter } from "@/src/scenarios"
-
-const DifficultySchema = z.enum(["beginner", "intermediate", "advanced", "expert", "master"])
+import { DifficultyLevelSchema } from "@/src/settings/types"
 const EnvironmentSchema = z.enum([
   "any",
   "high-street",
@@ -17,7 +16,7 @@ const EnvironmentSchema = z.enum([
 ])
 
 const RequestSchema = z.object({
-  difficulty: DifficultySchema,
+  difficulty: DifficultyLevelSchema,
   environment: EnvironmentSchema,
   includeHint: z.boolean().optional(),
   includeWeather: z.boolean().optional(),

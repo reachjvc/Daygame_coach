@@ -11,6 +11,15 @@ import type {
 // Re-export database types that UI needs
 export type { SessionRow, ApproachRow, ApproachOutcome, SetType, UserTrackingStatsRow, SessionSummary }
 
+// Re-export const arrays and type guards from canonical enum source
+export {
+  APPROACH_OUTCOMES, SET_TYPES, REVIEW_TYPES, FIELD_TYPES,
+  STICKING_POINT_STATUSES, SESSION_END_REASONS,
+  isKnownOutcome, isKnownSetType, isKnownReviewType,
+  isKnownFieldType, isKnownStickingPointStatus, isKnownSessionEndReason,
+} from "@/src/db/trackingEnums"
+export type { ReviewType, FieldType, StickingPointStatus, SessionEndReason } from "@/src/db/trackingEnums"
+
 // Re-export config-derived types (constants are in config.ts)
 export type { ApproachTagCategory, ApproachTag } from "./config"
 

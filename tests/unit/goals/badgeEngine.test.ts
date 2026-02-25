@@ -158,15 +158,12 @@ describe("computeBadge", () => {
   })
 
   it("computes correct progress with partial completion (no renormalization)", () => {
-    // Provide ALL 7 l2_overcome_aa goals at 50% so weights sum to 1
+    // Provide ALL 4 l2_overcome_aa goals at 50% so weights sum to 1
     const goals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 50 }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 50 }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 50 }),
-      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 50 }),
-      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 50 }),
-      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 50 }),
-      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 50 }),
+      mockL3Goal({ id: "2", template_id: "l3_solo_sessions", progress_percentage: 50 }),
+      mockL3Goal({ id: "3", template_id: "l3_consecutive_weeks", progress_percentage: 50 }),
+      mockL3Goal({ id: "4", template_id: "l3_visualization", progress_percentage: 50 }),
     ]
     const badge = computeBadge("l2_overcome_aa", goals)
     expect(badge).not.toBeNull()
@@ -385,31 +382,28 @@ describe("computeAllBadges", () => {
 // ============================================================================
 
 describe("tier boundaries", () => {
-  it("badges correctly reflect tier at exact boundaries (all 7 goals provided)", () => {
-    // Provide ALL 7 l2_overcome_aa L3s so weights sum to 1 and progress maps directly
-    const makeAll7 = (pct: number) => [
+  it("badges correctly reflect tier at exact boundaries (all 4 goals provided)", () => {
+    // Provide ALL 4 l2_overcome_aa L3s so weights sum to 1 and progress maps directly
+    const makeAll4 = (pct: number) => [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: pct }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: pct }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: pct }),
-      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: pct }),
-      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: pct }),
-      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: pct }),
-      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: pct }),
+      mockL3Goal({ id: "2", template_id: "l3_solo_sessions", progress_percentage: pct }),
+      mockL3Goal({ id: "3", template_id: "l3_consecutive_weeks", progress_percentage: pct }),
+      mockL3Goal({ id: "4", template_id: "l3_visualization", progress_percentage: pct }),
     ]
 
-    const badge25 = computeBadge("l2_overcome_aa", makeAll7(25))
+    const badge25 = computeBadge("l2_overcome_aa", makeAll4(25))
     expect(badge25!.progress).toBe(25)
     expect(badge25!.tier).toBe("bronze")
 
-    const badge50 = computeBadge("l2_overcome_aa", makeAll7(50))
+    const badge50 = computeBadge("l2_overcome_aa", makeAll4(50))
     expect(badge50!.progress).toBe(50)
     expect(badge50!.tier).toBe("silver")
 
-    const badge75 = computeBadge("l2_overcome_aa", makeAll7(75))
+    const badge75 = computeBadge("l2_overcome_aa", makeAll4(75))
     expect(badge75!.progress).toBe(75)
     expect(badge75!.tier).toBe("gold")
 
-    const badge100 = computeBadge("l2_overcome_aa", makeAll7(100))
+    const badge100 = computeBadge("l2_overcome_aa", makeAll4(100))
     expect(badge100!.progress).toBe(100)
     expect(badge100!.tier).toBe("diamond")
   })
@@ -423,8 +417,8 @@ describe("self-reported gating", () => {
   it("caps tier at bronze when all goals are self-reported", () => {
     // Use goals with templates that have NO linkedMetric
     const goals = [
-      mockL3Goal({ id: "1", template_id: "l3_consecutive_days", progress_percentage: 100 }),
-      mockL3Goal({ id: "2", template_id: "l3_solo_sessions", progress_percentage: 100 }),
+      mockL3Goal({ id: "1", template_id: "l3_solo_sessions", progress_percentage: 100 }),
+      mockL3Goal({ id: "2", template_id: "l3_consecutive_weeks", progress_percentage: 100 }),
     ]
     const badge = computeBadge("l2_overcome_aa", goals)
     expect(badge).not.toBeNull()
@@ -434,15 +428,12 @@ describe("self-reported gating", () => {
 
   it("allows higher tiers when at least one goal has linked metric", () => {
     // l3_approach_volume has linkedMetric: "approaches_cumulative"
-    // Use correct 7 L3 IDs for l2_overcome_aa
+    // Use correct 4 L3 IDs for l2_overcome_aa
     const allGoals = [
       mockL3Goal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
-      mockL3Goal({ id: "2", template_id: "l3_consecutive_days", progress_percentage: 100 }),
-      mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 100 }),
-      mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 100 }),
-      mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 100 }),
-      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 100 }),
-      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 100 }),
+      mockL3Goal({ id: "2", template_id: "l3_solo_sessions", progress_percentage: 100 }),
+      mockL3Goal({ id: "3", template_id: "l3_consecutive_weeks", progress_percentage: 100 }),
+      mockL3Goal({ id: "4", template_id: "l3_visualization", progress_percentage: 100 }),
     ]
     const badge = computeBadge("l2_overcome_aa", allGoals)
     expect(badge).not.toBeNull()
@@ -466,8 +457,7 @@ describe("phase-aware progress", () => {
       mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 50 }),
       mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 50 }),
       mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 50 }),
-      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 50 }),
-      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 50 }),
+      mockL3Goal({ id: "6", template_id: "l3_warmup_routine", progress_percentage: 50 }),
     ]
     const badgeWithPhase = computeBadge("l2_overcome_aa", goals)
 
@@ -489,8 +479,7 @@ describe("phase-aware progress", () => {
       mockL3Goal({ id: "3", template_id: "l3_solo_sessions", progress_percentage: 30 }),
       mockL3Goal({ id: "4", template_id: "l3_eye_contact_holds", progress_percentage: 30 }),
       mockL3Goal({ id: "5", template_id: "l3_aa_comfort_rating", progress_percentage: 30 }),
-      mockL3Goal({ id: "6", template_id: "l3_positive_references", progress_percentage: 30 }),
-      mockL3Goal({ id: "7", template_id: "l3_warmup_routine", progress_percentage: 30 }),
+      mockL3Goal({ id: "6", template_id: "l3_warmup_routine", progress_percentage: 30 }),
     ]
     const badge = computeBadge("l2_overcome_aa", goals)
 

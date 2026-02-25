@@ -4,6 +4,7 @@
  */
 
 import { z } from "zod"
+import { FEEDBACK_TYPE_VALUES } from "./types"
 
 // ============================================
 // Security: Safe Article ID
@@ -26,17 +27,7 @@ export const SafeArticleIdSchema = z
 // Feedback Type Enums
 // ============================================
 
-export const FeedbackTypeSchema = z.enum([
-  "excellent",
-  "good",
-  "almost",
-  "angle",
-  "ai",
-  "note",
-  "source",
-  "alternatives",
-  "negative",
-])
+export const FeedbackTypeSchema = z.enum(FEEDBACK_TYPE_VALUES)
 
 export const LearningSuggestionTypeSchema = z.enum(["positive", "anti-pattern"])
 

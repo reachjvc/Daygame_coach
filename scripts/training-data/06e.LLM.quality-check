@@ -220,7 +220,15 @@ def _call_claude(
                 timeout=max(1, timeout_seconds),
             )
             if res.returncode == 0:
-                return (res.stdout or "").strip()
+                out = (res.stdout or "").strip()
+                if out:
+                    return out
+                if attempt < retries - 1:
+                    wait = 2 ** attempt
+                    print(f"{LOG_PREFIX} Claude CLI empty output, retrying in {wait}s...")
+                    time.sleep(wait)
+                    continue
+                return None
             if attempt < retries - 1:
                 wait = 2 ** attempt
                 print(f"{LOG_PREFIX} Claude CLI non-zero exit, retrying in {wait}s...")

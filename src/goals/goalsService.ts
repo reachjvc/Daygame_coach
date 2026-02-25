@@ -220,6 +220,20 @@ export function isDailyMilestone(goal: GoalWithProgress): boolean {
 }
 
 /**
+ * Filter goals to only those that belong on the daily scorecard.
+ * Includes all actionable L3/standalone goals (recurring, habit_ramp, milestone).
+ * Excludes: completed, archived, graduated, and structural (L0/L1/L2) goals.
+ */
+export function filterScorecardGoals(goals: GoalWithProgress[]): GoalWithProgress[] {
+  return goals.filter((g) => {
+    if (g.is_complete || g.is_archived) return false
+    if (g.goal_phase === "graduated") return false
+    if (g.goal_level !== null && g.goal_level !== 3) return false
+    return true
+  })
+}
+
+/**
  * Determine the input mode for a goal based on tracking type and target value.
  * - boolean goals → "boolean" (Mark Done button)
  * - counter goals with high target (>50) → "direct-entry" (number input)
@@ -1072,7 +1086,11 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
     if (l1) {
       // Emit L1
       const l1TempId = TEMP_PREFIX + l1.id
-      inserts.push(templateToSetupInsert(l1, null))
+      const l1Insert = templateToSetupInsert(l1, null)
+      if (selections.targetDates?.["daygame"]) {
+        l1Insert.target_date = selections.targetDates["daygame"]
+      }
+      inserts.push(l1Insert)
 
       // Collect unique L2 achievements referenced by selected L3s (standalone badges)
       const l2Map = new Map<string, typeof GOAL_TEMPLATE_MAP[string]>()
@@ -1101,6 +1119,10 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
           insert.milestone_config = selections.curveConfigs[l3Id] as unknown as Record<string, unknown>
           insert.target_value = selections.curveConfigs[l3Id].target
           insert.goal_type = "milestone"
+        }
+        if (selections.rampConfigs?.[l3Id]) {
+          insert.ramp_steps = selections.rampConfigs[l3Id] as unknown as Record<string, unknown>[]
+          insert.target_value = selections.rampConfigs[l3Id][0].frequencyPerWeek
         }
 
         inserts.push(insert)

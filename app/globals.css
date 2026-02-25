@@ -217,6 +217,15 @@
   .scroll-touch {
     -webkit-overflow-scrolling: touch;
   }
+
+  /* Fully hide scrollbar while allowing scroll — use on thumbnail strips, dot indicators, etc. */
+  .hide-scrollbar {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
 }
 
 /* XP Progress Bar Shimmer Animation */
@@ -266,6 +275,60 @@
   animation: pulse-ring 2s ease-out infinite;
 }
 
+/* Kanban: card pulse when it moves to a new column */
+@keyframes kanban-pulse {
+  0% {
+    background-color: rgba(255, 255, 255, 0.08);
+    transform: scale(1.02);
+  }
+  50% {
+    background-color: rgba(255, 255, 255, 0.04);
+    transform: scale(1);
+  }
+  100% {
+    background-color: rgba(255, 255, 255, 0.02);
+    transform: scale(1);
+  }
+}
+
+.animate-kanban-pulse {
+  animation: kanban-pulse 1.5s ease-out;
+}
+
+/* Kanban: mobile tab-switch fade-in */
+@keyframes kanban-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-kanban-fade-in {
+  animation: kanban-fade-in 0.2s ease-out;
+}
+
+/* V11ViewB: "Let's go!" launch celebration — fade in, hold, fade out */
+@keyframes v11b-launch-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html:focus-within {
     scroll-behavior: auto;
@@ -277,7 +340,9 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-kanban-pulse,
+  .animate-kanban-fade-in {
     animation: none;
   }
 }

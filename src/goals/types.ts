@@ -38,9 +38,8 @@ export type LifeAreaId =
   | "daygame"
   | "health_fitness"
   | "career_business"
-  | "social"
   | "personal_growth"
-  | "lifestyle"
+  | "vices_elimination"
   | "custom"
   | (string & {})
 
@@ -103,7 +102,7 @@ export interface GoalFilterState {
 /**
  * Visual theme for the milestone curve editor.
  */
-export type CurveThemeId = "zen" | "cyberpunk"
+export type CurveThemeId = "zen" | "cyberpunk" | "orrery"
 
 // ============================================================================
 // Milestone Ladder & Curve Types
@@ -411,8 +410,10 @@ export interface GoalSetupSelections {
   selectedGoalIds: Set<string>
   targets: Record<string, number>
   curveConfigs: Record<string, MilestoneLadderConfig>
+  rampConfigs: Record<string, HabitRampStep[]>
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
+  targetDates: Record<string, string>
 }
 
 // ============================================================================

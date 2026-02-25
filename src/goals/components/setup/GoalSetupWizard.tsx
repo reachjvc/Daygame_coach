@@ -13,7 +13,8 @@ import { GoalsStep } from "./GoalsStep"
 import { SummaryStep } from "./SummaryStep"
 import { AuroraOrreryStep } from "./AuroraOrreryStep"
 import { OnboardingChoice } from "./OnboardingChoice"
-import type { DaygamePath, MilestoneLadderConfig, SetupCustomGoal, SetupCustomCategory } from "@/src/goals/types"
+import { getDaygamePathL1 } from "@/src/goals/data/goalGraph"
+import type { DaygamePath, HabitRampStep, MilestoneLadderConfig, SetupCustomGoal, SetupCustomCategory } from "@/src/goals/types"
 
 export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPath?: string } = {}) {
   const router = useRouter()
@@ -23,34 +24,73 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   const [onboardingTrack, setOnboardingTrack] = useState<"simple" | "full" | null>(null)
   const [path, setPath] = useState<DaygamePath | null>(null)
   const [selectedAreas, setSelectedAreas] = useState<Set<string>>(new Set())
+  const [selectedL1s, setSelectedL1s] = useState<Set<string>>(new Set())
+  const [customL1s, setCustomL1s] = useState<{ id: string; text: string; path: DaygamePath }[]>([])
   const [selectedGoals, setSelectedGoals] = useState<Set<string>>(new Set())
   const [targets, setTargets] = useState<Record<string, number>>({})
   const [curveConfigs, setCurveConfigs] = useState<Record<string, MilestoneLadderConfig>>({})
+  const [rampConfigs, setRampConfigs] = useState<Record<string, HabitRampStep[]>>({})
   const [customGoals, setCustomGoals] = useState<SetupCustomGoal[]>([])
   const [customCategories, setCustomCategories] = useState<SetupCustomCategory[]>([])
+  const [targetDates, setTargetDates] = useState<Record<string, string>>({})
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const stepIndex = STEPS.indexOf(step)
 
+  // Only auto-select the core funnel goals — the rest stay in the catalog for manual opt-in
+  const AUTO_SELECTED_GOAL_IDS = new Set([
+    "l3_approach_frequency",
+    "l3_session_frequency",
+    "l3_approach_volume",
+    "l3_phone_numbers",
+    "l3_instadates",
+  ])
+
   const handleSelectPath = useCallback(
     (p: DaygamePath) => {
       setPath(p)
-      // Auto-select all non-dirty_dog daygame L3 goals
+      // Don't change L1 selections — let individual L1 clicks handle that
       setSelectedGoals((prev) => {
         const next = new Set<string>()
         for (const id of prev) {
           if (!id.startsWith("l3_") && !id.startsWith("l2_")) next.add(id)
         }
-        for (const g of catalog.daygameL3Goals) {
-          if (g.displayCategory !== "dirty_dog") next.add(g.id)
+        for (const id of AUTO_SELECTED_GOAL_IDS) {
+          next.add(id)
         }
         return next
       })
-      setStep("goals")
     },
-    [catalog.daygameL3Goals]
+    []
   )
+
+  const toggleL1 = useCallback((id: string) => {
+    setSelectedL1s((prev) => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }, [])
+
+  const addCustomL1 = useCallback((p: DaygamePath) => {
+    const id = nextCustomId("cl1")
+    setCustomL1s((prev) => [...prev, { id, text: "", path: p }])
+    setSelectedL1s((prev) => new Set([...prev, id]))
+  }, [])
+
+  const updateCustomL1Text = useCallback((id: string, text: string) => {
+    setCustomL1s((prev) => prev.map((l) => (l.id === id ? { ...l, text } : l)))
+  }, [])
+
+  const removeCustomL1 = useCallback((id: string) => {
+    setCustomL1s((prev) => prev.filter((l) => l.id !== id))
+    setSelectedL1s((prev) => {
+      const next = new Set(prev)
+      next.delete(id)
+      return next
+    })
+  }, [])
 
   const handleOnboardingChoice = useCallback((track: "simple" | "full") => {
     setOnboardingTrack(track)
@@ -100,6 +140,13 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
     setTargets((prev) => ({ ...prev, [id]: config.target }))
   }, [])
 
+  const updateRampConfig = useCallback((id: string, steps: HabitRampStep[]) => {
+    setRampConfigs((prev) => ({ ...prev, [id]: steps }))
+    if (steps.length > 0) {
+      setTargets((prev) => ({ ...prev, [id]: steps[0].frequencyPerWeek }))
+    }
+  }, [])
+
   const addCustomGoal = useCallback((categoryId: string) => {
     const id = nextCustomId("cg")
     const goal: SetupCustomGoal = { id, title: "", categoryId, target: 1, period: "total" }
@@ -127,6 +174,10 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
 
   const renameCustomCategory = useCallback((catId: string, name: string) => {
     setCustomCategories((prev) => prev.map((c) => (c.id === catId ? { ...c, name } : c)))
+  }, [])
+
+  const updateTargetDate = useCallback((areaId: string, date: string) => {
+    setTargetDates((prev) => ({ ...prev, [areaId]: date }))
   }, [])
 
   const removeCustomCategory = useCallback((catId: string) => {
@@ -168,8 +219,10 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
         selectedGoalIds: selectedGoals,
         targets,
         curveConfigs,
+        rampConfigs,
         customGoals,
         customCategories,
+        targetDates,
       })
       if (inserts.length === 0) {
         setError("No goals selected — go back and pick at least one")
@@ -192,7 +245,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
     } finally {
       setIsCreating(false)
     }
-  }, [path, selectedAreas, selectedGoals, targets, curveConfigs, customGoals, customCategories, router, returnPath])
+  }, [path, selectedAreas, selectedGoals, targets, curveConfigs, rampConfigs, customGoals, customCategories, targetDates, router, returnPath])
 
   // --- CTA navigation ---
   const goNext = useCallback(() => {
@@ -266,8 +319,18 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
             lifeAreas={catalog.lifeAreas}
             selectedPath={path}
             selectedAreas={selectedAreas}
+            selectedL1s={selectedL1s}
+            customL1s={customL1s}
+            selectedGoals={selectedGoals}
+            targetDates={targetDates}
             onSelectPath={handleSelectPath}
+            onToggleL1={toggleL1}
+            onAddCustomL1={addCustomL1}
+            onUpdateCustomL1={updateCustomL1Text}
+            onRemoveCustomL1={removeCustomL1}
             onToggleArea={handleToggleArea}
+            onToggleGoal={toggleGoal}
+            onUpdateTargetDate={updateTargetDate}
           />
         )}
         {step === "goals" && (
@@ -279,11 +342,13 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
             selectedGoals={selectedGoals}
             targets={targets}
             curveConfigs={curveConfigs}
+            rampConfigs={rampConfigs}
             customGoals={customGoals}
             customCategories={customCategories}
             onToggle={toggleGoal}
             onUpdateTarget={updateTarget}
             onUpdateCurve={updateCurveConfig}
+            onUpdateRamp={updateRampConfig}
             onAddCustomGoal={addCustomGoal}
             onRemoveCustomGoal={removeCustomGoal}
             onUpdateCustomGoalTitle={updateCustomGoalTitle}
@@ -299,6 +364,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
             selectedAreas={selectedAreas}
             selectedGoals={selectedGoals}
             targets={targets}
+            rampConfigs={rampConfigs}
             path={path}
             customGoals={customGoals}
             customCategories={customCategories}

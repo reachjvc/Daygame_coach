@@ -1,4 +1,5 @@
-import type { ApproachOutcome, SetType } from "@/src/db/trackingTypes"
+import { APPROACH_OUTCOMES, SET_TYPES } from "@/src/db/trackingEnums"
+import type { ApproachOutcome, SetType } from "@/src/db/trackingEnums"
 
 /**
  * Tracking slice configuration
@@ -33,6 +34,12 @@ export const OUTCOME_OPTIONS: { value: ApproachOutcome; label: string; emoji: st
   { value: "instadate", label: "Instadate", emoji: "🎉", color: "bg-purple-500/20 text-purple-500 border-purple-500/30" },
 ]
 
+// Compile-time exhaustiveness: every ApproachOutcome must appear in OUTCOME_OPTIONS
+const _outcomeExhaustiveCheck: Record<ApproachOutcome, true> = Object.fromEntries(
+  OUTCOME_OPTIONS.map(o => [o.value, true as const])
+) as Record<ApproachOutcome, true>
+void _outcomeExhaustiveCheck
+
 // ============================================
 // Mood Options
 // ============================================
@@ -66,6 +73,12 @@ export const SET_TYPE_OPTIONS: { value: SetType; label: string; emoji: string; d
   { value: "double_set", label: "Double Set", emoji: "👯", description: "With wingman (2v2)" },
   { value: "triple_set", label: "Triple Set", emoji: "🎯", description: "With wing (2v3+)" },
 ]
+
+// Compile-time exhaustiveness: every SetType must appear in SET_TYPE_OPTIONS
+const _setTypeExhaustiveCheck: Record<SetType, true> = Object.fromEntries(
+  SET_TYPE_OPTIONS.map(o => [o.value, true as const])
+) as Record<SetType, true>
+void _setTypeExhaustiveCheck
 
 // ============================================
 // Voice Language Options

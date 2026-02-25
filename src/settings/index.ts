@@ -41,7 +41,8 @@ export type {
 } from "./types"
 
 // Config
-export { DIFFICULTY_OPTIONS, LEVEL_TITLES, VALID_DIFFICULTIES } from "./types"
+export { DIFFICULTY_OPTIONS, LEVEL_TITLES, VALID_DIFFICULTIES, DIFFICULTY_LEVELS } from "./types"
+export { DifficultyLevelSchema, isKnownDifficulty } from "./types"
 export { SETTINGS_CONFIG } from "./config"
 
 // Components

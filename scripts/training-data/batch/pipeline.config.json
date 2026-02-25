@@ -55,10 +55,16 @@
     }
   },
   "automation": {
+    "parallel_llm_calls": 10,
+    "stage_runtime": {
+      "heartbeat_secs": 60
+    },
     "auto_repair": {
       "enabled": true,
       "max_attempts": 1,
-      "rerun_from_stage": "06b"
+      "rerun_from_stage": "06b",
+      "llm_timeout_seconds": 240,
+      "llm_retries": 2
     }
   }
 }

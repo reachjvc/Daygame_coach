@@ -8,6 +8,7 @@ import { CATEGORY_ORDER } from "@/src/goals/config"
 import { getCategoryLabel } from "@/src/goals/goalDisplayService"
 import type {
   GoalTemplate,
+  HabitRampStep,
   LifeAreaConfig,
   BadgeStatus,
   SetupCustomGoal,
@@ -22,6 +23,7 @@ export function SummaryStep({
   selectedAreas,
   selectedGoals,
   targets,
+  rampConfigs,
   path,
   customGoals,
   customCategories,
@@ -31,6 +33,7 @@ export function SummaryStep({
   selectedAreas: Set<string>
   selectedGoals: Set<string>
   targets: Record<string, number>
+  rampConfigs: Record<string, HabitRampStep[]>
   path: DaygamePath | null
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
@@ -214,6 +217,8 @@ export function SummaryStep({
               </div>
               <div className="px-5 py-3 space-y-2">
                 {goals.map((g) => {
+                  const rampSteps = rampConfigs[g.id] ?? g.defaultRampSteps
+                  const isRamp = g.templateType === "habit_ramp" && rampSteps && rampSteps.length > 1
                   const target =
                     targets[g.id] ??
                     g.defaultMilestoneConfig?.target ??
@@ -226,7 +231,11 @@ export function SummaryStep({
                         style={{ background: catColor, boxShadow: `0 0 4px ${catColor}40` }}
                       />
                       <span className="text-sm text-white/70 flex-1">{g.title}</span>
-                      <span className="text-xs font-medium" style={{ color: catColor }}>{target}</span>
+                      <span className="text-xs font-medium" style={{ color: catColor }}>
+                        {isRamp
+                          ? rampSteps.map((s) => s.frequencyPerWeek).join("\u2009\u2192\u2009")
+                          : target}
+                      </span>
                       <span className="text-[10px] uppercase text-white/20">
                         {g.templateType === "habit_ramp" ? "/wk" : "total"}
                       </span>

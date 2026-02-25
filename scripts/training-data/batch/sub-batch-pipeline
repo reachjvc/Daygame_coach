@@ -142,8 +142,13 @@ CFG_READY_SPOTCHECK_CONTEXT_RADIUS="0"
 CFG_AUTO_REPAIR_ENABLED="true"
 CFG_AUTO_REPAIR_MAX_ATTEMPTS="1"
 CFG_AUTO_REPAIR_RERUN_FROM_STAGE="06b"
+CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS=""
+CFG_AUTO_REPAIR_LLM_RETRIES=""
+CFG_STAGE_HEARTBEAT_SECS="60"
+CFG_DEFAULT_PARALLEL_LLM_CALLS="10"
 AUTO_REPAIR_ATTEMPTS_RAN_LAST="0"
 AUTO_REPAIR_LAST_REVALIDATE_RC=""
+RUN_STAGE_CONTEXT="standard"
 
 load_pipeline_config() {
   local config_file="$SCRIPT_DIR/pipeline.config.json"
@@ -270,6 +275,22 @@ def emit_non_negative_int(var_name: str, raw: object, default: int = 0) -> None:
         value = default
     print(f'{var_name}="{value}"')
 
+def emit_optional_positive_int(var_name: str, raw: object) -> None:
+    if isinstance(raw, bool):
+        print(f'{var_name}=""')
+        return
+    if isinstance(raw, int):
+        value = raw
+    elif isinstance(raw, float) and raw.is_integer():
+        value = int(raw)
+    else:
+        print(f'{var_name}=""')
+        return
+    if value <= 0:
+        print(f'{var_name}=""')
+        return
+    print(f'{var_name}="{value}"')
+
 def emit_bool_string(var_name: str, raw: object, default: bool) -> None:
     if isinstance(raw, bool):
         print(f'{var_name}="{"true" if raw else "false"}"')
@@ -357,11 +378,18 @@ emit_non_negative_int(
     default=0,
 )
 automation = cfg.get("automation", {})
+stage_runtime = automation.get("stage_runtime", {}) if isinstance(automation, dict) else {}
+if not isinstance(stage_runtime, dict):
+    stage_runtime = {}
+emit_non_negative_int("CFG_STAGE_HEARTBEAT_SECS", stage_runtime.get("heartbeat_secs", 60), default=60)
+emit_optional_positive_int("CFG_DEFAULT_PARALLEL_LLM_CALLS", automation.get("parallel_llm_calls", 10))
 auto_repair = automation.get("auto_repair", {}) if isinstance(automation, dict) else {}
 if not isinstance(auto_repair, dict):
     auto_repair = {}
 emit_bool_string("CFG_AUTO_REPAIR_ENABLED", auto_repair.get("enabled"), True)
 emit_non_negative_int("CFG_AUTO_REPAIR_MAX_ATTEMPTS", auto_repair.get("max_attempts", 1), default=1)
+emit_optional_positive_int("CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS", auto_repair.get("llm_timeout_seconds"))
+emit_optional_positive_int("CFG_AUTO_REPAIR_LLM_RETRIES", auto_repair.get("llm_retries"))
 rerun_from_stage = auto_repair.get("rerun_from_stage", "06b")
 valid_stages = {"06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"}
 if isinstance(rerun_from_stage, str) and rerun_from_stage in valid_stages:
@@ -387,7 +415,7 @@ maybe_reroute_to_ops_wrapper() {
   for arg in "${ORIG_ARGS[@]}"; do
     case "$arg" in
       --list|--status|--view|--approve|--validate|--stage|--stage=*)
-        echo "WARNING: ${arg%%=*} is an operator/debug mode. Rerouting to ./scripts/training-data/batch/sub-batch-ops." >&2
+        echo "WARNING: ${arg%%=*} is an ops/inspection mode. Rerouting to ./scripts/training-data/batch/sub-batch-ops." >&2
         exec "$ops_wrapper" "${ORIG_ARGS[@]}"
         ;;
     esac
@@ -406,13 +434,13 @@ Usage:
     ./sub-batch-pipeline P001 --run-all          Run normal pipeline for all incomplete sub-batches
     ./sub-batch-pipeline P001 --run-all --count 3  Run next 3 incomplete sub-batches
 
-  Operator / debug tools:
+  Ops / inspection tools:
     Use ./sub-batch-ops (separate interface for --status/--stage/--validate/--view/--approve/--list)
 
 Options:
   --dry-run                Preview without running
   --from <stage>           Start the standard pipeline from this stage (default: 06)
-  --parallel <n>           Conveyor-belt mode: videos run in parallel, n max LLM calls
+  --parallel <n>           Override max concurrent LLM calls (conveyor mode is default via config)
   --count <n>              With --run-all, limit to n sub-batches
   --source <name>          Operator/debug only (when routed via sub-batch-ops)
   --quarantine-file <path> Override auto-detected quarantine file (run/validate)
@@ -420,7 +448,7 @@ Options:
 
 Notes:
   `--run` is optional. If you pass a sub-batch ID and no explicit mode, the standard pipeline runs.
-  Direct operator/debug modes on `sub-batch-pipeline` are deprecated; use `sub-batch-ops`.
+  Direct ops/inspection modes on `sub-batch-pipeline` are deprecated; use `sub-batch-ops`.
   Validation/repair/spotcheck/auto-repair policy is config-driven via pipeline.config.json.
 
 Config: scripts/training-data/batch/pipeline.config.json
@@ -438,7 +466,7 @@ warn_operator_mode_direct_use() {
   if [[ "${SUB_BATCH_PIPELINE_ALLOW_OPS_DIRECT:-}" == "1" ]]; then
     return 0
   fi
-  echo "WARNING: $flag is an operator/debug mode. Use ./scripts/training-data/batch/sub-batch-ops instead." >&2
+  echo "WARNING: $flag is an ops/inspection mode. Use ./scripts/training-data/batch/sub-batch-ops instead." >&2
 }
 
 stage_supports_quarantine() {
@@ -461,6 +489,14 @@ stage_supports_apply_repairs() {
   local stage="$1"
   case "$stage" in
     06h) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+stage_supports_llm_runtime_flags() {
+  local stage="$1"
+  case "$stage" in
+    06b|06e|06g|07|07b) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -554,8 +590,83 @@ def suggest_rerun_stage_from_strategy(strategy: str | None) -> str | None:
         return "06e"
     return None
 
+def suggest_rerun_stage_from_stage_report_signal(*, check: str | None, signal_class: str | None, remediation_path: str | None) -> str | None:
+    ck = (check or "").strip().lower()
+    sc = (signal_class or "").strip().lower()
+    rp = (remediation_path or "").strip().lower()
+    if ck == "video_type_mismatch" or sc == "routing_mismatch" or "routing" in rp:
+        return "07"
+    if ck in {"stage07_validation_warnings", "stage07_transcript_artifact_risk"}:
+        return "06e"
+    if "contamination" in sc or "damage" in sc:
+        return "06e"
+    # Generic transcript_quality / transcript_review often comes from segment_text_modified,
+    # which is too broad to force a full 06e rerun on its own.
+    if "misattribution" in ck or "speaker" in ck or "diar" in ck:
+        return "06b"
+    return None
+
+def enrich_target_from_stage_report(tgt: dict, artifacts: object) -> None:
+    if not isinstance(artifacts, dict):
+        return
+    raw_path = artifacts.get("readiness_report")
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return
+    if tgt.get("_stage_report_loaded"):
+        return
+    p = Path(raw_path.strip())
+    if not p.is_absolute():
+        p = Path.cwd() / p
+    payload = load_json(p)
+    tgt["_stage_report_loaded"] = True
+    if not isinstance(payload, dict):
+        return
+    tgt["stage_report_reason_code"] = normalize_reason(payload.get("reason_code"))
+    st = normalize_reason(payload.get("status"))
+    if st:
+        tgt["stage_report_status"] = st.upper()
+    checks = payload.get("checks")
+    if not isinstance(checks, list):
+        return
+    for row in checks:
+        if not isinstance(row, dict):
+            continue
+        ck = normalize_reason(row.get("check"))
+        sc = normalize_reason(row.get("signal_class"))
+        rp = normalize_reason(row.get("remediation_path"))
+        if ck:
+            tgt["stage_report_checks"].add(ck)
+        if sc:
+            tgt["stage_report_signal_classes"].add(sc)
+        if rp:
+            tgt["stage_report_remediation_paths"].add(rp)
+
 def choose_target_rerun_stage(target: dict) -> str:
     candidates: list[str] = []
+    for ck in sorted(target.get("stage_report_checks") or []):
+        stage = suggest_rerun_stage_from_stage_report_signal(
+            check=ck,
+            signal_class=None,
+            remediation_path=None,
+        )
+        if stage:
+            candidates.append(stage)
+    for sc in sorted(target.get("stage_report_signal_classes") or []):
+        stage = suggest_rerun_stage_from_stage_report_signal(
+            check=None,
+            signal_class=sc,
+            remediation_path=None,
+        )
+        if stage:
+            candidates.append(stage)
+    for rp in sorted(target.get("stage_report_remediation_paths") or []):
+        stage = suggest_rerun_stage_from_stage_report_signal(
+            check=None,
+            signal_class=None,
+            remediation_path=rp,
+        )
+        if stage:
+            candidates.append(stage)
     for reason in sorted(target.get("reasons") or []):
         stage = suggest_rerun_stage_from_reason(reason)
         if stage:
@@ -605,6 +716,12 @@ def ensure_target(vid: str) -> dict:
             "localized_repair": False,
             "windowless_auto_fallback": False,
             "fallback_strategies": set(),
+            "stage_report_checks": set(),
+            "stage_report_signal_classes": set(),
+            "stage_report_remediation_paths": set(),
+            "stage_report_reason_code": None,
+            "stage_report_status": None,
+            "_stage_report_loaded": False,
         }
         targets_meta[vid] = tgt
     return tgt
@@ -656,9 +773,11 @@ if isinstance(repair, dict):
                     tgt["source"] = row["source"].strip()
                 if isinstance(row.get("content_type"), str) and row.get("content_type").strip():
                     tgt["content_type"] = row["content_type"].strip()
+                enrich_target_from_stage_report(tgt, row.get("artifacts"))
 
 fallback_auto_ids: set[str] = set()
 fallback_manual_ids: set[str] = set()
+fallback_excluded_preexisting_quarantine_ids: set[str] = set()
 if isinstance(fallback, dict):
     tasks = fallback.get("tasks")
     if isinstance(tasks, list):
@@ -672,6 +791,10 @@ if isinstance(fallback, dict):
                 continue
             if status == "READY":
                 continue
+            reason = normalize_reason(row.get("reason"))
+            if (reason or "").strip().lower() == "preexisting_quarantine":
+                fallback_excluded_preexisting_quarantine_ids.add(vid)
+                continue
             if strategy == "manual_full_video_review":
                 fallback_manual_ids.add(vid)
             else:
@@ -681,13 +804,13 @@ if isinstance(fallback, dict):
                 tgt["status"] = worst_status(tgt.get("status"), status)
                 if strategy:
                     tgt["fallback_strategies"].add(strategy)
-                reason = normalize_reason(row.get("reason"))
                 if reason:
                     tgt["reasons"].add(reason)
                 if isinstance(row.get("source"), str) and row.get("source").strip():
                     tgt["source"] = row["source"].strip()
                 if isinstance(row.get("content_type"), str) and row.get("content_type").strip():
                     tgt["content_type"] = row["content_type"].strip()
+                enrich_target_from_stage_report(tgt, row.get("artifacts"))
 
 target_video_ids = localized_video_ids | fallback_auto_ids
 
@@ -741,6 +864,11 @@ for vid in sorted(target_video_ids):
             "windowless_auto_fallback": bool(tgt.get("windowless_auto_fallback")),
             "reasons": sorted(str(x) for x in (tgt.get("reasons") or set())),
             "fallback_strategies": sorted(str(x) for x in (tgt.get("fallback_strategies") or set())),
+            "stage_report_checks": sorted(str(x) for x in (tgt.get("stage_report_checks") or set())),
+            "stage_report_signal_classes": sorted(str(x) for x in (tgt.get("stage_report_signal_classes") or set())),
+            "stage_report_remediation_paths": sorted(str(x) for x in (tgt.get("stage_report_remediation_paths") or set())),
+            "stage_report_reason_code": tgt.get("stage_report_reason_code"),
+            "stage_report_status": tgt.get("stage_report_status"),
             "recommended_rerun_from_stage": final_stage,
         }
     )
@@ -798,6 +926,7 @@ meta = {
         "localized_repair_videos": len(localized_video_ids),
         "windowless_auto_fallback_videos": len(fallback_auto_ids),
         "windowless_manual_only_videos": len(manual_only_ids),
+        "windowless_excluded_preexisting_quarantine_videos": len(fallback_excluded_preexisting_quarantine_ids),
         "rerun_from_stage_counts": {
             row["rerun_from_stage"]: row["video_count"] for row in stage_group_rows
         },
@@ -806,6 +935,7 @@ meta = {
     "targets": target_rows,
     "stage_groups": stage_group_rows,
     "manual_only_video_ids": manual_only_ids[:200],
+    "excluded_preexisting_quarantine_video_ids": sorted(fallback_excluded_preexisting_quarantine_ids)[:200],
 }
 out_meta_path.parent.mkdir(parents=True, exist_ok=True)
 out_meta_path.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
@@ -816,6 +946,7 @@ print(f"TARGET_COUNT={len(selected_lines)}")
 print(f"LOCALIZED_REPAIR_VIDEOS={len(localized_video_ids)}")
 print(f"WINDOWLESS_AUTO_FALLBACK_VIDEOS={len(fallback_auto_ids)}")
 print(f"WINDOWLESS_MANUAL_ONLY_VIDEOS={len(manual_only_ids)}")
+print(f"WINDOWLESS_EXCLUDED_PREEXISTING_QUARANTINE_VIDEOS={len(fallback_excluded_preexisting_quarantine_ids)}")
 PYEOF
 }
 
@@ -1004,6 +1135,78 @@ print(f"OUT_JSON={out_path}")
 PYEOF
 }
 
+write_auto_repair_attempt_failure_result() {
+  local out_json="$1"
+  local sub_id="$2"
+  local attempt="$3"
+  local phase="$4"
+  local failure_rc="${5:-}"
+  local before_summary="${6:-}"
+  local target_meta="${7:-}"
+
+  python3 - "$out_json" "$sub_id" "$attempt" "$phase" "$failure_rc" "$before_summary" "$target_meta" <<'PYEOF'
+import json
+import sys
+import time
+from pathlib import Path
+
+out_path = Path(sys.argv[1])
+sub_id = sys.argv[2]
+attempt = int(sys.argv[3]) if sys.argv[3].isdigit() else None
+phase = sys.argv[4]
+failure_rc_raw = sys.argv[5]
+before_summary = sys.argv[6]
+target_meta = sys.argv[7]
+
+def load_json(path_str: str):
+    if not path_str:
+        return None
+    path = Path(path_str)
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+target_meta_data = load_json(target_meta)
+target_ids = []
+if isinstance(target_meta_data, dict):
+    ids = target_meta_data.get("target_video_ids")
+    if isinstance(ids, list):
+        target_ids = [x for x in ids if isinstance(x, str) and x]
+
+failure_rc = None
+if failure_rc_raw and failure_rc_raw.lstrip("-").isdigit():
+    failure_rc = int(failure_rc_raw)
+
+payload = {
+    "version": 1,
+    "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+    "status": "execution_failed",
+    "sub_batch_id": sub_id,
+    "attempt": attempt,
+    "failure": {
+        "phase": phase or "unknown",
+        "exit_code": failure_rc,
+    },
+    "inputs": {
+        "before_readiness_summary": before_summary or None,
+        "target_meta": target_meta or None,
+    },
+    "summary": {
+        "target_videos": len(target_ids),
+    },
+    "target_video_ids": target_ids[:500],
+}
+
+out_path.parent.mkdir(parents=True, exist_ok=True)
+out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+print(f"OUT_JSON={out_path}")
+PYEOF
+}
+
 stage_order_index() {
   local needle="$1"
   local i
@@ -1083,8 +1286,11 @@ run_stage_range_for_manifest() {
   local manifest_path="$2"
   local start_stage="$3"
   local end_stage="${4:-09}"
+  local prev_stage_context="${RUN_STAGE_CONTEXT:-standard}"
+  RUN_STAGE_CONTEXT="auto_repair"
 
   if [[ ! -f "$manifest_path" ]]; then
+    RUN_STAGE_CONTEXT="$prev_stage_context"
     error "Retry manifest not found: $manifest_path"
   fi
 
@@ -1100,12 +1306,15 @@ run_stage_range_for_manifest() {
     fi
   done
   if [[ $start_idx -lt 0 ]]; then
+    RUN_STAGE_CONTEXT="$prev_stage_context"
     error "Unknown auto-repair start stage: $start_stage"
   fi
   if [[ $end_idx -lt 0 ]]; then
+    RUN_STAGE_CONTEXT="$prev_stage_context"
     error "Unknown auto-repair end stage: $end_stage"
   fi
   if [[ $start_idx -gt $end_idx ]]; then
+    RUN_STAGE_CONTEXT="$prev_stage_context"
     error "Invalid auto-repair stage range: $start_stage..$end_stage"
   fi
 
@@ -1116,19 +1325,45 @@ run_stage_range_for_manifest() {
   echo "  Stages:   ${stages[*]}"
   echo ""
 
+  if [[ -n "${PARALLEL:-}" ]]; then
+    local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
+    local retry_quarantine="$RUN_QUARANTINE_FILE"
+    if [[ -z "$retry_quarantine" && -f "$auto_quarantine" ]]; then
+      retry_quarantine="$auto_quarantine"
+    fi
+    local runner_rc=0
+    local -a runner_args=("$sub_id" --parallel "$PARALLEL" --from "$start_stage" --manifest "$manifest_path" --skip-end-validation)
+    if [[ -n "$retry_quarantine" ]]; then
+      runner_args+=(--quarantine-file "$retry_quarantine")
+    fi
+    if [[ -n "${CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS:-}" ]]; then
+      runner_args+=(--llm-timeout-seconds "$CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS")
+    fi
+    if [[ -n "${CFG_AUTO_REPAIR_LLM_RETRIES:-}" ]]; then
+      runner_args+=(--llm-retries "$CFG_AUTO_REPAIR_LLM_RETRIES")
+    fi
+    "$REPO_ROOT/.venv/bin/python" -u "$SCRIPT_DIR/pipeline-runner" "${runner_args[@]}" || runner_rc=$?
+    RUN_STAGE_CONTEXT="$prev_stage_context"
+    echo "Auto-repair rerun failed in parallel pipeline-runner (exit $runner_rc)"
+    return "$runner_rc"
+  fi
+
   local stage
   for stage in "${stages[@]}"; do
     run_stage "$sub_id" "$stage" "$manifest_path"
     local rc=$?
     if [[ $rc -eq 2 ]]; then
       echo "Auto-repair rerun: all retry-target videos quarantined at stage $stage"
+      RUN_STAGE_CONTEXT="$prev_stage_context"
       return 0
     fi
     if [[ $rc -ne 0 ]]; then
       echo "Auto-repair rerun failed at stage $stage (exit $rc)"
+      RUN_STAGE_CONTEXT="$prev_stage_context"
       return "$rc"
     fi
   done
+  RUN_STAGE_CONTEXT="$prev_stage_context"
   return 0
 }
 
@@ -1164,6 +1399,7 @@ auto_repair_sub_batch() {
     local localized_count="0"
     local windowless_auto_count="0"
     local windowless_manual_only_count="0"
+    local windowless_excluded_preexisting_count="0"
     while IFS='=' read -r key value; do
       case "$key" in
         TARGET_MANIFEST) target_manifest="$value" ;;
@@ -1172,6 +1408,7 @@ auto_repair_sub_batch() {
         LOCALIZED_REPAIR_VIDEOS) localized_count="$value" ;;
         WINDOWLESS_AUTO_FALLBACK_VIDEOS) windowless_auto_count="$value" ;;
         WINDOWLESS_MANUAL_ONLY_VIDEOS) windowless_manual_only_count="$value" ;;
+        WINDOWLESS_EXCLUDED_PREEXISTING_QUARANTINE_VIDEOS) windowless_excluded_preexisting_count="$value" ;;
       esac
     done < <(build_auto_repair_retry_manifest "$sub_id" "$attempt")
 
@@ -1210,6 +1447,9 @@ auto_repair_sub_batch() {
     echo ""
     echo "[sub-batch-pipeline] Auto-repair attempt $attempt/$max_attempts for $sub_id"
     echo "[sub-batch-pipeline]   targets=${target_count} localized=${localized_count} windowless_auto=${windowless_auto_count} windowless_manual_only=${windowless_manual_only_count}"
+    if [[ "$windowless_excluded_preexisting_count" =~ ^[0-9]+$ ]] && [[ "$windowless_excluded_preexisting_count" -gt 0 ]]; then
+      echo "[sub-batch-pipeline]   excluded preexisting-quarantine fallback targets=${windowless_excluded_preexisting_count}"
+    fi
     [[ -n "$target_meta" ]] && echo "[sub-batch-pipeline]   target summary: $target_meta"
     if [[ -n "$target_meta" && -f "$target_meta" ]]; then
       python3 - "$target_meta" <<'PYEOF' || true
@@ -1238,11 +1478,16 @@ PYEOF
     if [[ -n "$VALIDATE_SOURCE" ]]; then
       attempt_before_snapshot="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.${VALIDATE_SOURCE}.auto-repair.attempt${attempt}.before.readiness-summary.json"
     fi
+    local attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.auto-repair.attempt${attempt}.result.json"
+    if [[ -n "$VALIDATE_SOURCE" ]]; then
+      attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.${VALIDATE_SOURCE}.auto-repair.attempt${attempt}.result.json"
+    fi
     if [[ -f "$readiness_before_path" ]]; then
       cp -f "$readiness_before_path" "$attempt_before_snapshot" || true
     fi
 
     local ran_grouped_retry=false
+    local retry_rerun_rc=0
     local group_stage group_manifest group_count
     if [[ -n "$target_meta" && -f "$target_meta" ]]; then
       while IFS=$'\t' read -r group_stage group_manifest group_count; do
@@ -1251,12 +1496,34 @@ PYEOF
         local effective_group_stage
         effective_group_stage="$(later_stage_by_order "$group_stage" "$rerun_from")"
         echo "[sub-batch-pipeline] Auto-repair group: stage=${group_stage} effective_start=${effective_group_stage} videos=${group_count}"
-        run_stage_range_for_manifest "$sub_id" "$group_manifest" "$effective_group_stage" "09" || return $?
+        retry_rerun_rc=0
+        run_stage_range_for_manifest "$sub_id" "$group_manifest" "$effective_group_stage" "09" || retry_rerun_rc=$?
+        if [[ "$retry_rerun_rc" -ne 0 ]]; then
+          local failed_result_path=""
+          while IFS='=' read -r key value; do
+            case "$key" in
+              OUT_JSON) failed_result_path="$value" ;;
+            esac
+          done < <(write_auto_repair_attempt_failure_result "$attempt_result_out" "$sub_id" "$attempt" "retry_rerun" "$retry_rerun_rc" "$attempt_before_snapshot" "$target_meta")
+          [[ -n "$failed_result_path" ]] && echo "[sub-batch-pipeline]   attempt result artifact: $failed_result_path"
+          return "$retry_rerun_rc"
+        fi
         ran_grouped_retry=true
       done < <(iter_auto_repair_stage_groups "$target_meta")
     fi
     if [[ "$ran_grouped_retry" != true ]]; then
-      run_stage_range_for_manifest "$sub_id" "$target_manifest" "$rerun_from" "09" || return $?
+      retry_rerun_rc=0
+      run_stage_range_for_manifest "$sub_id" "$target_manifest" "$rerun_from" "09" || retry_rerun_rc=$?
+      if [[ "$retry_rerun_rc" -ne 0 ]]; then
+        local failed_result_path=""
+        while IFS='=' read -r key value; do
+          case "$key" in
+            OUT_JSON) failed_result_path="$value" ;;
+          esac
+        done < <(write_auto_repair_attempt_failure_result "$attempt_result_out" "$sub_id" "$attempt" "retry_rerun" "$retry_rerun_rc" "$attempt_before_snapshot" "$target_meta")
+        [[ -n "$failed_result_path" ]] && echo "[sub-batch-pipeline]   attempt result artifact: $failed_result_path"
+        return "$retry_rerun_rc"
+      fi
     fi
     attempts_ran=$attempt
     prev_target_count="$target_count"
@@ -1267,16 +1534,19 @@ PYEOF
     validate_sub_batch "$sub_id" || revalidate_rc=$?
     AUTO_REPAIR_LAST_REVALIDATE_RC="$revalidate_rc"
     if [[ "$revalidate_rc" -ne 0 ]]; then
+      local failed_result_path=""
+      while IFS='=' read -r key value; do
+        case "$key" in
+          OUT_JSON) failed_result_path="$value" ;;
+        esac
+      done < <(write_auto_repair_attempt_failure_result "$attempt_result_out" "$sub_id" "$attempt" "revalidate" "$revalidate_rc" "$attempt_before_snapshot" "$target_meta")
+      [[ -n "$failed_result_path" ]] && echo "[sub-batch-pipeline]   attempt result artifact: $failed_result_path"
       return "$revalidate_rc"
     fi
 
     prev_attempt_improved_count="0"
     local readiness_after_path
     readiness_after_path="$(auto_repair_readiness_summary_path "$sub_id")"
-    local attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.auto-repair.attempt${attempt}.result.json"
-    if [[ -n "$VALIDATE_SOURCE" ]]; then
-      attempt_result_out="$REPO_ROOT/data/validation/repair_worklists/${sub_id}.${VALIDATE_SOURCE}.auto-repair.attempt${attempt}.result.json"
-    fi
     if [[ -f "$attempt_before_snapshot" && -f "$readiness_after_path" && -n "$target_meta" && -f "$target_meta" ]]; then
       local attempt_improved="0"
       local attempt_regressed="0"
@@ -1557,6 +1827,23 @@ run_stage() {
   if stage_supports_apply_repairs "$stage"; then
     stage_args+=(--apply-repairs)
   fi
+  if stage_supports_llm_runtime_flags "$stage"; then
+    local llm_timeout=""
+    local llm_retries=""
+    if [[ "${RUN_STAGE_CONTEXT:-standard}" == "auto_repair" ]]; then
+      llm_timeout="${CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS:-}"
+      llm_retries="${CFG_AUTO_REPAIR_LLM_RETRIES:-}"
+    fi
+    if [[ -n "$llm_timeout" ]]; then
+      stage_args+=(--timeout-seconds "$llm_timeout")
+    fi
+    if [[ -n "$llm_retries" ]]; then
+      stage_args+=(--llm-retries "$llm_retries")
+    fi
+    if [[ "${RUN_STAGE_CONTEXT:-standard}" == "auto_repair" ]] && [[ -n "$llm_timeout" || -n "$llm_retries" ]]; then
+      echo "[sub-batch-pipeline] Auto-repair LLM runtime overrides for $stage: timeout=${llm_timeout:-default} retries=${llm_retries:-default}"
+    fi
+  fi
   local quarantine_file=""
   local auto_quarantine="$QUARANTINE_DIR/${sub_id}.json"
 
@@ -1629,7 +1916,7 @@ PYEOF
   fi
 
   # Run the stage
-  if "${exec_cmd[@]}" "${stage_args[@]}"; then
+  if run_with_heartbeat "stage $stage ($sub_id)" "${exec_cmd[@]}" "${stage_args[@]}"; then
     echo ""
     echo "Stage $stage: COMPLETE"
   else
@@ -1776,6 +2063,44 @@ print('yes' if len(q.get('quarantined_video_ids',[])) >= m_count else 'no')
   fi
 
   return 0
+}
+
+# Run a command and emit periodic heartbeats while it is still running.
+run_with_heartbeat() {
+  local label="$1"
+  shift
+
+  local hb_secs="${STAGE_HEARTBEAT_SECS:-${CFG_STAGE_HEARTBEAT_SECS:-60}}"
+  local start_ts
+  start_ts=$(date +%s)
+
+  "$@" &
+  local cmd_pid=$!
+  local hb_pid=""
+
+  if [[ "$hb_secs" =~ ^[0-9]+$ ]] && [[ "$hb_secs" -gt 0 ]]; then
+    (
+      while kill -0 "$cmd_pid" 2>/dev/null; do
+        sleep "$hb_secs" || exit 0
+        kill -0 "$cmd_pid" 2>/dev/null || exit 0
+        local now_ts elapsed
+        now_ts=$(date +%s)
+        elapsed=$((now_ts - start_ts))
+        echo "[sub-batch-pipeline] heartbeat: $label still running (${elapsed}s)"
+      done
+    ) &
+    hb_pid=$!
+  fi
+
+  local rc=0
+  wait "$cmd_pid" || rc=$?
+
+  if [[ -n "$hb_pid" ]]; then
+    kill "$hb_pid" 2>/dev/null || true
+    wait "$hb_pid" 2>/dev/null || true
+  fi
+
+  return "$rc"
 }
 
 # Run pipeline: stages sequentially with post-stage validation + end-of-run validation
@@ -2791,13 +3116,29 @@ else
   BATCH_ID="$SUB_BATCH_ID"
 fi
 
-# Keep the standard pipeline interface clean: these flags are operator-only.
+if [[ -n "$PARALLEL" ]]; then
+  if ! [[ "$PARALLEL" =~ ^[1-9][0-9]*$ ]]; then
+    error "--parallel must be a positive integer"
+  fi
+fi
+
+# Keep the standard pipeline interface clean: these flags are ops/inspection-only.
 if [[ "$MODE" == "run_pipeline" || "$MODE" == "run_all" ]]; then
   if [[ -n "$VALIDATE_SOURCE" ]]; then
-    error "--source is operator/debug-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --source ...)"
+    error "--source is ops/inspection-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --source ...)"
   fi
   if [[ -n "$VALIDATE_WAIVER_FILE" ]]; then
-    error "--waiver-file is operator/debug-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --waiver-file ...)"
+    error "--waiver-file is ops/inspection-only (use ./scripts/training-data/batch/sub-batch-ops ... --validate --waiver-file ...)"
+  fi
+fi
+
+# Standard pipeline default: use conveyor-belt parallel mode unless explicitly overridden.
+if [[ "$MODE" == "run_pipeline" || "$MODE" == "run_all" ]]; then
+  if [[ -z "$PARALLEL" && -n "${CFG_DEFAULT_PARALLEL_LLM_CALLS:-}" ]]; then
+    if [[ "${CFG_DEFAULT_PARALLEL_LLM_CALLS}" =~ ^[1-9][0-9]*$ ]]; then
+      PARALLEL="$CFG_DEFAULT_PARALLEL_LLM_CALLS"
+      echo "[sub-batch-pipeline] Using configured parallel LLM calls: $PARALLEL"
+    fi
   fi
 fi
 

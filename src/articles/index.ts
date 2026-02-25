@@ -15,8 +15,8 @@ export type {
   ArticleFeedbackFlag,
 } from "./types"
 
-// Feedback type config
-export { FEEDBACK_TYPES } from "./types"
+// Feedback type config & enum utilities
+export { FEEDBACK_TYPES, FEEDBACK_TYPE_VALUES, isKnownFeedbackType } from "./types"
 
 // Config
 export {

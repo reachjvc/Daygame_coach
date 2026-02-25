@@ -23,13 +23,6 @@ export const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   learning: "Learning & Knowledge",
   reflection: "Reflection & Self-Awareness",
   discipline: "Discipline & Habits",
-  // Social
-  social_activity: "Social Activity",
-  friendships: "Friendships",
-  hosting: "Hosting & Events",
-  social_skills: "Social Skills",
-  network_expansion: "Network Expansion",
-  mentorship: "Mentorship",
   // Fitness
   strength: "Strength",
   training: "Training Discipline",
@@ -48,11 +41,6 @@ export const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   digital_discipline: "Digital Discipline",
   substance_control: "Substance Control",
   self_control: "Self-Control",
-  // Lifestyle
-  hobbies_skills: "Hobbies & Skills",
-  cooking_domestic: "Cooking & Home",
-  adventure_travel: "Adventure & Travel",
-  style_grooming: "Style & Grooming",
 }
 
 /**
@@ -64,16 +52,12 @@ export const CATEGORY_ORDER: GoalDisplayCategory[] = [
   "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
   // Personal Growth
   "mindfulness", "resilience", "learning", "reflection", "discipline",
-  // Social
-  "social_activity", "friendships", "hosting", "social_skills", "network_expansion", "mentorship",
   // Fitness
   "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
   // Wealth
   "income", "saving", "investing", "career_growth", "entrepreneurship",
   // Vices & Elimination
   "porn_freedom", "digital_discipline", "substance_control", "self_control",
-  // Lifestyle
-  "hobbies_skills", "cooking_domestic", "adventure_travel", "style_grooming",
 ]
 
 /**

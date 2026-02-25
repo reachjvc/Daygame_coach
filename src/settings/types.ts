@@ -3,6 +3,7 @@
  * Follows the vertical slice architecture pattern from SLICE_QA.md
  */
 
+import { z } from "zod"
 import type { SandboxSettings } from "@/src/scenarios/config"
 
 // ============================================
@@ -80,15 +81,20 @@ export interface UpdateDifficultyRequest {
   difficulty: DifficultyLevel
 }
 
-export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert" | "master"
+// Canonical const array — single source of truth for difficulty values
+export const DIFFICULTY_LEVELS = ["beginner", "intermediate", "advanced", "expert", "master"] as const
+export type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number]
 
-export const VALID_DIFFICULTIES: DifficultyLevel[] = [
-  "beginner",
-  "intermediate",
-  "advanced",
-  "expert",
-  "master",
-]
+// Backward-compat alias derived from const array
+export const VALID_DIFFICULTIES: DifficultyLevel[] = [...DIFFICULTY_LEVELS]
+
+// Type guard
+export function isKnownDifficulty(val: string): val is DifficultyLevel {
+  return (DIFFICULTY_LEVELS as readonly string[]).includes(val)
+}
+
+// Zod schema
+export const DifficultyLevelSchema = z.enum(DIFFICULTY_LEVELS)
 
 // ============================================
 // Config types
@@ -107,6 +113,12 @@ export const DIFFICULTY_OPTIONS: DifficultyOption[] = [
   { id: "expert", label: "Expert", description: "Difficult, realistic situations" },
   { id: "master", label: "Master", description: "Maximum challenge" },
 ]
+
+// Compile-time exhaustiveness check: DIFFICULTY_OPTIONS must cover every DifficultyLevel
+const _difficultyExhaustiveCheck: Record<DifficultyLevel, true> = Object.fromEntries(
+  DIFFICULTY_OPTIONS.map(o => [o.id, true as const])
+) as Record<DifficultyLevel, true>
+void _difficultyExhaustiveCheck
 
 export const LEVEL_TITLES: Record<number, string> = {
   1: "Newcomer",

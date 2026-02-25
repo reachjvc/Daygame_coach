@@ -24,8 +24,7 @@ import {
   type SubscriptionInfo,
   type UserStats,
   type ProfileInfo,
-  VALID_DIFFICULTIES,
-  type DifficultyLevel,
+  isKnownDifficulty,
 } from "./types"
 import { SETTINGS_CONFIG } from "./config"
 import { VALID_VOICE_LANGUAGE_CODES } from "@/src/tracking/config"
@@ -86,7 +85,7 @@ export async function handleUpdateDifficulty(
   userId: string,
   difficulty: string
 ): Promise<void> {
-  if (!VALID_DIFFICULTIES.includes(difficulty as DifficultyLevel)) {
+  if (!isKnownDifficulty(difficulty)) {
     throw createSettingsError("Invalid difficulty level", "INVALID_INPUT")
   }
 

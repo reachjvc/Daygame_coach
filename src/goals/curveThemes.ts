@@ -137,6 +137,49 @@ export const CURVE_THEMES: Record<CurveThemeId, CurveThemeConfig> = {
     sliderClasses:
       "w-full [&_[data-slot=slider-track]]:rounded-none [&_[data-slot=slider-track]]:bg-[#1c1c1c] [&_[data-slot=slider-track]]:h-1 [&_[data-slot=slider-range]]:bg-[#ff0033] [&_[data-slot=slider-range]]:rounded-none [&_[data-slot=slider-thumb]]:rounded-none [&_[data-slot=slider-thumb]]:border-[#ff0033] [&_[data-slot=slider-thumb]]:bg-[#ff0033] [&_[data-slot=slider-thumb]]:size-3 [&_[data-slot=slider-thumb]]:shadow-[0_0_6px_rgba(255,0,51,0.5)]",
   },
+
+  orrery: {
+    id: "orrery",
+    label: "Orrery",
+
+    accent: "#00E676",
+    accentLight: "#69F0AE",
+    accentFaded: "rgba(0, 230, 118, 0.1)",
+    bg: "rgba(5, 8, 16, 0.95)",
+    cardBg: "rgba(10, 14, 28, 0.8)",
+    text: "rgba(255, 255, 255, 0.9)",
+    muted: "rgba(255, 255, 255, 0.4)",
+    border: "rgba(0, 230, 118, 0.15)",
+    subtleBorder: "rgba(124, 77, 255, 0.1)",
+
+    svgColors: {
+      accent: "#00E676",
+      grid: "#7C4DFF",
+      axis: "#00E676",
+      tooltipBg: "rgba(5, 8, 16, 0.92)",
+      tooltipBorder: "rgba(0, 230, 118, 0.6)",
+      tooltipText: "#69F0AE",
+      areaTop: "rgba(0, 230, 118, 0.15)",
+      areaBottom: "rgba(124, 77, 255, 0.03)",
+      labelColor: "rgba(255, 255, 255, 0.4)",
+      endpointColor: "#69F0AE",
+    },
+
+    glowIntensity: 5,
+    glowOpacity: 0.5,
+    strokeWidth: 2.5,
+    svgCursor: "crosshair",
+
+    borderRadius: 16,
+    textTransform: "none",
+    monoLabels: true,
+
+    scanlines: false,
+    cornerBrackets: false,
+
+    sliderClasses:
+      "w-full [&_[data-slot=slider-track]]:bg-[rgba(124,77,255,0.15)] [&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-range]]:bg-[#00E676] [&_[data-slot=slider-thumb]]:border-[#00E676] [&_[data-slot=slider-thumb]]:bg-[#00E676] [&_[data-slot=slider-thumb]]:size-3.5 [&_[data-slot=slider-thumb]]:shadow-[0_0_10px_rgba(0,230,118,0.5)]",
+  },
 }
 
 export const CURVE_THEME_IDS = Object.keys(CURVE_THEMES) as CurveThemeId[]

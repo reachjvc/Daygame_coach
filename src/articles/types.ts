@@ -81,8 +81,16 @@ export type ArticleSortBy = "newest" | "oldest" | "readTime"
 /**
  * Feedback types for marking article sections during review.
  * Used in iterative refinement workflow.
+ *
+ * Canonical const array — single source of truth for feedback type values.
  */
-export type FeedbackType = "excellent" | "good" | "almost" | "angle" | "ai" | "note" | "source" | "alternatives" | "negative"
+export const FEEDBACK_TYPE_VALUES = ["excellent", "good", "almost", "angle", "ai", "note", "source", "alternatives", "negative"] as const
+export type FeedbackType = (typeof FEEDBACK_TYPE_VALUES)[number]
+
+// Type guard
+export function isKnownFeedbackType(val: string): val is FeedbackType {
+  return (FEEDBACK_TYPE_VALUES as readonly string[]).includes(val)
+}
 
 export interface FeedbackTypeConfig {
   label: string
@@ -158,6 +166,12 @@ export const FEEDBACK_TYPES: Record<FeedbackType, FeedbackTypeConfig> = {
     bg: "bg-rose-500/20 border-rose-500/30"
   }
 }
+
+// Compile-time exhaustiveness check: FEEDBACK_TYPES must cover every FeedbackType
+const _feedbackExhaustiveCheck: Record<FeedbackType, true> = Object.fromEntries(
+  Object.keys(FEEDBACK_TYPES).map(k => [k, true as const])
+) as Record<FeedbackType, true>
+void _feedbackExhaustiveCheck
 
 export interface ArticleFeedbackFlag {
   type: FeedbackType

@@ -1,20 +1,14 @@
 /**
  * Life area definitions with icons, colors, and goal suggestions
  *
- * Consolidated from 10 → 7 areas:
- * - daygame absorbed dating
- * - career_business absorbed finances
- * - personal_growth absorbed mindfulness + education
- * - lifestyle is new
+ * 5 areas: daygame, health_fitness, career_business, personal_growth, vices_elimination
  */
 
 import {
   MessageCircle,
   Dumbbell,
   Briefcase,
-  Users,
   Sprout,
-  Mountain,
   Puzzle,
   Ban,
 } from "lucide-react"
@@ -89,24 +83,6 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     ],
   },
   {
-    id: "social",
-    name: "Social Life",
-    icon: Users,
-    hex: "#3b82f6",
-    color: "text-blue-500",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/30",
-    progressColor: "bg-blue-500",
-    sortOrder: 3,
-    suggestions: [
-      { title: "Attend 1 social event per week", defaultTarget: 1, defaultPeriod: "weekly", featured: true },
-      { title: "Call a friend 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
-      { title: "Host 1 dinner per month", defaultTarget: 1, defaultPeriod: "monthly" },
-      { title: "Talk to 1 stranger daily (non-daygame)", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Meet 2 new people per month", defaultTarget: 2, defaultPeriod: "monthly" },
-    ],
-  },
-  {
     id: "personal_growth",
     name: "Personal Growth",
     icon: Sprout,
@@ -115,7 +91,7 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     bgColor: "bg-yellow-500/10",
     borderColor: "border-yellow-500/30",
     progressColor: "bg-yellow-500",
-    sortOrder: 4,
+    sortOrder: 3,
     suggestions: [
       { title: "Meditate 10 mins daily", defaultTarget: 10, defaultPeriod: "daily", featured: true },
       { title: "Journal every morning", defaultTarget: 1, defaultPeriod: "daily" },
@@ -132,27 +108,6 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     ],
   },
   {
-    id: "lifestyle",
-    name: "Lifestyle",
-    icon: Mountain,
-    hex: "#14b8a6",
-    color: "text-teal-500",
-    bgColor: "bg-teal-500/10",
-    borderColor: "border-teal-500/30",
-    progressColor: "bg-teal-500",
-    sortOrder: 5,
-    suggestions: [
-      { title: "Practice hobby 3x per week", defaultTarget: 3, defaultPeriod: "weekly", featured: true },
-      { title: "Cook 5 home meals per week", defaultTarget: 5, defaultPeriod: "weekly", featured: true },
-      { title: "Try 1 new experience per week", defaultTarget: 1, defaultPeriod: "weekly" },
-      { title: "Travel to 1 new place per month", defaultTarget: 1, defaultPeriod: "monthly" },
-      { title: "Grooming routine daily", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Upgrade 1 wardrobe piece per month", defaultTarget: 1, defaultPeriod: "monthly" },
-      { title: "Deep clean weekly", defaultTarget: 1, defaultPeriod: "weekly" },
-      { title: "1 adventure per month", defaultTarget: 1, defaultPeriod: "monthly" },
-    ],
-  },
-  {
     id: "vices_elimination",
     name: "Vices & Elimination",
     icon: Ban,
@@ -161,7 +116,7 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     bgColor: "bg-rose-500/10",
     borderColor: "border-rose-500/30",
     progressColor: "bg-rose-500",
-    sortOrder: 6,
+    sortOrder: 4,
     suggestions: [
       { title: "Porn-free every day", defaultTarget: 7, defaultPeriod: "weekly", featured: true },
       { title: "Screen time under limit 6 days/week", defaultTarget: 6, defaultPeriod: "weekly", featured: true },

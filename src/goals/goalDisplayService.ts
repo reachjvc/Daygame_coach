@@ -46,3 +46,14 @@ export function getGoalPhaseStyle(phase: string): string {
 export function getPeriodLabel(period: string): string {
   return period.charAt(0).toUpperCase() + period.slice(1)
 }
+
+export function getPeriodAbbrev(period: string): string {
+  const map: Record<string, string> = {
+    daily: "d",
+    weekly: "wk",
+    monthly: "mo",
+    quarterly: "qtr",
+    yearly: "yr",
+  }
+  return map[period] ?? period
+}

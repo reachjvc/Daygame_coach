@@ -43,11 +43,9 @@ describe("goal catalog integrity", () => {
     const validCategories = [
       "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
       "mindfulness", "resilience", "learning", "reflection", "discipline",
-      "social_activity", "friendships", "hosting", "social_skills", "network_expansion", "mentorship",
       "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
       "income", "saving", "investing", "career_growth", "entrepreneurship",
       "porn_freedom", "digital_discipline", "substance_control", "self_control",
-      "hobbies_skills", "cooking_domestic", "adventure_travel", "style_grooming",
     ]
     for (const g of l3Goals) {
       expect(g.displayCategory).toBeTruthy()
@@ -131,12 +129,9 @@ describe("goal catalog integrity", () => {
     }
   })
 
-  test("blind spot tools are correctly flagged", () => {
+  test("no blind spot tools remain after catalog pruning", () => {
     const blindSpotTools = GOAL_TEMPLATES.filter((t) => t.blindSpotTool)
-    const ids = blindSpotTools.map((t) => t.id)
-    expect(ids).toContain("l3_wing_feedback")
-    expect(ids).toContain("l3_video_review")
-    expect(blindSpotTools.length).toBe(2)
+    expect(blindSpotTools.length).toBe(0)
   })
 
   test("graduation_criteria is only set on core L3 templates", () => {
@@ -348,8 +343,8 @@ describe("getTemplatesByCategory", () => {
     const keys = Object.keys(cats).sort()
     expect(keys).toContain("field_work")
     expect(keys).toContain("mindfulness")
-    expect(keys).toContain("social_activity")
-    expect(keys.length).toBe(36) // 6 daygame + 5 PG + 6 social + 6 fitness + 5 wealth + 4 vices + 4 lifestyle
+    expect(keys).toContain("field_work")
+    expect(keys.length).toBe(26) // 6 daygame + 5 PG + 6 fitness + 5 wealth + 4 vices
   })
 
   test("field_work contains approach-related goals", () => {
@@ -359,11 +354,11 @@ describe("getTemplatesByCategory", () => {
     expect(ids).toContain("l3_approach_frequency")
   })
 
-  test("dirty_dog contains lays and sustained rotation", () => {
+  test("dirty_dog contains lays", () => {
     const cats = getTemplatesByCategory()
     const ids = cats.dirty_dog!.map((t) => t.id)
     expect(ids).toContain("l3_lays")
-    expect(ids).toContain("l3_sustained_rotation")
+    expect(ids.length).toBe(1)
   })
 
   test("texting contains texting-related goals", () => {
@@ -380,15 +375,6 @@ describe("getTemplatesByCategory", () => {
     expect(cats.learning!.length).toBeGreaterThan(0)
     expect(cats.reflection!.length).toBeGreaterThan(0)
     expect(cats.discipline!.length).toBeGreaterThan(0)
-  })
-
-  test("social categories exist", () => {
-    const cats = getTemplatesByCategory()
-    expect(cats.social_activity!.length).toBeGreaterThan(0)
-    expect(cats.friendships!.length).toBeGreaterThan(0)
-    expect(cats.hosting!.length).toBeGreaterThan(0)
-    expect(cats.social_skills!.length).toBeGreaterThan(0)
-    expect(cats.network_expansion!.length).toBeGreaterThan(0)
   })
 
   test("fitness categories exist", () => {
