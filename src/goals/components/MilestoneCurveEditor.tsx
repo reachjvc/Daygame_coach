@@ -20,12 +20,14 @@ interface MilestoneCurveEditorProps {
   allowDirectEdit?: boolean
   /** Visual theme — defaults to "zen" */
   themeId?: CurveThemeId
+  /** Target date for pace calculation — ISO string YYYY-MM-DD */
+  targetDate?: string
 }
 
 /* ── SVG layout ── */
 const SVG_W = 380
-const SVG_H = 220
-const PAD = { top: 18, right: 16, bottom: 38, left: 48 }
+const SVG_H = 234
+const PAD = { top: 18, right: 16, bottom: 48, left: 48 }
 const PLOT_W = SVG_W - PAD.left - PAD.right
 const PLOT_H = SVG_H - PAD.top - PAD.bottom
 
@@ -49,13 +51,35 @@ const CURVE_PRESETS: CurvePreset[] = [
   { id: "ambitious", label: "Ambitious", description: "Few big leaps", steps: 3, curveTension: -1.5 },
 ]
 
+/** Format a target date for display */
+function formatTargetDate(iso: string): string {
+  const d = new Date(iso + "T00:00:00")
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
+}
+
 export function MilestoneCurveEditor({
   config,
   onChange,
   allowDirectEdit = false,
   themeId = "zen",
+  targetDate,
 }: MilestoneCurveEditorProps) {
   const theme = getCurveTheme(themeId)
+
+  // Pace calculation when targetDate is set
+  const paceText = useMemo(() => {
+    if (!targetDate) return null
+    const now = new Date()
+    const target = new Date(targetDate + "T00:00:00")
+    const diffMs = target.getTime() - now.getTime()
+    if (diffMs <= 0) return null
+    const remaining = config.target - config.start
+    if (remaining <= 0) return null
+    const months = diffMs / (1000 * 60 * 60 * 24 * 30.44)
+    if (months < 0.5) return null
+    const perMonth = Math.round(remaining / months)
+    return `~${perMonth.toLocaleString()}/month to reach ${config.target.toLocaleString()} by ${formatTargetDate(targetDate)}`
+  }, [targetDate, config.start, config.target])
 
   // Stable unique ID for SVG defs (avoids collisions with multiple instances)
   const svgId = useRef(`mce-${Math.random().toString(36).slice(2, 8)}`).current
@@ -287,6 +311,7 @@ export function MilestoneCurveEditor({
           return (
             <button
               key={preset.id}
+              data-tour={`curve-preset-${preset.id}`}
               onClick={() => handlePresetSelect(preset)}
               onPointerEnter={() => setHoveredPresetId(preset.id)}
               onPointerLeave={() => setHoveredPresetId(null)}
@@ -613,6 +638,32 @@ export function MilestoneCurveEditor({
             )
           })()}
 
+          {/* Date labels on x-axis */}
+          {targetDate && (
+            <g>
+              <text
+                x={PAD.left}
+                y={PAD.top + PLOT_H + 38}
+                textAnchor="start"
+                fontSize="8"
+                fill={sc.labelColor}
+                fillOpacity={0.5}
+              >
+                Today
+              </text>
+              <text
+                x={PAD.left + PLOT_W}
+                y={PAD.top + PLOT_H + 38}
+                textAnchor="end"
+                fontSize="8"
+                fill={accentColor}
+                fillOpacity={0.6}
+              >
+                {formatTargetDate(targetDate)}
+              </text>
+            </g>
+          )}
+
           {/* Draggable control points */}
           {(config.controlPoints ?? []).map((cp, idx) => {
             const sv = toSvg(cp.x, cp.y)
@@ -664,6 +715,21 @@ export function MilestoneCurveEditor({
           </div>
         )
       })()}
+
+      {/* ── Pace indicator ── */}
+      {paceText && (
+        <div
+          style={{
+            fontSize: 11,
+            fontFamily: "var(--font-mono, 'Geist Mono', monospace)",
+            color: accentColor,
+            opacity: 0.7,
+            marginTop: 4,
+          }}
+        >
+          {paceText}
+        </div>
+      )}
 
       {/* ── Curve shape controls ── */}
       <div className="mt-4">

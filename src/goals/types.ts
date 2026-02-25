@@ -274,20 +274,49 @@ export interface PreviewGoalState {
 // ============================================================================
 
 /**
- * Badge tier thresholds for L2 achievement progress.
- * 0-24% = none, 25% = bronze, 50% = silver, 75% = gold, 100% = diamond
+ * Badge tier levels, from unearned to mythic.
+ * 6 earned tiers: iron → bronze → silver → gold → diamond → mythic.
  */
-export type BadgeTier = "none" | "bronze" | "silver" | "gold" | "diamond"
+export type BadgeTier = "none" | "iron" | "bronze" | "silver" | "gold" | "diamond" | "mythic"
 
 /**
- * Status of a single L2 badge, computed from weighted L3 goal progress.
+ * Status of a single L2 badge, computed from threshold requirements.
  */
 export interface BadgeStatus {
   badgeId: string
   title: string
+  tierName: string
   progress: number
   tier: BadgeTier
   unlocked: boolean
+}
+
+/**
+ * A single threshold requirement for a badge tier.
+ * The user's cumulative count for that L3 must reach `value`.
+ */
+export interface BadgeTierRequirement {
+  templateId: string
+  value: number
+}
+
+/**
+ * Requirements for one tier of a badge.
+ * ALL requirements must be met to unlock this tier.
+ */
+export interface BadgeTierConfig {
+  tier: BadgeTier
+  name: string
+  requirements: BadgeTierRequirement[]
+}
+
+/**
+ * Full badge configuration with tiered threshold requirements.
+ * Tiers ordered bronze → diamond; engine checks highest first.
+ */
+export interface BadgeConfig {
+  l2Id: string
+  tiers: BadgeTierConfig[]
 }
 
 // ============================================================================
@@ -411,9 +440,11 @@ export interface GoalSetupSelections {
   targets: Record<string, number>
   curveConfigs: Record<string, MilestoneLadderConfig>
   rampConfigs: Record<string, HabitRampStep[]>
+  rampEnabled: Set<string>
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
   targetDates: Record<string, string>
+  goalDates: Record<string, string>
 }
 
 // ============================================================================

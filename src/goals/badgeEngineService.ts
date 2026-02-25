@@ -1,151 +1,181 @@
 /**
- * L2 Badge Engine — standalone service that computes badge/gamification status
- * for each L2 achievement from a flat list of L3 goal progress.
+ * L2 Badge Engine — computes badge/gamification status for L2 achievements.
  *
- * Uses the same weighted aggregation math as computeAchievementProgress()
- * in milestoneService.ts, but packages results as badge statuses with tiers.
+ * All badges use threshold-based tiers with evolving names (6 tiers).
+ * Each badge config defines concrete L3 value requirements per tier.
  *
  * Pure functions — no DB or side effects.
  */
 
 import {
-  DEFAULT_ACHIEVEMENT_WEIGHTS,
   GOAL_TEMPLATE_MAP,
-  getAchievementWeights,
+  ALL_BADGE_REQUIREMENTS,
+  THRESHOLD_L2_IDS,
 } from "./data/goalGraph"
-import { computeAchievementProgress } from "./milestoneService"
-import type { GoalWithProgress, BadgeTier, BadgeStatus, TierUpgradeEvent, GoalPhase } from "./types"
+import type {
+  GoalWithProgress, BadgeTier, BadgeStatus, TierUpgradeEvent,
+  BadgeConfig, BadgeTierRequirement,
+} from "./types"
 
 // ============================================================================
-// Tier Thresholds
+// Tier System
 // ============================================================================
 
-/** Badge tier thresholds (progress percentage boundaries). */
-const TIER_THRESHOLDS: { min: number; tier: BadgeTier }[] = [
-  { min: 100, tier: "diamond" },
-  { min: 75, tier: "gold" },
-  { min: 50, tier: "silver" },
-  { min: 25, tier: "bronze" },
-  { min: 0, tier: "none" },
-]
+/** Ordered tiers from highest to lowest for threshold checking. */
+const TIERS_DESC: BadgeTier[] = ["mythic", "diamond", "gold", "silver", "bronze", "iron"]
 
-/**
- * Map a progress percentage (0–100) to a badge tier.
- */
-export function progressToTier(progress: number): BadgeTier {
-  for (const { min, tier } of TIER_THRESHOLDS) {
-    if (progress >= min) return tier
-  }
+/** Map a progress percentage (0–100) to a display tier. */
+export function progressToTier(percent: number): BadgeTier {
+  if (percent >= 100) return "diamond"
+  if (percent >= 75) return "gold"
+  if (percent >= 50) return "silver"
+  if (percent >= 25) return "bronze"
   return "none"
 }
 
+/** Numeric order for tier comparison. Higher = better. */
+export const TIER_ORDER: Record<BadgeTier, number> = {
+  none: 0,
+  iron: 1,
+  bronze: 2,
+  silver: 3,
+  gold: 4,
+  diamond: 5,
+  mythic: 6,
+}
+
 // ============================================================================
-// Self-Reported Gating
+// Threshold-Based Badge Computation
 // ============================================================================
 
 /**
- * Check if any contributing L3 goal has a non-self-reported linked metric.
- * If ALL goals are self-reported (linkedMetric === null), badge tier is capped at bronze.
+ * Build a map of template_id → current_value from L3 goals.
  */
-function hasNonSelfReportedGoal(l3Goals: GoalWithProgress[]): boolean {
-  return l3Goals.some((g) => {
-    if (!g.template_id) return false
-    const template = GOAL_TEMPLATE_MAP[g.template_id]
-    return template?.linkedMetric != null
+function buildCurrentValueMap(l3Goals: GoalWithProgress[]): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const goal of l3Goals) {
+    if (goal.template_id) {
+      map.set(goal.template_id, goal.current_value)
+    }
+  }
+  return map
+}
+
+/**
+ * Check if all requirements for a tier are met.
+ */
+function tierRequirementsMet(
+  requirements: BadgeTierRequirement[],
+  valueMap: Map<string, number>
+): boolean {
+  return requirements.every((req) => {
+    const value = valueMap.get(req.templateId) ?? 0
+    return value >= req.value
   })
 }
 
-// ============================================================================
-// Phase-Aware Progress
-// ============================================================================
+/**
+ * Compute progress percentage toward the next tier.
+ * Returns the minimum completion ratio across all next-tier requirements.
+ * If already mythic, returns 100.
+ */
+function computeThresholdProgress(
+  config: BadgeConfig,
+  currentTier: BadgeTier,
+  valueMap: Map<string, number>
+): number {
+  if (currentTier === "mythic") return 100
+
+  // Find the next tier's requirements
+  const currentIdx = TIERS_DESC.indexOf(currentTier)
+  const nextTierIdx = currentTier === "none" ? TIERS_DESC.length - 1 : currentIdx - 1
+  if (nextTierIdx < 0) return 100
+
+  const nextTier = TIERS_DESC[nextTierIdx]
+  const nextTierConfig = config.tiers.find((t) => t.tier === nextTier)
+  if (!nextTierConfig) return 0
+
+  // Progress = minimum ratio across all requirements (bottleneck determines %)
+  const ratios = nextTierConfig.requirements.map((req) => {
+    const value = valueMap.get(req.templateId) ?? 0
+    return Math.min(100, Math.round((value / req.value) * 100))
+  })
+
+  return ratios.length > 0 ? Math.min(...ratios) : 0
+}
 
 /**
- * Build a progress map that accounts for goal phase.
- * Goals in consolidation/graduated phase contribute 100% of their weight.
- * Goals in acquisition (or no phase) contribute their actual progress_percentage.
+ * Get the evolving tier name for the current tier of a badge.
+ * Returns the name from BadgeTierConfig, or falls back to the template title.
  */
-function buildPhaseAwareProgressMap(
+function getTierName(config: BadgeConfig, currentTier: BadgeTier): string {
+  if (currentTier === "none") {
+    // Show the iron tier name as the "locked" label
+    const ironTier = config.tiers.find((t) => t.tier === "iron")
+    return ironTier?.name ?? GOAL_TEMPLATE_MAP[config.l2Id]?.title ?? config.l2Id
+  }
+  const tierConfig = config.tiers.find((t) => t.tier === currentTier)
+  return tierConfig?.name ?? GOAL_TEMPLATE_MAP[config.l2Id]?.title ?? config.l2Id
+}
+
+/**
+ * Compute badge status for a single badge using threshold requirements.
+ */
+function computeThresholdBadge(
+  config: BadgeConfig,
   l3Goals: GoalWithProgress[]
-): Map<string, number> {
-  const progressMap = new Map<string, number>()
-  for (const goal of l3Goals) {
-    if (goal.template_id) {
-      const phase = (goal as GoalWithProgress & { goal_phase?: GoalPhase | null }).goal_phase
-      const progress = (phase === "consolidation" || phase === "graduated")
-        ? 100
-        : goal.progress_percentage
-      progressMap.set(goal.template_id, progress)
+): BadgeStatus | null {
+  const valueMap = buildCurrentValueMap(l3Goals)
+
+  // Check if user has ANY of the referenced L3 goals
+  const hasRelevantGoal = config.tiers.some((t) =>
+    t.requirements.some((req) => valueMap.has(req.templateId))
+  )
+  if (!hasRelevantGoal) return null
+
+  // Find highest tier where ALL requirements are met
+  let currentTier: BadgeTier = "none"
+  for (const tier of TIERS_DESC) {
+    const tierConfig = config.tiers.find((t) => t.tier === tier)
+    if (tierConfig && tierRequirementsMet(tierConfig.requirements, valueMap)) {
+      currentTier = tier
+      break
     }
   }
-  return progressMap
+
+  const progress = computeThresholdProgress(config, currentTier, valueMap)
+  const template = GOAL_TEMPLATE_MAP[config.l2Id]
+  const title = template?.title ?? config.l2Id
+  const tierName = getTierName(config, currentTier)
+
+  return {
+    badgeId: config.l2Id,
+    title,
+    tierName,
+    progress,
+    tier: currentTier,
+    unlocked: currentTier !== "none",
+  }
 }
 
 // ============================================================================
-// Badge Computation
+// Combined Badge Computation
 // ============================================================================
-
-/**
- * Extract unique L2 achievement IDs from the default weight table.
- * These are all L2 IDs that have weight entries defined.
- */
-function getAllL2Ids(): string[] {
-  const ids = new Set(DEFAULT_ACHIEVEMENT_WEIGHTS.map((w) => w.achievementId))
-  return [...ids]
-}
 
 /**
  * Compute badge status for all L2 achievements from a flat list of L3 goals.
  *
- * For each L2:
- * 1. Determines which L3 goals are active (present in the input list with a template_id)
- * 2. Redistributes weights across active goals only (same as getAchievementWeights)
- * 3. Computes weighted progress (same math as computeAchievementProgress)
- * 4. Assigns a tier based on progress thresholds
+ * All badges use threshold-based tiers with evolving names (6 tiers).
  *
- * L2 achievements with zero active contributing goals are excluded from the result.
- *
- * @param l3Goals - flat list of L3 GoalWithProgress items (must have template_id and progress_percentage)
+ * @param l3Goals - flat list of L3 GoalWithProgress items
  * @returns BadgeStatus[] - one entry per L2 that has at least one active contributing L3
  */
 export function computeAllBadges(l3Goals: GoalWithProgress[]): BadgeStatus[] {
-  // Build set of active template IDs and phase-aware progress map
-  const activeTemplateIds = new Set<string>()
-  for (const goal of l3Goals) {
-    if (goal.template_id) {
-      activeTemplateIds.add(goal.template_id)
-    }
-  }
-
-  const progressMap = buildPhaseAwareProgressMap(l3Goals)
-  const selfReportedOnly = !hasNonSelfReportedGoal(l3Goals)
-
-  const allL2Ids = getAllL2Ids()
   const badges: BadgeStatus[] = []
 
-  for (const l2Id of allL2Ids) {
-    const weights = getAchievementWeights(l2Id, activeTemplateIds)
-
-    // Skip L2s with no active contributing goals
-    if (weights.length === 0) continue
-
-    const result = computeAchievementProgress(weights, progressMap)
-    let tier = progressToTier(result.progressPercent)
-
-    // Self-reported gating: cap at bronze if no linked metrics
-    if (selfReportedOnly && TIER_ORDER[tier] > TIER_ORDER["bronze"]) {
-      tier = "bronze"
-    }
-
-    const template = GOAL_TEMPLATE_MAP[l2Id]
-    const title = template?.title ?? l2Id
-
-    badges.push({
-      badgeId: l2Id,
-      title,
-      progress: result.progressPercent,
-      tier,
-      unlocked: tier !== "none",
-    })
+  for (const config of ALL_BADGE_REQUIREMENTS) {
+    const badge = computeThresholdBadge(config, l3Goals)
+    if (badge) badges.push(badge)
   }
 
   return badges
@@ -153,60 +183,22 @@ export function computeAllBadges(l3Goals: GoalWithProgress[]): BadgeStatus[] {
 
 /**
  * Compute badge status for a single L2 achievement from a flat list of L3 goals.
- *
  * Returns null if the L2 has no active contributing goals in the input list.
- *
- * @param l2Id - the L2 template ID (e.g., "l2_master_daygame")
- * @param l3Goals - flat list of L3 GoalWithProgress items
  */
 export function computeBadge(
   l2Id: string,
   l3Goals: GoalWithProgress[]
 ): BadgeStatus | null {
-  const activeTemplateIds = new Set<string>()
-  for (const goal of l3Goals) {
-    if (goal.template_id) {
-      activeTemplateIds.add(goal.template_id)
-    }
-  }
+  if (!THRESHOLD_L2_IDS.has(l2Id)) return null
 
-  const weights = getAchievementWeights(l2Id, activeTemplateIds)
-  if (weights.length === 0) return null
-
-  const progressMap = buildPhaseAwareProgressMap(l3Goals)
-  const result = computeAchievementProgress(weights, progressMap)
-  let tier = progressToTier(result.progressPercent)
-
-  // Self-reported gating: cap at bronze if no linked metrics
-  const selfReportedOnly = !hasNonSelfReportedGoal(l3Goals)
-  if (selfReportedOnly && TIER_ORDER[tier] > TIER_ORDER["bronze"]) {
-    tier = "bronze"
-  }
-
-  const template = GOAL_TEMPLATE_MAP[l2Id]
-  const title = template?.title ?? l2Id
-
-  return {
-    badgeId: l2Id,
-    title,
-    progress: result.progressPercent,
-    tier,
-    unlocked: tier !== "none",
-  }
+  const config = ALL_BADGE_REQUIREMENTS.find((b) => b.l2Id === l2Id)
+  if (!config) return null
+  return computeThresholdBadge(config, l3Goals)
 }
 
 // ============================================================================
 // Tier Upgrade Detection
 // ============================================================================
-
-/** Numeric order for tier comparison. Higher = better. */
-export const TIER_ORDER: Record<BadgeTier, number> = {
-  none: 0,
-  bronze: 1,
-  silver: 2,
-  gold: 3,
-  diamond: 4,
-}
 
 /**
  * Detect upward tier changes between two badge snapshots.

@@ -20,6 +20,7 @@ export function OnboardingChoice({ onChoose }: OnboardingChoiceProps) {
           onClick={() => onChoose("simple")}
           className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 text-left transition-all hover:border-emerald-400/30 hover:bg-emerald-400/5 cursor-pointer"
         >
+          <kbd className="absolute top-3 right-3 size-6 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono text-white/50 flex items-center justify-center">1</kbd>
           <div className="flex items-start gap-4">
             <div className="rounded-xl bg-emerald-400/10 p-3">
               <Zap className="size-6 text-emerald-400" />
@@ -38,6 +39,7 @@ export function OnboardingChoice({ onChoose }: OnboardingChoiceProps) {
           onClick={() => onChoose("full")}
           className="group relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 text-left transition-all hover:border-purple-400/30 hover:bg-purple-400/5 cursor-pointer"
         >
+          <kbd className="absolute top-3 right-3 size-6 rounded-md bg-white/10 border border-white/15 text-[11px] font-mono text-white/50 flex items-center justify-center">2</kbd>
           <div className="flex items-start gap-4">
             <div className="rounded-xl bg-purple-400/10 p-3">
               <Rocket className="size-6 text-purple-400" />

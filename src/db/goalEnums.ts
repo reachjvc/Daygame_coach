@@ -19,7 +19,7 @@ export const GOAL_TYPES = ["recurring", "milestone", "habit_ramp"] as const
 
 export const GOAL_DISPLAY_CATEGORIES = [
   // Daygame
-  "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+  "field_work", "results", "dirty_dog", "texting", "dates", "relationship", "scenarios",
   // Personal Growth
   "mindfulness", "resilience", "learning", "reflection", "discipline",
   // Fitness
@@ -35,6 +35,7 @@ export const LINKED_METRICS = [
   "field_reports_weekly", "approaches_cumulative", "sessions_cumulative",
   "numbers_cumulative", "instadates_cumulative", "field_reports_cumulative",
   "approach_quality_avg_weekly",
+  "scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative",
 ] as const
 
 export const GOAL_NATURES = ["input", "outcome"] as const

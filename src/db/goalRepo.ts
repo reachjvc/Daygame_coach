@@ -17,6 +17,7 @@ import type {
 import { computeGoalProgress } from "./goalTypes"
 import type { UserTrackingStatsRow } from "./trackingTypes"
 import { getOrCreateUserTrackingStats, getWeeklyApproachQualityAvg } from "./trackingRepo"
+import { getScenarioStats, type ScenarioStats } from "./scenarioRepo"
 import { getISOWeekString } from "../tracking/trackingService"
 import { getTodayInTimezone, getNowInTimezone } from "../shared/dateUtils"
 import { shouldAutoFreeze } from "../goals/goalsService"
@@ -750,6 +751,11 @@ export function getMetricValue(
     case "approach_quality_avg_weekly":
       console.warn(`[getMetricValue] approach_quality_avg_weekly should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
       return 0
+    case "scenario_sessions_cumulative":
+    case "scenario_types_cumulative":
+    case "scenario_high_scores_cumulative":
+      console.warn(`[getMetricValue] ${metric} should be handled by syncLinkedGoals directly (requires async DB query). Returning 0.`)
+      return 0
     default:
       console.warn(`[getMetricValue] Unknown linked_metric "${metric}". Returning 0 — goal progress may be incorrect.`)
       return 0
@@ -835,13 +841,26 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     qualityAvg = await getWeeklyApproachQualityAvg(userId, monday.toISOString())
   }
 
+  const SCENARIO_METRICS = ["scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative"]
+  const needsScenarioStats = goals.some(g => SCENARIO_METRICS.includes(g.linked_metric ?? ""))
+  let scenarioStats: ScenarioStats | null = null
+  if (needsScenarioStats) {
+    scenarioStats = await getScenarioStats(userId)
+  }
+
   let updatedCount = 0
 
   for (const goal of goals) {
     const metric = goal.linked_metric as LinkedMetric
     const newValue = metric === "approach_quality_avg_weekly"
       ? qualityAvg
-      : getMetricValue(stats, metric, timezone)
+      : metric === "scenario_sessions_cumulative"
+        ? (scenarioStats?.totalSessions ?? 0)
+        : metric === "scenario_types_cumulative"
+          ? (scenarioStats?.uniqueTypes ?? 0)
+          : metric === "scenario_high_scores_cumulative"
+            ? (scenarioStats?.highScoreCount ?? 0)
+            : getMetricValue(stats, metric, timezone)
 
     // Only update if value changed
     if (newValue !== goal.current_value) {

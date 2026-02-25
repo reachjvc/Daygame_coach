@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Plus, Trash2, Calendar } from "lucide-react"
+import { Plus, Trash2, Calendar, Wand2 } from "lucide-react"
 import { computeRampMilestoneDates, generateMilestoneLadder } from "../milestoneService"
 import type { HabitRampStep, MilestoneLadderConfig } from "../types"
 
@@ -14,6 +14,8 @@ interface HabitRampEditorProps {
   /** Milestone config to compute projected dates against */
   milestoneConfig?: MilestoneLadderConfig
   accentColor?: string
+  /** Target date for auto-fit — ISO string YYYY-MM-DD */
+  targetDate?: string
 }
 
 function formatWeekDate(date: Date): string {
@@ -25,6 +27,7 @@ export function HabitRampEditor({
   onChange,
   milestoneConfig,
   accentColor = "#f97316",
+  targetDate,
 }: HabitRampEditorProps) {
   // Compute projected milestone dates if we have both ramp steps and milestone config
   const projectedDates = useMemo(() => {
@@ -37,6 +40,42 @@ export function HabitRampEditor({
   // Total weeks and volume
   const totalWeeks = steps.reduce((sum, s) => sum + s.durationWeeks, 0)
   const totalVolume = steps.reduce((sum, s) => sum + s.frequencyPerWeek * s.durationWeeks, 0)
+
+  // Available weeks until target date
+  const availableWeeks = useMemo(() => {
+    if (!targetDate) return null
+    const now = new Date()
+    const target = new Date(targetDate + "T00:00:00")
+    const diffMs = target.getTime() - now.getTime()
+    if (diffMs <= 0) return null
+    return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7))
+  }, [targetDate])
+
+  // Date fit indicator
+  const dateFitText = useMemo(() => {
+    if (availableWeeks === null) return null
+    const diff = totalWeeks - availableWeeks
+    if (Math.abs(diff) <= 1) return { text: "On target", color: accentColor }
+    if (diff > 0) return { text: `${diff}wk over target`, color: "#ef4444" }
+    return { text: `${Math.abs(diff)}wk headroom`, color: "#22c55e" }
+  }, [availableWeeks, totalWeeks, accentColor])
+
+  const handleAutoFit = () => {
+    if (availableWeeks === null || steps.length === 0) return
+    const totalOriginalWeeks = steps.reduce((sum, s) => sum + s.durationWeeks, 0)
+    if (totalOriginalWeeks === 0) return
+    const ratio = availableWeeks / totalOriginalWeeks
+    let remaining = availableWeeks
+    const fitted = steps.map((s, idx) => {
+      if (idx === steps.length - 1) {
+        return { ...s, durationWeeks: Math.max(1, remaining) }
+      }
+      const scaled = Math.max(1, Math.round(s.durationWeeks * ratio))
+      remaining -= scaled
+      return { ...s, durationWeeks: scaled }
+    })
+    onChange(fitted)
+  }
 
   const handleStepChange = (idx: number, field: keyof HabitRampStep, value: number) => {
     const updated = [...steps]
@@ -113,7 +152,26 @@ export function HabitRampEditor({
       <div className="flex items-center gap-4 text-xs text-muted-foreground">
         <span>{totalWeeks} weeks total</span>
         <span>{totalVolume.toLocaleString()} total volume</span>
+        {dateFitText && (
+          <span style={{ color: dateFitText.color, fontWeight: 500 }}>
+            {dateFitText.text}
+          </span>
+        )}
       </div>
+
+      {/* Auto-fit to target date */}
+      {availableWeeks !== null && totalWeeks !== availableWeeks && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleAutoFit}
+          className="text-xs h-7 w-full"
+          style={{ borderColor: `${accentColor}33`, color: accentColor }}
+        >
+          <Wand2 className="size-3 mr-1" />
+          Auto-fit to target date ({availableWeeks}wk available)
+        </Button>
+      )}
 
       {/* Projected milestone dates */}
       {projectedDates.length > 0 && (

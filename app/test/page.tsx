@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -82,6 +82,12 @@ const testPages = [
     href: "/test/curve_editor",
     description: "Milestone curve editor reskinned with aurora orrery aesthetic",
     icon: Orbit,
+  },
+  {
+    name: "Direction Step Colors",
+    href: "/test/direction-colors",
+    description: "3 color scheme variants for the direction/path selection step",
+    icon: Paintbrush,
   },
 ]
 

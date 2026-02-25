@@ -41,7 +41,7 @@ describe("goal catalog integrity", () => {
   test("L3 goals have display categories", () => {
     const l3Goals = GOAL_TEMPLATES.filter((t) => t.level === 3)
     const validCategories = [
-      "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+      "field_work", "results", "dirty_dog", "texting", "dates", "relationship", "scenarios",
       "mindfulness", "resilience", "learning", "reflection", "discipline",
       "strength", "training", "nutrition", "body_comp", "flexibility", "endurance",
       "income", "saving", "investing", "career_growth", "entrepreneurship",
@@ -161,10 +161,10 @@ describe("getChildren", () => {
   })
 
   test("L2 achievements have no children (standalone badges)", () => {
-    expect(getChildren("l2_master_daygame").length).toBe(0)
-    expect(getChildren("l2_overcome_aa").length).toBe(0)
-    expect(getChildren("l2_master_texting").length).toBe(0)
-    expect(getChildren("l2_attract_any").length).toBe(0)
+    expect(getChildren("l2_approach").length).toBe(0)
+    expect(getChildren("l2_results").length).toBe(0)
+    expect(getChildren("l2_tongue").length).toBe(0)
+    expect(getChildren("l2_inner").length).toBe(0)
   })
 
   test("L3 goals have no children", () => {
@@ -188,7 +188,7 @@ describe("getLeafGoals", () => {
   })
 
   test("L2 is standalone — returns only itself (no children)", () => {
-    const leaves = getLeafGoals("l2_master_daygame")
+    const leaves = getLeafGoals("l2_approach")
     // L2 has level 2, not 3, so it doesn't match the "return [tmpl]" branch.
     // But getLeafGoals returns the template itself if it has no children.
     // Since L2 has no children and is not level 3, it returns empty.
@@ -216,11 +216,12 @@ describe("getLeafGoals", () => {
 // Achievement Weights
 // ============================================================================
 
-describe("achievement weights", () => {
-  const l2Ids = GOAL_TEMPLATES.filter((t) => t.level === 2).map((t) => t.id)
+describe("achievement weights (legacy — non-daygame L2s)", () => {
+  // Weighted L2 IDs derived from the weights data itself
+  const weightedL2Ids = [...new Set(DEFAULT_ACHIEVEMENT_WEIGHTS.map((w) => w.achievementId))]
 
-  test("every L2 has weights that sum to ~1.0", () => {
-    for (const l2Id of l2Ids) {
+  test("every weighted L2 has weights that sum to ~1.0", () => {
+    for (const l2Id of weightedL2Ids) {
       const weights = getAchievementWeights(l2Id)
       expect(weights.length).toBeGreaterThan(0)
       const total = weights.reduce((sum, w) => sum + w.weight, 0)
@@ -228,21 +229,20 @@ describe("achievement weights", () => {
     }
   })
 
-  test("per-L2 weights differ (not shared in v2)", () => {
-    const daygame = getAchievementWeights("l2_master_daygame")
-    const aa = getAchievementWeights("l2_overcome_aa")
-    expect(daygame.length).not.toBe(aa.length)
+  test("per-L2 weights differ across personal growth L2s", () => {
+    const mindfulness = getAchievementWeights("l2_pg_mindfulness")
+    const toughness = getAchievementWeights("l2_pg_toughness")
+    expect(mindfulness.length).not.toBe(toughness.length)
   })
 
-  test("approach volume weight varies by L2 context", () => {
-    const daygameWeights = getAchievementWeights("l2_master_daygame")
-    const aaWeights = getAchievementWeights("l2_overcome_aa")
-    const daygameAV = daygameWeights.find((w) => w.goalId === "l3_approach_volume")
-    const aaAV = aaWeights.find((w) => w.goalId === "l3_approach_volume")
-    expect(daygameAV).toBeDefined()
-    expect(aaAV).toBeDefined()
-    // AA weights approach volume much more heavily than master daygame
-    expect(aaAV!.weight).toBeGreaterThan(daygameAV!.weight)
+  test("meditation weight varies by L2 context", () => {
+    const mindfulnessWeights = getAchievementWeights("l2_pg_mindfulness")
+    const reflectionWeights = getAchievementWeights("l2_pg_reflection")
+    const mindfulnessMed = mindfulnessWeights.find((w) => w.goalId === "l3_pg_meditation")
+    const reflectionMed = reflectionWeights.find((w) => w.goalId === "l3_pg_meditation")
+    expect(mindfulnessMed).toBeDefined()
+    expect(reflectionMed).toBeDefined()
+    expect(mindfulnessMed!.weight).toBeGreaterThan(reflectionMed!.weight)
   })
 
   test("all L3 goal IDs in weights exist in catalog", () => {
@@ -278,25 +278,25 @@ describe("redistributeWeights", () => {
     expect(result[2].weight).toBeCloseTo(0.20, 5)
   })
 
-  test("preserves original weights when goals are removed (no renormalization)", () => {
-    // Remove "c" (0.20) → a and b keep their original weights, total < 1
+  test("redistributes weights proportionally when goals are removed", () => {
+    // Remove "c" (0.20) → a and b get redistributed so they sum to 1.0
     const active = new Set(["a", "b"])
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(2)
 
     const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(0.80, 5)
+    expect(total).toBeCloseTo(1.0, 5)
 
-    // Original weights preserved
-    expect(result[0].weight).toBeCloseTo(0.50, 5)
-    expect(result[1].weight).toBeCloseTo(0.30, 5)
+    // Weights redistributed proportionally: 0.50/0.80 and 0.30/0.80
+    expect(result[0].weight).toBeCloseTo(0.50 / 0.80, 5)
+    expect(result[1].weight).toBeCloseTo(0.30 / 0.80, 5)
   })
 
-  test("single remaining goal keeps its original weight", () => {
+  test("single remaining goal gets weight of 1.0", () => {
     const active = new Set(["b"])
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(1)
-    expect(result[0].weight).toBeCloseTo(0.30, 5)
+    expect(result[0].weight).toBeCloseTo(1.0, 5)
   })
 
   test("returns empty array when no goals are active", () => {
@@ -310,26 +310,25 @@ describe("redistributeWeights", () => {
     const result = redistributeWeights(baseWeights, active)
     expect(result).toHaveLength(2)
     const total = result.reduce((s, w) => s + w.weight, 0)
-    expect(total).toBeCloseTo(0.80, 5)
+    expect(total).toBeCloseTo(1.0, 5)
   })
 
-  test("real scenario: user removes dirty dog goals from master_daygame", () => {
-    const allWeights = getAchievementWeights("l2_master_daygame")
-    const dirtyDogIds = new Set(["l3_kiss_closes", "l3_lays", "l3_sustained_rotation"])
-    const activeIds = new Set(allWeights.map((w) => w.goalId).filter((id) => !dirtyDogIds.has(id)))
+  test("real scenario: user removes some goals from l2_pg_mindfulness", () => {
+    const allWeights = getAchievementWeights("l2_pg_mindfulness")
+    // Remove a couple of goals
+    const removedIds = new Set(["l3_pg_therapy", "l3_pg_breathwork"])
+    const activeIds = new Set(allWeights.map((w) => w.goalId).filter((id) => !removedIds.has(id)))
 
     const result = redistributeWeights(allWeights, activeIds)
     const total = result.reduce((s, w) => s + w.weight, 0)
-    // Total should be < 1 (dirty dog weight is not redistributed)
-    expect(total).toBeLessThan(1.0)
-    expect(total).toBeGreaterThan(0.5)
+    // Total should be 1.0 after redistribution
+    expect(total).toBeCloseTo(1.0, 2)
 
-    // Approach volume keeps its original weight (no inflation from redistribution)
-    const approaches = result.find((w) => w.goalId === "l3_approach_volume")
-    expect(approaches).toBeDefined()
-    // Original weight preserved, not inflated
-    const originalApproaches = allWeights.find((w) => w.goalId === "l3_approach_volume")
-    expect(approaches!.weight).toBeCloseTo(originalApproaches!.weight, 5)
+    // Each remaining weight should be proportionally larger than the original
+    const originalMed = allWeights.find((w) => w.goalId === "l3_pg_meditation")
+    const resultMed = result.find((w) => w.goalId === "l3_pg_meditation")
+    expect(resultMed).toBeDefined()
+    expect(resultMed!.weight).toBeGreaterThan(originalMed!.weight)
   })
 })
 
@@ -344,7 +343,7 @@ describe("getTemplatesByCategory", () => {
     expect(keys).toContain("field_work")
     expect(keys).toContain("mindfulness")
     expect(keys).toContain("field_work")
-    expect(keys.length).toBe(26) // 6 daygame + 5 PG + 6 fitness + 5 wealth + 4 vices
+    expect(keys.length).toBe(27) // 7 daygame + 5 PG + 6 fitness + 5 wealth + 4 vices
   })
 
   test("field_work contains approach-related goals", () => {
@@ -354,11 +353,14 @@ describe("getTemplatesByCategory", () => {
     expect(ids).toContain("l3_approach_frequency")
   })
 
-  test("dirty_dog contains lays", () => {
+  test("dirty_dog contains all dirty dog goals", () => {
     const cats = getTemplatesByCategory()
     const ids = cats.dirty_dog!.map((t) => t.id)
+    expect(ids).toContain("l3_kiss_closes")
+    expect(ids).toContain("l3_pull_attempts")
     expect(ids).toContain("l3_lays")
-    expect(ids.length).toBe(1)
+    expect(ids).toContain("l3_same_day_lays")
+    expect(ids.length).toBe(4)
   })
 
   test("texting contains texting-related goals", () => {
@@ -456,9 +458,9 @@ describe("getCrossAreaInfluence", () => {
   })
 
   test("returns edges where template is target", () => {
-    const edges = getCrossAreaInfluence("l2_overcome_aa")
+    const edges = getCrossAreaInfluence("l2_approach")
     expect(edges.length).toBeGreaterThan(0)
-    expect(edges.some((e) => e.targetId === "l2_overcome_aa")).toBe(true)
+    expect(edges.some((e) => e.targetId === "l2_approach")).toBe(true)
   })
 
   test("returns empty for template with no cross-area connections", () => {
@@ -469,10 +471,10 @@ describe("getCrossAreaInfluence", () => {
 
 describe("getCrossAreaContributors", () => {
   test("returns only edges where template is the target", () => {
-    const edges = getCrossAreaContributors("l2_confident")
+    const edges = getCrossAreaContributors("l2_results")
     expect(edges.length).toBeGreaterThan(0)
     for (const edge of edges) {
-      expect(edge.targetId).toBe("l2_confident")
+      expect(edge.targetId).toBe("l2_results")
     }
   })
 

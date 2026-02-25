@@ -366,6 +366,11 @@ def _collect_confidence_stats(target_ids: Set[str]) -> Dict[str, Any]:
     conv_scores: List[float] = []
     video_scores: List[float] = []
     trace_ids: Set[str] = set()
+    damage_type_counts: Dict[str, int] = {}
+    quality_repair_totals = {"artifact_accepted": 0, "artifact_rejected": 0,
+                             "lq_accepted": 0, "lq_rejected": 0}
+    repair_credit_segments_total = 0
+    gated_videos = 0
 
     for trace_path in _iter_files(root, "*.confidence.trace.json"):
         trace_vid = _video_id_for_file(trace_path, allow_json_probe=False)
@@ -410,6 +415,37 @@ def _collect_confidence_stats(target_ids: Set[str]) -> Dict[str, Any]:
             if local_scores:
                 video_scores.append(sum(local_scores) / float(len(local_scores)))
 
+        # v2.1: aggregate damage types and repair counts from report
+        dtc = data.get("damage_type_counts")
+        if isinstance(dtc, dict):
+            for code, count in dtc.items():
+                if isinstance(code, str) and isinstance(count, (int, float)):
+                    damage_type_counts[code] = damage_type_counts.get(code, 0) + max(int(count), 0)
+
+        qr = data.get("quality_repairs")
+        if isinstance(qr, dict):
+            for key in quality_repair_totals:
+                raw = qr.get(key)
+                if isinstance(raw, (int, float)):
+                    quality_repair_totals[key] += max(int(raw), 0)
+
+        summary = data.get("summary")  # re-read for repair_credit_segments
+        if isinstance(summary, dict):
+            rcs = summary.get("repair_credit_segments")
+            if isinstance(rcs, (int, float)):
+                repair_credit_segments_total += max(int(rcs), 0)
+
+    # Also count gated videos from stage07 output
+    stage07_dir, stage07_pattern = STAGE_SPECS.get("stage07", ("07.LLM.content", "*.enriched.json"))
+    stage07_root = repo_root() / "data" / stage07_dir
+    for path07 in _iter_files(stage07_root, stage07_pattern):
+        vid07 = _video_id_for_file(path07, allow_json_probe=True)
+        if not vid07 or vid07 not in target_ids:
+            continue
+        d07 = _load_json(path07)
+        if isinstance(d07, dict) and d07.get("gated"):
+            gated_videos += 1
+
     conv_mean = statistics.fmean(conv_scores) if conv_scores else 0.0
     video_mean = statistics.fmean(video_scores) if video_scores else 0.0
     trace_expected = len(target_ids)
@@ -423,6 +459,10 @@ def _collect_confidence_stats(target_ids: Set[str]) -> Dict[str, Any]:
         "trace_files_present": trace_present,
         "trace_files_expected": trace_expected,
         "trace_coverage_ratio": round(float(trace_ratio), 4),
+        "damage_type_counts": damage_type_counts,
+        "quality_repairs": quality_repair_totals,
+        "repair_credit_segments_total": repair_credit_segments_total,
+        "gated_videos": gated_videos,
     }
 
 

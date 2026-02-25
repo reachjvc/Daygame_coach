@@ -527,8 +527,11 @@ def _process_single_adjudication(
     seed: Dict[str, Any],
     context_ids: List[int],
     args: argparse.Namespace,
+    video_type: str = "infield",
 ) -> Dict[str, Any]:
     """Post-process a single adjudication result into an output row."""
+    from validation.confidence_model import get_axis_weights
+
     sid = _safe_int(seed.get("segment_id"))
     conv_id = _safe_int(seed.get("conversation_id")) or 0
     sev = str(seed.get("severity", "low")).strip().lower() or "low"
@@ -538,7 +541,13 @@ def _process_single_adjudication(
     transcript_conf = float(adjudication.get("transcript_confidence", 0.0))
     speaker_conf = float(adjudication.get("speaker_confidence", 0.0))
     phase_conf = float(adjudication.get("phase_confidence", 0.0))
-    overall_conf = _mean([transcript_conf, speaker_conf, phase_conf])
+    # v2.1: Use video-type-aware weights (matching 06h model).
+    _w = get_axis_weights(video_type)
+    overall_conf = (
+        transcript_conf * _w.get("transcript", 0.475)
+        + speaker_conf * _w.get("speaker", 0.475)
+        + phase_conf * _w.get("phase", 0.05)
+    )
 
     repair_possible = bool(adjudication.get("repair_possible"))
     repaired_text = adjudication.get("repaired_text")
@@ -571,10 +580,11 @@ def _process_single_llm_failure(
     context_ids: List[int],
     args: argparse.Namespace,
     reason: str,
+    video_type: str = "infield",
 ) -> Dict[str, Any]:
     sid = _safe_int(seed.get("segment_id"))
     adjudication = _failed_seed_payload(sid, reason)
-    row = _process_single_adjudication(adjudication, seed, context_ids, args)
+    row = _process_single_adjudication(adjudication, seed, context_ids, args, video_type=video_type)
     row["llm_failed"] = True
     row["llm_error"] = reason
     return row
@@ -661,7 +671,8 @@ def _adjudicate_single_seed(
                 deterministic_match = False
                 break
 
-    row = _process_single_adjudication(adjudication, seed, context_ids, args)
+    row = _process_single_adjudication(adjudication, seed, context_ids, args,
+                                       video_type=_get_video_type(context_data))
     row["determinism_match"] = deterministic_match
     if args.include_raw_llm and raw_runs:
         row["raw_llm_output"] = raw_runs[0]
@@ -738,7 +749,8 @@ def _adjudicate_batch(
             sid = _safe_int(seed.get("segment_id"))
             sev = str(seed.get("severity", "low")).strip().lower() or "low"
             payload = _dry_run_seed_payload(sid, sev)
-            row = _process_single_adjudication(payload, seed, context_ids, args)
+            row = _process_single_adjudication(payload, seed, context_ids, args,
+                                               video_type=_get_video_type(context_data))
             rows.append(row)
         return rows, 0, 0
 
@@ -779,7 +791,8 @@ def _adjudicate_batch(
             if matched is None:
                 raise RuntimeError(f"Batch response missing required segment_id={sid} (strict mode)")
             adjudication = _normalize_adjudication(matched)
-            row = _process_single_adjudication(adjudication, seed, context_ids, args)
+            row = _process_single_adjudication(adjudication, seed, context_ids, args,
+                                               video_type=_get_video_type(context_data))
             rows.append(row)
 
         return rows, 0, 1
@@ -814,6 +827,7 @@ def _adjudicate_batch(
                     context_ids=context_ids,
                     args=args,
                     reason=str(single_exc),
+                    video_type=_get_video_type(context_data),
                 )
                 # Count both the failed batch call and the failed singleton retry call.
                 return [fail_row], 2, 2
@@ -1010,6 +1024,7 @@ def adjudicate_file(
                     context_ids=context_ids,
                     args=args,
                     reason=str(exc),
+                    video_type=_get_video_type(context_data),
                 )
                 llm_failed = True
             llm_calls += 1

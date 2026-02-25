@@ -8,6 +8,8 @@
  */
 
 import { getProfile } from "@/src/db/profilesRepo"
+import { createScenarioAttempt } from "@/src/db/scenarioRepo"
+import { syncLinkedGoals } from "@/src/db/goalRepo"
 
 import type {
   DifficultyLevel,
@@ -384,6 +386,47 @@ export async function handleChatMessage(request: ChatRequest, userId: string): P
     archetype: archetype.name,
     evaluation: evaluationResult.small,
     milestoneEvaluation,
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Persistence (fire-and-forget — don't block API response)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Persist a scenario attempt after evaluation.
+ * Normalizes score: always stores `score` at top level of evaluation JSONB.
+ * Fire-and-forget — logs errors but doesn't throw.
+ */
+export async function persistScenarioAttempt(
+  userId: string,
+  scenarioType: string,
+  userResponse: string,
+  scenarioData: Record<string, unknown> | null,
+  evaluation: Record<string, unknown> | null
+): Promise<void> {
+  try {
+    // Normalize: ensure top-level `score` field exists
+    const normalizedEval = evaluation ? { ...evaluation } : null
+    if (normalizedEval && typeof normalizedEval.score !== "number" && typeof normalizedEval.overallScore === "number") {
+      normalizedEval.score = normalizedEval.overallScore
+    }
+
+    await createScenarioAttempt({
+      user_id: userId,
+      scenario_type: scenarioType,
+      user_response: userResponse,
+      scenario_data: scenarioData,
+      evaluation: normalizedEval,
+    })
+
+    // Sync scenario-linked goals so badge progress updates
+    await syncLinkedGoals(userId).catch((e) =>
+      console.error("[scenarioRepo] syncLinkedGoals failed:", e)
+    )
+  } catch (err) {
+    // Log but don't throw — persistence failure shouldn't break the user's scenario experience
+    console.error("[scenarioRepo] Failed to persist scenario attempt:", err)
   }
 }
 

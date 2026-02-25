@@ -33,11 +33,23 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 from batch.manifest_parser import load_manifest_sources, manifest_filter_files
 from batch.quarantine_helpers import get_quarantine_block_reason, load_quarantine_video_ids
-from validation.confidence_model import band_from_score, clamp01 as shared_clamp01, weighted_mean
+from validation.confidence_model import (
+    band_from_score,
+    clamp01 as shared_clamp01,
+    weighted_mean,
+    get_axis_weights,
+    REPAIR_CREDIT_MULTIPLIER,
+    PROPAGATION_PENALTY,
+    SPEAKER_AMBIGUITY_MULT_INFIELD,
+    SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE,
+    SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE,
+    SPEAKER_OVERRIDE_FLOOR,
+    VIDEO_GATE_THRESHOLD,
+)
 
 
 LOG_PREFIX = "[06h.DET.confidence-propagation]"
-PIPELINE_VERSION = "06h.DET.confidence-propagation-v1.1"
+PIPELINE_VERSION = "06h.DET.confidence-propagation-v2.1"
 
 REPAIR_ACCEPT_THRESHOLD = 0.85
 DEFAULT_BAND_HIGH_THRESHOLD = 0.80
@@ -231,13 +243,9 @@ def _token_count(text: Any) -> int:
     return len([t for t in re.split(r"\s+", text.strip()) if t])
 
 
-def _gate_decision_from_band(confidence_band: str) -> str:
-    band = str(confidence_band or "").strip().lower()
-    if band == "high":
-        return "pass"
-    if band == "medium":
-        return "review"
-    return "block"
+def _gate_decision(confidence_score: float) -> str:
+    """Binary video gate: pass if >= VIDEO_GATE_THRESHOLD, block otherwise."""
+    return "pass" if confidence_score >= VIDEO_GATE_THRESHOLD else "block"
 
 
 def _build_confidence_trace(
@@ -245,6 +253,8 @@ def _build_confidence_trace(
     report: Dict[str, Any],
     *,
     manifest_hint: Optional[str],
+    penalty_trace_by_seg: Optional[Dict[int, List[Dict[str, Any]]]] = None,
+    repair_credit_sids: Optional[Set[int]] = None,
 ) -> Dict[str, Any]:
     segments = out.get("segments") if isinstance(out.get("segments"), list) else []
     conversations = out.get("conversations") if isinstance(out.get("conversations"), list) else []
@@ -267,15 +277,18 @@ def _build_confidence_trace(
         final_conf = _clamp01(_safe_float(seg_conf.get("overall"), 0.0))
         token_weight = float(max(_token_count(seg.get("text")), 1))
         band = _confidence_tier(final_conf)
+        seg_penalties = (penalty_trace_by_seg or {}).get(sid, [])
         segment_rows.append(
             {
                 "segment_id": sid,
                 "conversation_id": _safe_int(seg.get("conversation_id")),
                 "token_weight": round(token_weight, 2),
-                "base_confidence": round(final_conf, 4),
+                "base_confidence": 1.0,
                 "final_confidence": round(final_conf, 4),
                 "confidence_band": band,
-                "penalties": [],
+                "penalties": seg_penalties,
+                "damage_types": sorted(seg.get("damage_reason_codes", []) if isinstance(seg.get("damage_reason_codes"), list) else []),
+                "repair_credit_applied": sid in (repair_credit_sids or set()),
             }
         )
         segment_scores.append(final_conf)
@@ -302,7 +315,7 @@ def _build_confidence_trace(
         ]
         impacted_ratio = (len(impacted) / float(len(seg_ids))) if seg_ids else 0.0
         band = _confidence_tier(conv_score)
-        gate = "block" if conv.get("confidence_block_reason") else _gate_decision_from_band(band)
+        gate = _gate_decision(conv_score)
         conversation_rows.append(
             {
                 "conversation_id": conv_id,
@@ -316,7 +329,7 @@ def _build_confidence_trace(
 
     video_conf = _clamp01(weighted_mean(segment_scores, weights=segment_weights))
     video_band = _confidence_tier(video_conf)
-    video_gate = _gate_decision_from_band(video_band)
+    video_gate = _gate_decision(video_conf)
     return {
         "version": 1,
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -338,7 +351,12 @@ def _build_confidence_trace(
     }
 
 
-def _damage_multiplier(damage_types: Set[str]) -> Tuple[float, float, float]:
+def _damage_multiplier(
+    damage_types: Set[str],
+    *,
+    video_type: str = "unknown",
+    has_speaker_role_override: bool = False,
+) -> Tuple[float, float, float]:
     transcript = 1.0
     speaker = 1.0
     phase = 1.0
@@ -350,7 +368,13 @@ def _damage_multiplier(damage_types: Set[str]) -> Tuple[float, float, float]:
     if "mixed_mode" in damage_types:
         phase *= 0.55
     if "speaker_ambiguity" in damage_types:
-        speaker *= 0.48
+        if video_type in ("compilation",):
+            if has_speaker_role_override:
+                speaker *= SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE
+            else:
+                speaker *= SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE
+        else:
+            speaker *= SPEAKER_AMBIGUITY_MULT_INFIELD
     if "boundary_uncertain" in damage_types:
         phase *= 0.65
     return transcript, speaker, phase
@@ -359,15 +383,31 @@ def _damage_multiplier(damage_types: Set[str]) -> Tuple[float, float, float]:
 def _apply_propagation_penalties(
     base_conf_by_id: Dict[int, Dict[str, float]],
     propagation_by_seg: Dict[int, float],
+    axis_weights: Dict[str, float],
+    penalty_trace_by_seg: Optional[Dict[int, List[Dict[str, Any]]]] = None,
 ) -> None:
     for sid, penalty in propagation_by_seg.items():
         if sid not in base_conf_by_id:
             continue
         row = base_conf_by_id[sid]
+        pre_overall = row["overall"]
         penalty = _clamp01(penalty)
         for key in ("transcript", "speaker", "phase"):
             row[key] = _clamp01(row[key] * penalty)
-        row["overall"] = _clamp01((row["transcript"] + row["speaker"] + row["phase"]) / 3.0)
+        # v2.1: Recompute overall with video-type-aware weights (phase ~5%)
+        row["overall"] = _clamp01(
+            row["transcript"] * axis_weights.get("transcript", 0.475)
+            + row["speaker"] * axis_weights.get("speaker", 0.475)
+            + row["phase"] * axis_weights.get("phase", 0.05)
+        )
+        if penalty_trace_by_seg is not None:
+            penalty_trace_by_seg.setdefault(sid, []).append({
+                "issue_code": "contamination_propagation",
+                "axis": "all",
+                "multiplier": round(penalty, 4),
+                "before": round(pre_overall, 4),
+                "after": round(row["overall"], 4),
+            })
 
 
 def _load_quality_data(
@@ -640,7 +680,6 @@ def propagate_confidence(
     adjudication: Optional[Dict[str, Any]],
     quality_check: Optional[Dict[str, Any]],
     *,
-    conversation_block_threshold: float,
     apply_repairs: bool,
 ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
     out = copy.deepcopy(data_06d)
@@ -663,6 +702,10 @@ def propagate_confidence(
                 segments, transcript_artifacts, low_quality_segments,
             )
 
+    # v2: Base transcript starts at 1.0 — damage multipliers handle reduction.
+    # The ASR global_transcript_score is informational (already used by 06e/06f
+    # for damage detection). We no longer double-penalize by starting low.
+    # Kept for metadata only.
     global_transcript_score = 0.70
     tc = out.get("transcript_confidence")
     if isinstance(tc, dict):
@@ -671,6 +714,30 @@ def propagate_confidence(
             global_transcript_score = _clamp01(float(score) / 100.0)
 
     speaker_labels = out.get("speaker_labels") if isinstance(out.get("speaker_labels"), dict) else {}
+
+    # v2: Extract video type for type-aware weighting and speaker collapse handling.
+    vt = out.get("video_type", {})
+    if isinstance(vt, dict):
+        video_type_str = str(vt.get("type", "unknown")).strip().lower()
+    elif isinstance(vt, str):
+        video_type_str = vt.strip().lower()
+    else:
+        video_type_str = "unknown"
+    axis_weights = get_axis_weights(video_type_str)
+
+    # v2: Build set of segment IDs with accepted quality repairs (for repair credit).
+    repaired_by_06e: Set[int] = set()
+    for artifact in transcript_artifacts:
+        if isinstance(artifact, dict) and artifact.get("repaired"):
+            sid = artifact.get("segment_index")
+            if isinstance(sid, int):
+                repaired_by_06e.add(sid)
+    for lq_entry in low_quality_segments:
+        if isinstance(lq_entry, dict) and lq_entry.get("repaired"):
+            sid = lq_entry.get("segment")
+            if isinstance(sid, int):
+                repaired_by_06e.add(sid)
+
     seg_ids = [_safe_int(seg.get("id")) for seg in segments]
     seg_ids = [sid for sid in seg_ids if isinstance(sid, int)]
 
@@ -699,6 +766,8 @@ def propagate_confidence(
     damage_reason_codes_by_seg: Dict[int, List[str]] = {}
     contains_repaired_text: Set[int] = set()
     propagation_penalty_by_seg: Dict[int, float] = {}
+    penalty_trace_by_seg: Dict[int, List[Dict[str, Any]]] = {}
+    repair_credit_applied: Set[int] = set()
 
     # First pass: deterministic + local adjudication merge.
     for seg in segments:
@@ -709,16 +778,26 @@ def propagate_confidence(
         role = str(seg.get("speaker_role", "")).strip().lower()
         segment_type = str(seg.get("segment_type", "")).strip().lower()
 
-        speaker_conf = 0.85
+        # v2: Base speaker comes from speaker_labels confidence, else 1.0.
+        speaker_conf = 1.0
         if isinstance(speaker_id, str):
             lbl = speaker_labels.get(speaker_id, {})
             if isinstance(lbl, dict):
-                speaker_conf = _clamp01(_safe_float(lbl.get("confidence"), 0.85))
+                speaker_conf = _clamp01(_safe_float(lbl.get("confidence"), 1.0))
         if role in {"unknown"}:
             speaker_conf = min(speaker_conf, 0.45)
 
-        phase_conf = 0.86 if segment_type == "approach" else 0.74
-        transcript_conf = global_transcript_score
+        # v2: Check for speaker_role_override (set by stage 06 for collapsed speakers).
+        has_speaker_override = isinstance(seg.get("speaker_role_override"), str) and bool(
+            seg.get("speaker_role_override", "").strip()
+        )
+        # If override exists for a collapsed speaker, boost speaker_conf floor.
+        if has_speaker_override:
+            speaker_conf = max(speaker_conf, SPEAKER_OVERRIDE_FLOOR)
+
+        # v2: Base scores start at 1.0 — damage reduces from there.
+        phase_conf = 1.0
+        transcript_conf = 1.0
 
         dmg = damage_by_seg.get(sid, {})
         dmg_types = {
@@ -734,14 +813,56 @@ def propagate_confidence(
         contamination_sources_by_seg[sid] = set(damage_reason_codes)
         damage_reason_codes_by_seg[sid] = damage_reason_codes
 
-        t_mult, s_mult, p_mult = _damage_multiplier(dmg_types)
+        t_mult, s_mult, p_mult = _damage_multiplier(
+            dmg_types,
+            video_type=video_type_str,
+            has_speaker_role_override=has_speaker_override,
+        )
+
+        # v2: Repair credit — if segment was repaired, use gentler transcript multiplier.
+        _06e_repair_credit = False
+        if sid in repaired_by_06e:
+            if "transcript_artifact" in dmg_types or "low_quality" in dmg_types:
+                t_mult = max(t_mult, REPAIR_CREDIT_MULTIPLIER)
+                _06e_repair_credit = True
+                repair_credit_applied.add(sid)
+
+        # v2.1: Collect penalty trace for each axis.
+        seg_penalties: List[Dict[str, Any]] = []
+        speaker_conf_pre_damage = speaker_conf
+        for _ax_name, _ax_mult, _ax_base in [
+            ("transcript", t_mult, transcript_conf),
+            ("speaker", s_mult, speaker_conf_pre_damage),
+            ("phase", p_mult, phase_conf),
+        ]:
+            if _ax_mult < 1.0:
+                seg_penalties.append({
+                    "issue_code": "damage_multiplier",
+                    "axis": _ax_name,
+                    "multiplier": round(_ax_mult, 4),
+                    "before": round(_ax_base, 4),
+                    "after": round(_clamp01(_ax_base * _ax_mult), 4),
+                })
+        if _06e_repair_credit:
+            seg_penalties.append({
+                "issue_code": "repair_credit_06e",
+                "axis": "transcript",
+                "multiplier": round(REPAIR_CREDIT_MULTIPLIER, 4),
+                "before": round(_clamp01(1.0 * (t_mult if not _06e_repair_credit else 0.30)), 4),
+                "after": round(_clamp01(1.0 * t_mult), 4),
+            })
+
         transcript_conf = _clamp01(transcript_conf * t_mult)
         speaker_conf = _clamp01(speaker_conf * s_mult)
         phase_conf = _clamp01(phase_conf * p_mult)
 
         adj = adjudication_by_seed.get(sid, {})
+        adj_llm_failed = bool(adj.get("llm_failed"))
         adj_payload = adj.get("adjudication") if isinstance(adj.get("adjudication"), dict) else {}
-        if isinstance(adj_payload, dict) and adj_payload:
+        # v2: Skip adjudication merge when LLM failed — 0.0 scores would
+        # catastrophically tank confidence. Fall back to damage-only scores.
+        if isinstance(adj_payload, dict) and adj_payload and not adj_llm_failed:
+            _pre_adj_t, _pre_adj_s, _pre_adj_p = transcript_conf, speaker_conf, phase_conf
             transcript_conf = _clamp01(
                 (transcript_conf + _safe_float(adj_payload.get("transcript_confidence"), transcript_conf)) / 2.0
             )
@@ -751,8 +872,31 @@ def propagate_confidence(
             phase_conf = _clamp01(
                 (phase_conf + _safe_float(adj_payload.get("phase_confidence"), phase_conf)) / 2.0
             )
+            # v2.1: Trace adjudication merge per axis.
+            for _ax_name, _pre, _post in [
+                ("transcript", _pre_adj_t, transcript_conf),
+                ("speaker", _pre_adj_s, speaker_conf),
+                ("phase", _pre_adj_p, phase_conf),
+            ]:
+                if abs(_post - _pre) > 0.0001:
+                    seg_penalties.append({
+                        "issue_code": "adjudication_merge",
+                        "axis": _ax_name,
+                        "multiplier": round(_post / _pre, 4) if _pre > 0 else 0.0,
+                        "before": round(_pre, 4),
+                        "after": round(_post, 4),
+                    })
+        elif adj_llm_failed:
+            contamination_sources_by_seg.setdefault(sid, set()).add("adjudication_llm_failure")
 
-        overall = _clamp01((transcript_conf + speaker_conf + phase_conf) / 3.0)
+        penalty_trace_by_seg[sid] = seg_penalties
+
+        # v2.1: Overall uses video-type-aware weights. Phase has ~5% influence.
+        overall = _clamp01(
+            transcript_conf * axis_weights.get("transcript", 0.475)
+            + speaker_conf * axis_weights.get("speaker", 0.475)
+            + phase_conf * axis_weights.get("phase", 0.05)
+        )
         base_conf_by_id[sid] = {
             "transcript": transcript_conf,
             "speaker": speaker_conf,
@@ -760,7 +904,7 @@ def propagate_confidence(
             "overall": overall,
         }
 
-        if isinstance(adj_payload, dict) and adj_payload:
+        if isinstance(adj_payload, dict) and adj_payload and not adj_llm_failed:
             start = _safe_int(adj_payload.get("contamination_start_segment_id"))
             end = _safe_int(adj_payload.get("contamination_end_segment_id"))
             if start is not None and end is not None:
@@ -770,8 +914,8 @@ def propagate_confidence(
                     if target_sid < lo or target_sid > hi:
                         continue
                     existing = propagation_penalty_by_seg.get(target_sid, 1.0)
-                    # Deterministic tie-break: keep strongest penalty.
-                    propagation_penalty_by_seg[target_sid] = min(existing, 0.84)
+                    # v2: Use gentler propagation penalty (0.95 vs old 0.84).
+                    propagation_penalty_by_seg[target_sid] = min(existing, PROPAGATION_PENALTY)
                     contamination_sources_by_seg.setdefault(target_sid, set()).add(f"adjudicated_seed:{sid}")
 
             if bool(adj.get("repair_accepted")):
@@ -788,9 +932,28 @@ def propagate_confidence(
                                 "applied_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                             }
                     contains_repaired_text.add(sid)
+                    # v2: 06g repair credit — boost transcript confidence for repaired segments.
+                    if "transcript_artifact" in dmg_types or "low_quality" in dmg_types:
+                        repaired_t = _clamp01(REPAIR_CREDIT_MULTIPLIER)
+                        if repaired_t > base_conf_by_id[sid]["transcript"]:
+                            _pre_repair_t = base_conf_by_id[sid]["transcript"]
+                            base_conf_by_id[sid]["transcript"] = repaired_t
+                            base_conf_by_id[sid]["overall"] = _clamp01(
+                                repaired_t * axis_weights.get("transcript", 0.475)
+                                + base_conf_by_id[sid]["speaker"] * axis_weights.get("speaker", 0.475)
+                                + base_conf_by_id[sid]["phase"] * axis_weights.get("phase", 0.05)
+                            )
+                            repair_credit_applied.add(sid)
+                            penalty_trace_by_seg.setdefault(sid, []).append({
+                                "issue_code": "repair_credit_06g",
+                                "axis": "transcript",
+                                "multiplier": round(REPAIR_CREDIT_MULTIPLIER, 4),
+                                "before": round(_pre_repair_t, 4),
+                                "after": round(repaired_t, 4),
+                            })
 
     # Second pass: propagate contamination penalties across adjudicated spans.
-    _apply_propagation_penalties(base_conf_by_id, propagation_penalty_by_seg)
+    _apply_propagation_penalties(base_conf_by_id, propagation_penalty_by_seg, axis_weights, penalty_trace_by_seg)
 
     # Attach per-segment confidence metadata.
     by_tier: Dict[str, int] = {"high": 0, "medium": 0, "low": 0}
@@ -810,7 +973,8 @@ def propagate_confidence(
         seg["confidence_tier"] = tier
         seg["contamination_sources"] = sorted(contamination_sources_by_seg.get(sid, set()))
         seg["damage_reason_codes"] = sorted(damage_reason_codes_by_seg.get(sid, []))
-        seg["contains_repaired_text"] = sid in contains_repaired_text
+        seg["contains_repaired_text"] = sid in contains_repaired_text or sid in repaired_by_06e
+        seg["repair_credit_applied"] = sid in repair_credit_applied
 
     # Conversation-level confidence + anchor allowlist.
     conversations = out.get("conversations")
@@ -841,10 +1005,6 @@ def propagate_confidence(
         scores = [base_conf_by_id[sid]["overall"] for sid in seg_ids_conv if sid in base_conf_by_id]
         conv_score = _clamp01(weighted_mean(scores)) if scores else 0.0
         conv["conversation_confidence_score"] = round(conv_score, 4)
-        if conv_score < conversation_block_threshold:
-            conv["confidence_block_reason"] = "low_conversation_confidence"
-        else:
-            conv["confidence_block_reason"] = None
 
         anchor_ids: List[int] = []
         for sid in seg_ids_conv:
@@ -869,9 +1029,14 @@ def propagate_confidence(
                 "segment_count": len(seg_ids_conv),
                 "anchor_segment_count": len(anchor_ids),
                 "conversation_confidence_score": round(conv_score, 4),
-                "confidence_block_reason": conv.get("confidence_block_reason"),
             }
         )
+
+    # v2.1: Aggregate damage type counts for reporting.
+    damage_type_counts: Dict[str, int] = {}
+    for _codes in damage_reason_codes_by_seg.values():
+        for _code in _codes:
+            damage_type_counts[_code] = damage_type_counts.get(_code, 0) + 1
 
     meta = out.get("metadata")
     if not isinstance(meta, dict):
@@ -880,14 +1045,45 @@ def propagate_confidence(
     meta["confidence_propagated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     meta["confidence_pipeline_version"] = PIPELINE_VERSION
 
+    # Compute video-level confidence (token-weighted mean of segment overalls).
+    _video_seg_scores: List[float] = []
+    _video_seg_weights: List[float] = []
+    for sid in seg_ids:
+        if sid not in base_conf_by_id:
+            continue
+        seg_obj = next((s for s in segments if _safe_int(s.get("id")) == sid), None)
+        token_w = float(max(_token_count(seg_obj.get("text") if isinstance(seg_obj, dict) else ""), 1))
+        _video_seg_scores.append(base_conf_by_id[sid]["overall"])
+        _video_seg_weights.append(token_w)
+    video_confidence = _clamp01(weighted_mean(_video_seg_scores, weights=_video_seg_weights))
+    video_band = _confidence_tier(video_confidence)
+    video_gate = _gate_decision(video_confidence)
+    out["video_summary"] = {
+        "final_confidence": round(video_confidence, 4),
+        "confidence_band": video_band,
+        "gate_decision": video_gate,
+        "segment_count": len(seg_ids),
+        "conversation_count": len(conversation_summary),
+    }
+
+    # v2.1: Store internal trace data for _build_confidence_trace (popped before disk write).
+    out["_penalty_trace_by_seg"] = penalty_trace_by_seg
+    out["_repair_credit_applied_sids"] = sorted(repair_credit_applied)
+
     out["confidence_metadata"] = {
         "pipeline_version": PIPELINE_VERSION,
+        "model_version": "v2.1",
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "conversation_block_threshold": conversation_block_threshold,
         "band_high_threshold": CONFIDENCE_BAND_HIGH_THRESHOLD,
         "band_medium_threshold": CONFIDENCE_BAND_MEDIUM_THRESHOLD,
+        "video_type": video_type_str,
+        "axis_weights": axis_weights,
+        "global_transcript_score": round(global_transcript_score, 4),
         "tier_counts": by_tier,
-        "segments_with_repairs": len(contains_repaired_text),
+        "damage_type_counts": damage_type_counts,
+        "segments_with_repairs": len(contains_repaired_text | repaired_by_06e),
+        "segments_repaired_by_06e": len(repaired_by_06e),
+        "repair_credit_segments": len(repair_credit_applied),
         "damage_map_present": bool(damage_map),
         "adjudication_present": bool(adjudication),
         "quality_check_present": bool(quality_check),
@@ -910,14 +1106,23 @@ def propagate_confidence(
         "video_id": out.get("video_id"),
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "pipeline_version": PIPELINE_VERSION,
+        "model_version": "v2.1",
+        "video_type": video_type_str,
+        "axis_weights": axis_weights,
+        "damage_type_counts": damage_type_counts,
+        "quality_repairs": {
+            "artifact_accepted": quality_repair_counts[0],
+            "artifact_rejected": quality_repair_counts[1],
+            "lq_accepted": quality_repair_counts[2],
+            "lq_rejected": quality_repair_counts[3],
+        },
         "summary": {
             "segments_total": len(seg_ids),
             "tier_counts": by_tier,
-            "segments_with_repairs": len(contains_repaired_text),
+            "segments_with_repairs": len(contains_repaired_text | repaired_by_06e),
+            "segments_repaired_by_06e": len(repaired_by_06e),
+            "repair_credit_segments": len(repair_credit_applied),
             "conversations_total": len(conversation_summary),
-            "conversations_blocked": sum(
-                1 for row in conversation_summary if row.get("confidence_block_reason")
-            ),
             "band_high_threshold": CONFIDENCE_BAND_HIGH_THRESHOLD,
             "band_medium_threshold": CONFIDENCE_BAND_MEDIUM_THRESHOLD,
         },
@@ -933,7 +1138,6 @@ def process_file(
     input_root_dir: Path,
     damage_root_dir: Path,
     adjudication_root_dir: Path,
-    conversation_block_threshold: float,
     apply_repairs: bool,
     quality_root_dir: Optional[Path] = None,
     dry_run: bool = False,
@@ -988,7 +1192,6 @@ def process_file(
         damage_data,
         adjud_data,
         quality_data,
-        conversation_block_threshold=conversation_block_threshold,
         apply_repairs=apply_repairs,
     )
     report["inputs"] = {
@@ -1002,11 +1205,17 @@ def process_file(
     report_path = output_path.with_suffix(".confidence.report.json")
     trace_path = output_path.with_suffix(".confidence.trace.json")
     tier_counts = report.get("summary", {}).get("tier_counts", {}) if isinstance(report.get("summary"), dict) else {}
-    blocked_convs = int(report.get("summary", {}).get("conversations_blocked", 0)) if isinstance(report.get("summary"), dict) else 0
+    video_sum = propagated.get("video_summary", {})
+    video_gate_str = video_sum.get("gate_decision", "pass") if isinstance(video_sum, dict) else "pass"
+    # v2.1: Pop internal trace data from propagated output before writing.
+    _penalty_trace = propagated.pop("_penalty_trace_by_seg", {})
+    _repair_credit_sids = set(propagated.pop("_repair_credit_applied_sids", []))
     trace_payload = _build_confidence_trace(
         propagated,
         report,
         manifest_hint=manifest_hint,
+        penalty_trace_by_seg=_penalty_trace,
+        repair_credit_sids=_repair_credit_sids,
     )
     report["confidence_trace"] = {
         "version": int(trace_payload.get("version", 1)),
@@ -1018,10 +1227,10 @@ def process_file(
     if dry_run:
         print(
             f"{LOG_PREFIX} [DRY RUN] {input_path.name}: "
-            f"tiers={tier_counts}, blocked_conversations={blocked_convs}"
+            f"tiers={tier_counts}, video_gate={video_gate_str}"
         )
         return {
-            "blocked_conversations": blocked_convs,
+            "video_gate": video_gate_str,
             "segments_total": int(report.get("summary", {}).get("segments_total", 0) or 0),
         }
 
@@ -1029,12 +1238,12 @@ def process_file(
     output_path.write_text(json.dumps(propagated, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     report_path.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     trace_path.write_text(json.dumps(trace_payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"{LOG_PREFIX} {input_path.name}: tiers={tier_counts}, blocked_conversations={blocked_convs}")
+    print(f"{LOG_PREFIX} {input_path.name}: tiers={tier_counts}, video_gate={video_gate_str}")
     print(f"{LOG_PREFIX}   Output: {output_path}")
     print(f"{LOG_PREFIX}   Report: {report_path}")
     print(f"{LOG_PREFIX}   Trace : {trace_path}")
     return {
-        "blocked_conversations": blocked_convs,
+        "video_gate": video_gate_str,
         "segments_total": int(report.get("summary", {}).get("segments_total", 0) or 0),
     }
 
@@ -1060,7 +1269,8 @@ def _run_directory_with_files(
     skipped = 0
     skipped_quarantine = 0
     failed = 0
-    totals = {"segments_total": 0, "blocked_conversations": 0}
+    totals: Dict[str, int] = {"segments_total": 0}
+    video_gates: Dict[str, int] = {"pass": 0, "review": 0, "block": 0}
     quarantine_ids: Set[str] = getattr(args, "_quarantine_ids", set())
 
     for input_file in files:
@@ -1090,7 +1300,6 @@ def _run_directory_with_files(
                 input_root_dir=input_root_dir,
                 damage_root_dir=damage_root_dir,
                 adjudication_root_dir=adjudication_root_dir,
-                conversation_block_threshold=args.conversation_block_threshold,
                 apply_repairs=args.apply_repairs,
                 quality_root_dir=getattr(args, "_quality_root_dir", None),
                 dry_run=args.dry_run,
@@ -1099,6 +1308,8 @@ def _run_directory_with_files(
             processed += 1
             for key in totals:
                 totals[key] += int(counts.get(key, 0))
+            vg = str(counts.get("video_gate", "pass")).strip().lower()
+            video_gates[vg] = video_gates.get(vg, 0) + 1
         except Exception as exc:
             failed += 1
             print(f"{LOG_PREFIX} ERROR: {input_file} -> {exc}")
@@ -1109,7 +1320,7 @@ def _run_directory_with_files(
     print(f"  Skipped (quarantine): {skipped_quarantine}")
     print(f"  Failed:    {failed}")
     print(f"  Segments:  {totals['segments_total']}")
-    print(f"  Blocked conversations: {totals['blocked_conversations']}")
+    print(f"  Video gates: {video_gates}")
     if failed > 0:
         sys.exit(1)
 
@@ -1170,7 +1381,6 @@ def _run_input(
             input_root_dir=in_base,
             damage_root_dir=damage_root_dir,
             adjudication_root_dir=adjudication_root_dir,
-            conversation_block_threshold=args.conversation_block_threshold,
             apply_repairs=args.apply_repairs,
             quality_root_dir=getattr(args, "_quality_root_dir", None),
             dry_run=args.dry_run,
@@ -1316,12 +1526,6 @@ def main() -> None:
     )
     parser.add_argument("--output", help="Output directory (default: data/06h.DET.confidence-propagation/)")
     parser.add_argument(
-        "--conversation-block-threshold",
-        type=float,
-        default=0.60,
-        help="Conversation confidence threshold below which confidence_block_reason is set",
-    )
-    parser.add_argument(
         "--confidence-band-high-threshold",
         type=float,
         default=DEFAULT_BAND_HIGH_THRESHOLD,
@@ -1354,7 +1558,6 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    args.conversation_block_threshold = _clamp01(args.conversation_block_threshold)
     args.confidence_band_high_threshold = _clamp01(args.confidence_band_high_threshold)
     args.confidence_band_medium_threshold = _clamp01(args.confidence_band_medium_threshold)
     if args.confidence_band_medium_threshold > args.confidence_band_high_threshold:

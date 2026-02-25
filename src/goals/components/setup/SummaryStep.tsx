@@ -24,6 +24,7 @@ export function SummaryStep({
   selectedGoals,
   targets,
   rampConfigs,
+  rampEnabled,
   path,
   customGoals,
   customCategories,
@@ -34,6 +35,7 @@ export function SummaryStep({
   selectedGoals: Set<string>
   targets: Record<string, number>
   rampConfigs: Record<string, HabitRampStep[]>
+  rampEnabled: Set<string>
   path: DaygamePath | null
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
@@ -218,7 +220,7 @@ export function SummaryStep({
               <div className="px-5 py-3 space-y-2">
                 {goals.map((g) => {
                   const rampSteps = rampConfigs[g.id] ?? g.defaultRampSteps
-                  const isRamp = g.templateType === "habit_ramp" && rampSteps && rampSteps.length > 1
+                  const isRamp = g.templateType === "habit_ramp" && rampEnabled.has(g.id) && rampSteps && rampSteps.length > 1
                   const target =
                     targets[g.id] ??
                     g.defaultMilestoneConfig?.target ??
@@ -230,7 +232,12 @@ export function SummaryStep({
                         className="size-1.5 rounded-full"
                         style={{ background: catColor, boxShadow: `0 0 4px ${catColor}40` }}
                       />
-                      <span className="text-sm text-white/70 flex-1">{g.title}</span>
+                      <span className="flex-1">
+                        <span className="text-sm text-white/70">{g.title}</span>
+                        {g.templateType === "habit_ramp" && rampEnabled.has(g.id) && (
+                          <span className="block text-[11px] text-orange-400 italic">habit ramp</span>
+                        )}
+                      </span>
                       <span className="text-xs font-medium" style={{ color: catColor }}>
                         {isRamp
                           ? rampSteps.map((s) => s.frequencyPerWeek).join("\u2009\u2192\u2009")

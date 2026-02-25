@@ -11,9 +11,11 @@ function createSelections(overrides: Partial<GoalSetupSelections> = {}): GoalSet
     selectedGoalIds: new Set<string>(),
     targets: {},
     curveConfigs: {},
+    rampConfigs: {},
     customGoals: [],
     customCategories: [],
     targetDates: {},
+    goalDates: {},
     ...overrides,
   }
 }
@@ -35,11 +37,12 @@ describe("getParents", () => {
 })
 
 describe("getL2AchievementsForL3", () => {
-  test("returns L2 achievements that reference an L3 in their weights", () => {
+  test("returns L2 achievements that reference an L3 in their connections or weights", () => {
     const l2s = getL2AchievementsForL3("l3_approach_volume")
     expect(l2s.length).toBeGreaterThan(0)
     expect(l2s.every((t) => t.level === 2)).toBe(true)
-    expect(l2s.some((t) => t.id === "l2_master_daygame")).toBe(true)
+    // l3_approach_volume is referenced by daygame threshold badges via L2_L3_CONNECTIONS
+    expect(l2s.some((t) => t.id === "l2_approach")).toBe(true)
   })
 
   test("returns empty for unknown ID", () => {
@@ -121,7 +124,7 @@ describe("buildSetupInserts", () => {
 
   test("emits L2 badges from different areas when L3s reference multiple L2s", () => {
     const selections = createSelections({
-      selectedGoalIds: new Set(["l3_approach_volume", "l3_eye_contact_holds"]),
+      selectedGoalIds: new Set(["l3_approach_volume", "l3_phone_numbers"]),
     })
     const result = buildSetupInserts(selections)
 
@@ -287,5 +290,87 @@ describe("buildSetupInserts", () => {
     if (suggestion.linkedMetric) {
       expect(result[0].linked_metric).toBe(suggestion.linkedMetric)
     }
+  })
+
+  // ── Date cascade tests ──────────────────────────────────────────────
+
+  test("goalDates applied to L3 inserts", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["l3_approach_volume"]),
+      goalDates: { l3_approach_volume: "2026-12-31" },
+    })
+    const result = buildSetupInserts(selections)
+
+    const l3 = result.find((r) => r.template_id === "l3_approach_volume")
+    expect(l3).toBeDefined()
+    expect(l3!.target_date).toBe("2026-12-31")
+  })
+
+  test("area date cascades to L3 when no goalDate set", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["l3_approach_volume"]),
+      targetDates: { daygame: "2027-06-01" },
+    })
+    const result = buildSetupInserts(selections)
+
+    const l3 = result.find((r) => r.template_id === "l3_approach_volume")
+    expect(l3).toBeDefined()
+    expect(l3!.target_date).toBe("2027-06-01")
+  })
+
+  test("goalDate overrides area date for specific L3 goal", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["l3_approach_volume", "l3_phone_numbers"]),
+      targetDates: { daygame: "2027-06-01" },
+      goalDates: { l3_approach_volume: "2026-12-31" },
+    })
+    const result = buildSetupInserts(selections)
+
+    const volume = result.find((r) => r.template_id === "l3_approach_volume")
+    const phones = result.find((r) => r.template_id === "l3_phone_numbers")
+    expect(volume!.target_date).toBe("2026-12-31")
+    expect(phones!.target_date).toBe("2027-06-01")
+  })
+
+  test("goalDates applied to suggestion goals", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["health_fitness_s0"]),
+      goalDates: { health_fitness_s0: "2026-09-15" },
+    })
+    const result = buildSetupInserts(selections)
+
+    expect(result[0].target_date).toBe("2026-09-15")
+  })
+
+  test("area date cascades to suggestion goals", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["health_fitness_s0"]),
+      targetDates: { health_fitness: "2027-01-01" },
+    })
+    const result = buildSetupInserts(selections)
+
+    expect(result[0].target_date).toBe("2027-01-01")
+  })
+
+  test("goalDates applied to custom goals", () => {
+    const selections = createSelections({
+      customGoals: [
+        { id: "cg1", title: "Read daily", categoryId: "learning", target: 30, period: "daily" },
+      ],
+      goalDates: { cg1: "2026-08-01" },
+    })
+    const result = buildSetupInserts(selections)
+
+    expect(result[0].target_date).toBe("2026-08-01")
+  })
+
+  test("no target_date set when neither goalDate nor area date exists", () => {
+    const selections = createSelections({
+      selectedGoalIds: new Set(["l3_approach_volume"]),
+    })
+    const result = buildSetupInserts(selections)
+
+    const l3 = result.find((r) => r.template_id === "l3_approach_volume")
+    expect(l3!.target_date).toBeUndefined()
   })
 })

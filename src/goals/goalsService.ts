@@ -915,8 +915,8 @@ function isCorePriority(templateId: string | undefined | null): boolean {
  * Abundance-specific goals that don't make sense for relationship-seekers.
  */
 const FTO_OFF_TEMPLATES = new Set([
-  "l3_women_dating", "l3_sustained_rotation",
-  "l3_kiss_closes", "l3_lays",
+  "l3_women_dating",
+  "l3_kiss_closes", "l3_pull_attempts", "l3_lays", "l3_same_day_lays",
 ])
 
 /**
@@ -1109,7 +1109,8 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
       for (const l3Id of selectedL3Ids) {
         const tmpl = GOAL_TEMPLATE_MAP[l3Id]
         if (!tmpl) continue
-        const insert = templateToSetupInsert(tmpl, l1TempId)
+        const rampActive = selections.rampEnabled?.has(l3Id) ?? true
+        const insert = templateToSetupInsert(tmpl, l1TempId, rampActive)
 
         // Apply user overrides
         if (selections.targets[l3Id] !== undefined) {
@@ -1120,10 +1121,14 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
           insert.target_value = selections.curveConfigs[l3Id].target
           insert.goal_type = "milestone"
         }
-        if (selections.rampConfigs?.[l3Id]) {
+        if (rampActive && selections.rampConfigs?.[l3Id]) {
           insert.ramp_steps = selections.rampConfigs[l3Id] as unknown as Record<string, unknown>[]
           insert.target_value = selections.rampConfigs[l3Id][0].frequencyPerWeek
         }
+
+        // Per-goal date → area date cascade
+        const l3Date = selections.goalDates?.[l3Id] || selections.targetDates?.["daygame"]
+        if (l3Date) insert.target_date = l3Date
 
         inserts.push(insert)
       }
@@ -1163,6 +1168,10 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
       insert.linked_metric = suggestion.linkedMetric as LinkedMetric
     }
 
+    // Per-goal date → area date cascade
+    const suggestionDate = selections.goalDates?.[goalId] || selections.targetDates?.[areaId]
+    if (suggestionDate) insert.target_date = suggestionDate
+
     inserts.push(insert)
   }
 
@@ -1170,7 +1179,7 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
   for (const cg of selections.customGoals) {
     if (!cg.title.trim()) continue
 
-    inserts.push({
+    const customInsert: BatchGoalInsert = {
       _tempId: `${TEMP_PREFIX}custom_${cg.id}`,
       _tempParentId: null,
       title: cg.title.trim(),
@@ -1181,7 +1190,13 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
       tracking_type: "counter",
       goal_type: "recurring",
       goal_level: 3,
-    })
+    }
+
+    // Per-goal date → area date cascade
+    const customDate = selections.goalDates?.[cg.id] || selections.targetDates?.["custom"]
+    if (customDate) customInsert.target_date = customDate
+
+    inserts.push(customInsert)
   }
 
   return inserts
@@ -1189,7 +1204,8 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
 
 function templateToSetupInsert(
   tmpl: typeof GOAL_TEMPLATE_MAP[string],
-  tempParentId: string | null
+  tempParentId: string | null,
+  rampActive = true
 ): BatchGoalInsert {
   const TEMP_PREFIX = "__temp_"
   const base: BatchGoalInsert = {
@@ -1213,10 +1229,17 @@ function templateToSetupInsert(
     base.goal_type = "milestone"
     base.milestone_config = tmpl.defaultMilestoneConfig as unknown as Record<string, unknown>
   } else if (tmpl.templateType === "habit_ramp" && tmpl.defaultRampSteps) {
-    base.target_value = tmpl.defaultRampSteps[0].frequencyPerWeek
-    base.goal_type = "habit_ramp"
-    base.period = "weekly"
-    base.ramp_steps = tmpl.defaultRampSteps as unknown as Record<string, unknown>[]
+    if (rampActive) {
+      base.target_value = tmpl.defaultRampSteps[0].frequencyPerWeek
+      base.goal_type = "habit_ramp"
+      base.period = "weekly"
+      base.ramp_steps = tmpl.defaultRampSteps as unknown as Record<string, unknown>[]
+    } else {
+      // Ramp not enabled — create as simple recurring weekly goal
+      base.target_value = tmpl.defaultRampSteps[0].frequencyPerWeek
+      base.goal_type = "recurring"
+      base.period = "weekly"
+    }
   }
 
   if (tmpl.linkedMetric) {

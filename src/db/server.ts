@@ -36,6 +36,12 @@ export {
 } from "./profilesRepo"
 
 export {
+  createScenarioAttempt,
+  getScenarioStats,
+  type ScenarioStats,
+} from "./scenarioRepo"
+
+export {
   requireAuth,
   requirePremium,
   type AuthResult,

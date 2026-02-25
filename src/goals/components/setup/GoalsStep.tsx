@@ -1,19 +1,21 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, forwardRef, useImperativeHandle } from "react"
 import {
   ChevronRight,
   ChevronDown,
   Check,
-  Minus,
   Plus,
   SlidersHorizontal,
+  CalendarDays,
+  CircleHelp,
   X,
 } from "lucide-react"
 import { CATEGORY_COLORS } from "./setupConstants"
 import { MilestoneCurveEditor } from "@/src/goals/components/MilestoneCurveEditor"
 import { HabitRampEditor } from "@/src/goals/components/HabitRampEditor"
 import { getCategoryLabel } from "@/src/goals/goalDisplayService"
+import { GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import type {
   GoalTemplate,
   HabitRampStep,
@@ -21,6 +23,7 @@ import type {
   MilestoneLadderConfig,
   SetupCustomGoal,
   SetupCustomCategory,
+  DaygamePath,
 } from "@/src/goals/types"
 
 /* ── Target Stepper ────────────────────────────────────── */
@@ -30,11 +33,13 @@ function TargetStepper({
   period,
   onUpdate,
   curveButton,
+  isTourTarget,
 }: {
   value: number
   period: string
   onUpdate: (v: number) => void
   curveButton?: React.ReactNode
+  isTourTarget?: boolean
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState("")
@@ -52,15 +57,10 @@ function TargetStepper({
         background: "rgba(255,255,255,0.04)",
         border: "1px solid rgba(255,255,255,0.08)",
       }}
+      data-tour={isTourTarget ? "target-stepper" : undefined}
       onClick={(e) => e.stopPropagation()}
     >
       {curveButton}
-      <button
-        onClick={() => onUpdate(Math.max(1, value - 1))}
-        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-      >
-        <Minus className="size-2.5 text-white/60" />
-      </button>
       {editing ? (
         <input
           type="text"
@@ -88,12 +88,6 @@ function TargetStepper({
           {value}
         </button>
       )}
-      <button
-        onClick={() => onUpdate(value + 1)}
-        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-      >
-        <Plus className="size-2.5 text-white/60" />
-      </button>
       <span className="text-[9px] text-white/30 pl-0.5 pr-1 whitespace-nowrap">
         {period}
       </span>
@@ -130,12 +124,6 @@ function CustomGoalStepper({
           border: "1px solid rgba(255,255,255,0.08)",
         }}
       >
-        <button
-          onClick={() => onUpdate(Math.max(1, value - 1))}
-          className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-        >
-          <Minus className="size-2.5 text-white/60" />
-        </button>
         {editing ? (
           <input
             type="text"
@@ -163,12 +151,6 @@ function CustomGoalStepper({
             {value}
           </button>
         )}
-        <button
-          onClick={() => onUpdate(value + 1)}
-          className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-        >
-          <Plus className="size-2.5 text-white/60" />
-        </button>
       </div>
       <button
         onClick={onRemove}
@@ -182,6 +164,140 @@ function CustomGoalStepper({
   )
 }
 
+/* ── Goal Date Button ─────────────────────────────────── */
+
+function GoalDateButton({
+  goalId,
+  effectiveDate,
+  accentColor,
+  onUpdate,
+}: {
+  goalId: string
+  effectiveDate: string
+  accentColor: string
+  onUpdate: (goalId: string, date: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const hasDate = !!effectiveDate
+
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={() => setOpen(!open)}
+        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10 relative"
+        style={{
+          border: open
+            ? `1px solid ${accentColor}66`
+            : "1px solid rgba(255,255,255,0.1)",
+          background: open ? `${accentColor}1a` : "transparent",
+        }}
+        title={hasDate ? `Target: ${effectiveDate}` : "Set target date"}
+      >
+        <CalendarDays
+          className="size-2.5"
+          style={{ color: open || hasDate ? accentColor : "rgba(255,255,255,0.5)" }}
+        />
+        {hasDate && (
+          <div
+            className="absolute -top-0.5 -right-0.5 size-2 rounded-full"
+            style={{ background: accentColor, boxShadow: `0 0 4px ${accentColor}` }}
+          />
+        )}
+      </button>
+      {open && (
+        <div
+          className="absolute right-0 top-8 z-50 rounded-lg p-3 space-y-2 min-w-[200px]"
+          style={{
+            background: "rgba(10, 14, 28, 0.95)",
+            border: `1px solid ${accentColor}30`,
+            backdropFilter: "blur(12px)",
+            boxShadow: `0 8px 24px rgba(0,0,0,0.5), 0 0 12px ${accentColor}10`,
+          }}
+        >
+          <label className="text-[10px] text-white/40 uppercase tracking-wider block">
+            Target date
+          </label>
+          <input
+            type="date"
+            value={effectiveDate}
+            onChange={(e) => {
+              onUpdate(goalId, e.target.value)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                e.stopPropagation()
+                setOpen(false)
+              }
+            }}
+            className="w-full rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-xs text-white outline-none focus:border-white/25 [color-scheme:dark]"
+          />
+          {hasDate && (
+            <button
+              onClick={() => {
+                onUpdate(goalId, "")
+                setOpen(false)
+              }}
+              className="text-[10px] text-white/30 hover:text-white/60 transition-colors"
+            >
+              Clear date
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/* ── Path Banner ──────────────────────────────────────── */
+
+function PathBanner({ path, targetDate }: { path: DaygamePath | null; targetDate?: string }) {
+  if (!path) return null
+  const label = path === "fto" ? "Find The One" : "Abundance"
+  const color = path === "fto" ? "#f97068" : "#FF4081"
+  return (
+    <div
+      className="mb-4 rounded-lg px-4 py-2.5 flex items-center gap-3"
+      style={{
+        background: `${color}08`,
+        border: `1px solid ${color}20`,
+      }}
+    >
+      <span className="text-sm font-medium" style={{ color: `${color}cc` }}>
+        {label}
+      </span>
+      {targetDate && (
+        <span className="text-xs text-white/40 ml-auto">
+          Target: {new Date(targetDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/* ── Area ID resolution ───────────────────────────────── */
+
+function getAreaIdForGoal(goalId: string, customGoals: SetupCustomGoal[]): string {
+  if (GOAL_TEMPLATE_MAP[goalId]) return "daygame"
+  const match = goalId.match(/^(.+)_s\d+$/)
+  if (match) return match[1]
+  const cg = customGoals.find((g) => g.id === goalId)
+  if (cg) return cg.categoryId
+  return "custom"
+}
+
+/* ── Tour handle ──────────────────────────────────────── */
+
+export interface GoalsStepTourHandle {
+  expandSection(sectionId: string): void
+  expandAllSections(): void
+  collapseNonPreselected(): void
+  openCurveEditor(goalId: string): void
+  closeCurveEditor(): void
+  openRampEditor(goalId: string): void
+  closeRampEditor(): void
+}
+
 /* ── GoalsStep ─────────────────────────────────────────── */
 
 interface GoalsStepProps {
@@ -193,21 +309,28 @@ interface GoalsStepProps {
   targets: Record<string, number>
   curveConfigs: Record<string, MilestoneLadderConfig>
   rampConfigs: Record<string, HabitRampStep[]>
+  rampEnabled: Set<string>
   customGoals: SetupCustomGoal[]
   customCategories: SetupCustomCategory[]
+  path: DaygamePath | null
+  targetDates: Record<string, string>
+  goalDates: Record<string, string>
   onToggle: (id: string) => void
   onUpdateTarget: (id: string, value: number) => void
   onUpdateCurve: (id: string, config: MilestoneLadderConfig) => void
   onUpdateRamp: (id: string, steps: HabitRampStep[]) => void
+  onToggleRamp: (id: string) => void
   onAddCustomGoal: (categoryId: string) => void
   onRemoveCustomGoal: (goalId: string) => void
   onUpdateCustomGoalTitle: (goalId: string, title: string) => void
   onAddCustomCategory: () => void
   onRenameCustomCategory: (catId: string, name: string) => void
   onRemoveCustomCategory: (catId: string) => void
+  onUpdateGoalDate: (goalId: string, date: string) => void
+  onTourStart?: () => void
 }
 
-export function GoalsStep({
+export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(function GoalsStep({
   daygameByCategory,
   daygameL3Goals,
   lifeAreas,
@@ -216,23 +339,60 @@ export function GoalsStep({
   targets,
   curveConfigs,
   rampConfigs,
+  rampEnabled,
   customGoals,
   customCategories,
+  path,
+  targetDates,
+  goalDates,
   onToggle,
   onUpdateTarget,
   onUpdateCurve,
   onUpdateRamp,
+  onToggleRamp,
   onAddCustomGoal,
   onRemoveCustomGoal,
   onUpdateCustomGoalTitle,
   onAddCustomCategory,
   onRenameCustomCategory,
   onRemoveCustomCategory,
-}: GoalsStepProps) {
+  onUpdateGoalDate,
+  onTourStart,
+}, ref) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(() => new Set())
   const [expandedCurve, setExpandedCurve] = useState<string | null>(null)
   const [expandedRamp, setExpandedRamp] = useState<string | null>(null)
   const prevCustomCatCount = useRef(customCategories.length)
+
+  useImperativeHandle(ref, () => ({
+    expandSection: (sectionId: string) => {
+      setExpandedSections((prev) => new Set([...prev, sectionId]))
+    },
+    expandAllSections: () => {
+      setExpandedSections((prev) => {
+        const next = new Set(prev)
+        for (const { category } of daygameByCategory) next.add(`dg_${category}`)
+        return next
+      })
+    },
+    collapseNonPreselected: () => {
+      // Collapse back to only categories that have preselected goals
+      setExpandedSections((prev) => {
+        const next = new Set<string>()
+        for (const id of prev) {
+          const cat = id.replace(/^dg_/, "")
+          const group = daygameByCategory.find((c) => c.category === cat)
+          if (group && group.goals.some((g) => selectedGoals.has(g.id))) next.add(id)
+          if (!id.startsWith("dg_")) next.add(id) // keep non-daygame sections
+        }
+        return next
+      })
+    },
+    openCurveEditor: (goalId: string) => setExpandedCurve(goalId),
+    closeCurveEditor: () => setExpandedCurve(null),
+    openRampEditor: (goalId: string) => setExpandedRamp(goalId),
+    closeRampEditor: () => setExpandedRamp(null),
+  }))
 
   const toggleSection = (id: string) => {
     setExpandedSections((prev) => {
@@ -287,18 +447,34 @@ export function GoalsStep({
 
   const daygameSelected = daygameL3Goals.filter((g) => selectedGoals.has(g.id)).length
 
+  // Tour: find first preselected goal dynamically (for tour annotation)
+  const firstPreselectedGoalId = daygameByCategory
+    .flatMap(({ goals }) => goals)
+    .find((g) => selectedGoals.has(g.id))?.id ?? null
+
+  // Tour: find first selected curve/ramp goal dynamically
+  const firstCurveGoalId = daygameL3Goals.find(
+    (g) => selectedGoals.has(g.id) && g.templateType === "milestone_ladder" && g.defaultMilestoneConfig != null
+  )?.id ?? null
+  const firstRampGoalId = daygameL3Goals.find(
+    (g) => selectedGoals.has(g.id) && g.templateType === "habit_ramp" && rampEnabled.has(g.id) && g.defaultRampSteps != null && g.defaultRampSteps.length > 1
+  )?.id ?? null
+
   const getGoalMeta = (g: GoalTemplate) => {
+    const isRampActive = g.templateType === "habit_ramp" && rampEnabled.has(g.id)
+    const canAddRamp = g.templateType === "habit_ramp" && !rampEnabled.has(g.id)
     const defaultTarget =
       g.defaultMilestoneConfig?.target ?? g.defaultRampSteps?.[0]?.frequencyPerWeek ?? 5
     return {
-      type: (g.templateType === "habit_ramp" ? "habit" : "milestone") as "habit" | "milestone",
+      type: (isRampActive ? "habit" : g.templateType === "milestone_ladder" ? "milestone" : "habit") as "habit" | "milestone",
       target: targets[g.id] ?? defaultTarget,
       period: g.templateType === "habit_ramp" ? "per week" : "total",
       hasCurve:
         g.templateType === "milestone_ladder" && g.defaultMilestoneConfig != null,
       defaultCurve: g.defaultMilestoneConfig,
       hasRamp:
-        g.templateType === "habit_ramp" && g.defaultRampSteps != null && g.defaultRampSteps.length > 1,
+        isRampActive && g.defaultRampSteps != null && g.defaultRampSteps.length > 1,
+      canAddRamp,
       defaultRampSteps: g.defaultRampSteps,
     }
   }
@@ -306,33 +482,58 @@ export function GoalsStep({
   return (
     <div className="min-h-screen pt-12 pb-36 px-6">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-white mb-1">Choose Your Goals</h2>
-          <p className="text-white/40 text-sm">
-            Toggle goals on or off and adjust targets. These are starting points — you can change
-            them later.
-          </p>
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">Choose Your Goals</h2>
+            <p className="text-white/40 text-sm">
+              Toggle goals on or off and adjust targets. These are starting points — you can change
+              them later.
+            </p>
+          </div>
+          {onTourStart && (
+            <button
+              onClick={onTourStart}
+              className="size-8 rounded-full flex items-center justify-center shrink-0 transition-colors hover:bg-white/10"
+              style={{ border: "1px solid rgba(255,255,255,0.1)" }}
+              title="Show guided tour"
+            >
+              <CircleHelp className="size-4 text-white/40" />
+            </button>
+          )}
         </div>
+
+        <PathBanner path={path} targetDate={targetDates["daygame"]} />
 
         {daygameByCategory.length > 0 && (
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3" data-tour="area-header">
               <span className="text-xs font-semibold uppercase tracking-wider text-orange-400">
                 Dating & Daygame
               </span>
               <span className="text-xs text-white/30">{daygameSelected} selected</span>
             </div>
 
-            {daygameByCategory.map(({ category, goals }) => {
+            {daygameByCategory.map(({ category, goals }, catIdx) => {
               const sectionId = `dg_${category}`
               const isExpanded = expandedSections.has(sectionId)
               const selectedCount = goals.filter((g) => selectedGoals.has(g.id)).length
               const catColor = CATEGORY_COLORS[category] ?? "#00E676"
+              // Rank among expanded categories (0 = first, 1 = second, etc.)
+              let expandedRank = -1
+              if (isExpanded) {
+                let r = 0
+                for (let i = 0; i < catIdx; i++) {
+                  if (expandedSections.has(`dg_${daygameByCategory[i].category}`)) r++
+                }
+                expandedRank = r
+              }
 
               return (
                 <div key={category} className="mb-3">
                   <button
                     onClick={() => toggleSection(sectionId)}
+                    data-tour={expandedRank === 0 ? "category-1" : expandedRank === 1 ? "category-2" : undefined}
+                    data-tour-role="category"
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
                     style={{
                       background:
@@ -369,6 +570,8 @@ export function GoalsStep({
                             <div
                               onClick={() => onToggle(l3.id)}
                               className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
+                              data-tour={isOn && l3.id === firstPreselectedGoalId ? "preselected-goal" : undefined}
+                              data-tour-role={isOn ? "selected-goal" : "unselected-goal"}
                               style={{
                                 background: isOn ? `${catColor}0f` : "transparent",
                                 border: isOn
@@ -387,9 +590,23 @@ export function GoalsStep({
                                 {isOn && <Check className="size-2.5 text-white" />}
                               </div>
                               <span
-                                className={`text-sm flex-1 min-w-0 ${isOn ? "text-white" : "text-white/50"}`}
+                                className={`flex-1 min-w-0 ${isOn ? "text-white" : "text-white/50"}`}
                               >
-                                {l3.title}
+                                <span className="text-sm">{l3.title}</span>
+                                {rampEnabled.has(l3.id) && l3.templateType === "habit_ramp" && (
+                                  <span className="block text-[11px] text-orange-400 italic">habit ramp</span>
+                                )}
+                                {isOn && meta.canAddRamp && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      onToggleRamp(l3.id)
+                                    }}
+                                    className="block text-[11px] text-orange-400/50 hover:text-orange-400 italic transition-colors"
+                                  >
+                                    + add habit ramp
+                                  </button>
+                                )}
                               </span>
                               {category === "dirty_dog" && (
                                 <span className="text-[9px] px-1.5 py-0.5 rounded text-orange-400/60 bg-orange-400/10 shrink-0">
@@ -401,8 +618,16 @@ export function GoalsStep({
                                   value={meta.target}
                                   period={meta.period}
                                   onUpdate={(v) => onUpdateTarget(l3.id, v)}
+                                  isTourTarget={l3.id === firstCurveGoalId}
                                   curveButton={
-                                    meta.hasCurve ? (
+                                    <>
+                                    <GoalDateButton
+                                      goalId={l3.id}
+                                      effectiveDate={goalDates[l3.id] || targetDates["daygame"] || ""}
+                                      accentColor={catColor}
+                                      onUpdate={onUpdateGoalDate}
+                                    />
+                                    {meta.hasCurve ? (
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation()
@@ -422,6 +647,7 @@ export function GoalsStep({
                                               : "transparent",
                                         }}
                                         title="Customize milestone curve"
+                                        data-tour={l3.id === firstCurveGoalId ? "curve-button" : undefined}
                                       >
                                         <SlidersHorizontal
                                           className="size-2.5"
@@ -453,6 +679,7 @@ export function GoalsStep({
                                               : "transparent",
                                         }}
                                         title="Customize ramp schedule"
+                                        data-tour={l3.id === firstRampGoalId ? "ramp-button" : undefined}
                                       >
                                         <SlidersHorizontal
                                           className="size-2.5"
@@ -464,7 +691,8 @@ export function GoalsStep({
                                           }}
                                         />
                                       </button>
-                                    ) : undefined
+                                    ) : undefined}
+                                    </>
                                   }
                                 />
                               )}
@@ -473,12 +701,13 @@ export function GoalsStep({
                               meta.hasCurve &&
                               expandedCurve === l3.id &&
                               meta.defaultCurve && (
-                                <div className="mt-1 ml-7 mr-2 mb-2">
+                                <div className="mt-1 ml-7 mr-2 mb-2" data-tour="curve-editor">
                                   <MilestoneCurveEditor
                                     config={curveConfigs[l3.id] ?? meta.defaultCurve}
                                     onChange={(config) => onUpdateCurve(l3.id, config)}
                                     allowDirectEdit
                                     themeId="orrery"
+                                    targetDate={goalDates[l3.id] || targetDates["daygame"] || undefined}
                                   />
                                   <button
                                     onClick={() => setExpandedCurve(null)}
@@ -498,7 +727,7 @@ export function GoalsStep({
                               meta.hasRamp &&
                               expandedRamp === l3.id &&
                               meta.defaultRampSteps && (
-                                <div className="mt-1 ml-7 mr-2 mb-2">
+                                <div className="mt-1 ml-7 mr-2 mb-2" data-tour="ramp-editor">
                                   <div
                                     className="rounded-xl p-4"
                                     style={{
@@ -511,6 +740,7 @@ export function GoalsStep({
                                       steps={rampConfigs[l3.id] ?? meta.defaultRampSteps}
                                       onChange={(steps) => onUpdateRamp(l3.id, steps)}
                                       accentColor={catColor}
+                                      targetDate={goalDates[l3.id] || targetDates["daygame"] || undefined}
                                     />
                                   </div>
                                   <button
@@ -756,6 +986,14 @@ export function GoalsStep({
                               value={target}
                               period={s.defaultPeriod}
                               onUpdate={(v) => onUpdateTarget(id, v)}
+                              curveButton={
+                                <GoalDateButton
+                                  goalId={id}
+                                  effectiveDate={goalDates[id] || targetDates[area.id] || ""}
+                                  accentColor={area.hex}
+                                  onUpdate={onUpdateGoalDate}
+                                />
+                              }
                             />
                           )}
                         </div>
@@ -807,6 +1045,7 @@ export function GoalsStep({
             )
           })}
       </div>
+
       <style>{`
         @keyframes v9c-slideDown {
           from { opacity: 0; transform: translateY(-8px); }
@@ -815,4 +1054,4 @@ export function GoalsStep({
       `}</style>
     </div>
   )
-}
+})

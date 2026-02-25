@@ -135,6 +135,17 @@ def _validate_trace_payload(video_id: str, path: Path, payload: Dict[str, Any]) 
             issues.append(_issue(video_id, path, "error", "segment_final_confidence_out_of_bounds", f"segments[{idx}].final_confidence must be in [0,1]"))
         if not _valid_band(row.get("confidence_band")):
             issues.append(_issue(video_id, path, "error", "segment_invalid_band", f"segments[{idx}].confidence_band must be high|medium|low"))
+        # v2.1: validate repair_credit_applied (bool) and damage_types (list of str)
+        rca = row.get("repair_credit_applied")
+        if rca is not None and not isinstance(rca, bool):
+            issues.append(_issue(video_id, path, "warning", "segment_repair_credit_not_bool", f"segments[{idx}].repair_credit_applied should be boolean"))
+        dmg_types = row.get("damage_types")
+        if dmg_types is not None:
+            if not isinstance(dmg_types, list):
+                issues.append(_issue(video_id, path, "warning", "segment_damage_types_not_list", f"segments[{idx}].damage_types should be a list"))
+            elif not all(isinstance(dt, str) for dt in dmg_types):
+                issues.append(_issue(video_id, path, "warning", "segment_damage_types_invalid", f"segments[{idx}].damage_types entries must be strings"))
+
         penalties = row.get("penalties")
         if not isinstance(penalties, list):
             issues.append(_issue(video_id, path, "error", "segment_penalties_not_array", f"segments[{idx}].penalties must be an array"))
@@ -149,6 +160,13 @@ def _validate_trace_payload(video_id: str, path: Path, payload: Dict[str, Any]) 
                 issues.append(_issue(video_id, path, "error", "penalty_invalid_before", f"segments[{idx}].penalties[{pidx}].before must be in [0,1]"))
             if not _in_unit_interval(penalty.get("after")):
                 issues.append(_issue(video_id, path, "error", "penalty_invalid_after", f"segments[{idx}].penalties[{pidx}].after must be in [0,1]"))
+            # v2.1: validate issue_code and axis
+            issue_code = penalty.get("issue_code")
+            if issue_code is not None and not isinstance(issue_code, str):
+                issues.append(_issue(video_id, path, "warning", "penalty_issue_code_not_str", f"segments[{idx}].penalties[{pidx}].issue_code should be a string"))
+            axis = penalty.get("axis")
+            if axis is not None and not isinstance(axis, str):
+                issues.append(_issue(video_id, path, "warning", "penalty_axis_not_str", f"segments[{idx}].penalties[{pidx}].axis should be a string"))
 
     conversations = payload.get("conversations")
     if isinstance(conversations, list):

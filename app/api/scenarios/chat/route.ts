@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
-import { handleChatMessage } from "@/src/scenarios"
+import { handleChatMessage, persistScenarioAttempt } from "@/src/scenarios"
 import { ChatRequestSchema } from "@/src/scenarios/schemas"
 
 export async function POST(req: Request) {
@@ -30,5 +30,18 @@ export async function POST(req: Request) {
   }
 
   const response = await handleChatMessage(parsed.data, user.id)
+
+  // Fire-and-forget: persist on milestone evaluations only (every 5th turn).
+  // This counts "sessions" not "turns" — one row per meaningful checkpoint.
+  if (response.milestoneEvaluation) {
+    void persistScenarioAttempt(
+      user.id,
+      parsed.data.scenario_type,
+      parsed.data.message,
+      null,
+      response.milestoneEvaluation as unknown as Record<string, unknown>
+    )
+  }
+
   return NextResponse.json(response, { status: 200 })
 }

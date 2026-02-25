@@ -1067,15 +1067,18 @@ describe("deriveTimeHorizon", () => {
   // ============================================================================
 
   describe("generateDirtyDogInserts", () => {
-    test("returns 1 dirty dog goal when none exist and L2 parent present", () => {
+    test("returns all dirty dog goals when none exist and L2 parent present", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
         createGoalWithProgress({ id: "l3-1", goal_level: 3, template_id: "l3_approach_volume" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
-      expect(inserts.length).toBe(1)
+      expect(inserts.length).toBe(4)
       const templateIds = inserts.map((i) => i.template_id)
+      expect(templateIds).toContain("l3_kiss_closes")
+      expect(templateIds).toContain("l3_pull_attempts")
       expect(templateIds).toContain("l3_lays")
+      expect(templateIds).toContain("l3_same_day_lays")
     })
 
     test("all inserts have _tempId starting with __temp_", () => {
@@ -1121,6 +1124,9 @@ describe("deriveTimeHorizon", () => {
       const goals = [
         createGoalWithProgress({ id: "l2-1", goal_level: 2, template_id: "l2_master_daygame" }),
         createGoalWithProgress({ id: "dd-1", goal_level: 3, template_id: "l3_lays" }),
+        createGoalWithProgress({ id: "dd-2", goal_level: 3, template_id: "l3_kiss_closes" }),
+        createGoalWithProgress({ id: "dd-3", goal_level: 3, template_id: "l3_pull_attempts" }),
+        createGoalWithProgress({ id: "dd-4", goal_level: 3, template_id: "l3_same_day_lays" }),
       ]
       const inserts = generateDirtyDogInserts(goals)
       expect(inserts.length).toBe(0)

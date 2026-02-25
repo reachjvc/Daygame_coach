@@ -233,13 +233,13 @@ export function GoalHierarchyView({
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mb-3">
-                    Track intimate outcomes like kiss closes, lays, and rotation. Opt in if relevant to your goals.
+                    Track intimate outcomes like kiss closes, lays, and pull attempts. Opt in if relevant to your goals.
                   </p>
                   <ul className="text-xs text-muted-foreground mb-3 space-y-0.5 list-disc list-inside">
-                    <li>Kiss Closes (milestone: 1 → 15)</li>
-                    <li>Lays (milestone: 1 → 10)</li>
-                    <li>Rotation Size (milestone: 1 → 3)</li>
-                    <li>Sustained Rotation (habit ramp: 1 → 6 months)</li>
+                    <li>Kiss Closes (milestone: 1 → 25)</li>
+                    <li>Pull Attempts (habit ramp: 1 → 3/wk)</li>
+                    <li>Lays from Daygame (milestone: 1 → 10)</li>
+                    <li>Same-Day Lays (milestone: 1 → 5)</li>
                   </ul>
                   <Button
                     variant="outline"

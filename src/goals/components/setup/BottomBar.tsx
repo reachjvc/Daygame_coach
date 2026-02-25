@@ -1,26 +1,27 @@
 "use client"
 
-import { Check } from "lucide-react"
+import { Check, ChevronLeft } from "lucide-react"
 
 export interface BottomBarProps {
   currentStep: number
   steps: string[]
-  statusText: string
   ctaLabel: string
   ctaDisabled: boolean
   onCta: () => void
   onStepClick: (index: number) => void
+  onBack?: () => void
 }
 
 export function BottomBar({
   currentStep,
   steps,
-  statusText,
   ctaLabel,
   ctaDisabled,
   onCta,
   onStepClick,
+  onBack,
 }: BottomBarProps) {
+  const showBack = onBack && currentStep > 0
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-40"
@@ -40,8 +41,7 @@ export function BottomBar({
         }}
       />
 
-      <div className="mx-auto max-w-3xl flex items-center justify-between px-6 pt-3 pb-2">
-        <span className="text-xs text-emerald-300/50">{statusText}</span>
+      <div className="mx-auto max-w-3xl flex items-center justify-end px-6 pt-3 pb-2">
         <button
           onClick={onCta}
           disabled={ctaDisabled}
@@ -58,6 +58,22 @@ export function BottomBar({
         </button>
       </div>
       <div className="mx-auto max-w-3xl flex items-center justify-center px-6 pb-3 gap-1">
+        {/* Back arrow before step indicators */}
+        {showBack && (
+          <button
+            onClick={onBack}
+            className="flex items-center justify-center rounded-full mr-3 transition-all hover:scale-110"
+            style={{
+              width: 24,
+              height: 24,
+              background: "linear-gradient(135deg, #00E676, #7C4DFF)",
+              color: "white",
+              boxShadow: "0 0 8px rgba(0,230,118,0.2), 0 0 16px rgba(124,77,255,0.1)",
+            }}
+          >
+            <ChevronLeft className="size-3.5" />
+          </button>
+        )}
         {steps.map((label, i) => {
           const isActive = i === currentStep
           const isDone = i < currentStep
@@ -89,19 +105,15 @@ export function BottomBar({
                   style={{
                     width: isActive ? 30 : 24,
                     height: isActive ? 30 : 24,
-                    background: isDone
+                    background: isDone || isActive
                       ? "linear-gradient(135deg, #00E676, #7C4DFF)"
-                      : isActive
-                        ? "rgba(0,230,118,0.2)"
-                        : "rgba(20, 30, 40, 0.5)",
+                      : "rgba(20, 30, 40, 0.5)",
                     color: isDone || isActive ? "white" : "rgba(0,255,127,0.3)",
-                    border: isActive
-                      ? "2px solid rgba(0,230,118,0.5)"
-                      : isDone
-                        ? "none"
-                        : "1px solid rgba(0,255,127,0.1)",
+                    border: isDone || isActive
+                      ? "none"
+                      : "1px solid rgba(0,255,127,0.1)",
                     boxShadow: isActive
-                      ? "0 0 16px rgba(0,230,118,0.3)"
+                      ? "0 0 16px rgba(0,230,118,0.3), 0 0 32px rgba(124,77,255,0.15)"
                       : isDone
                         ? "0 0 8px rgba(0,230,118,0.15)"
                         : "none",
@@ -113,7 +125,7 @@ export function BottomBar({
                 </button>
                 <span
                   className="text-[9px] hidden sm:block"
-                  style={{ color: isActive ? "#00E676" : isDone ? "#7C4DFF" : "rgba(0,255,127,0.2)" }}
+                  style={{ color: isActive ? "#B388FF" : isDone ? "#7C4DFF" : "rgba(0,255,127,0.2)" }}
                 >
                   {label}
                 </span>

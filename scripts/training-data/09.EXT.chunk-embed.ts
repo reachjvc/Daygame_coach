@@ -1878,7 +1878,9 @@ async function main() {
     const internalChunks: InternalChunk[] = []
 
     const allSegments = parsedFile.segments!
-    const fileEnrichments = parsedFile.enrichments!
+    const allEnrichments = parsedFile.enrichments!
+
+    const fileEnrichments = allEnrichments
 
     // Filter out teaser segments (previews that duplicate content later in video)
     const teaserCount = allSegments.filter((s) => s.is_teaser).length
@@ -1887,37 +1889,9 @@ async function main() {
       console.log(`   ⏭️  Skipping ${teaserCount} teaser segments`)
     }
 
-    // Speaker role uncertainty is often worse than minor ASR issues for retrieval.
-    // Mask these segments from chunk text by default (still counted for confidence).
-    let speakerMaskedCount = 0
-    for (const seg of fileSegments) {
-      const segId = seg.id
-      const role = (seg.speaker_role ?? "").toLowerCase().trim()
-      if (typeof segId === "number" && PROBLEMATIC_SPEAKER_ROLES.includes(role)) {
-        if (!maskedSegmentIds.has(segId)) speakerMaskedCount++
-        maskedSegmentIds.add(segId)
-      }
-    }
-    if (speakerMaskedCount > 0) {
-      console.log(`   🧹 Masking ${speakerMaskedCount} speaker-uncertain segment(s) in chunk text`)
-    }
-
-    // Confidence-aware masking: keep low-confidence contaminated lines out of
-    // primary interaction chunk text.
-    let confidenceMaskedCount = 0
-    for (const seg of fileSegments) {
-      const segId = seg.id
-      if (typeof segId !== "number") continue
-      const tier = (seg.confidence_tier ?? "").toLowerCase().trim()
-      const hasContamination = Array.isArray(seg.contamination_sources) && seg.contamination_sources.length > 0
-      if (tier === "low" && hasContamination) {
-        if (!maskedSegmentIds.has(segId)) confidenceMaskedCount++
-        maskedSegmentIds.add(segId)
-      }
-    }
-    if (confidenceMaskedCount > 0) {
-      console.log(`   🧹 Masking ${confidenceMaskedCount} low-confidence contaminated segment(s) in chunk text`)
-    }
+    // Speaker-uncertain and low-confidence segments are NOT masked.
+    // They flow through with metadata (speaker_role, confidence_tier,
+    // contamination_sources) so retrieval can filter/rank at query time.
 
     // Process approach enrichments via phase-based chunking
     const approachChunksByConvId = new Map<number, InternalChunk[]>()

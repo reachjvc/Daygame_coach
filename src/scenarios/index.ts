@@ -37,6 +37,7 @@ export {
   generateOpenerEncounter,
   evaluateOpenerAttempt,
   handleChatMessage,
+  persistScenarioAttempt,
   // Types
   type EnvironmentChoice,
   type GenerateEncounterRequest,

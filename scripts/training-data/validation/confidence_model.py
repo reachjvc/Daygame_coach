@@ -9,11 +9,53 @@ aggregation behavior can be reused across stages and audits.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple  # noqa: F811
 
 
 DEFAULT_HIGH_THRESHOLD = 0.80
 DEFAULT_MEDIUM_THRESHOLD = 0.60
+
+# Video-level gate threshold: videos below this are blocked from LLM processing.
+VIDEO_GATE_THRESHOLD = 0.85
+
+# ---- v2 confidence model constants (06h.DET.confidence-propagation-v2.0) ----
+
+# Video-type-aware axis weights for the 3-axis blocking overall.
+# Phase has small weight (~5%) — enough to surface classification issues
+# without dominating the blocking decision.
+VIDEO_TYPE_AXIS_WEIGHTS: Dict[str, Dict[str, float]] = {
+    "infield":      {"transcript": 0.475, "speaker": 0.475, "phase": 0.05},
+    "compilation":  {"transcript": 0.76,  "speaker": 0.19,  "phase": 0.05},
+    "talking_head": {"transcript": 0.90,  "speaker": 0.05,  "phase": 0.05},
+    "podcast":      {"transcript": 0.90,  "speaker": 0.05,  "phase": 0.05},
+    "lecture":      {"transcript": 0.90,  "speaker": 0.05,  "phase": 0.05},
+}
+DEFAULT_AXIS_WEIGHTS: Dict[str, float] = {"transcript": 0.57, "speaker": 0.38, "phase": 0.05}
+
+# Repair credit: segments with accepted repairs get this multiplier
+# instead of the damage multiplier on the repaired axis.
+REPAIR_CREDIT_MULTIPLIER = 0.95
+
+# Contamination propagation penalty for neighboring segments.
+# With 1.0 base scores and 0.85 threshold, the old 0.84 penalty
+# would block clean neighbors. 0.95 gives a mild flag without blocking.
+PROPAGATION_PENALTY = 0.95
+
+# Speaker ambiguity multipliers by video type.
+# Compilations: speaker identity matters less (mostly one narrator).
+SPEAKER_AMBIGUITY_MULT_INFIELD = 0.48
+SPEAKER_AMBIGUITY_MULT_COMPILATION_NO_OVERRIDE = 0.65
+SPEAKER_AMBIGUITY_MULT_COMPILATION_WITH_OVERRIDE = 0.80
+
+# When speaker_role_override exists for a collapsed speaker,
+# boost the base speaker_conf to at least this value.
+SPEAKER_OVERRIDE_FLOOR = 0.85
+
+
+def get_axis_weights(video_type: str) -> Dict[str, float]:
+    """Return axis weights for the given video type."""
+    vt = video_type.strip().lower() if isinstance(video_type, str) else ""
+    return dict(VIDEO_TYPE_AXIS_WEIGHTS.get(vt, DEFAULT_AXIS_WEIGHTS))
 
 
 def clamp01(value: float) -> float:

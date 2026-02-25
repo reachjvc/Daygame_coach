@@ -19,6 +19,7 @@ import type {
   MilestoneLadderConfig,
   HabitRampStep,
   AchievementWeight,
+  BadgeConfig,
 } from "../types"
 import type { LinkedMetric } from "@/src/db/goalTypes"
 
@@ -90,20 +91,19 @@ const L1_ABUNDANCE: GoalTemplate[] = [
 
 // --- Level 2: Achievements (badges) ---
 const L2_TEMPLATES: GoalTemplate[] = [
-  // Existing
-  template("l2_master_daygame", "Master Daygame", 2, "outcome"),
-  template("l2_confident", "Become Confident with Women", 2, "outcome"),
-  // New — Daygame-focused
-  template("l2_overcome_aa", "Overcome Approach Anxiety Permanently", 2, "outcome"),
-  template("l2_master_cold_approach", "Master Cold Approach", 2, "outcome"),
-  template("l2_great_talker", "Master Conversational Game", 2, "outcome"),
-  template("l2_master_seduction", "Master Seduction & Attraction", 2, "outcome"),
-  template("l2_attract_any", "Be Able to Attract Any Woman I Want", 2, "outcome"),
-  template("l2_inner_game", "Master Inner Game", 2, "outcome"),
-  // New — Dating-focused
-  template("l2_master_dating", "Master Dating", 2, "outcome"),
-  template("l2_master_texting", "Master Texting Game", 2, "outcome"),
-  template("l2_dating_freedom", "Have Total Dating Freedom", 2, "outcome"),
+  template("l2_approach", "Approach Legend", 2, "outcome"),
+  template("l2_results", "Results Legend", 2, "outcome"),
+  template("l2_tongue", "Mythic Tongue", 2, "outcome"),
+  template("l2_text", "Text God", 2, "outcome"),
+  template("l2_date", "Date Architect", 2, "outcome"),
+  template("l2_seduction", "Seduction Legend", 2, "outcome"),
+  template("l2_inner", "Inner God", 2, "outcome"),
+  template("l2_life", "Mythic Life", 2, "outcome"),
+  template("l2_grinder", "Mythic Grinder", 2, "outcome"),
+  template("l2_self", "Self Myth", 2, "outcome"),
+  template("l2_opener", "Mythic Opener", 2, "outcome"),
+  template("l2_pipeline", "Pipeline Myth", 2, "outcome"),
+  template("l2_training", "Mythic Student", 2, "outcome"),
 ]
 
 // --- Level 3: Specific Skills & Metrics ---
@@ -151,10 +151,14 @@ const L3_FIELD_WORK: GoalTemplate[] = [
     ],
     linkedMetric: "field_reports_weekly",
   }),
-  template("l3_approach_quality", "Approach Quality Self-Rating", 3, "input", {
+  template("l3_approach_quality", "High-Quality Approaches", 3, "input", {
     displayCategory: "field_work",
-    templateType: "milestone_ladder",
-    milestoneConfig: { start: 3, target: 8, steps: 5, curveTension: CURVE_TENSION },
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 2, durationWeeks: 12 },
+      { frequencyPerWeek: 4, durationWeeks: 12 },
+      { frequencyPerWeek: 6, durationWeeks: 24 },
+    ],
     linkedMetric: "approach_quality_avg_weekly",
   }),
   template("l3_open_in_3_seconds", "Open in <3 Seconds", 3, "input", {
@@ -229,10 +233,29 @@ const L3_RESULTS: GoalTemplate[] = [
 
 // -- Daygame: Dirty Dog --
 const L3_DIRTY_DOG: GoalTemplate[] = [
+  template("l3_kiss_closes", "Kiss Closes", 3, "outcome", {
+    displayCategory: "dirty_dog",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 25, steps: 8, curveTension: CURVE_TENSION },
+  }),
+  template("l3_pull_attempts", "Pull Attempts", 3, "input", {
+    displayCategory: "dirty_dog",
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 12 },
+      { frequencyPerWeek: 3, durationWeeks: 24 },
+    ],
+  }),
   template("l3_lays", "Lays from Daygame", 3, "outcome", {
     displayCategory: "dirty_dog",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 10, steps: 5, curveTension: CURVE_TENSION },
+  }),
+  template("l3_same_day_lays", "Same-Day Lays", 3, "outcome", {
+    displayCategory: "dirty_dog",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 5, steps: 5, curveTension: CURVE_TENSION },
   }),
 ]
 
@@ -252,10 +275,10 @@ const L3_TEXTING: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 15, steps: 6, curveTension: CURVE_TENSION },
   }),
-  template("l3_response_rate", "Texts That Got Replies", 3, "outcome", {
+  template("l3_response_rate", "First Messages That Got a Reply", 3, "outcome", {
     displayCategory: "texting",
     templateType: "milestone_ladder",
-    milestoneConfig: { start: 1, target: 25, steps: 6, curveTension: CURVE_TENSION },
+    milestoneConfig: { start: 1, target: 50, steps: 8, curveTension: CURVE_TENSION },
   }),
 ]
 
@@ -292,12 +315,41 @@ const L3_DATES: GoalTemplate[] = [
   }),
 ]
 
+// -- Daygame: Scenario Practice --
+const L3_SCENARIOS: GoalTemplate[] = [
+  template("l3_scenario_sessions", "Scenario Practice Sessions", 3, "input", {
+    displayCategory: "scenarios",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 500, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "scenario_sessions_cumulative",
+    priority: "progressive",
+  }),
+  template("l3_scenario_types_tried", "Unique Scenario Types Practiced", 3, "outcome", {
+    displayCategory: "scenarios",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 19, steps: 8, curveTension: CURVE_TENSION },
+    linkedMetric: "scenario_types_cumulative",
+    priority: "progressive",
+  }),
+  template("l3_scenario_high_scores", "High-Scoring Sessions (7+/10)", 3, "outcome", {
+    displayCategory: "scenarios",
+    templateType: "milestone_ladder",
+    milestoneConfig: { start: 1, target: 200, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "scenario_high_scores_cumulative",
+    priority: "progressive",
+  }),
+]
+
 // -- Dating: Relationship --
 const L3_RELATIONSHIP: GoalTemplate[] = [
   template("l3_women_dating", "Active Rotation / Women Dating", 3, "outcome", {
     displayCategory: "relationship",
-    templateType: "milestone_ladder",
-    milestoneConfig: { start: 1, target: 5, steps: 5, curveTension: 0 },
+    templateType: "habit_ramp",
+    rampSteps: [
+      { frequencyPerWeek: 1, durationWeeks: 12 },
+      { frequencyPerWeek: 2, durationWeeks: 24 },
+      { frequencyPerWeek: 3, durationWeeks: 24 },
+    ],
   }),
 ]
 
@@ -1113,7 +1165,7 @@ const ALL_L3_VIC = [
 
 const ALL_L3_DAYGAME = [
   ...L3_FIELD_WORK, ...L3_RESULTS, ...L3_DIRTY_DOG,
-  ...L3_TEXTING, ...L3_DATES, ...L3_RELATIONSHIP,
+  ...L3_TEXTING, ...L3_DATES, ...L3_SCENARIOS, ...L3_RELATIONSHIP,
 ]
 
 export const GOAL_TEMPLATES: GoalTemplate[] = [
@@ -1162,63 +1214,21 @@ const L1_TO_L3_EDGES: GoalGraphEdge[] = [
 // NOT included in GOAL_GRAPH_EDGES — L2s are standalone, not in the parent-child hierarchy.
 const L2_L3_CONNECTIONS: Record<string, string[]> = {
   // ---- DAYGAME ----
-  // Master Daygame — broad, results-heavy
-  l2_master_daygame: [
-    "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency",
-    "l3_voice_notes", "l3_approach_quality", "l3_open_in_3_seconds", "l3_solo_sessions",
-    "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
-    "l3_lays", "l3_women_dating",
-    "l3_venues_explored", "l3_daygame_weekly_review",
-    "l3_visualization",
-  ],
-  // Become Confident — exposure/consistency-heavy
-  l2_confident: [
-    "l3_approach_volume", "l3_approach_frequency", "l3_session_frequency",
-    "l3_solo_sessions",
-    "l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates",
-  ],
-  // Overcome AA — pure exposure
-  l2_overcome_aa: [
-    "l3_approach_volume", "l3_solo_sessions",
-    "l3_visualization",
-  ],
-  // Master Cold Approach — technique + quality
-  l2_master_cold_approach: [
-    "l3_approach_volume", "l3_approach_frequency", "l3_approach_quality", "l3_open_in_3_seconds",
-    "l3_phone_numbers", "l3_instadates",
-  ],
-  // Master Conversational Game — conversation/conversion
-  l2_great_talker: [
-    "l3_phone_numbers", "l3_instadates", "l3_dates",
-    "l3_response_rate", "l3_voice_notes", "l3_approach_quality",
-  ],
-  // Master Seduction — escalation
-  l2_master_seduction: [
-    "l3_lays",
-    "l3_dates", "l3_second_dates",
-    "l3_date_leadership",
-  ],
-  // Attract Any Woman — broadest, everything
-  l2_attract_any: ALL_L3_DAYGAME.map((t) => t.id),
-  // Master Inner Game — mindset, resilience, anti-anxiety
-  l2_inner_game: [
-    "l3_solo_sessions",
-    "l3_approach_volume", "l3_daygame_weekly_review",
-    "l3_visualization",
-  ],
-  // Master Texting — texting metrics
-  l2_master_texting: [
-    "l3_texting_initiated", "l3_response_rate", "l3_number_to_date_conversion",
-  ],
-  // Master Dating — date execution
-  l2_master_dating: [
-    "l3_dates_planned", "l3_second_dates", "l3_creative_dates",
-    "l3_date_spots", "l3_date_leadership",
-  ],
-  // Total Dating Freedom — abundance
-  l2_dating_freedom: [
-    "l3_women_dating", "l3_dates_planned",
-  ],
+  // All badges use threshold-based requirements (BADGE_REQUIREMENTS).
+  // L2_L3_CONNECTIONS only needed for badge→L3 discovery (getL2AchievementsForL3).
+  l2_approach: ["l3_approach_volume", "l3_venues_explored"],
+  l2_results: ["l3_phone_numbers", "l3_instadates", "l3_dates", "l3_second_dates"],
+  l2_tongue: ["l3_approach_volume", "l3_phone_numbers", "l3_instadates"],
+  l2_text: ["l3_response_rate", "l3_number_to_date_conversion"],
+  l2_date: ["l3_dates", "l3_second_dates", "l3_creative_dates", "l3_date_spots"],
+  l2_seduction: ["l3_kiss_closes", "l3_lays", "l3_same_day_lays"],
+  l2_inner: ["l3_approach_volume", "l3_venues_explored", "l3_instadates", "l3_creative_dates"],
+  l2_life: ["l3_dates", "l3_number_to_date_conversion", "l3_second_dates", "l3_lays"],
+  l2_grinder: ["l3_session_frequency", "l3_solo_sessions", "l3_approach_frequency"],
+  l2_self: ["l3_voice_notes", "l3_daygame_weekly_review", "l3_visualization"],
+  l2_opener: ["l3_approach_quality", "l3_open_in_3_seconds"],
+  l2_pipeline: ["l3_texting_initiated", "l3_dates_planned", "l3_pull_attempts", "l3_date_leadership", "l3_women_dating"],
+  l2_training: ["l3_scenario_sessions", "l3_scenario_types_tried", "l3_scenario_high_scores"],
 
   // ---- PERSONAL GROWTH ----
   // Master Mindfulness & Presence (8 L3s — cross-category)
@@ -1336,113 +1346,405 @@ export const GOAL_GRAPH_EDGES: GoalGraphEdge[] = [
 // Achievement Weights — per-L2, each sums to 1.0
 // ============================================================================
 
+// ============================================================================
+// Daygame Badge Requirements — threshold-based tiers
+// ============================================================================
+
+const r = (templateId: string, value: number) => ({ templateId, value })
+
+export const DAYGAME_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  {
+    l2Id: "l2_approach",
+    tiers: [
+      { tier: "iron",    name: "Approach Newbie",   requirements: [r("l3_approach_volume", 20)] },
+      { tier: "bronze",  name: "Approach Warrior",  requirements: [r("l3_approach_volume", 75), r("l3_venues_explored", 3)] },
+      { tier: "silver",  name: "Approach Veteran",  requirements: [r("l3_approach_volume", 200), r("l3_venues_explored", 7)] },
+      { tier: "gold",    name: "Approach Machine",  requirements: [r("l3_approach_volume", 500), r("l3_venues_explored", 15)] },
+      { tier: "diamond", name: "Approach Legend",    requirements: [r("l3_approach_volume", 1200), r("l3_venues_explored", 25)] },
+      { tier: "mythic",  name: "Approach Myth",     requirements: [r("l3_approach_volume", 3000), r("l3_venues_explored", 50)] },
+    ],
+  },
+  {
+    l2Id: "l2_results",
+    tiers: [
+      { tier: "iron",    name: "Results Seeker",    requirements: [r("l3_phone_numbers", 3)] },
+      { tier: "bronze",  name: "Results Hunter",    requirements: [r("l3_phone_numbers", 10), r("l3_instadates", 2)] },
+      { tier: "silver",  name: "Results Machine",   requirements: [r("l3_phone_numbers", 25), r("l3_instadates", 8), r("l3_dates", 3)] },
+      { tier: "gold",    name: "Results King",      requirements: [r("l3_phone_numbers", 60), r("l3_instadates", 20), r("l3_dates", 12), r("l3_second_dates", 5)] },
+      { tier: "diamond", name: "Results Legend",     requirements: [r("l3_phone_numbers", 120), r("l3_instadates", 40), r("l3_dates", 30), r("l3_second_dates", 12)] },
+      { tier: "mythic",  name: "Results Myth",      requirements: [r("l3_phone_numbers", 250), r("l3_instadates", 80), r("l3_dates", 60), r("l3_second_dates", 30)] },
+    ],
+  },
+  {
+    l2Id: "l2_tongue",
+    tiers: [
+      { tier: "iron",    name: "Nervous Tongue",    requirements: [r("l3_approach_volume", 30), r("l3_phone_numbers", 3)] },
+      { tier: "bronze",  name: "Smooth Tongue",     requirements: [r("l3_approach_volume", 100), r("l3_phone_numbers", 10), r("l3_instadates", 2)] },
+      { tier: "silver",  name: "Silver Tongue",     requirements: [r("l3_approach_volume", 300), r("l3_phone_numbers", 25), r("l3_instadates", 8)] },
+      { tier: "gold",    name: "Golden Tongue",     requirements: [r("l3_approach_volume", 600), r("l3_phone_numbers", 50), r("l3_instadates", 18)] },
+      { tier: "diamond", name: "Diamond Tongue",    requirements: [r("l3_approach_volume", 1200), r("l3_phone_numbers", 100), r("l3_instadates", 35)] },
+      { tier: "mythic",  name: "Mythic Tongue",     requirements: [r("l3_approach_volume", 3000), r("l3_phone_numbers", 200), r("l3_instadates", 70)] },
+    ],
+  },
+  {
+    l2Id: "l2_text",
+    tiers: [
+      { tier: "iron",    name: "Text Rookie",       requirements: [r("l3_response_rate", 3), r("l3_number_to_date_conversion", 1)] },
+      { tier: "bronze",  name: "Text Player",       requirements: [r("l3_response_rate", 10), r("l3_number_to_date_conversion", 3)] },
+      { tier: "silver",  name: "Text Tactician",    requirements: [r("l3_response_rate", 25), r("l3_number_to_date_conversion", 8)] },
+      { tier: "gold",    name: "Text King",         requirements: [r("l3_response_rate", 50), r("l3_number_to_date_conversion", 15)] },
+      { tier: "diamond", name: "Text God",          requirements: [r("l3_response_rate", 100), r("l3_number_to_date_conversion", 30)] },
+      { tier: "mythic",  name: "Text Myth",         requirements: [r("l3_response_rate", 200), r("l3_number_to_date_conversion", 60)] },
+    ],
+  },
+  {
+    l2Id: "l2_date",
+    tiers: [
+      { tier: "iron",    name: "Date Rookie",       requirements: [r("l3_dates", 2), r("l3_second_dates", 1)] },
+      { tier: "bronze",  name: "Date Planner",      requirements: [r("l3_dates", 6), r("l3_second_dates", 3), r("l3_creative_dates", 1)] },
+      { tier: "silver",  name: "Date Strategist",   requirements: [r("l3_dates", 15), r("l3_second_dates", 8), r("l3_creative_dates", 4)] },
+      { tier: "gold",    name: "Date Commander",    requirements: [r("l3_dates", 30), r("l3_second_dates", 16), r("l3_creative_dates", 8), r("l3_date_spots", 4)] },
+      { tier: "diamond", name: "Date Architect",    requirements: [r("l3_dates", 55), r("l3_second_dates", 28), r("l3_creative_dates", 15), r("l3_date_spots", 8)] },
+      { tier: "mythic",  name: "Date Myth",         requirements: [r("l3_dates", 100), r("l3_second_dates", 50), r("l3_creative_dates", 30), r("l3_date_spots", 15)] },
+    ],
+  },
+  {
+    l2Id: "l2_seduction",
+    tiers: [
+      { tier: "iron",    name: "Seduction Novice",  requirements: [r("l3_kiss_closes", 2)] },
+      { tier: "bronze",  name: "Seduction Player",  requirements: [r("l3_kiss_closes", 7), r("l3_lays", 1)] },
+      { tier: "silver",  name: "Seduction Artist",  requirements: [r("l3_kiss_closes", 15), r("l3_lays", 4), r("l3_same_day_lays", 1)] },
+      { tier: "gold",    name: "Seduction Master",  requirements: [r("l3_kiss_closes", 30), r("l3_lays", 8), r("l3_same_day_lays", 2)] },
+      { tier: "diamond", name: "Seduction Legend",   requirements: [r("l3_kiss_closes", 45), r("l3_lays", 15), r("l3_same_day_lays", 5)] },
+      { tier: "mythic",  name: "Seduction Myth",    requirements: [r("l3_kiss_closes", 75), r("l3_lays", 30), r("l3_same_day_lays", 10)] },
+    ],
+  },
+  {
+    l2Id: "l2_inner",
+    tiers: [
+      { tier: "iron",    name: "Inner Spark",       requirements: [r("l3_approach_volume", 50), r("l3_venues_explored", 2)] },
+      { tier: "bronze",  name: "Inner Flame",       requirements: [r("l3_approach_volume", 150), r("l3_venues_explored", 5), r("l3_instadates", 2)] },
+      { tier: "silver",  name: "Inner Shield",      requirements: [r("l3_approach_volume", 400), r("l3_venues_explored", 10), r("l3_instadates", 8), r("l3_creative_dates", 2)] },
+      { tier: "gold",    name: "Inner Fortress",    requirements: [r("l3_approach_volume", 750), r("l3_venues_explored", 16), r("l3_instadates", 18), r("l3_creative_dates", 6)] },
+      { tier: "diamond", name: "Inner Titan",       requirements: [r("l3_approach_volume", 1200), r("l3_venues_explored", 25), r("l3_instadates", 35), r("l3_creative_dates", 12)] },
+      { tier: "mythic",  name: "Inner God",         requirements: [r("l3_approach_volume", 2500), r("l3_venues_explored", 40), r("l3_instadates", 70), r("l3_creative_dates", 25)] },
+    ],
+  },
+  {
+    l2Id: "l2_life",
+    tiers: [
+      { tier: "iron",    name: "Tasting Life",      requirements: [r("l3_dates", 2), r("l3_number_to_date_conversion", 1), r("l3_second_dates", 1)] },
+      { tier: "bronze",  name: "Rising Life",       requirements: [r("l3_dates", 7), r("l3_number_to_date_conversion", 4), r("l3_second_dates", 3)] },
+      { tier: "silver",  name: "Thriving Life",     requirements: [r("l3_dates", 18), r("l3_number_to_date_conversion", 12), r("l3_second_dates", 8), r("l3_lays", 2)] },
+      { tier: "gold",    name: "Abundant Life",     requirements: [r("l3_dates", 35), r("l3_number_to_date_conversion", 22), r("l3_second_dates", 16), r("l3_lays", 5)] },
+      { tier: "diamond", name: "Legendary Life",    requirements: [r("l3_dates", 65), r("l3_number_to_date_conversion", 35), r("l3_second_dates", 28), r("l3_lays", 10)] },
+      { tier: "mythic",  name: "Mythic Life",       requirements: [r("l3_dates", 120), r("l3_number_to_date_conversion", 60), r("l3_second_dates", 50), r("l3_lays", 20)] },
+    ],
+  },
+  // --- New daygame badges ---
+  {
+    l2Id: "l2_grinder",
+    tiers: [
+      { tier: "iron",    name: "Fresh Grinder",     requirements: [r("l3_session_frequency", 20)] },
+      { tier: "bronze",  name: "Street Grinder",    requirements: [r("l3_session_frequency", 50), r("l3_solo_sessions", 10)] },
+      { tier: "silver",  name: "Steady Grinder",    requirements: [r("l3_session_frequency", 120), r("l3_solo_sessions", 30)] },
+      { tier: "gold",    name: "Iron Grinder",      requirements: [r("l3_session_frequency", 250), r("l3_solo_sessions", 60)] },
+      { tier: "diamond", name: "Legendary Grinder",  requirements: [r("l3_session_frequency", 500), r("l3_solo_sessions", 120)] },
+      { tier: "mythic",  name: "Mythic Grinder",    requirements: [r("l3_session_frequency", 1000), r("l3_solo_sessions", 250)] },
+    ],
+  },
+  {
+    l2Id: "l2_self",
+    tiers: [
+      { tier: "iron",    name: "Self Starter",      requirements: [r("l3_voice_notes", 10), r("l3_daygame_weekly_review", 4)] },
+      { tier: "bronze",  name: "Self Aware",        requirements: [r("l3_voice_notes", 30), r("l3_daygame_weekly_review", 12), r("l3_visualization", 20)] },
+      { tier: "silver",  name: "Self Coach",        requirements: [r("l3_voice_notes", 75), r("l3_daygame_weekly_review", 30), r("l3_visualization", 50)] },
+      { tier: "gold",    name: "Self Master",       requirements: [r("l3_voice_notes", 150), r("l3_daygame_weekly_review", 48), r("l3_visualization", 100)] },
+      { tier: "diamond", name: "Self Sensei",       requirements: [r("l3_voice_notes", 300), r("l3_daygame_weekly_review", 96), r("l3_visualization", 200)] },
+      { tier: "mythic",  name: "Self Myth",         requirements: [r("l3_voice_notes", 600), r("l3_daygame_weekly_review", 192), r("l3_visualization", 400)] },
+    ],
+  },
+  {
+    l2Id: "l2_opener",
+    tiers: [
+      { tier: "iron",    name: "Hesitant Opener",   requirements: [r("l3_approach_quality", 20)] },
+      { tier: "bronze",  name: "Bold Opener",       requirements: [r("l3_approach_quality", 50), r("l3_open_in_3_seconds", 30)] },
+      { tier: "silver",  name: "Sharp Opener",      requirements: [r("l3_approach_quality", 120), r("l3_open_in_3_seconds", 80)] },
+      { tier: "gold",    name: "Killer Opener",     requirements: [r("l3_approach_quality", 250), r("l3_open_in_3_seconds", 180)] },
+      { tier: "diamond", name: "Legendary Opener",   requirements: [r("l3_approach_quality", 500), r("l3_open_in_3_seconds", 350)] },
+      { tier: "mythic",  name: "Mythic Opener",     requirements: [r("l3_approach_quality", 1000), r("l3_open_in_3_seconds", 700)] },
+    ],
+  },
+  {
+    l2Id: "l2_pipeline",
+    tiers: [
+      { tier: "iron",    name: "Pipeline Rookie",   requirements: [r("l3_texting_initiated", 10), r("l3_dates_planned", 3)] },
+      { tier: "bronze",  name: "Pipeline Builder",  requirements: [r("l3_texting_initiated", 25), r("l3_dates_planned", 8), r("l3_pull_attempts", 5)] },
+      { tier: "silver",  name: "Pipeline Manager",  requirements: [r("l3_texting_initiated", 50), r("l3_dates_planned", 20), r("l3_pull_attempts", 12), r("l3_women_dating", 2)] },
+      { tier: "gold",    name: "Pipeline King",     requirements: [r("l3_texting_initiated", 100), r("l3_dates_planned", 40), r("l3_pull_attempts", 25), r("l3_women_dating", 3)] },
+      { tier: "diamond", name: "Pipeline Legend",    requirements: [r("l3_texting_initiated", 200), r("l3_dates_planned", 80), r("l3_pull_attempts", 50), r("l3_women_dating", 5)] },
+      { tier: "mythic",  name: "Pipeline Myth",     requirements: [r("l3_texting_initiated", 400), r("l3_dates_planned", 160), r("l3_pull_attempts", 100), r("l3_women_dating", 8)] },
+    ],
+  },
+  {
+    l2Id: "l2_training",
+    tiers: [
+      { tier: "iron",    name: "Reluctant Student",  requirements: [r("l3_scenario_sessions", 10)] },
+      { tier: "bronze",  name: "Keen Student",       requirements: [r("l3_scenario_sessions", 30), r("l3_scenario_types_tried", 3), r("l3_scenario_high_scores", 10)] },
+      { tier: "silver",  name: "Dedicated Student",  requirements: [r("l3_scenario_sessions", 80), r("l3_scenario_types_tried", 7), r("l3_scenario_high_scores", 30)] },
+      { tier: "gold",    name: "Star Student",       requirements: [r("l3_scenario_sessions", 180), r("l3_scenario_types_tried", 12), r("l3_scenario_high_scores", 70)] },
+      { tier: "diamond", name: "Master Student",     requirements: [r("l3_scenario_sessions", 400), r("l3_scenario_types_tried", 16), r("l3_scenario_high_scores", 150)] },
+      { tier: "mythic",  name: "Mythic Student",     requirements: [r("l3_scenario_sessions", 800), r("l3_scenario_types_tried", 19), r("l3_scenario_high_scores", 300)] },
+    ],
+  },
+]
+
+// ============================================================================
+// Personal Growth Badge Requirements — threshold-based tiers
+// ============================================================================
+
+export const PG_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  {
+    l2Id: "l2_pg_mindfulness",
+    tiers: [
+      { tier: "iron",    name: "Mindfulness Beginner", requirements: [r("l3_pg_meditation_hours", 10)] },
+      { tier: "bronze",  name: "Mindfulness Student",  requirements: [r("l3_pg_meditation_hours", 50), r("l3_pg_meditation_streak", 14)] },
+      { tier: "silver",  name: "Mindfulness Practitioner", requirements: [r("l3_pg_meditation_hours", 150), r("l3_pg_meditation_streak", 30)] },
+      { tier: "gold",    name: "Mindfulness Master",   requirements: [r("l3_pg_meditation_hours", 400), r("l3_pg_meditation_streak", 90)] },
+      { tier: "diamond", name: "Mindfulness Sage",     requirements: [r("l3_pg_meditation_hours", 700), r("l3_pg_meditation_streak", 180)] },
+      { tier: "mythic",  name: "Enlightened",          requirements: [r("l3_pg_meditation_hours", 1000), r("l3_pg_meditation_streak", 365)] },
+    ],
+  },
+  {
+    l2Id: "l2_pg_toughness",
+    tiers: [
+      { tier: "iron",    name: "Soft",                 requirements: [r("l3_pg_challenges_completed", 10)] },
+      { tier: "bronze",  name: "Growing",              requirements: [r("l3_pg_challenges_completed", 30), r("l3_pg_cold_streak", 7)] },
+      { tier: "silver",  name: "Real",                 requirements: [r("l3_pg_challenges_completed", 100), r("l3_pg_cold_streak", 21)] },
+      { tier: "gold",    name: "Iron",                 requirements: [r("l3_pg_challenges_completed", 250), r("l3_pg_cold_streak", 45)] },
+      { tier: "diamond", name: "Legendary",            requirements: [r("l3_pg_challenges_completed", 400), r("l3_pg_cold_streak", 75)] },
+      { tier: "mythic",  name: "Mythic Toughness",     requirements: [r("l3_pg_challenges_completed", 500), r("l3_pg_cold_streak", 100)] },
+    ],
+  },
+  {
+    l2Id: "l2_pg_well_read",
+    tiers: [
+      { tier: "iron",    name: "Casual Reader",        requirements: [r("l3_pg_books", 3)] },
+      { tier: "bronze",  name: "Active Reader",        requirements: [r("l3_pg_books", 10), r("l3_pg_reading_hours", 50)] },
+      { tier: "silver",  name: "Dedicated Reader",     requirements: [r("l3_pg_books", 25), r("l3_pg_courses", 5), r("l3_pg_reading_hours", 150)] },
+      { tier: "gold",    name: "Voracious Reader",     requirements: [r("l3_pg_books", 50), r("l3_pg_courses", 12), r("l3_pg_reading_hours", 400)] },
+      { tier: "diamond", name: "Scholar",              requirements: [r("l3_pg_books", 75), r("l3_pg_courses", 20), r("l3_pg_reading_hours", 700)] },
+      { tier: "mythic",  name: "Mythic Reader",        requirements: [r("l3_pg_books", 100), r("l3_pg_courses", 25), r("l3_pg_reading_hours", 1000)] },
+    ],
+  },
+  {
+    l2Id: "l2_pg_reflection",
+    tiers: [
+      { tier: "iron",    name: "Reluctant Reflector",  requirements: [r("l3_pg_journal_entries", 10)] },
+      { tier: "bronze",  name: "Growing Reflector",    requirements: [r("l3_pg_journal_entries", 50), r("l3_pg_retreats", 1)] },
+      { tier: "silver",  name: "Committed Reflector",  requirements: [r("l3_pg_journal_entries", 150), r("l3_pg_retreats", 3)] },
+      { tier: "gold",    name: "Deep Reflector",       requirements: [r("l3_pg_journal_entries", 400), r("l3_pg_retreats", 7)] },
+      { tier: "diamond", name: "Master Reflector",     requirements: [r("l3_pg_journal_entries", 700), r("l3_pg_retreats", 12)] },
+      { tier: "mythic",  name: "Mythic Reflector",     requirements: [r("l3_pg_journal_entries", 1000), r("l3_pg_retreats", 20)] },
+    ],
+  },
+  {
+    l2Id: "l2_pg_eq",
+    tiers: [
+      { tier: "iron",    name: "EQ Novice",            requirements: [r("l3_pg_meditation_hours", 10)] },
+      { tier: "bronze",  name: "EQ Student",           requirements: [r("l3_pg_meditation_hours", 50), r("l3_pg_journal_entries", 50)] },
+      { tier: "silver",  name: "EQ Practitioner",      requirements: [r("l3_pg_meditation_hours", 150), r("l3_pg_journal_entries", 150)] },
+      { tier: "gold",    name: "EQ Expert",            requirements: [r("l3_pg_meditation_hours", 350), r("l3_pg_journal_entries", 350)] },
+      { tier: "diamond", name: "EQ Master",            requirements: [r("l3_pg_meditation_hours", 600), r("l3_pg_journal_entries", 600)] },
+      { tier: "mythic",  name: "EQ Myth",              requirements: [r("l3_pg_meditation_hours", 1000), r("l3_pg_journal_entries", 1000)] },
+    ],
+  },
+  {
+    l2Id: "l2_pg_discipline",
+    tiers: [
+      { tier: "iron",    name: "Discipline Rookie",    requirements: [r("l3_pg_routine_streak", 7)] },
+      { tier: "bronze",  name: "Discipline Builder",   requirements: [r("l3_pg_routine_streak", 21), r("l3_pg_challenges_completed", 20)] },
+      { tier: "silver",  name: "Discipline Soldier",   requirements: [r("l3_pg_routine_streak", 60), r("l3_pg_challenges_completed", 80), r("l3_pg_cold_streak", 14)] },
+      { tier: "gold",    name: "Discipline Machine",   requirements: [r("l3_pg_routine_streak", 150), r("l3_pg_challenges_completed", 200), r("l3_pg_cold_streak", 45)] },
+      { tier: "diamond", name: "Discipline Legend",     requirements: [r("l3_pg_routine_streak", 270), r("l3_pg_challenges_completed", 400), r("l3_pg_cold_streak", 75)] },
+      { tier: "mythic",  name: "Discipline Myth",      requirements: [r("l3_pg_routine_streak", 365), r("l3_pg_challenges_completed", 500), r("l3_pg_cold_streak", 100)] },
+    ],
+  },
+]
+
+// ============================================================================
+// Fitness Badge Requirements — threshold-based tiers
+// ============================================================================
+
+export const FIT_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  {
+    l2Id: "l2_f_strength",
+    tiers: [
+      { tier: "iron",    name: "Strength Beginner",    requirements: [r("l3_f_total_sessions", 20)] },
+      { tier: "bronze",  name: "Strength Builder",     requirements: [r("l3_f_bench_press", 60), r("l3_f_squat", 80), r("l3_f_total_sessions", 50)] },
+      { tier: "silver",  name: "Strength Beast",       requirements: [r("l3_f_bench_press", 80), r("l3_f_squat", 120), r("l3_f_deadlift", 120), r("l3_f_pullups", 10)] },
+      { tier: "gold",    name: "Strength Master",      requirements: [r("l3_f_bench_press", 100), r("l3_f_squat", 140), r("l3_f_deadlift", 160), r("l3_f_pullups", 15)] },
+      { tier: "diamond", name: "Strength Titan",       requirements: [r("l3_f_bench_press", 120), r("l3_f_squat", 170), r("l3_f_deadlift", 190), r("l3_f_pullups", 22)] },
+      { tier: "mythic",  name: "Strength Myth",        requirements: [r("l3_f_bench_press", 140), r("l3_f_squat", 200), r("l3_f_deadlift", 220), r("l3_f_pullups", 30)] },
+    ],
+  },
+  {
+    l2Id: "l2_f_body_comp",
+    tiers: [
+      { tier: "iron",    name: "Body Starter",         requirements: [r("l3_f_progress_photos", 2)] },
+      { tier: "bronze",  name: "Body Builder",         requirements: [r("l3_f_progress_photos", 6), r("l3_f_weight_lost", 3)] },
+      { tier: "silver",  name: "Body Sculptor",        requirements: [r("l3_f_weight_lost", 8), r("l3_f_muscle_gained", 3), r("l3_f_progress_photos", 12)] },
+      { tier: "gold",    name: "Body Artist",          requirements: [r("l3_f_weight_lost", 15), r("l3_f_muscle_gained", 7), r("l3_f_body_measurements", 10)] },
+      { tier: "diamond", name: "Body Masterpiece",     requirements: [r("l3_f_weight_lost", 20), r("l3_f_muscle_gained", 12), r("l3_f_progress_photos", 40)] },
+      { tier: "mythic",  name: "Body Myth",            requirements: [r("l3_f_weight_lost", 25), r("l3_f_muscle_gained", 15), r("l3_f_body_measurements", 20), r("l3_f_progress_photos", 52)] },
+    ],
+  },
+  {
+    l2Id: "l2_f_nutrition",
+    tiers: [
+      { tier: "iron",    name: "Nutrition Rookie",     requirements: [r("l3_f_consecutive_weeks", 4)] },
+      { tier: "bronze",  name: "Nutrition Aware",      requirements: [r("l3_f_consecutive_weeks", 12), r("l3_f_weight_lost", 2)] },
+      { tier: "silver",  name: "Nutrition Disciplined", requirements: [r("l3_f_consecutive_weeks", 24), r("l3_f_weight_lost", 5), r("l3_f_muscle_gained", 2)] },
+      { tier: "gold",    name: "Nutrition Master",     requirements: [r("l3_f_consecutive_weeks", 36), r("l3_f_weight_lost", 12), r("l3_f_muscle_gained", 6)] },
+      { tier: "diamond", name: "Nutrition Sage",       requirements: [r("l3_f_consecutive_weeks", 48), r("l3_f_weight_lost", 20), r("l3_f_muscle_gained", 10)] },
+      { tier: "mythic",  name: "Nutrition Myth",       requirements: [r("l3_f_consecutive_weeks", 52), r("l3_f_weight_lost", 25), r("l3_f_muscle_gained", 15)] },
+    ],
+  },
+  {
+    l2Id: "l2_f_training_discipline",
+    tiers: [
+      { tier: "iron",    name: "Training Rookie",      requirements: [r("l3_f_total_sessions", 20)] },
+      { tier: "bronze",  name: "Training Regular",     requirements: [r("l3_f_total_sessions", 75), r("l3_f_consecutive_weeks", 8)] },
+      { tier: "silver",  name: "Training Machine",     requirements: [r("l3_f_total_sessions", 200), r("l3_f_consecutive_weeks", 24), r("l3_f_training_hours", 150)] },
+      { tier: "gold",    name: "Training Warrior",     requirements: [r("l3_f_total_sessions", 400), r("l3_f_consecutive_weeks", 40), r("l3_f_training_hours", 400)] },
+      { tier: "diamond", name: "Training Legend",       requirements: [r("l3_f_total_sessions", 700), r("l3_f_consecutive_weeks", 48), r("l3_f_training_hours", 700)] },
+      { tier: "mythic",  name: "Training Myth",        requirements: [r("l3_f_total_sessions", 1000), r("l3_f_consecutive_weeks", 52), r("l3_f_training_hours", 1000)] },
+    ],
+  },
+]
+
+// ============================================================================
+// Wealth Badge Requirements — threshold-based tiers
+// ============================================================================
+
+export const WLT_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  {
+    l2Id: "l2_w_budgeting",
+    tiers: [
+      { tier: "iron",    name: "Budget Beginner",      requirements: [r("l3_w_emergency_fund", 1)] },
+      { tier: "bronze",  name: "Budget Tracker",       requirements: [r("l3_w_emergency_fund", 3), r("l3_w_net_worth", 10000)] },
+      { tier: "silver",  name: "Budget Master",        requirements: [r("l3_w_emergency_fund", 6), r("l3_w_net_worth", 50000)] },
+      { tier: "gold",    name: "Budget Wizard",        requirements: [r("l3_w_emergency_fund", 9), r("l3_w_net_worth", 200000), r("l3_w_income_streams", 2)] },
+      { tier: "diamond", name: "Budget Legend",         requirements: [r("l3_w_emergency_fund", 12), r("l3_w_net_worth", 500000), r("l3_w_income_streams", 3)] },
+      { tier: "mythic",  name: "Budget Myth",          requirements: [r("l3_w_emergency_fund", 12), r("l3_w_net_worth", 1000000), r("l3_w_income_streams", 5)] },
+    ],
+  },
+  {
+    l2Id: "l2_w_earning",
+    tiers: [
+      { tier: "iron",    name: "Earning Starter",      requirements: [r("l3_w_monthly_income", 4000)] },
+      { tier: "bronze",  name: "Earning Grower",       requirements: [r("l3_w_monthly_income", 6000), r("l3_w_skills", 3)] },
+      { tier: "silver",  name: "Earning Machine",      requirements: [r("l3_w_monthly_income", 10000), r("l3_w_side_income", 1000), r("l3_w_skills", 7)] },
+      { tier: "gold",    name: "Earning Master",       requirements: [r("l3_w_monthly_income", 14000), r("l3_w_side_income", 4000), r("l3_w_income_streams", 3)] },
+      { tier: "diamond", name: "Earning Mogul",        requirements: [r("l3_w_monthly_income", 18000), r("l3_w_side_income", 7000), r("l3_w_income_streams", 4)] },
+      { tier: "mythic",  name: "Earning Myth",         requirements: [r("l3_w_monthly_income", 20000), r("l3_w_side_income", 10000), r("l3_w_income_streams", 5), r("l3_w_skills", 20)] },
+    ],
+  },
+  {
+    l2Id: "l2_w_investing",
+    tiers: [
+      { tier: "iron",    name: "Investor Novice",      requirements: [r("l3_w_portfolio", 5000)] },
+      { tier: "bronze",  name: "Investor Beginner",    requirements: [r("l3_w_portfolio", 20000), r("l3_w_diversification", 2)] },
+      { tier: "silver",  name: "Investor Builder",     requirements: [r("l3_w_portfolio", 75000), r("l3_w_diversification", 3), r("l3_w_net_worth", 100000)] },
+      { tier: "gold",    name: "Investor Pro",         requirements: [r("l3_w_portfolio", 200000), r("l3_w_diversification", 5), r("l3_w_net_worth", 400000)] },
+      { tier: "diamond", name: "Investor Legend",       requirements: [r("l3_w_portfolio", 350000), r("l3_w_diversification", 6), r("l3_w_net_worth", 700000)] },
+      { tier: "mythic",  name: "Investor Myth",        requirements: [r("l3_w_portfolio", 500000), r("l3_w_diversification", 7), r("l3_w_net_worth", 1000000)] },
+    ],
+  },
+  {
+    l2Id: "l2_w_debt_free",
+    tiers: [
+      { tier: "iron",    name: "Debt Drowning",        requirements: [r("l3_w_emergency_fund", 1)] },
+      { tier: "bronze",  name: "Debt Fighting",        requirements: [r("l3_w_emergency_fund", 3), r("l3_w_net_worth", 5000)] },
+      { tier: "silver",  name: "Debt Shrinking",       requirements: [r("l3_w_emergency_fund", 6), r("l3_w_net_worth", 50000)] },
+      { tier: "gold",    name: "Debt Crushing",        requirements: [r("l3_w_emergency_fund", 9), r("l3_w_net_worth", 200000)] },
+      { tier: "diamond", name: "Debt Free",            requirements: [r("l3_w_emergency_fund", 12), r("l3_w_net_worth", 500000)] },
+      { tier: "mythic",  name: "Debt Myth",            requirements: [r("l3_w_emergency_fund", 12), r("l3_w_net_worth", 1000000)] },
+    ],
+  },
+]
+
+// ============================================================================
+// Vices Badge Requirements — threshold-based tiers
+// ============================================================================
+
+export const VIC_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  {
+    l2Id: "l2_v_porn_free",
+    tiers: [
+      { tier: "iron",    name: "Barely Free",          requirements: [r("l3_v_porn_free_days", 7)] },
+      { tier: "bronze",  name: "Getting Free",         requirements: [r("l3_v_porn_free_days", 30), r("l3_v_nofap_streak", 7)] },
+      { tier: "silver",  name: "Staying Free",         requirements: [r("l3_v_porn_free_days", 90), r("l3_v_nofap_streak", 21)] },
+      { tier: "gold",    name: "Truly Free",           requirements: [r("l3_v_porn_free_days", 180), r("l3_v_nofap_streak", 45)] },
+      { tier: "diamond", name: "Forever Free",         requirements: [r("l3_v_porn_free_days", 270), r("l3_v_nofap_streak", 70)] },
+      { tier: "mythic",  name: "Mythic Free",          requirements: [r("l3_v_porn_free_days", 365), r("l3_v_nofap_streak", 90)] },
+    ],
+  },
+  {
+    l2Id: "l2_v_digital",
+    tiers: [
+      { tier: "iron",    name: "Digital Slave",        requirements: [r("l3_v_screen_streak", 3)] },
+      { tier: "bronze",  name: "Digital Aware",        requirements: [r("l3_v_screen_streak", 7)] },
+      { tier: "silver",  name: "Digital Disciplined",  requirements: [r("l3_v_screen_streak", 21)] },
+      { tier: "gold",    name: "Digital Master",       requirements: [r("l3_v_screen_streak", 45)] },
+      { tier: "diamond", name: "Digital Monk",         requirements: [r("l3_v_screen_streak", 70)] },
+      { tier: "mythic",  name: "Digital Myth",         requirements: [r("l3_v_screen_streak", 90)] },
+    ],
+  },
+  {
+    l2Id: "l2_v_substance",
+    tiers: [
+      { tier: "iron",    name: "Substance Dependent",  requirements: [r("l3_v_sober_days", 7)] },
+      { tier: "bronze",  name: "Substance Aware",      requirements: [r("l3_v_sober_days", 30)] },
+      { tier: "silver",  name: "Substance Reducing",   requirements: [r("l3_v_sober_days", 90), r("l3_v_smoke_free", 30)] },
+      { tier: "gold",    name: "Substance Clean",      requirements: [r("l3_v_sober_days", 180), r("l3_v_smoke_free", 90)] },
+      { tier: "diamond", name: "Substance Free",       requirements: [r("l3_v_sober_days", 270), r("l3_v_smoke_free", 180)] },
+      { tier: "mythic",  name: "Substance Myth",       requirements: [r("l3_v_sober_days", 365), r("l3_v_smoke_free", 365)] },
+    ],
+  },
+  {
+    l2Id: "l2_v_willpower",
+    tiers: [
+      { tier: "iron",    name: "Willpower Weak",       requirements: [r("l3_v_impulse_free", 4)] },
+      { tier: "bronze",  name: "Willpower Growing",    requirements: [r("l3_v_impulse_free", 12), r("l3_v_screen_streak", 7)] },
+      { tier: "silver",  name: "Willpower Strong",     requirements: [r("l3_v_impulse_free", 24), r("l3_v_porn_free_days", 30), r("l3_v_screen_streak", 21)] },
+      { tier: "gold",    name: "Willpower Iron",       requirements: [r("l3_v_impulse_free", 36), r("l3_v_porn_free_days", 90), r("l3_v_sober_days", 90)] },
+      { tier: "diamond", name: "Willpower Unbreakable", requirements: [r("l3_v_impulse_free", 48), r("l3_v_porn_free_days", 180), r("l3_v_sober_days", 180), r("l3_v_screen_streak", 60)] },
+      { tier: "mythic",  name: "Willpower Myth",       requirements: [r("l3_v_impulse_free", 52), r("l3_v_porn_free_days", 365), r("l3_v_sober_days", 365), r("l3_v_screen_streak", 90)] },
+    ],
+  },
+]
+
+// ============================================================================
+// Combined Badge Requirements — all areas, single threshold system
+// ============================================================================
+
+export const ALL_BADGE_REQUIREMENTS: BadgeConfig[] = [
+  ...DAYGAME_BADGE_REQUIREMENTS,
+  ...PG_BADGE_REQUIREMENTS,
+  ...FIT_BADGE_REQUIREMENTS,
+  ...WLT_BADGE_REQUIREMENTS,
+  ...VIC_BADGE_REQUIREMENTS,
+]
+
+/** Set of all L2 IDs that use threshold-based badges */
+export const THRESHOLD_L2_IDS = new Set(ALL_BADGE_REQUIREMENTS.map((b) => b.l2Id))
+
+// ============================================================================
+// Achievement Weights — per-L2, each sums to 1.0 (non-daygame areas only)
+// ============================================================================
+
 const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
-  // Master Daygame — results-heavy (16 L3s)
-  l2_master_daygame: {
-    l3_approach_volume: 0.18,
-    l3_approach_frequency: 0.07,
-    l3_session_frequency: 0.06,
-    l3_voice_notes: 0.03,
-    l3_approach_quality: 0.07,
-    l3_open_in_3_seconds: 0.03,
-    l3_solo_sessions: 0.03,
-    l3_phone_numbers: 0.12,
-    l3_instadates: 0.08,
-    l3_dates: 0.08,
-    l3_second_dates: 0.05,
-    l3_lays: 0.07,
-    l3_women_dating: 0.03,
-    l3_venues_explored: 0.02,
-    l3_daygame_weekly_review: 0.04,
-    l3_visualization: 0.04,
-  },
-  // Become Confident — exposure/consistency-heavy (8 L3s)
-  l2_confident: {
-    l3_approach_volume: 0.24,
-    l3_approach_frequency: 0.14,
-    l3_session_frequency: 0.13,
-    l3_solo_sessions: 0.13,
-    l3_phone_numbers: 0.13,
-    l3_instadates: 0.09,
-    l3_dates: 0.09,
-    l3_second_dates: 0.05,
-  },
-  // Overcome AA — exposure-heavy (3 L3s)
-  l2_overcome_aa: {
-    l3_approach_volume: 0.50,
-    l3_solo_sessions: 0.30,
-    l3_visualization: 0.20,
-  },
-  // Master Cold Approach — technique + quality (6 L3s)
-  l2_master_cold_approach: {
-    l3_approach_volume: 0.18,
-    l3_approach_frequency: 0.17,
-    l3_approach_quality: 0.25,
-    l3_open_in_3_seconds: 0.20,
-    l3_phone_numbers: 0.12,
-    l3_instadates: 0.08,
-  },
-  // Master Conversational Game — conversion-heavy (6 L3s)
-  l2_great_talker: {
-    l3_phone_numbers: 0.17,
-    l3_instadates: 0.17,
-    l3_dates: 0.20,
-    l3_response_rate: 0.17,
-    l3_voice_notes: 0.14,
-    l3_approach_quality: 0.15,
-  },
-  // Master Seduction — escalation-heavy (4 L3s)
-  l2_master_seduction: {
-    l3_lays: 0.35,
-    l3_dates: 0.30,
-    l3_second_dates: 0.20,
-    l3_date_leadership: 0.15,
-  },
-  // Attract Any Woman — broad (all daygame L3s)
-  l2_attract_any: {
-    l3_approach_volume: 0.11,
-    l3_approach_frequency: 0.05,
-    l3_session_frequency: 0.05,
-    l3_voice_notes: 0.02,
-    l3_approach_quality: 0.04,
-    l3_open_in_3_seconds: 0.02,
-    l3_solo_sessions: 0.02,
-    l3_venues_explored: 0.02,
-    l3_daygame_weekly_review: 0.02,
-    l3_visualization: 0.02,
-    l3_phone_numbers: 0.07,
-    l3_instadates: 0.05,
-    l3_dates: 0.08,
-    l3_second_dates: 0.06,
-    l3_lays: 0.08,
-    l3_texting_initiated: 0.02,
-    l3_number_to_date_conversion: 0.04,
-    l3_response_rate: 0.02,
-    l3_dates_planned: 0.03,
-    l3_creative_dates: 0.02,
-    l3_women_dating: 0.12,
-    l3_date_spots: 0.02,
-    l3_date_leadership: 0.02,
-  },
-  // Master Texting — texting conversion (3 L3s)
-  l2_master_texting: {
-    l3_texting_initiated: 0.30,
-    l3_response_rate: 0.30,
-    l3_number_to_date_conversion: 0.40,
-  },
-  // Master Dating — date execution (5 L3s)
-  l2_master_dating: {
-    l3_dates_planned: 0.28,
-    l3_second_dates: 0.25,
-    l3_creative_dates: 0.15,
-    l3_date_spots: 0.13,
-    l3_date_leadership: 0.19,
-  },
-  // Total Dating Freedom — abundance (2 L3s)
-  l2_dating_freedom: {
-    l3_women_dating: 0.65,
-    l3_dates_planned: 0.35,
-  },
 
   // ---- PERSONAL GROWTH WEIGHTS ----
 
@@ -1652,16 +1954,6 @@ const PER_L2_WEIGHTS: Record<string, Record<string, number>> = {
     l3_v_no_late_scrolling: 0.06,
     l3_v_budget_days: 0.06,
   },
-
-  // ---- DAYGAME: INNER GAME WEIGHTS ----
-
-  // Master Inner Game — identity/mindset (4 L3s)
-  l2_inner_game: {
-    l3_solo_sessions: 0.25,
-    l3_approach_volume: 0.30,
-    l3_daygame_weekly_review: 0.22,
-    l3_visualization: 0.23,
-  },
 }
 
 export const DEFAULT_ACHIEVEMENT_WEIGHTS: DefaultAchievementWeight[] =
@@ -1740,15 +2032,19 @@ export function getAchievementWeights(
 }
 
 /**
- * Filter weights to active goals only, preserving original weight values.
- * Removed goals' weight is NOT redistributed — the total will be < 1.
- * This prevents "fewer goals = faster badges" gaming.
+ * Filter weights to active goals only and redistribute so they sum to 1.0.
+ * Users who opt out of certain goals (e.g. dirty dog) can still reach 100%
+ * on any badge — progress is always relative to the goals they picked.
  */
 export function redistributeWeights(
   weights: AchievementWeight[],
   activeGoalIds: Set<string>
 ): AchievementWeight[] {
-  return weights.filter((w) => activeGoalIds.has(w.goalId))
+  const active = weights.filter((w) => activeGoalIds.has(w.goalId))
+  if (active.length === 0) return []
+  const total = active.reduce((sum, w) => sum + w.weight, 0)
+  if (total === 0) return active
+  return active.map((w) => ({ goalId: w.goalId, weight: w.weight / total }))
 }
 
 /**
@@ -1757,9 +2053,16 @@ export function redistributeWeights(
  */
 export function getL2AchievementsForL3(l3Id: string): GoalTemplate[] {
   const l2Ids = new Set<string>()
+  // Search weighted badges (non-daygame)
   for (const w of DEFAULT_ACHIEVEMENT_WEIGHTS) {
     if (w.goalId === l3Id) {
       l2Ids.add(w.achievementId)
+    }
+  }
+  // Search threshold badges (daygame) via L2_L3_CONNECTIONS
+  for (const [l2Id, l3Ids] of Object.entries(L2_L3_CONNECTIONS)) {
+    if (l3Ids.includes(l3Id)) {
+      l2Ids.add(l2Id)
     }
   }
   return Array.from(l2Ids).map((id) => GOAL_TEMPLATE_MAP[id]).filter(Boolean)
@@ -1776,6 +2079,7 @@ export function getTemplatesByCategory(): Partial<Record<GoalDisplayCategory, Go
     dirty_dog: L3_DIRTY_DOG,
     texting: L3_TEXTING,
     dates: L3_DATES,
+    scenarios: L3_SCENARIOS,
     relationship: L3_RELATIONSHIP,
     // Personal Growth
     mindfulness: L3_PG_MINDFULNESS,
@@ -1908,18 +2212,18 @@ export function getCatalogTiers(): {
  */
 export const CROSS_AREA_EDGES: CrossAreaEdge[] = [
   // Personal Growth → Daygame
-  { sourceId: "l3_pg_meditation", targetId: "l2_overcome_aa", weight: 0.7, relationship: "supports" },
+  { sourceId: "l3_pg_meditation", targetId: "l2_approach", weight: 0.7, relationship: "supports" },
   { sourceId: "l3_pg_comfort_zone", targetId: "l3_approach_volume", weight: 0.6, relationship: "enables" },
-  { sourceId: "l3_pg_cold_exposure", targetId: "l2_overcome_aa", weight: 0.5, relationship: "supports" },
-  { sourceId: "l3_pg_books", targetId: "l2_great_talker", weight: 0.4, relationship: "reinforces" },
+  { sourceId: "l3_pg_cold_exposure", targetId: "l2_approach", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_pg_books", targetId: "l2_tongue", weight: 0.4, relationship: "reinforces" },
   { sourceId: "l3_pg_morning_routine", targetId: "l3_session_frequency", weight: 0.4, relationship: "enables" },
 
   // Fitness → Daygame
-  { sourceId: "l3_f_gym_frequency", targetId: "l2_confident", weight: 0.5, relationship: "supports" },
-  { sourceId: "l3_f_gym_frequency", targetId: "l2_inner_game", weight: 0.4, relationship: "supports" },
+  { sourceId: "l3_f_gym_frequency", targetId: "l2_results", weight: 0.5, relationship: "supports" },
+  { sourceId: "l3_f_gym_frequency", targetId: "l2_inner", weight: 0.4, relationship: "supports" },
 
   // Vices → Daygame
-  { sourceId: "l3_v_porn_free_days", targetId: "l2_inner_game", weight: 0.6, relationship: "enables" },
+  { sourceId: "l3_v_porn_free_days", targetId: "l2_inner", weight: 0.6, relationship: "enables" },
   { sourceId: "l3_v_screen_time", targetId: "l3_session_frequency", weight: 0.3, relationship: "enables" },
 
   // Fitness → Personal Growth

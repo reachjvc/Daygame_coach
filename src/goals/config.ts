@@ -17,6 +17,7 @@ export const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   texting: "Texting Game",
   dates: "Dating",
   relationship: "Relationship",
+  scenarios: "Scenario Practice",
   // Personal Growth
   mindfulness: "Mindfulness & Presence",
   resilience: "Mental Toughness",
@@ -49,7 +50,7 @@ export const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
  */
 export const CATEGORY_ORDER: GoalDisplayCategory[] = [
   // Daygame
-  "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+  "field_work", "results", "dirty_dog", "texting", "dates", "relationship", "scenarios",
   // Personal Growth
   "mindfulness", "resilience", "learning", "reflection", "discipline",
   // Fitness

@@ -133,23 +133,28 @@ export function GoalCard({
             )
           )}
 
-          <div className="flex items-center gap-2">
-            <h3
-              className="font-medium text-sm truncate"
-              data-testid={`goal-title-${goal.id}`}
-            >
-              {goal.title}
-            </h3>
-            {goal.is_complete && (
-              <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
-                Done
-              </Badge>
-            )}
-            {childCount > 0 && (
-              <Badge variant="outline" className="text-xs gap-1 py-0 h-5">
-                <GitBranch className="size-2.5" />
-                {childCount}
-              </Badge>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3
+                className="font-medium text-sm truncate"
+                data-testid={`goal-title-${goal.id}`}
+              >
+                {goal.title}
+              </h3>
+              {goal.is_complete && (
+                <Badge variant="outline" className="text-xs bg-green-500/10 text-green-600 border-green-500/30">
+                  Done
+                </Badge>
+              )}
+              {childCount > 0 && (
+                <Badge variant="outline" className="text-xs gap-1 py-0 h-5">
+                  <GitBranch className="size-2.5" />
+                  {childCount}
+                </Badge>
+              )}
+            </div>
+            {goal.goal_type === "habit_ramp" && (
+              <span className="text-[11px] text-orange-400 italic">habit ramp</span>
             )}
           </div>
 

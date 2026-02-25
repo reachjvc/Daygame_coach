@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
-import { useHistoryBarrier } from "@/src/shared/HistoryBarrierContext"
+import { useEffect, useState } from "react"
+import { useSteppedFlow } from "@/src/shared/useSteppedFlow"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -22,19 +22,18 @@ interface OnboardingFlowProps {
   initialStep?: number;
 }
 
+const ONBOARDING_STEPS = [1, 2, 3, 4, 5] as const
 const clampStep = (value: number) => Math.min(Math.max(value, 1), 5);
 
 export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
-  const [step, setStep] = useState(() =>
-    clampStep(initialStep ?? 1)
-  );
+  const { step, goNext, goBack, setStep } = useSteppedFlow(ONBOARDING_STEPS, clampStep(initialStep ?? 1))
 
   useEffect(() => {
     if (initialStep === undefined) {
       return;
     }
     setStep(clampStep(initialStep));
-  }, [initialStep]);
+  }, [initialStep, setStep]);
 
   // Step 1: Age + Foreign Status
   const [ageRange, setAgeRange] = useState([22, 25]);
@@ -61,18 +60,8 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   // Get archetypes based on age and region
   const archetypes = getArchetypes(ageRange, selectedRegion ?? undefined);
 
-  const handleNext = () => {
-    if (step < 5) {
-      setStep(step + 1);
-    }
-  };
-
-  const handleBack = useCallback(() => {
-    if (step > 1) setStep((s) => s - 1);
-  }, [step]);
-
-  // Browser back: go to previous step instead of leaving onboarding
-  useHistoryBarrier(step > 1, handleBack);
+  const handleNext = goNext
+  const handleBack = goBack
 
   const canProceed = () => {
     switch (step) {

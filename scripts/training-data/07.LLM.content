@@ -4466,6 +4466,48 @@ def _process_non_infield(
     conversation_meta_by_id = build_conversation_meta_index(data.get("conversations"))
     commentary_blocks = group_commentary_blocks(segments)
 
+    # Video-level gate: skip LLM when 06h video confidence is too low.
+    video_summary = data.get("video_summary", {})
+    video_gate = (video_summary.get("gate_decision") or "pass").strip().lower()
+    video_conf = video_summary.get("final_confidence", 0.0)
+    if video_gate == "block":
+        gate_reason = f"06h_block_{video_conf:.4f}"
+        print(f"{LOG_PREFIX}   VIDEO GATED by 06h: confidence={video_conf:.4f}, "
+              f"gate_decision=block — skipping LLM call")
+        gated_output = {
+            "metadata": {
+                "source_file": str(input_path),
+                "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "video_type": video_type,
+                "video_type_confidence": video_type_confidence,
+                "routing_lane": "non_infield",
+                "gated": True,
+                "gate_reason": gate_reason,
+                "video_confidence": video_conf,
+                "video_confidence_band": video_summary.get("confidence_band", "low"),
+            },
+            "pipeline_version": PIPELINE_VERSION,
+            "source": source,
+            "video_title": video_title,
+            "video_id": video_id,
+            "video_type": data.get("video_type"),
+            "gated": True,
+            "gate_reason": gate_reason,
+            "enrichments": [],
+            "segments": segments,
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(gated_output, f, ensure_ascii=False)
+        print(f"{LOG_PREFIX}   Wrote gated output: {output_path}")
+        return {
+            "conversations": 0,
+            "enriched": 0,
+            "routing_lane": "non_infield",
+            "gated": True,
+            "gate_reason": gate_reason,
+        }
+
     prompt = build_talking_head_prompt(segments, video_id)
     print(f"{LOG_PREFIX}   Calling Claude CLI (talking_head prompt, routing=non_infield)...")
 
@@ -4525,14 +4567,6 @@ def _process_non_infield(
     if low_quality_segments or transcript_artifacts:
         print(f"{LOG_PREFIX}   Quality data: {len(low_quality_segments)} low-quality, {len(transcript_artifacts)} artifacts")
 
-    # Propagate 06h confidence flags onto enrichments
-    for e in enrichments:
-        conv_id = e.get("conversation_id")
-        if isinstance(conv_id, int) and conv_id in conversation_meta_by_id:
-            block_reason = conversation_meta_by_id[conv_id].get("confidence_block_reason")
-            if block_reason:
-                e["confidence_flag"] = block_reason
-
     # Collect summary data
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
     all_unlisted_techniques: List[str] = []
@@ -4575,9 +4609,6 @@ def _process_non_infield(
             "normalization_repairs_preview": normalization_repairs[:5],
             "evidence_segment_id_repairs_count": len(evidence_segment_id_repairs),
             "evidence_segment_id_repairs_preview": evidence_segment_id_repairs[:5],
-            "conversations_confidence_flagged": sum(
-                1 for e in enrichments if e.get("confidence_flag")
-            ),
             "quality_source": "06e" if quality_data else "none",
         },
         "pipeline_version": PIPELINE_VERSION,
@@ -4735,12 +4766,47 @@ def process_video_file(
         f"[07.LLM.content]   Stage07 anchor allowlist: "
         f"{len(stage07_anchor_allowlist)} convs, {anchored_segments_total} segment ids"
     )
-    confidence_flagged_convs = sum(
-        1 for cid, meta in conversation_meta_by_id.items()
-        if cid > 0 and meta.get("confidence_block_reason")
-    )
-    if confidence_flagged_convs:
-        print(f"{LOG_PREFIX}   06h confidence flags: {confidence_flagged_convs} conversation(s) flagged")
+    # Video-level gate: skip LLM when 06h video confidence is too low.
+    video_summary = data.get("video_summary", {})
+    video_gate = (video_summary.get("gate_decision") or "pass").strip().lower()
+    video_conf = video_summary.get("final_confidence", 0.0)
+    if video_gate == "block":
+        gate_reason = f"06h_block_{video_conf:.4f}"
+        print(f"{LOG_PREFIX}   VIDEO GATED by 06h: confidence={video_conf:.4f}, "
+              f"gate_decision=block — skipping LLM call")
+        gated_output = {
+            "metadata": {
+                "source_file": str(input_path),
+                "processed_at": time.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "video_type": video_type,
+                "video_type_confidence": video_type_confidence,
+                "routing_lane": routing_lane,
+                "gated": True,
+                "gate_reason": gate_reason,
+                "video_confidence": video_conf,
+                "video_confidence_band": video_summary.get("confidence_band", "low"),
+            },
+            "pipeline_version": PIPELINE_VERSION,
+            "source": source,
+            "video_title": video_title,
+            "video_id": video_id,
+            "video_type": data.get("video_type"),
+            "gated": True,
+            "gate_reason": gate_reason,
+            "enrichments": [],
+            "segments": segments,
+        }
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with output_path.open("w", encoding="utf-8") as f:
+            json.dump(gated_output, f, ensure_ascii=False)
+        print(f"{LOG_PREFIX}   Wrote gated output: {output_path}")
+        return {
+            "conversations": len(approach_convs),
+            "enriched": 0,
+            "routing_lane": routing_lane,
+            "gated": True,
+            "gate_reason": gate_reason,
+        }
 
     # Determine if windowing applies (D13b: infield routing with enough segments)
     use_windowing = (
@@ -4932,14 +4998,6 @@ def process_video_file(
     commentary_enrichments = [e for e in enrichments if e.get("type") == "commentary"]
     section_enrichments = [e for e in enrichments if e.get("type") == "talking_head_section"]
 
-    # Propagate 06h confidence flags onto enrichments
-    for e in enrichments:
-        conv_id = e.get("conversation_id")
-        if isinstance(conv_id, int) and conv_id in conversation_meta_by_id:
-            block_reason = conversation_meta_by_id[conv_id].get("confidence_block_reason")
-            if block_reason:
-                e["confidence_flag"] = block_reason
-
     # Collect unlisted concepts across all enrichments (post-normalization).
     all_unlisted_techniques: List[str] = []
     all_unlisted_topics: List[str] = []
@@ -5001,9 +5059,6 @@ def process_video_file(
             "stage07_anchor_allowlist_segments": anchored_segments_total,
             "target_confident_conversations": confident_target_convs,
             "synthetic_segment_count": len(synthetic_segment_ids),
-            "conversations_confidence_flagged": sum(
-                1 for e in approach_enrichments if e.get("confidence_flag")
-            ),
             "quality_source": "06e" if quality_data else "none",
             "windowing": {
                 "window_count": len(windows) if windows else 1,

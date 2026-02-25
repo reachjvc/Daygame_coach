@@ -130,29 +130,28 @@ describe("groupGoalsByHierarchy", () => {
 
 describe("computeAchievementProgressFromGoals", () => {
   it("returns 0 when all sibling goals are at 0", () => {
-    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_master_daygame" })
+    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_pg_mindfulness" })
     const siblings = [
-      mockGoal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 0 }),
-      mockGoal({ id: "2", template_id: "l3_phone_numbers", progress_percentage: 0 }),
+      mockGoal({ id: "1", template_id: "l3_pg_meditation", progress_percentage: 0 }),
+      mockGoal({ id: "2", template_id: "l3_pg_gratitude", progress_percentage: 0 }),
     ]
 
     const result = computeAchievementProgressFromGoals(achievement, siblings)
     expect(result.progressPercent).toBe(0)
   })
 
-  it("computes weighted progress correctly (no renormalization)", () => {
-    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_master_daygame" })
-    // Approach volume and phone numbers — only their original weights used
+  it("computes weighted progress correctly (with redistribution)", () => {
+    const achievement = mockGoal({ id: "ach", goal_level: 2, template_id: "l2_pg_mindfulness" })
+    // Provide only 2 of 8 mindfulness L3s at 100%
     const siblings = [
-      mockGoal({ id: "1", template_id: "l3_approach_volume", progress_percentage: 100 }),
-      mockGoal({ id: "2", template_id: "l3_phone_numbers", progress_percentage: 100 }),
+      mockGoal({ id: "1", template_id: "l3_pg_meditation", progress_percentage: 100 }),
+      mockGoal({ id: "2", template_id: "l3_pg_gratitude", progress_percentage: 100 }),
     ]
 
     const result = computeAchievementProgressFromGoals(achievement, siblings)
-    // No renormalization: only original weight contributions counted
-    // With 2 of 20 goals active at 100%, progress reflects just their weight sum
+    // With redistribution: 2 goals at 100% → weights redistribute to sum to 1.0 → progress = 100
     expect(result.progressPercent).toBeGreaterThan(0)
-    expect(result.progressPercent).toBeLessThan(100)
+    expect(result.progressPercent).toBe(100)
   })
 
   it("returns empty result when achievement has no template_id", () => {

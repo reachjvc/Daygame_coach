@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 
 import { createServerSupabaseClient, hasPurchased } from "@/src/db/server"
-import { evaluateOpenerAttempt } from "@/src/scenarios"
+import { evaluateOpenerAttempt, persistScenarioAttempt } from "@/src/scenarios"
 
 const RequestSchema = z.object({
   opener: z.string().trim().min(1).max(280),
@@ -11,14 +11,8 @@ const RequestSchema = z.object({
 
 export async function POST(req: Request) {
   const supabase = await createServerSupabaseClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
   const premium = await hasPurchased(user.id)
   if (!premium) {
@@ -38,6 +32,15 @@ export async function POST(req: Request) {
   }
 
   const result = await evaluateOpenerAttempt(parsed.data, user.id)
+
+  // Fire-and-forget: persist attempt for badge tracking
+  void persistScenarioAttempt(
+    user.id,
+    "practice-openers",
+    parsed.data.opener,
+    parsed.data.encounter as Record<string, unknown> | null,
+    result as unknown as Record<string, unknown>
+  )
 
   return NextResponse.json(result, { status: 200 })
 }

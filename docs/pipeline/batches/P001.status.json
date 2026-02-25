@@ -10,49 +10,58 @@
       "current_stage": "09"
     },
     "P001.2": {
-      "status": "in_progress",
+      "status": "completed",
       "video_count": 10,
-      "current_stage": "09"
+      "current_stage": "ingested",
+      "note": "9/10 ingested to DB (manually cleaned). nFjdyAHcTgA not ingested."
     },
     "P001.3": {
-      "status": "in_progress",
+      "status": "completed",
       "video_count": 10,
-      "current_stage": "05"
+      "current_stage": "ingested",
+      "note": "2/10 ingested to DB via P001.3-clean (D1t_K8hjJzc, XDZbqorwGNk). Remaining 8 did not pass quality gate."
     },
     "P001.4": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "06e"
+      "current_stage": "09",
+      "note": "08 report: WARN (non-blocking). Pending quality review before ingest."
     },
     "P001.5": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "06f"
+      "current_stage": "09",
+      "note": "08 report: WARN (non-blocking). Pending quality review before ingest."
     },
     "P001.6": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "05"
+      "current_stage": "06",
+      "note": "STALLED: 06b only processed 1/10 (hllwnZLqvsE). 9 videos need 06b re-run."
     },
     "P001.7": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "08"
+      "current_stage": "05",
+      "note": "STALLED: Never entered stage 06. All 10 videos stuck at 05."
     },
     "P001.8": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "08"
+      "current_stage": "07",
+      "note": "7/10 at 09. FNpZs1VhwaA blocked at 06h (conf 0.43). -iCf6UX3ZMg and e2dLEB-AwmA passed 06h but stalled before 07."
     },
     "P001.9": {
       "status": "in_progress",
       "video_count": 10,
-      "current_stage": "08"
+      "current_stage": "05",
+      "note": "STALLED: Never entered stage 06. All 10 videos stuck at 05."
     },
     "P001.10": {
       "status": "in_progress",
       "video_count": 6,
-      "current_stage": "05"
+      "current_stage": "07",
+      "note": "4/6 at 07+, 2/6 at 09. 2 videos (JOcglovL3IA, yVbiH29D3Q0) blocked at 07. 08 report: FAIL."
     }
   }
 }

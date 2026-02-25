@@ -82,7 +82,7 @@ describe("generateGoalTreeInserts", () => {
     it("L3 goals have display_category set", () => {
       const l3s = inserts.filter((i) => i.goal_level === 3)
       const validCategories = [
-        "field_work", "results", "dirty_dog", "texting", "dates", "relationship",
+        "field_work", "results", "dirty_dog", "texting", "dates", "relationship", "scenarios",
         "mindfulness", "resilience", "learning", "reflection", "discipline",
         "strength", "training", "nutrition", "body_comp",
         "income", "saving", "investing", "career_growth",
@@ -142,11 +142,11 @@ describe("generateGoalTreeInserts", () => {
   })
 
   describe("L2 pick", () => {
-    const inserts = generateGoalTreeInserts("l2_master_daygame")
+    const inserts = generateGoalTreeInserts("l2_approach")
 
     it("creates standalone L2 as root (no children — L2s are badges)", () => {
       expect(inserts.length).toBe(1)
-      expect(inserts[0].template_id).toBe("l2_master_daygame")
+      expect(inserts[0].template_id).toBe("l2_approach")
       expect(inserts[0]._tempParentId).toBeNull()
     })
   })
