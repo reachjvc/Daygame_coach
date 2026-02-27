@@ -34,15 +34,6 @@ test.describe('Protected Routes - Unauthenticated Access', () => {
     expect(page.url()).toContain('/auth/login')
   })
 
-  test('should redirect unauthenticated user from /dashboard/qa to login', async ({ page }) => {
-    // Act: Try to access QA page without logging in
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-
-    // Assert: Should be redirected to login page
-    await page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT })
-    expect(page.url()).toContain('/auth/login')
-  })
-
   // Note: All /dashboard routes are protected by proxy.ts middleware
   // and redirect unauthenticated users to /auth/login
 })

@@ -21,13 +21,8 @@ const projectRoot = path.resolve(__dirname, '../..')
 // Grandfathered violations - existing files that violate rules
 // Remove items from these lists as they get fixed
 const ALLOWED_LONG_ROUTES = new Set([
-  'app/api/articles/alternatives/route.ts',
   'app/api/inner-game/comparisons/route.ts',
   'app/api/inner-game/values/route.ts',
-  'app/api/test/analyze-comments/route.ts',
-  'app/api/test/articles/route.ts',
-  'app/api/test/generate-draft/route.ts',
-  'app/api/test/save-feedback/route.ts',
   'app/api/tracking/approach/route.ts',
   'app/api/tracking/field-report/route.ts',
   'app/api/tracking/review/route.ts',
@@ -36,9 +31,6 @@ const ALLOWED_LONG_ROUTES = new Set([
 ])
 
 const ALLOWED_TYPE_EXPORTS = new Set([
-  'src/articles/schemas.ts',
-  'src/qa/providers/index.ts',
-  'src/qa/schemas.ts',
   'src/inner-game/data/roleModels.ts',
   'src/inner-game/hooks/useValueInference.ts',
   'src/inner-game/schemas.ts',
@@ -189,7 +181,7 @@ describe('Architecture Compliance', () => {
   })
 
   describe('Slice Structure', () => {
-    const slices = ['qa', 'inner-game', 'scenarios', 'tracking', 'profile', 'settings', 'articles']
+    const slices = ['inner-game', 'scenarios', 'tracking', 'profile', 'settings']
 
     test('Each slice should have a types.ts file', () => {
       // Arrange & Act

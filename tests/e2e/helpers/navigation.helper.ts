@@ -38,13 +38,6 @@ export async function goToInnerGame(page: Page): Promise<void> {
 }
 
 /**
- * Navigates to the Q&A page
- */
-export async function goToQA(page: Page): Promise<void> {
-  await page.goto('/dashboard/qa', { timeout: ACTION_TIMEOUT })
-}
-
-/**
  * Navigates to the onboarding/preferences page
  */
 export async function goToOnboarding(page: Page): Promise<void> {

@@ -1,10 +1,10 @@
 import Link from "next/link"
-import { Aperture, Beaker, BookOpen, Castle, HelpCircle, LayoutDashboard, LogOut, Settings } from "lucide-react"
+import { Aperture, Beaker, LayoutDashboard, LogOut, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signOut } from "@/app/actions/auth"
 import { MobileNav, type MobileNavItem } from "@/components/MobileNav"
 
-type CurrentPage = "home" | "dashboard" | "settings" | "qa" | "inner-game" | "scenarios" | "articles" | "lair" | "goals" | "other"
+type CurrentPage = "home" | "dashboard" | "settings" | "inner-game" | "scenarios" | "goals" | "other"
 
 interface AppHeaderProps {
   /** Current page identifier - used to hide redundant navigation links */
@@ -38,10 +38,7 @@ export function AppHeader({
   isPreviewMode = false,
 }: AppHeaderProps) {
   const showDashboard = currentPage !== "dashboard"
-  const showLair = currentPage !== "lair"
   const showGoals = currentPage !== "goals" && hasPurchased
-  const showAskCoach = currentPage !== "qa" && hasPurchased
-  const showArticles = currentPage !== "articles"
   const showSettings = currentPage !== "settings" && isLoggedIn
 
   const navItems: MobileNavItem[] = []
@@ -59,17 +56,6 @@ export function AppHeader({
         testId: "header-dashboard-link",
       })
     }
-    if (showLair) {
-      navItems.push({
-        type: "link",
-        href: "/lair",
-        label: "The Lair",
-        icon: <Castle className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
-        testId: "header-lair-link",
-      })
-    }
     if (showGoals) {
       navItems.push({
         type: "link",
@@ -79,26 +65,6 @@ export function AppHeader({
         variant: "ghost",
         className: "text-foreground hover:text-primary",
         testId: "header-goals-link",
-      })
-    }
-    if (showAskCoach) {
-      navItems.push({
-        type: "link",
-        href: "/dashboard/qa",
-        label: "Ask Coach",
-        icon: <HelpCircle className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
-      })
-    }
-    if (showArticles) {
-      navItems.push({
-        type: "link",
-        href: "/dashboard/articles",
-        label: "Articles",
-        icon: <BookOpen className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
       })
     }
     if (showSettings) {
@@ -148,16 +114,6 @@ export function AppHeader({
         href: "/dashboard",
         label: "Dashboard",
         icon: <LayoutDashboard className="size-4 mr-2" />,
-        variant: "ghost",
-        className: "text-foreground hover:text-primary",
-      })
-    }
-    if (showArticles) {
-      navItems.push({
-        type: "link",
-        href: "/dashboard/articles",
-        label: "Articles",
-        icon: <BookOpen className="size-4 mr-2" />,
         variant: "ghost",
         className: "text-foreground hover:text-primary",
       })

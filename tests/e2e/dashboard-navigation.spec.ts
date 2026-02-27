@@ -20,7 +20,6 @@ test.describe('Dashboard Navigation Flow', () => {
     // Assert: All navigation links should be visible
     await expect(page.getByTestId(SELECTORS.dashboard.scenariosLink)).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.dashboard.innerGameLink)).toBeVisible({ timeout: AUTH_TIMEOUT })
-    await expect(page.getByTestId(SELECTORS.dashboard.qaLink)).toBeVisible({ timeout: AUTH_TIMEOUT })
     await expect(page.getByTestId(SELECTORS.dashboard.trackingLink)).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
 
@@ -52,22 +51,6 @@ test.describe('Dashboard Navigation Flow', () => {
 
     // Assert: Should navigate to inner game page
     expect(page.url()).toContain('/dashboard/inner-game')
-  })
-
-  test('should navigate to Q&A page', async ({ page }) => {
-    // Wait for link to be visible
-    const link = page.getByTestId(SELECTORS.dashboard.qaLink)
-    await expect(link).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Act: Click Q&A link
-    // Note: In preview mode this goes to /auth/sign-up, in full mode to /dashboard/qa
-    await Promise.all([
-      page.waitForURL(/\/(dashboard\/qa|auth\/sign-up)/, { timeout: AUTH_TIMEOUT }),
-      link.click({ timeout: ACTION_TIMEOUT }),
-    ])
-
-    // Assert: Should navigate (either to Q&A or sign-up depending on user state)
-    expect(page.url()).toMatch(/\/(dashboard\/qa|auth\/sign-up)/)
   })
 
   test('should navigate to tracking page', async ({ page }) => {

@@ -103,66 +103,6 @@ test.describe('Error Handling: Form Validation', () => {
     })
   })
 
-  test.describe('Q&A Form', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
-      await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
-    })
-
-    // Cleanup route handlers after each test to prevent route stacking
-    test.afterEach(async ({ page }) => {
-      await page.unrouteAll({ behavior: 'wait' })
-    })
-
-    test('submit button disabled when input is empty', async ({ page }) => {
-      // Skip if user doesn't have subscription (redirected away from QA)
-      test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-      await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
-
-      // Assert: Submit button should be disabled when input is empty
-      const submitButton = page.getByTestId(SELECTORS.qa.submit)
-      await expect(submitButton).toBeDisabled()
-    })
-
-    test('submit button enabled when input has content', async ({ page }) => {
-      // Skip if user doesn't have subscription (redirected away from QA)
-      test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-      await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
-
-      // Act: Type a question
-      await page.getByTestId(SELECTORS.qa.input).fill('How do I approach?')
-
-      // Assert: Submit button should be enabled
-      const submitButton = page.getByTestId(SELECTORS.qa.submit)
-      await expect(submitButton).toBeEnabled()
-    })
-
-    test('shows error when server returns validation error', async ({ page }) => {
-      // Skip if user doesn't have subscription (redirected away from QA)
-      test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-      await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
-
-      // Intercept API to return validation error
-      await page.route('/api/qa', async (route) => {
-        await route.fulfill({
-          status: 422,
-          contentType: 'application/json',
-          body: JSON.stringify({ error: 'Question too short' }),
-        })
-      })
-
-      // Act: Submit a question
-      await page.getByTestId(SELECTORS.qa.input).fill('Hi')
-      await page.getByTestId(SELECTORS.qa.submit).click()
-
-      // Assert: Error should be displayed
-      await expect(page.locator('text=Error:')).toBeVisible({ timeout: 10000 })
-    })
-  })
-
   test.describe('Session Form', () => {
     // Cleanup any sessions that may have been created during tests
     test.afterEach(async ({ page }) => {

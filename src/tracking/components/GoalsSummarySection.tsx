@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Aperture, Loader2, CheckCircle2, Circle, Flame, Calendar, ArrowRight, ChevronDown, ChevronUp } from "lucide-react"
-import { getCategoryConfig } from "@/src/lair/data/goalCategories"
+import { getLifeAreaConfig } from "@/src/goals/data/lifeAreas"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 
 interface GoalsSummarySectionProps {
@@ -22,7 +22,7 @@ interface GoalsSummarySectionProps {
  * until lifeAreas.ts is available from M2.
  */
 function getLifeAreaDisplay(lifeArea: string) {
-  const config = getCategoryConfig(lifeArea)
+  const config = getLifeAreaConfig(lifeArea)
   return {
     name: config.name,
     hex: config.hex,

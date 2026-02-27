@@ -19,15 +19,12 @@ test.describe('Error Handling: Authentication Errors', () => {
     await page.unrouteAll({ behavior: 'wait' })
   })
 
-  test('401 on API call mid-session shows error', async ({ page }) => {
+  test('401 on API call mid-session shows error or redirect', async ({ page }) => {
     // Arrange: Navigate to a protected page
-    await page.goto('/dashboard/qa', { timeout: AUTH_TIMEOUT })
+    await page.goto('/dashboard/tracking', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle', { timeout: AUTH_TIMEOUT })
 
-    // Skip if user doesn't have subscription (redirected away from QA)
-    test.skip(!page.url().includes('/dashboard/qa'), 'User does not have QA access (no subscription)')
-
-    await page.waitForSelector(`[data-testid="${SELECTORS.qa.page}"]`, { timeout: AUTH_TIMEOUT })
+    await page.waitForSelector(`[data-testid="${SELECTORS.trackingDashboard.page}"]`, { timeout: AUTH_TIMEOUT })
 
     // Intercept ALL API calls to return 401 (simulating expired token)
     await page.route('/api/**', async (route) => {
@@ -38,13 +35,18 @@ test.describe('Error Handling: Authentication Errors', () => {
       })
     })
 
-    // Act: Trigger an API call that will get 401
-    await page.getByTestId(SELECTORS.qa.input).fill('Test question')
-    await page.getByTestId(SELECTORS.qa.submit).click()
+    // Act: Trigger navigation that will make API calls
+    await page.getByTestId(SELECTORS.trackingDashboard.newSessionLink).click()
 
-    // Assert: The page should show an error (app doesn't auto-redirect on API 401)
-    // This tests actual behavior - API 401s show inline errors, not redirects
-    await expect(page.locator('text=Error:')).toBeVisible({ timeout: 10000 })
+    // Assert: Should redirect to login or show auth error
+    await Promise.race([
+      page.waitForURL(/\/auth\/login/, { timeout: AUTH_TIMEOUT }),
+      page.waitForSelector('text=error', { timeout: AUTH_TIMEOUT }),
+    ])
+
+    const isOnLogin = page.url().includes('/auth/login')
+    const hasError = await page.locator('text=error').isVisible().catch(() => false)
+    expect(isOnLogin || hasError).toBe(true)
   })
 
   test('clearing cookies while on protected page shows error on next action', async ({ page }) => {
