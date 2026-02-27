@@ -51,6 +51,8 @@ export default defineConfig({
         // Goals tests share a user and mutate goals data — run serially
         /goals-hub\.spec\.ts/,
         /goals-data-consistency\.spec\.ts/,
+        // Mobile-specific tests run in dedicated cross-browser projects
+        /mobile\//,
       ],
       dependencies: ['setup'],
       use: {
@@ -179,6 +181,113 @@ export default defineConfig({
       ],
       dependencies: ['chromium', 'security-multi-user', 'session-4'],
       use: { ...devices['Desktop Chrome'] },
+    },
+
+    // === Cross-browser: Goals on mobile & Safari ===
+    {
+      name: 'goals-mobile-iphone',
+      testMatch: /goals-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'goals-mobile-pixel',
+      testMatch: /goals-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Pixel 7'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'goals-safari',
+      testMatch: /goals-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+
+    // === Cross-browser: Session tracking on mobile & Safari ===
+    {
+      name: 'tracking-mobile-iphone',
+      testMatch: /session-tracking\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'tracking-mobile-pixel',
+      testMatch: /session-tracking\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Pixel 7'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'tracking-safari',
+      testMatch: /session-tracking\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+
+    // === Cross-browser: Scenarios on mobile & Safari ===
+    {
+      name: 'scenarios-mobile-iphone',
+      testMatch: /scenarios-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'scenarios-mobile-pixel',
+      testMatch: /scenarios-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Pixel 7'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'scenarios-safari',
+      testMatch: /scenarios-hub\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+
+    // === Mobile-specific navigation tests ===
+    {
+      name: 'mobile-navigation-iphone',
+      testMatch: /mobile\/mobile-navigation\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['iPhone 14'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+    {
+      name: 'mobile-navigation-pixel',
+      testMatch: /mobile\/mobile-navigation\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Pixel 7'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
     },
   ],
   webServer: {
