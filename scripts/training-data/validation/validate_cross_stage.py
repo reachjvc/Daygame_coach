@@ -494,6 +494,12 @@ def _count_stage_artifacts(source: Optional[str]) -> Tuple[int, int]:
     return (len(s06c_files), len(s07_files))
 
 
+def _find_video_artifacts(root: Path, video_id: str, suffix: str) -> List[Path]:
+    if not root.exists():
+        return []
+    return sorted(root.rglob(f"*{video_id}*{suffix}"))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Cross-stage validation between Stage 06c and 07")
     parser.add_argument("--s06", help="Stage 06c output file (conversations.json)")
@@ -541,11 +547,21 @@ def main() -> None:
         s06c_root = repo_root() / "data" / "06c.DET.patched"
         s07_root = repo_root() / "data" / "07.LLM.content"
 
-        s06c_files = sorted(s06c_root.rglob("*.conversations.json")) if s06c_root.exists() else []
-        s07_files = sorted(s07_root.rglob("*.enriched.json")) if s07_root.exists() else []
+        manifest_sources = sorted({src for src, _, _ in manifest_entries})
+        s06c_files: List[Path] = []
+        s07_files: List[Path] = []
+        for src in manifest_sources:
+            s06_src = s06c_root / src
+            if s06_src.exists():
+                s06c_files.extend(sorted(s06_src.rglob("*.conversations.json")))
+            s07_src = s07_root / src
+            if s07_src.exists():
+                s07_files.extend(sorted(s07_src.rglob("*.enriched.json")))
 
         s06c_by_vid = _index_by_video_id(s06c_files)
         s07_by_vid = _index_by_video_id(s07_files)
+        fallback_s06c_by_vid: Dict[str, List[Path]] = {}
+        fallback_s07_by_vid: Dict[str, List[Path]] = {}
 
         pairs: List[Tuple[Path, Path, str]] = []
         pair_keys: Set[Tuple[str, str, str]] = set()
@@ -553,9 +569,17 @@ def main() -> None:
 
         for src, vid, folder_text in sorted(manifest_entries, key=lambda x: (x[0], x[1], x[2])):
             s07_candidates_all = s07_by_vid.get(vid, [])
+            if not s07_candidates_all:
+                if vid not in fallback_s07_by_vid:
+                    fallback_s07_by_vid[vid] = _find_video_artifacts(s07_root, vid, ".enriched.json")
+                s07_candidates_all = fallback_s07_by_vid[vid]
             s07_candidates_src = [p for p in s07_candidates_all if _path_has_source(p, src)]
 
             s06c_candidates_all = s06c_by_vid.get(vid, [])
+            if not s06c_candidates_all:
+                if vid not in fallback_s06c_by_vid:
+                    fallback_s06c_by_vid[vid] = _find_video_artifacts(s06c_root, vid, ".conversations.json")
+                s06c_candidates_all = fallback_s06c_by_vid[vid]
             s06c_candidates_src = [p for p in s06c_candidates_all if _path_has_source(p, src)]
 
             # Strict source-scoped selection.

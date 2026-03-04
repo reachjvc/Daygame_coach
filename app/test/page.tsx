@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -88,6 +88,18 @@ const testPages = [
     href: "/test/direction-colors",
     description: "3 color scheme variants for the direction/path selection step",
     icon: Paintbrush,
+  },
+  {
+    name: "Tour Variants",
+    href: "/test/tour-variants",
+    description: "4 guided tour approaches for the Goals step: strong site, creative, minimalist, narrative",
+    icon: Navigation,
+  },
+  {
+    name: "Health & Appearance",
+    href: "/test/health",
+    description: "Weight, sleep, workout, and nutrition trackers with cross-domain correlation",
+    icon: Dumbbell,
   },
 ]
 

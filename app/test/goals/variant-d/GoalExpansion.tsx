@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { getCatalogGroups, getCatalogTiers, getChildren } from "@/src/goals/data/goalGraph"
 import type { GoalTemplate, GoalDisplayCategory } from "@/src/goals/types"
 
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_LABELS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",
@@ -15,7 +15,7 @@ const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   relationship: "Relationship",
 }
 
-const CATEGORY_DESCRIPTIONS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_DESCRIPTIONS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Hours, sessions, and approach practice",
   results: "Numbers, instadates, and date conversions",
   dirty_dog: "Intimate outcomes (opt-in)",
@@ -24,7 +24,7 @@ const CATEGORY_DESCRIPTIONS: Record<GoalDisplayCategory, string> = {
   relationship: "Women dating, rotation management",
 }
 
-const CATEGORY_ICONS: Record<GoalDisplayCategory, typeof Target> = {
+const CATEGORY_ICONS: Partial<Record<GoalDisplayCategory, typeof Target>> = {
   field_work: Zap,
   results: Target,
   dirty_dog: Flame,

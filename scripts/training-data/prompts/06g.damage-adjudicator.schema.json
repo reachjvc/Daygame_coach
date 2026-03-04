@@ -40,5 +40,34 @@
       "type": "string",
       "maxLength": 240
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "repair_possible": { "const": false }
+        }
+      },
+      "then": {
+        "properties": {
+          "repaired_text": { "type": "null" }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "repair_possible": { "const": true }
+        }
+      },
+      "then": {
+        "properties": {
+          "repaired_text": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  ]
 }

@@ -51,14 +51,12 @@ export const LIFE_AREAS: LifeAreaConfig[] = [
     progressColor: "bg-green-500",
     sortOrder: 1,
     suggestions: [
-      { title: "Go to gym 4x per week", defaultTarget: 4, defaultPeriod: "weekly", featured: true },
+      { title: "Go to gym 4x per week", defaultTarget: 4, defaultPeriod: "weekly", linkedMetric: "gym_sessions_weekly", featured: true },
       { title: "Eat 150g protein daily", defaultTarget: 150, defaultPeriod: "daily" },
       { title: "Hit 10,000 steps daily", defaultTarget: 10000, defaultPeriod: "daily" },
-      { title: "Drink 3L water daily", defaultTarget: 3, defaultPeriod: "daily" },
-      { title: "Sleep 8 hours nightly", defaultTarget: 8, defaultPeriod: "daily" },
+      { title: "Sleep 8 hours nightly", defaultTarget: 8, defaultPeriod: "daily", linkedMetric: "sleep_hours_avg_weekly" },
       { title: "Run 5km 3x per week", defaultTarget: 3, defaultPeriod: "weekly" },
       { title: "Skincare routine daily", defaultTarget: 1, defaultPeriod: "daily" },
-      { title: "Haircut every 4 weeks", defaultTarget: 1, defaultPeriod: "monthly" },
     ],
   },
   {

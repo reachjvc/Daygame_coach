@@ -20,6 +20,7 @@ import shlex
 import subprocess
 import sys
 import time
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -53,6 +54,10 @@ ARTIFACT_DAMAGE_SEVERITY: Dict[str, str] = {
 
 # Transcript artifact repair: minimum confidence to accept a repair suggestion.
 REPAIR_ACCEPT_THRESHOLD = 0.85
+MAX_DYNAMIC_TIMEOUT_SECONDS = 1800
+TIMEOUT_BUFFER_SECONDS = 120
+TIMEOUT_CHARS_PER_SECOND = 140.0
+TIMEOUT_SECONDS_PER_SEGMENT = 1.2
 
 
 def repo_root() -> Path:
@@ -179,6 +184,7 @@ def _load_schema() -> Optional[Dict[str, Any]]:
     return schema if isinstance(schema, dict) else None
 
 
+@lru_cache(maxsize=1)
 def _find_claude_binary() -> Optional[str]:
     for cand in CLAUDE_BINARY_PATHS:
         p = Path(cand)
@@ -212,7 +218,16 @@ def _call_claude(
             cmd = [claude_bin]
             if isinstance(model, str) and model.strip():
                 cmd += ["--model", model.strip()]
-            cmd += ["-p", prompt, "--output-format", "text"]
+            cmd += [
+                "-p",
+                prompt,
+                "--output-format",
+                "text",
+                "--tools",
+                "",
+                "--strict-mcp-config",
+                "--no-session-persistence",
+            ]
             res = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -298,6 +313,20 @@ def _format_transcript(segments: List[Dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _compute_effective_timeout_seconds(
+    base_timeout_seconds: int,
+    *,
+    prompt_chars: int,
+    segment_count: int,
+) -> int:
+    base = max(1, int(base_timeout_seconds))
+    prompt_chars = max(0, int(prompt_chars))
+    segment_count = max(0, int(segment_count))
+    char_based = int(prompt_chars / TIMEOUT_CHARS_PER_SECOND) + TIMEOUT_BUFFER_SECONDS
+    seg_based = int(segment_count * TIMEOUT_SECONDS_PER_SEGMENT) + TIMEOUT_BUFFER_SECONDS
+    return min(MAX_DYNAMIC_TIMEOUT_SECONDS, max(base, char_based, seg_based))
+
+
 def quality_check_file(
     input_path: Path,
     output_path: Path,
@@ -321,6 +350,12 @@ def quality_check_file(
 
     transcript_text = _format_transcript(valid_segments)
     prompt = prompt_template.replace("{{TRANSCRIPT}}", transcript_text)
+    base_timeout_seconds = max(1, int(args.timeout_seconds))
+    effective_timeout_seconds = _compute_effective_timeout_seconds(
+        base_timeout_seconds,
+        prompt_chars=len(prompt),
+        segment_count=len(valid_segments),
+    )
 
     if args.dry_run:
         print(
@@ -329,10 +364,16 @@ def quality_check_file(
         )
         return {"segments_total": len(valid_segments), "low_quality": 0, "artifacts": 0}
 
+    if effective_timeout_seconds != base_timeout_seconds:
+        print(
+            f"{LOG_PREFIX} {input_path.name}: adaptive timeout={effective_timeout_seconds}s "
+            f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(valid_segments)})"
+        )
+
     raw = _call_claude(
         prompt,
         model=args.model,
-        timeout_seconds=args.timeout_seconds,
+        timeout_seconds=effective_timeout_seconds,
         retries=args.retries,
     )
 

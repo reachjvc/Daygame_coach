@@ -44,6 +44,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, asdict, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -76,6 +77,10 @@ SCHEMA_PATH = Path(__file__).parent / "schemas" / "conversations.schema.json"
 # Failure budget: halt batch if too many failures
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_FAILURE_RATE = 0.20  # halt if >20% of videos fail validation
+MAX_DYNAMIC_TIMEOUT_SECONDS = 1800
+TIMEOUT_BUFFER_SECONDS = 120
+TIMEOUT_CHARS_PER_SECOND = 140.0
+TIMEOUT_SECONDS_PER_SEGMENT = 1.2
 
 
 # ---------------------------
@@ -599,6 +604,7 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
 # Claude CLI Interface
 # ---------------------------
 
+@lru_cache(maxsize=1)
 def find_claude_binary() -> Optional[str]:
     for path in CLAUDE_BINARY_PATHS:
         path = Path(path)
@@ -622,7 +628,17 @@ def run_claude_preflight(
     retries: int,
 ) -> Tuple[bool, str]:
     """Probe Claude health with a tiny fixed request."""
-    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
+    cmd: List[str] = [
+        claude_bin,
+        "-p",
+        "Respond exactly: ok",
+        "--output-format",
+        "text",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--no-session-persistence",
+    ]
     if isinstance(model, str) and model.strip():
         cmd += ["--model", model.strip()]
 
@@ -664,7 +680,17 @@ def call_claude(
     if not claude_bin:
         raise RuntimeError("Claude CLI binary not found - cannot proceed")
 
-    cmd: List[str] = [claude_bin, "-p", prompt, "--output-format", "text"]
+    cmd: List[str] = [
+        claude_bin,
+        "-p",
+        prompt,
+        "--output-format",
+        "text",
+        "--tools",
+        "",
+        "--strict-mcp-config",
+        "--no-session-persistence",
+    ]
     if isinstance(model, str) and model.strip():
         cmd += ["--model", model.strip()]
 
@@ -679,16 +705,22 @@ def call_claude(
             if result.returncode == 0:
                 return result.stdout.strip()
             else:
+                stderr = (result.stderr or "").strip()
+                stdout = (result.stdout or "").strip()
+                detail = stderr[:200] or stdout[:200] or "<no stderr/stdout>"
                 if attempt < retries - 1:
                     wait = 2 ** attempt
                     print(f"{LOG_PREFIX} Claude CLI error, retrying in {wait}s...")
-                    print(f"{LOG_PREFIX}   stderr: {result.stderr[:200]}")
+                    print(f"{LOG_PREFIX}   detail: {detail}")
                     time.sleep(wait)
                     continue
-                raise RuntimeError(f"Claude CLI failed: {result.stderr[:500]}")
+                raise RuntimeError(
+                    f"Claude CLI failed (exit {result.returncode}): "
+                    f"{(stderr[:500] or stdout[:500] or '<no stderr/stdout>')}"
+                )
         except subprocess.TimeoutExpired:
             if attempt < retries - 1:
-                print(f"{LOG_PREFIX} Timeout, retrying...")
+                print(f"{LOG_PREFIX} Timeout after {timeout}s, retrying...")
                 time.sleep(2 ** attempt)
                 continue
             raise RuntimeError(f"Claude CLI timeout after {timeout}s")
@@ -748,6 +780,20 @@ def parse_json_response(response: str) -> Optional[Dict]:
     return None
 
 
+def compute_effective_timeout_seconds(
+    base_timeout_seconds: int,
+    *,
+    prompt_chars: int,
+    segment_count: int,
+) -> int:
+    base = max(1, int(base_timeout_seconds))
+    prompt_chars = max(0, int(prompt_chars))
+    segment_count = max(0, int(segment_count))
+    char_based = int(prompt_chars / TIMEOUT_CHARS_PER_SECOND) + TIMEOUT_BUFFER_SECONDS
+    seg_based = int(segment_count * TIMEOUT_SECONDS_PER_SEGMENT) + TIMEOUT_BUFFER_SECONDS
+    return min(MAX_DYNAMIC_TIMEOUT_SECONDS, max(base, char_based, seg_based))
+
+
 # ---------------------------
 # Single-Pass Analysis: Video Type + Speakers + Boundaries
 # ---------------------------
@@ -804,17 +850,40 @@ def analyze_video(
         segment_count=len(segments),
         transcript=transcript_text,
     )
+    base_timeout_seconds = max(1, int(llm_timeout_seconds))
+    effective_timeout_seconds = compute_effective_timeout_seconds(
+        base_timeout_seconds,
+        prompt_chars=len(prompt),
+        segment_count=len(segments),
+    )
 
     print(f"{LOG_PREFIX} Analyzing: type + {len(speakers)} speakers + boundaries ({len(segments)} segments)...")
+    if effective_timeout_seconds != base_timeout_seconds:
+        print(
+            f"{LOG_PREFIX}   Adaptive timeout: {effective_timeout_seconds}s "
+            f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(segments)})"
+        )
 
     max_retries = max(1, int(llm_retries))
     for attempt in range(max_retries):
-        response = call_claude(
-            prompt,
-            retries=1,
-            timeout=max(1, int(llm_timeout_seconds)),
-            model=claude_model,
-        )
+        try:
+            response = call_claude(
+                prompt,
+                retries=1,
+                timeout=effective_timeout_seconds,
+                model=claude_model,
+            )
+        except RuntimeError as exc:
+            if attempt < max_retries - 1:
+                wait = 2 ** attempt
+                print(
+                    f"{LOG_PREFIX}   WARNING: LLM call failed "
+                    f"({attempt + 1}/{max_retries}): {exc}; retrying in {wait}s..."
+                )
+                time.sleep(wait)
+                continue
+            raise
+
         result = parse_json_response(response)
 
         if result and "video_type" in result and "speaker_labels" in result and "segments" in result:
@@ -1355,6 +1424,11 @@ def main() -> None:
         default=2,
         help="Retry attempts for startup Claude health probe (default: 2).",
     )
+    parser.add_argument(
+        "--skip-preflight",
+        action="store_true",
+        help="Skip startup Claude health probe (recommended under high-concurrency orchestrators).",
+    )
 
     args = parser.parse_args()
     if args.timeout_seconds <= 0:
@@ -1369,43 +1443,48 @@ def main() -> None:
     global DEBUG_MODE
     DEBUG_MODE = args.debug
 
-    # Test Claude CLI availability
-    claude_bin = find_claude_binary()
-    if not claude_bin:
-        print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
-        print(f"{LOG_PREFIX} Searched paths:")
-        for p in CLAUDE_BINARY_PATHS:
-            print(f"  - {p}")
-        print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
-        raise SystemExit(1)
-
-    try:
-        result = subprocess.run(
-            [claude_bin, "--version"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode != 0:
-            print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
-        else:
-            print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
-    except subprocess.TimeoutExpired:
-        print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
-
     if not args.dry_run:
-        ok, reason = run_claude_preflight(
-            claude_bin,
-            model=args.model,
-            timeout_seconds=args.preflight_timeout_seconds,
-            retries=args.preflight_retries,
-        )
-        if not ok:
-            print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
-            print(f"{LOG_PREFIX} Hint: verify Claude auth/network and retry.")
-            raise SystemExit(2)
-        print(
-            f"{LOG_PREFIX} Claude preflight: ok "
-            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
-        )
+        # Test Claude CLI availability only for real runs.
+        claude_bin = find_claude_binary()
+        if not claude_bin:
+            print(f"{LOG_PREFIX} Error: Claude CLI binary not found")
+            print(f"{LOG_PREFIX} Searched paths:")
+            for p in CLAUDE_BINARY_PATHS:
+                print(f"  - {p}")
+            print(f"{LOG_PREFIX} Install Claude Code CLI: https://claude.ai/code")
+            raise SystemExit(1)
+
+        try:
+            result = subprocess.run(
+                [claude_bin, "--version"],
+                capture_output=True, text=True, timeout=10,
+            )
+            if result.returncode != 0:
+                print(f"{LOG_PREFIX} Warning: Claude CLI not responding properly")
+            else:
+                print(f"{LOG_PREFIX} Using Claude CLI: {claude_bin}")
+        except subprocess.TimeoutExpired:
+            print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
+
+        if not args.skip_preflight:
+            ok, reason = run_claude_preflight(
+                claude_bin,
+                model=args.model,
+                timeout_seconds=args.preflight_timeout_seconds,
+                retries=args.preflight_retries,
+            )
+            if not ok:
+                print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
+                print(f"{LOG_PREFIX} Hint: verify Claude auth/network and retry.")
+                raise SystemExit(2)
+            print(
+                f"{LOG_PREFIX} Claude preflight: ok "
+                f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
+            )
+        else:
+            print(f"{LOG_PREFIX} Claude preflight: skipped")
+    else:
+        print(f"{LOG_PREFIX} Dry-run: skipping Claude availability and preflight checks")
 
     if isinstance(args.model, str) and args.model.strip():
         print(f"{LOG_PREFIX} Claude model: {args.model.strip()}")

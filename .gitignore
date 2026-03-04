@@ -83,3 +83,7 @@ playwright-report/
 test-results/
 tests/integration/.test-connection.json
 tests/e2e/.auth/
+
+# Playwright MCP screenshots
+.playwright-mcp/
+*.png

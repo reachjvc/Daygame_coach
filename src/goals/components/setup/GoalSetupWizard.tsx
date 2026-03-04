@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { useSteppedFlow } from "@/src/shared/useSteppedFlow"
+import { useBackableState } from "@/src/shared/useBackableState"
 import { useSetupCatalog } from "@/src/goals/hooks/useSetupCatalog"
 import { buildSetupInserts } from "@/src/goals/goalsService"
 import { STEPS, STEP_LABELS, nextCustomId, type FlowStep } from "./setupConstants"
@@ -13,7 +14,7 @@ import { DirectionStep } from "./DirectionStep"
 import { GoalsStep, type GoalsStepTourHandle } from "./GoalsStep"
 import { GoalsStepTour } from "./GoalsStepTour"
 import { SummaryStep } from "./SummaryStep"
-import { AuroraOrreryStep } from "./AuroraOrreryStep"
+import { GoalCatalogPicker } from "../GoalCatalogPicker"
 import { getDaygamePathL1, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import type { DaygamePath, HabitRampStep, MilestoneLadderConfig, SetupCustomGoal, SetupCustomCategory } from "@/src/goals/types"
 
@@ -39,6 +40,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   const [error, setError] = useState<string | null>(null)
   const goalsStepRef = useRef<GoalsStepTourHandle>(null)
   const [tourRequested, setTourRequested] = useState(false)
+  const [showCatalog, setShowCatalog] = useBackableState(false)
 
   // Dynamic tour target IDs — computed from current selections
   const tourTargets = useMemo(() => {
@@ -134,7 +136,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   }, [])
 
   const handleSkipToGoals = useCallback(() => {
-    setStep("goals")
+    setShowCatalog(true)
   }, [])
 
   const handleToggleArea = useCallback(
@@ -225,22 +227,10 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   }, [])
 
   const updateTargetDate = useCallback((areaId: string, date: string) => {
-    // Safety net: never accept past/today dates
-    if (date) {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      if (date < tomorrow.toISOString().split("T")[0]) return
-    }
     setTargetDates((prev) => ({ ...prev, [areaId]: date }))
   }, [])
 
   const updateGoalDate = useCallback((goalId: string, date: string) => {
-    // Safety net: never accept past/today dates
-    if (date) {
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      if (date < tomorrow.toISOString().split("T")[0]) return
-    }
     setGoalDates((prev) => ({ ...prev, [goalId]: date }))
   }, [])
 
@@ -257,26 +247,19 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
     setCustomCategories((prev) => prev.filter((c) => c.id !== catId))
   }, [])
 
-  // --- Goal counts ---
-  const selectedDaygameCount =
-    catalog.daygameL3Goals.filter((g) => selectedGoals.has(g.id)).length
-  const otherGoalCount = catalog.lifeAreas
-    .filter((a) => selectedAreas.has(a.id) && a.id !== "daygame" && a.id !== "custom")
-    .reduce((sum, area) => {
-      return (
-        sum +
-        (area.suggestions ?? []).filter((_, i) => selectedGoals.has(`${area.id}_s${i}`)).length
-      )
-    }, 0)
-  const customGoalCount = customGoals.filter((g) => g.title.trim()).length
-  const totalGoals = selectedDaygameCount + otherGoalCount + customGoalCount
-
   // --- Create goals handler ---
   const handleCreateGoals = useCallback(async () => {
     if (!path) return
     setIsCreating(true)
     setError(null)
     try {
+      // Strip out past dates so they never reach the DB
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const minDate = tomorrow.toISOString().slice(0, 10)
+      const filterDates = (dates: Record<string, string>) =>
+        Object.fromEntries(Object.entries(dates).filter(([, d]) => d >= minDate))
+
       const inserts = buildSetupInserts({
         path,
         selectedAreas,
@@ -287,8 +270,8 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
         rampEnabled,
         customGoals,
         customCategories,
-        targetDates,
-        goalDates,
+        targetDates: filterDates(targetDates),
+        goalDates: filterDates(goalDates),
       })
       if (inserts.length === 0) {
         setError("No goals selected — go back and pick at least one")
@@ -315,7 +298,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
 
   // --- CTA navigation ---
   const goNext = useCallback(() => {
-    if (step === "orrery") {
+    if (step === "summary") {
       handleCreateGoals()
       return
     }
@@ -337,8 +320,6 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
       case "goals":
         return { label: "View Summary \u2192", disabled: selectedGoals.size === 0 }
       case "summary":
-        return { label: "View Your System \u2192", disabled: false }
-      case "orrery":
         return { label: isCreating ? "Creating..." : "Create Goals", disabled: isCreating }
     }
   }, [step, path, selectedGoals.size, isCreating])
@@ -415,6 +396,22 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [step, ctaConfig.disabled, goNext, handleSelectPath, toggleL1, currentL1Ids, handleToggleArea, otherAreaIds, path])
 
+  if (showCatalog) {
+    return (
+      <div className="relative">
+        <AuroraBackground stepIndex={0} />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 pt-10 pb-20 sm:pb-28">
+          <GoalCatalogPicker
+            onTreeCreated={() => {
+              const separator = returnPath.includes("?") ? "&" : "?"
+              router.push(`${returnPath}${separator}fromSetup=true`)
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="relative">
       <AuroraBackground stepIndex={stepIndex} />
@@ -442,7 +439,6 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
           />
         )}
         {step === "goals" && (
-          <>
             <GoalsStep
               ref={goalsStepRef}
               daygameByCategory={catalog.daygameByCategory}
@@ -473,16 +469,6 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
               onUpdateGoalDate={updateGoalDate}
               onTourStart={() => setTourRequested(true)}
             />
-            <GoalsStepTour
-              tourRef={goalsStepRef}
-              triggerStart={tourRequested}
-              onTourEnd={() => setTourRequested(false)}
-              selectedGoals={selectedGoals}
-              firstCurveGoalId={tourTargets.firstCurveGoalId}
-              firstRampGoalId={tourTargets.firstRampGoalId}
-              firstCurveSectionId={tourTargets.firstCurveSectionId}
-            />
-          </>
         )}
         {step === "summary" && (
           <SummaryStep
@@ -498,18 +484,19 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
             customCategories={customCategories}
           />
         )}
-        {step === "orrery" && (
-          <AuroraOrreryStep
-            lifeAreas={catalog.lifeAreas}
-            selectedAreas={selectedAreas}
-            selectedGoals={selectedGoals}
-            totalGoals={totalGoals}
-            path={path}
-            onCreateGoals={handleCreateGoals}
-            isCreating={isCreating}
-          />
-        )}
       </AnimatedStep>
+
+      {step === "goals" && (
+        <GoalsStepTour
+          tourRef={goalsStepRef}
+          triggerStart={tourRequested}
+          onTourEnd={() => setTourRequested(false)}
+          selectedGoals={selectedGoals}
+          firstCurveGoalId={tourTargets.firstCurveGoalId}
+          firstRampGoalId={tourTargets.firstRampGoalId}
+          firstCurveSectionId={tourTargets.firstCurveSectionId}
+        />
+      )}
 
       {error && (
         <div className="fixed top-4 right-4 z-50 rounded-lg bg-red-500/90 px-4 py-2 text-white text-sm shadow-lg">

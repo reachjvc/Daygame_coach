@@ -10,14 +10,18 @@ interface FutureDateInputProps {
 function getTomorrow(): string {
   const d = new Date()
   d.setDate(d.getDate() + 1)
-  return d.toISOString().split("T")[0]
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
 /**
  * Date input that only accepts future dates (tomorrow or later).
  *
  * Approach: let the user type freely, show a persistent warning when
- * the value is in the past, and clear it on blur. No blocking mid-typing.
+ * the value is in the past. The invalid value stays visible so the user
+ * knows what they entered. Past dates are excluded at submission time.
  */
 export function FutureDateInput({ value, onChange, className, onKeyDown }: FutureDateInputProps) {
   const tomorrow = getTomorrow()
@@ -27,26 +31,19 @@ export function FutureDateInput({ value, onChange, className, onKeyDown }: Futur
     onChange(e.target.value)
   }
 
-  const handleBlur = () => {
-    if (isPast) {
-      onChange("")
-    }
-  }
-
   return (
     <div>
       <input
         type="date"
         value={value}
         onChange={handleChange}
-        onBlur={handleBlur}
         onKeyDown={onKeyDown}
         min={tomorrow}
-        className={className}
+        className={`${className ?? ""}${isPast ? " ring-1 ring-red-400/60" : ""}`}
       />
       {isPast && (
-        <p className="mt-1.5 text-xs text-amber-400/80">
-          That date is in the past — pick a future date
+        <p className="mt-1.5 text-xs text-red-400">
+          This date is in the past — please pick a future date
         </p>
       )}
     </div>

@@ -1,0 +1,383 @@
+/* ── Variant A: "Strong Site" (Linear/Notion style) ────────── */
+/* Prefix: va- to avoid conflicts with other variants          */
+
+/* ── Overlay backdrop ───────────────────────────────────────── */
+.va-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+}
+
+.va-overlay-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9990;
+  transition: opacity 0.3s ease;
+  pointer-events: auto;
+}
+
+.va-overlay-bg--entering {
+  opacity: 0;
+}
+
+.va-overlay-bg--visible {
+  opacity: 1;
+}
+
+.va-overlay-bg--exiting {
+  opacity: 0;
+}
+
+/* ── Spotlight cutout ───────────────────────────────────────── */
+.va-spotlight {
+  position: fixed;
+  z-index: 9991;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 4000px rgba(0, 0, 0, 0.55),
+    0 0 0 2px rgba(94, 106, 210, 0.6),
+    0 0 20px 4px rgba(94, 106, 210, 0.15);
+  transition:
+    top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* ── Tooltip card ───────────────────────────────────────────── */
+.va-tooltip {
+  position: fixed;
+  z-index: 9995;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 24, 32, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #e8e8ed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  pointer-events: auto;
+  transition:
+    top 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.25s ease;
+}
+
+.va-tooltip--entering {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.va-tooltip--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Tooltip header ─────────────────────────────────────────── */
+.va-tooltip__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.va-tooltip__step-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b8fa3;
+}
+
+.va-tooltip__skip {
+  font-size: 11px;
+  color: #6b6f83;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.va-tooltip__skip:hover {
+  color: #a0a4b8;
+}
+
+/* ── Progress bar ───────────────────────────────────────────── */
+.va-progress {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.va-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5E6AD2, #7B83EB);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Title ──────────────────────────────────────────────────── */
+.va-tooltip__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f0f5;
+  margin: 0 0 6px 0;
+  line-height: 1.35;
+}
+
+/* ── Body text ──────────────────────────────────────────────── */
+.va-tooltip__body {
+  font-size: 13px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0 0 16px 0;
+}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+.va-tooltip__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.va-tooltip__hotkeys {
+  display: flex;
+  gap: 6px;
+}
+
+.va-hotkey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b6f83;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.va-tooltip__buttons {
+  display: flex;
+  gap: 6px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.va-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.va-btn--secondary {
+  color: #a0a4b8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.va-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e8;
+}
+
+.va-btn--primary {
+  color: #fff;
+  background: #5E6AD2;
+}
+
+.va-btn--primary:hover {
+  background: #6E7AE2;
+}
+
+/* ── Welcome overlay (step 0 intro) ─────────────────────────── */
+.va-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.va-welcome__card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 24, 32, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #e8e8ed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.va-welcome__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #5E6AD2, #7B83EB);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.va-welcome__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #f0f0f5;
+}
+
+.va-welcome__text {
+  font-size: 14px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0 0 24px;
+}
+
+.va-welcome__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.va-welcome__start {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #5E6AD2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.va-welcome__start:hover {
+  background: #6E7AE2;
+}
+
+.va-welcome__dismiss {
+  width: 100%;
+  height: 32px;
+  font-size: 13px;
+  color: #6b6f83;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.va-welcome__dismiss:hover {
+  color: #a0a4b8;
+}
+
+/* ── Finish overlay ─────────────────────────────────────────── */
+.va-finish {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.va-finish__card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 24, 32, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #e8e8ed;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.va-finish__check {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #34D399, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.va-finish__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #f0f0f5;
+}
+
+.va-finish__text {
+  font-size: 14px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0 0 24px;
+}
+
+.va-finish__close {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #5E6AD2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.va-finish__close:hover {
+  background: #6E7AE2;
+}

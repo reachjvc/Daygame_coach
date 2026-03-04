@@ -273,7 +273,10 @@ def main():
 
     print(f"\nManifest written: {manifest_path}")
     print(f"Next: ./scripts/training-data/batch/sub-batch-create {manifest_path.stem}")
-    print(f"Then: ./scripts/training-data/batch/sub-batch-pipeline {manifest_path.stem}.1 --status")
+    print(
+        "Then: ./scripts/training-data/batch/run-campaign "
+        f"--start {manifest_path.stem}.1 --end {manifest_path.stem}.1"
+    )
 
 
 if __name__ == "__main__":

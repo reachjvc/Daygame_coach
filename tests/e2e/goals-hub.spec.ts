@@ -16,16 +16,19 @@ test.describe('Goals Hub', () => {
     await ensureNoGoals(page)
   })
 
-  // 4.1a: Empty state shows catalog picker
-  test('empty state shows catalog picker', async ({ page }) => {
+  // 4.1a: Empty state redirects to setup wizard
+  test('empty state redirects to setup wizard', async ({ page }) => {
     // Arrange: no goals (ensureNoGoals in beforeEach)
 
-    // Act
-    await goToGoals(page)
+    // Act: navigating to /dashboard/goals with 0 goals triggers server redirect to setup
+    // Use AUTH_TIMEOUT since the redirect can be slow under load
+    await page.goto('/dashboard/goals', { timeout: AUTH_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
-    // Assert
-    await expect(page.getByTestId(SELECTORS.goals.catalogPicker)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // Assert: redirected to setup wizard
+    await expect(page).toHaveURL(/\/dashboard\/goals\/setup/, { timeout: AUTH_TIMEOUT })
+    // Setup wizard shows the direction picker with "Shape Your Path" heading
+    await expect(page.getByRole('heading', { name: /shape your path/i })).toBeVisible({ timeout: AUTH_TIMEOUT })
   })
 
   // 4.1b: Create goal via form modal
@@ -62,11 +65,11 @@ test.describe('Goals Hub', () => {
     await expect(page.getByTestId(SELECTORS.goals.viewSwitcher)).toBeVisible({ timeout: AUTH_TIMEOUT })
 
     // Click strategic view
-    await page.getByTestId(SELECTORS.goals.viewOption('strategic')).click({ timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.goals.viewOption('hierarchy')).click({ timeout: ACTION_TIMEOUT })
     await page.waitForLoadState('networkidle')
 
     // Click back to daily
-    await page.getByTestId(SELECTORS.goals.viewOption('daily')).click({ timeout: ACTION_TIMEOUT })
+    await page.getByTestId(SELECTORS.goals.viewOption('today')).click({ timeout: ACTION_TIMEOUT })
     await page.waitForLoadState('networkidle')
   })
 
@@ -119,8 +122,8 @@ test.describe('Goals Hub', () => {
     await expect(page.getByTestId(SELECTORS.goals.deleteAllConfirm)).toBeVisible({ timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.goals.deleteAllConfirmYes).click({ timeout: ACTION_TIMEOUT })
 
-    // Assert: wait for empty state to appear in UI
-    await expect(page.getByTestId(SELECTORS.goals.catalogPicker)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // Assert: delete-all redirects to setup wizard
+    await expect(page).toHaveURL(/\/dashboard\/goals\/setup/, { timeout: AUTH_TIMEOUT })
 
     // Assert: API confirms zero goals
     const goals = await getGoalsViaAPI(page)
@@ -143,8 +146,8 @@ test.describe('Goals Hub', () => {
     await expect(page.getByTestId(SELECTORS.goals.deleteAllConfirm)).toBeVisible({ timeout: ACTION_TIMEOUT })
     await page.getByTestId(SELECTORS.goals.deleteAllConfirmYes).click({ timeout: ACTION_TIMEOUT })
 
-    // Assert: wait for empty state to appear in UI
-    await expect(page.getByTestId(SELECTORS.goals.catalogPicker)).toBeVisible({ timeout: AUTH_TIMEOUT })
+    // Assert: delete-all redirects to setup wizard
+    await expect(page).toHaveURL(/\/dashboard\/goals\/setup/, { timeout: AUTH_TIMEOUT })
 
     // Assert: API confirms zero goals — not a single orphan child
     const after = await getGoalsViaAPI(page)

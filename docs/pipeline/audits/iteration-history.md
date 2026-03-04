@@ -4067,3 +4067,342 @@ If we fix path-derived `video_id` drift in early LLM stages and harden Stage `07
 
 ### Next Hypothesis
 Continue full-path recovery on remaining `P002` sub-batches and then retune contamination-risk thresholds using completed-scope evidence only.
+
+## Iteration I87 - 2026-03-03
+
+### Hypothesis
+If reruns ignore stale same-stage runtime quarantine and end-of-run validation preserves `07b` review truth, `P001.5` can move from a runtime-frozen false block state to a defensible readiness distribution driven by real Claude outputs.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - restart from stage `S` now ignores same-stage and downstream quarantine reasons when deciding pre-run skips.
+  - retained upstream quarantine reasons are preserved and rewritten into the canonical quarantine artifact.
+- `scripts/training-data/validation/validate_manifest.py`:
+  - Stage `07b` artifacts are now parsed during end-of-run manifest validation.
+  - emits canonical `stage07b_gate_review` / `stage07b_gate_block` issues instead of treating `07b` as presence-only.
+  - report summary now includes Stage `07b` validation counts.
+- `docs/plans/03_03_codex.md`:
+  - recorded baseline, rerun, false-pass audit evidence, and live execution findings.
+
+### Run Scope
+- manifest: `P001.5`
+- stages rerun:
+  - baseline validation packet
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.5 --from 07b --parallel 10`
+  - auto-repair attempt from `06b` on selected targets
+  - `./scripts/training-data/batch/sub-batch-ops P001.5 --validate`
+- run_ids:
+  - baseline: `20260303.P001.5.baseline`
+  - post-fix scorecard: `20260303.P001.5.I85.stage07b-readiness-propagation`
+
+### Before vs After (Scorecard)
+- missing_required_input_count: `0` -> `0`
+- silent_pass_count: `0` -> `0`
+- cross_stage_error_rate: `0.0` -> `0.0`
+- stage07_validation_error_count: `0` -> `0`
+- chunk_validation_error_count: `0` -> `0`
+- semantic_judge.mean_overall_score: n/a -> n/a
+- semantic_judge.major_error_rate: n/a -> n/a
+- semantic_judge.hallucination_rate: n/a -> n/a
+
+### Validation Evidence
+- Before rerun (`20260303.P001.5.baseline`):
+  - `quarantined_videos=10`
+  - `ingest_eligible_videos=0`
+  - cause: all `10/10` Stage `07b` artifacts were fail-closed `llm_no_output`, and restart-from-`07b` skipped all videos as already quarantined.
+- Real Claude rerun after `pipeline-runner` fix:
+  - `07b` produced `pass=9`, `review=1`, `block=0`.
+  - auto-repair improved `Y9D7p8KMZek` from `REVIEW` -> `READY`; damage score `0.235395 -> 0.060907`.
+- After `validate_manifest.py` `07b` propagation:
+  - `manifest-validate` surfaces `g35sbdbjNXw stage07b_gate_review: section_coverage_gap`.
+  - readiness shifted to `READY=4`, `REVIEW=4`, `BLOCKED=2`.
+  - `g35sbdbjNXw` is no longer a false `READY`.
+  - scorecard: `ingest_eligible_videos=8`, `allow_ingest_statuses=[READY, REVIEW]`.
+
+### Decision
+- keep
+- rationale: the pipeline now distinguishes runtime failure from content truth, and `07b` review findings survive into canonical readiness instead of being dropped.
+
+### Next Hypothesis
+If the reintroduced review-ingest override path is removed, Stage 10 dry-run will shrink to `READY`-only scope without regressing any contract or quality metrics.
+
+## Iteration I88 - 2026-03-03
+
+### Hypothesis
+If the review-ingest override path is removed end-to-end, Stage 10 dry-run will align with the documented READY-only policy and stop treating `REVIEW` videos as ingest-eligible.
+
+### Changes
+- `scripts/training-data/validation/validate_stage_report.py`:
+  - removed `--allow-ingest-status` override path.
+  - readiness ingest eligibility is again fixed to `READY`.
+- `scripts/training-data/batch/sub-batch-pipeline`:
+  - removed config export/forwarding for ingest-eligible status overrides.
+- `scripts/training-data/batch/pipeline.config.json`:
+  - removed `validation.readiness.allow_ingest_statuses`.
+
+### Run Scope
+- manifest: `P001.5`
+- stages rerun: validation-only (`./scripts/training-data/batch/sub-batch-ops P001.5 --validate`)
+- run_id: `20260303.P001.5.I88.ready-only-ingest`
+
+### Before vs After (Scorecard)
+- missing_required_input_count: `0` -> `0`
+- silent_pass_count: `0` -> `0`
+- cross_stage_error_rate: `0.0` -> `0.0`
+- stage07_validation_error_count: `0` -> `0`
+- chunk_validation_error_count: `0` -> `0`
+- semantic_judge.mean_overall_score: n/a -> n/a
+- semantic_judge.major_error_rate: n/a -> n/a
+- semantic_judge.hallucination_rate: n/a -> n/a
+
+### Validation Evidence
+- Readiness state is unchanged:
+  - before: `READY=4`, `REVIEW=4`, `BLOCKED=2`
+  - after: `READY=4`, `REVIEW=4`, `BLOCKED=2`
+- Ingest policy changed exactly as intended:
+  - before: `allow_ingest_statuses=[READY, REVIEW]`, `ingest_eligible_videos=8`
+  - after: `allow_ingest_statuses=[READY]`, `ingest_eligible_videos=4`
+- Stage 10 dry-run eligible set is now:
+  - `jl5tLCqpTNo`
+  - `l5zEcgIS2Pw`
+  - `LftMFDMrfAQ`
+  - `Y9D7p8KMZek`
+
+### Decision
+- keep
+- rationale: Stage 10 now matches the documented single-path READY-only policy without any regression in contract health, cross-stage quality, or chunk validation metrics.
+
+### Next Hypothesis
+Deduplicate repair/worklist exports when `REVIEW` videos are non-ingest-eligible, so READY-only gating does not create duplicate blocked/review window rows for the same video spans.
+
+## Iteration I89 - 2026-03-03
+
+### Hypothesis
+If Stage 10 quarantine reporting deduplicates segment repair candidates by video/window/reason, READY-only gating will stop emitting contradictory duplicate repair rows for non-ingest-eligible `REVIEW` videos.
+
+### Changes
+- `scripts/training-data/10.EXT.ingest.ts`:
+  - deduplicates `segment_repair_candidates` at report generation time.
+  - prefers the actual readiness status representation (`REVIEW`) over the synthetic blocked-for-ingest representation when both refer to the same repair window.
+
+### Run Scope
+- manifest: `P001.5`
+- stages rerun: validation-only (`./scripts/training-data/batch/sub-batch-ops P001.5 --validate`)
+- run_id: `20260303.P001.5.I89.repair-worklist-dedupe`
+
+### Before vs After (Scorecard)
+- missing_required_input_count: `0` -> `0`
+- silent_pass_count: `0` -> `0`
+- cross_stage_error_rate: `0.0` -> `0.0`
+- stage07_validation_error_count: `0` -> `0`
+- chunk_validation_error_count: `0` -> `0`
+- semantic_judge.mean_overall_score: n/a -> n/a
+- semantic_judge.major_error_rate: n/a -> n/a
+- semantic_judge.hallucination_rate: n/a -> n/a
+
+### Validation Evidence
+- Before:
+  - `data/validation/ingest_quarantine/P001.5.auto.report.json` emitted `segment_repair_candidates=46`.
+  - overlapping duplicates existed for the same video/window/reason on all non-ingest-eligible `REVIEW` videos (for example `6ImEzB6NhiI 71-73 contamination_risk`, `g35sbdbjNXw 44-46 other_quality`).
+- After:
+  - repair worklist dropped to `Segment windows: 26`.
+  - status mix is now clean: `REVIEW=20`, `BLOCKED=6`.
+  - `g35sbdbjNXw` and the other non-ingest-eligible review videos appear once per window, as `REVIEW`, not duplicated as both `REVIEW` and `BLOCKED`.
+- Readiness / ingest gate unchanged:
+  - `READY=4`, `REVIEW=4`, `BLOCKED=2`
+  - Stage 10 dry-run ingest scope remains `4/10`.
+
+### Decision
+- keep
+- rationale: this removes downstream repair noise without altering canonical readiness or ingest decisions.
+
+### Next Hypothesis
+Re-run `P001.4` from `06b` under the new rerun semantics and READY-only policy to distinguish runtime-failure drift from actual content truth on a historically inconsistent sub-batch.
+
+## Iteration I90 - 2026-03-03
+
+### Hypothesis
+If restart quarantine filtering is scoped to the active retry manifest rather than the whole sub-batch quarantine file, targeted reruns will stop mutating unrelated quarantine truth and become safe to use for surgical pipeline diagnosis.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - `filter_quarantine_rows_for_restart(...)` now accepts `active_video_ids`.
+  - rows for videos outside the active retry manifest are retained unchanged.
+  - restart logging now reports retained quarantine rows rather than implying they are all upstream-only.
+
+### Run Scope
+- manifest: targeted `P001.4` retry subset (`iOSpNACA9VI`, `n0smMRCqVmc`)
+- stages rerun: `07 -> 07b`
+- command: `python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 2 --from 07 --to 07b --manifest /tmp/p0014_stage07_repair_manifest.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+
+### Validation Evidence
+- Before the fix, restart filtering operated on the entire `data/validation/quarantine/P001.4.json`, which made partial-manifest retries unsafe because unrelated same-stage/downstream rows could be dropped.
+- After the fix, the targeted rerun starts with:
+  - `Restart from 07: ignoring 2 same-stage/downstream quarantine entries (retained quarantine rows: 2/4).`
+- This confirms the retry is reopening only the two stale `stage07_execution_error` videos while preserving the unrelated `wHQW1s5FzkY` / `x2kk9HoXjnI` quarantine rows.
+
+### Decision
+- keep
+- rationale: partial reruns are a core debugging tool in this pipeline; they must be manifest-scoped to avoid corrupting canonical quarantine state.
+
+### Next Hypothesis
+The remaining stale `P001.4` `stage07_execution_error` rows are caused by Stage `07` Claude runtime contention under parallel load rather than bad content or validator truth.
+
+## Iteration I91 - 2026-03-03
+
+### Hypothesis
+If pipeline LLM stages invoke the real Claude CLI in strict print-only mode with tools/MCP disabled, Stage `07` runtime stalls and timeout noise will decrease without introducing a second inference path.
+
+### Changes
+- `scripts/training-data/06.LLM.video-type`
+- `scripts/training-data/06b.LLM.verify`
+- `scripts/training-data/06e.LLM.quality-check`
+- `scripts/training-data/06g.LLM.damage-adjudicator`
+- `scripts/training-data/07.LLM.content`
+- `scripts/training-data/07b.LLM.enrichment-verify`
+- each wrapper still uses the real Claude CLI, but now appends:
+  - `--tools ""`
+  - `--strict-mcp-config`
+  - `--no-session-persistence`
+
+### Run Scope
+- direct local Claude invocation check:
+  - `claude -p 'Reply with OK.' --output-format text --tools '' --strict-mcp-config --no-session-persistence`
+- live evidence source:
+  - targeted `P001.4` `07 -> 07b` rerun on `iOSpNACA9VI` + `n0smMRCqVmc`
+
+### Validation Evidence
+- Direct local check returned `OK.`
+- Live Stage `07` evidence before the wrapper change:
+  - isolated `n0smMRCqVmc` `07.LLM.content` rerun succeeds quickly on its own
+  - the same video, when paired with large-window `iOSpNACA9VI` in a parallel `07 -> 07b` rerun, hits `Timeout, retrying...`
+  - this indicates real Claude runtime contention/load behavior, not content truth failure
+
+### Decision
+- keep
+- rationale: this preserves the single real-Claude path while removing unnecessary tool/MCP/session overhead from non-interactive extraction calls.
+
+### Next Hypothesis
+Re-run the stale `P001.4` `07 -> 07b` pair with the new Claude wrapper, then revalidate the whole sub-batch to see whether the auto-repair-added `stage07_execution_error` quarantines clear.
+
+## Iteration I92 - 2026-03-04
+
+### Hypothesis
+If Stage `07` stops forcing oversized compilation/infield inputs through a single fixed-timeout Claude call, the remaining `P001.4` `stage07_execution_error` on `n0smMRCqVmc` will clear without introducing a fallback inference path.
+
+### Changes
+- `scripts/training-data/07.LLM.content`:
+  - added adaptive timeout sizing from prompt length + segment count
+  - added prompt-budget window planning for oversized single-call infield routes
+  - tuned single-call prompt budget down to `17500` chars
+  - tuned budgeted window search to smaller windows / lower overlap so large compilations split into more tractable calls
+
+### Run Scope
+- isolated manifest:
+  - `/tmp/p0014_n0sm_only.txt`
+- command:
+  - `python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 1 --from 07 --to 07b --manifest /tmp/p0014_n0sm_only.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+
+### Validation Evidence
+- Before the fix:
+  - `n0smMRCqVmc` Stage `07` used a single-call prompt around `24772` chars
+  - targeted reruns failed with `Claude CLI timeout after 300s`
+- After the fix:
+  - Stage `07` logs:
+    - `Prompt-budget windowing: single-call prompt chars=24772 exceeds budget=17500; using 5 windows`
+    - windows `1..5` all completed successfully
+    - merged output: `10 enrichments (from 11 pre-merge) in 585.2s total`
+  - Stage `07b` verdict:
+    - `gate=pass reason=adequate_enrichment_noisy_compilation`
+  - canonical `P001.4` validation no longer contains the stale `stage07_execution_error` runtime reject
+
+### Decision
+- keep
+- rationale: this fixes the actual Stage `07` routing/timeout defect while preserving the single real-Claude path.
+
+### Next Hypothesis
+The next remaining readiness false-pass is not execution-related but policy-related: `damaged_chunk_ratio` is currently measured yet not used for canonical READY/REVIEW/BLOCKED decisions.
+
+## Iteration I93 - 2026-03-04
+
+### Hypothesis
+If `damaged_chunk_ratio` participates directly in readiness gating, videos with widespread Stage `09` quality damage will stop slipping through as `READY` even when their average damage score stays deceptively low.
+
+### Changes
+- `scripts/training-data/validation/validate_stage_report.py`:
+  - added `--review-damaged-chunk-ratio`
+  - added `--block-damaged-chunk-ratio`
+  - readiness now escalates on `damage_profile.damaged_chunk_ratio`
+- `scripts/training-data/batch/sub-batch-pipeline`:
+  - wired the new readiness thresholds from config into validation
+- `scripts/training-data/batch/pipeline.config.json`:
+  - set `review_damaged_chunk_ratio = 0.25`
+  - set `block_damaged_chunk_ratio = 0.6`
+
+### Run Scope
+- validation reruns:
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.4 --validate`
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.5 --validate`
+
+### Validation Evidence
+- Before the fix:
+  - `P001.5` still had `READY` videos with meaningful damage prevalence:
+    - `LftMFDMrfAQ`: `damaged_chunk_ratio=0.351`
+    - `Y9D7p8KMZek`: `damaged_chunk_ratio=0.280`
+  - the old policy only enforced `video_damage_score` and `severe_damage_chunk_ratio`
+- After the fix:
+  - `P001.4` readiness shifted `READY=1 / REVIEW=7 / BLOCKED=2` -> `READY=1 / REVIEW=6 / BLOCKED=3`
+  - `n0smMRCqVmc` is now blocked on truth:
+    - `policy_block_damaged_chunk_ratio:0.711>0.600`
+  - `P001.5` readiness shifted `READY=4 / REVIEW=4 / BLOCKED=2` -> `READY=2 / REVIEW=5 / BLOCKED=3`
+  - specific truth corrections:
+    - `LftMFDMrfAQ`: `READY -> REVIEW` (`0.351>0.250`)
+    - `Y9D7p8KMZek`: `READY -> REVIEW` (`0.280>0.250`)
+    - `6ImEzB6NhiI`: `REVIEW -> BLOCKED` (`0.659>0.600`)
+  - remaining READY set across `P001.4` and `P001.5`:
+    - `zi8EvOdRQiI`
+    - `jl5tLCqpTNo`
+    - `l5zEcgIS2Pw`
+  - all three remaining READY videos have `video_damage_score=0.0`, `damaged_chunk_ratio=0.0`, `severe_damage_chunk_ratio=0.0`
+
+### Decision
+- keep
+- rationale: this closes a real false-pass gap using already-produced Stage `09` truth, without adding heuristics or a parallel decision path.
+
+### Next Hypothesis
+The remaining broad `other_quality` review bucket is now the main place where truth is still under-specified; the next iteration should separate transcript-repair pressure from true semantic/content review so repair worklists become more surgical.
+
+## Iteration I94 - 2026-03-04
+
+### Hypothesis
+If canonical readiness keeps the dominant underlying check when a review is caused by the `other_quality` warning class, repair worklists and operator triage will become materially more actionable without changing the gate itself.
+
+### Changes
+- `scripts/training-data/validation/validate_stage_report.py`:
+  - tracked policy warning checks grouped by signal class
+  - when `review_warning_class_excess` resolves to `other_quality`, canonical `reason_code` now uses the dominant contributing check instead of the generic class label
+
+### Run Scope
+- validation reruns:
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.4 --validate`
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.5 --validate`
+
+### Validation Evidence
+- Before the fix:
+  - many reviews surfaced only as `reason=other_quality`, which hid the real cause in downstream repair artifacts
+- After the fix:
+  - `P001.4` review reasons now include:
+    - `FVNOq-rQ2O0 -> stage06b_flag`
+    - `KURlBcRF6-M -> stage07b_gate_review`
+    - `NBJ0JkyyqR0 -> stage06b_flag`
+  - `P001.5` review reasons now include:
+    - `7BfD4URAD1Y -> stage06b_flag`
+    - `g35sbdbjNXw -> stage07b_gate_review`
+  - Stage `10` dry-run repair output now carries the same specific reasons into localized windows and repair manifests
+
+### Decision
+- keep
+- rationale: this does not alter readiness counts, but it removes an operator-truth blind spot and makes the repair loop much easier to target.
+
+### Next Hypothesis
+Use the now-cleaner reason codes and repair windows to decide whether `stage06b_flag` should remain a pure review signal or become stricter for certain content types / damage profiles.

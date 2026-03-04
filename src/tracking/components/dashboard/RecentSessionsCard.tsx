@@ -53,14 +53,14 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
             {(expanded ? sessions : sessions.slice(0, 3)).map((session) => (
               <div
                 key={session.id}
-                className={`flex items-center justify-between p-4 rounded-lg transition-all ${
+                className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-lg transition-all ${
                   session.goal_met
                     ? "bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 ring-2 ring-yellow-500/30"
                     : "bg-muted/30"
                 }`}
               >
-                <div className="flex items-center gap-4">
-                  <div className="min-w-[4rem] text-center">
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="min-w-[4rem] text-center shrink-0">
                     <div className={`text-3xl font-bold ${session.goal_met ? "text-yellow-500" : "text-primary"}`}>
                       {session.total_approaches}
                     </div>
@@ -70,8 +70,8 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
                       </div>
                     )}
                   </div>
-                  <div>
-                    <div className="font-medium flex items-center gap-2">
+                  <div className="min-w-0">
+                    <div className="font-medium flex items-center gap-2 flex-wrap">
                       {new Date(session.started_at).toLocaleDateString(undefined, {
                         weekday: "short",
                         month: "short",
@@ -96,7 +96,7 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {session.outcomes.number > 0 && (
                     <Badge variant="secondary" className="bg-green-500/10 text-green-500">
                       {session.outcomes.number} 📱

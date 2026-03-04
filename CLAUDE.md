@@ -153,3 +153,23 @@ Whenever you create something for the test pages, it must be accessible from the
 3. Keep exchanges short (150 words max per turn) so the conversation moves fast.
 
 **Never make user re-prompt for progress.** Use `run_in_background` + poll inbox. Act on results immediately. If slow, proactively update user.
+
+### 14. Single-Command-First Pipeline Rule (CRITICAL)
+
+When working on training-data pipeline operations, prefer one canonical entrypoint command over many ad-hoc commands.
+
+Rules:
+- Do not introduce extra operational command variants unless replacing existing complexity.
+- If automation is needed, wrap existing orchestrators behind one top-level command instead of creating parallel flows.
+- Any new pipeline automation must write a single state file and a single human-readable progress plan, updated automatically.
+- Before adding another command, ask: "Can this be folded into the existing top-level command?"
+
+### 15. Fail-Closed Quality Rule (CRITICAL)
+
+Pipeline quality gates must fail closed.
+
+Rules:
+- No fallback heuristics or bypass logic may replace required LLM quality decisions.
+- Required LLM-stage null responses (empty/no-output) must convert to explicit `BLOCK` decisions for the affected video.
+- For Stage `07b`, `Claude returned no output` must emit a canonical `BLOCK` artifact (reason-coded) so downstream quarantine can act deterministically.
+- Do not silently continue as if a failed quality decision passed; propagate explicit block/review/pass outcomes only.

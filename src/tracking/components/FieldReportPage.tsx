@@ -1,16 +1,17 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
+import { useBackableState } from "@/src/shared/useBackableState"
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Aperture, Loader2, FileText, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ArrowRight, Lock, Star, X, Heart } from "lucide-react"
+import { Aperture, Loader2, FileText, ArrowLeft, Clock, MapPin, TrendingUp, Check, Settings2, ArrowRight, Lock, Star, X, Heart, Trash2, Save } from "lucide-react"
 import Link from "next/link"
 import type { FieldReportTemplateRow, FieldReportRow, SessionWithApproaches, ApproachOutcome, TemplateField } from "@/src/db/trackingTypes"
 import type { GoalWithProgress } from "@/src/db/goalTypes"
-import type { SessionSummaryData } from "../types"
+import type { SessionSummaryData, FieldDefinition } from "../types"
 import { OUTCOME_OPTIONS, MOOD_OPTIONS, SESSION_IMPORT_FIELD_IDS } from "../config"
 import { TEMPLATE_COLORS, TEMPLATE_TAGLINES, TEMPLATE_ORDER, getSystemTemplateInfo, type TemplateSlug } from "../data/templates"
 import { TEMPLATE_ICONS } from "./templateIcons"
@@ -21,6 +22,7 @@ import { PrinciplesSection } from "./PrinciplesSection"
 import { ResearchDomainsSection } from "./ResearchDomainsSection"
 import { CustomReportBuilder } from "./CustomReportBuilder"
 import { DatePicker } from "./DatePicker"
+import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
 
 interface FieldReportPageProps {
   userId: string
@@ -32,7 +34,7 @@ interface FieldReportPageProps {
 export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPageProps) {
   const router = useRouter()
   const [templates, setTemplates] = useState<FieldReportTemplateRow[]>([])
-  const [selectedTemplate, setSelectedTemplate] = useState<FieldReportTemplateRow | null>(null)
+  const [selectedTemplate, setSelectedTemplate] = useBackableState<FieldReportTemplateRow | null>(null)
   const [sessionData, setSessionData] = useState<SessionSummaryData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [sessionLoading, setSessionLoading] = useState(!!sessionId)
@@ -42,10 +44,17 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
   const [recentlyUsedTemplateId, setRecentlyUsedTemplateId] = useState<string | null>(null)
   const [favoriteTemplateIds, setFavoriteTemplateIds] = useState<string[]>([])
   const [isTogglingFavorite, setIsTogglingFavorite] = useState<string | null>(null)
-  const [showCustomBuilder, setShowCustomBuilder] = useState(false)
+  const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null)
+  const [showCustomBuilder, setShowCustomBuilder] = useBackableState(false)
   const [reportTitle, setReportTitle] = useState("")
   const [reportDate, setReportDate] = useState<Date>(new Date())
   const [postSessionMood, setPostSessionMood] = useState<number | null>(null)
+
+  // Extra fields added via field picker (not in original template)
+  const [extraFields, setExtraFields] = useState<TemplateField[]>([])
+  const [saveTemplateName, setSaveTemplateName] = useState("")
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [templateSaved, setTemplateSaved] = useState(false)
 
   // Goal auto-increment state
   const [goalsUpdateMessage, setGoalsUpdateMessage] = useState<string | null>(null)
@@ -74,9 +83,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
         loadSessionData(sessionId)
       }
     }
-    // Replace initial history state so we have a known "home" state to return to
-    // This prevents browser back from navigating away entirely when closing modals
-    window.history.replaceState({ fieldReportHome: true }, '')
+    // Browser back handling is managed by useBackableState for selectedTemplate and showCustomBuilder
   }, [sessionId, reportId])
 
   // Scroll to template section when coming from ended session
@@ -219,36 +226,36 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     }
   }
 
-  // Handle browser back button - close template form instead of leaving page
-  useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      // If we have the custom builder open and user pressed back, close it
-      if (showCustomBuilder && !event.state?.customBuilder) {
-        setShowCustomBuilder(false)
-        // Restore the home state if we went too far back
-        if (!event.state?.fieldReportHome) {
-          window.history.replaceState({ fieldReportHome: true }, '')
-        }
-        return
-      }
-      // If we have a selected template and user pressed back, close the form
-      if (selectedTemplate && !event.state?.templateOpen) {
-        setSelectedTemplate(null)
-        setFormValues({})
-        setReportTitle("")
-        setReportDate(new Date())
-        setSubmitError(null)
-        setPostSessionMood(null)
-        // Restore the home state if we went too far back
-        if (!event.state?.fieldReportHome) {
-          window.history.replaceState({ fieldReportHome: true }, '')
-        }
-      }
-    }
+  const handleDeleteTemplate = async (templateId: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!confirm("Are you sure you want to delete this custom template? This cannot be undone.")) return
 
-    window.addEventListener('popstate', handlePopState)
-    return () => window.removeEventListener('popstate', handlePopState)
-  }, [selectedTemplate, showCustomBuilder])
+    setDeletingTemplateId(templateId)
+    try {
+      const response = await fetch(`/api/tracking/templates/custom/${templateId}`, { method: "DELETE" })
+      if (response.ok) {
+        setTemplates(prev => prev.filter(t => t.id !== templateId))
+        setFavoriteTemplateIds(prev => prev.filter(id => id !== templateId))
+      } else {
+        console.error("Failed to delete template")
+      }
+    } catch (error) {
+      console.error("Failed to delete template:", error)
+    } finally {
+      setDeletingTemplateId(null)
+    }
+  }
+
+  // Clear form state when selectedTemplate becomes null (browser back or UI back)
+  useEffect(() => {
+    if (!selectedTemplate) {
+      setFormValues({})
+      setReportTitle("")
+      setReportDate(new Date())
+      setSubmitError(null)
+      setPostSessionMood(null)
+    }
+  }, [selectedTemplate])
 
   const loadSessionData = async (id: string) => {
     try {
@@ -494,23 +501,14 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
     setFormValues(prev => ({ ...prev, [fieldId]: value }))
   }
 
-  // Select template and push history state so back button closes form
+  // Select template (useBackableState handles browser back automatically)
   const handleSelectTemplate = (template: FieldReportTemplateRow) => {
     setSelectedTemplate(template)
-    // Push a new history entry so back button closes the form
-    window.history.pushState({ templateOpen: true }, '')
   }
 
-  // Close template form (used by back button in UI)
+  // Close template form (useBackableState handles history cleanup)
   const handleCloseTemplate = () => {
     setSelectedTemplate(null)
-    setFormValues({})
-    setReportTitle("")
-    setReportDate(new Date())
-    setSubmitError(null)
-    setPostSessionMood(null)
-    // Go back in history to remove our pushed state
-    window.history.back()
   }
 
   const handleSubmit = async (isDraft: boolean) => {
@@ -744,9 +742,24 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
         sessionData={sessionData}
         onBack={() => {
           setShowCustomBuilder(false)
-          window.history.back()
         }}
-        onSaved={() => router.push("/dashboard/tracking")}
+        onSavedTemplate={async (templateId) => {
+          try {
+            await fetch("/api/tracking/templates/field-report/favorites", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ templateId, action: "add" }),
+            })
+          } catch {
+            // best-effort auto-favorite
+          }
+          await loadFavoriteTemplates()
+          await loadTemplates()
+          setShowCustomBuilder(false)
+        }}
+        onSavedReport={() => {
+          router.push("/dashboard/tracking#recent-reports")
+        }}
       />
     )
   }
@@ -946,6 +959,20 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                         <X className="size-4" />
                       )}
                     </button>
+                    {!template.is_system && (
+                      <button
+                        onClick={(e) => handleDeleteTemplate(template.id, e)}
+                        disabled={deletingTemplateId === template.id}
+                        className="px-4 py-3 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center"
+                        title="Delete template"
+                      >
+                        {deletingTemplateId === template.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1080,7 +1107,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                     <span>{allFields.filter(f => f.required).length} required</span>
                   </div>
 
-                  {/* CTA row with add favorite button */}
+                  {/* CTA row with add favorite / delete buttons */}
                   <div className="flex gap-2">
                     <button className="flex-1 py-3 rounded-xl text-primary-foreground font-semibold bg-primary opacity-90 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                       Start Report
@@ -1100,6 +1127,20 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                         )}
                       </button>
                     )}
+                    {!template.is_system && (
+                      <button
+                        onClick={(e) => handleDeleteTemplate(template.id, e)}
+                        disabled={deletingTemplateId === template.id}
+                        className="px-4 py-3 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors flex items-center justify-center"
+                        title="Delete template"
+                      >
+                        {deletingTemplateId === template.id ? (
+                          <Loader2 className="size-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="size-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1110,7 +1151,6 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
           <div
             onClick={() => {
               setShowCustomBuilder(true)
-              window.history.pushState({ customBuilder: true }, '')
             }}
             className="group rounded-2xl overflow-hidden border-2 border-dashed border-border hover:border-emerald-500/50 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-emerald-500/10 bg-card"
           >
@@ -1313,7 +1353,133 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                 onChange={(value) => handleFieldChange(field.id, value)}
               />
             ))}
+
+            {/* Extra fields added via field picker */}
+            {extraFields.map((field) => (
+              <div key={field.id} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExtraFields(extraFields.filter(f => f.id !== field.id))
+                    setFormValues(prev => {
+                      const next = { ...prev }
+                      delete next[field.id]
+                      return next
+                    })
+                  }}
+                  className="absolute -top-2 -right-2 z-10 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                  aria-label={`Remove ${field.label}`}
+                >
+                  <X className="size-3" />
+                </button>
+                <FieldRenderer
+                  field={field}
+                  value={formValues[field.id]}
+                  onChange={(value) => handleFieldChange(field.id, value)}
+                />
+              </div>
+            ))}
           </div>
+
+          {/* Field picker for adding extra fields */}
+          {!isEditMode && (
+            <div className="mt-6">
+              <FieldPickerPanel
+                excludeFieldIds={new Set([
+                  ...fieldsToRender.map(f => f.id),
+                  ...extraFields.map(f => f.id),
+                ])}
+                onAddField={(field: FieldDefinition) => {
+                  const templateField: TemplateField = {
+                    id: field.id,
+                    type: field.type,
+                    label: field.label,
+                    placeholder: field.placeholder,
+                    required: field.required,
+                    options: field.options,
+                    min: field.min,
+                    max: field.max,
+                    rows: field.rows,
+                  }
+                  setExtraFields(prev => [...prev, templateField])
+                }}
+                onAddCustomField={(label: string) => {
+                  const field = createCustomTextField(label)
+                  setExtraFields(prev => [...prev, field])
+                }}
+                compact
+              />
+            </div>
+          )}
+
+          {/* Save as custom template (when extra fields added) */}
+          {!isEditMode && extraFields.length > 0 && !templateSaved && (
+            <div className="mt-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Save className="size-4 text-primary" />
+                <span className="text-sm font-semibold">Save as custom template?</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Save this field combination as a reusable template for next time.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={saveTemplateName}
+                  onChange={(e) => setSaveTemplateName(e.target.value)}
+                  placeholder={`${selectedTemplate?.name || "Report"} + custom`}
+                  className="flex-1 text-sm"
+                  data-testid="save-template-name-input"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isSavingTemplate}
+                  onClick={async () => {
+                    setIsSavingTemplate(true)
+                    try {
+                      const allFields = [...fieldsToRender, ...extraFields].map(f => ({
+                        id: f.id,
+                        label: f.label,
+                        type: f.type,
+                        placeholder: f.placeholder,
+                        required: f.required,
+                        options: f.options,
+                        min: f.min,
+                        max: f.max,
+                        rows: f.rows,
+                      }))
+                      const res = await fetch("/api/tracking/templates/custom", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          name: saveTemplateName.trim() || `${selectedTemplate?.name || "Report"} + custom`,
+                          fields: allFields,
+                        }),
+                      })
+                      if (res.ok) {
+                        setTemplateSaved(true)
+                      }
+                    } finally {
+                      setIsSavingTemplate(false)
+                    }
+                  }}
+                  data-testid="save-as-template-btn"
+                >
+                  {isSavingTemplate ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    "Save Template"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+          {templateSaved && (
+            <div className="mt-6 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+              <Check className="size-4" />
+              Template saved! It will appear in your template picker next time.
+            </div>
+          )}
 
           {/* Goals Affected Preview */}
           {!isEditMode && affectedGoals.length > 0 && (

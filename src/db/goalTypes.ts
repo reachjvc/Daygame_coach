@@ -72,7 +72,7 @@ export interface UserGoalRow {
  */
 export interface UserGoalInsert {
   title: string
-  category: string
+  category?: string
   tracking_type?: GoalTrackingType
   period?: GoalPeriod
   target_value: number
@@ -85,8 +85,8 @@ export interface UserGoalInsert {
   description?: string
   goal_type?: GoalType
   goal_nature?: GoalNature
-  display_category?: GoalDisplayCategory
-  goal_level?: number
+  display_category?: GoalDisplayCategory | null
+  goal_level?: number | null
   template_id?: string
   milestone_config?: Record<string, unknown> | null
   ramp_steps?: Record<string, unknown>[] | null
@@ -113,8 +113,8 @@ export interface UserGoalUpdate {
   target_date?: string | null
   description?: string | null
   goal_type?: GoalType
-  goal_nature?: GoalNature
-  display_category?: GoalDisplayCategory
+  goal_nature?: GoalNature | null
+  display_category?: GoalDisplayCategory | null
   goal_level?: number | null
   template_id?: string | null
   milestone_config?: Record<string, unknown> | null

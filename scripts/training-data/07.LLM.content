@@ -59,6 +59,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass, asdict, field
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -75,6 +76,15 @@ CLAUDE_BINARY_PATHS = [
     Path.home() / ".vscode/extensions/anthropic.claude-code-2.1.17-linux-x64/resources/native-binary/claude",
     "/usr/local/bin/claude",
 ]
+
+MAX_DYNAMIC_TIMEOUT_SECONDS = 900
+TIMEOUT_BUFFER_SECONDS = 120
+TIMEOUT_CHARS_PER_SECOND = 50.0
+TIMEOUT_SECONDS_PER_SEGMENT = 2.0
+SINGLE_CALL_PROMPT_CHAR_BUDGET = 17500
+PROMPT_BUDGET_MIN_WINDOW_SIZE = 20
+PROMPT_BUDGET_WINDOW_SIZE_STEP = 10
+PROMPT_BUDGET_MIN_OVERLAP = 5
 
 
 # ---------------------------
@@ -2263,6 +2273,7 @@ def save_state(state_path: Path, state: ProcessingState) -> None:
     state_path.write_text(json.dumps(asdict(state), indent=2))
 
 
+@lru_cache(maxsize=1)
 def find_claude_binary() -> Optional[str]:
     """Find Claude CLI binary in known locations."""
     for path in CLAUDE_BINARY_PATHS:
@@ -2277,46 +2288,6 @@ def find_claude_binary() -> Optional[str]:
             except Exception:
                 pass
     return None
-
-
-def run_claude_preflight(
-    claude_bin: str,
-    *,
-    model: Optional[str],
-    timeout_seconds: int,
-    retries: int,
-) -> Tuple[bool, str]:
-    """Probe Claude health with a tiny fixed request."""
-    cmd: List[str] = [claude_bin, "-p", "Respond exactly: ok", "--output-format", "text"]
-    if isinstance(model, str) and model.strip():
-        cmd += ["--model", model.strip()]
-
-    last_reason = "unknown"
-    for attempt in range(max(1, int(retries))):
-        try:
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=max(1, int(timeout_seconds)),
-            )
-            stdout = (result.stdout or "").strip().lower()
-            if result.returncode == 0 and stdout == "ok":
-                return True, "ok"
-            stderr = (result.stderr or "").strip()
-            if result.returncode != 0:
-                last_reason = f"non_zero_exit={result.returncode} stderr={stderr[:200]}"
-            else:
-                last_reason = f"unexpected_output={stdout[:80]!r}"
-        except subprocess.TimeoutExpired:
-            last_reason = f"timeout_after_{int(timeout_seconds)}s"
-        except FileNotFoundError:
-            return False, "claude_binary_not_found"
-
-        if attempt < max(1, int(retries)) - 1:
-            time.sleep(min(5, 2 ** attempt))
-
-    return False, last_reason
 
 
 def call_claude(
@@ -2337,7 +2308,16 @@ def call_claude(
             cmd = [claude_bin]
             if isinstance(model, str) and model.strip():
                 cmd += ["--model", model.strip()]
-            cmd += ["-p", prompt, "--output-format", "text"]
+            cmd += [
+                "-p",
+                prompt,
+                "--output-format",
+                "text",
+                "--tools",
+                "",
+                "--strict-mcp-config",
+                "--no-session-persistence",
+            ]
             result = subprocess.run(
                 cmd,
                 capture_output=True,
@@ -2363,6 +2343,20 @@ def call_claude(
             print(f"{LOG_PREFIX} Error: 'claude' command not found. Install Claude Code CLI.")
             return None
     return None
+
+
+def compute_effective_timeout_seconds(
+    base_timeout_seconds: int,
+    *,
+    prompt_chars: int,
+    segment_count: int,
+) -> int:
+    base = max(1, int(base_timeout_seconds))
+    prompt_chars = max(0, int(prompt_chars))
+    segment_count = max(0, int(segment_count))
+    char_based = int(prompt_chars / TIMEOUT_CHARS_PER_SECOND) + TIMEOUT_BUFFER_SECONDS
+    seg_based = int(segment_count * TIMEOUT_SECONDS_PER_SEGMENT) + TIMEOUT_BUFFER_SECONDS
+    return min(MAX_DYNAMIC_TIMEOUT_SECONDS, max(base, char_based, seg_based))
 
 
 def group_segments_by_conversation(segments: List[Dict]) -> Dict[int, List[Dict]]:
@@ -4147,7 +4141,9 @@ def _merge_approach_enrichments(
     seen_techniques: Set[Tuple[str, int]] = set()
     merged_techniques: List[Dict] = []
     for e, wr in entries:
-        for t in e.get("techniques_used", []):
+        for t in e.get("techniques_used", []) or []:
+            if not isinstance(t, dict):
+                continue
             tech_name = t.get("technique", "")
             seg = t.get("segment", -1)
             key = (tech_name, seg)
@@ -4169,7 +4165,9 @@ def _merge_approach_enrichments(
     # Merge turn phases: union by segment, prefer core-range on conflict
     phase_by_seg: Dict[int, Tuple[str, bool]] = {}  # seg -> (phase, is_core)
     for e, wr in entries:
-        for tp in e.get("turn_phases", []):
+        for tp in e.get("turn_phases", []) or []:
+            if not isinstance(tp, dict):
+                continue
             seg = tp.get("segment")
             phase = tp.get("phase")
             if not isinstance(seg, int) or not isinstance(phase, str):
@@ -4200,8 +4198,9 @@ def _merge_approach_enrichments(
     if best_hook is None:
         # Fallback: use any non-null hook_point
         for e, _ in entries:
-            if e.get("hook_point"):
-                best_hook = e["hook_point"]
+            hp = e.get("hook_point")
+            if isinstance(hp, dict):
+                best_hook = hp
                 best_investment = e.get("investment_level")
                 break
     merged["hook_point"] = best_hook
@@ -4443,6 +4442,66 @@ def derive_source_from_path(p: Path) -> Optional[str]:
     return p.parent.name or None
 
 
+def find_prompt_budget_windows(
+    *,
+    conversations: Dict[int, List[Dict[str, Any]]],
+    commentary_blocks: List[Dict[str, Any]],
+    total_segments: int,
+    base_window_size: int,
+    base_overlap: int,
+    video_id: str,
+    stage07_evidence_allowlist: Dict[int, Set[int]],
+    stage07_anchor_allowlist: Dict[int, Set[int]],
+    prompt_char_budget: int,
+) -> Optional[Tuple[List[Window], int, int, int]]:
+    chrono_items = build_chronological_items(conversations, commentary_blocks)
+    best_plan: Optional[Tuple[List[Window], int, int, int]] = None
+    best_score: Optional[Tuple[int, int, int]] = None
+
+    start_window_size = max(
+        PROMPT_BUDGET_MIN_WINDOW_SIZE,
+        min(int(base_window_size), max(PROMPT_BUDGET_MIN_WINDOW_SIZE, int(total_segments) - 1)),
+    )
+
+    for candidate_window_size in range(start_window_size, PROMPT_BUDGET_MIN_WINDOW_SIZE - 1, -PROMPT_BUDGET_WINDOW_SIZE_STEP):
+        candidate_overlap = min(
+            int(base_overlap),
+            max(PROMPT_BUDGET_MIN_OVERLAP, candidate_window_size // 6),
+        )
+        if candidate_overlap >= candidate_window_size:
+            candidate_overlap = max(0, candidate_window_size - 1)
+
+        windows = build_windows(
+            chrono_items,
+            total_segments,
+            candidate_window_size,
+            candidate_overlap,
+        )
+        if len(windows) <= 1:
+            continue
+
+        max_prompt_chars = 0
+        for w in windows:
+            prompt = build_windowed_infield_prompt(
+                w,
+                video_id,
+                len(windows),
+                stage07_evidence_allowlist=stage07_evidence_allowlist,
+                stage07_anchor_allowlist=stage07_anchor_allowlist,
+            )
+            max_prompt_chars = max(max_prompt_chars, len(prompt))
+
+        score = (max_prompt_chars, len(windows), -candidate_window_size)
+        if best_score is None or score < best_score:
+            best_score = score
+            best_plan = (windows, candidate_window_size, candidate_overlap, max_prompt_chars)
+
+        if max_prompt_chars <= prompt_char_budget:
+            return windows, candidate_window_size, candidate_overlap, max_prompt_chars
+
+    return best_plan
+
+
 def _process_non_infield(
     *,
     data: Dict[str, Any],
@@ -4509,13 +4568,24 @@ def _process_non_infield(
         }
 
     prompt = build_talking_head_prompt(segments, video_id)
+    base_timeout_seconds = max(1, int(llm_timeout_seconds))
+    effective_timeout_seconds = compute_effective_timeout_seconds(
+        base_timeout_seconds,
+        prompt_chars=len(prompt),
+        segment_count=len(segments),
+    )
     print(f"{LOG_PREFIX}   Calling Claude CLI (talking_head prompt, routing=non_infield)...")
+    if effective_timeout_seconds != base_timeout_seconds:
+        print(
+            f"{LOG_PREFIX}   Adaptive timeout: {effective_timeout_seconds}s "
+            f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(segments)})"
+        )
 
     start_time = time.time()
     response = call_claude(
         prompt,
         retries=max(1, int(llm_retries)),
-        timeout=max(1, int(llm_timeout_seconds)),
+        timeout=effective_timeout_seconds,
         model=claude_model,
     )
     elapsed = time.time() - start_time
@@ -4526,7 +4596,9 @@ def _process_non_infield(
         enrichments = parsed.enrichments
         print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
     else:
-        print(f"{LOG_PREFIX}   Claude call failed, using empty enrichments")
+        raise RuntimeError(
+            f"Claude call failed for talking_head routing (video={video_id})"
+        )
 
     seg_by_id = {
         s.get("id"): s for s in segments
@@ -4815,17 +4887,51 @@ def process_video_file(
         and len(segments) > window_size + overlap
     )
     windows: Optional[List[Window]] = None
+    effective_window_size = window_size
+    effective_overlap = overlap
+    single_infield_prompt: Optional[str] = None
     if use_windowing:
         chrono_items = build_chronological_items(conversations, commentary_blocks)
         windows = build_windows(chrono_items, len(segments), window_size, overlap)
         if len(windows) <= 1:
             use_windowing = False
             windows = None
+    elif routing_lane != "non_infield":
+        single_infield_prompt = build_infield_prompt(
+            conversations,
+            commentary_blocks,
+            video_id,
+            stage07_evidence_allowlist=stage07_evidence_allowlist,
+            stage07_anchor_allowlist=stage07_anchor_allowlist,
+        )
+        single_prompt_chars = len(single_infield_prompt)
+        if single_prompt_chars > SINGLE_CALL_PROMPT_CHAR_BUDGET:
+            budgeted_plan = find_prompt_budget_windows(
+                conversations=conversations,
+                commentary_blocks=commentary_blocks,
+                total_segments=len(segments),
+                base_window_size=window_size,
+                base_overlap=overlap,
+                video_id=video_id,
+                stage07_evidence_allowlist=stage07_evidence_allowlist,
+                stage07_anchor_allowlist=stage07_anchor_allowlist,
+                prompt_char_budget=SINGLE_CALL_PROMPT_CHAR_BUDGET,
+            )
+            if budgeted_plan is not None:
+                windows, effective_window_size, effective_overlap, budget_max_prompt_chars = budgeted_plan
+                if len(windows) > 1:
+                    use_windowing = True
+                    print(
+                        f"{LOG_PREFIX}   Prompt-budget windowing: single-call prompt chars={single_prompt_chars} "
+                        f"exceeds budget={SINGLE_CALL_PROMPT_CHAR_BUDGET}; using {len(windows)} windows "
+                        f"(window_size={effective_window_size}, overlap={effective_overlap}, "
+                        f"max_window_prompt_chars={budget_max_prompt_chars})"
+                    )
 
     if dry_run:
         if use_windowing and windows:
             print(f"{LOG_PREFIX}   [DRY RUN] Would use {len(windows)} windows "
-                  f"(window_size={window_size}, overlap={overlap}, routing={routing_lane})")
+                  f"(window_size={effective_window_size}, overlap={effective_overlap}, routing={routing_lane})")
             for w in windows:
                 print(f"{LOG_PREFIX}     Window {w.index + 1}: {len(w.core_segments)} core, "
                       f"{len(w.context_before)} ctx_before, {len(w.context_after)} ctx_after, "
@@ -4842,7 +4948,7 @@ def process_video_file(
     if use_windowing and windows:
         # --- Multi-window path (D13b) ---
         print(f"{LOG_PREFIX}   Windowing: {len(windows)} windows "
-              f"(window_size={window_size}, overlap={overlap})")
+              f"(window_size={effective_window_size}, overlap={effective_overlap})")
         for w in windows:
             print(f"{LOG_PREFIX}     Window {w.index + 1}: {len(w.core_segments)} core, "
                   f"{len(w.context_before)} ctx_before, {len(w.context_after)} ctx_after, "
@@ -4858,12 +4964,24 @@ def process_video_file(
                 stage07_evidence_allowlist=stage07_evidence_allowlist,
                 stage07_anchor_allowlist=stage07_anchor_allowlist,
             )
+            base_timeout_seconds = max(1, int(llm_timeout_seconds))
+            effective_timeout_seconds = compute_effective_timeout_seconds(
+                base_timeout_seconds,
+                prompt_chars=len(prompt),
+                segment_count=len(w.core_segments) + len(w.context_before) + len(w.context_after),
+            )
             print(f"{LOG_PREFIX}   Calling Claude CLI (window {w.index + 1}/{len(windows)})...")
+            if effective_timeout_seconds != base_timeout_seconds:
+                print(
+                    f"{LOG_PREFIX}     Adaptive timeout: {effective_timeout_seconds}s "
+                    f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, "
+                    f"segments={len(w.core_segments) + len(w.context_before) + len(w.context_after)})"
+                )
             w_start = time.time()
             response = call_claude(
                 prompt,
                 retries=max(1, int(llm_retries)),
-                timeout=max(1, int(llm_timeout_seconds)),
+                timeout=effective_timeout_seconds,
                 model=claude_model,
             )
             w_elapsed = time.time() - w_start
@@ -4897,25 +5015,38 @@ def process_video_file(
             print(f"{LOG_PREFIX}   Merged: {len(enrichments)} enrichments "
                   f"(from {total_e} pre-merge) in {elapsed:.1f}s total")
         else:
-            print(f"{LOG_PREFIX}   Claude call failed on window, using empty enrichments")
+            raise RuntimeError(
+                f"Claude call failed in windowed infield routing (video={video_id})"
+            )
 
     else:
         # --- Single-call infield path ---
-        prompt = build_infield_prompt(
+        prompt = single_infield_prompt if single_infield_prompt is not None else build_infield_prompt(
             conversations,
             commentary_blocks,
             video_id,
             stage07_evidence_allowlist=stage07_evidence_allowlist,
             stage07_anchor_allowlist=stage07_anchor_allowlist,
         )
+        base_timeout_seconds = max(1, int(llm_timeout_seconds))
+        effective_timeout_seconds = compute_effective_timeout_seconds(
+            base_timeout_seconds,
+            prompt_chars=len(prompt),
+            segment_count=len(segments),
+        )
 
         print(f"{LOG_PREFIX}   Calling Claude CLI ({prompt_variant} prompt, routing={routing_lane})...")
+        if effective_timeout_seconds != base_timeout_seconds:
+            print(
+                f"{LOG_PREFIX}   Adaptive timeout: {effective_timeout_seconds}s "
+                f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(segments)})"
+            )
 
         start_time = time.time()
         response = call_claude(
             prompt,
             retries=max(1, int(llm_retries)),
-            timeout=max(1, int(llm_timeout_seconds)),
+            timeout=effective_timeout_seconds,
             model=claude_model,
         )
         elapsed = time.time() - start_time
@@ -4925,7 +5056,9 @@ def process_video_file(
             enrichments = parsed.enrichments
             print(f"{LOG_PREFIX}   Got {len(enrichments)} enrichments in {elapsed:.1f}s")
         else:
-            print(f"{LOG_PREFIX}   Claude call failed, using empty enrichments")
+            raise RuntimeError(
+                f"Claude call failed in single-call infield routing (video={video_id})"
+            )
 
     # Remap segment references only when the prompt uses per-conversation relative indices.
     if not PROMPT_USES_GLOBAL_SEG_IDS:
@@ -5533,14 +5666,14 @@ def main() -> None:
     parser.add_argument(
         "--preflight-timeout-seconds",
         type=int,
-        default=20,
-        help="Per-attempt timeout for startup Claude health probe (default: 20).",
+        default=None,
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--preflight-retries",
         type=int,
-        default=2,
-        help="Retry attempts for startup Claude health probe (default: 2).",
+        default=None,
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--force-routing",
@@ -5567,9 +5700,9 @@ def main() -> None:
         raise SystemExit("--timeout-seconds must be >= 1")
     if args.llm_retries <= 0:
         raise SystemExit("--llm-retries must be >= 1")
-    if args.preflight_timeout_seconds <= 0:
+    if args.preflight_timeout_seconds is not None and args.preflight_timeout_seconds <= 0:
         raise SystemExit("--preflight-timeout-seconds must be >= 1")
-    if args.preflight_retries <= 0:
+    if args.preflight_retries is not None and args.preflight_retries <= 0:
         raise SystemExit("--preflight-retries must be >= 1")
     if args.window_size <= 0:
         raise SystemExit("--window-size must be >= 1")
@@ -5613,20 +5746,11 @@ def main() -> None:
         except subprocess.TimeoutExpired:
             print(f"{LOG_PREFIX} Warning: Claude CLI slow to respond")
 
-        ok, reason = run_claude_preflight(
-            claude_bin,
-            model=args.model,
-            timeout_seconds=args.preflight_timeout_seconds,
-            retries=args.preflight_retries,
-        )
-        if not ok:
-            print(f"{LOG_PREFIX} Error: Claude preflight failed ({reason})")
-            print(f"{LOG_PREFIX} Hint: verify Claude auth/network and retry.")
-            raise SystemExit(2)
-        print(
-            f"{LOG_PREFIX} Claude preflight: ok "
-            f"(timeout={args.preflight_timeout_seconds}s, retries={args.preflight_retries})"
-        )
+        if args.preflight_timeout_seconds is not None or args.preflight_retries is not None:
+            print(f"{LOG_PREFIX} Note: preflight flags are deprecated and ignored.")
+
+        # Preflight removed — Claude CLI health is validated by the first
+        # real LLM call; a dedicated probe wastes a slot under concurrency.
 
     # Determine input/output paths.
     in_root = test_input_root() if args.test else input_root()

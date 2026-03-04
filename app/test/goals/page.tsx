@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Target } from "lucide-react"
@@ -65,7 +65,7 @@ function VariantChooser({ onSelect }: { onSelect: (key: string) => void }) {
   )
 }
 
-export default function GoalVariantsPage() {
+function GoalVariantsPageInner() {
   const searchParams = useSearchParams()
   const urlVariant = searchParams.get("variant")
   const [selected, setSelected] = useState<string | null>(urlVariant)
@@ -99,4 +99,8 @@ export default function GoalVariantsPage() {
       {selected === "e" && <VariantE />}
     </div>
   )
+}
+
+export default function GoalVariantsPage() {
+  return <Suspense><GoalVariantsPageInner /></Suspense>
 }

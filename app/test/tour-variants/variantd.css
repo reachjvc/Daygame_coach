@@ -1,0 +1,377 @@
+/* ── Variant D: "Storytelling / Narrative" ───────────────── */
+/* Prefix: vd- to avoid conflicts with other variants        */
+/* Warm amber/gold accent, cinematic overlay, coaching voice  */
+
+/* ── Overlay backdrop (cinematic dark) ─────────────────── */
+.vd-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  pointer-events: none;
+}
+
+.vd-overlay-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 9990;
+  transition: opacity 0.4s ease;
+  pointer-events: auto;
+}
+
+.vd-overlay-bg--entering {
+  opacity: 0;
+}
+
+.vd-overlay-bg--visible {
+  opacity: 1;
+}
+
+.vd-overlay-bg--exiting {
+  opacity: 0;
+}
+
+/* ── Spotlight cutout ──────────────────────────────────── */
+.vd-spotlight {
+  position: fixed;
+  z-index: 9991;
+  border-radius: 8px;
+  box-shadow:
+    0 0 0 4000px rgba(0, 0, 0, 0.65),
+    0 0 0 2px rgba(245, 158, 11, 0.5),
+    0 0 24px 6px rgba(245, 158, 11, 0.12);
+  transition:
+    top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+/* ── Tooltip card ──────────────────────────────────────── */
+.vd-tooltip {
+  position: fixed;
+  z-index: 9995;
+  width: 400px;
+  max-width: calc(100vw - 32px);
+  background: rgba(20, 16, 12, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 1px rgba(245, 158, 11, 0.15);
+  color: #e8e4de;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  pointer-events: auto;
+  transition:
+    top 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    left 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease;
+}
+
+.vd-tooltip--entering {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.vd-tooltip--visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Act indicator ─────────────────────────────────────── */
+.vd-tooltip__act {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #F59E0B;
+  margin-bottom: 4px;
+}
+
+/* ── Headline (coaching voice) ─────────────────────────── */
+.vd-tooltip__headline {
+  font-size: 17px;
+  font-weight: 700;
+  color: #faf5ee;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+/* ── Body text ─────────────────────────────────────────── */
+.vd-tooltip__body {
+  font-size: 14px;
+  color: #b0a898;
+  line-height: 1.6;
+  margin: 0 0 18px 0;
+}
+
+/* ── Progress breadcrumb ───────────────────────────────── */
+.vd-tooltip__progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.vd-tooltip__step-text {
+  font-size: 11px;
+  color: #7a7062;
+  font-weight: 500;
+}
+
+.vd-tooltip__dots {
+  display: flex;
+  gap: 4px;
+}
+
+.vd-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.15);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.vd-dot--completed {
+  background: rgba(245, 158, 11, 0.5);
+}
+
+.vd-dot--active {
+  background: #F59E0B;
+  transform: scale(1.3);
+}
+
+/* ── Footer ────────────────────────────────────────────── */
+.vd-tooltip__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vd-tooltip__buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.vd-tooltip__skip {
+  font-size: 11px;
+  color: #5a5248;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.vd-tooltip__skip:hover {
+  color: #8a7e72;
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.vd-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.vd-btn--back {
+  color: #a09888;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vd-btn--back:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #d0c8be;
+}
+
+.vd-btn--next {
+  color: #1a1408;
+  background: #F59E0B;
+  font-weight: 600;
+}
+
+.vd-btn--next:hover {
+  background: #FBBF24;
+}
+
+/* ── Welcome overlay (intro card) ──────────────────────── */
+.vd-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  transition: opacity 0.4s ease;
+}
+
+.vd-welcome__card {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: rgba(20, 16, 12, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 18px;
+  padding: 40px 36px;
+  text-align: center;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(245, 158, 11, 0.2);
+  color: #e8e4de;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.vd-welcome__ember {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+}
+
+.vd-welcome__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #faf5ee;
+}
+
+.vd-welcome__text {
+  font-size: 15px;
+  color: #a09888;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.vd-welcome__start {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1408;
+  background: #F59E0B;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vd-welcome__start:hover {
+  background: #FBBF24;
+}
+
+.vd-welcome__dismiss {
+  width: 100%;
+  height: 36px;
+  font-size: 13px;
+  color: #5a5248;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: color 0.15s;
+}
+
+.vd-welcome__dismiss:hover {
+  color: #8a7e72;
+}
+
+/* ── Finish overlay ────────────────────────────────────── */
+.vd-finish {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.7);
+  pointer-events: auto;
+  transition: opacity 0.4s ease;
+}
+
+.vd-finish__card {
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: rgba(20, 16, 12, 0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 18px;
+  padding: 40px 36px;
+  text-align: center;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(245, 158, 11, 0.2);
+  color: #e8e4de;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.vd-finish__ember {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+}
+
+.vd-finish__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #faf5ee;
+}
+
+.vd-finish__text {
+  font-size: 15px;
+  color: #a09888;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.vd-finish__close {
+  width: 100%;
+  height: 44px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1408;
+  background: #F59E0B;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.vd-finish__close:hover {
+  background: #FBBF24;
+}

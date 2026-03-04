@@ -17,6 +17,7 @@ Objectives:
 Rules:
 - Gating: rule that blocks downstream processing or ingestion.
 - No silent pass: missing/empty/invalid outputs are explicit failures with reason.
+- Fail-closed quality: if a required LLM quality stage returns empty/no output, emit explicit per-video `BLOCK` outcomes (no heuristic fallback).
 - **Show-don't-summarize:** When reporting flags/warnings/artifacts to user, ALWAYS include the actual segment text + 5 segments before and after for context. Use `>>>` marker on the target segment. 
 
 ### Work being done
@@ -104,24 +105,32 @@ MUST UPDATE ASCII file when you make changes to the stages!
 
 ### Running the pipeline
 
-All LLM stages must be run in parallel of 5.
-
-Use `sub-batch-pipeline` for all pipeline operations.
+Use one canonical command for pipeline operations:
+- `./scripts/training-data/batch/run-campaign`
 
 ```bash
-# Run full pipeline for a sub-batch (stages 06→09 + auto-validation)
-./sub-batch-pipeline P001.1 --run
+# Default campaign run (P001.4 -> P003.10)
+./scripts/training-data/batch/run-campaign
 
-# Resume from a specific stage
-./sub-batch-pipeline P001.1 --run --from 07
+# Single sub-batch run
+./scripts/training-data/batch/run-campaign --start P001.1 --end P001.1
 
-# Run all incomplete sub-batches in a batch
-./sub-batch-pipeline P001 --run-all
-./sub-batch-pipeline P001 --run-all --count 3
+# Range run with explicit parallelism
+./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10 --parallel 5
 
-# Run a single stage (post-stage validation still fires)
-./sub-batch-pipeline P001.1 --stage 06
+# Resume range from a specific stage
+./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10 --from-stage 07
+
+# Force a fresh state for a range
+./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10 --reset
 ```
+
+`run-campaign` writes and updates one stable state and one stable plan per range:
+- `data/validation/campaigns/<campaign-id>.json`
+- `docs/plans/<campaign-id>.md`
+
+Manual operator/debug modes (`--validate`, `--stage`, `--status`, `--view`) should use:
+- `./scripts/training-data/batch/sub-batch-ops ...`
 
 Validation is automatic:
 - Post-stage hooks run after 06b (REJECT check), 07 (cross-stage), 09 (chunk integrity)
@@ -129,7 +138,7 @@ Validation is automatic:
 - Failing videos are quarantined and skipped in subsequent stages
 - Summary report printed at end
 
-Config: `scripts/training-data/batch/pipeline.config.json` (quarantine levels, warning budgets)
+Config: `scripts/training-data/batch/pipeline.config.json` (quarantine levels, warning budgets, automation defaults: `parallel_llm_calls`, `parallel_sub_batches`, `max_aggregate_llm_calls`, and run-all guardrails under `automation.run_all` such as `max_failures` and `lock_batch`)
 
 **Never auto-ingest** — stage 10 requires explicit user approval.
 **Update status** after batch work: status must reflect what actually completed on disk, not what was attempted. If videos within a sub-batch are at different stages (e.g. some quarantined, some progressed), record the per-video breakdown. Never update `current_stage` to a target stage that wasn't fully achieved — verify against actual output files before writing.

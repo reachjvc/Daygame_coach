@@ -12,6 +12,7 @@ This is intentionally read-only (no DB calls, no writes) and can be used to:
 Usage:
   python3 scripts/training-data/validation/validate_chunks.py --source daily_evolution
   python3 scripts/training-data/validation/validate_chunks.py --manifest docs/pipeline/batches/P001.1.txt
+  python3 scripts/training-data/validation/validate_chunks.py --source daily_evolution --video-id a1b2c3d4e5F
   python3 scripts/training-data/validation/validate_chunks.py --all
   python3 scripts/training-data/validation/validate_chunks.py --json
 """
@@ -334,6 +335,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Validate Stage 09 chunk files (deterministic, read-only).")
     parser.add_argument("--source", help="Only validate one source (data/09.EXT.chunks/<source>/)")
     parser.add_argument("--manifest", help="Only validate videos in this manifest (docs/pipeline/batches/*.txt)")
+    parser.add_argument("--video-id", help="Only validate this video ID (optionally combined with --source or --manifest)")
     parser.add_argument("--all", action="store_true", help="Validate all sources under data/09.EXT.chunks/")
     parser.add_argument("--json", action="store_true", help="Output JSON report (stdout)")
     parser.add_argument("--show", type=int, default=30, help="Max issue lines to print in text mode")
@@ -341,6 +343,13 @@ def main() -> None:
     args = parser.parse_args()
 
     chunks_root = repo_root() / "data" / "09.EXT.chunks"
+    target_video_id: Optional[str] = None
+    if args.video_id:
+        raw_vid = args.video_id.strip()
+        if not _is_valid_video_id(raw_vid):
+            print(f"{LOG_PREFIX} ERROR: invalid --video-id: {args.video_id!r}", file=sys.stderr)
+            sys.exit(2)
+        target_video_id = raw_vid
 
     sources_filter: Optional[Set[str]] = None
     ids_by_source: Optional[Dict[str, Set[str]]] = None
@@ -356,21 +365,49 @@ def main() -> None:
         ids_by_source = defaultdict(set)
         for src, vid in entries:
             ids_by_source[src].add(vid)
+        if target_video_id:
+            filtered: Dict[str, Set[str]] = {}
+            for src, ids in ids_by_source.items():
+                if target_video_id in ids:
+                    filtered[src] = {target_video_id}
+            ids_by_source = filtered
         sources_filter = set(ids_by_source.keys())
 
     if args.source:
         sources_filter = {args.source}
+        if ids_by_source is not None and target_video_id is not None:
+            if target_video_id in ids_by_source.get(args.source, set()):
+                ids_by_source = {args.source: {target_video_id}}
+            else:
+                ids_by_source = {args.source: set()}
 
-    if not args.all and not args.source and not args.manifest:
-        print(f"{LOG_PREFIX} ERROR: Provide --all or --source or --manifest", file=sys.stderr)
+    if not args.all and not args.source and not args.manifest and not args.video_id:
+        print(f"{LOG_PREFIX} ERROR: Provide --all or --source or --manifest or --video-id", file=sys.stderr)
         sys.exit(2)
 
     files: List[Path] = []
-    if sources_filter is not None:
-        for src in sorted(sources_filter):
-            files.extend(_iter_chunk_files(chunks_root / src))
+    if target_video_id:
+        pattern = f"*{target_video_id}*.chunks.json"
+        if sources_filter is not None:
+            for src in sorted(sources_filter):
+                src_root = chunks_root / src
+                if src_root.exists():
+                    files.extend(sorted(src_root.rglob(pattern)))
+        else:
+            files = sorted(chunks_root.rglob(pattern)) if chunks_root.exists() else []
+        if not files:
+            # Filename does not always include canonical video id. Fall back to a broader scan.
+            if sources_filter is not None:
+                for src in sorted(sources_filter):
+                    files.extend(_iter_chunk_files(chunks_root / src))
+            else:
+                files = list(_iter_chunk_files(chunks_root))
     else:
-        files = list(_iter_chunk_files(chunks_root))
+        if sources_filter is not None:
+            for src in sorted(sources_filter):
+                files.extend(_iter_chunk_files(chunks_root / src))
+        else:
+            files = list(_iter_chunk_files(chunks_root))
 
     if not files:
         print(f"{LOG_PREFIX} No chunk files found under {chunks_root}")
@@ -391,11 +428,26 @@ def main() -> None:
             allowed = ids_by_source.get(src, set())
             if vid not in allowed:
                 continue
+        if target_video_id is not None and vid != target_video_id:
+            continue
 
         processed += 1
         issues.extend(file_issues)
         stats_by_source[src]["files"] += 1
         stats_by_source[src]["chunks"] += int(file_stats.get("chunks", 0) or 0)
+
+    if target_video_id is not None and processed == 0:
+        missing_source = args.source or "unknown"
+        issues.append(
+            Issue(
+                "error",
+                target_video_id,
+                missing_source,
+                "missing_stage09_output",
+                "No Stage 09 chunk artifact found for requested video",
+                str(chunks_root / (args.source or "")),
+            )
+        )
 
     errors = sum(1 for i in issues if i.severity == "error")
     warnings = sum(1 for i in issues if i.severity == "warning")
@@ -403,6 +455,7 @@ def main() -> None:
     report = {
         "version": 1,
         "stage": "09.chunk-embed",
+        "video_id_filter": target_video_id,
         "processed_files": processed,
         "issues_summary": {"errors": errors, "warnings": warnings},
         "stats_by_source": dict(stats_by_source),

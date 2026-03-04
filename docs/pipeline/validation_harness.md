@@ -9,6 +9,7 @@ All thresholds and policies are configured in `scripts/training-data/batch/pipel
 - Required LLM stages must not use deterministic/heuristic/fallback bypasses to avoid LLM calls.
 - Stage `06`, `06b`, and `07` now require Claude preflight in normal execution (non-dry-run).
 - Parallel runner no longer injects preflight-skip flags into Stage `07`.
+- Stage `07b` fail-closed rule: if Claude returns empty/no output, emit a reason-coded `BLOCK` artifact for that video.
 - Read-only validators can stay deterministic, but they do not replace missing required LLM stage outputs.
 - Operator/runtime note: run Claude CLI for required LLM stages outside sandbox restrictions in this environment to avoid sandbox-induced timeout/hang false failures.
 
@@ -33,19 +34,23 @@ All thresholds and policies are configured in `scripts/training-data/batch/pipel
 ## Running the Pipeline (Validation Included)
 
 ```bash
-# Full pipeline (stages 06→09) with automatic validation + summary
-./sub-batch-pipeline P001.1 --run
+# Canonical operator command (default range: P001.4 -> P003.10)
+./scripts/training-data/batch/run-campaign
 
-# Resume from a specific stage
-./sub-batch-pipeline P001.1 --run --from 07
+# Restrict to one sub-batch
+./scripts/training-data/batch/run-campaign --start P001.1 --end P001.1
 
-# Run all incomplete sub-batches in a batch
-./sub-batch-pipeline P001 --run-all
-./sub-batch-pipeline P001 --run-all --count 3
+# Resume a range from a specific stage
+./scripts/training-data/batch/run-campaign --start P001.1 --end P001.3 --from-stage 07
 
-# Run a single stage (post-stage validation still fires)
-./sub-batch-pipeline P001.1 --stage 06
+# One-sweep retry loop for an existing campaign state/plan
+./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10 --max-iterations 1
 ```
+
+Manual operator/debug modes (`--validate`, `--stage`, `--status`, `--view`) are handled via:
+- `./scripts/training-data/batch/sub-batch-ops ...`
+
+`run-campaign` records blocking sub-batch exits in campaign state/plan (`blocking_failure`, failure signature, failed video IDs when surfaced by summary logs).
 
 Post-stage validation hooks:
 | After stage | What runs | Quarantine on |
@@ -72,14 +77,14 @@ In parallel runner mode, delegated end-of-run validation failures now propagate 
 
 ```bash
 # Run validation-only (no stage execution)
-./sub-batch-pipeline P001.1 --validate
+./scripts/training-data/batch/sub-batch-ops P001.1 --validate
 
 # Validate one source only
-./sub-batch-pipeline P001.1 --validate --source coach_kyle_how_to_approach_a_girl
+./scripts/training-data/batch/sub-batch-ops P001.1 --validate --source coach_kyle_how_to_approach_a_girl
 
 # With explicit quarantine/waiver files (auto-detected by default)
-./sub-batch-pipeline P001.1 --validate --quarantine-file data/validation/quarantine/P001.1.json
-./sub-batch-pipeline P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
+./scripts/training-data/batch/sub-batch-ops P001.1 --validate --quarantine-file data/validation/quarantine/P001.1.json
+./scripts/training-data/batch/sub-batch-ops P001.1 --validate --waiver-file docs/pipeline/waivers/P001.1.json
 
 ```
 
@@ -169,10 +174,10 @@ Notes:
 Stage scripts skip existing outputs unless `--overwrite` is supplied. To re-run LLM stages and validate:
 
 ```bash
-./sub-batch-pipeline P001.1 --stage 06b
-./sub-batch-pipeline P001.1 --stage 06c
-./sub-batch-pipeline P001.1 --stage 07
-./sub-batch-pipeline P001.1 --validate
+./scripts/training-data/batch/sub-batch-ops P001.1 --stage 06b
+./scripts/training-data/batch/sub-batch-ops P001.1 --stage 06c
+./scripts/training-data/batch/sub-batch-ops P001.1 --stage 07
+./scripts/training-data/batch/sub-batch-ops P001.1 --validate
 ```
 
 For isolated experiment runs, root overrides are available on the stage scripts directly:
@@ -180,7 +185,8 @@ For isolated experiment runs, root overrides are available on the stage scripts 
 - `07.LLM.content`: `--input-root`
 
 Orchestrator policy:
-- `sub-batch-pipeline` and `pipeline-runner` now use fixed stage defaults/config in production flow.
+- `run-campaign` is the canonical operator entrypoint for production flow.
+- `sub-batch-pipeline` and `pipeline-runner` are internal orchestrators used by `run-campaign`.
 - Stage-specific threshold experiments are run by calling the stage scripts directly in controlled test scopes, not by runner pass-through flags.
 
 Stage `09` chunks now include floor telemetry for auditability:
@@ -192,7 +198,7 @@ Stage `09` chunks now include floor telemetry for auditability:
 
 ## Advanced: Direct Script Usage
 
-The underlying validation scripts accept their own flags for manual debugging. In normal use, `sub-batch-pipeline` calls these automatically with config-driven arguments.
+The underlying validation scripts accept their own flags for manual debugging. In normal use, `run-campaign` drives orchestrators that call these automatically with config-driven arguments.
 
 ### validate_manifest.py
 

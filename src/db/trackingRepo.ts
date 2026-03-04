@@ -25,6 +25,7 @@ import type {
   FieldReportInsert,
   FieldReportUpdate,
   ReviewTemplateRow,
+  ReviewTemplateInsert,
   ReviewRow,
   ReviewInsert,
   ReviewUpdate,
@@ -831,7 +832,8 @@ export async function getFavoriteTemplateIds(userId: string): Promise<string[]> 
 }
 
 export async function addFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
-  const supabase = await createServerSupabaseClient()
+  // Use admin client - user_tracking_stats is system-only (no user UPDATE policy)
+  const supabase = createAdminSupabaseClient()
   const stats = await getOrCreateUserTrackingStats(userId)
   const currentFavorites = stats.favorite_template_ids || []
 
@@ -845,7 +847,7 @@ export async function addFavoriteTemplate(userId: string, templateId: string): P
     return currentFavorites
   }
 
-  const newFavorites = [...currentFavorites, templateId]
+  const newFavorites = [templateId, ...currentFavorites]
 
   const { error } = await supabase
     .from("user_tracking_stats")
@@ -860,7 +862,8 @@ export async function addFavoriteTemplate(userId: string, templateId: string): P
 }
 
 export async function removeFavoriteTemplate(userId: string, templateId: string): Promise<string[]> {
-  const supabase = await createServerSupabaseClient()
+  // Use admin client - user_tracking_stats is system-only (no user UPDATE policy)
+  const supabase = createAdminSupabaseClient()
   const stats = await getOrCreateUserTrackingStats(userId)
   const currentFavorites = stats.favorite_template_ids || []
 
@@ -883,16 +886,81 @@ export async function removeFavoriteTemplate(userId: string, templateId: string)
 // ============================================
 
 export async function getReviewTemplates(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   userId: string,
   reviewType?: ReviewType
 ): Promise<ReviewTemplateRow[]> {
   // System review templates are served from code (same pattern as field report templates)
   const systemTemplates = getSystemReviewTemplatesAsRows(reviewType)
 
-  // TODO: When user-created review templates are supported, fetch from DB here
-  // For now, just return system templates
-  return systemTemplates
+  // Get user-created review templates from DB
+  const supabase = await createServerSupabaseClient()
+
+  let query = supabase
+    .from("review_templates")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("is_system", false)
+
+  if (reviewType) {
+    query = query.eq("review_type", reviewType)
+  }
+
+  const { data: userTemplates, error } = await query.order("name", { ascending: true })
+
+  if (error) {
+    throw new Error(`Failed to get user review templates: ${error.message}`)
+  }
+
+  return [...systemTemplates, ...(userTemplates as ReviewTemplateRow[])]
+}
+
+/**
+ * Create a user-created review template.
+ */
+export async function createCustomReviewTemplate(
+  template: ReviewTemplateInsert
+): Promise<ReviewTemplateRow> {
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("review_templates")
+    .insert({
+      ...template,
+      is_system: false,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to create review template: ${error.message}`)
+  }
+
+  return data as ReviewTemplateRow
+}
+
+/**
+ * Delete a user-created review template.
+ */
+export async function deleteCustomReviewTemplate(
+  templateId: string,
+  userId: string
+): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+
+  const { error, count } = await supabase
+    .from("review_templates")
+    .delete({ count: "exact" })
+    .eq("id", templateId)
+    .eq("user_id", userId)
+    .eq("is_system", false)
+
+  if (error) {
+    throw new Error(`Failed to delete review template: ${error.message}`)
+  }
+
+  if (count === 0) {
+    throw new Error("Template not found or access denied")
+  }
 }
 
 // ============================================

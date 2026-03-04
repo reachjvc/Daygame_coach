@@ -110,7 +110,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
                       }}
                       rows={field.rows || 4}
                       className={cn(
-                        "flex-1 min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all duration-200",
+                        "flex-1 min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all duration-200",
                         variant === "card" && "bg-background/50 border-border/50 focus:border-primary"
                       )}
                     />
@@ -186,7 +186,7 @@ export function FieldRenderer({ field, value, onChange, variant = "default" }: F
             onChange={(e: ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
             rows={field.rows || 4}
             className={cn(
-              "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all duration-200",
+              "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none transition-all duration-200",
               variant === "card" && "bg-background/50 border-border/50 focus:border-primary"
             )}
           />

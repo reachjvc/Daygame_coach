@@ -35,12 +35,10 @@
           "routing_mismatch": 0
         }
       },
-      "allow_ingest_statuses": [
-        "READY",
-        "REVIEW"
-      ],
       "review_video_damage_score": 0.18,
       "block_video_damage_score": 0.35,
+      "review_damaged_chunk_ratio": 0.25,
+      "block_damaged_chunk_ratio": 0.6,
       "review_windowless_video_damage_score_by_content_type": {},
       "block_windowless_video_damage_score": 0.3,
       "block_windowless_video_damage_score_by_content_type": {},
@@ -56,6 +54,15 @@
   },
   "automation": {
     "parallel_llm_calls": 10,
+    "stage_parallel_caps": {
+      "07": 1
+    },
+    "parallel_sub_batches": 1,
+    "max_aggregate_llm_calls": 20,
+    "run_all": {
+      "max_failures": 2,
+      "lock_batch": true
+    },
     "stage_runtime": {
       "heartbeat_secs": 60
     },

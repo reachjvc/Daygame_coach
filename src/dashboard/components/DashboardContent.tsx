@@ -29,9 +29,9 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
   }, [profileData?.primary_goal]);
 
   return (
-    <main className="mx-auto max-w-6xl px-8 py-24" data-testid="dashboard-content">
-      <div className="text-center mb-16">
-        <h1 className="text-balance text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
+    <main className="mx-auto max-w-6xl px-4 sm:px-8 py-12 sm:py-24" data-testid="dashboard-content">
+      <div className="text-center mb-8 sm:mb-16">
+        <h1 className="text-balance text-3xl sm:text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
           {isPreviewMode ? "Explore the Dashboard" : "Welcome Back!"}
         </h1>
         <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
@@ -70,10 +70,10 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         </div>
       )}
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-4 md:gap-8">
         {/* Scenarios */}
         <Link href="/dashboard/scenarios" className="group" data-testid="dashboard-scenarios-link">
-          <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
+          <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Swords className="size-10 text-primary" />
             </div>
@@ -110,7 +110,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
         {/* Inner Game */}
         <Link href="/dashboard/inner-game" className="group" data-testid="dashboard-inner-game-link">
-          <Card className="p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
+          <Card className="p-5 sm:p-8 bg-card border-border hover:border-primary transition-all duration-300 h-full flex flex-col items-center text-center cursor-pointer group-hover:shadow-lg">
             <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
               <Brain className="size-10 text-primary" />
             </div>

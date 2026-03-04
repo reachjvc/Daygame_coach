@@ -80,12 +80,14 @@ Waivers:
 Canonical wiring:
 1. Stage script:
    - `scripts/training-data/07b.LLM.enrichment-verify`
-2. Orchestrator stage slot:
+2. Operator entrypoint:
+   - `scripts/training-data/batch/run-campaign`
+3. Internal orchestrator stage slot:
    - `scripts/training-data/batch/sub-batch-pipeline`
    - `scripts/training-data/batch/pipeline-runner`
-3. Route:
+4. Route:
    - `07 -> 07b -> 08 -> 09`
-4. Stage-local validation + quarantine feed:
+5. Stage-local validation + quarantine feed:
    - `scripts/training-data/validation/validate_stage07b.py`
    - `scripts/training-data/batch/quarantine_updater.py --stage 07b`
 
@@ -96,6 +98,7 @@ Canonical wiring:
 ## Operational Criteria
 
 - Output shape validates against `07b` schema.
+- Required LLM null output (`Claude returned no output`) is fail-closed to a canonical `BLOCK` artifact (reason-coded), not a silent pass.
 - Stage-local validator emits canonical issue rows for quarantine extraction.
 - Block decisions quarantine videos before Stage `08/09`.
 - Validation + scorecard runs remain regression-free on `P002.9` and `P003.1`.

@@ -25,7 +25,7 @@ jobs:
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests (Chromium)
-        run: npx playwright test --project=setup --project=setup-user-b --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=auth-destructive
+        run: npx playwright test --project=setup --project=setup-user-b --project=chromium --project=no-auth --project=security-multi-user --project='goals-*' --project='session-*' --project=auth-destructive --project=integration
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -62,7 +62,7 @@ jobs:
         run: npx playwright install --with-deps chromium webkit firefox
 
       - name: Run cross-browser E2E tests
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=goals-mobile-iphone --project=goals-mobile-pixel --project=goals-safari --project=tracking-mobile-iphone --project=tracking-mobile-pixel --project=tracking-safari --project=scenarios-mobile-iphone --project=scenarios-mobile-pixel --project=scenarios-safari --project=mobile-navigation-iphone --project=mobile-navigation-pixel
+        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}

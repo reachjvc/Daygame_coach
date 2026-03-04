@@ -181,6 +181,17 @@ export const SELECTORS = {
     saveButton: 'save-button',
   },
 
+  history: {
+    page: 'tracking-history-page',
+    filterAll: 'history-filter-all',
+    filterSubmitted: 'history-filter-submitted',
+    filterDrafts: 'history-filter-drafts',
+    card: (id: string) => `history-card-${id}`,
+    cardExpand: (id: string) => `history-card-expand-${id}`,
+    cardDelete: (id: string) => `history-delete-${id}`,
+    loadMore: 'history-load-more',
+  },
+
   goals: {
     page: 'goals-page',
     loading: 'goals-loading',

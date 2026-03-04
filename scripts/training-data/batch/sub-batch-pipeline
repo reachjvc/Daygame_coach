@@ -5,12 +5,15 @@
 # Pipeline orchestrator for sub-batches. Runs stages with automatic
 # post-stage validation, bounded auto-repair retries, and quarantine-and-continue.
 #
-# Usage:
-#   A) Standard production path (implicit run mode):
+# Operator entrypoint (recommended):
+#   ./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10
+#
+# Usage (low-level orchestrator):
+#   A) Sub-batch run path (implicit run mode):
 #      ./sub-batch-pipeline P001.1                   # runs stages 06→09 + validation + auto-repair retries
 #      ./sub-batch-pipeline P001.1 --from 07         # resume from stage 07
 #
-#   B) Batch execution:
+#   B) Batch execution (legacy run-all path):
 #      ./sub-batch-pipeline P001 --run-all
 #      ./sub-batch-pipeline P001 --run-all --count 3  # next 3 incomplete
 #
@@ -110,6 +113,12 @@ START_STAGE=""
 SUB_BATCH_ID=""
 BATCH_ID=""
 RUN_ALL_COUNT=0
+RUN_ALL_PARALLEL=""
+RUN_ALL_PARALLEL_EXPLICIT="false"
+RUN_ALL_ALLOW_AGGREGATE_OVERLOAD="false"
+RUN_ALL_MAX_FAILURES=""
+RUN_ALL_ALLOW_CONCURRENT="false"
+RUN_ALL_LOCK_FD=""
 VALIDATE_SOURCE=""
 VALIDATE_WAIVER_FILE=""
 VALIDATE_QUARANTINE_FILE=""
@@ -125,9 +134,10 @@ CFG_MAX_WARNING_CHECKS_BY_CLASS=()
 CFG_BLOCK_WARNING_CLASSES=()
 CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()
 CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()
-CFG_ALLOW_INGEST_STATUSES=("READY")
 CFG_REVIEW_VIDEO_DAMAGE_SCORE=""
 CFG_BLOCK_VIDEO_DAMAGE_SCORE=""
+CFG_REVIEW_DAMAGED_CHUNK_RATIO=""
+CFG_BLOCK_DAMAGED_CHUNK_RATIO=""
 CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
 CFG_BLOCK_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
 CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE_BY_CONTENT_TYPE=()
@@ -146,6 +156,10 @@ CFG_AUTO_REPAIR_LLM_TIMEOUT_SECONDS=""
 CFG_AUTO_REPAIR_LLM_RETRIES=""
 CFG_STAGE_HEARTBEAT_SECS="60"
 CFG_DEFAULT_PARALLEL_LLM_CALLS="10"
+CFG_DEFAULT_PARALLEL_SUB_BATCHES="1"
+CFG_MAX_AGGREGATE_LLM_CALLS=""
+CFG_RUN_ALL_MAX_FAILURES=""
+CFG_RUN_ALL_LOCK_BATCH="true"
 AUTO_REPAIR_ATTEMPTS_RAN_LAST="0"
 AUTO_REPAIR_LAST_REVALIDATE_RC=""
 RUN_STAGE_CONTEXT="standard"
@@ -236,22 +250,6 @@ if isinstance(review_by_type, dict) and review_by_type:
 else:
     print('CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()')
 
-allow_statuses = r.get("allow_ingest_statuses", ["READY"])
-if isinstance(allow_statuses, list) and allow_statuses:
-    items = []
-    for status in allow_statuses:
-        if not isinstance(status, str):
-            continue
-        st = status.strip().upper()
-        if st in {"READY", "REVIEW", "BLOCKED"}:
-            items.append(f'"{st}"')
-    if items:
-        print(f'CFG_ALLOW_INGEST_STATUSES=({" ".join(items)})')
-    else:
-        print('CFG_ALLOW_INGEST_STATUSES=("READY")')
-else:
-    print('CFG_ALLOW_INGEST_STATUSES=("READY")')
-
 def emit_optional_ratio(var_name: str, raw: object) -> None:
     if isinstance(raw, (int, float)) and not isinstance(raw, bool):
         value = float(raw)
@@ -299,6 +297,8 @@ def emit_bool_string(var_name: str, raw: object, default: bool) -> None:
 
 emit_optional_ratio("CFG_REVIEW_VIDEO_DAMAGE_SCORE", r.get("review_video_damage_score"))
 emit_optional_ratio("CFG_BLOCK_VIDEO_DAMAGE_SCORE", r.get("block_video_damage_score"))
+emit_optional_ratio("CFG_REVIEW_DAMAGED_CHUNK_RATIO", r.get("review_damaged_chunk_ratio"))
+emit_optional_ratio("CFG_BLOCK_DAMAGED_CHUNK_RATIO", r.get("block_damaged_chunk_ratio"))
 emit_optional_ratio(
     "CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE",
     r.get("review_windowless_video_damage_score"),
@@ -383,6 +383,32 @@ if not isinstance(stage_runtime, dict):
     stage_runtime = {}
 emit_non_negative_int("CFG_STAGE_HEARTBEAT_SECS", stage_runtime.get("heartbeat_secs", 60), default=60)
 emit_optional_positive_int("CFG_DEFAULT_PARALLEL_LLM_CALLS", automation.get("parallel_llm_calls", 10))
+emit_optional_positive_int("CFG_DEFAULT_PARALLEL_SUB_BATCHES", automation.get("parallel_sub_batches", 1))
+emit_optional_positive_int("CFG_MAX_AGGREGATE_LLM_CALLS", automation.get("max_aggregate_llm_calls"))
+stage_parallel_caps = automation.get("stage_parallel_caps", {}) if isinstance(automation, dict) else {}
+if isinstance(stage_parallel_caps, dict):
+    items = []
+    for stage_key, cap in stage_parallel_caps.items():
+        if not isinstance(stage_key, str):
+            continue
+        key = stage_key.strip()
+        if not key or isinstance(cap, bool):
+            continue
+        if isinstance(cap, float) and cap.is_integer():
+            cap = int(cap)
+        if isinstance(cap, int) and cap > 0:
+            items.append(f'"{key}={cap}"')
+    if items:
+        print(f'CFG_STAGE_PARALLEL_CAPS=({" ".join(items)})')
+    else:
+        print('CFG_STAGE_PARALLEL_CAPS=()')
+else:
+    print('CFG_STAGE_PARALLEL_CAPS=()')
+run_all = automation.get("run_all", {}) if isinstance(automation, dict) else {}
+if not isinstance(run_all, dict):
+    run_all = {}
+emit_optional_positive_int("CFG_RUN_ALL_MAX_FAILURES", run_all.get("max_failures"))
+emit_bool_string("CFG_RUN_ALL_LOCK_BATCH", run_all.get("lock_batch"), True)
 auto_repair = automation.get("auto_repair", {}) if isinstance(automation, dict) else {}
 if not isinstance(auto_repair, dict):
     auto_repair = {}
@@ -427,12 +453,16 @@ maybe_reroute_to_ops_wrapper
 usage() {
   cat <<'EOF'
 Usage:
+  Canonical operator command:
+    ./scripts/training-data/batch/run-campaign --start P001.4 --end P003.10
+
   Standard pipeline (recommended):
     ./sub-batch-pipeline P001.1                  Run the normal pipeline (06→09 + validation + auto-repair retries + artifacts)
     ./sub-batch-pipeline P001.1 --from 07        Resume the normal pipeline from stage 07
     ./sub-batch-pipeline P001.1 --parallel 10    Normal pipeline in conveyor-belt mode
     ./sub-batch-pipeline P001 --run-all          Run normal pipeline for all incomplete sub-batches
     ./sub-batch-pipeline P001 --run-all --count 3  Run next 3 incomplete sub-batches
+    ./sub-batch-pipeline P001 --run-all --sub-batch-parallel 2  Run two sub-batches at once (logs per sub-batch)
 
   Ops / inspection tools:
     Use ./sub-batch-ops (separate interface for --status/--stage/--validate/--view/--approve/--list)
@@ -442,11 +472,16 @@ Options:
   --from <stage>           Start the standard pipeline from this stage (default: 06)
   --parallel <n>           Override max concurrent LLM calls (conveyor mode is default via config)
   --count <n>              With --run-all, limit to n sub-batches
+  --sub-batch-parallel <n> With --run-all, number of sub-batches to execute concurrently
+  --max-failures <n>       With --run-all, stop launching new sub-batches after n failures (0 disables)
+  --allow-concurrent-run-all  With --run-all, bypass per-batch run lock
+  --allow-aggregate-overload  With --run-all, allow estimated aggregate LLM load above configured max
   --source <name>          Operator/debug only (when routed via sub-batch-ops)
   --quarantine-file <path> Override auto-detected quarantine file (run/validate)
   --waiver-file <path>     Operator/debug only (when routed via sub-batch-ops)
 
 Notes:
+  For campaign/range execution, use run-campaign instead of invoking this script repeatedly.
   `--run` is optional. If you pass a sub-batch ID and no explicit mode, the standard pipeline runs.
   Direct ops/inspection modes on `sub-batch-pipeline` are deprecated; use `sub-batch-ops`.
   Validation/repair/spotcheck/auto-repair policy is config-driven via pipeline.config.json.
@@ -467,6 +502,45 @@ warn_operator_mode_direct_use() {
     return 0
   fi
   echo "WARNING: $flag is an ops/inspection mode. Use ./scripts/training-data/batch/sub-batch-ops instead." >&2
+}
+
+release_run_all_lock() {
+  if [[ -n "${RUN_ALL_LOCK_FD:-}" ]]; then
+    if command -v flock >/dev/null 2>&1; then
+      flock -u "$RUN_ALL_LOCK_FD" 2>/dev/null || true
+    fi
+    exec {RUN_ALL_LOCK_FD}>&-
+    RUN_ALL_LOCK_FD=""
+  fi
+}
+
+acquire_run_all_lock() {
+  local batch_id="$1"
+  if [[ "$RUN_ALL_ALLOW_CONCURRENT" == "true" ]]; then
+    echo "[sub-batch-pipeline] WARNING: bypassing run-all lock for $batch_id (--allow-concurrent-run-all)."
+    return 0
+  fi
+  if [[ "${CFG_RUN_ALL_LOCK_BATCH:-true}" != "true" ]]; then
+    echo "[sub-batch-pipeline] Run-all lock disabled by config (automation.run_all.lock_batch=false)."
+    return 0
+  fi
+  if ! command -v flock >/dev/null 2>&1; then
+    echo "[sub-batch-pipeline] WARNING: flock not found; cannot enforce run-all lock for $batch_id."
+    return 0
+  fi
+
+  local lock_dir="$REPO_ROOT/data/validation/run_all_locks"
+  local lock_file="$lock_dir/${batch_id}.lock"
+  mkdir -p "$lock_dir"
+
+  exec {RUN_ALL_LOCK_FD}>"$lock_file"
+  if flock -n "$RUN_ALL_LOCK_FD"; then
+    echo "[sub-batch-pipeline] Acquired run-all lock: $lock_file"
+    return 0
+  fi
+
+  release_run_all_lock
+  error "Another --run-all appears active for $batch_id (lock: $lock_file). Use --allow-concurrent-run-all to bypass."
 }
 
 stage_supports_quarantine() {
@@ -1333,6 +1407,10 @@ run_stage_range_for_manifest() {
     fi
     local runner_rc=0
     local -a runner_args=("$sub_id" --parallel "$PARALLEL" --from "$start_stage" --manifest "$manifest_path" --skip-end-validation)
+    local stage_cap
+    for stage_cap in "${CFG_STAGE_PARALLEL_CAPS[@]}"; do
+      [[ -n "$stage_cap" ]] && runner_args+=(--stage-parallel-cap "$stage_cap")
+    done
     if [[ -n "$retry_quarantine" ]]; then
       runner_args+=(--quarantine-file "$retry_quarantine")
     fi
@@ -2111,6 +2189,10 @@ run_pipeline() {
   # Parallel mode: delegate to pipeline-runner (conveyor-belt orchestrator)
   if [[ -n "$PARALLEL" ]]; then
     local runner_args=("$sub_id" --parallel "$PARALLEL" --from "$start_stage")
+    local stage_cap
+    for stage_cap in "${CFG_STAGE_PARALLEL_CAPS[@]}"; do
+      [[ -n "$stage_cap" ]] && runner_args+=(--stage-parallel-cap "$stage_cap")
+    done
     if [[ -n "$RUN_QUARANTINE_FILE" ]]; then
       runner_args+=(--quarantine-file "$RUN_QUARANTINE_FILE")
     fi
@@ -2220,6 +2302,8 @@ run_pipeline() {
 run_all_sub_batches() {
   local batch_id="$1"
   local count="${2:-0}"
+  local sub_batch_parallel="${3:-1}"
+  local max_failures="${4:-0}"
   local status_file="$BATCHES_DIR/${batch_id}.status.json"
 
   if [[ ! -f "$status_file" ]]; then
@@ -2252,28 +2336,266 @@ PYEOF
     return 0
   fi
 
-  local total_subs
-  total_subs=$(echo "$sub_batches" | wc -l)
+  local -a sub_batch_list=()
+  mapfile -t sub_batch_list <<< "$sub_batches"
+  local total_subs="${#sub_batch_list[@]}"
+  local timestamp
+  timestamp=$(date -u +"%Y%m%dT%H%M%SZ")
+  local run_logs_root="$REPO_ROOT/data/validation/run_all_logs"
+  mkdir -p "$run_logs_root"
+  local run_logs_dir
+  run_logs_dir=$(mktemp -d "$run_logs_root/${batch_id}.${timestamp}.XXXXXX")
+  local run_started_epoch
+  run_started_epoch=$(date +%s)
+  local results_tsv="$run_logs_dir/results.tsv"
+  : >"$results_tsv"
   echo ""
   echo "========================================"
   echo "  Batch run: $batch_id ($total_subs sub-batches)"
-  echo "  Sub-batches: $(echo $sub_batches | tr '\n' ' ')"
+  echo "  Sub-batches: ${sub_batch_list[*]}"
+  echo "  Sub-batch concurrency: $sub_batch_parallel"
+  echo "  Run logs: $run_logs_dir"
   echo "========================================"
 
   local pass_count=0
   local fail_count=0
+  local skip_count=0
+  local -a passed_subs=()
+  local -a failed_subs=()
+  local -a skipped_subs=()
+  local halt_new_launches="false"
+  local halt_reason=""
+  local next_index=0
 
-  for sub_id in $sub_batches; do
-    run_pipeline "$sub_id" "${START_STAGE:-06}"
-    local rc=$?
-    if [[ $rc -eq 0 ]]; then
-      ((++pass_count))
-    else
-      ((++fail_count))
-      echo ""
-      echo "Sub-batch $sub_id had failures. Continuing to next sub-batch."
-    fi
-  done
+  if ! [[ "$max_failures" =~ ^[1-9][0-9]*$ ]]; then
+    max_failures=0
+  fi
+  if [[ "$max_failures" -gt 0 ]]; then
+    echo "  Max failures before halt: $max_failures"
+  else
+    echo "  Max failures before halt: unlimited"
+  fi
+
+  if [[ "$DRY_RUN" == true && "$sub_batch_parallel" -gt 1 ]]; then
+    echo "[sub-batch-pipeline] --dry-run with concurrent --run-all is forced to sequential output."
+    sub_batch_parallel=1
+  fi
+
+  if [[ "$sub_batch_parallel" -le 1 ]]; then
+    while [[ "$next_index" -lt "$total_subs" ]]; do
+      local sub_id="${sub_batch_list[$next_index]}"
+      ((next_index+=1))
+      local started_epoch
+      started_epoch=$(date +%s)
+      local rc=0
+      run_pipeline "$sub_id" "${START_STAGE:-06}" || rc=$?
+      local ended_epoch
+      ended_epoch=$(date +%s)
+      local elapsed_sec=$((ended_epoch - started_epoch))
+      local status_word="FAIL"
+      if [[ $rc -eq 0 ]]; then
+        ((++pass_count))
+        passed_subs+=("$sub_id")
+        status_word="PASS"
+      else
+        ((++fail_count))
+        failed_subs+=("$sub_id")
+        echo ""
+        echo "Sub-batch $sub_id had failures. Continuing to next sub-batch."
+        if [[ "$max_failures" -gt 0 && "$fail_count" -ge "$max_failures" && "$next_index" -lt "$total_subs" ]]; then
+          halt_new_launches="true"
+          halt_reason="max_failures"
+          echo "[sub-batch-pipeline] Reached max failures ($fail_count/$max_failures); halting before remaining sub-batches."
+          printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+            "$sub_id" "$status_word" "$rc" "$started_epoch" "$ended_epoch" "$elapsed_sec" "" >>"$results_tsv"
+          break
+        fi
+      fi
+      printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+        "$sub_id" "$status_word" "$rc" "$started_epoch" "$ended_epoch" "$elapsed_sec" "" >>"$results_tsv"
+    done
+  else
+    local -a active_pids=()
+    declare -A pid_to_sub=()
+    declare -A pid_to_log=()
+    declare -A pid_to_started_epoch=()
+
+    while [[ "$next_index" -lt "$total_subs" || "${#active_pids[@]}" -gt 0 ]]; do
+      while [[ "$halt_new_launches" != "true" && "$next_index" -lt "$total_subs" && "${#active_pids[@]}" -lt "$sub_batch_parallel" ]]; do
+        local sub_id="${sub_batch_list[$next_index]}"
+        local sub_log="$run_logs_dir/${sub_id}.log"
+        local started_epoch
+        started_epoch=$(date +%s)
+        ((next_index+=1))
+
+        (
+          run_pipeline "$sub_id" "${START_STAGE:-06}"
+        ) >"$sub_log" 2>&1 &
+        local sub_pid=$!
+        active_pids+=("$sub_pid")
+        pid_to_sub["$sub_pid"]="$sub_id"
+        pid_to_log["$sub_pid"]="$sub_log"
+        pid_to_started_epoch["$sub_pid"]="$started_epoch"
+        echo "[sub-batch-pipeline] Started $sub_id (pid=$sub_pid)"
+      done
+
+      if [[ "${#active_pids[@]}" -gt 0 ]]; then
+        local finished_pid=""
+        local rc=0
+        wait -n -p finished_pid "${active_pids[@]}" || rc=$?
+        if [[ -z "$finished_pid" ]]; then
+          echo "[sub-batch-pipeline] WARNING: sub-batch worker finished without a pid reference."
+          continue
+        fi
+        local sub_id="${pid_to_sub[$finished_pid]:-unknown}"
+        local sub_log="${pid_to_log[$finished_pid]:-$run_logs_dir/${sub_id}.log}"
+        local started_epoch="${pid_to_started_epoch[$finished_pid]:-0}"
+        local ended_epoch
+        ended_epoch=$(date +%s)
+        local elapsed_sec=0
+        if [[ "$started_epoch" =~ ^[0-9]+$ ]]; then
+          elapsed_sec=$((ended_epoch - started_epoch))
+        fi
+        unset "pid_to_sub[$finished_pid]" || true
+        unset "pid_to_log[$finished_pid]" || true
+        unset "pid_to_started_epoch[$finished_pid]" || true
+
+        local -a remaining_pids=()
+        local pid
+        for pid in "${active_pids[@]}"; do
+          [[ "$pid" == "$finished_pid" ]] && continue
+          remaining_pids+=("$pid")
+        done
+        active_pids=("${remaining_pids[@]}")
+
+        if [[ $rc -eq 0 ]]; then
+          ((++pass_count))
+          passed_subs+=("$sub_id")
+          echo "[sub-batch-pipeline] Finished $sub_id: PASS"
+          printf "%s\tPASS\t%s\t%s\t%s\t%s\t%s\n" \
+            "$sub_id" "$rc" "$started_epoch" "$ended_epoch" "$elapsed_sec" "$sub_log" >>"$results_tsv"
+        else
+          ((++fail_count))
+          failed_subs+=("$sub_id")
+          echo "[sub-batch-pipeline] Finished $sub_id: FAIL (log: $sub_log)"
+          printf "%s\tFAIL\t%s\t%s\t%s\t%s\t%s\n" \
+            "$sub_id" "$rc" "$started_epoch" "$ended_epoch" "$elapsed_sec" "$sub_log" >>"$results_tsv"
+          if [[ "$max_failures" -gt 0 && "$fail_count" -ge "$max_failures" && "$halt_new_launches" != "true" ]]; then
+            halt_new_launches="true"
+            halt_reason="max_failures"
+            local remaining_to_launch=$((total_subs - next_index))
+            if [[ "$remaining_to_launch" -gt 0 ]]; then
+              echo "[sub-batch-pipeline] Reached max failures ($fail_count/$max_failures); no new sub-batches will be launched."
+            fi
+          fi
+        fi
+      fi
+      if [[ "$halt_new_launches" == "true" && "${#active_pids[@]}" -eq 0 ]]; then
+        break
+      fi
+    done
+  fi
+
+  if [[ "$next_index" -lt "$total_subs" ]]; then
+    skipped_subs=("${sub_batch_list[@]:$next_index}")
+    for sub_id in "${skipped_subs[@]}"; do
+      printf "%s\tSKIP\t\t\t\t\t\n" "$sub_id" >>"$results_tsv"
+    done
+  fi
+  skip_count="${#skipped_subs[@]}"
+
+  local run_finished_epoch
+  run_finished_epoch=$(date +%s)
+  local run_elapsed_sec=$((run_finished_epoch - run_started_epoch))
+  local run_summary_file="$run_logs_dir/summary.txt"
+  {
+    echo "batch_id=$batch_id"
+    echo "generated_at_utc=$timestamp"
+    echo "total_sub_batches=$total_subs"
+    echo "sub_batch_concurrency=$sub_batch_parallel"
+    echo "llm_parallel_per_sub_batch=${PARALLEL:-}"
+    echo "run_started_epoch=$run_started_epoch"
+    echo "run_finished_epoch=$run_finished_epoch"
+    echo "run_elapsed_sec=$run_elapsed_sec"
+    echo "pass_count=$pass_count"
+    echo "fail_count=$fail_count"
+    echo "skip_count=$skip_count"
+    echo "halt_reason=${halt_reason:-}"
+    echo "max_failures=${max_failures:-0}"
+    echo "passed_sub_batches=${passed_subs[*]}"
+    echo "failed_sub_batches=${failed_subs[*]}"
+    echo "skipped_sub_batches=${skipped_subs[*]}"
+  } >"$run_summary_file"
+  local run_summary_json="$run_logs_dir/summary.json"
+  python3 - "$results_tsv" "$run_summary_json" "$batch_id" "$timestamp" "$total_subs" "$sub_batch_parallel" "${PARALLEL:-}" "$run_started_epoch" "$run_finished_epoch" "$run_elapsed_sec" "$max_failures" "$halt_reason" <<'PYEOF'
+import json
+import sys
+
+results_path = sys.argv[1]
+out_path = sys.argv[2]
+batch_id = sys.argv[3]
+generated_at = sys.argv[4]
+total_sub_batches = int(sys.argv[5]) if sys.argv[5].isdigit() else 0
+sub_batch_concurrency = int(sys.argv[6]) if sys.argv[6].isdigit() else 0
+llm_parallel = int(sys.argv[7]) if str(sys.argv[7]).isdigit() else None
+run_started_epoch = int(sys.argv[8]) if str(sys.argv[8]).isdigit() else None
+run_finished_epoch = int(sys.argv[9]) if str(sys.argv[9]).isdigit() else None
+run_elapsed_sec = int(sys.argv[10]) if str(sys.argv[10]).isdigit() else None
+max_failures = int(sys.argv[11]) if str(sys.argv[11]).isdigit() else 0
+halt_reason = (sys.argv[12] or "").strip() or None
+
+rows = []
+with open(results_path, encoding="utf-8") as f:
+    for raw in f:
+        line = raw.rstrip("\n")
+        if not line:
+            continue
+        parts = line.split("\t")
+        while len(parts) < 7:
+            parts.append("")
+        sub_id, status, rc, started, ended, elapsed, log_path = parts[:7]
+        rows.append(
+            {
+                "sub_batch_id": sub_id,
+                "status": status,
+                "exit_code": int(rc) if rc.lstrip("-").isdigit() else None,
+                "started_epoch": int(started) if started.isdigit() else None,
+                "finished_epoch": int(ended) if ended.isdigit() else None,
+                "elapsed_sec": int(elapsed) if elapsed.lstrip("-").isdigit() else None,
+                "log_path": log_path or None,
+            }
+        )
+
+pass_count = sum(1 for row in rows if row.get("status") == "PASS")
+fail_count = sum(1 for row in rows if row.get("status") == "FAIL")
+skip_count = sum(1 for row in rows if row.get("status") == "SKIP")
+
+payload = {
+    "version": 1,
+    "generated_at_utc": generated_at,
+    "batch_id": batch_id,
+    "summary": {
+        "total_sub_batches": total_sub_batches,
+        "sub_batch_concurrency": sub_batch_concurrency,
+        "llm_parallel_per_sub_batch": llm_parallel,
+        "run_started_epoch": run_started_epoch,
+        "run_finished_epoch": run_finished_epoch,
+        "run_elapsed_sec": run_elapsed_sec,
+        "pass_count": pass_count,
+        "fail_count": fail_count,
+        "skip_count": skip_count,
+        "max_failures": max_failures if max_failures > 0 else None,
+        "halt_reason": halt_reason,
+    },
+    "sub_batches": rows,
+}
+
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(payload, f, indent=2, ensure_ascii=False)
+    f.write("\n")
+PYEOF
+  echo "  Run summary: $run_summary_file"
+  echo "  Run summary JSON: $run_summary_json"
 
   echo ""
   echo "========================================"
@@ -2281,10 +2603,22 @@ PYEOF
   echo "  Passed: $pass_count / $total_subs"
   if [[ $fail_count -gt 0 ]]; then
     echo "  Failed: $fail_count / $total_subs"
+    echo "  Failed sub-batches: ${failed_subs[*]}"
+  fi
+  if [[ $skip_count -gt 0 ]]; then
+    echo "  Skipped: $skip_count / $total_subs"
+    echo "  Skipped sub-batches: ${skipped_subs[*]}"
+  fi
+  if [[ "$halt_reason" == "max_failures" ]]; then
+    echo "  Halted early: reached max failures ($fail_count/$max_failures)"
   fi
   echo "========================================"
   echo ""
   show_batch_status "$batch_id"
+  if [[ "$fail_count" -gt 0 || "$skip_count" -gt 0 ]]; then
+    return 1
+  fi
+  return 0
 }
 
 # Legacy alias
@@ -2593,14 +2927,17 @@ validate_sub_batch() {
   for rule in "${CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE[@]}"; do
     stage_report_check_args+=(--review-warning-class-budget-by-content-type "$rule")
   done
-  for status in "${CFG_ALLOW_INGEST_STATUSES[@]}"; do
-    stage_report_check_args+=(--allow-ingest-status "$status")
-  done
   if [[ -n "$CFG_REVIEW_VIDEO_DAMAGE_SCORE" ]]; then
     stage_report_check_args+=(--review-video-damage-score "$CFG_REVIEW_VIDEO_DAMAGE_SCORE")
   fi
   if [[ -n "$CFG_BLOCK_VIDEO_DAMAGE_SCORE" ]]; then
     stage_report_check_args+=(--block-video-damage-score "$CFG_BLOCK_VIDEO_DAMAGE_SCORE")
+  fi
+  if [[ -n "$CFG_REVIEW_DAMAGED_CHUNK_RATIO" ]]; then
+    stage_report_check_args+=(--review-damaged-chunk-ratio "$CFG_REVIEW_DAMAGED_CHUNK_RATIO")
+  fi
+  if [[ -n "$CFG_BLOCK_DAMAGED_CHUNK_RATIO" ]]; then
+    stage_report_check_args+=(--block-damaged-chunk-ratio "$CFG_BLOCK_DAMAGED_CHUNK_RATIO")
   fi
   if [[ -n "$CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE" ]]; then
     stage_report_check_args+=(--review-windowless-video-damage-score "$CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE")
@@ -2944,6 +3281,9 @@ print()
 PYEOF
 }
 
+# Ensure run-all lock is released on all exits.
+trap 'release_run_all_lock' EXIT
+
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -3004,6 +3344,34 @@ while [[ $# -gt 0 ]]; do
       ;;
     --count=*)
       RUN_ALL_COUNT="${1#--count=}"
+      shift
+      ;;
+    --sub-batch-parallel|--run-all-parallel)
+      [[ $# -lt 2 ]] && error "$1 requires a number"
+      RUN_ALL_PARALLEL="$2"
+      RUN_ALL_PARALLEL_EXPLICIT="true"
+      shift 2
+      ;;
+    --sub-batch-parallel=*|--run-all-parallel=*)
+      RUN_ALL_PARALLEL="${1#*=}"
+      RUN_ALL_PARALLEL_EXPLICIT="true"
+      shift
+      ;;
+    --max-failures)
+      [[ $# -lt 2 ]] && error "--max-failures requires a number"
+      RUN_ALL_MAX_FAILURES="$2"
+      shift 2
+      ;;
+    --max-failures=*)
+      RUN_ALL_MAX_FAILURES="${1#--max-failures=}"
+      shift
+      ;;
+    --allow-concurrent-run-all)
+      RUN_ALL_ALLOW_CONCURRENT="true"
+      shift
+      ;;
+    --allow-aggregate-overload)
+      RUN_ALL_ALLOW_AGGREGATE_OVERLOAD="true"
       shift
       ;;
     --stage)
@@ -3121,6 +3489,16 @@ if [[ -n "$PARALLEL" ]]; then
     error "--parallel must be a positive integer"
   fi
 fi
+if [[ -n "$RUN_ALL_PARALLEL" ]]; then
+  if ! [[ "$RUN_ALL_PARALLEL" =~ ^[1-9][0-9]*$ ]]; then
+    error "--sub-batch-parallel must be a positive integer"
+  fi
+fi
+if [[ -n "$RUN_ALL_MAX_FAILURES" ]]; then
+  if ! [[ "$RUN_ALL_MAX_FAILURES" =~ ^[0-9]+$ ]]; then
+    error "--max-failures must be a non-negative integer"
+  fi
+fi
 
 # Keep the standard pipeline interface clean: these flags are ops/inspection-only.
 if [[ "$MODE" == "run_pipeline" || "$MODE" == "run_all" ]]; then
@@ -3138,6 +3516,46 @@ if [[ "$MODE" == "run_pipeline" || "$MODE" == "run_all" ]]; then
     if [[ "${CFG_DEFAULT_PARALLEL_LLM_CALLS}" =~ ^[1-9][0-9]*$ ]]; then
       PARALLEL="$CFG_DEFAULT_PARALLEL_LLM_CALLS"
       echo "[sub-batch-pipeline] Using configured parallel LLM calls: $PARALLEL"
+    fi
+  fi
+fi
+if [[ "$MODE" == "run_all" ]]; then
+  if [[ -z "$RUN_ALL_PARALLEL" && -n "${CFG_DEFAULT_PARALLEL_SUB_BATCHES:-}" ]]; then
+    if [[ "${CFG_DEFAULT_PARALLEL_SUB_BATCHES}" =~ ^[1-9][0-9]*$ ]]; then
+      RUN_ALL_PARALLEL="$CFG_DEFAULT_PARALLEL_SUB_BATCHES"
+      echo "[sub-batch-pipeline] Using configured sub-batch concurrency: $RUN_ALL_PARALLEL"
+    fi
+  fi
+  if [[ -z "$RUN_ALL_PARALLEL" ]]; then
+    RUN_ALL_PARALLEL="1"
+  fi
+  if [[ -z "$RUN_ALL_MAX_FAILURES" && -n "${CFG_RUN_ALL_MAX_FAILURES:-}" ]]; then
+    if [[ "${CFG_RUN_ALL_MAX_FAILURES}" =~ ^[1-9][0-9]*$ ]]; then
+      RUN_ALL_MAX_FAILURES="$CFG_RUN_ALL_MAX_FAILURES"
+      echo "[sub-batch-pipeline] Using configured run-all max failures: $RUN_ALL_MAX_FAILURES"
+    fi
+  fi
+  if [[ "$PARALLEL" =~ ^[1-9][0-9]*$ && "${CFG_MAX_AGGREGATE_LLM_CALLS:-}" =~ ^[1-9][0-9]*$ ]]; then
+    local_auto_cap=$((CFG_MAX_AGGREGATE_LLM_CALLS / PARALLEL))
+    if [[ "$local_auto_cap" -lt 1 ]]; then
+      local_auto_cap=1
+    fi
+    if [[ "$RUN_ALL_PARALLEL" -gt "$local_auto_cap" ]]; then
+      if [[ "$RUN_ALL_ALLOW_AGGREGATE_OVERLOAD" == "true" ]]; then
+        echo "[sub-batch-pipeline] WARNING: sub-batch concurrency ($RUN_ALL_PARALLEL) exceeds safe cap ($local_auto_cap) for max_aggregate_llm_calls=${CFG_MAX_AGGREGATE_LLM_CALLS} and --parallel=$PARALLEL."
+      else
+        echo "[sub-batch-pipeline] Capping sub-batch concurrency to $local_auto_cap to honor max aggregate LLM calls (${CFG_MAX_AGGREGATE_LLM_CALLS})."
+        RUN_ALL_PARALLEL="$local_auto_cap"
+      fi
+    fi
+  fi
+  if [[ "$RUN_ALL_PARALLEL" =~ ^[1-9][0-9]*$ && "$PARALLEL" =~ ^[1-9][0-9]*$ ]]; then
+    local_estimated_llm_load=$((RUN_ALL_PARALLEL * PARALLEL))
+    if [[ "$RUN_ALL_PARALLEL" -gt 1 ]]; then
+      echo "[sub-batch-pipeline] Estimated aggregate LLM concurrency: $local_estimated_llm_load (${RUN_ALL_PARALLEL} sub-batches x ${PARALLEL} each)"
+    fi
+    if [[ "${CFG_MAX_AGGREGATE_LLM_CALLS:-}" =~ ^[1-9][0-9]*$ && "$local_estimated_llm_load" -gt "$CFG_MAX_AGGREGATE_LLM_CALLS" ]]; then
+      echo "[sub-batch-pipeline] WARNING: estimated aggregate LLM concurrency ($local_estimated_llm_load) exceeds configured max_aggregate_llm_calls (${CFG_MAX_AGGREGATE_LLM_CALLS})."
     fi
   fi
 fi
@@ -3167,7 +3585,9 @@ case "$MODE" in
     if is_sub_batch "$SUB_BATCH_ID"; then
       error "--run-all requires a batch ID (e.g., P001), not a sub-batch"
     fi
-    run_all_sub_batches "$BATCH_ID" "$RUN_ALL_COUNT"
+    acquire_run_all_lock "$BATCH_ID"
+    run_all_sub_batches "$BATCH_ID" "$RUN_ALL_COUNT" "$RUN_ALL_PARALLEL" "${RUN_ALL_MAX_FAILURES:-0}"
+    release_run_all_lock
     ;;
   view)
     if ! is_sub_batch "$SUB_BATCH_ID"; then

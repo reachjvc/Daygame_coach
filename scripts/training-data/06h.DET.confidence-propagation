@@ -879,10 +879,13 @@ def propagate_confidence(
                 ("phase", _pre_adj_p, phase_conf),
             ]:
                 if abs(_post - _pre) > 0.0001:
+                    _ratio = (_post / _pre) if _pre > 0 else 0.0
                     seg_penalties.append({
                         "issue_code": "adjudication_merge",
                         "axis": _ax_name,
-                        "multiplier": round(_post / _pre, 4) if _pre > 0 else 0.0,
+                        # penalty.multiplier is schema-bounded to [0,1];
+                        # before/after retain the full direction and magnitude.
+                        "multiplier": round(_clamp01(_ratio), 4),
                         "before": round(_pre, 4),
                         "after": round(_post, 4),
                     })

@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, parse, isValid, startOfDay } from "date-fns"
 import type { GoalTemplate, GoalDisplayCategory } from "@/src/goals/types"
 
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_LABELS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",
@@ -290,7 +290,7 @@ export function CommitmentBuilder({
         return (
           <CollapsibleSection
             key={cat}
-            title={CATEGORY_LABELS[cat]}
+            title={CATEGORY_LABELS[cat] ?? cat}
             icon={<Target className="size-4 text-muted-foreground/60" />}
             count={enabledInCat}
             total={goals.length}

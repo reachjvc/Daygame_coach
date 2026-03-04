@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState } from "react"
+import { useBackableState } from "@/src/shared/useBackableState"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -15,14 +16,11 @@ import {
 } from "@/components/ui/select"
 import {
   ArrowLeft,
-  Plus,
   X,
   Check,
   Settings2,
   Save,
   Loader2,
-  ChevronDown,
-  ChevronUp,
   Clock,
   MapPin,
   TrendingUp,
@@ -30,17 +28,19 @@ import {
   LayoutTemplate,
 } from "lucide-react"
 
-import type { FieldDefinition, FieldCategory, SessionSummaryData } from "@/src/tracking/types"
+import type { FieldDefinition, SessionSummaryData } from "@/src/tracking/types"
 import { FIELD_LIBRARY, CATEGORY_INFO, SESSION_IMPORT_FIELD_IDS } from "@/src/tracking/config"
 import { TEMPLATE_COLORS } from "@/src/tracking/data/templates"
-import { CATEGORY_ICONS } from "@/src/tracking/components/templateIcons"
+import { CATEGORY_COLORS_MAP } from "@/src/tracking/components/templateIcons"
 import { SessionImportSection } from "./SessionImportSection"
 import { DatePicker } from "./DatePicker"
+import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
 
 interface CustomReportBuilderProps {
   sessionData?: SessionSummaryData | null
   onBack: () => void
-  onSaved: () => void
+  onSavedTemplate: (templateId: string) => void
+  onSavedReport: () => void
 }
 
 // Mode for the builder
@@ -57,55 +57,9 @@ interface SelectedField {
   field: FieldDefinition
 }
 
-// Category color classes (can't use dynamic Tailwind classes)
-const CATEGORY_COLORS_MAP: Record<FieldCategory, { border: string; bg: string; dot: string; text: string }> = {
-  quick_capture: {
-    border: "border-amber-500/30 hover:border-amber-500",
-    bg: "hover:bg-amber-500/10",
-    dot: "bg-amber-500",
-    text: "text-amber-600 border-amber-500/50",
-  },
-  emotional: {
-    border: "border-pink-500/30 hover:border-pink-500",
-    bg: "hover:bg-pink-500/10",
-    dot: "bg-pink-500",
-    text: "text-pink-600 border-pink-500/50",
-  },
-  analysis: {
-    border: "border-indigo-500/30 hover:border-indigo-500",
-    bg: "hover:bg-indigo-500/10",
-    dot: "bg-indigo-500",
-    text: "text-indigo-600 border-indigo-500/50",
-  },
-  action: {
-    border: "border-green-500/30 hover:border-green-500",
-    bg: "hover:bg-green-500/10",
-    dot: "bg-green-500",
-    text: "text-green-600 border-green-500/50",
-  },
-  skill: {
-    border: "border-orange-500/30 hover:border-orange-500",
-    bg: "hover:bg-orange-500/10",
-    dot: "bg-orange-500",
-    text: "text-orange-600 border-orange-500/50",
-  },
-  context: {
-    border: "border-slate-500/30 hover:border-slate-500",
-    bg: "hover:bg-slate-500/10",
-    dot: "bg-slate-500",
-    text: "text-slate-600 border-slate-500/50",
-  },
-  cognitive: {
-    border: "border-violet-500/30 hover:border-violet-500",
-    bg: "hover:bg-violet-500/10",
-    dot: "bg-violet-500",
-    text: "text-violet-600 border-violet-500/50",
-  },
-}
-
-export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomReportBuilderProps) {
+export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSavedReport }: CustomReportBuilderProps) {
   // Builder mode: select (initial), template-only, or report
-  const [mode, setMode] = useState<BuilderMode>("select")
+  const [mode, setMode] = useBackableState<BuilderMode>("select")
 
   // Template name (used in both modes)
   const [templateName, setTemplateName] = useState("")
@@ -124,10 +78,6 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
   const [expandedFieldId, setExpandedFieldId] = useState<string | null>(null)
   const [pendingFieldValue, setPendingFieldValue] = useState<unknown>(null)
 
-  // Category filter for field picker
-  const [activeCategory, setActiveCategory] = useState<FieldCategory | "all">("all")
-  const [showFieldPicker, setShowFieldPicker] = useState(true)
-
   // Report date (separate from title) - defaults to today
   const [reportDate, setReportDate] = useState<Date>(new Date())
 
@@ -139,25 +89,10 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
   const [saveError, setSaveError] = useState<string | null>(null)
   const [isSaved, setIsSaved] = useState(false)
 
-  // Available fields (exclude already filled/selected ones based on mode)
-  const availableFields = useMemo(() => {
-    const usedIds = mode === "template-only"
-      ? new Set(selectedFields.map(f => f.field.id))
-      : new Set(filledFields.map(f => f.field.id))
-    let fields = FIELD_LIBRARY.filter(f => !usedIds.has(f.id))
-
-    if (activeCategory !== "all") {
-      fields = fields.filter(f => f.category === activeCategory)
-    }
-
-    return fields
-  }, [filledFields, selectedFields, activeCategory, mode])
-
   // Click a field from the picker to start filling it (report mode)
   const startFillingField = (field: FieldDefinition) => {
     setExpandedFieldId(field.id)
     setPendingFieldValue(getDefaultValue(field))
-    setShowFieldPicker(false)
   }
 
   // Add a field to template (template-only mode - no value needed)
@@ -253,8 +188,9 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
         throw new Error(data.error || "Failed to save template")
       }
 
+      const template = await response.json()
       setIsSaved(true)
-      onSaved()
+      onSavedTemplate(template.id)
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Failed to save")
     } finally {
@@ -336,7 +272,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
       }
 
       setIsSaved(true)
-      onSaved()
+      onSavedReport()
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : "Failed to save")
     } finally {
@@ -793,78 +729,38 @@ export function CustomReportBuilder({ sessionData, onBack, onSaved }: CustomRepo
 
         {/* Add field button / picker */}
         {(mode === "template-only" || !expandedField) && (
-          <div className="space-y-3">
-            <button
-              onClick={() => setShowFieldPicker(!showFieldPicker)}
-              className="w-full py-3 border-2 border-dashed border-muted-foreground/30 rounded-xl text-muted-foreground hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
-            >
-              {showFieldPicker ? (
-                <><ChevronUp className="size-4" /> Hide fields</>
-              ) : (
-                <><Plus className="size-4" /> Add a field</>
-              )}
-            </button>
-
-            {showFieldPicker && (
-              <Card className="p-4 space-y-4">
-                {/* Category filter */}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={activeCategory === "all" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setActiveCategory("all")}
-                    className="h-8"
-                  >
-                    All
-                  </Button>
-                  {(Object.keys(CATEGORY_INFO) as FieldCategory[]).map(cat => (
-                    <Button
-                      key={cat}
-                      variant={activeCategory === cat ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setActiveCategory(cat)}
-                      className="h-8 gap-1.5"
-                    >
-                      {CATEGORY_ICONS[cat]}
-                      <span className="hidden sm:inline">{CATEGORY_INFO[cat].label}</span>
-                    </Button>
-                  ))}
-                </div>
-
-                {/* Field list */}
-                <div className="max-h-[300px] overflow-y-auto space-y-2">
-                  {availableFields.map(field => {
-                    const fieldColors = CATEGORY_COLORS_MAP[field.category]
-                    return (
-                      <button
-                        key={field.id}
-                        onClick={() => mode === "template-only" ? addFieldToTemplate(field) : startFillingField(field)}
-                        className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${fieldColors.border} ${fieldColors.bg}`}
-                        data-testid={`field-option-${field.id}`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`size-2 rounded-full ${fieldColors.dot}`} />
-                            <span className="font-medium">{field.label}</span>
-                          </div>
-                          <Badge variant="outline" className={`text-xs ${fieldColors.text}`}>
-                            {CATEGORY_INFO[field.category].label}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1 ml-4">{field.description}</p>
-                      </button>
-                    )
-                  })}
-
-                  {availableFields.length === 0 && (
-                    <p className="text-center text-muted-foreground py-4">
-                      No more fields in this category
-                    </p>
-                  )}
-                </div>
-              </Card>
-            )}
-          </div>
+          <FieldPickerPanel
+            excludeFieldIds={
+              mode === "template-only"
+                ? new Set(selectedFields.map(f => f.field.id))
+                : new Set(filledFields.map(f => f.field.id))
+            }
+            onAddField={(field) => {
+              if (mode === "template-only") {
+                addFieldToTemplate(field)
+              } else {
+                startFillingField(field)
+              }
+            }}
+            onAddCustomField={(label) => {
+              const customField = createCustomTextField(label)
+              const asFieldDef: FieldDefinition = {
+                id: customField.id,
+                type: customField.type as FieldDefinition["type"],
+                label: customField.label,
+                placeholder: customField.placeholder,
+                rows: customField.rows,
+                category: "quick_capture",
+                description: `Custom field: ${label}`,
+                usedIn: [],
+              }
+              if (mode === "template-only") {
+                addFieldToTemplate(asFieldDef)
+              } else {
+                startFillingField(asFieldDef)
+              }
+            }}
+          />
         )}
 
         {/* Error message */}

@@ -1,261 +1,392 @@
-/* ── Interactive guided tour styles ── */
+/* ── Goals Tour: driver.js theme overrides + welcome/finish screens ── */
+/* Prefix: gt- for welcome/finish to avoid conflicts                   */
 
-/* ─── Keyframes ─────────────────────────────────────── */
+/* ── driver.js popover theme ─────────────────────────────────────── */
 
-@keyframes tour-ring-pulse {
-  0%, 100% {
-    box-shadow:
-      0 0 0 3px rgba(249, 115, 22, 0.6),
-      0 0 16px 4px rgba(249, 115, 22, 0.25);
-  }
-  50% {
-    box-shadow:
-      0 0 0 5px rgba(249, 115, 22, 0.8),
-      0 0 28px 8px rgba(249, 115, 22, 0.4);
-  }
-}
-
-@keyframes tour-tooltip-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ─── Overlay ───────────────────────────────────────── */
-
-.tour-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 10000;
-  background: rgba(0, 0, 0, 0.6);
-  cursor: pointer;
-}
-
-/* ─── Highlight ring ────────────────────────────────── */
-
-.tour-ring {
-  position: relative !important;
-  z-index: 10001 !important;
+.gt-popover.driver-popover {
+  background: rgba(24, 24, 32, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  animation: tour-ring-pulse 1.5s ease-in-out infinite;
-  transition: box-shadow 0.3s ease;
-}
-
-/* ─── Tooltip ───────────────────────────────────────── */
-
-.tour-tooltip {
-  position: absolute;
-  z-index: 10002;
-  width: 340px;
-  background: rgba(15, 20, 40, 0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(249, 115, 22, 0.35);
-  border-radius: 14px;
-  padding: 16px 18px 12px;
-  animation: tour-tooltip-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  padding: 20px;
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.5),
-    0 0 24px rgba(249, 115, 22, 0.1);
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+  color: #e8e8ed;
+  font-family: inherit;
+  max-width: 360px;
 }
 
-/* Arrow — below placement (arrow on top, pointing up) */
-.tour-tooltip--below .tour-tooltip-arrow {
-  position: absolute;
-  top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 7px;
-  overflow: hidden;
+/* Title */
+.gt-popover .driver-popover-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f0f0f5;
+  margin: 0 0 6px 0;
+  line-height: 1.35;
 }
 
-.tour-tooltip--below .tour-tooltip-arrow::before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 10px;
-  height: 10px;
-  background: rgba(15, 20, 40, 0.96);
-  border: 1px solid rgba(249, 115, 22, 0.35);
+/* Description (body) */
+.gt-popover .driver-popover-description {
+  font-size: 13px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0;
 }
 
-/* Arrow — above placement (arrow on bottom, pointing down) */
-.tour-tooltip--above .tour-tooltip-arrow {
-  position: absolute;
-  bottom: -7px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 7px;
-  overflow: hidden;
+/* Arrow — match popover background for each side */
+.gt-popover .driver-popover-arrow {
+  border: 5px solid transparent;
 }
 
-.tour-tooltip--above .tour-tooltip-arrow::before {
-  content: "";
-  position: absolute;
-  bottom: 3px;
-  left: 50%;
-  transform: translateX(-50%) rotate(45deg);
-  width: 10px;
-  height: 10px;
-  background: rgba(15, 20, 40, 0.96);
-  border: 1px solid rgba(249, 115, 22, 0.35);
+.gt-popover .driver-popover-arrow-side-top {
+  border-top-color: rgba(24, 24, 32, 0.92);
 }
 
-.tour-tooltip-text {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.5;
-  margin: 0 0 14px;
+.gt-popover .driver-popover-arrow-side-bottom {
+  border-bottom-color: rgba(24, 24, 32, 0.92);
 }
 
-/* Footer: Back | progress | Next */
-.tour-tooltip-footer {
+.gt-popover .driver-popover-arrow-side-left {
+  border-left-color: rgba(24, 24, 32, 0.92);
+}
+
+.gt-popover .driver-popover-arrow-side-right {
+  border-right-color: rgba(24, 24, 32, 0.92);
+}
+
+/* Hide default navigation — we inject custom via onPopoverRender */
+.gt-popover .driver-popover-navigation-btns,
+.gt-popover .driver-popover-close-btn,
+.gt-popover .driver-popover-progress-text {
+  display: none !important;
+}
+
+/* Custom footer injected via onPopoverRender */
+.gt-popover .gt-custom-footer {
+  margin-top: 16px;
+}
+
+.gt-popover .gt-custom-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
-.tour-tooltip-progress {
+.gt-popover .gt-step-label {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.3);
-  white-space: nowrap;
-  flex: 1;
-  text-align: center;
-}
-
-.tour-tooltip-next {
-  font-size: 13px;
   font-weight: 600;
-  color: white;
-  background: rgba(249, 115, 22, 0.8);
-  border: none;
-  border-radius: 8px;
-  padding: 7px 16px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.15s;
-  margin-left: auto;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8b8fa3;
 }
 
-.tour-tooltip-next:hover {
-  background: rgba(249, 115, 22, 1);
-}
-
-.tour-tooltip-back {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 6px 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.tour-tooltip-back:hover {
-  color: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.25);
-}
-
-.tour-tooltip-skip {
-  display: block;
-  margin: 10px auto 0;
+.gt-popover .gt-skip-link {
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.25);
+  color: #6b6f83;
   background: none;
   border: none;
   cursor: pointer;
   padding: 2px 6px;
+  border-radius: 4px;
   transition: color 0.15s;
 }
 
-.tour-tooltip-skip:hover {
-  color: rgba(255, 255, 255, 0.6);
+.gt-popover .gt-skip-link:hover {
+  color: #a0a4b8;
 }
 
-/* ─── Red annotation callouts ──────────────────────── */
-
-@keyframes tour-callout-pulse {
-  0%, 100% { opacity: 0.75; }
-  50% { opacity: 1; }
+/* Custom progress bar */
+.gt-popover .gt-progress {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  margin-bottom: 14px;
+  overflow: hidden;
 }
 
-.tour-arrow {
-  position: absolute;
-  z-index: 10003;
-  pointer-events: none;
-  white-space: nowrap;
+.gt-popover .gt-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, #5E6AD2, #7B83EB);
+  border-radius: 2px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Buttons */
+.gt-popover .gt-nav-buttons {
   display: flex;
   align-items: center;
-  animation: tour-callout-pulse 2.5s ease-in-out infinite;
+  justify-content: space-between;
 }
 
-/* Left placement: label + line pointing right toward element */
-.tour-arrow--left {
-  transform: translate(-100%, -50%);
+.gt-popover .gt-hotkeys {
+  display: flex;
+  gap: 6px;
 }
 
-.tour-arrow--left::after {
-  content: '';
-  display: block;
-  width: 10px;
-  height: 1.5px;
-  background: rgba(239, 68, 68, 0.6);
-  flex-shrink: 0;
-}
-
-/* Above placement: label sits above element */
-.tour-arrow--above {
-  transform: translateY(-100%);
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.tour-arrow--above::after {
-  content: '';
-  display: block;
-  width: 1.5px;
-  height: 6px;
-  background: rgba(239, 68, 68, 0.6);
-  margin-left: 12px;
-}
-
-.tour-arrow-label {
-  font-size: 9px;
-  font-weight: 600;
-  color: white;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  background: rgba(239, 68, 68, 0.72);
+.gt-popover .gt-hotkey {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b6f83;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 4px;
-  padding: 2px 6px 1px;
-  line-height: 1.3;
+  font-family: inherit;
 }
 
-/* ─── Reduced motion ────────────────────────────────── */
+.gt-popover .gt-btn-group {
+  display: flex;
+  gap: 6px;
+}
 
+.gt-popover .gt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.gt-popover .gt-btn--secondary {
+  color: #a0a4b8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gt-popover .gt-btn--secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e0e0e8;
+}
+
+.gt-popover .gt-btn--primary {
+  color: #fff;
+  background: #5E6AD2;
+}
+
+.gt-popover .gt-btn--primary:hover {
+  background: #6E7AE2;
+}
+
+/* Smooth overlay cutout — SVG only, NOT the popover (avoids fly-across) */
+.driver-overlay svg {
+  transition: all 150ms ease !important;
+}
+
+/* Highlight border glow */
+.driver-active-element {
+  outline: 2px solid rgba(94, 106, 210, 0.6) !important;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* ── Welcome overlay ────────────────────────────────────────── */
+.gt-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.gt-welcome__card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 24, 32, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #e8e8ed;
+  font-family: inherit;
+}
+
+.gt-welcome__icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #5E6AD2, #7B83EB);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.gt-welcome__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #f0f0f5;
+}
+
+.gt-welcome__text {
+  font-size: 14px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0 0 24px;
+}
+
+.gt-welcome__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gt-welcome__start {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #5E6AD2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.gt-welcome__start:hover {
+  background: #6E7AE2;
+}
+
+.gt-welcome__dismiss {
+  width: 100%;
+  height: 32px;
+  font-size: 13px;
+  color: #6b6f83;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  font-family: inherit;
+}
+
+.gt-welcome__dismiss:hover {
+  color: #a0a4b8;
+}
+
+.gt-welcome__hint {
+  display: block;
+  margin-top: 12px;
+  font-size: 11px;
+  color: #4a4e62;
+}
+
+.gt-welcome__hint kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b6f83;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  font-family: inherit;
+}
+
+/* ── Finish overlay ─────────────────────────────────────────── */
+.gt-finish {
+  position: fixed;
+  inset: 0;
+  z-index: 10010;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  transition: opacity 0.3s ease;
+}
+
+.gt-finish__card {
+  width: 420px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 24, 32, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #e8e8ed;
+  font-family: inherit;
+}
+
+.gt-finish__check {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #34D399, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.gt-finish__title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #f0f0f5;
+}
+
+.gt-finish__text {
+  font-size: 14px;
+  color: #a0a4b8;
+  line-height: 1.55;
+  margin: 0 0 24px;
+}
+
+.gt-finish__close {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #5E6AD2;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+}
+
+.gt-finish__close:hover {
+  background: #6E7AE2;
+}
+
+/* ── Reduced motion ─────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .tour-ring {
-    animation: none !important;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.7) !important;
-  }
-
-  .tour-tooltip {
-    animation: none !important;
-  }
-
-  .tour-arrow {
-    animation: none !important;
-    opacity: 1 !important;
+  .gt-popover .gt-progress__bar {
+    transition: none !important;
   }
 }

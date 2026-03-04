@@ -28,7 +28,7 @@ export async function ScenariosPage() {
     return (
       <div className="min-h-dvh bg-background">
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
@@ -47,7 +47,7 @@ export async function ScenariosPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-8 py-12">
+        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
           <ScenariosHub
             recommendedDifficulty="beginner"
             userLevel={1}
@@ -83,7 +83,7 @@ export async function ScenariosPage() {
     return (
       <div className="min-h-dvh bg-background">
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
@@ -102,7 +102,7 @@ export async function ScenariosPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-8 py-12">
+        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
           <ScenariosHub
             recommendedDifficulty="beginner"
             userLevel={1}
@@ -119,7 +119,7 @@ export async function ScenariosPage() {
     return (
       <div className="min-h-dvh bg-background">
         <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+          <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
             <div className="flex items-center gap-2 font-bold text-xl text-foreground">
               <CircleDot className="size-6 text-primary" />
               <span>Scenarios</span>
@@ -133,7 +133,7 @@ export async function ScenariosPage() {
           </div>
         </header>
 
-        <main className="mx-auto max-w-6xl px-8 py-12">
+        <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
           <div className="text-center py-16">
             <h2 className="text-2xl font-bold mb-4">Complete Your Profile First</h2>
             <p className="text-muted-foreground mb-6">Set up your preferences to get personalized scenarios.</p>
@@ -151,7 +151,7 @@ export async function ScenariosPage() {
   return (
     <div className="min-h-dvh bg-background">
       <header className="border-b border-border bg-card/50 backdrop-blur backdrop-fallback-card">
-        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-8">
+        <div className="mx-auto max-w-6xl flex h-16 items-center justify-between px-4 sm:px-8">
           <div className="flex items-center gap-2 font-bold text-xl text-foreground">
             <CircleDot className="size-6 text-primary" />
             <span>Scenarios</span>
@@ -165,7 +165,7 @@ export async function ScenariosPage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-8 py-12">
+      <main className="mx-auto max-w-6xl px-4 sm:px-8 py-8 sm:py-12">
         <ScenariosHub
           recommendedDifficulty={recommendedDifficulty}
           userLevel={profile?.level ?? 1}

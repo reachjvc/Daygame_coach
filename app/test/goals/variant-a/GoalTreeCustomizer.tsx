@@ -25,7 +25,7 @@ interface GoalTreeCustomizerProps {
   isCreating: boolean
 }
 
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_LABELS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",
@@ -34,7 +34,7 @@ const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
   relationship: "Relationship",
 }
 
-const CATEGORY_DESCRIPTIONS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_DESCRIPTIONS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Practice and exposure goals",
   results: "Outcome-based milestones",
   dirty_dog: "Intimate outcome tracking",
@@ -43,7 +43,7 @@ const CATEGORY_DESCRIPTIONS: Record<GoalDisplayCategory, string> = {
   relationship: "Relationship building",
 }
 
-const CATEGORY_ICONS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_ICONS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "🏃",
   results: "🎯",
   dirty_dog: "🔥",

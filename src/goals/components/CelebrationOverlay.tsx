@@ -70,6 +70,19 @@ export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss
     }
   }, [fireConfetti, config, onDismiss])
 
+  // Keyboard dismissal for modal tiers
+  useEffect(() => {
+    if (!config.showModal) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "Escape") {
+        e.preventDefault()
+        onDismiss()
+      }
+    }
+    window.addEventListener("keydown", handler)
+    return () => window.removeEventListener("keydown", handler)
+  }, [config.showModal, onDismiss])
+
   // Subtle: just a checkmark pulse (no overlay)
   if (tier === "subtle") {
     return (

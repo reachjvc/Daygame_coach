@@ -1,0 +1,692 @@
+#!/usr/bin/env python3
+"""
+Single-command campaign runner for sub-batch pipeline execution.
+
+Default target range:
+  P001.4 -> P003.10
+
+This is the canonical operator entrypoint. It intentionally wraps the existing
+sub-batch orchestrator instead of adding stage-specific parallel command paths.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from collections import deque
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List, Optional, TextIO, Tuple
+
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - non-posix fallback
+    fcntl = None  # type: ignore[assignment]
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+BATCHES_DIR = REPO_ROOT / "docs" / "pipeline" / "batches"
+PLANS_DIR = REPO_ROOT / "docs" / "plans"
+CAMPAIGN_DIR = REPO_ROOT / "data" / "validation" / "campaigns"
+LOCKS_DIR = REPO_ROOT / "data" / "validation" / "campaign_locks"
+SUB_BATCH_SCRIPT = REPO_ROOT / "scripts" / "training-data" / "batch" / "sub-batch-pipeline"
+SUB_BATCH_RE = re.compile(r"^P(\d{3})\.(\d+)$")
+FAILED_VIDEO_SUMMARY_RE = re.compile(r"^\s*([A-Za-z0-9_-]{11}) at stage ([0-9A-Za-z._-]+): Exit code (-?\d+)\s*$")
+FAILED_VIDEO_LINE_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]\s+FAILED at stage\s+([0-9A-Za-z._-]+)\s+\(exit code\s+(-?\d+)\)")
+FINAL_SUMMARY_RE = re.compile(r"^\s*Videos:\s+(\d+)\s+total,\s+(\d+)\s+passed,\s+(\d+)\s+quarantined\s*$")
+
+
+@dataclass(frozen=True)
+class SubBatchId:
+    raw: str
+    batch_num: int
+    sub_num: int
+
+    @staticmethod
+    def parse(text: str) -> "SubBatchId":
+        m = SUB_BATCH_RE.fullmatch(text.strip())
+        if not m:
+            raise ValueError(f"Invalid sub-batch ID: {text!r}")
+        return SubBatchId(raw=text.strip(), batch_num=int(m.group(1)), sub_num=int(m.group(2)))
+
+    def key(self) -> Tuple[int, int]:
+        return (self.batch_num, self.sub_num)
+
+
+def now_iso() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def campaign_id_for(start: str, end: str, from_stage: Optional[str]) -> str:
+    base = f"{start}-{end}"
+    if from_stage:
+        base = f"{base}-from-{from_stage}"
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", base)
+
+
+def list_all_sub_batches() -> List[str]:
+    out: List[str] = []
+    for p in BATCHES_DIR.glob("P*.txt"):
+        stem = p.stem
+        if SUB_BATCH_RE.fullmatch(stem):
+            out.append(stem)
+    return sorted(out, key=lambda s: SubBatchId.parse(s).key())
+
+
+def sub_batches_in_range(start: str, end: str) -> List[str]:
+    s = SubBatchId.parse(start)
+    e = SubBatchId.parse(end)
+    if s.key() > e.key():
+        raise ValueError(f"start must be <= end (got {start} > {end})")
+    selected = []
+    for sid in list_all_sub_batches():
+        key = SubBatchId.parse(sid).key()
+        if s.key() <= key <= e.key():
+            selected.append(sid)
+    return selected
+
+
+def batch_status_path(sub_batch_id: str) -> Path:
+    m = SubBatchId.parse(sub_batch_id)
+    return BATCHES_DIR / f"P{m.batch_num:03d}.status.json"
+
+
+def read_sub_batch_status(sub_batch_id: str) -> Dict[str, str]:
+    path = batch_status_path(sub_batch_id)
+    if not path.exists():
+        return {"status": "unknown", "current_stage": "", "note": ""}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {"status": "unknown", "current_stage": "", "note": ""}
+    sub_batches = payload.get("sub_batches")
+    if not isinstance(sub_batches, dict):
+        return {"status": "unknown", "current_stage": "", "note": ""}
+    row = sub_batches.get(sub_batch_id)
+    if not isinstance(row, dict):
+        return {"status": "unknown", "current_stage": "", "note": ""}
+    return {
+        "status": str(row.get("status", "unknown")),
+        "current_stage": str(row.get("current_stage", "")),
+        "note": str(row.get("note", "")),
+    }
+
+
+def ensure_dirs() -> None:
+    CAMPAIGN_DIR.mkdir(parents=True, exist_ok=True)
+    PLANS_DIR.mkdir(parents=True, exist_ok=True)
+    LOCKS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def write_json(path: Path, data: Dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+
+
+def snapshot_row_for(sid: str) -> Dict:
+    s = read_sub_batch_status(sid)
+    return {
+        "status": s.get("status", "pending"),
+        "current_stage": s.get("current_stage", ""),
+        "note": s.get("note", ""),
+        "attempts": 0,
+        "last_exit_code": None,
+        "last_run_started_at": None,
+        "last_run_finished_at": None,
+        "blocking_failure": False,
+        "last_failure_signature": "",
+        "last_failed_videos": [],
+        "last_log_excerpt": [],
+        "terminal_complete": s.get("status") == "completed",
+    }
+
+
+def render_plan_md(state: Dict, state_path: Path, plan_path: Path) -> str:
+    lines: List[str] = []
+    lines.append(f"# Pipeline Campaign {state['start']} -> {state['end']}")
+    lines.append("")
+    lines.append(f"- Campaign ID: `{state['campaign_id']}`")
+    lines.append(f"- Updated: `{state['updated_at']}`")
+    lines.append(f"- Invocation count: `{state['invocation_count']}`")
+    lines.append(f"- Iteration (current invocation): `{state['iteration']}`")
+    lines.append(f"- Parallel LLM calls: `{state['parallel']}`")
+    if state.get("from_stage"):
+        lines.append(f"- Forced start stage: `{state['from_stage']}`")
+    lines.append(f"- State file: `{state_path}`")
+    lines.append(f"- Plan file: `{plan_path}`")
+    lines.append("")
+    lines.append("## Progress")
+    done = sum(1 for row in state["sub_batches"].values() if row.get("terminal_complete"))
+    total = len(state["sub_batches"])
+    lines.append(f"- Completed sub-batches: `{done}/{total}`")
+    if done == total:
+        lines.append("- Campaign status: `complete`")
+    else:
+        lines.append("- Campaign status: `in_progress`")
+    lines.append("")
+    lines.append("## Sub-batches")
+    for sid in state["ordered_sub_batches"]:
+        row = state["sub_batches"][sid]
+        status = row.get("status", "pending")
+        stage = row.get("current_stage", "")
+        attempts = row.get("attempts", 0)
+        last_rc = row.get("last_exit_code")
+        blocking_failure = bool(row.get("blocking_failure", False))
+        lines.append(
+            f"- `{sid}`: status=`{status}` stage=`{stage}` attempts=`{attempts}` "
+            f"last_exit=`{last_rc}` blocking_failure=`{blocking_failure}`"
+        )
+        note = str(row.get("note", "")).strip()
+        if note:
+            lines.append(f"  note: {note}")
+        failure_signature = str(row.get("last_failure_signature", "")).strip()
+        if failure_signature:
+            lines.append(f"  failure_signature: {failure_signature}")
+        failed_videos = row.get("last_failed_videos")
+        if isinstance(failed_videos, list) and failed_videos:
+            lines.append(f"  failed_videos: {len(failed_videos)}")
+            preview = failed_videos[:8]
+            for item in preview:
+                if not isinstance(item, dict):
+                    continue
+                vid = str(item.get("video_id", "")).strip()
+                stage_item = str(item.get("stage", "")).strip()
+                exit_item = item.get("exit_code")
+                if vid:
+                    lines.append(f"    - {vid} stage={stage_item} exit={exit_item}")
+            if len(failed_videos) > len(preview):
+                lines.append(f"    - ... {len(failed_videos) - len(preview)} more")
+    lines.append("")
+    lines.append("## Single Command")
+    cmd = f"./scripts/training-data/batch/run-campaign --start {state['start']} --end {state['end']}"
+    if state.get("from_stage"):
+        cmd += f" --from-stage {state['from_stage']}"
+    cmd += f" --parallel {state['parallel']}"
+    lines.append(f"- `{cmd}`")
+    return "\n".join(lines) + "\n"
+
+
+def init_state(
+    *,
+    campaign_id: str,
+    start: str,
+    end: str,
+    ordered_sub_batches: List[str],
+    parallel: int,
+    from_stage: Optional[str],
+) -> Dict:
+    sub_map = {}
+    for sid in ordered_sub_batches:
+        sub_map[sid] = snapshot_row_for(sid)
+    ts = now_iso()
+    return {
+        "campaign_id": campaign_id,
+        "created_at": ts,
+        "updated_at": ts,
+        "start": start,
+        "end": end,
+        "iteration": 0,
+        "invocation_count": 0,
+        "last_invocation_started_at": None,
+        "last_invocation_finished_at": None,
+        "last_invocation_exit_code": None,
+        "parallel": parallel,
+        "from_stage": from_stage,
+        "ordered_sub_batches": ordered_sub_batches,
+        "sub_batches": sub_map,
+        "history": [],
+    }
+
+
+def normalize_loaded_state(
+    *,
+    loaded: Dict,
+    campaign_id: str,
+    start: str,
+    end: str,
+    ordered_sub_batches: List[str],
+    parallel: int,
+    from_stage: Optional[str],
+) -> Dict:
+    if not isinstance(loaded, dict):
+        return init_state(
+            campaign_id=campaign_id,
+            start=start,
+            end=end,
+            ordered_sub_batches=ordered_sub_batches,
+            parallel=parallel,
+            from_stage=from_stage,
+        )
+
+    sub_map = loaded.get("sub_batches")
+    if not isinstance(sub_map, dict):
+        sub_map = {}
+
+    normalized_rows: Dict[str, Dict] = {}
+    for sid in ordered_sub_batches:
+        existing = sub_map.get(sid)
+        if isinstance(existing, dict):
+            row = snapshot_row_for(sid)
+            row["status"] = str(existing.get("status", row["status"]))
+            row["current_stage"] = str(existing.get("current_stage", row["current_stage"]))
+            row["note"] = str(existing.get("note", row["note"]))
+            row["attempts"] = int(existing.get("attempts", row["attempts"]) or 0)
+            row["last_exit_code"] = existing.get("last_exit_code")
+            row["last_run_started_at"] = existing.get("last_run_started_at")
+            row["last_run_finished_at"] = existing.get("last_run_finished_at")
+            row["blocking_failure"] = bool(existing.get("blocking_failure", row["blocking_failure"]))
+            row["last_failure_signature"] = str(existing.get("last_failure_signature", row["last_failure_signature"]))
+            raw_failed_videos = existing.get("last_failed_videos", row["last_failed_videos"])
+            if isinstance(raw_failed_videos, list):
+                row["last_failed_videos"] = raw_failed_videos[:50]
+            raw_excerpt = existing.get("last_log_excerpt", row["last_log_excerpt"])
+            if isinstance(raw_excerpt, list):
+                row["last_log_excerpt"] = [str(x) for x in raw_excerpt[-30:]]
+            row["terminal_complete"] = bool(existing.get("terminal_complete", row["terminal_complete"]))
+            normalized_rows[sid] = row
+        else:
+            normalized_rows[sid] = snapshot_row_for(sid)
+
+    ts = now_iso()
+    return {
+        "campaign_id": campaign_id,
+        "created_at": str(loaded.get("created_at") or ts),
+        "updated_at": str(loaded.get("updated_at") or ts),
+        "start": start,
+        "end": end,
+        "iteration": int(loaded.get("iteration", 0) or 0),
+        "invocation_count": int(loaded.get("invocation_count", 0) or 0),
+        "last_invocation_started_at": loaded.get("last_invocation_started_at"),
+        "last_invocation_finished_at": loaded.get("last_invocation_finished_at"),
+        "last_invocation_exit_code": loaded.get("last_invocation_exit_code"),
+        "parallel": parallel,
+        "from_stage": from_stage,
+        "ordered_sub_batches": ordered_sub_batches,
+        "sub_batches": normalized_rows,
+        "history": loaded.get("history", []) if isinstance(loaded.get("history"), list) else [],
+    }
+
+
+def update_sub_batch_snapshot(state: Dict, sid: str) -> None:
+    snap = read_sub_batch_status(sid)
+    row = state["sub_batches"][sid]
+    row["status"] = snap.get("status", row.get("status"))
+    row["current_stage"] = snap.get("current_stage", row.get("current_stage"))
+    row["note"] = snap.get("note", row.get("note"))
+    row["terminal_complete"] = row.get("status") == "completed"
+
+
+def summarize_sub_batch_output(exit_code: int, output_tail: List[str]) -> Dict:
+    failed_videos: List[Dict[str, object]] = []
+    seen_video_stage: set[Tuple[str, str]] = set()
+    final_total: Optional[int] = None
+    final_passed: Optional[int] = None
+    final_quarantined: Optional[int] = None
+    no_fixable_targets = False
+
+    for raw in output_tail:
+        line = raw.strip()
+        if not line:
+            continue
+        m = FINAL_SUMMARY_RE.match(line)
+        if m:
+            final_total = int(m.group(1))
+            final_passed = int(m.group(2))
+            final_quarantined = int(m.group(3))
+        if "Auto-repair: no fixable non-READY targets" in line:
+            no_fixable_targets = True
+        m = FAILED_VIDEO_SUMMARY_RE.match(line)
+        if m:
+            key = (m.group(1), m.group(2))
+            if key in seen_video_stage:
+                continue
+            seen_video_stage.add(key)
+            failed_videos.append(
+                {
+                    "video_id": m.group(1),
+                    "stage": m.group(2),
+                    "exit_code": int(m.group(3)),
+                }
+            )
+            continue
+        m = FAILED_VIDEO_LINE_RE.search(line)
+        if m:
+            key = (m.group(1), m.group(2))
+            if key in seen_video_stage:
+                continue
+            seen_video_stage.add(key)
+            failed_videos.append(
+                {
+                    "video_id": m.group(1),
+                    "stage": m.group(2),
+                    "exit_code": int(m.group(3)),
+                }
+            )
+
+    signature = ""
+    if exit_code != 0:
+        preferred_markers = [
+            "Claude returned no output",
+            "CONTRACT PRECHECK FAILED",
+            "PIPELINE HALTED",
+            "End-of-run validation failed",
+            "FAILED at stage",
+            "ERROR:",
+        ]
+        for marker in preferred_markers:
+            for raw in reversed(output_tail):
+                if marker in raw:
+                    signature = raw.strip()
+                    break
+            if signature:
+                break
+        if not signature:
+            signature = f"sub-batch command exited with code {exit_code}"
+
+    cleaned_tail = [line.rstrip() for line in output_tail if line.strip()]
+    fully_accounted = (
+        isinstance(final_total, int)
+        and isinstance(final_passed, int)
+        and isinstance(final_quarantined, int)
+        and final_total > 0
+        and (final_passed + final_quarantined) == final_total
+    )
+    terminal_by_output = (
+        exit_code == 0
+        and not failed_videos
+        and fully_accounted
+        and (
+            no_fixable_targets
+            or (isinstance(final_quarantined, int) and isinstance(final_total, int) and final_quarantined == final_total)
+            or (isinstance(final_passed, int) and isinstance(final_total, int) and final_passed == final_total)
+        )
+    )
+    return {
+        "blocking_failure": exit_code != 0,
+        "failure_signature": signature,
+        "failed_videos": failed_videos[:50],
+        "log_excerpt": cleaned_tail[-30:],
+        "final_total": final_total,
+        "final_passed": final_passed,
+        "final_quarantined": final_quarantined,
+        "no_fixable_targets": no_fixable_targets,
+        "terminal_by_output": terminal_by_output,
+    }
+
+
+def run_sub_batch(
+    *,
+    sid: str,
+    parallel: int,
+    from_stage: Optional[str],
+    dry_run: bool,
+) -> Tuple[int, List[str]]:
+    cmd = [str(SUB_BATCH_SCRIPT), sid, "--parallel", str(parallel)]
+    if from_stage:
+        cmd.extend(["--from", from_stage])
+    if dry_run:
+        print("[dry-run]", " ".join(cmd))
+        return 0, []
+    print("[run]", " ".join(cmd))
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+    output_tail: deque[str] = deque(maxlen=400)
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        print(line, end="")
+        output_tail.append(line.rstrip("\n"))
+    rc = int(proc.wait())
+    return rc, list(output_tail)
+
+
+def persist(state: Dict, state_path: Path, plan_path: Path) -> None:
+    state["updated_at"] = now_iso()
+    write_json(state_path, state)
+    plan_path.parent.mkdir(parents=True, exist_ok=True)
+    plan_path.write_text(render_plan_md(state, state_path, plan_path), encoding="utf-8")
+
+
+def acquire_campaign_lock(lock_path: Path) -> Optional[TextIO]:
+    if fcntl is None:
+        print("WARNING: fcntl unavailable; campaign lock disabled.", file=sys.stderr)
+        return None
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = lock_path.open("w", encoding="utf-8")
+    try:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        handle.close()
+        raise RuntimeError(
+            f"another run-campaign process is active for this campaign (lock: {lock_path})"
+        )
+    handle.seek(0)
+    handle.truncate()
+    handle.write(f"{os.getpid()}\n")
+    handle.flush()
+    return handle
+
+
+def release_campaign_lock(lock_handle: Optional[TextIO], lock_path: Optional[Path] = None) -> None:
+    if lock_handle is None:
+        return
+    try:
+        if fcntl is not None:
+            fcntl.flock(lock_handle.fileno(), fcntl.LOCK_UN)
+    finally:
+        lock_handle.close()
+        if lock_path is not None:
+            try:
+                lock_path.unlink(missing_ok=True)
+            except OSError:
+                pass
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Single-command campaign runner for sub-batch pipeline execution."
+    )
+    parser.add_argument("--start", default="P001.4", help="Start sub-batch ID (inclusive)")
+    parser.add_argument("--end", default="P003.10", help="End sub-batch ID (inclusive)")
+    parser.add_argument("--parallel", type=int, default=3, help="Max concurrent LLM calls inside each sub-batch run")
+    parser.add_argument("--from-stage", help="Optional forced start stage for every sub-batch run")
+    parser.add_argument("--max-iterations", type=int, default=20, help="Max campaign sweeps per invocation")
+    parser.add_argument("--dry-run", action="store_true", help="Print commands without executing")
+    parser.add_argument("--reset", action="store_true", help="Reset existing campaign state for this range before running")
+    parser.add_argument(
+        "--rerun-completed",
+        action="store_true",
+        help="Run sub-batches even when batch status marks them completed",
+    )
+    parser.add_argument("--state-out", help="Optional JSON state output path")
+    parser.add_argument("--plan-out", help="Optional markdown plan output path")
+    args = parser.parse_args()
+
+    if args.parallel <= 0:
+        print("ERROR: --parallel must be > 0", file=sys.stderr)
+        return 2
+    if args.max_iterations <= 0:
+        print("ERROR: --max-iterations must be > 0", file=sys.stderr)
+        return 2
+
+    ensure_dirs()
+    try:
+        ordered = sub_batches_in_range(args.start, args.end)
+    except ValueError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+
+    if not ordered:
+        print(f"ERROR: no sub-batches found in range {args.start}..{args.end}", file=sys.stderr)
+        return 2
+
+    campaign_id = campaign_id_for(args.start, args.end, args.from_stage)
+    state_path = Path(args.state_out) if args.state_out else (CAMPAIGN_DIR / f"{campaign_id}.json")
+    if not state_path.is_absolute():
+        state_path = REPO_ROOT / state_path
+    plan_path = Path(args.plan_out) if args.plan_out else (PLANS_DIR / f"{campaign_id}.md")
+    if not plan_path.is_absolute():
+        plan_path = REPO_ROOT / plan_path
+
+    lock_path = LOCKS_DIR / f"{campaign_id}.lock"
+    try:
+        lock_handle = acquire_campaign_lock(lock_path)
+    except RuntimeError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+
+    try:
+        if args.reset:
+            if state_path.exists():
+                state_path.unlink()
+            if plan_path.exists():
+                plan_path.unlink()
+
+        if state_path.exists():
+            try:
+                loaded = json.loads(state_path.read_text(encoding="utf-8"))
+            except Exception as exc:
+                print(f"ERROR: failed to read existing state file {state_path}: {exc}", file=sys.stderr)
+                return 2
+            state = normalize_loaded_state(
+                loaded=loaded,
+                campaign_id=campaign_id,
+                start=args.start,
+                end=args.end,
+                ordered_sub_batches=ordered,
+                parallel=args.parallel,
+                from_stage=args.from_stage,
+            )
+            resumed = True
+        else:
+            state = init_state(
+                campaign_id=campaign_id,
+                start=args.start,
+                end=args.end,
+                ordered_sub_batches=ordered,
+                parallel=args.parallel,
+                from_stage=args.from_stage,
+            )
+            resumed = False
+
+        state["parallel"] = args.parallel
+        state["from_stage"] = args.from_stage
+        state["invocation_count"] = int(state.get("invocation_count", 0) or 0) + 1
+        state["last_invocation_started_at"] = now_iso()
+        state["last_invocation_finished_at"] = None
+        state["last_invocation_exit_code"] = None
+        persist(state, state_path, plan_path)
+
+        print(
+            f"[run-campaign] {'resuming' if resumed else 'starting'} campaign "
+            f"{campaign_id} ({args.start}..{args.end})"
+        )
+        print(f"[run-campaign] state={state_path}")
+        print(f"[run-campaign] plan={plan_path}")
+
+        exit_code = 1
+        try:
+            for iteration in range(1, args.max_iterations + 1):
+                state["iteration"] = iteration
+                print(f"\n=== Campaign Iteration {iteration}/{args.max_iterations} ===")
+                all_complete = True
+                for sid in state["ordered_sub_batches"]:
+                    update_sub_batch_snapshot(state, sid)
+                    row = state["sub_batches"][sid]
+                    if row.get("terminal_complete") and not args.rerun_completed:
+                        print(f"[skip] {sid} already completed")
+                        continue
+                    all_complete = False
+                    if not args.dry_run:
+                        row["attempts"] = int(row.get("attempts", 0)) + 1
+                        row["last_run_started_at"] = now_iso()
+                        persist(state, state_path, plan_path)
+                    rc, output_tail = run_sub_batch(
+                        sid=sid,
+                        parallel=args.parallel,
+                        from_stage=args.from_stage,
+                        dry_run=args.dry_run,
+                    )
+                    if args.dry_run:
+                        state["history"].append(
+                            {
+                                "time": now_iso(),
+                                "invocation": state["invocation_count"],
+                                "iteration": iteration,
+                                "sub_batch": sid,
+                                "exit_code": rc,
+                                "dry_run": True,
+                            }
+                        )
+                        persist(state, state_path, plan_path)
+                        continue
+
+                    run_summary = summarize_sub_batch_output(rc, output_tail)
+                    row["last_exit_code"] = rc
+                    row["last_run_finished_at"] = now_iso()
+                    row["blocking_failure"] = bool(run_summary.get("blocking_failure", False))
+                    row["last_failure_signature"] = str(run_summary.get("failure_signature", ""))
+                    row["last_failed_videos"] = run_summary.get("failed_videos", [])
+                    row["last_log_excerpt"] = run_summary.get("log_excerpt", [])
+                    update_sub_batch_snapshot(state, sid)
+                    if bool(run_summary.get("terminal_by_output", False)):
+                        row["terminal_complete"] = True
+                        if str(row.get("status", "")).strip() != "completed":
+                            row["status"] = "completed"
+                            row["current_stage"] = str(row.get("current_stage", "")).strip() or "09"
+                            note_prefix = str(row.get("note", "")).strip()
+                            terminal_note = "campaign terminal: fully accounted (pass+quarantine) with no blocking failures"
+                            row["note"] = f"{note_prefix}; {terminal_note}" if note_prefix else terminal_note
+                    state["history"].append(
+                        {
+                            "time": now_iso(),
+                            "invocation": state["invocation_count"],
+                            "iteration": iteration,
+                            "sub_batch": sid,
+                            "exit_code": rc,
+                            "status_after": row.get("status"),
+                            "stage_after": row.get("current_stage"),
+                            "failure_signature": row.get("last_failure_signature"),
+                            "failed_video_count": len(row.get("last_failed_videos", [])),
+                        }
+                    )
+                    persist(state, state_path, plan_path)
+
+                if all_complete:
+                    print("\nCampaign complete: all sub-batches already completed.")
+                    exit_code = 0
+                    break
+
+                done = sum(1 for sid in state["ordered_sub_batches"] if state["sub_batches"][sid].get("terminal_complete"))
+                total = len(state["ordered_sub_batches"])
+                print(f"\nIteration {iteration} summary: completed {done}/{total}")
+                if done == total:
+                    print("Campaign complete.")
+                    exit_code = 0
+                    break
+            else:
+                print("\nCampaign stopped: max iterations reached before full completion.", file=sys.stderr)
+                exit_code = 1
+        except KeyboardInterrupt:
+            print("\nCampaign interrupted by user.", file=sys.stderr)
+            exit_code = 130
+        finally:
+            state["last_invocation_exit_code"] = exit_code
+            state["last_invocation_finished_at"] = now_iso()
+            persist(state, state_path, plan_path)
+        return exit_code
+    finally:
+        release_campaign_lock(lock_handle, lock_path)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

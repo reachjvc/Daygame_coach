@@ -2,6 +2,9 @@
 """
 pipeline-runner — Conveyor-belt pipeline orchestrator.
 
+Internal runner used by `sub-batch-pipeline` and `run-campaign`.
+Operator entrypoint: `./scripts/training-data/batch/run-campaign`.
+
 Each video progresses through stages 06→09 sequentially (including 07b), but multiple videos
 are in-flight simultaneously. A shared semaphore caps concurrent LLM calls.
 
@@ -23,7 +26,7 @@ import tempfile
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from quarantine_updater import extract_from_cross_stage_or_chunks
 
@@ -37,6 +40,9 @@ TSX_LOADER = REPO_ROOT / "node_modules" / "tsx" / "dist" / "loader.mjs"
 VALIDATION_DIR = REPO_ROOT / "scripts" / "training-data" / "validation"
 
 VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+LEGACY_QUARANTINE_CHECK_MAP = {
+    "stage07b_enrichment_verify_error": "stage07b_gate_block",
+}
 
 DEFAULT_PARALLEL = 10
 
@@ -65,11 +71,21 @@ STAGES = [
 ]
 
 STAGE_KEYS = [s.key for s in STAGES]
+STAGE_KEY_INDEX = {key: idx for idx, key in enumerate(STAGE_KEYS)}
+STAGE_KEYS_BY_LENGTH = sorted(STAGE_KEYS, key=len, reverse=True)
 STAGES_SUPPORTING_QUARANTINE = {"06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"}
 STAGES_SUPPORTING_OVERWRITE = {"06", "06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b"}
 STAGES_SUPPORTING_APPLY_REPAIRS = {"06h"}
 STAGES_SUPPORTING_LLM_RUNTIME_FLAGS = {"06", "06b", "06e", "06g", "07", "07b"}
-STAGES_SUPPORTING_SKIP_PREFLIGHT = {"06b"}
+STAGES_SUPPORTING_SKIP_PREFLIGHT = {"06", "06b"}
+
+STAGE_OUTPUT_DIRS = {
+    "06": DATA_DIR / "06.LLM.video-type",
+    "06c": DATA_DIR / "06c.DET.patched",
+    "07": DATA_DIR / "07.LLM.content",
+    "07b": DATA_DIR / "07b.LLM.enrichment-verify",
+    "09": DATA_DIR / "09.EXT.chunks",
+}
 
 
 # ── Video state tracking ────────────────────────────────────────────────────
@@ -112,6 +128,220 @@ def load_manifest_videos(manifest_path: Path) -> List[VideoState]:
     return videos
 
 
+def _normalize_quarantine_check(raw_check: Any) -> str:
+    check = str(raw_check or "").strip()
+    return LEGACY_QUARANTINE_CHECK_MAP.get(check, check)
+
+
+def _normalize_quarantine_reason(reason: dict) -> Optional[dict]:
+    if not isinstance(reason, dict):
+        return None
+    check = _normalize_quarantine_check(reason.get("check"))
+    if not check:
+        return None
+    message = str(reason.get("message", "")).strip()
+    normalized = dict(reason)
+    normalized["check"] = check
+    if message:
+        normalized["message"] = message[:300]
+    return normalized
+
+
+def _normalize_quarantine_row(row: dict) -> Optional[dict]:
+    if not isinstance(row, dict):
+        return None
+    raw_vid = row.get("video_id")
+    if not isinstance(raw_vid, str):
+        return None
+    video_id = raw_vid.strip()
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        return None
+
+    normalized: dict = {"video_id": video_id}
+    raw_source = row.get("source")
+    if isinstance(raw_source, str) and raw_source.strip():
+        normalized["source"] = raw_source.strip()
+
+    checks: List[str] = []
+    raw_checks = row.get("checks")
+    if isinstance(raw_checks, list):
+        checks = sorted(
+            {
+                _normalize_quarantine_check(item)
+                for item in raw_checks
+                if _normalize_quarantine_check(item)
+            }
+        )
+
+    reasons: List[dict] = []
+    raw_reasons = row.get("reasons")
+    if isinstance(raw_reasons, list):
+        for reason in raw_reasons:
+            normalized_reason = _normalize_quarantine_reason(reason)
+            if normalized_reason:
+                reasons.append(normalized_reason)
+
+    if not reasons and checks:
+        reasons = [
+            {
+                "severity": "error",
+                "check": check,
+                "message": f"Preexisting quarantine retained ({check}).",
+            }
+            for check in checks
+        ]
+
+    if reasons:
+        normalized["reasons"] = reasons
+        normalized["checks"] = sorted({str(reason.get("check", "")).strip() for reason in reasons if str(reason.get("check", "")).strip()})
+    elif checks:
+        normalized["checks"] = checks
+
+    return normalized
+
+
+def load_quarantine_state(quarantine_file: Path | None) -> Tuple[Set[str], List[dict]]:
+    if not quarantine_file or not quarantine_file.exists():
+        return set(), []
+    try:
+        payload = json.loads(quarantine_file.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return set(), []
+    if not isinstance(payload, dict):
+        return set(), []
+
+    rows_by_video: Dict[str, dict] = {}
+    raw_rows = payload.get("videos")
+    if isinstance(raw_rows, list):
+        for row in raw_rows:
+            normalized = _normalize_quarantine_row(row)
+            if normalized:
+                rows_by_video[normalized["video_id"]] = normalized
+
+    ids: Set[str] = set()
+    raw_ids = payload.get("quarantined_video_ids")
+    if isinstance(raw_ids, list):
+        for item in raw_ids:
+            if isinstance(item, str):
+                vid = item.strip()
+                if re.fullmatch(r"[A-Za-z0-9_-]{11}", vid):
+                    ids.add(vid)
+    ids.update(rows_by_video.keys())
+
+    for video_id in sorted(ids):
+        rows_by_video.setdefault(video_id, {"video_id": video_id})
+
+    normalized_rows = [rows_by_video[video_id] for video_id in sorted(rows_by_video)]
+    return set(rows_by_video.keys()), normalized_rows
+
+
+def quarantine_reason_stage(check: str) -> Optional[str]:
+    normalized = _normalize_quarantine_check(check)
+    for stage_key in STAGE_KEYS_BY_LENGTH:
+        if normalized.startswith(f"stage{stage_key}"):
+            return stage_key
+    return None
+
+
+def parse_stage_parallel_caps(raw_values: List[str]) -> Dict[str, int]:
+    caps: Dict[str, int] = {}
+    for raw in raw_values:
+        text = str(raw or "").strip()
+        if not text:
+            continue
+        stage_key, sep, value_text = text.partition("=")
+        stage_key = stage_key.strip()
+        value_text = value_text.strip()
+        if sep != "=" or not stage_key or not value_text:
+            raise ValueError(f"invalid stage cap '{text}' (expected STAGE=N)")
+        if stage_key not in STAGE_KEYS:
+            raise ValueError(f"unknown stage in stage cap '{text}' (valid: {', '.join(STAGE_KEYS)})")
+        if not value_text.isdigit() or int(value_text) < 1:
+            raise ValueError(f"invalid stage cap '{text}' (N must be >= 1)")
+        value = int(value_text)
+        prev = caps.get(stage_key)
+        if prev is not None and prev != value:
+            raise ValueError(f"conflicting stage caps for {stage_key}: {prev} vs {value}")
+        caps[stage_key] = value
+    return caps
+
+
+def filter_quarantine_rows_for_restart(
+    rows: List[dict],
+    start_stage: str,
+    active_video_ids: Optional[Set[str]] = None,
+) -> List[dict]:
+    start_idx = STAGE_KEY_INDEX[start_stage]
+    retained: List[dict] = []
+    for row in rows:
+        normalized = _normalize_quarantine_row(row)
+        if not normalized:
+            continue
+        video_id = str(normalized.get("video_id", "")).strip()
+        if active_video_ids is not None and video_id not in active_video_ids:
+            retained.append(normalized)
+            continue
+
+        reasons = normalized.get("reasons")
+        retained_reasons: List[dict] = []
+        if isinstance(reasons, list):
+            for reason in reasons:
+                check = str(reason.get("check", "")).strip()
+                reason_stage = quarantine_reason_stage(check)
+                if reason_stage is None or STAGE_KEY_INDEX[reason_stage] < start_idx:
+                    retained_reasons.append(reason)
+        else:
+            retained_reasons = []
+
+        checks = normalized.get("checks")
+        retained_checks: List[str] = []
+        if isinstance(checks, list):
+            for check in checks:
+                check_text = str(check).strip()
+                if not check_text:
+                    continue
+                reason_stage = quarantine_reason_stage(check_text)
+                if reason_stage is None or STAGE_KEY_INDEX[reason_stage] < start_idx:
+                    retained_checks.append(check_text)
+
+        if reasons and not retained_reasons:
+            continue
+        if checks and not reasons and not retained_checks:
+            continue
+
+        out = dict(normalized)
+        if retained_reasons:
+            out["reasons"] = retained_reasons
+            out["checks"] = sorted({str(reason.get("check", "")).strip() for reason in retained_reasons if str(reason.get("check", "")).strip()})
+        elif retained_checks:
+            out["checks"] = sorted(set(retained_checks))
+            out.pop("reasons", None)
+        retained.append(out)
+
+    return retained
+
+
+def write_quarantine_payload(
+    quarantine_path: Path,
+    videos: List[dict],
+) -> None:
+    quarantine_path.parent.mkdir(parents=True, exist_ok=True)
+    normalized_rows = [row for row in (_normalize_quarantine_row(item) for item in videos) if row]
+    ids = sorted({str(row.get("video_id", "")).strip() for row in normalized_rows if str(row.get("video_id", "")).strip()})
+    out = {
+        "version": 1,
+        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "quarantine_level": "error",
+        "quarantined_video_count": len(ids),
+        "quarantined_video_ids": ids,
+        "videos": normalized_rows,
+    }
+    quarantine_path.write_text(
+        json.dumps(out, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+
+
 # ── Subprocess execution ────────────────────────────────────────────────────
 
 def build_stage_command(
@@ -138,7 +368,7 @@ def build_stage_command(
     if stage.key in STAGES_SUPPORTING_APPLY_REPAIRS:
         cmd.append("--apply-repairs")
     if stage.key in STAGES_SUPPORTING_SKIP_PREFLIGHT:
-        # Avoid N-way Claude startup probes when conveyor mode fans out many 06b workers.
+        # Avoid N-way Claude startup probes when conveyor mode fans out many LLM workers.
         cmd.append("--skip-preflight")
 
     # Stage 08 per-video runs are only used for immediate gating progression.
@@ -184,21 +414,12 @@ async def run_subprocess(
 # ── Quarantine check ────────────────────────────────────────────────────────
 
 def load_quarantine_video_ids(quarantine_file: Path | None) -> Set[str]:
-    if not quarantine_file or not quarantine_file.exists():
-        return set()
-    try:
-        payload = json.loads(quarantine_file.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return set()
-    if not isinstance(payload, dict):
-        return set()
-    ids = payload.get("quarantined_video_ids")
-    if not isinstance(ids, list):
-        return set()
-    return {str(v).strip() for v in ids if isinstance(v, str) and re.fullmatch(r"[A-Za-z0-9_-]{11}", v.strip())}
+    ids, _ = load_quarantine_state(quarantine_file)
+    return ids
 
 
 def add_quarantine_reason(vs: VideoState, check: str, message: str) -> None:
+    check = LEGACY_QUARANTINE_CHECK_MAP.get(check.strip(), check.strip())
     if check not in vs.quarantine_checks:
         vs.quarantine_checks.add(check)
         vs.quarantine_reasons.append(
@@ -244,19 +465,69 @@ async def run_contract_preflight(
     return proc.returncode or 0
 
 
+def _pick_newest(paths: List[Path]) -> Optional[Path]:
+    if not paths:
+        return None
+
+    def key(path: Path) -> Tuple[float, str]:
+        try:
+            return (path.stat().st_mtime, str(path))
+        except OSError:
+            return (0.0, str(path))
+
+    return max(paths, key=key)
+
+
+def find_stage_artifact(
+    stage_key: str,
+    source: str,
+    video_id: str,
+    suffix: str,
+) -> Optional[Path]:
+    root = STAGE_OUTPUT_DIRS.get(stage_key)
+    if root is None:
+        return None
+    source_dir = root / source
+    if not source_dir.exists():
+        return None
+    candidates = list(source_dir.rglob(f"*{video_id}*{suffix}"))
+    return _pick_newest(candidates)
+
+
+def resolve_stage07_pair(vs: VideoState) -> Tuple[Optional[Path], Optional[Path]]:
+    s07_path = find_stage_artifact("07", vs.source, vs.video_id, ".enriched.json")
+    s06_path = find_stage_artifact("06c", vs.source, vs.video_id, ".conversations.json")
+    return s06_path, s07_path
+
+
 async def run_stage_validator_errors(
     stage: Stage,
+    vs: VideoState,
     manifest_path: str,
     quarantine_file: Path | None,
     log_prefix: str,
-) -> Set[str]:
+) -> Tuple[Set[str], Dict[str, List[dict]]]:
     if stage.key == "07":
+        s06_path, s07_path = resolve_stage07_pair(vs)
+        if not (s06_path and s07_path):
+            return {
+                vs.video_id,
+            }, {
+                vs.video_id: [
+                    {
+                        "check": "stage07_validator_inputs_missing",
+                        "message": "Missing direct Stage 06c/07 artifacts for cross-stage validation; fail-closed block applied.",
+                    }
+                ]
+            }
         cmd = [
             VENV_PYTHON,
             "-u",
             str(VALIDATION_DIR / "validate_cross_stage.py"),
-            "--manifest",
-            manifest_path,
+            "--s06",
+            str(s06_path),
+            "--s07",
+            str(s07_path),
             "--json",
         ]
     elif stage.key == "07b":
@@ -264,8 +535,10 @@ async def run_stage_validator_errors(
             VENV_PYTHON,
             "-u",
             str(VALIDATION_DIR / "validate_stage07b.py"),
-            "--manifest",
-            manifest_path,
+            "--source",
+            vs.source,
+            "--video-id",
+            vs.video_id,
             "--json",
         ]
         if quarantine_file and quarantine_file.exists():
@@ -275,12 +548,14 @@ async def run_stage_validator_errors(
             VENV_PYTHON,
             "-u",
             str(VALIDATION_DIR / "validate_chunks.py"),
-            "--manifest",
-            manifest_path,
+            "--source",
+            vs.source,
+            "--video-id",
+            vs.video_id,
             "--json",
         ]
     else:
-        return set()
+        return set(), {}
 
     proc = await asyncio.create_subprocess_exec(
         *cmd,
@@ -290,16 +565,39 @@ async def run_stage_validator_errors(
     stdout, _ = await proc.communicate()
     text = stdout.decode("utf-8", errors="replace").strip()
     if not text:
-        return set()
+        return set(), {}
     try:
         payload = json.loads(text)
     except json.JSONDecodeError:
         print(f"{log_prefix} [validate:{stage.key}] WARNING: non-JSON validator output")
-        return set()
+        return set(), {}
     if not isinstance(payload, dict):
-        return set()
-    quarantined_ids, _ = extract_from_cross_stage_or_chunks(payload, stage_label=stage.key)
-    return quarantined_ids
+        return set(), {}
+    quarantined_ids, quarantined_videos = extract_from_cross_stage_or_chunks(payload, stage_label=stage.key)
+    reasons_by_video: Dict[str, List[dict]] = {}
+    for row in quarantined_videos:
+        if not isinstance(row, dict):
+            continue
+        vid = row.get("video_id")
+        if not isinstance(vid, str) or not vid.strip():
+            continue
+        reasons = row.get("reasons")
+        if not isinstance(reasons, list):
+            continue
+        for reason in reasons:
+            if not isinstance(reason, dict):
+                continue
+            check = str(reason.get("check", "")).strip()
+            message = str(reason.get("message", "")).strip()
+            if not check or not message:
+                continue
+            reasons_by_video.setdefault(vid, []).append(
+                {
+                    "check": check,
+                    "message": message,
+                }
+            )
+    return quarantined_ids, reasons_by_video
 
 
 def check_06b_verdict(video_id: str, source: str) -> bool:
@@ -324,56 +622,55 @@ def check_06b_verdict(video_id: str, source: str) -> bool:
 def write_quarantine_file(
     quarantine_path: Path,
     quarantined: List[VideoState],
+    existing_seed_videos: Optional[List[dict]] = None,
 ) -> None:
     """Write quarantine file in the standard format."""
-    if not quarantined:
-        return
-    quarantine_path.parent.mkdir(parents=True, exist_ok=True)
-
-    # Load existing quarantine to merge
-    existing_ids: Set[str] = set()
-    existing_videos: List[dict] = []
-    if quarantine_path.exists():
-        try:
-            data = json.loads(quarantine_path.read_text(encoding="utf-8"))
-            existing_videos = data.get("videos", [])
-            existing_ids = set(data.get("quarantined_video_ids", []))
-        except (json.JSONDecodeError, OSError):
-            pass
+    existing_videos = (
+        [row for row in (_normalize_quarantine_row(item) for item in (existing_seed_videos or [])) if row]
+        if existing_seed_videos is not None
+        else load_quarantine_state(quarantine_path)[1]
+    )
+    rows_by_video: Dict[str, dict] = {
+        str(row.get("video_id", "")).strip(): dict(row)
+        for row in existing_videos
+        if str(row.get("video_id", "")).strip()
+    }
 
     for vs in quarantined:
-        if vs.video_id not in existing_ids:
-            existing_ids.add(vs.video_id)
-            checks = sorted(vs.quarantine_checks) if vs.quarantine_checks else ["stage06b_reject"]
-            reasons = (
-                vs.quarantine_reasons
-                if vs.quarantine_reasons
-                else [
-                    {
-                        "severity": "error",
-                        "check": "stage06b_reject",
-                        "message": "Stage 06b verdict: REJECT",
-                    }
-                ]
-            )
-            existing_videos.append({
-                "video_id": vs.video_id,
-                "checks": checks,
-                "reasons": reasons,
-            })
+        checks = sorted(vs.quarantine_checks) if vs.quarantine_checks else ["stage06b_reject"]
+        reasons = (
+            vs.quarantine_reasons
+            if vs.quarantine_reasons
+            else [
+                {
+                    "severity": "error",
+                    "check": "stage06b_reject",
+                    "message": "Stage 06b verdict: REJECT",
+                }
+            ]
+        )
+        normalized_reasons = [row for row in (_normalize_quarantine_reason(reason) for reason in reasons) if row]
+        current = rows_by_video.get(vs.video_id, {"video_id": vs.video_id})
+        merged_checks = set(current.get("checks", [])) if isinstance(current.get("checks"), list) else set()
+        merged_checks.update(checks)
+        merged_checks.update(str(reason.get("check", "")).strip() for reason in normalized_reasons if str(reason.get("check", "")).strip())
+        merged_reasons = list(current.get("reasons", [])) if isinstance(current.get("reasons"), list) else []
+        existing_reason_keys = {
+            (str(reason.get("check", "")).strip(), str(reason.get("message", "")).strip())
+            for reason in merged_reasons
+            if isinstance(reason, dict)
+        }
+        for reason in normalized_reasons:
+            key = (str(reason.get("check", "")).strip(), str(reason.get("message", "")).strip())
+            if key not in existing_reason_keys:
+                merged_reasons.append(reason)
+                existing_reason_keys.add(key)
+        current["checks"] = sorted(check for check in merged_checks if str(check).strip())
+        if merged_reasons:
+            current["reasons"] = merged_reasons
+        rows_by_video[vs.video_id] = current
 
-    out = {
-        "version": 1,
-        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "quarantine_level": "error",
-        "quarantined_video_count": len(existing_ids),
-        "quarantined_video_ids": sorted(existing_ids),
-        "videos": existing_videos,
-    }
-    quarantine_path.write_text(
-        json.dumps(out, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    write_quarantine_payload(quarantine_path, list(rows_by_video.values()))
 
 
 # ── Per-video pipeline ──────────────────────────────────────────────────────
@@ -382,8 +679,9 @@ async def run_video(
     vs: VideoState,
     stages: List[Stage],
     semaphore: asyncio.Semaphore,
+    stage_semaphores: Dict[str, asyncio.Semaphore],
     quarantine_file: Path | None,
-    full_manifest_path: Path,
+    preexisting_quarantine_ids: Set[str],
     dry_run: bool,
     progress: Dict[str, str],
     llm_timeout_seconds: int | None = None,
@@ -391,7 +689,7 @@ async def run_video(
 ) -> None:
     """Run one video through all stages sequentially."""
     log_prefix = f"[{vs.video_id}]"
-    if vs.video_id in load_quarantine_video_ids(quarantine_file):
+    if vs.video_id in preexisting_quarantine_ids:
         vs.status = "quarantined"
         add_quarantine_reason(vs, "preexisting_quarantine", "Video was already quarantined before this run.")
         progress[vs.video_id] = "QUARANTINED"
@@ -424,27 +722,39 @@ async def run_video(
 
             preflight_rc = await run_contract_preflight(stage, tmp_manifest, quarantine_file, log_prefix)
             if preflight_rc != 0:
-                vs.status = "failed"
-                vs.error_stage = stage.key
-                vs.error_msg = f"Contract preflight failed (exit {preflight_rc})"
-                print(f"{log_prefix} FAILED at stage {stage.key} (contract preflight exit {preflight_rc})")
-                progress[vs.video_id] = f"{stage.key}(PREFAIL)"
+                vs.status = "quarantined"
+                add_quarantine_reason(
+                    vs,
+                    f"stage{stage.key}_contract_preflight_fail",
+                    f"Stage {stage.key} contract preflight failed (exit {preflight_rc}); fail-closed quarantine.",
+                )
+                print(f"{log_prefix} QUARANTINED: stage {stage.key} contract preflight failed (exit {preflight_rc})")
+                progress[vs.video_id] = "QUARANTINED"
                 return
 
             if stage.needs_llm:
                 progress[vs.video_id] = f"{stage.key}(wait)"
+                stage_semaphore = stage_semaphores.get(stage.key)
                 async with semaphore:
-                    progress[vs.video_id] = f"{stage.key}(llm)"
-                    rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+                    if stage_semaphore is not None:
+                        async with stage_semaphore:
+                            progress[vs.video_id] = f"{stage.key}(llm)"
+                            rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
+                    else:
+                        progress[vs.video_id] = f"{stage.key}(llm)"
+                        rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
             else:
                 rc = await run_subprocess(cmd, stage, vs.video_id, log_prefix)
 
             if rc != 0:
-                vs.status = "failed"
-                vs.error_stage = stage.key
-                vs.error_msg = f"Exit code {rc}"
-                print(f"{log_prefix} FAILED at stage {stage.key} (exit code {rc})")
-                progress[vs.video_id] = f"{stage.key}(FAIL)"
+                vs.status = "quarantined"
+                add_quarantine_reason(
+                    vs,
+                    f"stage{stage.key}_execution_error",
+                    f"Stage {stage.key} exited non-zero (exit {rc}); fail-closed quarantine.",
+                )
+                print(f"{log_prefix} QUARANTINED: stage {stage.key} execution failure (exit {rc})")
+                progress[vs.video_id] = "QUARANTINED"
                 return
 
             # Post-06b: check for REJECT verdict
@@ -457,32 +767,42 @@ async def run_video(
                     return
 
             if stage.key in ("07", "07b", "09"):
-                error_ids = await run_stage_validator_errors(
+                error_ids, reasons_by_video = await run_stage_validator_errors(
                     stage,
-                    str(full_manifest_path),
+                    vs,
+                    tmp_manifest,
                     quarantine_file,
                     log_prefix,
                 )
                 if vs.video_id in error_ids:
                     vs.status = "quarantined"
-                    if stage.key == "07":
-                        add_quarantine_reason(
-                            vs,
-                            "stage07_cross_stage_error",
-                            "Stage 07 cross-stage validation reported error severity issues.",
-                        )
-                    elif stage.key == "07b":
-                        add_quarantine_reason(
-                            vs,
-                            "stage07b_enrichment_verify_error",
-                            "Stage 07b enrichment verification reported block-level issues.",
-                        )
+                    reason_rows = reasons_by_video.get(vs.video_id, [])
+                    if reason_rows:
+                        for reason_row in reason_rows:
+                            add_quarantine_reason(
+                                vs,
+                                str(reason_row.get("check", "")).strip() or f"stage{stage.key}_block",
+                                str(reason_row.get("message", "")).strip() or f"Stage {stage.key} validation reported block-level issues.",
+                            )
                     else:
-                        add_quarantine_reason(
-                            vs,
-                            "stage09_chunk_validation_error",
-                            "Stage 09 chunk validation reported error severity issues.",
-                        )
+                        if stage.key == "07":
+                            add_quarantine_reason(
+                                vs,
+                                "stage07_cross_stage_error",
+                                "Stage 07 cross-stage validation reported error severity issues.",
+                            )
+                        elif stage.key == "07b":
+                            add_quarantine_reason(
+                                vs,
+                                "stage07b_gate_block",
+                                "Stage 07b enrichment verification reported block-level issues.",
+                            )
+                        else:
+                            add_quarantine_reason(
+                                vs,
+                                "stage09_chunk_validation_error",
+                                "Stage 09 chunk validation reported error severity issues.",
+                            )
                     print(f"{log_prefix} QUARANTINED: stage {stage.key} validation errors")
                     progress[vs.video_id] = "QUARANTINED"
                     return
@@ -576,6 +896,16 @@ async def run_pipeline(args: argparse.Namespace) -> int:
 
     parallel = args.parallel
     semaphore = asyncio.Semaphore(parallel)
+    stage_parallel_caps = {
+        stage_key: min(parallel, int(cap))
+        for stage_key, cap in (args.stage_parallel_caps or {}).items()
+        if isinstance(cap, int) and cap > 0
+    }
+    stage_semaphores = {
+        stage_key: asyncio.Semaphore(cap)
+        for stage_key, cap in stage_parallel_caps.items()
+        if cap < parallel
+    }
     if args.quarantine_file:
         quarantine_file = Path(args.quarantine_file)
         if not quarantine_file.is_absolute():
@@ -583,12 +913,41 @@ async def run_pipeline(args: argparse.Namespace) -> int:
     else:
         quarantine_file = QUARANTINE_DIR / f"{sub_id}.json"
 
+    preexisting_quarantine_ids: Set[str] = set()
+    retained_existing_videos: List[dict] = []
+    original_quarantine_count = 0
+    if quarantine_file and quarantine_file.exists():
+        original_ids, original_rows = load_quarantine_state(quarantine_file)
+        original_quarantine_count = len(original_ids)
+        retained_existing_videos = filter_quarantine_rows_for_restart(
+            original_rows,
+            start_key,
+            active_video_ids={v.video_id for v in videos},
+        )
+        preexisting_quarantine_ids = {
+            str(row.get("video_id", "")).strip()
+            for row in retained_existing_videos
+            if str(row.get("video_id", "")).strip()
+        }
+        removed_count = original_quarantine_count - len(preexisting_quarantine_ids)
+        if removed_count > 0 and not args.dry_run:
+            write_quarantine_payload(quarantine_file, retained_existing_videos)
+        if removed_count > 0:
+            print(
+                f"[pipeline-runner] Restart from {start_key}: ignoring {removed_count} "
+                f"same-stage/downstream quarantine entr{'y' if removed_count == 1 else 'ies'} "
+                f"(retained quarantine rows: {len(preexisting_quarantine_ids)}/{original_quarantine_count})."
+            )
+
     print()
     print("=" * 56)
     print(f"  Pipeline Runner: {sub_id}")
     print(f"  Videos: {len(videos)}")
     print(f"  Stages: {' → '.join(s.key for s in stages)}")
     print(f"  Parallel LLM calls: {parallel}")
+    if stage_parallel_caps:
+        caps_text = ", ".join(f"{stage_key}={stage_parallel_caps[stage_key]}" for stage_key in sorted(stage_parallel_caps))
+        print(f"  Stage LLM caps: {caps_text}")
     if args.dry_run:
         print("  Mode: DRY RUN")
     print("=" * 56)
@@ -604,8 +963,9 @@ async def run_pipeline(args: argparse.Namespace) -> int:
                 vs,
                 stages,
                 semaphore,
+                stage_semaphores,
                 quarantine_file,
-                manifest_path,
+                preexisting_quarantine_ids,
                 args.dry_run,
                 progress,
                 llm_timeout_seconds=args.llm_timeout_seconds,
@@ -629,8 +989,8 @@ async def run_pipeline(args: argparse.Namespace) -> int:
 
     # Write quarantine file for any rejected videos
     quarantined = [v for v in videos if v.status == "quarantined"]
-    if quarantined:
-        write_quarantine_file(quarantine_file, quarantined)
+    if quarantine_file and (quarantined or retained_existing_videos or original_quarantine_count > 0) and not args.dry_run:
+        write_quarantine_file(quarantine_file, quarantined, existing_seed_videos=retained_existing_videos)
 
     # Summary
     done_count = sum(1 for v in videos if v.status == "done")
@@ -722,6 +1082,12 @@ def main() -> None:
         type=int,
         help="Optional per-call retry override for LLM stages",
     )
+    parser.add_argument(
+        "--stage-parallel-cap",
+        action="append",
+        default=[],
+        help="Optional per-stage LLM concurrency cap (repeatable, format: STAGE=N)",
+    )
     args = parser.parse_args()
     if args.parallel < 1:
         parser.error("--parallel must be >= 1")
@@ -729,6 +1095,10 @@ def main() -> None:
         parser.error("--llm-timeout-seconds must be >= 1")
     if args.llm_retries is not None and args.llm_retries < 1:
         parser.error("--llm-retries must be >= 1")
+    try:
+        args.stage_parallel_caps = parse_stage_parallel_caps(list(args.stage_parallel_cap or []))
+    except ValueError as exc:
+        parser.error(str(exc))
     rc = asyncio.run(run_pipeline(args))
     sys.exit(rc)
 

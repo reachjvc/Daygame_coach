@@ -348,6 +348,43 @@ def _validate_verification_payload(
     return verdict, errs
 
 
+def _validate_stage07b_payload(
+    stage07b_path: Path,
+    expected_video_id: str,
+) -> Tuple[Optional[str], Optional[str], List[str]]:
+    data = _load_json(stage07b_path)
+    if not isinstance(data, dict):
+        return None, None, ["unreadable_json"]
+
+    errs: List[str] = []
+    gate_raw = data.get("gate_decision")
+    gate: Optional[str] = None
+    if not isinstance(gate_raw, str) or not gate_raw.strip():
+        errs.append("missing_gate_decision")
+    else:
+        gate = gate_raw.strip().lower()
+        if gate not in {"pass", "review", "block"}:
+            errs.append(f"invalid_gate_decision={gate_raw!r}")
+            gate = None
+
+    video_id = data.get("video_id")
+    if video_id is not None:
+        if not isinstance(video_id, str) or not _VIDEO_ID_RE.fullmatch(video_id.strip()):
+            errs.append("invalid_video_id")
+        elif video_id.strip() != expected_video_id:
+            errs.append("video_id_mismatch_manifest")
+
+    reason_code: Optional[str] = None
+    reason_raw = data.get("reason_code")
+    if reason_raw is not None:
+        if not isinstance(reason_raw, str):
+            errs.append("invalid_reason_code")
+        elif reason_raw.strip():
+            reason_code = reason_raw.strip()
+
+    return gate, reason_code, errs
+
+
 def _parse_waiver_expires_at(expires_at: str, idx: int) -> float:
     raw = expires_at.strip()
     if not raw:
@@ -1360,6 +1397,7 @@ def main() -> None:
     verdict_counts: Counter = Counter()
     missing_verify: List[str] = []
     invalid_verify: List[str] = []
+    invalid_s07b: List[str] = []
     missing_s01: List[str] = []
     missing_s05: List[str] = []
     missing_s06c: List[str] = []
@@ -1374,6 +1412,9 @@ def main() -> None:
     cross_stage_warnings = 0
     stage06b_checked_files = 0
     stage06b_invalid_files = 0
+    stage07b_checked_files = 0
+    stage07b_invalid_files = 0
+    stage07b_gate_counts: Counter = Counter()
     stage09_checked_files = 0
     stage09_invalid_files = 0
     stage05_checked_files = 0
@@ -1862,6 +1903,43 @@ def main() -> None:
                 "manifest_folder": folder_text,
             })
             check_counts["error:missing_stage07b_enrichment_verify"] += 1
+        else:
+            stage07b_checked_files += 1
+            stage07b_gate, stage07b_reason, s07b_errs = _validate_stage07b_payload(s07b_path, vid)
+            if s07b_errs:
+                stage07b_invalid_files += 1
+                invalid_s07b.append(vid)
+                issues.append({
+                    "video_id": vid,
+                    "source": src,
+                    "severity": "error",
+                    "check": "stage07b_enrichment_verify_invalid",
+                    "message": f"Stage 07b enrichment-verify payload invalid: {s07b_errs}",
+                    "s07b": str(s07b_path),
+                })
+                check_counts["error:stage07b_enrichment_verify_invalid"] += 1
+            elif stage07b_gate:
+                stage07b_gate_counts[stage07b_gate] += 1
+                if stage07b_gate == "block":
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "error",
+                        "check": "stage07b_gate_block",
+                        "message": f"Stage 07b gate decision is block ({stage07b_reason or 'blocking_issue_detected'})",
+                        "s07b": str(s07b_path),
+                    })
+                    check_counts["error:stage07b_gate_block"] += 1
+                elif stage07b_gate == "review":
+                    issues.append({
+                        "video_id": vid,
+                        "source": src,
+                        "severity": "warning",
+                        "check": "stage07b_gate_review",
+                        "message": f"Stage 07b gate decision is review ({stage07b_reason or 'review_required'})",
+                        "s07b": str(s07b_path),
+                    })
+                    check_counts["warning:stage07b_gate_review"] += 1
         if args.check_stage05_audio and not s05_path:
             missing_s05.append(vid)
             issues.append({
@@ -2826,6 +2904,7 @@ def main() -> None:
             "missing_06c_patched": len(missing_s06c),
             "missing_07_content": len(missing_s07),
             "missing_07b_enrichment_verify": len(missing_s07b),
+            "invalid_07b_enrichment_verify": len(invalid_s07b),
             **({"missing_09_chunks": len(missing_s09)} if args.check_stage09_chunks else {}),
         },
         "stage01_presence_required": not bool(args.skip_stage01_presence),
@@ -2836,6 +2915,11 @@ def main() -> None:
         "stage06b_validation": {
             "checked_files": stage06b_checked_files,
             "invalid_files": stage06b_invalid_files,
+        },
+        "stage07b_validation": {
+            "checked_files": stage07b_checked_files,
+            "invalid_files": stage07b_invalid_files,
+            "gate_counts": {k: stage07b_gate_counts[k] for k in sorted(stage07b_gate_counts)},
         },
         "stage07_validation": {
             "errors": stage07_val_errors,
@@ -2957,13 +3041,17 @@ def main() -> None:
             f"{LOG_PREFIX} Presence: missing 01.download={len(missing_s01)}, "
             f"missing 06b.LLM.verify={len(missing_verify)}, invalid 06b.LLM.verify={len(invalid_verify)}, "
             f"missing 06c.DET.patched={len(missing_s06c)}, missing 07.LLM.content={len(missing_s07)}, "
-            f"missing 07b.LLM.enrichment-verify={len(missing_s07b)}"
+            f"missing 07b.LLM.enrichment-verify={len(missing_s07b)}, invalid 07b.LLM.enrichment-verify={len(invalid_s07b)}"
             + (f", missing 05.audio_features={len(missing_s05)}" if args.check_stage05_audio else "")
             + (f", missing 09.EXT.chunks={len(missing_s09)}" if args.check_stage09_chunks else "")
         )
         print(
             f"{LOG_PREFIX} Stage 06b verification check: "
             f"checked={stage06b_checked_files}, invalid={stage06b_invalid_files}"
+        )
+        print(
+            f"{LOG_PREFIX} Stage 07b enrichment verify check: "
+            f"checked={stage07b_checked_files}, invalid={stage07b_invalid_files}, gates={dict(stage07b_gate_counts) or '{}'}"
         )
         if args.check_stage05_audio:
             print(

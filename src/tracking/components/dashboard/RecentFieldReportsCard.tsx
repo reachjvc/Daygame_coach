@@ -44,7 +44,7 @@ export function RecentFieldReportsCard({ reports, onDeleteReport }: RecentFieldR
   }
 
   return (
-    <div className="md:col-span-2 relative">
+    <div id="recent-reports" className="md:col-span-2 relative">
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Recent Field Reports</h2>

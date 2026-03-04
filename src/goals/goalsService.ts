@@ -998,6 +998,22 @@ export function applyPreviewState(
 }
 
 /**
+ * Detect orphaned goals — goals whose template_id no longer exists in the template registry.
+ * Only flags goals with directly invalid template_ids. Children with valid (or no)
+ * template_ids are NOT cascade-archived — they become roots instead.
+ * Custom goals (no template_id) are never orphaned.
+ */
+export function getOrphanedGoalIds(goals: GoalWithProgress[]): string[] {
+  const orphans: string[] = []
+  for (const g of goals) {
+    if (g.template_id && !GOAL_TEMPLATE_MAP[g.template_id]) {
+      orphans.push(g.id)
+    }
+  }
+  return orphans
+}
+
+/**
  * Find an existing goal matching a template_id.
  */
 export function findExistingByTemplate(

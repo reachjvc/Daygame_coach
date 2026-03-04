@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
+import { useBackableState } from "@/src/shared/useBackableState"
 import { Loader2, Library, Heart, Flame, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +24,7 @@ interface GoalCatalogPickerProps {
 export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCreateManual }: GoalCatalogPickerProps) {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [previewInserts, setPreviewInserts] = useState<BatchGoalInsert[] | null>(null)
+  const [previewInserts, setPreviewInserts] = useBackableState<BatchGoalInsert[] | null>(null)
   const [selectedAreaId, setSelectedAreaId] = useState<string>("daygame")
 
   const catalog = getAreaCatalog(selectedAreaId)

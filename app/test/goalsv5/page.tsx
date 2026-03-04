@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Sparkles } from "lucide-react"
@@ -270,7 +270,7 @@ const VARIANT_COMPONENTS: Record<string, React.ComponentType> = {
   g: VariantG,
 }
 
-export default function GoalsV5Page() {
+function GoalsV5PageInner() {
   const searchParams = useSearchParams()
   const urlVariant = searchParams.get("variant")
   const [selected, setSelected] = useState<string | null>(urlVariant)
@@ -312,4 +312,8 @@ export default function GoalsV5Page() {
       <VariantComponent />
     </div>
   )
+}
+
+export default function GoalsV5Page() {
+  return <Suspense><GoalsV5PageInner /></Suspense>
 }

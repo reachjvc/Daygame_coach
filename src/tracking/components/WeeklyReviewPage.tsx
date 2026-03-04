@@ -23,6 +23,7 @@ import {
   Lightbulb,
   Trophy,
   AlertTriangle,
+  Save,
 } from "lucide-react"
 import Link from "next/link"
 import type {
@@ -33,6 +34,8 @@ import type {
 import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { FieldRenderer } from "./FieldRenderer"
 import { GoalsSummarySection } from "./GoalsSummarySection"
+import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
+import type { FieldDefinition } from "../types"
 
 interface WeeklyReviewPageProps {
   userId: string
@@ -99,6 +102,12 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const [showPrinciples, setShowPrinciples] = useState(false)
   const [completedGoals, setCompletedGoals] = useState<GoalWithProgress[]>([])
   const [approachingMilestones, setApproachingMilestones] = useState<GoalWithProgress[]>([])
+
+  // Extra fields added via field picker
+  const [extraFields, setExtraFields] = useState<TemplateField[]>([])
+  const [saveTemplateName, setSaveTemplateName] = useState("")
+  const [isSavingTemplate, setIsSavingTemplate] = useState(false)
+  const [templateSaved, setTemplateSaved] = useState(false)
 
   // Calculate current week boundaries
   const getWeekBoundaries = () => {
@@ -562,7 +571,132 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
                 onChange={(value) => handleFieldChange(field.id, value)}
               />
             ))}
+
+            {/* Extra fields added via field picker */}
+            {extraFields.map((field) => (
+              <div key={field.id} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExtraFields(extraFields.filter(f => f.id !== field.id))
+                    setFormValues(prev => {
+                      const next = { ...prev }
+                      delete next[field.id]
+                      return next
+                    })
+                  }}
+                  className="absolute -top-2 -right-2 z-10 p-1 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                  aria-label={`Remove ${field.label}`}
+                >
+                  <X className="size-3" />
+                </button>
+                <FieldRenderer
+                  field={field}
+                  value={formValues[field.id]}
+                  onChange={(value) => handleFieldChange(field.id, value)}
+                />
+              </div>
+            ))}
           </div>
+
+          {/* Field picker for adding extra fields */}
+          <div className="mt-6">
+            <FieldPickerPanel
+              excludeFieldIds={new Set([
+                ...fieldsToRender.map(f => f.id),
+                ...extraFields.map(f => f.id),
+              ])}
+              onAddField={(field: FieldDefinition) => {
+                const templateField: TemplateField = {
+                  id: field.id,
+                  type: field.type,
+                  label: field.label,
+                  placeholder: field.placeholder,
+                  required: field.required,
+                  options: field.options,
+                  min: field.min,
+                  max: field.max,
+                  rows: field.rows,
+                }
+                setExtraFields(prev => [...prev, templateField])
+              }}
+              onAddCustomField={(label: string) => {
+                const field = createCustomTextField(label)
+                setExtraFields(prev => [...prev, field])
+              }}
+              compact
+            />
+          </div>
+
+          {/* Save as custom review template (when extra fields added) */}
+          {extraFields.length > 0 && !templateSaved && (
+            <div className="mt-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-2 mb-2">
+                <Save className="size-4 text-primary" />
+                <span className="text-sm font-semibold">Save as custom review template?</span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Save this field combination as a reusable review template.
+              </p>
+              <div className="flex gap-2">
+                <Input
+                  value={saveTemplateName}
+                  onChange={(e) => setSaveTemplateName(e.target.value)}
+                  placeholder={`${selectedTemplate?.name || "Review"} + custom`}
+                  className="flex-1 text-sm"
+                  data-testid="save-review-template-name-input"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={isSavingTemplate}
+                  onClick={async () => {
+                    setIsSavingTemplate(true)
+                    try {
+                      const allFields = [...fieldsToRender, ...extraFields].map(f => ({
+                        id: f.id,
+                        label: f.label,
+                        type: f.type,
+                        placeholder: f.placeholder,
+                        required: f.required,
+                        options: f.options,
+                        min: f.min,
+                        max: f.max,
+                        rows: f.rows,
+                      }))
+                      const res = await fetch("/api/tracking/templates/review", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          name: saveTemplateName.trim() || `${selectedTemplate?.name || "Review"} + custom`,
+                          review_type: "weekly",
+                          fields: allFields,
+                        }),
+                      })
+                      if (res.ok) {
+                        setTemplateSaved(true)
+                      }
+                    } finally {
+                      setIsSavingTemplate(false)
+                    }
+                  }}
+                  data-testid="save-as-review-template-btn"
+                >
+                  {isSavingTemplate ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    "Save Template"
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+          {templateSaved && (
+            <div className="mt-6 p-3 rounded-xl bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400 text-sm flex items-center gap-2">
+              <Check className="size-4" />
+              Template saved! It will appear in your review template picker next time.
+            </div>
+          )}
 
           {/* New Commitment */}
           <div className="mt-8 p-4 rounded-lg border bg-primary/5 border-primary/20">

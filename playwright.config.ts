@@ -53,6 +53,8 @@ export default defineConfig({
         /goals-data-consistency\.spec\.ts/,
         // Mobile-specific tests run in dedicated cross-browser projects
         /mobile\//,
+        // Integration tests run in dedicated project after session chain
+        /integration\//,
       ],
       dependencies: ['setup'],
       use: {
@@ -183,96 +185,45 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
 
-    // === Cross-browser: Goals on mobile & Safari ===
+    // === Mobile viewport: beta-critical specs on iPhone 14 ===
     {
-      name: 'goals-mobile-iphone',
-      testMatch: /goals-hub\.spec\.ts/,
+      name: 'mobile-iphone',
+      testMatch: [
+        /goals-hub\.spec\.ts/,
+        /session-tracking\.spec\.ts/,
+        /scenarios-hub\.spec\.ts/,
+        /dashboard-navigation\.spec\.ts/,
+        /tracking-dashboard\.spec\.ts/,
+        /field-report\.spec\.ts/,
+      ],
       dependencies: ['setup'],
       use: {
         ...devices['iPhone 14'],
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
+
+    // === Mobile viewport: beta-critical specs on Pixel 7 ===
     {
-      name: 'goals-mobile-pixel',
-      testMatch: /goals-hub\.spec\.ts/,
+      name: 'mobile-pixel',
+      testMatch: [
+        /goals-hub\.spec\.ts/,
+        /session-tracking\.spec\.ts/,
+        /scenarios-hub\.spec\.ts/,
+        /dashboard-navigation\.spec\.ts/,
+        /tracking-dashboard\.spec\.ts/,
+        /field-report\.spec\.ts/,
+      ],
       dependencies: ['setup'],
       use: {
         ...devices['Pixel 7'],
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
-    {
-      name: 'goals-safari',
-      testMatch: /goals-hub\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
 
-    // === Cross-browser: Session tracking on mobile & Safari ===
+    // === Mobile navigation (genuine mobile-only UI: hamburger menu) ===
     {
-      name: 'tracking-mobile-iphone',
-      testMatch: /session-tracking\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['iPhone 14'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'tracking-mobile-pixel',
-      testMatch: /session-tracking\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Pixel 7'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'tracking-safari',
-      testMatch: /session-tracking\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-
-    // === Cross-browser: Scenarios on mobile & Safari ===
-    {
-      name: 'scenarios-mobile-iphone',
-      testMatch: /scenarios-hub\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['iPhone 14'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'scenarios-mobile-pixel',
-      testMatch: /scenarios-hub\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Pixel 7'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-    {
-      name: 'scenarios-safari',
-      testMatch: /scenarios-hub\.spec\.ts/,
-      dependencies: ['setup'],
-      use: {
-        ...devices['Desktop Safari'],
-        storageState: 'tests/e2e/.auth/user.json',
-      },
-    },
-
-    // === Mobile-specific navigation tests ===
-    {
-      name: 'mobile-navigation-iphone',
+      name: 'mobile-nav',
       testMatch: /mobile\/mobile-navigation\.spec\.ts/,
       dependencies: ['setup'],
       use: {
@@ -280,12 +231,14 @@ export default defineConfig({
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
+
+    // === Cross-feature integration tests (run after session chain) ===
     {
-      name: 'mobile-navigation-pixel',
-      testMatch: /mobile\/mobile-navigation\.spec\.ts/,
-      dependencies: ['setup'],
+      name: 'integration',
+      testMatch: /integration\//,
+      dependencies: ['session-4'],
       use: {
-        ...devices['Pixel 7'],
+        ...devices['Desktop Chrome'],
         storageState: 'tests/e2e/.auth/user.json',
       },
     },

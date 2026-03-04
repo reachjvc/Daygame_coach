@@ -310,6 +310,10 @@ Never trade quality for speed. Never lower gates to "get content flowing."
              |      validate_stage_report.py
              |  - canonical gate marker:
              |      summary.decision_source=stage_report_readiness
+             |  - conveyor post-stage hooks (07/07b/09)
+             |    use per-video validator scope
+             |    (direct file pair or source+video_id)
+             |    to avoid full-source rescans
              v
      validation artifacts
   data/validation/stage_reports/

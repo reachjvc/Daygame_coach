@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { ArrowLeft, Navigation } from "lucide-react"
@@ -63,7 +63,7 @@ function VariantChooser({ onSelect }: { onSelect: (key: string) => void }) {
   )
 }
 
-export default function TourVariantsPage() {
+function TourVariantsPageInner() {
   const searchParams = useSearchParams()
   const urlVariant = searchParams.get("variant")
   const [selected, setSelected] = useState<string | null>(urlVariant)
@@ -96,4 +96,8 @@ export default function TourVariantsPage() {
       {selected === "d" && <VariantD />}
     </div>
   )
+}
+
+export default function TourVariantsPage() {
+  return <Suspense><TourVariantsPageInner /></Suspense>
 }

@@ -4,7 +4,7 @@
 #
 # Operator/debug wrapper for sub-batch pipeline tooling.
 # Standard production runs should use:
-#   ./sub-batch-pipeline <sub-batch> [--from <stage>] [--parallel <n>]
+#   ./scripts/training-data/batch/run-campaign [--start ... --end ...]
 
 set -euo pipefail
 
@@ -25,7 +25,7 @@ Usage:
 
 Notes:
   This is the ops/inspection interface.
-  Use `./sub-batch-pipeline P001.1` for the standard production pipeline path.
+  Use `./scripts/training-data/batch/run-campaign` for the standard production path.
 EOF
 }
 
@@ -59,7 +59,7 @@ for arg in "$@"; do
 done
 
 if [[ "$has_operator_mode" != true ]]; then
-  echo "ERROR: no ops/inspection mode supplied. Use ./sub-batch-pipeline for standard runs." >&2
+  echo "ERROR: no ops/inspection mode supplied. Use ./scripts/training-data/batch/run-campaign for standard runs." >&2
   usage >&2
   exit 2
 fi

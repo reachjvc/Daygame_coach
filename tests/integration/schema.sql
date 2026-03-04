@@ -333,7 +333,7 @@ CREATE TABLE user_tracking_stats (
   monthly_review_unlocked BOOLEAN NOT NULL DEFAULT false,
   quarterly_review_unlocked BOOLEAN NOT NULL DEFAULT false,
   -- Favorite templates (max 3)
-  favorite_template_ids UUID[] NOT NULL DEFAULT ARRAY[]::UUID[],
+  favorite_template_ids TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

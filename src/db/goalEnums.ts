@@ -36,6 +36,20 @@ export const LINKED_METRICS = [
   "numbers_cumulative", "instadates_cumulative", "field_reports_cumulative",
   "approach_quality_avg_weekly", "high_quality_approaches_cumulative",
   "scenario_sessions_cumulative", "scenario_types_cumulative", "scenario_high_scores_cumulative",
+  // Health metrics
+  "body_weight_current", "sleep_hours_avg_weekly",
+  "gym_sessions_weekly", "gym_sessions_cumulative",
+  "nutrition_quality_avg_weekly",
+  // Health: training detail
+  "cardio_sessions_weekly", "training_hours_cumulative",
+  "consecutive_training_weeks",
+  // Health: strength PRs (auto-synced from workout_sets)
+  "bench_press_1rm", "squat_1rm", "deadlift_1rm",
+  "overhead_press_1rm", "pullups_max_reps",
+  // Health: body comp
+  "progress_photos_cumulative",
+  // Health: nutrition
+  "protein_days_hit_weekly",
 ] as const
 
 export const GOAL_NATURES = ["input", "outcome"] as const

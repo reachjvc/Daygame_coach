@@ -468,9 +468,9 @@ function FormulaBar() {
 
 function DomainCard({ mapping }: { mapping: DomainMapping }) {
   const rows = [
-    { icon: Activity, label: "Input Rate", ...mapping.inputRate },
-    { icon: Brain, label: "Skill Leverage", ...mapping.skillLeverage },
-    { icon: Battery, label: "Recovery", ...mapping.recovery },
+    { ...mapping.inputRate, icon: Activity, label: "Input Rate" },
+    { ...mapping.skillLeverage, icon: Brain, label: "Skill Leverage" },
+    { ...mapping.recovery, icon: Battery, label: "Recovery" },
   ]
 
   return (

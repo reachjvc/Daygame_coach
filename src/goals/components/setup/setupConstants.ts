@@ -1,6 +1,6 @@
-export type FlowStep = "direction" | "goals" | "summary" | "orrery"
-export const STEPS: FlowStep[] = ["direction", "goals", "summary", "orrery"]
-export const STEP_LABELS = ["Direction", "Goals", "Summary", "Your System"]
+export type FlowStep = "direction" | "goals" | "summary"
+export const STEPS: FlowStep[] = ["direction", "goals", "summary"]
+export const STEP_LABELS = ["Direction", "Goals", "Summary"]
 
 export const CATEGORY_COLORS: Record<string, string> = {
   field_work: "#06b6d4",

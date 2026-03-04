@@ -92,12 +92,12 @@ export const mockRampEnabled = new Set([
 
 /** Custom goals user has added */
 export const mockCustomGoals: SetupCustomGoal[] = [
-  { id: "cg_1_1700000000", title: "Daily meditation", categoryId: "personal_growth", target: 7 },
+  { id: "cg_1_1700000000", title: "Daily meditation", categoryId: "personal_growth", target: 7, period: "weekly" },
 ]
 
 /** Custom categories user has added */
 export const mockCustomCategories: SetupCustomCategory[] = [
-  { id: "cc_1_1700000001", name: "Side Projects", goals: [] },
+  { id: "cc_1_1700000001", name: "Side Projects" },
 ]
 
 /** Per-area target dates */

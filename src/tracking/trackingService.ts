@@ -53,6 +53,9 @@ import {
   getReviewTemplates as repoGetReviewTemplates,
   getLatestCommitment as repoGetLatestCommitment,
   countMonthlyReviews as repoCountMonthlyReviews,
+  // Custom Review Templates
+  createCustomReviewTemplate as repoCreateCustomReviewTemplate,
+  deleteCustomReviewTemplate as repoDeleteCustomReviewTemplate,
   // Stats
   getUserTrackingStats as repoGetUserTrackingStats,
   getOrCreateUserTrackingStats as repoGetOrCreateUserTrackingStats,
@@ -90,6 +93,7 @@ import type {
   ReviewUpdate,
   ReviewType,
   ReviewTemplateRow,
+  ReviewTemplateInsert,
   UserTrackingStatsRow,
   UserTrackingStatsUpdate,
   MilestoneRow,
@@ -526,6 +530,56 @@ export async function getReviewTemplates(
 
 export async function getLatestCommitment(userId: string): Promise<string | null> {
   return repoGetLatestCommitment(userId)
+}
+
+// ============================================
+// Custom Review Templates
+// ============================================
+
+/**
+ * Save a new custom review template for a user.
+ * Generates slug and estimates completion time automatically.
+ */
+export async function saveCustomReviewTemplate(
+  userId: string,
+  config: {
+    name: string
+    description?: string
+    reviewType: ReviewType
+    fields: ReviewTemplateInsert["static_fields"]
+  }
+): Promise<ReviewTemplateRow> {
+  if (!config.name.trim()) {
+    throw new Error("Template name is required")
+  }
+  if (config.fields.length === 0) {
+    throw new Error("At least one field is required")
+  }
+
+  const template: ReviewTemplateInsert = {
+    user_id: userId,
+    name: config.name.trim(),
+    slug: generateSlug(config.name),
+    description: config.description?.trim(),
+    estimated_minutes: estimateMinutes(config.fields),
+    review_type: config.reviewType,
+    is_system: false,
+    static_fields: config.fields,
+    dynamic_fields: [],
+    active_dynamic_fields: [],
+  }
+
+  return repoCreateCustomReviewTemplate(template)
+}
+
+/**
+ * Delete a custom review template.
+ */
+export async function deleteCustomReviewTemplate(
+  userId: string,
+  templateId: string
+): Promise<void> {
+  return repoDeleteCustomReviewTemplate(templateId, userId)
 }
 
 // ============================================

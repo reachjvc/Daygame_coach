@@ -2,7 +2,7 @@
 """
 scripts/training-data/validation/validate_stage07b.py
 
-Validate Stage 07b enrichment verification artifacts at manifest scope.
+Validate Stage 07b enrichment verification artifacts at manifest scope or single-video scope.
 
 This validator emits canonical issue rows:
   - blocking rows (`gate_decision=block`) for missing/invalid outputs or 07b block decisions
@@ -108,23 +108,36 @@ def _load_quarantine_ids(path: Path) -> Set[str]:
     return ids
 
 
-def _index_stage07b_files(stage_root: Path, manifest_ids: Set[str]) -> Dict[str, List[Path]]:
+def _index_stage07b_files(
+    stage_root: Path,
+    manifest_ids: Set[str],
+    *,
+    sources: Optional[Set[str]] = None,
+    target_video_id: Optional[str] = None,
+) -> Dict[str, List[Path]]:
     out: Dict[str, List[Path]] = {}
     if not stage_root.exists():
         return out
-    for path in stage_root.rglob("*.enrichment-verify.json"):
-        text_vid = _extract_video_id_from_text(str(path))
-        payload_vid: Optional[str] = None
-        if not text_vid:
-            payload = _load_json(path)
-            if isinstance(payload, dict):
-                raw_vid = payload.get("video_id")
-                if isinstance(raw_vid, str) and VIDEO_ID_RE.fullmatch(raw_vid.strip()):
-                    payload_vid = raw_vid.strip()
-        vid = text_vid or payload_vid
-        if not vid or vid not in manifest_ids:
-            continue
-        out.setdefault(vid, []).append(path)
+    scan_roots: List[Path]
+    if sources:
+        scan_roots = [stage_root / src for src in sorted(sources) if (stage_root / src).exists()]
+    else:
+        scan_roots = [stage_root]
+    pattern = f"*{target_video_id}*.enrichment-verify.json" if target_video_id else "*.enrichment-verify.json"
+    for root in scan_roots:
+        for path in root.rglob(pattern):
+            text_vid = _extract_video_id_from_text(str(path))
+            payload_vid: Optional[str] = None
+            if not text_vid:
+                payload = _load_json(path)
+                if isinstance(payload, dict):
+                    raw_vid = payload.get("video_id")
+                    if isinstance(raw_vid, str) and VIDEO_ID_RE.fullmatch(raw_vid.strip()):
+                        payload_vid = raw_vid.strip()
+            vid = text_vid or payload_vid
+            if not vid or vid not in manifest_ids:
+                continue
+            out.setdefault(vid, []).append(path)
     return out
 
 
@@ -176,23 +189,39 @@ def _canonical_issue(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Validate Stage 07b enrichment-verify artifacts")
-    parser.add_argument("--manifest", required=True, help="Manifest file path")
+    parser.add_argument("--manifest", help="Manifest file path")
+    parser.add_argument("--video-id", help="Validate one video ID directly (requires --source)")
     parser.add_argument("--source", help="Source filter within manifest")
     parser.add_argument("--quarantine-file", help="Quarantine JSON path to exclude pre-quarantined videos")
     parser.add_argument("--json", action="store_true", help="Emit JSON output")
     args = parser.parse_args()
 
-    manifest_path = Path(args.manifest)
-    if not manifest_path.is_absolute():
-        manifest_path = repo_root() / manifest_path
-    if not manifest_path.exists():
-        print(f"{LOG_PREFIX} ERROR: Manifest not found: {manifest_path}", file=sys.stderr)
+    manifest_path: Optional[Path] = None
+    entries: List[Tuple[str, str]] = []
+    if args.manifest:
+        manifest_path = Path(args.manifest)
+        if not manifest_path.is_absolute():
+            manifest_path = repo_root() / manifest_path
+        if not manifest_path.exists():
+            print(f"{LOG_PREFIX} ERROR: Manifest not found: {manifest_path}", file=sys.stderr)
+            sys.exit(2)
+        entries = _load_manifest_entries(manifest_path, args.source)
+        if not entries:
+            print(f"{LOG_PREFIX} No manifest entries in scope: {manifest_path}")
+            sys.exit(0)
+    elif args.video_id:
+        raw_vid = args.video_id.strip()
+        if not VIDEO_ID_RE.fullmatch(raw_vid):
+            print(f"{LOG_PREFIX} ERROR: invalid --video-id: {args.video_id!r}", file=sys.stderr)
+            sys.exit(2)
+        src = str(args.source or "").strip()
+        if not src:
+            print(f"{LOG_PREFIX} ERROR: --video-id requires --source", file=sys.stderr)
+            sys.exit(2)
+        entries = [(src, raw_vid)]
+    else:
+        print(f"{LOG_PREFIX} ERROR: provide --manifest or --video-id", file=sys.stderr)
         sys.exit(2)
-
-    entries = _load_manifest_entries(manifest_path, args.source)
-    if not entries:
-        print(f"{LOG_PREFIX} No manifest entries in scope: {manifest_path}")
-        sys.exit(0)
 
     manifest_ids = {vid for _, vid in entries}
     source_by_vid = {vid: src for src, vid in entries}
@@ -209,7 +238,12 @@ def main() -> None:
 
     effective_ids = sorted(vid for vid in manifest_ids if vid not in quarantine_ids)
     stage_root = repo_root() / "data" / "07b.LLM.enrichment-verify"
-    idx = _index_stage07b_files(stage_root, manifest_ids)
+    idx = _index_stage07b_files(
+        stage_root,
+        manifest_ids,
+        sources={src for src, _ in entries},
+        target_video_id=(args.video_id.strip() if isinstance(args.video_id, str) and args.video_id.strip() else None),
+    )
     schema = _load_schema()
 
     issues: List[Dict[str, Any]] = []
@@ -316,7 +350,8 @@ def main() -> None:
     errors = sum(1 for i in issues if str(i.get("issue_severity")) in {"critical", "major"})
     warnings = sum(1 for i in issues if str(i.get("issue_severity")) == "minor")
     summary = {
-        "manifest": str(manifest_path),
+        "manifest": str(manifest_path) if manifest_path else None,
+        "video_id": args.video_id.strip() if isinstance(args.video_id, str) and args.video_id.strip() else None,
         "source_filter": args.source or None,
         "manifest_videos": len(manifest_ids),
         "effective_videos": len(effective_ids),
@@ -335,7 +370,10 @@ def main() -> None:
     if args.json:
         print(json.dumps(payload, indent=2, ensure_ascii=False))
     else:
-        print(f"{LOG_PREFIX} Manifest: {manifest_path}")
+        if manifest_path:
+            print(f"{LOG_PREFIX} Manifest: {manifest_path}")
+        elif args.video_id:
+            print(f"{LOG_PREFIX} Video: {args.video_id} (source={args.source})")
         print(
             f"{LOG_PREFIX} Videos: manifest={len(manifest_ids)}, effective={len(effective_ids)}, "
             f"checked={checked_files}"

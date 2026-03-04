@@ -857,21 +857,83 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     scenarioStats = await getScenarioStats(userId)
   }
 
+  // Pre-fetch health metrics (only if any goal uses them)
+  const HEALTH_METRICS = [
+    "body_weight_current", "sleep_hours_avg_weekly",
+    "gym_sessions_weekly", "gym_sessions_cumulative",
+    "nutrition_quality_avg_weekly",
+    "cardio_sessions_weekly", "training_hours_cumulative",
+    "consecutive_training_weeks",
+    "bench_press_1rm", "squat_1rm", "deadlift_1rm",
+    "overhead_press_1rm", "pullups_max_reps",
+    "progress_photos_cumulative", "protein_days_hit_weekly",
+  ]
+  const needsHealthMetrics = goals.some(g => HEALTH_METRICS.includes(g.linked_metric ?? ""))
+  const healthValues: Record<string, number> = {}
+  if (needsHealthMetrics) {
+    const hr = await import("./healthRepo")
+    const needs = (m: string) => goals.some(g => g.linked_metric === m)
+
+    const fetches = await Promise.allSettled([
+      needs("body_weight_current") ? hr.getLatestWeight(userId) : null,
+      needs("sleep_hours_avg_weekly") ? hr.getSleepWeeklyAvgHours(userId) : null,
+      needs("gym_sessions_weekly") ? hr.getWorkoutWeeklyCount(userId) : null,
+      needs("gym_sessions_cumulative") ? hr.getWorkoutCumulativeCount(userId) : null,
+      needs("nutrition_quality_avg_weekly") ? hr.getNutritionWeeklyAvg(userId) : null,
+      needs("cardio_sessions_weekly") ? hr.getCardioWeeklyCount(userId) : null,
+      needs("training_hours_cumulative") ? hr.getTrainingHoursCumulative(userId) : null,
+      needs("consecutive_training_weeks") ? hr.getConsecutiveTrainingWeeks(userId) : null,
+      needs("bench_press_1rm") ? hr.getExerciseMax(userId, "bench press") : null,
+      needs("squat_1rm") ? hr.getExerciseMax(userId, "squat") : null,
+      needs("deadlift_1rm") ? hr.getExerciseMax(userId, "deadlift") : null,
+      needs("overhead_press_1rm") ? hr.getExerciseMax(userId, "overhead press") : null,
+      needs("pullups_max_reps") ? hr.getPullUpsMax(userId) : null,
+      needs("progress_photos_cumulative") ? hr.getProgressPhotoCount(userId) : null,
+      needs("protein_days_hit_weekly") ? hr.getProteinDaysHitWeekly(userId) : null,
+    ])
+
+    const resolve = (i: number): number => {
+      const r = fetches[i]
+      if (r.status !== "fulfilled" || r.value === null || r.value === undefined) return 0
+      if (typeof r.value === "number") return r.value
+      if (typeof r.value === "object" && "weight_kg" in (r.value as Record<string, unknown>)) return (r.value as { weight_kg: number }).weight_kg
+      return 0
+    }
+
+    healthValues.body_weight_current = resolve(0)
+    healthValues.sleep_hours_avg_weekly = resolve(1)
+    healthValues.gym_sessions_weekly = resolve(2)
+    healthValues.gym_sessions_cumulative = resolve(3)
+    healthValues.nutrition_quality_avg_weekly = resolve(4)
+    healthValues.cardio_sessions_weekly = resolve(5)
+    healthValues.training_hours_cumulative = resolve(6)
+    healthValues.consecutive_training_weeks = resolve(7)
+    healthValues.bench_press_1rm = resolve(8)
+    healthValues.squat_1rm = resolve(9)
+    healthValues.deadlift_1rm = resolve(10)
+    healthValues.overhead_press_1rm = resolve(11)
+    healthValues.pullups_max_reps = resolve(12)
+    healthValues.progress_photos_cumulative = resolve(13)
+    healthValues.protein_days_hit_weekly = resolve(14)
+  }
+
   let updatedCount = 0
 
   for (const goal of goals) {
     const metric = goal.linked_metric as LinkedMetric
-    const newValue = metric === "approach_quality_avg_weekly"
-      ? qualityAvg
-      : metric === "high_quality_approaches_cumulative"
-        ? highQualityCount
-        : metric === "scenario_sessions_cumulative"
-          ? (scenarioStats?.totalSessions ?? 0)
-          : metric === "scenario_types_cumulative"
-            ? (scenarioStats?.uniqueTypes ?? 0)
-            : metric === "scenario_high_scores_cumulative"
-              ? (scenarioStats?.highScoreCount ?? 0)
-              : getMetricValue(stats, metric, timezone)
+    const newValue = HEALTH_METRICS.includes(metric ?? "")
+      ? (healthValues[metric ?? ""] ?? 0)
+      : metric === "approach_quality_avg_weekly"
+        ? qualityAvg
+        : metric === "high_quality_approaches_cumulative"
+          ? highQualityCount
+          : metric === "scenario_sessions_cumulative"
+            ? (scenarioStats?.totalSessions ?? 0)
+            : metric === "scenario_types_cumulative"
+              ? (scenarioStats?.uniqueTypes ?? 0)
+              : metric === "scenario_high_scores_cumulative"
+                ? (scenarioStats?.highScoreCount ?? 0)
+                : getMetricValue(stats, metric, timezone)
 
     // Only update if value changed
     if (newValue !== goal.current_value) {
@@ -1221,6 +1283,27 @@ export async function archiveGoal(userId: string, goalId: string): Promise<void>
   if (error) {
     throw new Error(`Failed to archive goal: ${error.message}`)
   }
+}
+
+/**
+ * Archive multiple goals by ID in a single DB call.
+ * Used by orphan cleanup to remove goals referencing deleted templates.
+ */
+export async function archiveGoalsBatch(userId: string, goalIds: string[]): Promise<number> {
+  if (goalIds.length === 0) return 0
+  const supabase = await createServerSupabaseClient()
+
+  const { data, error } = await supabase
+    .from("user_goals")
+    .update({ is_archived: true, is_active: false })
+    .eq("user_id", userId)
+    .in("id", goalIds)
+    .select("id")
+
+  if (error) {
+    throw new Error(`Failed to archive orphaned goals: ${error.message}`)
+  }
+  return data?.length ?? 0
 }
 
 /**

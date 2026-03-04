@@ -176,7 +176,10 @@ def main():
     print(f"Status file: {status_path}")
     print()
     print("Next steps:")
-    print(f"  ./scripts/training-data/batch/sub-batch-pipeline {args.batch_id}.1")
+    print(
+        "  ./scripts/training-data/batch/run-campaign "
+        f"--start {args.batch_id}.1 --end {args.batch_id}.1"
+    )
 
 
 if __name__ == "__main__":

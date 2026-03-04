@@ -184,6 +184,7 @@ function GoalDateButton({
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <button
+        data-tour="goal-date-button"
         onClick={() => setOpen(!open)}
         className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10 relative"
         style={{
@@ -289,6 +290,7 @@ function getAreaIdForGoal(goalId: string, customGoals: SetupCustomGoal[]): strin
 export interface GoalsStepTourHandle {
   expandSection(sectionId: string): void
   expandAllSections(): void
+  collapseAllDaygame(): void
   collapseNonPreselected(): void
   openCurveEditor(goalId: string): void
   closeCurveEditor(): void
@@ -370,6 +372,15 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
       setExpandedSections((prev) => {
         const next = new Set(prev)
         for (const { category } of daygameByCategory) next.add(`dg_${category}`)
+        return next
+      })
+    },
+    collapseAllDaygame: () => {
+      setExpandedSections((prev) => {
+        const next = new Set<string>()
+        for (const id of prev) {
+          if (!id.startsWith("dg_")) next.add(id) // keep non-daygame sections
+        }
         return next
       })
     },
@@ -532,7 +543,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                     onClick={() => toggleSection(sectionId)}
                     data-tour={expandedRank === 0 ? "category-1" : expandedRank === 1 ? "category-2" : undefined}
                     data-tour-role="category"
-                    data-expanded={isExpanded ? "" : undefined}
+                    data-tour-expanded={isExpanded ? "true" : "false"}
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
                     style={{
                       background:
@@ -795,6 +806,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                         onClick={() => onAddCustomGoal(category)}
                         className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
                         style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
+                        data-tour="add-custom-goal"
                       >
                         <Plus className="size-3.5 text-white/25" />
                         <span className="text-sm text-white/25">Add custom goal</span>
@@ -891,6 +903,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                         onClick={() => onAddCustomGoal(cat.id)}
                         className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
                         style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
+                        data-tour="add-custom-goal"
                       >
                         <Plus className="size-3.5 text-white/25" />
                         <span className="text-sm text-white/25">Add custom goal</span>
@@ -905,6 +918,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
               onClick={onAddCustomCategory}
               className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-colors hover:bg-white/5 mb-3"
               style={{ border: "1px dashed rgba(0,230,118,0.15)" }}
+              data-tour="add-custom-category"
             >
               <Plus className="size-3.5 text-emerald-400/40" />
               <span className="text-sm text-emerald-400/40">Add custom category</span>
@@ -1034,6 +1048,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                       onClick={() => onAddCustomGoal(area.id)}
                       className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
                       style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
+                      data-tour="add-custom-goal"
                     >
                       <Plus className="size-3.5 text-white/25" />
                       <span className="text-sm text-white/25">Add custom goal</span>

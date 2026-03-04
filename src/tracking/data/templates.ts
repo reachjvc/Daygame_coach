@@ -157,9 +157,9 @@ export const SYSTEM_TEMPLATES = {
 
   "deep-dive": {
     name: "Deep Dive",
-    description: "Full forensic analysis for notable sessions.",
+    description: "Thorough analysis for notable sessions.",
     icon: "microscope",
-    estimatedMinutes: 15,
+    estimatedMinutes: 8,
     staticFields: [
       {
         id: "approaches",
@@ -271,7 +271,7 @@ export const SYSTEM_TEMPLATES = {
     name: "CBT Thought Diary",
     description: "Identify and reframe negative thought patterns",
     icon: "brain",
-    estimatedMinutes: 20,
+    estimatedMinutes: 10,
     staticFields: [
       {
         id: "approaches",
@@ -530,9 +530,9 @@ export const TEMPLATE_COLORS: Record<TemplateSlug, TemplateColorConfig> = {
 // ============================================
 
 export const TEMPLATE_TAGLINES: Record<SystemTemplateSlug, string> = {
-  "quick-log": "30 seconds. Just the essentials.",
+  "quick-log": "Just the essentials. Log and go.",
   standard: "The sweet spot. Learn without overthinking.",
-  "deep-dive": "When you got close. Extract every lesson.",
+  "deep-dive": "The full picture. Extract every lesson.",
   "cbt-thought-diary": "Challenge automatic thoughts. Break the loop.",
 }
 

@@ -3,7 +3,7 @@
 Use this folder for explicit, auditable validation waivers consumed by:
 
 - `scripts/training-data/validation/validate_manifest.py --waiver-file ...`
-- `scripts/training-data/batch/sub-batch-pipeline <manifest> --validate --waiver-file ...`
+- `scripts/training-data/batch/sub-batch-ops <subbatch> --validate --waiver-file ...`
 
 Default auto-detect path in orchestrator mode:
 

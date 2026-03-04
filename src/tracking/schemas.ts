@@ -90,7 +90,14 @@ export const UpdateFieldReportSchema = z.object({
 })
 
 export const FavoriteActionSchema = z.object({
-  templateId: z.string().uuid(),
+  templateId: z.string().refine(
+    (val) => {
+      if (val.startsWith("system-")) return true
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+      return uuidRegex.test(val)
+    },
+    { message: "Must be a valid UUID or system template ID" }
+  ),
   action: z.enum(["add", "remove"]),
 })
 

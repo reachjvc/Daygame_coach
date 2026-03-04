@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import type { GoalTemplate, GoalDisplayCategory } from "@/src/goals/types"
 
-const CATEGORY_LABELS: Record<GoalDisplayCategory, string> = {
+const CATEGORY_LABELS: Partial<Record<GoalDisplayCategory, string>> = {
   field_work: "Field Work",
   results: "Results",
   dirty_dog: "Dirty Dog",

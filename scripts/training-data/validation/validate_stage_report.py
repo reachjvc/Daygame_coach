@@ -1107,6 +1107,8 @@ def _compute_readiness(
     allow_ingest_statuses: Set[str],
     review_video_damage_score: Optional[float],
     block_video_damage_score: Optional[float],
+    review_damaged_chunk_ratio: Optional[float],
+    block_damaged_chunk_ratio: Optional[float],
     review_windowless_video_damage_score: Optional[float],
     block_windowless_video_damage_score: Optional[float],
     review_windowless_video_damage_score_by_content_type: Dict[str, float],
@@ -1169,6 +1171,7 @@ def _compute_readiness(
         policy_warning_signal_counts: Counter[str] = Counter()
         warning_signal_class_counts: Counter[str] = Counter()
         policy_warning_signal_class_counts: Counter[str] = Counter()
+        policy_warning_checks_by_class: Dict[str, Counter[str]] = defaultdict(Counter)
 
         for rec in recs:
             report_paths.append(str(rec.path))
@@ -1225,6 +1228,7 @@ def _compute_readiness(
                             ):
                                 policy_warning_signal_counts[sub_check] += sub_count
                                 policy_warning_signal_class_counts[signal_class] += sub_count
+                                policy_warning_checks_by_class[signal_class][sub_check] += sub_count
                                 policy_warning_checks += sub_count
                     elif chk_name:
                         warning_signal_counts[chk_name] += 1
@@ -1233,6 +1237,7 @@ def _compute_readiness(
                         if chk_name not in POLICY_WARNING_BUDGET_EXCLUDED_CHECKS:
                             policy_warning_signal_counts[chk_name] += 1
                             policy_warning_signal_class_counts[signal_class] += 1
+                            policy_warning_checks_by_class[signal_class][chk_name] += 1
                             policy_warning_checks += 1
                     else:
                         # Unnamed warnings still count against the generic warning budget.
@@ -1281,12 +1286,20 @@ def _compute_readiness(
         elif review_warning_checks > 0:
             status = "REVIEW"
             if review_warning_class_excess:
-                # Prefer class-level reason so review semantics stay stable even
-                # when raw warning check names evolve.
-                reason_code = sorted(
+                top_review_class = sorted(
                     review_warning_class_excess.items(),
                     key=lambda item: (-item[1], item[0]),
                 )[0][0]
+                top_class_checks = policy_warning_checks_by_class.get(top_review_class)
+                if top_review_class == "other_quality" and top_class_checks:
+                    reason_code = sorted(
+                        top_class_checks.items(),
+                        key=lambda item: (-item[1], item[0]),
+                    )[0][0]
+                else:
+                    # Prefer class-level reason so review semantics stay stable even
+                    # when raw warning check names evolve.
+                    reason_code = top_review_class
             elif policy_warning_signal_counts:
                 reason_code = sorted(
                     policy_warning_signal_counts.items(),
@@ -1368,6 +1381,7 @@ def _compute_readiness(
         # escalate non-blocked videos when quality degradation is substantial.
         if status != "BLOCKED" and isinstance(damage_profile, dict):
             video_damage_score = _parse_number(damage_profile.get("video_damage_score"))
+            damaged_chunk_ratio = _parse_number(damage_profile.get("damaged_chunk_ratio"))
             severe_damage_chunk_ratio = _parse_number(damage_profile.get("severe_damage_chunk_ratio"))
             has_localized_damage = _damage_profile_has_localized_damage(damage_profile)
             review_windowless_threshold = review_windowless_video_damage_score_by_content_type.get(
@@ -1401,6 +1415,16 @@ def _compute_readiness(
                     f"{video_damage_score:.3f}>{float(block_video_damage_score):.3f}"
                 )
             elif (
+                block_damaged_chunk_ratio is not None
+                and damaged_chunk_ratio is not None
+                and damaged_chunk_ratio > float(block_damaged_chunk_ratio)
+            ):
+                status = "BLOCKED"
+                reason_code = (
+                    "policy_block_damaged_chunk_ratio:"
+                    f"{damaged_chunk_ratio:.3f}>{float(block_damaged_chunk_ratio):.3f}"
+                )
+            elif (
                 block_severe_damage_chunk_ratio is not None
                 and severe_damage_chunk_ratio is not None
                 and severe_damage_chunk_ratio > float(block_severe_damage_chunk_ratio)
@@ -1431,6 +1455,16 @@ def _compute_readiness(
                     reason_code = (
                         "policy_review_video_damage_score:"
                         f"{video_damage_score:.3f}>{float(review_video_damage_score):.3f}"
+                    )
+                elif (
+                    review_damaged_chunk_ratio is not None
+                    and damaged_chunk_ratio is not None
+                    and damaged_chunk_ratio > float(review_damaged_chunk_ratio)
+                ):
+                    status = "REVIEW"
+                    reason_code = (
+                        "policy_review_damaged_chunk_ratio:"
+                        f"{damaged_chunk_ratio:.3f}>{float(review_damaged_chunk_ratio):.3f}"
                     )
                 elif (
                     review_severe_damage_chunk_ratio is not None
@@ -1519,6 +1553,8 @@ def _compute_readiness(
             "warning_budget_excluded_checks": sorted(POLICY_WARNING_BUDGET_EXCLUDED_CHECKS),
             "review_video_damage_score": review_video_damage_score,
             "block_video_damage_score": block_video_damage_score,
+            "review_damaged_chunk_ratio": review_damaged_chunk_ratio,
+            "block_damaged_chunk_ratio": block_damaged_chunk_ratio,
             "review_windowless_video_damage_score": review_windowless_video_damage_score,
             "block_windowless_video_damage_score": block_windowless_video_damage_score,
             "review_windowless_video_damage_score_by_content_type": {
@@ -1559,15 +1595,6 @@ def main() -> None:
         ),
     )
     parser.add_argument(
-        "--allow-ingest-status",
-        action="append",
-        default=[],
-        help=(
-            "Readiness statuses treated as ingest-eligible (repeatable). "
-            "Allowed values: READY, REVIEW, BLOCKED. Default: READY"
-        ),
-    )
-    parser.add_argument(
         "--review-video-damage-score",
         type=float,
         help=(
@@ -1581,6 +1608,22 @@ def main() -> None:
         help=(
             "Escalate non-blocked videos -> BLOCKED when Stage 09 video_damage_score exceeds this threshold (0..1). "
             "Disabled when omitted."
+        ),
+    )
+    parser.add_argument(
+        "--review-damaged-chunk-ratio",
+        type=float,
+        help=(
+            "Escalate READY -> REVIEW when damaged_chunk_ratio exceeds this threshold (0..1). "
+            "A chunk is 'damaged' when damage_score > 0."
+        ),
+    )
+    parser.add_argument(
+        "--block-damaged-chunk-ratio",
+        type=float,
+        help=(
+            "Escalate non-blocked videos -> BLOCKED when damaged_chunk_ratio exceeds this threshold (0..1). "
+            "A chunk is 'damaged' when damage_score > 0."
         ),
     )
     parser.add_argument(
@@ -1839,25 +1882,13 @@ def main() -> None:
             sys.exit(2)
         block_windowless_video_damage_score_by_content_type[content_type] = float(threshold)
 
-    allow_ingest_statuses: Set[str] = set()
-    for raw in args.allow_ingest_status or []:
-        status = str(raw or "").strip().upper()
-        if not status:
-            continue
-        if status not in {"READY", "REVIEW", "BLOCKED"}:
-            print(
-                f"{LOG_PREFIX} ERROR: invalid --allow-ingest-status value '{raw}' "
-                "(expected READY|REVIEW|BLOCKED)",
-                file=sys.stderr,
-            )
-            sys.exit(2)
-        allow_ingest_statuses.add(status)
-    if not allow_ingest_statuses:
-        allow_ingest_statuses = {"READY"}
+    allow_ingest_statuses: Set[str] = {"READY"}
 
     for flag_name in (
         "review_video_damage_score",
         "block_video_damage_score",
+        "review_damaged_chunk_ratio",
+        "block_damaged_chunk_ratio",
         "review_windowless_video_damage_score",
         "block_windowless_video_damage_score",
         "review_severe_damage_chunk_ratio",
@@ -1878,6 +1909,17 @@ def main() -> None:
     ):
         print(
             f"{LOG_PREFIX} ERROR: --block-video-damage-score must be >= --review-video-damage-score",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    if (
+        args.review_damaged_chunk_ratio is not None
+        and args.block_damaged_chunk_ratio is not None
+        and float(args.block_damaged_chunk_ratio) < float(args.review_damaged_chunk_ratio)
+    ):
+        print(
+            f"{LOG_PREFIX} ERROR: --block-damaged-chunk-ratio must be >= --review-damaged-chunk-ratio",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -2015,6 +2057,8 @@ def main() -> None:
         allow_ingest_statuses=allow_ingest_statuses,
         review_video_damage_score=args.review_video_damage_score,
         block_video_damage_score=args.block_video_damage_score,
+        review_damaged_chunk_ratio=args.review_damaged_chunk_ratio,
+        block_damaged_chunk_ratio=args.block_damaged_chunk_ratio,
         review_windowless_video_damage_score=args.review_windowless_video_damage_score,
         block_windowless_video_damage_score=args.block_windowless_video_damage_score,
         review_windowless_video_damage_score_by_content_type=review_windowless_video_damage_score_by_content_type,

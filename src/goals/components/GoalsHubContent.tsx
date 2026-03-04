@@ -297,12 +297,9 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
     try {
       const response = await fetch("/api/goals", { method: "DELETE" })
       if (!response.ok) throw new Error("Failed to delete all goals")
-      setShowDeleteAllConfirm(false)
-      setIsCustomizeMode(false)
-      await fetchGoals()
+      router.push("/dashboard/goals/setup")
     } catch {
       showToast("Failed to delete goals", "error")
-    } finally {
       setIsDeletingAll(false)
     }
   }
@@ -438,7 +435,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
             <Button
               size="sm"
               onClick={handleCreateGoal}
-              data-testid="goals-new-goal"
+              data-testid="goals-new-goal-button"
             >
               <Plus className="size-4 mr-1" />
               New Goal
@@ -449,7 +446,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
               className="h-9 w-9"
               onClick={() => setIsCustomizeMode(!isCustomizeMode)}
               title={isCustomizeMode ? "Exit Customize" : "Customize Goals"}
-              data-testid="goals-customize-toggle"
+              data-testid="goals-customize-button"
             >
               <Settings2 className="size-4" />
             </Button>

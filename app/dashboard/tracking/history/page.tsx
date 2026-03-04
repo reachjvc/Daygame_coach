@@ -50,7 +50,7 @@ export default function FieldReportHistoryPage() {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-8" data-testid="tracking-history-page">
       {/* Header */}
       <div className="mb-8">
         <Link
@@ -73,6 +73,7 @@ export default function FieldReportHistoryPage() {
           {filterOptions.map((option) => (
             <button
               key={option.value}
+              data-testid={`history-filter-${option.value}`}
               onClick={() => setFilterMode(option.value)}
               className={`px-4 py-2 rounded-lg text-sm transition-all ${
                 state.filterMode === option.value
@@ -138,6 +139,7 @@ export default function FieldReportHistoryPage() {
                 onClick={loadMore}
                 disabled={state.isLoading}
                 className="gap-2"
+                data-testid="history-load-more"
               >
                 {state.isLoading ? (
                   <Loader2 className="size-4 animate-spin" />
@@ -171,7 +173,7 @@ function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }
   const colors = TEMPLATE_COLORS[templateSlug] || TEMPLATE_COLORS.custom
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden" data-testid={`history-card-${report.id}`}>
       {/* Card Header - Always visible */}
       <div
         className="p-4 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -241,6 +243,7 @@ function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
+              data-testid={`history-delete-${report.id}`}
               onClick={(e) => {
                 e.stopPropagation()
                 onDelete()
@@ -253,7 +256,7 @@ function ReportCard({ report, isExpanded, onToggleExpand, onDelete, isDeleting }
                 <Trash2 className="size-4" />
               )}
             </Button>
-            <div className="p-2">
+            <div className="p-2" data-testid={`history-card-expand-${report.id}`}>
               {isExpanded ? (
                 <ChevronUp className="size-5 text-muted-foreground" />
               ) : (

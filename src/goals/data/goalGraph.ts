@@ -579,28 +579,33 @@ const L3_FIT_STRENGTH: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 40, target: 140, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "bench_press_1rm",
     priority: "core",
   }),
   template("l3_f_squat", "Squat 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 60, target: 200, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "squat_1rm",
   }),
   template("l3_f_deadlift", "Deadlift 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 60, target: 220, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "deadlift_1rm",
   }),
   template("l3_f_overhead_press", "Overhead Press 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 20, target: 100, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "overhead_press_1rm",
     priority: "niche",
   }),
   template("l3_f_pullups", "Pull-ups Max Reps", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 30, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "pullups_max_reps",
   }),
 ]
 
@@ -615,6 +620,7 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
       { frequencyPerWeek: 5, durationWeeks: 12 },
       { frequencyPerWeek: 6, durationWeeks: 24 },
     ],
+    linkedMetric: "gym_sessions_weekly",
     priority: "core",
     graduation_criteria: "Consistently hitting 5+ gym sessions/week for 8+ weeks",
   }),
@@ -622,16 +628,19 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "training",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 1000, steps: 15, curveTension: CURVE_TENSION },
+    linkedMetric: "gym_sessions_cumulative",
   }),
   template("l3_f_consecutive_weeks", "Consecutive Weeks Training", 3, "input", {
     lifeArea: FIT, displayCategory: "training",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 52, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "consecutive_training_weeks",
   }),
   template("l3_f_training_hours", "Total Hours Training", 3, "input", {
     lifeArea: FIT, displayCategory: "training",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 10, target: 1000, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "training_hours_cumulative",
   }),
   template("l3_f_cardio_sessions", "Cardio Sessions per Week", 3, "input", {
     lifeArea: FIT, displayCategory: "training",
@@ -641,6 +650,7 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    linkedMetric: "cardio_sessions_weekly",
   }),
   template("l3_f_combat_sports", "Combat Sports Sessions", 3, "input", {
     lifeArea: FIT, displayCategory: "training",
@@ -666,6 +676,7 @@ const L3_FIT_NUTRITION: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    linkedMetric: "protein_days_hit_weekly",
   }),
   template("l3_f_meals_prepped", "Meals Prepped", 3, "input", {
     lifeArea: FIT, displayCategory: "nutrition",
@@ -684,6 +695,7 @@ const L3_FIT_NUTRITION: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
   template("l3_f_calorie_target", "Calorie Target Hit", 3, "input", {
     lifeArea: FIT, displayCategory: "nutrition",
@@ -693,6 +705,7 @@ const L3_FIT_NUTRITION: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    priority: "niche",
   }),
 ]
 
@@ -717,6 +730,7 @@ const L3_FIT_BODY_COMP: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "body_comp",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 52, steps: 8, curveTension: CURVE_TENSION },
+    linkedMetric: "progress_photos_cumulative",
   }),
 ]
 
@@ -1861,8 +1875,8 @@ export function getCatalogGroups(): {
   abundance: GoalTemplate[]
 } {
   return {
-    onePerson: L1_ONE_PERSON,
-    abundance: L1_ABUNDANCE,
+    onePerson: L1_ONE_PERSON.filter((t) => !t.requiresOptIn),
+    abundance: L1_ABUNDANCE.filter((t) => !t.requiresOptIn),
   }
 }
 
@@ -1882,7 +1896,7 @@ export function getAreaCatalog(lifeArea: string): AreaCatalog | null {
   switch (lifeArea) {
     case "daygame":
       return {
-        l1Goals: [...L1_ONE_PERSON, ...L1_ABUNDANCE],
+        l1Goals: [...L1_ONE_PERSON, ...L1_ABUNDANCE].filter((t) => !t.requiresOptIn),
         l2Achievements: L2_TEMPLATES,
         l3ByCategory: getTemplatesByCategoryForArea("daygame"),
       }

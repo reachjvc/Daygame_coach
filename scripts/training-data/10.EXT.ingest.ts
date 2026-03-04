@@ -1231,10 +1231,29 @@ async function writeManifestQuarantineReport({
     }
   })
 
-  const segmentRepairCandidates: ManifestSegmentRepairCandidate[] = []
+  const segmentRepairCandidateMap = new Map<string, ManifestSegmentRepairCandidate>()
+  const repairCandidatePriority = (candidate: ManifestSegmentRepairCandidate): number => {
+    let score = candidate.status === "REVIEW" ? 2 : 1
+    if (candidate.ingest_eligible) {
+      score += 1
+    }
+    return score
+  }
+  const pushSegmentRepairCandidate = (candidate: ManifestSegmentRepairCandidate): void => {
+    const key = [
+      candidate.video_id,
+      candidate.start_segment_id,
+      candidate.end_segment_id,
+      candidate.reason,
+    ].join(":")
+    const existing = segmentRepairCandidateMap.get(key)
+    if (!existing || repairCandidatePriority(candidate) > repairCandidatePriority(existing)) {
+      segmentRepairCandidateMap.set(key, candidate)
+    }
+  }
   for (const item of readinessGate?.blocked ?? []) {
     for (const window of toRepairWindows(item.damageProfile)) {
-      segmentRepairCandidates.push({
+      pushSegmentRepairCandidate({
         video_id: item.videoId,
         source: sourceByVideo.get(item.videoId) ?? item.source ?? null,
         status: "BLOCKED",
@@ -1252,7 +1271,7 @@ async function writeManifestQuarantineReport({
   }
   for (const item of readinessGate?.review ?? []) {
     for (const window of toRepairWindows(item.damageProfile)) {
-      segmentRepairCandidates.push({
+      pushSegmentRepairCandidate({
         video_id: item.videoId,
         source: sourceByVideo.get(item.videoId) ?? item.source ?? null,
         status: "REVIEW",
@@ -1268,6 +1287,7 @@ async function writeManifestQuarantineReport({
       })
     }
   }
+  const segmentRepairCandidates = Array.from(segmentRepairCandidateMap.values())
   segmentRepairCandidates.sort((a, b) => {
     if (a.video_id !== b.video_id) return a.video_id.localeCompare(b.video_id)
     if (a.start_segment_id !== b.start_segment_id) return a.start_segment_id - b.start_segment_id

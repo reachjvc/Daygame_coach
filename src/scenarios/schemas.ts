@@ -40,6 +40,7 @@ export const KeepItGoingContextSchema = z.object({
   interestLevel: z.number().min(1).max(10),
   exitRisk: z.number().min(0).max(3),
   realismNotch: z.union([z.literal(-1), z.literal(0), z.literal(1)]),
+  neutralStreak: z.number().min(0),
   isEnded: z.boolean(),
   endReason: z.string().optional(),
 })

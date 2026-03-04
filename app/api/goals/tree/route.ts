@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth } from "@/src/db/auth"
-import { getGoalTree, syncLinkedGoals, resetDailyGoals, resetWeeklyGoals } from "@/src/db/goalRepo"
+import { getGoalTree, getUserGoals, archiveGoalsBatch, syncLinkedGoals, resetDailyGoals, resetWeeklyGoals } from "@/src/db/goalRepo"
 import { getUserTimezone } from "@/src/db/settingsRepo"
+import { getOrphanedGoalIds } from "@/src/goals/goalsService"
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth()
@@ -11,11 +12,18 @@ export async function GET(request: NextRequest) {
 
   try {
     const tz = await getUserTimezone(auth.userId)
-    // Auto-reset daily/weekly goals if needed (snapshots + streak logic, idempotent via period_start_date check)
     await resetDailyGoals(auth.userId, tz).catch(() => {})
     await resetWeeklyGoals(auth.userId, tz).catch(() => {})
-    // Sync linked goals before returning tree to ensure fresh data
     await syncLinkedGoals(auth.userId, tz).catch((e) => console.error("syncLinkedGoals failed:", e))
+
+    // Auto-archive goals referencing deleted templates (idempotent)
+    const allGoals = await getUserGoals(auth.userId, false, tz)
+    const orphanIds = getOrphanedGoalIds(allGoals)
+    if (orphanIds.length > 0) {
+      const count = await archiveGoalsBatch(auth.userId, orphanIds)
+      console.log(`Archived ${count} orphaned goals for user ${auth.userId}`)
+    }
+
     const tree = await getGoalTree(auth.userId, includeArchived, tz)
     return NextResponse.json(tree)
   } catch (error) {

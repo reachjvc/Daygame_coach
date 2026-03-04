@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { SELECTORS } from './helpers/selectors'
+import { isMobileViewport } from './helpers/viewport.helper'
 
 const ACTION_TIMEOUT = 2000
 const AUTH_TIMEOUT = 15000 // Increased for external service latency
@@ -87,12 +88,18 @@ test.describe('Dashboard Navigation Flow', () => {
   })
 
   test('should navigate to settings from header', async ({ page }) => {
-    // Wait for settings link to be visible
-    const link = page.getByTestId(SELECTORS.header.settingsLink)
-    await expect(link).toBeVisible({ timeout: AUTH_TIMEOUT })
-
-    // Act: Click settings link in header
-    await link.click({ timeout: ACTION_TIMEOUT })
+    if (isMobileViewport(page)) {
+      // On mobile, settings is in the hamburger menu
+      await page.getByRole('button', { name: 'Open menu' }).click({ timeout: ACTION_TIMEOUT })
+      const settingsLink = page.getByRole('link', { name: 'Settings' })
+      await expect(settingsLink).toBeVisible({ timeout: ACTION_TIMEOUT })
+      await settingsLink.click({ timeout: ACTION_TIMEOUT })
+    } else {
+      // On desktop, settings link is in the header nav
+      const link = page.getByTestId(SELECTORS.header.settingsLink)
+      await expect(link).toBeVisible({ timeout: AUTH_TIMEOUT })
+      await link.click({ timeout: ACTION_TIMEOUT })
+    }
 
     // Wait for navigation - could go to settings or redirect to login if session expired
     await page.waitForURL(/\/(dashboard\/settings|auth\/login)/, { timeout: AUTH_TIMEOUT })
