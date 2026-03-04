@@ -183,6 +183,49 @@
         "type": "string"
       }
     },
+    "other_flags_detailed": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "flag_class": {
+            "type": "string",
+            "enum": [
+              "missing_target_coverage",
+              "mixed_speaker_segment",
+              "same_speaker_multi_role_conflict",
+              "diarization_split_same_person",
+              "duplicate_teaser_content",
+              "video_type_ambiguity",
+              "within_segment_boundary_bleed",
+              "transcript_artifact",
+              "role_ambiguity",
+              "other"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["minor", "moderate", "major"]
+          },
+          "segment_id": {
+            "type": ["integer", "null"],
+            "minimum": 0
+          },
+          "conversation_id": {
+            "type": ["integer", "null"],
+            "minimum": 1
+          },
+          "speaker_id": {
+            "type": ["string", "null"]
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": ["flag_class", "severity", "segment_id", "conversation_id", "speaker_id", "notes"]
+      }
+    },
     "metadata": {
       "type": "object"
     },

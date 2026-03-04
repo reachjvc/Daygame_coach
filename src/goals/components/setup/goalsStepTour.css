@@ -195,6 +195,43 @@
   border-radius: 8px;
 }
 
+/* ── Pulse ring for target stepper (orange breathe) ────────── */
+.gt-pulse-ring {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.7);
+  border-radius: 8px;
+  animation: gt-ring-breathe 1s ease-in-out 2;
+}
+
+@keyframes gt-ring-breathe {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.7); }
+  50% { box-shadow: 0 0 0 5px rgba(249, 115, 22, 0.3); }
+}
+
+/* Number glow — orange fade-in, stays lit */
+.gt-number-glow {
+  color: #fdba74 !important;
+  text-shadow: 0 0 6px rgba(251, 146, 60, 0.6);
+  animation: gt-number-fadein 0.8s ease-out forwards;
+}
+
+@keyframes gt-number-fadein {
+  from { text-shadow: none; color: white; }
+  to { color: #fdba74; text-shadow: 0 0 6px rgba(251, 146, 60, 0.6); }
+}
+
+/* ── Curve / Ramp button blink ─────────────────────────────── */
+.gt-curve-blink,
+.gt-ramp-blink {
+  box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.8);
+  animation: gt-editor-pulse 0.5s ease-in-out 4;
+}
+
+@keyframes gt-editor-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(94, 106, 210, 0.8); }
+  50% { box-shadow: 0 0 0 5px rgba(94, 106, 210, 0.3); }
+}
+
 /* ── Welcome overlay ────────────────────────────────────────── */
 .gt-welcome {
   position: fixed;
@@ -388,5 +425,11 @@
 @media (prefers-reduced-motion: reduce) {
   .gt-popover .gt-progress__bar {
     transition: none !important;
+  }
+  .gt-pulse-ring,
+  .gt-number-glow,
+  .gt-curve-blink,
+  .gt-ramp-blink {
+    animation: none !important;
   }
 }

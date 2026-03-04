@@ -86,7 +86,7 @@ export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss
   // Subtle: just a checkmark pulse (no overlay)
   if (tier === "subtle") {
     return (
-      <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="fixed bottom-6 right-6 z-50 pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center gap-2 bg-green-500/15 text-green-400 border border-green-500/30 rounded-lg px-4 py-2">
           <Sparkles className="size-4" />
           <span className="text-sm font-medium">Done!</span>
@@ -98,7 +98,7 @@ export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss
   // Toast: brief notification
   if (tier === "toast") {
     return (
-      <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="fixed bottom-6 right-6 z-50 pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center gap-2 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-lg px-4 py-3 shadow-lg">
           <PartyPopper className="size-4" />
           <span className="text-sm font-medium">Goal complete: {goalTitle}</span>
@@ -110,7 +110,7 @@ export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss
   // Confetti-small: brief confetti + toast
   if (tier === "confetti-small") {
     return (
-      <div className="fixed bottom-6 right-6 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="fixed bottom-6 right-6 z-50 pb-safe animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="flex items-center gap-2 bg-amber-500/15 text-amber-300 border border-amber-500/30 rounded-lg px-4 py-3 shadow-lg">
           <PartyPopper className="size-4" />
           <span className="text-sm font-medium">Goal complete: {goalTitle}</span>
@@ -121,13 +121,13 @@ export function CelebrationOverlay({ tier, goalTitle, source = "goal", onDismiss
 
   // Modal tiers (confetti-full, confetti-epic)
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-300">
-      <div className="relative bg-card border border-border rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-500">
-        <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/15 flex items-center justify-center mb-4">
-          <PartyPopper className="size-8 text-amber-400" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-300 pt-safe pb-safe">
+      <div className="relative bg-card border border-border rounded-2xl p-5 sm:p-8 max-w-md mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-500">
+        <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-500/15 flex items-center justify-center mb-4">
+          <PartyPopper className="size-6 sm:size-8 text-amber-400" />
         </div>
 
-        <h2 className="text-2xl font-bold mb-2">
+        <h2 className="text-xl sm:text-2xl font-bold mb-2">
           {tier === "confetti-epic" ? "Epic Achievement!" : "Goal Complete!"}
         </h2>
 

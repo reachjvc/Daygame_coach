@@ -401,7 +401,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
           {/* Goal Type Toggle */}
           <div className="space-y-2">
             <Label>Goal Type</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {([
                 { type: "recurring" as GoalType, label: "Recurring", desc: "Resets per period" },
                 { type: "milestone" as GoalType, label: "Milestone", desc: "One-time target" },
@@ -422,7 +422,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     onClick={() => setGoalType(type)}
                   >
                     <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[10px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
+                    <span className={`text-[11px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
                       {desc}
                     </span>
                   </Button>
@@ -454,7 +454,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                     onClick={() => setGoalNature(nature)}
                   >
                     <span className="font-medium text-xs">{label}</span>
-                    <span className={`text-[10px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
+                    <span className={`text-[11px] ${isSelected ? "text-white/70" : ""}`} style={isSelected ? undefined : { color: theme.muted }}>
                       {desc}
                     </span>
                   </Button>
@@ -473,11 +473,30 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 return (
                   <Badge
                     key={area.id}
+                    role="button"
+                    tabIndex={0}
                     variant="outline"
                     className="cursor-pointer gap-1.5 transition-colors border-transparent"
                     style={{
                       backgroundColor: isSelected ? area.hex : `${area.hex}15`,
                       color: isSelected ? "white" : area.hex,
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
+                        const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
+                        setLifeArea(area.id)
+                        setCustomLifeArea("")
+                        setSelectedSuggestion(null)
+                        setUserPickedLifeArea(true)
+                        setLifeAreaOverrideNote(null)
+                        setParentGoalId(null)
+                        if (titleIsSuggestion || !title.trim()) {
+                          setTitle("")
+                          setTargetValue(1)
+                          setLinkedMetric(null)
+                        }
+                      }
                     }}
                     onClick={() => {
                       const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
@@ -501,11 +520,29 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 )
               })}
               <Badge
+                role="button"
+                tabIndex={0}
                 variant="outline"
                 className="cursor-pointer transition-colors border-transparent"
                 style={{
                   backgroundColor: lifeArea === "custom" ? "#9ca3af" : "#9ca3af15",
                   color: lifeArea === "custom" ? "white" : "#9ca3af",
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
+                    const titleIsSuggestion = prevSuggestions.some(s => s.title === title)
+                    setLifeArea("custom")
+                    setSelectedSuggestion(null)
+                    setUserPickedLifeArea(true)
+                    setLifeAreaOverrideNote(null)
+                    setParentGoalId(null)
+                    if (titleIsSuggestion || !title.trim()) {
+                      setTitle("")
+                      setTargetValue(1)
+                      setLinkedMetric(null)
+                    }
+                  }
                 }}
                 onClick={() => {
                   const prevSuggestions = getLifeAreaConfig(lifeArea).suggestions
@@ -662,6 +699,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                 </Button>
                 <Input
                   type="number"
+                  inputMode="numeric"
                   value={targetValue}
                   onChange={(e) => {
                     const newVal = Math.max(1, parseInt(e.target.value) || 1)
@@ -670,7 +708,7 @@ export function GoalFormModal({ open, onOpenChange, goal, parentGoals = [], onSu
                   }}
                   className="w-20 text-center text-lg font-bold"
                   min={1}
-    
+
                 />
                 <Button
                   type="button"

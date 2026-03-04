@@ -25,7 +25,7 @@ export function BottomBar({
   const showForward = currentStep < steps.length - 1
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-40"
+      className="fixed bottom-0 left-0 right-0 z-40 pb-safe"
       style={{
         background: "rgba(5, 8, 16, 0.88)",
         backdropFilter: "blur(20px)",

@@ -62,7 +62,7 @@ jobs:
         run: npx playwright install --with-deps chromium webkit firefox
 
       - name: Run cross-browser E2E tests
-        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav
+        run: npx playwright test --project=smoke-firefox --project=smoke-webkit --project=smoke-iphone --project=smoke-android --project=mobile-iphone --project=mobile-pixel --project=mobile-nav --project=cross-firefox --project=cross-webkit
         env:
           CI: true
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -80,3 +80,11 @@ jobs:
           name: playwright-report-cross-browser
           path: playwright-report/
           retention-days: 7
+
+      - name: Upload cross-browser traces
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-traces
+          path: test-results/**/trace.zip
+          retention-days: 14

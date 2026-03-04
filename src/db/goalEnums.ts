@@ -50,6 +50,20 @@ export const LINKED_METRICS = [
   "progress_photos_cumulative",
   // Health: nutrition
   "protein_days_hit_weekly",
+  "calorie_days_hit_weekly",
+  // Health: body comp extended
+  "weight_lost_from_peak",
+  "weight_gained_from_lowest",
+  "body_measurements_count",
+  // Health: flexibility/mobility
+  "mobility_sessions_weekly",
+  "yoga_sessions_weekly",
+  "flexibility_hours_cumulative",
+  // Health: running/endurance
+  "running_sessions_weekly",
+  "running_distance_cumulative",
+  "longest_run_km",
+  "consecutive_cardio_weeks",
 ] as const
 
 export const GOAL_NATURES = ["input", "outcome"] as const

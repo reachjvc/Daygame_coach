@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { DashboardContent } from "./DashboardContent"
 import type { DashboardProfileData } from "../types"
 
@@ -58,9 +59,10 @@ export async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-tab-bar">
       <AppHeader currentPage="dashboard" isLoggedIn={true} hasPurchased={true} />
       <DashboardContent profileData={profileData} isPreviewMode={false} />
+      <MobileTabBar />
     </div>
   )
 }

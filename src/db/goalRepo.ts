@@ -867,6 +867,13 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     "bench_press_1rm", "squat_1rm", "deadlift_1rm",
     "overhead_press_1rm", "pullups_max_reps",
     "progress_photos_cumulative", "protein_days_hit_weekly",
+    "calorie_days_hit_weekly",
+    "weight_lost_from_peak", "weight_gained_from_lowest",
+    "body_measurements_count",
+    "mobility_sessions_weekly", "yoga_sessions_weekly",
+    "flexibility_hours_cumulative",
+    "running_sessions_weekly", "running_distance_cumulative",
+    "longest_run_km", "consecutive_cardio_weeks",
   ]
   const needsHealthMetrics = goals.some(g => HEALTH_METRICS.includes(g.linked_metric ?? ""))
   const healthValues: Record<string, number> = {}
@@ -890,6 +897,17 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
       needs("pullups_max_reps") ? hr.getPullUpsMax(userId) : null,
       needs("progress_photos_cumulative") ? hr.getProgressPhotoCount(userId) : null,
       needs("protein_days_hit_weekly") ? hr.getProteinDaysHitWeekly(userId) : null,
+      needs("calorie_days_hit_weekly") ? hr.getCalorieDaysHitWeekly(userId) : null,
+      needs("weight_lost_from_peak") ? hr.getWeightLostFromPeak(userId) : null,
+      needs("weight_gained_from_lowest") ? hr.getWeightGainedFromLowest(userId) : null,
+      needs("body_measurements_count") ? hr.getBodyMeasurementCount(userId) : null,
+      needs("mobility_sessions_weekly") ? hr.getMobilitySessionsWeekly(userId) : null,
+      needs("yoga_sessions_weekly") ? hr.getYogaSessionsWeekly(userId) : null,
+      needs("flexibility_hours_cumulative") ? hr.getFlexibilityHoursCumulative(userId) : null,
+      needs("running_sessions_weekly") ? hr.getRunningSessionsWeekly(userId) : null,
+      needs("running_distance_cumulative") ? hr.getRunningDistanceCumulative(userId) : null,
+      needs("longest_run_km") ? hr.getLongestRunKm(userId) : null,
+      needs("consecutive_cardio_weeks") ? hr.getConsecutiveCardioWeeks(userId) : null,
     ])
 
     const resolve = (i: number): number => {
@@ -915,6 +933,17 @@ export async function syncLinkedGoals(userId: string, timezone: string | null = 
     healthValues.pullups_max_reps = resolve(12)
     healthValues.progress_photos_cumulative = resolve(13)
     healthValues.protein_days_hit_weekly = resolve(14)
+    healthValues.calorie_days_hit_weekly = resolve(15)
+    healthValues.weight_lost_from_peak = resolve(16)
+    healthValues.weight_gained_from_lowest = resolve(17)
+    healthValues.body_measurements_count = resolve(18)
+    healthValues.mobility_sessions_weekly = resolve(19)
+    healthValues.yoga_sessions_weekly = resolve(20)
+    healthValues.flexibility_hours_cumulative = resolve(21)
+    healthValues.running_sessions_weekly = resolve(22)
+    healthValues.running_distance_cumulative = resolve(23)
+    healthValues.longest_run_km = resolve(24)
+    healthValues.consecutive_cardio_weeks = resolve(25)
   }
 
   let updatedCount = 0

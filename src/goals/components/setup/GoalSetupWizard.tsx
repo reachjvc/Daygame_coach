@@ -42,28 +42,43 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
   const [tourRequested, setTourRequested] = useState(false)
   const [showCatalog, setShowCatalog] = useBackableState(false)
 
-  // Dynamic tour target IDs — computed from current selections
+  // Dynamic tour target IDs — computed from current selections (area-agnostic)
   const tourTargets = useMemo(() => {
-    const { daygameL3Goals, daygameByCategory } = catalog
-    const firstCurveGoal = daygameL3Goals.find(
+    const { daygameL3Goals, daygameByCategory, areaCatalogs } = catalog
+    // Pool all L3 goals: daygame first (takes priority), then other selected areas
+    const allL3Goals = [
+      ...daygameL3Goals,
+      ...Object.entries(areaCatalogs)
+        .filter(([areaId]) => selectedAreas.has(areaId))
+        .flatMap(([, cat]) => cat.allL3Goals),
+    ]
+    const allByCategory = [
+      ...daygameByCategory.map(c => ({ ...c, sectionPrefix: "dg" })),
+      ...Object.entries(areaCatalogs)
+        .filter(([areaId]) => selectedAreas.has(areaId))
+        .flatMap(([areaId, cat]) =>
+          cat.byCategory.map(c => ({ ...c, sectionPrefix: areaId }))
+        ),
+    ]
+    const firstCurveGoal = allL3Goals.find(
       (g) => selectedGoals.has(g.id) && g.templateType === "milestone_ladder" && g.defaultMilestoneConfig != null
     )
-    const firstRampGoal = daygameL3Goals.find(
+    const firstRampGoal = allL3Goals.find(
       (g) => selectedGoals.has(g.id) && g.templateType === "habit_ramp" && rampEnabled.has(g.id) && g.defaultRampSteps != null && g.defaultRampSteps.length > 1
     )
     // Find the section ID for the category containing the first curve (or ramp) goal
     const anchorGoal = firstCurveGoal ?? firstRampGoal
     let sectionId: string | null = null
     if (anchorGoal) {
-      const cat = daygameByCategory.find((c) => c.goals.some((g) => g.id === anchorGoal.id))
-      if (cat) sectionId = `dg_${cat.category}`
+      const cat = allByCategory.find((c) => c.goals.some((g) => g.id === anchorGoal.id))
+      if (cat) sectionId = `${cat.sectionPrefix}_${cat.category}`
     }
     return {
       firstCurveGoalId: firstCurveGoal?.id ?? null,
       firstRampGoalId: firstRampGoal?.id ?? null,
       firstCurveSectionId: sectionId,
     }
-  }, [catalog, selectedGoals, rampEnabled])
+  }, [catalog, selectedGoals, rampEnabled, selectedAreas])
 
   // Only auto-select the core funnel goals — the rest stay in the catalog for manual opt-in
   const AUTO_SELECTED_GOAL_IDS = new Set([
@@ -147,13 +162,32 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
         next.has(areaId) ? next.delete(areaId) : next.add(areaId)
         return next
       })
+      const areaCatalog = catalog.areaCatalogs[areaId]
       setSelectedGoals((prev) => {
         const next = new Set(prev)
         if (wasSelected) {
+          // Deselecting — remove all template goals AND suggestion goals for this area
+          if (areaCatalog) {
+            for (const g of areaCatalog.allL3Goals) next.delete(g.id)
+          }
           for (const id of prev) {
             if (id.startsWith(`${areaId}_s`)) next.delete(id)
           }
+        } else if (areaCatalog) {
+          // Selecting — auto-select core template goals
+          for (const g of areaCatalog.allL3Goals) {
+            if (g.priority === "core") next.add(g.id)
+          }
+          // Auto-enable ramp for core habit_ramp goals
+          setRampEnabled((rPrev) => {
+            const rNext = new Set(rPrev)
+            for (const g of areaCatalog.allL3Goals) {
+              if (g.priority === "core" && g.templateType === "habit_ramp") rNext.add(g.id)
+            }
+            return rNext
+          })
         } else {
+          // Fallback for areas without catalogs — use suggestion goals
           const area = catalog.lifeAreas.find((a) => a.id === areaId)
           if (area?.suggestions) {
             area.suggestions.forEach((_, i) => next.add(`${areaId}_s${i}`))
@@ -162,7 +196,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
         return next
       })
     },
-    [catalog.lifeAreas, selectedAreas]
+    [catalog.lifeAreas, catalog.areaCatalogs, selectedAreas]
   )
 
   const toggleGoal = useCallback((id: string) => {
@@ -263,6 +297,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
       const inserts = buildSetupInserts({
         path,
         selectedAreas,
+        selectedL1s,
         selectedGoalIds: selectedGoals,
         targets,
         curveConfigs,
@@ -432,7 +467,6 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
             onUpdateCustomL1={updateCustomL1Text}
             onRemoveCustomL1={removeCustomL1}
             onToggleArea={handleToggleArea}
-            onToggleGoal={toggleGoal}
             onUpdateTargetDate={updateTargetDate}
             onAdvance={goNext}
             onSkipToGoals={handleSkipToGoals}
@@ -444,6 +478,7 @@ export function GoalSetupWizard({ returnPath = "/dashboard/goals" }: { returnPat
               daygameByCategory={catalog.daygameByCategory}
               daygameL3Goals={catalog.daygameL3Goals}
               lifeAreas={catalog.lifeAreas}
+              areaCatalogs={catalog.areaCatalogs}
               selectedAreas={selectedAreas}
               selectedGoals={selectedGoals}
               targets={targets}

@@ -14,7 +14,7 @@ interface WeeklyReviewsCardProps {
 
 export function WeeklyReviewsCard({ stats, recentReviews }: WeeklyReviewsCardProps) {
   return (
-    <Card className="p-6 md:col-span-2">
+    <Card className="p-4 sm:p-6 md:col-span-2">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-lg">Weekly Reviews</h2>

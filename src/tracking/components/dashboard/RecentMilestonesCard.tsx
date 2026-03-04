@@ -17,7 +17,7 @@ export function RecentMilestonesCard({ milestones, onViewAll }: RecentMilestones
 
   return (
     <div className="relative">
-      <Card className="p-6 h-full">
+      <Card className="p-4 sm:p-6 h-full">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Recent Achievements</h2>
           <Button

@@ -123,8 +123,8 @@ export function WeeklyReviewDialog({ isOpen, onClose }: WeeklyReviewDialogProps)
   const dateRange = formatDateRange(monday)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200" onClick={onClose}>
-      <div className="relative bg-card border border-border rounded-2xl p-6 max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200 pt-safe pb-safe" onClick={onClose}>
+      <div className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 max-w-md mx-4 shadow-2xl animate-in zoom-in-95 duration-300 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         {/* Close X */}
         <button onClick={onClose} className="absolute top-3 right-3 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors">
           <X className="size-4" />

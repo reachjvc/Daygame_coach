@@ -69,7 +69,7 @@ export interface SleepStats {
 // Workout Tracking
 // ============================================================================
 
-export type SessionType = "weights" | "cardio" | "mobility"
+export type SessionType = "weights" | "cardio" | "mobility" | "yoga" | "running"
 export type WorkoutIntensity = 1 | 2 | 3 | 4 | 5
 
 export interface WorkoutLogRow {
@@ -78,6 +78,7 @@ export interface WorkoutLogRow {
   session_type: SessionType
   duration_min: number
   intensity: WorkoutIntensity
+  distance_km: number | null
   logged_at: string
   created_at: string
 }
@@ -86,6 +87,7 @@ export interface WorkoutLogInsert {
   session_type: SessionType
   duration_min: number
   intensity: WorkoutIntensity
+  distance_km?: number | null
   logged_at?: string
 }
 
@@ -133,6 +135,7 @@ export interface NutritionLogRow {
   quality_score: NutritionQuality
   note: string
   protein_g: number | null
+  calories: number | null
   logged_at: string
   created_at: string
 }
@@ -141,6 +144,7 @@ export interface NutritionLogInsert {
   quality_score: NutritionQuality
   note: string
   protein_g?: number | null
+  calories?: number | null
   logged_at?: string
 }
 
@@ -166,6 +170,31 @@ export interface HealthDaygameCorrelation {
   insights: CorrelationInsight[]
   sleepVsApproaches: { avgSleepHours: number; avgApproaches: number; sessions: number } | null
   weightVsFrequency: { weightTrend: "down" | "up" | "flat"; sessionFrequencyTrend: "up" | "down" | "flat" } | null
+}
+
+// ============================================================================
+// Shared
+// ============================================================================
+
+// ============================================================================
+// Body Measurements
+// ============================================================================
+
+export type MeasurementType = "chest" | "waist" | "hips" | "arms" | "thighs" | "neck" | "shoulders" | "calves"
+
+export interface BodyMeasurementRow {
+  id: string
+  user_id: string
+  measurement_type: MeasurementType
+  value_cm: number
+  logged_at: string
+  created_at: string
+}
+
+export interface BodyMeasurementInsert {
+  measurement_type: MeasurementType
+  value_cm: number
+  logged_at?: string
 }
 
 // ============================================================================

@@ -120,7 +120,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
   };
 
   return (
-    <div className="min-h-dvh bg-background flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-4xl">
         {/* Progress Indicator */}
         <div className="mb-8" data-testid="onboarding-progress">
@@ -156,7 +156,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
           <div className="min-h-[500px]">
           {/* STEP 1: Age + Foreign Status */}
           {step === 1 && (
-            <Card className="p-8 bg-card border-border">
+            <Card className="p-5 sm:p-8 bg-card border-border">
               <h2 className="text-3xl font-bold mb-4 text-foreground">
                 Tell us about yourself
               </h2>
@@ -195,19 +195,25 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <Card
+                      role="button"
+                      tabIndex={0}
                       className={`p-6 cursor-pointer text-center transition-all hover:border-primary ${
                         userIsForeign === true ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => setUserIsForeign(true)}
+                      onKeyDown={(e) => e.key === "Enter" && setUserIsForeign(true)}
                     >
                       <h4 className="text-lg font-bold text-foreground">Yes, I'm a foreigner</h4>
                       <p className="text-sm text-muted-foreground mt-2">Living/traveling abroad</p>
                     </Card>
                     <Card
+                      role="button"
+                      tabIndex={0}
                       className={`p-6 cursor-pointer text-center transition-all hover:border-primary ${
                         userIsForeign === false ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => setUserIsForeign(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setUserIsForeign(false)}
                     >
                       <h4 className="text-lg font-bold text-foreground">No, I'm local</h4>
                       <p className="text-sm text-muted-foreground mt-2">In my home country</p>
@@ -222,19 +228,25 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
                     <Card
+                      role="button"
+                      tabIndex={0}
                       className={`p-6 cursor-pointer text-center transition-all hover:border-primary ${
                         datingForeigners === true ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => setDatingForeigners(true)}
+                      onKeyDown={(e) => e.key === "Enter" && setDatingForeigners(true)}
                     >
                       <h4 className="text-lg font-bold text-foreground">Yes</h4>
                       <p className="text-sm text-muted-foreground mt-2">Mostly dating foreigners or tourists</p>
                     </Card>
                     <Card
+                      role="button"
+                      tabIndex={0}
                       className={`p-6 cursor-pointer text-center transition-all hover:border-primary ${
                         datingForeigners === false ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => setDatingForeigners(false)}
+                      onKeyDown={(e) => e.key === "Enter" && setDatingForeigners(false)}
                     >
                       <h4 className="text-lg font-bold text-foreground">No</h4>
                       <p className="text-sm text-muted-foreground mt-2">Mostly dating locals</p>
@@ -247,7 +259,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
           {/* STEP 2: Nationality/Region */}
           {step === 2 && (
-            <Card className="p-8 bg-card border-border">
+            <Card className="p-5 sm:p-8 bg-card border-border">
               <div className="flex items-center gap-3 mb-4">
                 <MapPin className="size-8 text-primary" />
                 <h2 className="text-3xl font-bold text-foreground">
@@ -282,7 +294,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
           {/* STEP 3: Archetype */}
           {step === 3 && (
-            <Card className="p-8 bg-card border-border">
+            <Card className="p-5 sm:p-8 bg-card border-border">
               <h2 className="text-3xl font-bold mb-4 text-foreground">Choose your preferred archetype</h2>
               <p className="text-muted-foreground leading-relaxed">
                 Choose at least one and up to three archetypes. The order you pick sets your priority.
@@ -302,10 +314,13 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                   return (
                     <Card
                       key={archetype.name}
+                      role="button"
+                      tabIndex={0}
                       className={`relative p-6 cursor-pointer transition-all hover:border-primary hover:shadow-lg ${
                         isSelected ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => handleArchetypeToggle(archetype.name)}
+                      onKeyDown={(e) => e.key === "Enter" && handleArchetypeToggle(archetype.name)}
                     >
                       {badgeLabel && (
                         <div className="absolute right-4 top-4">
@@ -341,7 +356,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
           {/* STEP 4: Experience Level */}
           {step === 4 && (
-            <Card className="p-8 bg-card border-border">
+            <Card className="p-5 sm:p-8 bg-card border-border">
               <div className="flex items-center gap-3 mb-4">
                 <Rocket className="size-8 text-primary" />
                 <h2 className="text-3xl font-bold text-foreground">
@@ -356,10 +371,13 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                 {EXPERIENCE_LEVELS.map((level) => (
                   <Card
                     key={level.id}
+                    role="button"
+                    tabIndex={0}
                     className={`p-6 cursor-pointer transition-all hover:border-primary hover:shadow-lg ${
                       experienceLevel === level.id ? "border-primary bg-primary/5" : "border-border"
                     }`}
                     onClick={() => setExperienceLevel(level.id)}
+                    onKeyDown={(e) => e.key === "Enter" && setExperienceLevel(level.id)}
                   >
                     <h3 className="font-bold text-lg mb-2 text-foreground">{level.name}</h3>
                     <p className="text-sm text-muted-foreground">{level.description}</p>
@@ -371,7 +389,7 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
 
           {/* STEP 5: Primary Goal */}
           {step === 5 && (
-            <Card className="p-8 bg-card border-border">
+            <Card className="p-5 sm:p-8 bg-card border-border">
               <div className="flex items-center gap-3 mb-4">
                 <CircleDot className="size-8 text-primary" />
                 <h2 className="text-3xl font-bold text-foreground">
@@ -388,10 +406,13 @@ export function OnboardingFlow({ initialStep }: OnboardingFlowProps) {
                   return (
                     <Card
                       key={goal.id}
-                      className={`p-8 cursor-pointer transition-all hover:border-primary hover:shadow-lg ${
+                      role="button"
+                      tabIndex={0}
+                      className={`p-5 sm:p-8 cursor-pointer transition-all hover:border-primary hover:shadow-lg ${
                         primaryGoal === goal.id ? "border-primary bg-primary/5" : "border-border"
                       }`}
                       onClick={() => setPrimaryGoal(goal.id)}
+                      onKeyDown={(e) => e.key === "Enter" && setPrimaryGoal(goal.id)}
                     >
                       <Icon className="size-12 text-primary mb-4" />
                       <h3 className="font-bold text-xl mb-3 text-foreground">{goal.name}</h3>

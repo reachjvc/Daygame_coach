@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { Play, Clock, PlusCircle, Calendar, ArrowRight } from "lucide-react"
+import { Play, Clock, PlusCircle, Calendar, Sun, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 interface QuickActionsCardProps {
@@ -10,7 +10,7 @@ interface QuickActionsCardProps {
 
 export function QuickActionsCard({ onQuickAddClick }: QuickActionsCardProps) {
   return (
-    <Card className="p-6">
+    <Card className="p-4 sm:p-6">
       <h2 className="font-semibold text-lg mb-4">Quick Actions</h2>
       <div className="space-y-3">
         <Link href="/dashboard/tracking/session?autostart=true" className="block">
@@ -49,6 +49,15 @@ export function QuickActionsCard({ onQuickAddClick }: QuickActionsCardProps) {
             <div className="flex items-center gap-3">
               <Calendar className="size-5 text-primary" />
               <span>Weekly Review</span>
+            </div>
+            <ArrowRight className="size-4 text-muted-foreground" />
+          </div>
+        </Link>
+        <Link href="/dashboard/tracking/daily" className="block" data-testid="daily-reflection-link">
+          <div className="flex items-center justify-between p-3 rounded-lg hover:bg-muted/50 transition-colors">
+            <div className="flex items-center gap-3">
+              <Sun className="size-5 text-amber-500" />
+              <span>Daily Reflection</span>
             </div>
             <ArrowRight className="size-4 text-muted-foreground" />
           </div>

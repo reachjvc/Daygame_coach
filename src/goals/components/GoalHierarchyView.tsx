@@ -5,6 +5,7 @@ import { CircleDot, Clock, Plus, Star, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { AchievementBadge } from "./AchievementBadge"
 import { HeatmapCalendar } from "./HeatmapCalendar"
+import { HealthTrackingPanel } from "./HealthTrackingPanel"
 import { GoalCategorySection } from "./GoalCategorySection"
 import { GoalCard } from "./GoalCard"
 import { groupGoalsByHierarchy } from "../goalHierarchyService"
@@ -147,6 +148,11 @@ export function GoalHierarchyView({
               </div>
             )}
 
+            {/* Health Tracking — only for health_fitness sections, outside customize mode */}
+            {section.l1Goal.life_area === "health_fitness" && !isCustomizeMode && (
+              <HealthTrackingPanel />
+            )}
+
             {/* Goal Categories */}
             <div className="space-y-4">
               {CATEGORY_ORDER.map((cat) => {
@@ -224,8 +230,8 @@ export function GoalHierarchyView({
                 </div>
               ))}
 
-              {/* Dirty Dog opt-in placeholder */}
-              {(!section.categories.dirty_dog || section.categories.dirty_dog.length === 0) && onAddDirtyDogGoals && (
+              {/* Dirty Dog opt-in placeholder — daygame only */}
+              {section.l1Goal.life_area === "daygame" && (!section.categories.dirty_dog || section.categories.dirty_dog.length === 0) && onAddDirtyDogGoals && (
                 <div className="rounded-lg border border-dashed border-border/60 bg-muted/20 p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">

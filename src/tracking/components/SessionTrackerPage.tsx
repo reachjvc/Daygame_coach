@@ -432,7 +432,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
       return (
         <div className="min-h-[80vh] flex flex-col items-center justify-center px-4">
           <Card
-            className="p-8 max-w-md w-full text-center"
+            className="p-4 sm:p-8 max-w-md w-full text-center"
             data-testid="session-ended-banner"
           >
             <div className="mb-6">
@@ -499,7 +499,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
         <Button
           size="lg"
-          className="h-20 px-12 text-xl gap-3"
+          className="h-20 px-6 sm:px-12 text-xl gap-3"
           onClick={handleStartButtonClick}
           disabled={isCheckingActiveSession || state.isLoading}
           data-testid="start-session-button"
@@ -783,7 +783,7 @@ export function SessionTrackerPage({ userId }: SessionTrackerPageProps) {
 
       <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
         {/* Main Counter */}
-        <Card className="p-8">
+        <Card className="p-4 sm:p-8">
           <div className="text-center">
             <div data-testid="approach-counter" className="text-7xl font-bold mb-2">{liveStats.totalApproaches}</div>
             <div className="text-muted-foreground">approaches</div>

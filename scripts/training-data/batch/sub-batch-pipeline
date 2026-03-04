@@ -136,6 +136,8 @@ CFG_BLOCK_WARNING_CLASS_BY_CONTENT_TYPE=()
 CFG_REVIEW_WARNING_CLASS_BUDGET_BY_CONTENT_TYPE=()
 CFG_REVIEW_VIDEO_DAMAGE_SCORE=""
 CFG_BLOCK_VIDEO_DAMAGE_SCORE=""
+CFG_REVIEW_DAMAGED_SEGMENT_COUNT=""
+CFG_BLOCK_DAMAGED_SEGMENT_COUNT=""
 CFG_REVIEW_DAMAGED_CHUNK_RATIO=""
 CFG_BLOCK_DAMAGED_CHUNK_RATIO=""
 CFG_REVIEW_WINDOWLESS_VIDEO_DAMAGE_SCORE=""
@@ -289,6 +291,22 @@ def emit_optional_positive_int(var_name: str, raw: object) -> None:
         return
     print(f'{var_name}="{value}"')
 
+def emit_optional_non_negative_int(var_name: str, raw: object) -> None:
+    if isinstance(raw, bool):
+        print(f'{var_name}=""')
+        return
+    if isinstance(raw, int):
+        value = raw
+    elif isinstance(raw, float) and raw.is_integer():
+        value = int(raw)
+    else:
+        print(f'{var_name}=""')
+        return
+    if value < 0:
+        print(f'{var_name}=""')
+        return
+    print(f'{var_name}="{value}"')
+
 def emit_bool_string(var_name: str, raw: object, default: bool) -> None:
     if isinstance(raw, bool):
         print(f'{var_name}="{"true" if raw else "false"}"')
@@ -297,6 +315,8 @@ def emit_bool_string(var_name: str, raw: object, default: bool) -> None:
 
 emit_optional_ratio("CFG_REVIEW_VIDEO_DAMAGE_SCORE", r.get("review_video_damage_score"))
 emit_optional_ratio("CFG_BLOCK_VIDEO_DAMAGE_SCORE", r.get("block_video_damage_score"))
+emit_optional_non_negative_int("CFG_REVIEW_DAMAGED_SEGMENT_COUNT", r.get("review_damaged_segment_count"))
+emit_optional_non_negative_int("CFG_BLOCK_DAMAGED_SEGMENT_COUNT", r.get("block_damaged_segment_count"))
 emit_optional_ratio("CFG_REVIEW_DAMAGED_CHUNK_RATIO", r.get("review_damaged_chunk_ratio"))
 emit_optional_ratio("CFG_BLOCK_DAMAGED_CHUNK_RATIO", r.get("block_damaged_chunk_ratio"))
 emit_optional_ratio(
@@ -605,10 +625,11 @@ build_auto_repair_retry_manifest() {
 
   local repair_worklist="$REPO_ROOT/data/validation/repair_worklists/${label}.repair-worklist.json"
   local fallback_manifest="$REPO_ROOT/data/validation/repair_worklists/${label}.repair-windowless-fallback.json"
+  local confidence_trace_report="$REPO_ROOT/data/validation/confidence_trace/${label}.report.json"
   local out_manifest="$REPO_ROOT/data/validation/repair_worklists/${label}.auto-repair.attempt${attempt}.manifest.txt"
   local out_meta="$REPO_ROOT/data/validation/repair_worklists/${label}.auto-repair.attempt${attempt}.targets.json"
 
-  python3 - "$manifest" "$repair_worklist" "$fallback_manifest" "$out_manifest" "$out_meta" "$sub_id" "$attempt" <<'PYEOF'
+  python3 - "$manifest" "$repair_worklist" "$fallback_manifest" "$confidence_trace_report" "$out_manifest" "$out_meta" "$sub_id" "$attempt" <<'PYEOF'
 import json
 import re
 import sys
@@ -616,7 +637,7 @@ import time
 from pathlib import Path
 
 VIDEO_ID_RE = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
-RERUN_STAGE_ORDER = ["06b", "06e", "07"]
+RERUN_STAGE_ORDER = ["06b", "06e", "06h", "07"]
 
 def stage_index(stage: str) -> int:
     try:
@@ -642,6 +663,8 @@ def suggest_rerun_stage_from_reason(reason: str | None) -> str | None:
     if not reason:
         return None
     r = reason.lower()
+    if "missing_confidence_trace" in r or "confidence trace" in r:
+        return "06h"
     if "routing_mismatch" in r or "prompt_variant_mismatch" in r:
         return "07"
     if "misattribution" in r or "speaker" in r or "diar" in r:
@@ -662,6 +685,23 @@ def suggest_rerun_stage_from_strategy(strategy: str | None) -> str | None:
     s = strategy.strip()
     if s in {"chunk_probe_reverify", "chunk_scan_reverify", "segment_sweep_reverify"}:
         return "06e"
+    return None
+
+def suggest_rerun_stage_from_confidence_trace_check(check: str | None) -> str | None:
+    ck = (check or "").strip().lower()
+    if ck in {
+        "missing_confidence_trace",
+        "unreadable_confidence_trace",
+        "invalid_confidence_trace_payload",
+        "invalid_trace_version",
+        "missing_scope",
+        "invalid_scope_video_id",
+        "scope_video_id_mismatch",
+        "missing_segments",
+    }:
+        return "06h"
+    if ck.startswith("segment_") or ck.startswith("conversation_") or ck.startswith("video_summary_"):
+        return "06h"
     return None
 
 def suggest_rerun_stage_from_stage_report_signal(*, check: str | None, signal_class: str | None, remediation_path: str | None) -> str | None:
@@ -715,8 +755,26 @@ def enrich_target_from_stage_report(tgt: dict, artifacts: object) -> None:
         if rp:
             tgt["stage_report_remediation_paths"].add(rp)
 
+def enrich_target_from_confidence_trace_issue(tgt: dict, issue: dict) -> None:
+    if not isinstance(issue, dict):
+        return
+    ck = normalize_reason(issue.get("check"))
+    msg = normalize_reason(issue.get("message"))
+    sev = normalize_reason(issue.get("severity"))
+    if ck:
+        tgt["confidence_trace_checks"].add(ck)
+        tgt["reasons"].add(ck)
+    if msg and ck == "missing_confidence_trace":
+        tgt["reasons"].add("missing_confidence_trace")
+    tgt["confidence_trace_issue_count"] += 1
+    tgt["status"] = worst_status(tgt.get("status"), "BLOCKED" if (sev or "").upper() == "ERROR" else "REVIEW")
+
 def choose_target_rerun_stage(target: dict) -> str:
     candidates: list[str] = []
+    for ck in sorted(target.get("confidence_trace_checks") or []):
+        stage = suggest_rerun_stage_from_confidence_trace_check(ck)
+        if stage:
+            candidates.append(stage)
     for ck in sorted(target.get("stage_report_checks") or []):
         stage = suggest_rerun_stage_from_stage_report_signal(
             check=ck,
@@ -759,10 +817,11 @@ def choose_target_rerun_stage(target: dict) -> str:
 manifest_path = Path(sys.argv[1])
 repair_worklist_path = Path(sys.argv[2])
 fallback_manifest_path = Path(sys.argv[3])
-out_manifest_path = Path(sys.argv[4])
-out_meta_path = Path(sys.argv[5])
-sub_id = sys.argv[6]
-attempt = sys.argv[7]
+confidence_trace_report_path = Path(sys.argv[4])
+out_manifest_path = Path(sys.argv[5])
+out_meta_path = Path(sys.argv[6])
+sub_id = sys.argv[7]
+attempt = sys.argv[8]
 
 def load_json(path: Path):
     if not path.exists():
@@ -774,8 +833,10 @@ def load_json(path: Path):
 
 repair = load_json(repair_worklist_path)
 fallback = load_json(fallback_manifest_path)
+confidence_trace = load_json(confidence_trace_report_path)
 
 localized_video_ids: set[str] = set()
+confidence_trace_video_ids: set[str] = set()
 targets_meta: dict[str, dict] = {}
 
 def ensure_target(vid: str) -> dict:
@@ -793,6 +854,8 @@ def ensure_target(vid: str) -> dict:
             "stage_report_checks": set(),
             "stage_report_signal_classes": set(),
             "stage_report_remediation_paths": set(),
+            "confidence_trace_checks": set(),
+            "confidence_trace_issue_count": 0,
             "stage_report_reason_code": None,
             "stage_report_status": None,
             "_stage_report_loaded": False,
@@ -886,7 +949,23 @@ if isinstance(fallback, dict):
                     tgt["content_type"] = row["content_type"].strip()
                 enrich_target_from_stage_report(tgt, row.get("artifacts"))
 
-target_video_ids = localized_video_ids | fallback_auto_ids
+if isinstance(confidence_trace, dict):
+    issues = confidence_trace.get("issues")
+    if isinstance(issues, list):
+        for issue in issues:
+            if not isinstance(issue, dict):
+                continue
+            vid = issue.get("video_id")
+            sev = str(issue.get("severity") or "").strip().lower()
+            if not isinstance(vid, str) or not vid or vid == "*":
+                continue
+            if sev not in {"error", "warning"}:
+                continue
+            confidence_trace_video_ids.add(vid)
+            tgt = ensure_target(vid)
+            enrich_target_from_confidence_trace_issue(tgt, issue)
+
+target_video_ids = localized_video_ids | fallback_auto_ids | confidence_trace_video_ids
 
 selected_lines: list[str] = []
 original_lines = manifest_path.read_text(encoding="utf-8").splitlines()
@@ -941,6 +1020,8 @@ for vid in sorted(target_video_ids):
             "stage_report_checks": sorted(str(x) for x in (tgt.get("stage_report_checks") or set())),
             "stage_report_signal_classes": sorted(str(x) for x in (tgt.get("stage_report_signal_classes") or set())),
             "stage_report_remediation_paths": sorted(str(x) for x in (tgt.get("stage_report_remediation_paths") or set())),
+            "confidence_trace_checks": sorted(str(x) for x in (tgt.get("confidence_trace_checks") or set())),
+            "confidence_trace_issue_count": int(tgt.get("confidence_trace_issue_count") or 0),
             "stage_report_reason_code": tgt.get("stage_report_reason_code"),
             "stage_report_status": tgt.get("stage_report_status"),
             "recommended_rerun_from_stage": final_stage,
@@ -991,6 +1072,7 @@ meta = {
         "manifest": str(manifest_path),
         "repair_worklist": str(repair_worklist_path) if repair_worklist_path.exists() else None,
         "repair_windowless_fallback": str(fallback_manifest_path) if fallback_manifest_path.exists() else None,
+        "confidence_trace_report": str(confidence_trace_report_path) if confidence_trace_report_path.exists() else None,
     },
     "outputs": {
         "retry_manifest": str(out_manifest_path) if out_manifest_written else None,
@@ -999,6 +1081,7 @@ meta = {
         "target_videos": len(selected_lines),
         "localized_repair_videos": len(localized_video_ids),
         "windowless_auto_fallback_videos": len(fallback_auto_ids),
+        "confidence_trace_issue_videos": len(confidence_trace_video_ids),
         "windowless_manual_only_videos": len(manual_only_ids),
         "windowless_excluded_preexisting_quarantine_videos": len(fallback_excluded_preexisting_quarantine_ids),
         "rerun_from_stage_counts": {
@@ -1332,7 +1415,7 @@ except Exception:
 groups = data.get("stage_groups")
 if not isinstance(groups, list):
     sys.exit(0)
-order = {"06b": 0, "06e": 1, "07": 2}
+order = {"06b": 0, "06e": 1, "06h": 2, "07": 3}
 rows = []
 for row in groups:
     if not isinstance(row, dict):
@@ -2842,6 +2925,7 @@ validate_sub_batch() {
   local -a confidence_trace_args=(--manifest "$manifest" --strict-missing)
   local -a batch_report_args=()
   local -a stage_report_check_args=()
+  local confidence_trace_label="$sub_id"
   local waiver_file="$VALIDATE_WAIVER_FILE"
   local quarantine_file="$VALIDATE_QUARANTINE_FILE"
 
@@ -2858,9 +2942,11 @@ validate_sub_batch() {
     batch_report_args+=(--source "$VALIDATE_SOURCE")
     stage_report_check_args+=(--source "$VALIDATE_SOURCE")
     stage_reports_dir="$REPO_ROOT/data/validation/stage_reports/${sub_id}.${VALIDATE_SOURCE}"
+    confidence_trace_label="${sub_id}.${VALIDATE_SOURCE}"
   else
     batch_report_args+=(--all)
   fi
+  local confidence_trace_out="$REPO_ROOT/data/validation/confidence_trace/${confidence_trace_label}.report.json"
 
   # Auto-detect waivers + quarantine
   if [[ -z "$waiver_file" ]]; then
@@ -2895,6 +2981,21 @@ validate_sub_batch() {
   echo "  Confidence trace policy: strict-only"
   echo ""
 
+  # Refresh canonical Stage 08 manifest report before reading it back through
+  # validate_manifest so targeted 07/07b recovery runs cannot leave taxonomy
+  # truth stuck on an old report.
+  echo "=== Stage 08 Report Refresh ==="
+  echo ""
+  local -a stage08_refresh_args=(--manifest "$manifest")
+  if [[ -n "$VALIDATE_SOURCE" ]]; then
+    stage08_refresh_args+=(--source "$VALIDATE_SOURCE")
+  fi
+  if [[ -n "$quarantine_file" ]]; then
+    stage08_refresh_args+=(--quarantine-file "$quarantine_file")
+  fi
+  python3 "$REPO_ROOT/scripts/training-data/08.DET.taxonomy-validation" \
+    "${stage08_refresh_args[@]}" || rc=$?
+
   # 1. Manifest + cross-stage validation
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_manifest.py" "${validate_args[@]}" || rc=$?
 
@@ -2903,7 +3004,8 @@ validate_sub_batch() {
   echo "=== Confidence Trace Validation ==="
   echo ""
   python3 "$REPO_ROOT/scripts/training-data/validation/validate_confidence_trace.py" \
-    "${confidence_trace_args[@]}" || rc=$?
+    "${confidence_trace_args[@]}" \
+    --out "$confidence_trace_out" || rc=$?
 
   # 3. Stage report contract validation + readiness
   if [[ -n "$CFG_MAX_WARNING_CHECKS" ]]; then
@@ -2932,6 +3034,12 @@ validate_sub_batch() {
   fi
   if [[ -n "$CFG_BLOCK_VIDEO_DAMAGE_SCORE" ]]; then
     stage_report_check_args+=(--block-video-damage-score "$CFG_BLOCK_VIDEO_DAMAGE_SCORE")
+  fi
+  if [[ -n "$CFG_REVIEW_DAMAGED_SEGMENT_COUNT" ]]; then
+    stage_report_check_args+=(--review-damaged-segment-count "$CFG_REVIEW_DAMAGED_SEGMENT_COUNT")
+  fi
+  if [[ -n "$CFG_BLOCK_DAMAGED_SEGMENT_COUNT" ]]; then
+    stage_report_check_args+=(--block-damaged-segment-count "$CFG_BLOCK_DAMAGED_SEGMENT_COUNT")
   fi
   if [[ -n "$CFG_REVIEW_DAMAGED_CHUNK_RATIO" ]]; then
     stage_report_check_args+=(--review-damaged-chunk-ratio "$CFG_REVIEW_DAMAGED_CHUNK_RATIO")

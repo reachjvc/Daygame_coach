@@ -4406,3 +4406,472 @@ If canonical readiness keeps the dominant underlying check when a review is caus
 
 ### Next Hypothesis
 Use the now-cleaner reason codes and repair windows to decide whether `stage06b_flag` should remain a pure review signal or become stricter for certain content types / damage profiles.
+
+## Iteration I95 - 2026-03-04
+
+### Hypothesis
+The remaining `stage07b_gate_review` videos should be rerun from Stage `07`; if their reviews are unstable enrichment artifacts, they will clear without changing upstream truth.
+
+### Changes
+- no code change
+- targeted rerun manifests added:
+  - `data/validation/tmp/P001.4.stage07b-review.txt`
+  - `data/validation/tmp/P001.5.stage07b-review.txt`
+
+### Run Scope
+- `python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 2 --from 07 --to 07b --manifest data/validation/tmp/P001.4.stage07b-review.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2 --stage-parallel-cap 07=1`
+- `python3 scripts/training-data/batch/pipeline-runner P001.5 --parallel 1 --from 07 --to 07b --manifest data/validation/tmp/P001.5.stage07b-review.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2 --stage-parallel-cap 07=1`
+
+### Validation Evidence
+- `g35sbdbjNXw`:
+  - before: `review(section_coverage_gap)`
+  - after: `pass(adequate_evidence_minor_coverage_gap)`
+- `iOSpNACA9VI`:
+  - before: `review(summary_aggregation_contract_violation)`
+  - after: `pass(adequate_compilation_enrichment)`
+- `KURlBcRF6-M`:
+  - before: `review(technique_misattribution_conv1)`
+  - after: `review(technique_description_contradiction)`
+- batch effect:
+  - `P001.5` readiness moved to `READY=3 / REVIEW=4 / BLOCKED=3`
+  - `P001.4` readiness counts held at `READY=1 / REVIEW=6 / BLOCKED=3` because the repaired `iOSpNACA9VI` still carries `stage06b_flag`
+
+### Decision
+- keep
+- rationale: this was a clean, canonical repair loop and it removed two false review cases without altering the upstream method.
+
+### Next Hypothesis
+Probe the remaining `stage06b_flag` set with fresh real-Claude verification to determine whether `stage06b_flag` is stable enough to justify stricter policy treatment.
+
+## Iteration I96 - 2026-03-04
+
+### Hypothesis
+If `stage06b_flag` is a stable structural-truth signal, rerunning flagged videos through fresh Stage `06b` verification should mostly reproduce the same verdicts and only sharpen the reasons.
+
+### Changes
+- no code change
+- targeted rerun manifests added:
+  - `data/validation/tmp/P001.4.stage06b-flag.txt`
+  - `data/validation/tmp/P001.5.stage06b-flag.txt`
+
+### Run Scope
+- `python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 5 --from 06b --to 06b --manifest data/validation/tmp/P001.4.stage06b-flag.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+- `python3 scripts/training-data/batch/pipeline-runner P001.5 --parallel 1 --from 06b --to 06b --manifest data/validation/tmp/P001.5.stage06b-flag.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+
+### Validation Evidence
+- systems finding:
+  - `06b.LLM.verify` serializes Claude calls behind `/tmp/stage06b_claude.lock`
+  - runner parallelism therefore does not currently yield true Stage `06b` concurrency
+- completed sample so far:
+  - `NBJ0JkyyqR0`: `FLAG -> APPROVE`
+  - `SPDOb_IE5YM`: `FLAG -> FLAG`
+  - `iOSpNACA9VI`: `FLAG -> FLAG`
+  - `FVNOq-rQ2O0`: `FLAG -> FLAG`
+- reason-shape evidence:
+  - `NBJ0JkyyqR0` approving on rerun proves `stage06b_flag` is not globally stable enough to harden blindly
+  - `SPDOb_IE5YM` stayed flagged for mixed-speaker / boundary corruption
+  - `iOSpNACA9VI` stayed flagged for a concrete collapse issue plus same-speaker role inconsistency
+  - `FVNOq-rQ2O0` stayed flagged, but the fresh reason narrowed drastically from a broad “one continuous approach” narrative to specific minor boundary / override issues
+
+### Decision
+- keep as evidence-gathering
+- rationale: the sample is already sufficient to reject a blanket stricter policy on raw `stage06b_flag` alone.
+
+### Next Hypothesis
+`stage06b_flag` should stay a review signal by default and only become stricter when paired with more objective downstream corroboration such as high damage prevalence, contamination risk, or repeatable collapse/mixed-speaker failure classes.
+
+## Iteration I97 - 2026-03-04
+
+### Hypothesis
+If `06b` verification emits stable structured findings, the pipeline should consume those findings directly instead of collapsing them into a single `stage06b_flag` review bucket.
+
+### Changes
+- `scripts/training-data/validation/validate_manifest.py`:
+  - added class-aware extraction for `06b.LLM.verify-v3.1` artifacts
+  - emits canonical issue checks for:
+    - `stage06b_video_type_mismatch`
+    - `stage06b_misattribution`
+    - `stage06b_boundary_issue`
+    - `stage06b_collapse_issue`
+    - `stage06b_missing_target_coverage`
+    - `stage06b_mixed_speaker_segment`
+    - `stage06b_same_speaker_multi_role_conflict`
+    - `stage06b_video_type_ambiguity`
+    - `stage06b_transcript_artifact`
+  - coarse `stage06b_flag` now downgrades to informational context when class-specific issues are present; old coarse artifacts still keep the fallback warning path
+  - fixed null-speaker rendering so report messages no longer print `speaker=None`
+
+### Run Scope
+- one-video `06b` canary rerun:
+  - `python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 1 --from 06b --to 06b --manifest data/validation/tmp/P001.4.stage06b-canary.srq1.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+- validation reruns:
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.4 --validate`
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.5 --validate`
+
+### Validation Evidence
+- new `06b` truth now visible in reports:
+  - `srq1OVqxX0E` emitted:
+    - `stage06b_video_type_mismatch`
+    - `stage06b_missing_target_coverage` x2
+  - `FVNOq-rQ2O0` emitted:
+    - `stage06b_video_type_mismatch`
+    - `stage06b_mixed_speaker_segment`
+    - `stage06b_video_type_ambiguity`
+    - minor-only `stage06b_boundary_issue` / `stage06b_within_segment_boundary_bleed`
+- readiness reasons became materially more truthful without changing the downstream method:
+  - `P001.4`:
+    - `FVNOq-rQ2O0 -> routing_mismatch`
+    - `iOSpNACA9VI -> transcript_quality`
+    - `srq1OVqxX0E -> transcript_quality`
+  - `P001.5`:
+    - `7BfD4URAD1Y -> conversation_structure`
+    - `HqQdRyRgPtU -> conversation_structure`
+- batch-level readiness after the validator change:
+  - `P001.4`: `READY=1 / REVIEW=6 / BLOCKED=3`
+  - Stage 10 dry-run ingest scope: `1/8` (`zi8EvOdRQiI`)
+  - `P001.5`: `READY=3 / REVIEW=4 / BLOCKED=3`
+  - Stage 10 dry-run ingest scope: `3/10` (`g35sbdbjNXw`, `jl5tLCqpTNo`, `l5zEcgIS2Pw`)
+
+### Decision
+- keep
+- rationale: this replaces a false “manual review” bucket with canonical structured truth using the existing readiness machinery. It is a real pipeline improvement, not an operator-side workaround.
+
+### Next Hypothesis
+Treat specific serious `06b` checks as policy-calibrated signals (`missing_target_coverage`, `same_speaker_multi_role_conflict`, `collapse_issue`, `mixed_speaker_segment`) rather than tightening raw `stage06b_flag`, and separately validate whether the global `06b` Claude lock can be safely relaxed.
+
+## Iteration I98 - 2026-03-04
+
+### Hypothesis
+If we hard-block the new `06b` structural checks globally, readiness truth will tighten without creating new false blocks.
+
+### Changes
+- no code change
+- ran direct A/B readiness validation with added block policy:
+  - `--block-warning-check stage06b_misattribution`
+  - `--block-warning-check stage06b_role_ambiguity`
+
+### Run Scope
+- `python3 scripts/training-data/validation/validate_stage_report.py ... --dir data/validation/stage_reports/P001.4 ... --block-warning-check stage06b_misattribution --block-warning-check stage06b_role_ambiguity`
+- `python3 scripts/training-data/validation/validate_stage_report.py ... --dir data/validation/stage_reports/P001.5 ... --block-warning-check stage06b_misattribution --block-warning-check stage06b_role_ambiguity`
+
+### Validation Evidence
+- baseline truth before A/B:
+  - `P001.4`: `READY=1 / REVIEW=6 / BLOCKED=3`
+  - `P001.5`: `READY=3 / REVIEW=4 / BLOCKED=3`
+- A/B result:
+  - `P001.4` -> `READY=1 / REVIEW=5 / BLOCKED=4`
+    - newly blocked:
+      - `iOSpNACA9VI -> policy_block_warning_check:stage06b_role_ambiguity`
+  - `P001.5` -> `READY=3 / REVIEW=2 / BLOCKED=5`
+    - newly blocked:
+      - `7BfD4URAD1Y -> policy_block_warning_check:stage06b_misattribution`
+      - `HqQdRyRgPtU -> policy_block_warning_check:stage06b_misattribution`
+- interpretation:
+  - one moderate role ambiguity on `iOSpNACA9VI` is not enough evidence to justify a hard block
+  - the `7BfD4URAD1Y` / `HqQdRyRgPtU` misattribution cases are real review findings, but global block semantics are still too aggressive
+
+### Decision
+- reject
+- rationale: global blocking on `stage06b_misattribution` / `stage06b_role_ambiguity` overblocks current real data.
+
+### Next Hypothesis
+Keep these `06b` findings as review signals unless corroborated by stronger downstream evidence (damage prevalence, contamination pressure, repeated structural failures) or a narrower content-type policy.
+
+## Iteration I99 - 2026-03-04
+
+### Hypothesis
+If the global `06b` Claude lock is only throttling throughput, disabling it on a small real-Claude smoke test should give safe parallel progress.
+
+### Changes
+- `scripts/training-data/06b.LLM.verify`:
+  - normalize none-like placeholder values (`None`, `null`, `n/a`) for `suggested_role` / `suggested_override` as absent instead of surfacing them as dropped-note noise
+- manifests:
+  - added `data/validation/tmp/P001.4.stage06b-lock-smoke.txt`
+
+### Run Scope
+- lock-off smoke test:
+  - `STAGE06B_CLAUDE_LOCK=0 python3 scripts/training-data/batch/pipeline-runner P001.4 --parallel 2 --from 06b --to 06b --manifest data/validation/tmp/P001.4.stage06b-lock-smoke.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2`
+- normalization verification:
+  - `python3 -m py_compile scripts/training-data/06b.LLM.verify`
+  - direct synthetic checks via `runpy` on `normalize_misattributions` / `normalize_collapse_issues`
+
+### Validation Evidence
+- lock-off smoke test:
+  - both `06b` workers reached real Claude invocation concurrently
+  - both immediately hit repeated `rc=1` transient failures and never produced updated verification artifacts
+  - debug payloads captured:
+    - `getaddrinfo EAI_AGAIN api.anthropic.com`
+    - `EACCES: permission denied, open '/home/jonaswsl/.claude/debug/<session>.txt'`
+  - run was terminated after repeated backoff loops because it was not making progress
+- normalization fix:
+  - `normalize_misattributions([{'segment_id':399,'suggested_role':'None','confidence':0.9}]) -> ([], [])`
+  - `normalize_collapse_issues([{'speaker_id':'SPEAKER_01','segment_id':58,'suggested_override':'None','confidence':0.9}]) -> ([], [])`
+- downstream truth refresh from the completed `iOSpNACA9VI` `v3.1` artifact:
+  - `iOSpNACA9VI` now reviews as `conversation_structure` rather than generic `transcript_quality`
+  - concrete `06b` findings are:
+    - `stage06b_role_ambiguity` on segment `399`
+    - minor `stage06b_missing_target_coverage` on montage conversation `11`
+
+### Decision
+- keep the global `06b` lock for now
+- rationale: disabling it produces a real Claude runtime failure mode, not safe throughput. The normalization fix is valid independently and removes false `other_unclassified` pollution.
+
+### Next Hypothesis
+If we want true Stage `06b` concurrency later, we need a Claude runtime fix or launch-model change that survives parallel invocation; the next pipeline-quality win is likely additional calibration on narrower `06b` checks or continued batch progression under the current locked runtime.
+
+## Iteration I100 - 2026-03-04
+
+### Hypothesis
+If restart quarantine filtering understands manifest-level missing-stage checks and ignores synthetic preexisting-skip markers, targeted recovery manifests can reopen real work instead of self-skipping forever.
+
+### Changes
+- `scripts/training-data/batch/pipeline-runner`:
+  - `quarantine_reason_stage(...)` now recognizes embedded stage keys such as `_stage07_`, `_stage07b_`, `_stage09_` inside check names like `manifest_missing_stage07_output`
+  - `filter_quarantine_rows_for_restart(...)` now drops synthetic `preexisting_quarantine` reasons/checks for active restart scope
+  - `run_video(...)` no longer writes `preexisting_quarantine` back as a new quarantine reason; it marks those videos as `skipped_preexisting_quarantine` instead
+  - runner summary now reports skipped-preexisting items separately
+- manifests:
+  - added `data/validation/tmp/P001.8.from07-recovery.txt`
+
+### Run Scope
+- baseline validation:
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+- targeted recovery:
+  - `python3 scripts/training-data/batch/pipeline-runner P001.8 --parallel 3 --from 07 --to 09 --manifest data/validation/tmp/P001.8.from07-recovery.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2 --stage-parallel-cap 07=1`
+
+### Validation Evidence
+- baseline `P001.8` truth under current pipeline rules:
+  - `READY=3 / REVIEW=4 / BLOCKED=3`
+  - dry-run ingest set:
+    - `EscjHJHTuSs`
+    - `QvGtRoklA3A`
+    - `YOEP0380xD4`
+  - blocked set was entirely restartable missing-stage scope:
+    - `-iCf6UX3ZMg`
+    - `FNpZs1VhwaA`
+    - `e2dLEB-AwmA`
+- before the fix:
+  - recovery manifest from `07` instantly skipped all three as “already quarantined before run”
+  - quarantine rows had been polluted by synthetic `preexisting_quarantine`, creating a self-deadlock
+- after the fix:
+  - targeted `P001.8` recovery reopened successfully
+  - live process inspection showed:
+    - `FNpZs1VhwaA` actively in Stage `07`
+    - one real `claude` child under the enforced stable cap `07=1`
+    - `-iCf6UX3ZMg` and `e2dLEB-AwmA` waiting behind that cap
+
+### Decision
+- keep
+- rationale: this removes another real rerun deadlock in the canonical path and directly improves our ability to push blocked sub-batches forward without touching quarantine files manually.
+
+### Next Hypothesis
+Let the reopened `P001.8` `07 -> 09` recovery finish, then validate whether those three videos convert from synthetic missing-stage blocks into real readiness outcomes under the tightened pipeline.
+
+## Iteration I101 - 2026-03-04
+
+### Hypothesis
+If validation refreshes the canonical manifest-level Stage `08` report before reading it, and Stage `08` only excludes upstream quarantine from coverage checks, targeted recovery runs will stop self-preserving stale `missing_stage07_enriched` blocks.
+
+### Changes
+- `scripts/training-data/batch/sub-batch-pipeline`:
+  - `validate_sub_batch` now runs Stage `08` manifest refresh before `validate_manifest.py`
+- `scripts/training-data/08.DET.taxonomy-validation`:
+  - quarantine loading now keeps only upstream quarantine when evaluating Stage `08` coverage
+  - stale Stage `08` / `09` quarantine can no longer hide recovered Stage `07` outputs
+- `scripts/training-data/validation/validate_manifest.py`:
+  - same-file quarantine re-emission now rebuilds membership from current issues instead of preserving stale input rows
+
+### Run Scope
+- `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+
+### Validation Evidence
+- before:
+  - `P001.8.report.json` was stale from `2026-02-25`
+  - Stage `08` still reported `missing_stage07_enriched` for:
+    - `-iCf6UX3ZMg`
+    - `FNpZs1VhwaA`
+    - `e2dLEB-AwmA`
+  - `P001.8` quarantine incorrectly preserved those three as blocked
+- after:
+  - Stage `08` refreshed to `Matched video IDs: 10`, `Missing videos: 0`
+  - Stage `08` status became `WARNING`, not `FAIL`
+  - `data/validation/quarantine/P001.8.json` dropped to `quarantined_video_count=0`
+
+### Decision
+- keep
+- rationale: this removes another stale-truth path where recovered Stage `07` output could still be masked by obsolete Stage `08` / quarantine artifacts.
+
+### Next Hypothesis
+With stale Stage `08` truth removed, the next blocking validation error should reflect real artifact debt rather than report reuse. Fix that debt at the owning stage instead of suppressing the validator.
+
+## Iteration I102 - 2026-03-04
+
+### Hypothesis
+If strict confidence-trace failures are turned into canonical repair targets, Stage `06h` debt can be repaired through the same auto-repair machinery instead of requiring manual operator discovery.
+
+### Changes
+- `scripts/training-data/validation/validate_confidence_trace.py`:
+  - added `--out` to persist JSON reports while retaining current stdout behavior
+- `scripts/training-data/batch/sub-batch-pipeline`:
+  - `validate_sub_batch` now writes `data/validation/confidence_trace/<sub-batch>.report.json`
+  - auto-repair target building now reads that report
+  - rerun stage selection now recognizes confidence-trace issues as `06h`
+  - stage-group ordering now includes `06h` between `06e` and `07`
+
+### Run Scope
+- confidence-trace validation artifact:
+  - `python3 scripts/training-data/validation/validate_confidence_trace.py --manifest docs/pipeline/batches/P001.8.txt --strict-missing --out /tmp/P001.8.confidence.report.json`
+- targeted repair:
+  - `python3 scripts/training-data/batch/pipeline-runner P001.8 --parallel 3 --from 06h --to 09 --manifest data/validation/tmp/P001.8.from07-recovery.txt --skip-end-validation --llm-timeout-seconds 300 --llm-retries 2 --stage-parallel-cap 07=1`
+- revalidation:
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+
+### Validation Evidence
+- before repair:
+  - strict confidence trace validation failed on `P001.8`
+  - exactly three videos were missing `.confidence.trace.json`:
+    - `-iCf6UX3ZMg`
+    - `FNpZs1VhwaA`
+    - `e2dLEB-AwmA`
+  - those videos still had old `06h v1.0` `.confidence.report.json` files, proving this was real Stage `06h` artifact debt
+- after targeted `06h -> 09` rerun:
+  - all three emitted fresh `.confidence.trace.json`
+  - strict confidence trace validation passed at `10/10`
+- current `P001.8` truth:
+  - `READY=3 / REVIEW=6 / BLOCKED=1`
+  - `e2dLEB-AwmA` is now the only blocked video, for real contamination-risk budget excess
+  - `FNpZs1VhwaA` improved from prior hard damage block to `REVIEW conversation_structure`
+
+### Decision
+- keep
+- rationale: confidence-trace coverage is now repaired at the owning stage, and future missing-trace failures are routed into the canonical auto-repair loop at `06h`.
+
+### Next Hypothesis
+Push the remaining `P001.8` conversation-structure reviews through a fresh `06b -> 09` rerun to see whether `06b` still emits the same misattribution/collapse classes after the tightened downstream truth path.
+
+## Iteration I103 - 2026-03-04
+
+### Hypothesis
+If readiness also gates on absolute `damaged_segment_count`, long videos with large amounts of surviving damage will stop slipping through ratio-only policy as merely `REVIEW` or even future `READY`.
+
+### Changes
+- `scripts/training-data/validation/validate_stage_report.py`:
+  - added canonical thresholds:
+    - `--review-damaged-segment-count`
+    - `--block-damaged-segment-count`
+  - readiness now escalates on Stage `09 qualityProfile.damaged_segment_count`
+  - new canonical reasons:
+    - `policy_review_damaged_segment_count:<seen>><limit>`
+    - `policy_block_damaged_segment_count:<seen>><limit>`
+- `scripts/training-data/batch/sub-batch-pipeline`:
+  - wired the new config keys through validation invocation
+- `scripts/training-data/batch/pipeline.config.json`:
+  - set:
+    - `review_damaged_segment_count = 20`
+    - `block_damaged_segment_count = 80`
+
+### Run Scope
+- `python3 -m py_compile scripts/training-data/validation/validate_stage_report.py`
+- `bash -n scripts/training-data/batch/sub-batch-pipeline`
+- `./scripts/training-data/batch/sub-batch-pipeline P001.4 --validate`
+- `./scripts/training-data/batch/sub-batch-pipeline P001.5 --validate`
+- `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+
+### Validation Evidence
+- calibration before the change:
+  - top surviving-damage counts across live batches included:
+    - `iOSpNACA9VI = 219`
+    - `FNpZs1VhwaA = 44`
+    - `FVNOq-rQ2O0 = 27`
+    - `SPDOb_IE5YM = 24`
+  - no current READY video had `damaged_segment_count >= 20`, so the new thresholds harden real outliers without broad collateral churn
+- `P001.4` after revalidation:
+  - `READY=1 / REVIEW=5 / BLOCKED=4`
+  - `iOSpNACA9VI` moved `REVIEW -> BLOCKED` on:
+    - `policy_block_damaged_segment_count:219>80`
+  - `SPDOb_IE5YM` now reviews explicitly for surviving damage volume:
+    - `policy_review_damaged_segment_count:24>20`
+- `P001.5` after revalidation:
+  - unchanged at `READY=3 / REVIEW=4 / BLOCKED=3`
+  - current READY set remains:
+    - `g35sbdbjNXw`
+    - `jl5tLCqpTNo`
+    - `l5zEcgIS2Pw`
+- `P001.8` after revalidation:
+  - unchanged at `READY=3 / REVIEW=6 / BLOCKED=1`
+  - `FNpZs1VhwaA` stays non-READY, now surfacing as `REVIEW transcript_quality`
+  - dry-run ingest remains:
+    - `EscjHJHTuSs`
+    - `QvGtRoklA3A`
+    - `YOEP0380xD4`
+
+### Decision
+- keep
+- rationale: the pipeline is now stricter on surviving absolute damage, which addresses the specific “many bad segments but not blocked” class of truth gap without introducing a parallel heuristic path.
+
+### Next Hypothesis
+The next gating blind spot is likely not ratio-vs-count anymore, but positive-damage videos with weak or missing localization windows (`positive_damage_windowless_ratio` alert on `P001.8`). Audit whether those should remain repair-only metadata or become stricter readiness input.
+
+## Iteration I104 - 2026-03-04
+
+### Hypothesis
+If Stage `09` stops confusing retrieval confidence with transcript damage, and if it preserves dropped bad-chunk localization in the video `qualityProfile`, then `P001.8` should lose its last windowless repair debt while keeping the real damage signal.
+
+### Changes
+- `scripts/training-data/09.EXT.chunk-embed.ts`:
+  - split Stage `09` scoring into:
+    - retrieval `chunk_confidence_score`
+    - quality `damage_score`
+  - removed `phaseConfidence` from `damage_score`
+  - rewrote commentary chunking so masked segments stay inside the original segment-range stats for each chunk
+  - changed `qualityProfile` to use pre-filter `normalizedChunks`, so dropped chunks still contribute `damaged_segment_ids` / `damage_segment_windows`
+- `scripts/training-data/batch/pipeline-runner`:
+  - added repeatable `--force-stage`
+  - current support is explicit for Stage `09`, which lets the runner invalidate Stage `09` state-cache reuse after code fixes
+
+### Run Scope
+- `python3 -m py_compile scripts/training-data/batch/pipeline-runner`
+- `python3 scripts/training-data/batch/pipeline-runner P001.8 --from 09 --to 09 --parallel 3 --skip-end-validation --force-stage 09`
+- `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+- focused Stage `09` smoke test:
+  - `python3 scripts/training-data/batch/pipeline-runner P001.8 --manifest /tmp/P001.8.vwr.txt --from 09 --to 09 --parallel 1 --skip-end-validation --force-stage 09`
+  - `./scripts/training-data/batch/sub-batch-pipeline P001.8 --validate`
+
+### Validation Evidence
+- `vWr955SeGXs` was the last windowless case before the fix:
+  - Stage `07` had one unrepaired artifact at segment `74`
+  - the corresponding Stage `09` bad chunk fell below the confidence floor and was dropped
+  - because `qualityProfile` only looked at retained chunks, `vWr955SeGXs` stayed `REVIEW contamination_risk` with no localized repair window
+- after the Stage `09` fixes:
+  - `vWr955SeGXs qualityProfile.damaged_segment_ids = [74]`
+  - `vWr955SeGXs qualityProfile.damage_segment_windows = [{start_segment_id:73,end_segment_id:75,damaged_segment_count:1}]`
+- final `P001.8` scorecard after revalidation:
+  - `READY=1 / REVIEW=7 / BLOCKED=2`
+  - `positive_damage_windowless_ratio = 0.0`
+  - `videos_with_localized_damage_windows = 10`
+  - `positive_damage_videos_without_localized_windows = 0`
+  - `top_windowless_damage_scores = []`
+- repair outputs after revalidation:
+  - `localized_windows = 48`
+  - `windowless_fallback_tasks = 0`
+  - READY spotcheck still isolates the only ingest-eligible video:
+    - `EscjHJHTuSs`
+- current `P001.8` truth after the Stage `09` fixes:
+  - blocked:
+    - `YpOTPGIZwtk -> policy_block_damaged_chunk_ratio:0.611>0.600`
+    - `e2dLEB-AwmA -> policy_warning_class_budget_exceeded:contamination_risk:4>2`
+  - review:
+    - `QvGtRoklA3A -> policy_review_video_damage_score:0.223>0.180`
+    - `YOEP0380xD4 -> policy_review_video_damage_score:0.207>0.180`
+    - `rMNSFU7TyIg -> policy_review_video_damage_score:0.295>0.180`
+    - `vWr955SeGXs -> contamination_risk`
+    - `ndYaBU7K82o -> contamination_risk`
+    - `-iCf6UX3ZMg -> conversation_structure`
+    - `FNpZs1VhwaA -> transcript_quality`
+
+### Decision
+- keep
+- rationale: Stage `09` now preserves the actual damage truth all the way through scoring and repair export. The pipeline no longer needs a windowless fallback path for `P001.8`.
+
+### Next Hypothesis
+Audit whether `confidence_tier:medium` should remain a retrieval-only downrank signal instead of contributing to canonical Stage `09` damage, unless it appears alongside harder evidence such as transcript artifacts, low tier, or contamination.

@@ -6,10 +6,12 @@ import type { GoalWithProgress, BadgeTier } from "../types"
 
 const TIER_COLORS: Record<BadgeTier, { border: string; bg: string; icon: string; bar: string }> = {
   none: { border: "border-gray-500/20", bg: "bg-gray-500/5", icon: "text-gray-500", bar: "bg-gray-500" },
+  iron: { border: "border-stone-400/20", bg: "bg-stone-400/5", icon: "text-stone-400", bar: "bg-stone-400" },
   bronze: { border: "border-amber-700/20", bg: "bg-amber-700/5", icon: "text-amber-700", bar: "bg-amber-700" },
   silver: { border: "border-slate-400/20", bg: "bg-slate-400/5", icon: "text-slate-400", bar: "bg-slate-400" },
   gold: { border: "border-yellow-500/20", bg: "bg-yellow-500/5", icon: "text-yellow-500", bar: "bg-yellow-500" },
   diamond: { border: "border-cyan-400/20", bg: "bg-cyan-400/5", icon: "text-cyan-400", bar: "bg-cyan-400" },
+  mythic: { border: "border-purple-500/20", bg: "bg-purple-500/5", icon: "text-purple-500", bar: "bg-purple-500" },
 }
 
 interface AchievementBadgeProps {

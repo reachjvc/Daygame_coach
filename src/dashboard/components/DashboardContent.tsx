@@ -34,7 +34,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
         <h1 className="text-balance text-3xl sm:text-4xl font-bold tracking-tight lg:text-5xl mb-4 text-foreground">
           {isPreviewMode ? "Explore the Dashboard" : "Welcome Back!"}
         </h1>
-        <p className="text-pretty text-lg text-muted-foreground leading-relaxed">
+        <p className="text-pretty text-base sm:text-lg text-muted-foreground leading-relaxed">
           {isPreviewMode
             ? "See what training modules are available. Sign up to start practicing!"
             : "Choose a training module to continue improving your daygame skills"
@@ -94,7 +94,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
         {/* Cold Approach - Coming Soon */}
         <Card
-          className="p-8 bg-card border-border opacity-60 h-full flex flex-col items-center text-center"
+          className="p-5 sm:p-8 bg-card border-border opacity-60 h-full flex flex-col items-center text-center"
         >
           <div className="size-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <MessageCircle className="size-10 text-primary" />
@@ -132,7 +132,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
       {/* Ask Your Coach - QA Section */}
       <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/qa"} className="group block mt-8" data-testid="dashboard-qa-link">
-        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="size-14 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
@@ -158,7 +158,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
       {/* Progress Tracking Section */}
       <Link href={isPreviewMode ? "/auth/sign-up" : "/dashboard/tracking"} className="group block mt-4" data-testid="dashboard-tracking-link">
-        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="size-14 rounded-full bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors shrink-0">
@@ -184,7 +184,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
       {/* Articles & Research Section - Always accessible */}
       <Link href="/dashboard/articles" className="group block mt-4">
-        <Card className="p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-card to-card/80 border-border hover:border-primary transition-all duration-300 cursor-pointer group-hover:shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-5">
               <div className="size-14 rounded-full bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors shrink-0">
@@ -207,7 +207,7 @@ export function DashboardContent({ profileData, isPreviewMode = false }: Dashboa
 
       {/* Preview Mode CTA */}
       {isPreviewMode && (
-        <div className="mt-12 text-center p-8 bg-primary/5 border border-primary/20 rounded-lg">
+        <div className="mt-12 text-center p-4 sm:p-8 bg-primary/5 border border-primary/20 rounded-lg">
           <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Training?</h3>
           <p className="text-muted-foreground mb-6">
             Sign up now to unlock all features and start improving your social skills today.

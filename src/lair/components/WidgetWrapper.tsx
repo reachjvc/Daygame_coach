@@ -86,7 +86,7 @@ export function WidgetWrapper({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 p-0"
+                className="h-10 w-10 sm:h-7 sm:w-7 p-0"
                 onClick={onToggleCollapse}
               >
                 {collapsed ? (
@@ -99,7 +99,7 @@ export function WidgetWrapper({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0 text-destructive hover:text-destructive"
+                  className="h-10 w-10 sm:h-7 sm:w-7 p-0 text-destructive hover:text-destructive"
                   onClick={onRemove}
                 >
                   <X className="h-4 w-4" />

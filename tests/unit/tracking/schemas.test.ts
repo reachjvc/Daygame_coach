@@ -90,7 +90,7 @@ describe("SetTypeSchema", () => {
 })
 
 describe("ReviewTypeSchema", () => {
-  const validReviewTypes = ["weekly", "monthly", "quarterly"]
+  const validReviewTypes = ["daily", "weekly", "monthly", "quarterly"]
 
   test.each(validReviewTypes)('should accept valid review type "%s"', (reviewType) => {
     // Arrange & Act

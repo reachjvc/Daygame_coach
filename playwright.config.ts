@@ -51,10 +51,13 @@ export default defineConfig({
         // Goals tests share a user and mutate goals data — run serially
         /goals-hub\.spec\.ts/,
         /goals-data-consistency\.spec\.ts/,
+        /goals-tour\.spec\.ts/,
         // Mobile-specific tests run in dedicated cross-browser projects
         /mobile\//,
         // Integration tests run in dedicated project after session chain
         /integration\//,
+        // Cross-browser tests run in dedicated Firefox/WebKit projects
+        /cross-browser\//,
       ],
       dependencies: ['setup'],
       use: {
@@ -132,6 +135,15 @@ export default defineConfig({
         storageState: 'tests/e2e/.auth/user.json',
       },
     },
+    {
+      name: 'goals-tour',
+      testMatch: /goals-tour\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
 
     // === Session-creating tests (chained to run ONE file at a time) ===
     // These files create/end sessions via UI for the same user. Since only one session
@@ -195,6 +207,9 @@ export default defineConfig({
         /dashboard-navigation\.spec\.ts/,
         /tracking-dashboard\.spec\.ts/,
         /field-report\.spec\.ts/,
+        /mobile\/mobile-goals\.spec\.ts/,
+        /mobile\/mobile-tracking\.spec\.ts/,
+        /mobile\/mobile-scenarios\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {
@@ -213,6 +228,9 @@ export default defineConfig({
         /dashboard-navigation\.spec\.ts/,
         /tracking-dashboard\.spec\.ts/,
         /field-report\.spec\.ts/,
+        /mobile\/mobile-goals\.spec\.ts/,
+        /mobile\/mobile-tracking\.spec\.ts/,
+        /mobile\/mobile-scenarios\.spec\.ts/,
       ],
       dependencies: ['setup'],
       use: {
@@ -229,6 +247,28 @@ export default defineConfig({
       use: {
         ...devices['iPhone 14'],
         storageState: 'tests/e2e/.auth/user.json',
+      },
+    },
+
+    // === Cross-browser authenticated tests (Firefox + WebKit with traces) ===
+    {
+      name: 'cross-firefox',
+      testMatch: /cross-browser\//,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Firefox'],
+        storageState: 'tests/e2e/.auth/user.json',
+        trace: 'on',
+      },
+    },
+    {
+      name: 'cross-webkit',
+      testMatch: /cross-browser\//,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Safari'],
+        storageState: 'tests/e2e/.auth/user.json',
+        trace: 'on',
       },
     },
 

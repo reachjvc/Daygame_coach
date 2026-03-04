@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { redirect } from "next/navigation"
 import { GoalsHubPage } from "@/src/goals/components/GoalsHubPage"
 import { getUserGoalCount } from "@/src/db/goalRepo"
@@ -31,9 +32,10 @@ export default async function GoalsPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-tab-bar">
       <AppHeader currentPage="other" isLoggedIn={true} hasPurchased={true} />
       <GoalsHubPage />
+      <MobileTabBar />
     </div>
   )
 }

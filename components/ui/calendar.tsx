@@ -50,12 +50,12 @@ function Calendar({
         nav: "flex items-center gap-1",
         button_previous: cn(
           "inline-flex items-center justify-center rounded-md",
-          "h-7 w-7 bg-transparent p-0",
+          "h-10 w-10 sm:h-7 sm:w-7 bg-transparent p-0",
           "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         ),
         button_next: cn(
           "inline-flex items-center justify-center rounded-md",
-          "h-7 w-7 bg-transparent p-0",
+          "h-10 w-10 sm:h-7 sm:w-7 bg-transparent p-0",
           "text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         ),
 

@@ -293,3 +293,24 @@ export interface ScenarioScore {
 export function clampScore(value: number): number {
   return Math.max(1, Math.min(10, Math.round(value)))
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Conversation Script Builder Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ConversationNode {
+  id: string
+  speaker: "me" | "her"
+  text: { da: string; en: string }
+  children: string[]
+}
+
+export interface ConversationScript {
+  id: string
+  name: string
+  language: "da" | "en"
+  rootNodeId: string
+  nodes: Record<string, ConversationNode>
+  createdAt: string
+  updatedAt: string
+}

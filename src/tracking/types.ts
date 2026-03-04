@@ -260,6 +260,22 @@ export interface UseVoiceRecorderReturn {
   isTranscriptionSupported: boolean
 }
 
+// ============================================
+// Daily-to-Weekly Aggregation
+// ============================================
+
+export interface DailyWeekSummary {
+  count: number
+  avgEnergy: number | null
+  avgDayRating: number | null
+  avgProcessRating: number | null
+  processOutcomeGap: number | null
+  blockers: string[]
+  valuesAlignment: { toward: number; neutral: number; away: number }
+  gladMoments: string[]
+  lowDays: number
+}
+
 // FireStreakBadge
 export interface FireStreakBadgeProps {
   /** Current consecutive-week streak */

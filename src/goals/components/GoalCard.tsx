@@ -244,7 +244,7 @@ export function GoalCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-green-500"
+              className="h-9 w-9 sm:h-7 sm:w-7 flex-shrink-0 text-muted-foreground hover:text-green-500"
               onClick={(e) => { e.stopPropagation(); onComplete ? onComplete(goal) : handleIncrement(1) }}
               disabled={isIncrementing}
               title="Mark done"
@@ -256,7 +256,7 @@ export function GoalCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-primary"
+              className="h-9 w-9 sm:h-7 sm:w-7 flex-shrink-0 text-muted-foreground hover:text-primary"
               onClick={(e) => { e.stopPropagation(); handleIncrement(1) }}
               disabled={isIncrementing}
               title="+1"
@@ -271,7 +271,7 @@ export function GoalCard({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 flex-shrink-0"
+          className="h-9 w-9 sm:h-7 sm:w-7 flex-shrink-0"
           onClick={() => setIsExpanded(!isExpanded)}
           aria-label={isExpanded ? "Collapse goal" : "Expand goal"}
         >
@@ -368,7 +368,7 @@ export function GoalCard({
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowResetConfirm(true)}
-                    className="text-muted-foreground hover:text-foreground h-7 px-2 text-xs"
+                    className="text-muted-foreground hover:text-foreground h-9 sm:h-7 px-3 sm:px-2 text-sm sm:text-xs"
                   >
                     <RotateCcw className="size-3 mr-1" />
                     Reset
@@ -380,7 +380,7 @@ export function GoalCard({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(goal)}
-                  className="text-muted-foreground hover:text-foreground h-7 px-2 text-xs"
+                  className="text-muted-foreground hover:text-foreground h-9 sm:h-7 px-3 sm:px-2 text-sm sm:text-xs"
                   data-testid={`goal-edit-${goal.id}`}
                 >
                   Edit
@@ -395,7 +395,7 @@ export function GoalCard({
       <div className="flex justify-end -mt-1.5 mr-4 mb-1">
         <button
           onClick={() => onAddChild!(goal)}
-          className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-orange-300 rounded-full bg-orange-950/80 border border-orange-500/40 shadow-[0_1px_4px_rgba(249,115,22,0.2)] hover:bg-orange-900/80 hover:border-orange-500/60 transition-all cursor-pointer"
+          className="flex items-center gap-1 px-3 py-2 sm:py-1 text-xs font-medium text-orange-300 rounded-full bg-orange-950/80 border border-orange-500/40 shadow-[0_1px_4px_rgba(249,115,22,0.2)] hover:bg-orange-900/80 hover:border-orange-500/60 transition-all cursor-pointer"
         >
           <Plus className="size-3" />
           Sub-goal

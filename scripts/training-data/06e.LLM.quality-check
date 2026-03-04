@@ -34,7 +34,7 @@ except Exception:  # pragma: no cover
 
 
 LOG_PREFIX = "[06e.LLM.quality-check]"
-PIPELINE_VERSION = "06e.LLM.quality-check-v1.0"
+PIPELINE_VERSION = "06e.LLM.quality-check-v1.1"
 PROMPT_PATH = Path(__file__).resolve().parent / "prompts" / "06e.quality-check.prompt.md"
 SCHEMA_PATH = Path(__file__).resolve().parent / "schemas" / "06e.quality-check.schema.json"
 CLAUDE_BINARY_PATHS = [
@@ -58,6 +58,8 @@ MAX_DYNAMIC_TIMEOUT_SECONDS = 1800
 TIMEOUT_BUFFER_SECONDS = 120
 TIMEOUT_CHARS_PER_SECOND = 140.0
 TIMEOUT_SECONDS_PER_SEGMENT = 1.2
+WINDOW_PRIMARY_SEGMENT_COUNT = 90
+WINDOW_CONTEXT_SEGMENT_COUNT = 10
 
 
 def repo_root() -> Path:
@@ -240,13 +242,29 @@ def _call_claude(
                     return out
                 if attempt < retries - 1:
                     wait = 2 ** attempt
-                    print(f"{LOG_PREFIX} Claude CLI empty output, retrying in {wait}s...")
+                    stderr_excerpt = (res.stderr or "").strip()
+                    if stderr_excerpt:
+                        stderr_excerpt = stderr_excerpt.splitlines()[-1][:240]
+                        print(
+                            f"{LOG_PREFIX} Claude CLI empty output (stderr: {stderr_excerpt}), "
+                            f"retrying in {wait}s..."
+                        )
+                    else:
+                        print(f"{LOG_PREFIX} Claude CLI empty output, retrying in {wait}s...")
                     time.sleep(wait)
                     continue
                 return None
             if attempt < retries - 1:
                 wait = 2 ** attempt
-                print(f"{LOG_PREFIX} Claude CLI non-zero exit, retrying in {wait}s...")
+                stderr_excerpt = (res.stderr or "").strip()
+                if stderr_excerpt:
+                    stderr_excerpt = stderr_excerpt.splitlines()[-1][:240]
+                    print(
+                        f"{LOG_PREFIX} Claude CLI non-zero exit rc={res.returncode} "
+                        f"(stderr: {stderr_excerpt}), retrying in {wait}s..."
+                    )
+                else:
+                    print(f"{LOG_PREFIX} Claude CLI non-zero exit rc={res.returncode}, retrying in {wait}s...")
                 time.sleep(wait)
         except subprocess.TimeoutExpired:
             if attempt < retries - 1:
@@ -327,6 +345,131 @@ def _compute_effective_timeout_seconds(
     return min(MAX_DYNAMIC_TIMEOUT_SECONDS, max(base, char_based, seg_based))
 
 
+def _iter_window_specs(
+    segments: List[Dict[str, Any]],
+    *,
+    primary_segment_count: int,
+    context_segment_count: int,
+) -> List[Dict[str, Any]]:
+    if not segments:
+        return []
+    primary_segment_count = max(1, int(primary_segment_count))
+    context_segment_count = max(0, int(context_segment_count))
+    specs: List[Dict[str, Any]] = []
+    total = len(segments)
+    start_idx = 0
+    window_index = 0
+    while start_idx < total:
+        primary_start_idx = start_idx
+        primary_end_idx = min(total, primary_start_idx + primary_segment_count)
+        context_start_idx = max(0, primary_start_idx - context_segment_count)
+        context_end_idx = min(total, primary_end_idx + context_segment_count)
+        primary_segments = segments[primary_start_idx:primary_end_idx]
+        context_segments = segments[context_start_idx:context_end_idx]
+        primary_ids = [
+            sid
+            for sid in (_safe_int(seg.get("id")) for seg in primary_segments)
+            if sid is not None
+        ]
+        context_ids = [
+            sid
+            for sid in (_safe_int(seg.get("id")) for seg in context_segments)
+            if sid is not None
+        ]
+        if not primary_ids or not context_ids:
+            start_idx = primary_end_idx
+            continue
+        specs.append({
+            "index": window_index,
+            "primary_segments": primary_segments,
+            "context_segments": context_segments,
+            "primary_ids": primary_ids,
+            "primary_id_set": set(primary_ids),
+            "primary_start_segment_id": primary_ids[0],
+            "primary_end_segment_id": primary_ids[-1],
+            "context_start_segment_id": context_ids[0],
+            "context_end_segment_id": context_ids[-1],
+        })
+        if primary_end_idx >= total:
+            break
+        start_idx = primary_end_idx
+        window_index += 1
+    return specs
+
+
+def _format_segment_id_ranges(segment_ids: List[int]) -> str:
+    if not segment_ids:
+        return ""
+    sorted_ids = sorted({int(sid) for sid in segment_ids})
+    ranges: List[str] = []
+    start = sorted_ids[0]
+    end = start
+    for sid in sorted_ids[1:]:
+        if sid == end + 1:
+            end = sid
+            continue
+        ranges.append(f"{start}-{end}" if start != end else str(start))
+        start = end = sid
+    ranges.append(f"{start}-{end}" if start != end else str(start))
+    return ", ".join(ranges)
+
+
+def _build_window_prompt(
+    prompt_template: str,
+    *,
+    context_segments: List[Dict[str, Any]],
+    primary_ids: List[int],
+) -> str:
+    transcript_text = _format_transcript(context_segments)
+    primary_ranges = _format_segment_id_ranges(primary_ids)
+    window_directive = (
+        "Primary evaluation scope:\n"
+        f"- Only return issues for primary segment ids: {primary_ranges}\n"
+        "- Segments outside that primary set are context only.\n"
+        "- If you notice an issue on a context-only segment, use it to interpret the primary segments, "
+        "but do not include that context-only segment in the JSON output.\n\n"
+    )
+    return prompt_template.replace("{{TRANSCRIPT}}", window_directive + transcript_text)
+
+
+def _filtered_low_quality_segments(
+    items: Any,
+    *,
+    primary_segment_ids: Set[int],
+    synthetic_segment_ids: Set[int],
+) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    if not isinstance(items, list):
+        return out
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        seg_id = _safe_int(item.get("segment"))
+        if seg_id is None or seg_id not in primary_segment_ids or seg_id in synthetic_segment_ids:
+            continue
+        out.append(dict(item))
+    return out
+
+
+def _filtered_transcript_artifacts(
+    items: Any,
+    *,
+    primary_segment_ids: Set[int],
+    synthetic_segment_ids: Set[int],
+) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    if not isinstance(items, list):
+        return out
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        seg_id = _safe_int(item.get("segment_index"))
+        if seg_id is None or seg_id not in primary_segment_ids or seg_id in synthetic_segment_ids:
+            continue
+        out.append(dict(item))
+    return out
+
+
 def quality_check_file(
     input_path: Path,
     output_path: Path,
@@ -348,14 +491,7 @@ def quality_check_file(
     valid_segments = [s for s in segments if isinstance(s, dict) and _safe_int(s.get("id")) is not None]
     valid_segments.sort(key=lambda s: _safe_int(s.get("id")) or 0)
 
-    transcript_text = _format_transcript(valid_segments)
-    prompt = prompt_template.replace("{{TRANSCRIPT}}", transcript_text)
     base_timeout_seconds = max(1, int(args.timeout_seconds))
-    effective_timeout_seconds = _compute_effective_timeout_seconds(
-        base_timeout_seconds,
-        prompt_chars=len(prompt),
-        segment_count=len(valid_segments),
-    )
 
     if args.dry_run:
         print(
@@ -364,34 +500,6 @@ def quality_check_file(
         )
         return {"segments_total": len(valid_segments), "low_quality": 0, "artifacts": 0}
 
-    if effective_timeout_seconds != base_timeout_seconds:
-        print(
-            f"{LOG_PREFIX} {input_path.name}: adaptive timeout={effective_timeout_seconds}s "
-            f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, segments={len(valid_segments)})"
-        )
-
-    raw = _call_claude(
-        prompt,
-        model=args.model,
-        timeout_seconds=effective_timeout_seconds,
-        retries=args.retries,
-    )
-
-    if not raw:
-        raise RuntimeError(f"Claude CLI returned no output for {input_path.name}")
-
-    parsed = _extract_json(raw)
-    if not isinstance(parsed, dict) or not _validate_schema(parsed, schema):
-        raise RuntimeError(f"Invalid/unparseable JSON response for {input_path.name}")
-
-    low_quality_segments = parsed.get("low_quality_segments", [])
-    transcript_artifacts = parsed.get("transcript_artifacts", [])
-
-    if not isinstance(low_quality_segments, list):
-        low_quality_segments = []
-    if not isinstance(transcript_artifacts, list):
-        transcript_artifacts = []
-
     # Filter out synthetic segments from quality flags
     synthetic_ids: Set[int] = {
         _safe_int(s.get("id"))
@@ -399,15 +507,80 @@ def quality_check_file(
         if isinstance(s, dict) and bool(s.get("synthetic_segment"))
         and _safe_int(s.get("id")) is not None
     }
-    if synthetic_ids:
-        low_quality_segments = [
-            r for r in low_quality_segments
-            if isinstance(r, dict) and r.get("segment") not in synthetic_ids
-        ]
-        transcript_artifacts = [
-            r for r in transcript_artifacts
-            if isinstance(r, dict) and r.get("segment_index") not in synthetic_ids
-        ]
+    window_specs = _iter_window_specs(
+        valid_segments,
+        primary_segment_count=WINDOW_PRIMARY_SEGMENT_COUNT,
+        context_segment_count=WINDOW_CONTEXT_SEGMENT_COUNT,
+    )
+    if not window_specs:
+        raise RuntimeError(f"No valid segments found for {input_path.name}")
+
+    low_quality_segments: List[Dict[str, Any]] = []
+    transcript_artifacts: List[Dict[str, Any]] = []
+    window_meta: List[Dict[str, Any]] = []
+
+    for window in window_specs:
+        prompt = _build_window_prompt(
+            prompt_template,
+            context_segments=window["context_segments"],
+            primary_ids=window["primary_ids"],
+        )
+        effective_timeout_seconds = _compute_effective_timeout_seconds(
+            base_timeout_seconds,
+            prompt_chars=len(prompt),
+            segment_count=len(window["context_segments"]),
+        )
+        if effective_timeout_seconds != base_timeout_seconds:
+            print(
+                f"{LOG_PREFIX} {input_path.name}: window {window['index'] + 1}/{len(window_specs)} "
+                f"adaptive timeout={effective_timeout_seconds}s "
+                f"(base={base_timeout_seconds}s, prompt_chars={len(prompt)}, "
+                f"segments={len(window['context_segments'])}, primary={len(window['primary_segments'])})"
+            )
+
+        raw = _call_claude(
+            prompt,
+            model=args.model,
+            timeout_seconds=effective_timeout_seconds,
+            retries=args.retries,
+        )
+        if not raw:
+            raise RuntimeError(
+                f"Claude CLI returned no output for {input_path.name} "
+                f"(window {window['primary_start_segment_id']}-{window['primary_end_segment_id']})"
+            )
+        parsed = _extract_json(raw)
+        if not isinstance(parsed, dict) or not _validate_schema(parsed, schema):
+            raise RuntimeError(
+                f"Invalid/unparseable JSON response for {input_path.name} "
+                f"(window {window['primary_start_segment_id']}-{window['primary_end_segment_id']})"
+            )
+
+        low_quality_segments.extend(
+            _filtered_low_quality_segments(
+                parsed.get("low_quality_segments"),
+                primary_segment_ids=window["primary_id_set"],
+                synthetic_segment_ids=synthetic_ids,
+            )
+        )
+        transcript_artifacts.extend(
+            _filtered_transcript_artifacts(
+                parsed.get("transcript_artifacts"),
+                primary_segment_ids=window["primary_id_set"],
+                synthetic_segment_ids=synthetic_ids,
+            )
+        )
+        window_meta.append({
+            "index": window["index"],
+            "primary_start_segment_id": window["primary_start_segment_id"],
+            "primary_end_segment_id": window["primary_end_segment_id"],
+            "primary_segment_count": len(window["primary_segments"]),
+            "context_start_segment_id": window["context_start_segment_id"],
+            "context_end_segment_id": window["context_end_segment_id"],
+            "context_segment_count": len(window["context_segments"]),
+            "prompt_chars": len(prompt),
+            "timeout_seconds": effective_timeout_seconds,
+        })
 
     # Count LQ segments with high-confidence repairs
     lq_repair_candidates = sum(
@@ -433,6 +606,12 @@ def quality_check_file(
         "pipeline_version": PIPELINE_VERSION,
         "source_file": str(input_path),
         "model": args.model,
+        "windowing": {
+            "primary_segment_count": WINDOW_PRIMARY_SEGMENT_COUNT,
+            "context_segment_count": WINDOW_CONTEXT_SEGMENT_COUNT,
+            "window_count": len(window_meta),
+            "windows": window_meta,
+        },
         "low_quality_segments": low_quality_segments,
         "transcript_artifacts": transcript_artifacts,
         "summary": {

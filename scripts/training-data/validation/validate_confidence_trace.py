@@ -262,6 +262,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--manifest", required=True, help="Manifest path")
     parser.add_argument("--source", help="Optional source filter")
     parser.add_argument("--quarantine-file", help="Optional quarantine JSON path")
+    parser.add_argument("--out", help="Optional JSON output path")
     parser.add_argument(
         "--strict-missing",
         action="store_true",
@@ -295,6 +296,13 @@ def main() -> None:
         quarantine_file=quarantine_path,
         strict_missing=bool(args.strict_missing),
     )
+
+    if args.out:
+        out_path = Path(args.out)
+        if not out_path.is_absolute():
+            out_path = repo_root() / out_path
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
 
     if args.json:
         print(json.dumps(report, indent=2))

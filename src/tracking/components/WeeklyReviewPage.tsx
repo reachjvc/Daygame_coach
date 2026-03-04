@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import {
   Loader2,
   ArrowLeft,
+  ArrowRight,
   Calendar,
   Footprints,
   TrendingUp,
@@ -20,10 +21,18 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Lightbulb,
   Trophy,
   AlertTriangle,
   Save,
+  Zap,
+  Target,
+  Brain,
+  SlidersHorizontal,
+  ClipboardCheck,
+  Sun,
+  Heart,
 } from "lucide-react"
 import Link from "next/link"
 import type {
@@ -35,7 +44,34 @@ import type { GoalWithProgress } from "@/src/db/goalTypes"
 import { FieldRenderer } from "./FieldRenderer"
 import { GoalsSummarySection } from "./GoalsSummarySection"
 import { FieldPickerPanel, createCustomTextField } from "./FieldPickerPanel"
-import type { FieldDefinition } from "../types"
+import type { FieldDefinition, FieldCategory, DailyWeekSummary } from "../types"
+import { CATEGORY_INFO, FIELD_LIBRARY } from "../config"
+
+// Template icon mapping: slug → lucide icon + color tint
+type IconComponent = typeof Zap
+const REVIEW_TEMPLATE_ICONS: Record<string, { icon: IconComponent; bg: string; text: string }> = {
+  "quick-win": { icon: Zap, bg: "bg-amber-500/10", text: "text-amber-500" },
+  "operator": { icon: Target, bg: "bg-blue-500/10", text: "text-blue-500" },
+  "deep-thinker": { icon: Brain, bg: "bg-purple-500/10", text: "text-purple-500" },
+  "scaling-weekly": { icon: SlidersHorizontal, bg: "bg-green-500/10", text: "text-green-500" },
+  "six-phase": { icon: ClipboardCheck, bg: "bg-indigo-500/10", text: "text-indigo-500" },
+}
+const DEFAULT_TEMPLATE_ICON = { icon: FileText, bg: "bg-primary/10", text: "text-primary" }
+
+function getTemplateIcon(slug?: string | null) {
+  return (slug && REVIEW_TEMPLATE_ICONS[slug]) || DEFAULT_TEMPLATE_ICON
+}
+
+// Category color mapping for field grouping section headers
+const CATEGORY_COLORS: Record<string, string> = {
+  quick_capture: "text-amber-500",
+  emotional: "text-pink-500",
+  analysis: "text-indigo-500",
+  action: "text-green-500",
+  skill: "text-orange-500",
+  context: "text-slate-400",
+  cognitive: "text-violet-500",
+}
 
 interface WeeklyReviewPageProps {
   userId: string
@@ -102,6 +138,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   const [showPrinciples, setShowPrinciples] = useState(false)
   const [completedGoals, setCompletedGoals] = useState<GoalWithProgress[]>([])
   const [approachingMilestones, setApproachingMilestones] = useState<GoalWithProgress[]>([])
+  const [dailySummary, setDailySummary] = useState<DailyWeekSummary | null>(null)
 
   // Extra fields added via field picker
   const [extraFields, setExtraFields] = useState<TemplateField[]>([])
@@ -130,11 +167,13 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
   const loadData = async () => {
     try {
-      const [templatesRes, statsRes, commitmentRes, goalsRes] = await Promise.all([
+      const { startOfWeek, endOfWeek } = getWeekBoundaries()
+      const [templatesRes, statsRes, commitmentRes, goalsRes, dailySummaryRes] = await Promise.all([
         fetch("/api/tracking/templates/review?type=weekly"),
         fetch("/api/tracking/stats"),
         fetch("/api/tracking/review/commitment"),
         fetch("/api/goals"),
+        fetch(`/api/tracking/review/daily/summary?start=${startOfWeek.toISOString()}&end=${endOfWeek.toISOString()}`),
       ])
 
       if (templatesRes.ok) {
@@ -144,15 +183,14 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
       if (statsRes.ok) {
         const stats: UserTrackingStatsRow = await statsRes.json()
-        const { startOfWeek, endOfWeek } = getWeekBoundaries()
 
         // Use current week stats from the tracking stats
         setWeeklyStats({
           approaches: stats.current_week_approaches || 0,
           sessions: stats.current_week_sessions || 0,
-          numbers: 0, // Would need to fetch from approaches this week
-          instadates: 0, // Would need to fetch from approaches this week
-          fieldReports: 0, // Would need separate tracking
+          numbers: stats.current_week_numbers || 0,
+          instadates: stats.current_week_instadates || 0,
+          fieldReports: stats.current_week_field_reports || 0,
           weekStart: startOfWeek.toISOString(),
           weekEnd: endOfWeek.toISOString(),
         })
@@ -161,6 +199,11 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
       if (commitmentRes.ok) {
         const data = await commitmentRes.json()
         setPreviousCommitment(data.commitment)
+      }
+
+      if (dailySummaryRes.ok) {
+        const summary: DailyWeekSummary = await dailySummaryRes.json()
+        setDailySummary(summary)
       }
 
       // Process goals for celebration + approaching milestones
@@ -205,6 +248,44 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
     return [...staticFields, ...activeDynamic]
   }, [selectedTemplate])
+
+  // Group fields by category for section headers
+  const groupedFields = useMemo(() => {
+    if (fieldsToRender.length === 0) return []
+
+    // Build lookup from FIELD_LIBRARY
+    const fieldCategoryMap = new Map<string, FieldCategory>()
+    for (const f of FIELD_LIBRARY) {
+      fieldCategoryMap.set(f.id, f.category)
+    }
+
+    // Group fields maintaining original order
+    const groups: { category: FieldCategory | "other"; fields: TemplateField[] }[] = []
+    let currentCat: FieldCategory | "other" | null = null
+
+    for (const field of fieldsToRender) {
+      const cat = fieldCategoryMap.get(field.id) || "other"
+      if (cat !== currentCat) {
+        groups.push({ category: cat, fields: [field] })
+        currentCat = cat
+      } else {
+        groups[groups.length - 1].fields.push(field)
+      }
+    }
+
+    return groups
+  }, [fieldsToRender])
+
+  // Check if reflection fields have content (for commitment soft-unlock)
+  const hasReflectionContent = useMemo(() => {
+    return fieldsToRender.some((f) => {
+      const val = formValues[f.id]
+      if (typeof val === "string") return val.trim().length > 0
+      if (typeof val === "number") return true
+      if (Array.isArray(val)) return val.length > 0
+      return !!val
+    })
+  }, [fieldsToRender, formValues])
 
   const handleFieldChange = (fieldId: string, value: unknown) => {
     setFormValues((prev) => ({ ...prev, [fieldId]: value }))
@@ -322,7 +403,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
         {/* Weekly Stats Summary */}
         {weeklyStats && (
-          <Card className="p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20" data-testid="weekly-stats-card">
+          <Card className="p-4 sm:p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20" data-testid="weekly-stats-card">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="font-semibold text-lg">This Week&apos;s Progress</h2>
@@ -340,7 +421,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
                 <Footprints className="size-5 text-primary" />
                 <div>
@@ -369,6 +450,103 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
                   <div className="text-xs text-muted-foreground">Instadates</div>
                 </div>
               </div>
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
+                <FileText className="size-5 text-cyan-500" />
+                <div>
+                  <div className="text-2xl font-bold">{weeklyStats.fieldReports}</div>
+                  <div className="text-xs text-muted-foreground">Field Reports</div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Daily Reflections Summary */}
+        {dailySummary && dailySummary.count > 0 && (
+          <Card className="p-4 sm:p-6 mb-8 border-amber-500/20 bg-amber-500/5" data-testid="daily-summary-card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Sun className="size-5 text-amber-500" />
+              </div>
+              <div>
+                <h3 className="font-semibold">Daily Reflections This Week</h3>
+                <p className="text-sm text-muted-foreground">
+                  {dailySummary.count} {dailySummary.count === 1 ? "reflection" : "reflections"} completed
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {/* Averages row */}
+              <div className="flex flex-wrap gap-4 text-sm">
+                {dailySummary.avgEnergy !== null && (
+                  <span>Energy: <strong>{dailySummary.avgEnergy}</strong>/5</span>
+                )}
+                {dailySummary.avgDayRating !== null && (
+                  <span>Day rating: <strong>{dailySummary.avgDayRating}</strong>/5</span>
+                )}
+                {dailySummary.avgProcessRating !== null && (
+                  <span>Process: <strong>{dailySummary.avgProcessRating}</strong>/5</span>
+                )}
+              </div>
+
+              {/* Process-outcome insight */}
+              {dailySummary.processOutcomeGap !== null && Math.abs(dailySummary.processOutcomeGap) > 1.0 && (
+                <p className="text-sm italic text-muted-foreground">
+                  {dailySummary.processOutcomeGap > 1.0
+                    ? "Your effort was stronger than your outcomes suggest. Trust the process."
+                    : "Outcomes outpaced your effort this week. Enjoy wins, keep investing in process."}
+                </p>
+              )}
+
+              {/* Values alignment */}
+              {(dailySummary.valuesAlignment.toward > 0 || dailySummary.valuesAlignment.neutral > 0 || dailySummary.valuesAlignment.away > 0) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs text-muted-foreground">Values:</span>
+                  {dailySummary.valuesAlignment.toward > 0 && (
+                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 text-xs">
+                      {dailySummary.valuesAlignment.toward} toward
+                    </Badge>
+                  )}
+                  {dailySummary.valuesAlignment.neutral > 0 && (
+                    <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-600 text-xs">
+                      {dailySummary.valuesAlignment.neutral} neutral
+                    </Badge>
+                  )}
+                  {dailySummary.valuesAlignment.away > 0 && (
+                    <Badge variant="secondary" className="bg-red-400/10 text-red-500 text-xs">
+                      {dailySummary.valuesAlignment.away} away
+                    </Badge>
+                  )}
+                </div>
+              )}
+
+              {/* Blockers */}
+              {dailySummary.blockers.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium mb-1">Blockers you named this week</h4>
+                  <ul className="space-y-1">
+                    {dailySummary.blockers.map((b, i) => (
+                      <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                        <span className="text-muted-foreground/50 mt-0.5">•</span>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Low days empathy */}
+              {dailySummary.lowDays > 0 && (
+                <div className="flex items-start gap-2 text-sm p-3 rounded-lg bg-purple-500/5 border border-purple-500/10">
+                  <Heart className="size-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-foreground/80">
+                    {dailySummary.lowDays === 1
+                      ? "You had a tough day this week and still showed up. That counts."
+                      : `${dailySummary.lowDays} tough days this week — and you reflected through all of them. Real strength.`}
+                  </span>
+                </div>
+              )}
             </div>
           </Card>
         )}
@@ -378,7 +556,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
         {/* Celebration Section for Completed Goals */}
         {completedGoals.length > 0 && (
-          <Card className="p-6 mb-8 border-green-500/30 bg-green-500/5">
+          <Card className="p-4 sm:p-6 mb-8 border-green-500/30 bg-green-500/5">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <Trophy className="size-5 text-green-500" />
               Goals Completed This Week
@@ -404,7 +582,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
         {/* Approaching Milestones Warning */}
         {approachingMilestones.length > 0 && (
-          <Card className="p-6 mb-8 border-amber-500/30 bg-amber-500/5">
+          <Card className="p-4 sm:p-6 mb-8 border-amber-500/30 bg-amber-500/5">
             <h3 className="font-semibold mb-3 flex items-center gap-2">
               <AlertTriangle className="size-5 text-amber-500" />
               Milestones Approaching Deadline
@@ -427,12 +605,14 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
 
         {/* Previous Commitment */}
         {previousCommitment && (
-          <Card className="p-6 mb-8 border-yellow-500/30 bg-yellow-500/5">
-            <h3 className="font-semibold mb-2 flex items-center gap-2">
-              <FileText className="size-4 text-yellow-500" />
+          <Card className="p-4 sm:p-6 mb-8 border-yellow-500/30 bg-yellow-500/5">
+            <h3 className="font-semibold mb-3 flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-yellow-500/10">
+                <FileText className="size-5 text-yellow-500" />
+              </div>
               Your Previous Commitment
             </h3>
-            <p className="text-muted-foreground italic">&quot;{previousCommitment}&quot;</p>
+            <p className="text-lg text-foreground italic leading-relaxed">&quot;{previousCommitment}&quot;</p>
           </Card>
         )}
 
@@ -440,39 +620,42 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
         <h2 className="font-semibold text-lg mb-4">Choose a Review Template</h2>
         <div className="grid md:grid-cols-2 gap-4">
           {templates.length > 0 ? (
-            templates.map((template) => (
-              <Card
-                key={template.id}
-                className="p-6 cursor-pointer hover:border-primary transition-colors"
-                onClick={() => setSelectedTemplate(template)}
-                data-testid={`weekly-template-${template.slug || template.id}`}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10 text-primary">
-                    <Calendar className="size-6" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg">{template.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {template.description}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3">
-                      <Badge variant="secondary">
-                        ~{template.estimated_minutes} min
-                      </Badge>
-                      <Badge variant="outline">
-                        {template.static_fields.length +
-                          (template.active_dynamic_fields?.length || 0)}{" "}
-                        fields
-                      </Badge>
+            templates.map((template) => {
+              const ti = getTemplateIcon(template.slug)
+              const TemplateIcon = ti.icon
+              const fieldCount = template.static_fields.length + (template.active_dynamic_fields?.length || 0)
+              return (
+                <Card
+                  key={template.id}
+                  className="p-4 sm:p-6 cursor-pointer hover:border-primary transition-colors"
+                  onClick={() => setSelectedTemplate(template)}
+                  data-testid={`weekly-template-${template.slug || template.id}`}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`p-3 rounded-lg ${ti.bg} ${ti.text}`}>
+                      <TemplateIcon className="size-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {template.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-3">
+                        <Badge variant="secondary">
+                          ~{template.estimated_minutes} min
+                        </Badge>
+                        <Badge variant="outline">
+                          {fieldCount} {fieldCount === 1 ? "field" : "fields"}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              )
+            })
           ) : (
-            <Card className="p-6 col-span-2 text-center text-muted-foreground">
-              <Calendar className="size-12 mx-auto mb-3 opacity-30" />
+            <Card className="p-4 sm:p-6 col-span-2 text-center text-muted-foreground">
+              <FileText className="size-12 mx-auto mb-3 opacity-30" />
               <p>No review templates available</p>
               <p className="text-sm">Templates will appear here once configured</p>
             </Card>
@@ -486,18 +669,19 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => {
             setSelectedTemplate(null)
             setFormValues({})
             setSubmitError(null)
           }}
-          className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4"
+          className="gap-2 text-muted-foreground hover:text-foreground mb-4 -ml-2"
           data-testid="weekly-review-back"
         >
           <ArrowLeft className="size-4" />
           Choose Different Template
-        </button>
+        </Button>
         <h1 className="text-3xl font-bold">{selectedTemplate.name}</h1>
         <p className="text-muted-foreground mt-2">{selectedTemplate.description}</p>
       </div>
@@ -528,7 +712,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
       <GoalsSummarySection compact />
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }} data-testid="weekly-review-form">
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           {/* Previous Commitment Check */}
           {previousCommitment && (
             <div className="mb-8 p-4 rounded-lg border bg-muted/30">
@@ -561,15 +745,47 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             </div>
           )}
 
-          {/* Template Fields */}
+          {/* Template Fields — grouped by category with section headers */}
           <div className="space-y-6">
-            {fieldsToRender.map((field) => (
-              <FieldRenderer
-                key={field.id}
-                field={field}
-                value={formValues[field.id]}
-                onChange={(value) => handleFieldChange(field.id, value)}
-              />
+            {groupedFields.map((group, gi) => (
+              <div key={`group-${gi}`}>
+                {/* Section header (skip for "other" or single-group templates) */}
+                {group.category !== "other" && groupedFields.length > 1 && CATEGORY_INFO[group.category as FieldCategory] && (
+                  <button
+                    type="button"
+                    className="flex items-center gap-2 w-full mb-4 mt-2"
+                    onClick={() => {}} // Non-collapsible, just visual grouping
+                  >
+                    <ChevronRight className={`size-3 ${CATEGORY_COLORS[group.category] || "text-muted-foreground"}`} />
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      {CATEGORY_INFO[group.category as FieldCategory]?.label}
+                    </span>
+                    <div className="flex-1 border-t border-border/50" />
+                  </button>
+                )}
+                <div className="space-y-6">
+                  {group.fields.map((field) => {
+                    // Textarea fields get elevated card treatment
+                    const isTextarea = field.type === "textarea"
+                    return isTextarea ? (
+                      <div key={field.id} className="bg-muted/20 rounded-xl p-4">
+                        <FieldRenderer
+                          field={field}
+                          value={formValues[field.id]}
+                          onChange={(value) => handleFieldChange(field.id, value)}
+                        />
+                      </div>
+                    ) : (
+                      <FieldRenderer
+                        key={field.id}
+                        field={field}
+                        value={formValues[field.id]}
+                        onChange={(value) => handleFieldChange(field.id, value)}
+                      />
+                    )
+                  })}
+                </div>
+              </div>
             ))}
 
             {/* Extra fields added via field picker */}
@@ -698,12 +914,17 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             </div>
           )}
 
-          {/* New Commitment */}
-          <div className="mt-8 p-4 rounded-lg border bg-primary/5 border-primary/20">
-            <Label htmlFor="new-commitment" className="text-base font-semibold">
-              What&apos;s your commitment for next week?
-            </Label>
-            <p className="text-sm text-muted-foreground mt-1 mb-3">
+          {/* New Commitment — soft unlock: muted until reflection fields have content */}
+          <Card className={`mt-8 p-5 border-primary/20 bg-primary/5 transition-all duration-500 ${
+            hasReflectionContent ? "opacity-100 border-primary/30" : "opacity-60"
+          }`}>
+            <div className="flex items-center gap-2 mb-3">
+              <ArrowRight className="size-4 text-primary" />
+              <Label htmlFor="new-commitment" className="text-base font-semibold">
+                What&apos;s your commitment for next week?
+              </Label>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
               Set one specific, achievable goal
             </p>
             <Input
@@ -712,7 +933,7 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
               value={newCommitment}
               onChange={(e) => setNewCommitment(e.target.value)}
             />
-          </div>
+          </Card>
 
           {submitError && (
             <div className="mt-4 p-3 rounded-md bg-destructive/10 text-destructive text-sm">
@@ -720,29 +941,35 @@ export function WeeklyReviewPage({ userId }: WeeklyReviewPageProps) {
             </div>
           )}
 
-          <div className="flex gap-3 mt-8">
-            <Button
-              type="button"
-              variant="outline"
-              className="flex-1"
-              disabled={isSubmitting}
-              onClick={() => handleSubmit(true)}
-              data-testid="weekly-review-save-draft"
-            >
-              {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-              Save Draft
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting} data-testid="weekly-review-submit">
-              {isSubmitting ? (
-                <Loader2 className="size-4 animate-spin mr-2" />
-              ) : (
-                <Check className="size-4 mr-2" />
-              )}
-              Submit Review
-            </Button>
-          </div>
+          {/* Spacer for sticky footer */}
+          <div className="h-20" />
         </Card>
       </form>
+
+      {/* Sticky footer submit buttons */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 pb-safe">
+        <div className="max-w-2xl mx-auto px-4 py-3 flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            disabled={isSubmitting}
+            onClick={() => handleSubmit(true)}
+            data-testid="weekly-review-save-draft"
+          >
+            {isSubmitting ? <Loader2 className="size-4 animate-spin mr-2" /> : <Save className="size-4 mr-2" />}
+            Save Draft
+          </Button>
+          <Button className="flex-1" disabled={isSubmitting} onClick={() => handleSubmit(false)} data-testid="weekly-review-submit">
+            {isSubmitting ? (
+              <Loader2 className="size-4 animate-spin mr-2" />
+            ) : (
+              <Check className="size-4 mr-2" />
+            )}
+            Submit Review
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

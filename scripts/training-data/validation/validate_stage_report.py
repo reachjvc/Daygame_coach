@@ -205,6 +205,8 @@ def _signal_class_for_readiness_reason(reason_code: str, warning_classes: Counte
             return _warning_class_for_check(parts[1])
     if reason.startswith("policy_block_video_damage_score:") or reason.startswith("policy_review_video_damage_score:"):
         return "transcript_quality"
+    if reason.startswith("policy_block_damaged_segment_count:") or reason.startswith("policy_review_damaged_segment_count:"):
+        return "transcript_quality"
     if reason.startswith("policy_block_windowless_video_damage_score:") or reason.startswith("policy_review_windowless_video_damage_score:"):
         return "transcript_quality"
     if reason.startswith("policy_block_severe_damage_chunk_ratio:") or reason.startswith("policy_review_severe_damage_chunk_ratio:"):
@@ -1107,6 +1109,8 @@ def _compute_readiness(
     allow_ingest_statuses: Set[str],
     review_video_damage_score: Optional[float],
     block_video_damage_score: Optional[float],
+    review_damaged_segment_count: Optional[int],
+    block_damaged_segment_count: Optional[int],
     review_damaged_chunk_ratio: Optional[float],
     block_damaged_chunk_ratio: Optional[float],
     review_windowless_video_damage_score: Optional[float],
@@ -1381,6 +1385,16 @@ def _compute_readiness(
         # escalate non-blocked videos when quality degradation is substantial.
         if status != "BLOCKED" and isinstance(damage_profile, dict):
             video_damage_score = _parse_number(damage_profile.get("video_damage_score"))
+            raw_damaged_segment_count = damage_profile.get("damaged_segment_count")
+            damaged_segment_count: Optional[int] = None
+            if isinstance(raw_damaged_segment_count, bool):
+                damaged_segment_count = None
+            elif isinstance(raw_damaged_segment_count, int):
+                damaged_segment_count = raw_damaged_segment_count
+            elif isinstance(raw_damaged_segment_count, float) and raw_damaged_segment_count.is_integer():
+                damaged_segment_count = int(raw_damaged_segment_count)
+            elif isinstance(raw_damaged_segment_count, str) and raw_damaged_segment_count.strip().isdigit():
+                damaged_segment_count = int(raw_damaged_segment_count.strip())
             damaged_chunk_ratio = _parse_number(damage_profile.get("damaged_chunk_ratio"))
             severe_damage_chunk_ratio = _parse_number(damage_profile.get("severe_damage_chunk_ratio"))
             has_localized_damage = _damage_profile_has_localized_damage(damage_profile)
@@ -1413,6 +1427,16 @@ def _compute_readiness(
                 reason_code = (
                     "policy_block_video_damage_score:"
                     f"{video_damage_score:.3f}>{float(block_video_damage_score):.3f}"
+                )
+            elif (
+                block_damaged_segment_count is not None
+                and damaged_segment_count is not None
+                and damaged_segment_count > int(block_damaged_segment_count)
+            ):
+                status = "BLOCKED"
+                reason_code = (
+                    "policy_block_damaged_segment_count:"
+                    f"{damaged_segment_count}>{int(block_damaged_segment_count)}"
                 )
             elif (
                 block_damaged_chunk_ratio is not None
@@ -1455,6 +1479,16 @@ def _compute_readiness(
                     reason_code = (
                         "policy_review_video_damage_score:"
                         f"{video_damage_score:.3f}>{float(review_video_damage_score):.3f}"
+                    )
+                elif (
+                    review_damaged_segment_count is not None
+                    and damaged_segment_count is not None
+                    and damaged_segment_count > int(review_damaged_segment_count)
+                ):
+                    status = "REVIEW"
+                    reason_code = (
+                        "policy_review_damaged_segment_count:"
+                        f"{damaged_segment_count}>{int(review_damaged_segment_count)}"
                     )
                 elif (
                     review_damaged_chunk_ratio is not None
@@ -1553,6 +1587,8 @@ def _compute_readiness(
             "warning_budget_excluded_checks": sorted(POLICY_WARNING_BUDGET_EXCLUDED_CHECKS),
             "review_video_damage_score": review_video_damage_score,
             "block_video_damage_score": block_video_damage_score,
+            "review_damaged_segment_count": review_damaged_segment_count,
+            "block_damaged_segment_count": block_damaged_segment_count,
             "review_damaged_chunk_ratio": review_damaged_chunk_ratio,
             "block_damaged_chunk_ratio": block_damaged_chunk_ratio,
             "review_windowless_video_damage_score": review_windowless_video_damage_score,
@@ -1607,6 +1643,22 @@ def main() -> None:
         type=float,
         help=(
             "Escalate non-blocked videos -> BLOCKED when Stage 09 video_damage_score exceeds this threshold (0..1). "
+            "Disabled when omitted."
+        ),
+    )
+    parser.add_argument(
+        "--review-damaged-segment-count",
+        type=int,
+        help=(
+            "Escalate READY -> REVIEW when Stage 09 damaged_segment_count exceeds this threshold. "
+            "Disabled when omitted."
+        ),
+    )
+    parser.add_argument(
+        "--block-damaged-segment-count",
+        type=int,
+        help=(
+            "Escalate non-blocked videos -> BLOCKED when Stage 09 damaged_segment_count exceeds this threshold. "
             "Disabled when omitted."
         ),
     )
@@ -1902,6 +1954,15 @@ def main() -> None:
             print(f"{LOG_PREFIX} ERROR: {cli_name} must be within [0,1]", file=sys.stderr)
             sys.exit(2)
 
+    for flag_name in ("review_damaged_segment_count", "block_damaged_segment_count"):
+        value = getattr(args, flag_name)
+        if value is None:
+            continue
+        if int(value) < 0:
+            cli_name = "--" + flag_name.replace("_", "-")
+            print(f"{LOG_PREFIX} ERROR: {cli_name} must be >= 0", file=sys.stderr)
+            sys.exit(2)
+
     if (
         args.review_video_damage_score is not None
         and args.block_video_damage_score is not None
@@ -1909,6 +1970,17 @@ def main() -> None:
     ):
         print(
             f"{LOG_PREFIX} ERROR: --block-video-damage-score must be >= --review-video-damage-score",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    if (
+        args.review_damaged_segment_count is not None
+        and args.block_damaged_segment_count is not None
+        and int(args.block_damaged_segment_count) < int(args.review_damaged_segment_count)
+    ):
+        print(
+            f"{LOG_PREFIX} ERROR: --block-damaged-segment-count must be >= --review-damaged-segment-count",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -2057,6 +2129,8 @@ def main() -> None:
         allow_ingest_statuses=allow_ingest_statuses,
         review_video_damage_score=args.review_video_damage_score,
         block_video_damage_score=args.block_video_damage_score,
+        review_damaged_segment_count=args.review_damaged_segment_count,
+        block_damaged_segment_count=args.block_damaged_segment_count,
         review_damaged_chunk_ratio=args.review_damaged_chunk_ratio,
         block_damaged_chunk_ratio=args.block_damaged_chunk_ratio,
         review_windowless_video_damage_score=args.review_windowless_video_damage_score,

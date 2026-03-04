@@ -23,7 +23,7 @@ export const SET_TYPES = [
   "foreign_language", "celebrity_vibes", "double_set", "triple_set",
 ] as const
 
-export const REVIEW_TYPES = ["weekly", "monthly", "quarterly"] as const
+export const REVIEW_TYPES = ["daily", "weekly", "monthly", "quarterly"] as const
 
 export const FIELD_TYPES = [
   "text", "textarea", "number", "select", "multiselect",

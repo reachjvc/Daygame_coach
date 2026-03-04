@@ -401,6 +401,7 @@ export interface SetupCustomCategory {
 export interface GoalSetupSelections {
   path: DaygamePath
   selectedAreas: Set<string>
+  selectedL1s: Set<string>
   selectedGoalIds: Set<string>
   targets: Record<string, number>
   curveConfigs: Record<string, MilestoneLadderConfig>

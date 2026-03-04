@@ -110,7 +110,7 @@ function ScorecardRow({
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
+            className="size-9 sm:size-7"
             disabled={busy}
             onClick={handleIncrement}
           >

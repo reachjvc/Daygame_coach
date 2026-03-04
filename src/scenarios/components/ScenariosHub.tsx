@@ -17,7 +17,8 @@ import { Button } from "@/components/ui/button";
 import type { DifficultyLevel } from "../openers/data/energy";
 import { PracticeOpenersTrainer } from "@/src/scenarios/openers/OpenersTrainer";
 import { VoiceChatWindow } from "@/src/scenarios/components/ChatWindow";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { MobileTabBar } from "@/components/MobileTabBar";
 
 import {
   SCENARIO_CATALOG,
@@ -163,12 +164,12 @@ export function ScenariosHub({
   );
 
   return (
-    <div className="space-y-8" data-testid="scenarios-hub">
+    <div className="space-y-8 pb-tab-bar" data-testid="scenarios-hub">
       {/* Signup Prompt Modal */}
       {showSignupPrompt && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-safe pb-safe">
           <div
-            className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-6 relative"
+            className="bg-card border border-border rounded-lg shadow-xl max-w-md w-full p-4 sm:p-6 relative"
             data-testid="scenarios-signup-prompt"
             role="dialog"
             aria-modal="true"
@@ -212,7 +213,7 @@ export function ScenariosHub({
       {showSituationPicker && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 pt-safe pb-safe">
           <div
-            className="bg-card border border-border rounded-lg shadow-xl max-w-2xl w-full p-6 relative max-h-[80vh] overflow-y-auto"
+            className="bg-card border border-border rounded-lg shadow-xl max-w-2xl w-full p-4 sm:p-6 relative max-h-[80vh] overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-labelledby="situation-picker-title"
@@ -281,7 +282,7 @@ export function ScenariosHub({
 
       {/* Recommended Section */}
       {recommendedScenarios.length > 0 && (
-        <div className="bg-primary/5 border border-primary/20 rounded-lg p-6">
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 sm:p-6">
           <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
             <Sparkles className="size-5 text-primary" />
             {isPreviewMode ? "Popular Scenarios" : "Recommended for You"}
@@ -421,7 +422,7 @@ export function ScenariosHub({
 
       {/* Preview Mode CTA */}
       {isPreviewMode && (
-        <div className="text-center p-8 bg-primary/5 border border-primary/20 rounded-lg">
+        <div className="text-center p-4 sm:p-8 bg-primary/5 border border-primary/20 rounded-lg">
           <h3 className="text-xl font-bold text-foreground mb-2">Ready to Start Practicing?</h3>
           <p className="text-muted-foreground mb-6">
             Sign up to unlock all scenarios and start improving your conversation skills today.
@@ -446,6 +447,8 @@ export function ScenariosHub({
           situationId={activeScenario === "keep-it-going" ? selectedSituationId ?? undefined : undefined}
         />
       )}
+
+      {!isPreviewMode && <MobileTabBar />}
     </div>
   );
 }

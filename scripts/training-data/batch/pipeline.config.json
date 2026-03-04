@@ -37,6 +37,8 @@
       },
       "review_video_damage_score": 0.18,
       "block_video_damage_score": 0.35,
+      "review_damaged_segment_count": 20,
+      "block_damaged_segment_count": 80,
       "review_damaged_chunk_ratio": 0.25,
       "block_damaged_chunk_ratio": 0.6,
       "review_windowless_video_damage_score_by_content_type": {},

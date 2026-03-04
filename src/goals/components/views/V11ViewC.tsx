@@ -791,7 +791,7 @@ function SetupWizard({
                 placeholder="Goal title..."
                 onKeyDown={(e) => e.key === "Enter" && handleCustomCreate()}
               />
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 <select
                   value={customArea}
                   onChange={(e) => setCustomArea(e.target.value)}
@@ -1780,7 +1780,7 @@ function InlineEditForm({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 pt-safe pb-safe">
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold">Edit Goal</h3>
@@ -1803,7 +1803,7 @@ function InlineEditForm({
               onKeyDown={(e) => e.key === "Enter" && handleSave()}
             />
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">
                 Life Area
@@ -1996,7 +1996,7 @@ function TemplateDrawer({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm pt-safe pb-safe">
       <div className="w-full max-w-2xl max-h-[85vh] rounded-t-xl sm:rounded-xl border border-border bg-card shadow-xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">

@@ -51,6 +51,19 @@ _KNOWN_STAGE07_DROP_REASONS: Set[str] = {
     "insufficient_post_hook_evidence",
     "low_confidence_anchor",
 }
+_STAGE06B_OTHER_FLAG_SIGNAL_CLASS: Dict[str, str] = {
+    "missing_target_coverage": "transcript_quality",
+    "mixed_speaker_segment": "transcript_quality",
+    "same_speaker_multi_role_conflict": "conversation_structure",
+    "diarization_split_same_person": "transcript_quality",
+    "duplicate_teaser_content": "transcript_quality",
+    "video_type_ambiguity": "routing_mismatch",
+    "within_segment_boundary_bleed": "transcript_quality",
+    "transcript_artifact": "contamination_risk",
+    "role_ambiguity": "conversation_structure",
+    "other": "other_quality",
+    "other_unclassified": "other_quality",
+}
 
 
 def _canonical_issue_severity(legacy_severity: str) -> str:
@@ -104,6 +117,46 @@ def _canonical_signal_class(issue: Dict[str, Any]) -> str:
         return "routing_mismatch"
     if issue_code in {"video_type_mismatch", "prompt_variant_mismatch"}:
         return "routing_mismatch"
+    if check in {"stage06b_video_type_mismatch", "stage06b_video_type_ambiguity"}:
+        return "routing_mismatch"
+    if issue_code in {"stage06b_video_type_mismatch", "stage06b_video_type_ambiguity"}:
+        return "routing_mismatch"
+
+    if check in {
+        "stage06b_misattribution",
+        "stage06b_same_speaker_multi_role_conflict",
+        "stage06b_role_ambiguity",
+    }:
+        return "conversation_structure"
+    if issue_code in {
+        "stage06b_misattribution",
+        "stage06b_same_speaker_multi_role_conflict",
+        "stage06b_role_ambiguity",
+    }:
+        return "conversation_structure"
+
+    if check in {
+        "stage06b_boundary_issue",
+        "stage06b_collapse_issue",
+        "stage06b_missing_target_coverage",
+        "stage06b_mixed_speaker_segment",
+        "stage06b_diarization_split_same_person",
+        "stage06b_duplicate_teaser_content",
+        "stage06b_within_segment_boundary_bleed",
+    }:
+        return "transcript_quality"
+    if issue_code in {
+        "stage06b_boundary_issue",
+        "stage06b_collapse_issue",
+        "stage06b_missing_target_coverage",
+        "stage06b_mixed_speaker_segment",
+        "stage06b_diarization_split_same_person",
+        "stage06b_duplicate_teaser_content",
+        "stage06b_within_segment_boundary_bleed",
+    }:
+        return "transcript_quality"
+    if check == "stage06b_transcript_artifact" or issue_code == "stage06b_transcript_artifact":
+        return "contamination_risk"
 
     if check.startswith("stage08_"):
         return "taxonomy_coverage"
@@ -346,6 +399,188 @@ def _validate_verification_payload(
         errs.append("invalid_flags_not_array")
 
     return verdict, errs
+
+
+def _extract_stage06b_flag_summary(verification_path: Path) -> Optional[Dict[str, Any]]:
+    data = _load_json(verification_path)
+    if not isinstance(data, dict):
+        return None
+    metadata = data.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    flag_summary = metadata.get("flag_summary")
+    return flag_summary if isinstance(flag_summary, dict) else None
+
+
+def _stage06b_issue_severity(raw: Any, *, default: str = "warning") -> str:
+    severity = str(raw or "").strip().lower()
+    if severity in {"major", "moderate", "warning"}:
+        return "warning"
+    if severity in {"minor", "info"}:
+        return "info"
+    return default
+
+
+def _extract_stage06b_detailed_issues(
+    verification_path: Path,
+    video_id: str,
+    source: str,
+) -> List[Dict[str, Any]]:
+    data = _load_json(verification_path)
+    if not isinstance(data, dict):
+        return []
+
+    issues: List[Dict[str, Any]] = []
+
+    video_type_check = data.get("video_type_check")
+    if isinstance(video_type_check, dict) and video_type_check.get("agrees") is False:
+        suggested_type = video_type_check.get("suggested_type")
+        confidence = video_type_check.get("confidence")
+        reasoning = str(video_type_check.get("reasoning", "")).strip()
+        message = "Stage 06b video type mismatch"
+        detail_parts: List[str] = []
+        if isinstance(suggested_type, str) and suggested_type.strip():
+            detail_parts.append(f"suggested_type={suggested_type.strip()}")
+        if isinstance(confidence, (int, float)) and math.isfinite(float(confidence)):
+            detail_parts.append(f"confidence={float(confidence):.2f}")
+        if reasoning:
+            detail_parts.append(reasoning[:240])
+        if detail_parts:
+            message += ": " + "; ".join(detail_parts)
+        issues.append({
+            "video_id": video_id,
+            "source": source,
+            "severity": "warning",
+            "check": "stage06b_video_type_mismatch",
+            "message": message,
+            "verify": str(verification_path),
+        })
+
+    misattributions = data.get("misattributions")
+    if isinstance(misattributions, list):
+        for row in misattributions:
+            if not isinstance(row, dict):
+                continue
+            raw_speaker_id = row.get("speaker_id")
+            speaker_id = raw_speaker_id.strip() if isinstance(raw_speaker_id, str) else ""
+            segment_id = row.get("segment_id")
+            evidence = str(row.get("evidence", "")).strip()
+            confidence = row.get("confidence")
+            message = "Stage 06b misattribution flagged"
+            detail_parts = []
+            if speaker_id:
+                detail_parts.append(f"speaker={speaker_id}")
+            if isinstance(segment_id, int):
+                detail_parts.append(f"segment={segment_id}")
+            if isinstance(confidence, (int, float)) and math.isfinite(float(confidence)):
+                detail_parts.append(f"confidence={float(confidence):.2f}")
+            if evidence:
+                detail_parts.append(evidence[:240])
+            if detail_parts:
+                message += ": " + "; ".join(detail_parts)
+            issues.append({
+                "video_id": video_id,
+                "source": source,
+                "severity": "warning",
+                "check": "stage06b_misattribution",
+                "message": message,
+                "verify": str(verification_path),
+            })
+
+    boundary_issues = data.get("boundary_issues")
+    if isinstance(boundary_issues, list):
+        for row in boundary_issues:
+            if not isinstance(row, dict):
+                continue
+            severity = _stage06b_issue_severity(row.get("severity"), default="warning")
+            conv_id = row.get("conversation_id")
+            issue = str(row.get("issue", "")).strip()
+            message = "Stage 06b boundary issue"
+            detail_parts = []
+            if isinstance(conv_id, int):
+                detail_parts.append(f"conversation={conv_id}")
+            if issue:
+                detail_parts.append(issue[:240])
+            if detail_parts:
+                message += ": " + "; ".join(detail_parts)
+            issues.append({
+                "video_id": video_id,
+                "source": source,
+                "severity": severity,
+                "check": "stage06b_boundary_issue",
+                "message": message,
+                "verify": str(verification_path),
+            })
+
+    collapse_issues = data.get("collapse_issues")
+    if isinstance(collapse_issues, list):
+        for row in collapse_issues:
+            if not isinstance(row, dict):
+                continue
+            raw_speaker_id = row.get("speaker_id")
+            speaker_id = raw_speaker_id.strip() if isinstance(raw_speaker_id, str) else ""
+            segment_id = row.get("segment_id")
+            evidence = str(row.get("evidence", "")).strip()
+            confidence = row.get("confidence")
+            message = "Stage 06b collapse issue"
+            detail_parts = []
+            if speaker_id:
+                detail_parts.append(f"speaker={speaker_id}")
+            if isinstance(segment_id, int):
+                detail_parts.append(f"segment={segment_id}")
+            if isinstance(confidence, (int, float)) and math.isfinite(float(confidence)):
+                detail_parts.append(f"confidence={float(confidence):.2f}")
+            if evidence:
+                detail_parts.append(evidence[:240])
+            if detail_parts:
+                message += ": " + "; ".join(detail_parts)
+            issues.append({
+                "video_id": video_id,
+                "source": source,
+                "severity": "warning",
+                "check": "stage06b_collapse_issue",
+                "message": message,
+                "verify": str(verification_path),
+            })
+
+    other_flags_detailed = data.get("other_flags_detailed")
+    if isinstance(other_flags_detailed, list):
+        for row in other_flags_detailed:
+            if not isinstance(row, dict):
+                continue
+            flag_class = str(row.get("flag_class", "")).strip().lower()
+            if not flag_class:
+                flag_class = "other"
+            signal_class = _STAGE06B_OTHER_FLAG_SIGNAL_CLASS.get(flag_class, "other_quality")
+            severity = _stage06b_issue_severity(row.get("severity"), default="warning")
+            conv_id = row.get("conversation_id")
+            segment_id = row.get("segment_id")
+            raw_speaker_id = row.get("speaker_id")
+            speaker_id = raw_speaker_id.strip() if isinstance(raw_speaker_id, str) else ""
+            notes = str(row.get("notes", "")).strip()
+            message = f"Stage 06b {flag_class.replace('_', ' ')}"
+            detail_parts = []
+            if isinstance(conv_id, int):
+                detail_parts.append(f"conversation={conv_id}")
+            if isinstance(segment_id, int):
+                detail_parts.append(f"segment={segment_id}")
+            if speaker_id:
+                detail_parts.append(f"speaker={speaker_id}")
+            if notes:
+                detail_parts.append(notes[:240])
+            if detail_parts:
+                message += ": " + "; ".join(detail_parts)
+            issues.append({
+                "video_id": video_id,
+                "source": source,
+                "severity": severity,
+                "check": f"stage06b_{flag_class}",
+                "message": message,
+                "signal_class": signal_class,
+                "verify": str(verification_path),
+            })
+
+    return issues
 
 
 def _validate_stage07b_payload(
@@ -1480,6 +1715,11 @@ def main() -> None:
                 )
             except Exception:
                 preserve_input_quarantine_ids = True
+        if not preserve_input_quarantine_ids:
+            # When re-emitting to the same quarantine file, rebuild membership
+            # from current artifacts/issues instead of letting stale input rows
+            # suppress or perpetuate resolved blocks.
+            quarantine_video_ids = set()
 
     if args.check_stage08_report:
         stage08_checked = True
@@ -2110,15 +2350,45 @@ def main() -> None:
                     })
                     check_counts["error:stage06b_reject"] += 1
                 elif verdict == "FLAG":
+                    detailed_stage06b_issues = _extract_stage06b_detailed_issues(v_path, vid, src)
+                    coarse_severity = "info" if detailed_stage06b_issues else "warning"
                     issues.append({
                         "video_id": vid,
                         "source": src,
-                        "severity": "warning",
+                        "severity": coarse_severity,
                         "check": "stage06b_flag",
-                        "message": "Stage 06b verdict: FLAG (manual review recommended)",
+                        "message": (
+                            "Stage 06b verdict: FLAG (class-specific issues emitted)"
+                            if detailed_stage06b_issues
+                            else "Stage 06b verdict: FLAG (manual review recommended)"
+                        ),
                         "verify": str(v_path),
                     })
-                    check_counts["warning:stage06b_flag"] += 1
+                    check_counts[f"{coarse_severity}:stage06b_flag"] += 1
+                    for detail_issue in detailed_stage06b_issues:
+                        issues.append(detail_issue)
+                        detail_severity = str(detail_issue.get("severity", "")).strip().lower() or "info"
+                        detail_check = str(detail_issue.get("check", "")).strip() or "stage06b_detail"
+                        check_counts[f"{detail_severity}:{detail_check}"] += 1
+                    flag_summary = _extract_stage06b_flag_summary(v_path)
+                    if isinstance(flag_summary, dict):
+                        structured_counts = flag_summary.get("structured_flag_class_counts")
+                        other_counts = flag_summary.get("other_flag_class_counts")
+                        detail_parts: List[str] = []
+                        if isinstance(structured_counts, dict) and structured_counts:
+                            detail_parts.append(f"structured={structured_counts}")
+                        if isinstance(other_counts, dict) and other_counts:
+                            detail_parts.append(f"other={other_counts}")
+                        if detail_parts:
+                            issues.append({
+                                "video_id": vid,
+                                "source": src,
+                                "severity": "info",
+                                "check": "stage06b_flag_classes",
+                                "message": "Stage 06b flag summary: " + "; ".join(detail_parts),
+                                "verify": str(v_path),
+                            })
+                            check_counts["info:stage06b_flag_classes"] += 1
 
         s07_data: Optional[Dict[str, Any]] = None
         stage07_content_unreadable = False
@@ -2437,7 +2707,7 @@ def main() -> None:
 
     quarantine_severities = {"error"} if args.quarantine_level == "error" else {"error", "warning"}
     quarantine_items: Dict[str, Dict[str, Any]] = {}
-    if emit_quarantine and quarantine_file_path and quarantine_file_path.exists():
+    if emit_quarantine and preserve_input_quarantine_ids and quarantine_file_path and quarantine_file_path.exists():
         # Preserve existing quarantine membership/reasons when re-emitting so
         # stage-derived quarantines (for example 06b REJECT) are never dropped
         # by a later validation-only quarantine write.

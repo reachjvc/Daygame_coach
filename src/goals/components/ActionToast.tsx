@@ -23,7 +23,7 @@ export function ActionToast({ message, variant, onDismiss, style }: ActionToastP
 
   return (
     <div
-      className={`fixed bottom-6 right-6 z-[100] flex items-center gap-2 px-4 py-3 rounded-lg border text-white text-sm shadow-lg transition-all ${bg}`}
+      className={`fixed bottom-6 right-6 z-[100] pb-safe flex items-center gap-2 px-4 py-3 rounded-lg border text-white text-sm shadow-lg transition-all ${bg}`}
       style={style}
     >
       <span>{message}</span>

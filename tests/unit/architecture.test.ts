@@ -359,4 +359,71 @@ describe('Architecture Compliance', () => {
     })
   })
 
+  describe('Tour data-tour Attribute Consistency', () => {
+    test('all data-tour selectors in GoalsStepTour.tsx exist in GoalsStep.tsx or GoalSetupWizard tree', () => {
+      const tourFile = path.join(projectRoot, 'src/goals/components/setup/GoalsStepTour.tsx')
+      const stepFile = path.join(projectRoot, 'src/goals/components/setup/GoalsStep.tsx')
+
+      const tourContent = fs.readFileSync(tourFile, 'utf-8')
+      const stepContent = fs.readFileSync(stepFile, 'utf-8')
+
+      // Extract all data-tour="xxx" values referenced in GoalsStepTour.tsx
+      // Matches both: [data-tour="xxx"] selectors and data-tour="xxx" attributes
+      const selectorPattern = /data-tour="([^"]+)"/g
+      const tourSelectors = new Set<string>()
+      let match
+      while ((match = selectorPattern.exec(tourContent)) !== null) {
+        tourSelectors.add(match[1])
+      }
+
+      // Extract all data-tour values defined in GoalsStep.tsx
+      // Strategy: find lines with data-tour, extract all quoted strings from those lines
+      const definedSelectors = new Set<string>()
+      const definedRoles = new Set<string>()
+      for (const line of stepContent.split('\n')) {
+        if (line.includes('data-tour=') || line.includes('data-tour-role=')) {
+          const strings = [...line.matchAll(/"([^"]+)"/g)].map(m => m[1])
+          if (line.includes('data-tour-role')) {
+            for (const s of strings) {
+              if (!s.includes('/') && !s.includes(' ') && s !== 'true' && s !== 'false' && s !== 'undefined') {
+                definedRoles.add(s)
+              }
+            }
+          }
+          if (line.includes('data-tour=') && !line.includes('data-tour-role') && !line.includes('data-tour-expanded')) {
+            for (const s of strings) {
+              if (!s.includes('/') && !s.includes(' ') && s !== 'true' && s !== 'false' && s !== 'undefined') {
+                definedSelectors.add(s)
+              }
+            }
+          }
+        }
+      }
+
+      // Extract data-tour-role selectors used in tour
+      const rolePattern = /data-tour-role="([^"]+)"/g
+      const tourRoles = new Set<string>()
+      while ((match = rolePattern.exec(tourContent)) !== null) {
+        tourRoles.add(match[1])
+      }
+
+      const missingSelectors: string[] = []
+      for (const sel of tourSelectors) {
+        if (!definedSelectors.has(sel)) {
+          missingSelectors.push(`data-tour="${sel}" used in GoalsStepTour.tsx but not defined in GoalsStep.tsx`)
+        }
+      }
+      for (const role of tourRoles) {
+        if (!definedRoles.has(role)) {
+          missingSelectors.push(`data-tour-role="${role}" used in GoalsStepTour.tsx but not defined in GoalsStep.tsx`)
+        }
+      }
+
+      expect(
+        missingSelectors,
+        `Tour references missing data-tour attributes:\n${missingSelectors.join('\n')}`
+      ).toHaveLength(0)
+    })
+  })
+
 })

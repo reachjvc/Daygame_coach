@@ -224,7 +224,7 @@ export function GoalsSummarySection({
 
   // Full version for template selection view
   return (
-    <Card className="p-6 mb-8" data-testid="goals-summary-section">
+    <Card className="p-4 sm:p-6 mb-8" data-testid="goals-summary-section">
       <div className="flex items-start justify-between mb-4">
         <div>
           <h2 className="font-semibold text-lg flex items-center gap-2">

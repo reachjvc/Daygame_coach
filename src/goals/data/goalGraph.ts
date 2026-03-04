@@ -587,12 +587,16 @@ const L3_FIT_STRENGTH: GoalTemplate[] = [
     templateType: "milestone_ladder",
     milestoneConfig: { start: 60, target: 200, steps: 12, curveTension: CURVE_TENSION },
     linkedMetric: "squat_1rm",
+    priority: "core",
+    graduation_criteria: "Reached 200kg squat 1RM",
   }),
   template("l3_f_deadlift", "Deadlift 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 60, target: 220, steps: 12, curveTension: CURVE_TENSION },
     linkedMetric: "deadlift_1rm",
+    priority: "core",
+    graduation_criteria: "Reached 220kg deadlift 1RM",
   }),
   template("l3_f_overhead_press", "Overhead Press 1RM (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "strength",
@@ -668,8 +672,6 @@ const L3_FIT_TRAINING: GoalTemplate[] = [
 const L3_FIT_NUTRITION: GoalTemplate[] = [
   template("l3_f_protein", "Protein Target Hit", 3, "input", {
     lifeArea: FIT, displayCategory: "nutrition",
-    priority: "core",
-    graduation_criteria: "Hitting protein target 7 days/week for 8+ consecutive weeks",
     templateType: "habit_ramp",
     rampSteps: [
       { frequencyPerWeek: 5, durationWeeks: 4 },
@@ -705,6 +707,7 @@ const L3_FIT_NUTRITION: GoalTemplate[] = [
       { frequencyPerWeek: 6, durationWeeks: 12 },
       { frequencyPerWeek: 7, durationWeeks: 24 },
     ],
+    linkedMetric: "calorie_days_hit_weekly",
     priority: "niche",
   }),
 ]
@@ -715,16 +718,19 @@ const L3_FIT_BODY_COMP: GoalTemplate[] = [
     lifeArea: FIT, displayCategory: "body_comp",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 25, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "weight_lost_from_peak",
   }),
   template("l3_f_muscle_gained", "Lean Muscle Gained (kg)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "body_comp",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 15, steps: 8, curveTension: CURVE_TENSION },
+    linkedMetric: "weight_gained_from_lowest",
   }),
   template("l3_f_body_measurements", "Body Measurements Improved", 3, "outcome", {
     lifeArea: FIT, displayCategory: "body_comp",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 20, steps: 8, curveTension: CURVE_TENSION },
+    linkedMetric: "body_measurements_count",
   }),
   template("l3_f_progress_photos", "Progress Photos Taken", 3, "outcome", {
     lifeArea: FIT, displayCategory: "body_comp",
@@ -744,6 +750,7 @@ const L3_FIT_FLEXIBILITY: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 5, durationWeeks: 24 },
     ],
+    linkedMetric: "mobility_sessions_weekly",
     priority: "niche",
   }),
   template("l3_f_yoga", "Yoga Sessions", 3, "input", {
@@ -754,12 +761,14 @@ const L3_FIT_FLEXIBILITY: GoalTemplate[] = [
       { frequencyPerWeek: 2, durationWeeks: 12 },
       { frequencyPerWeek: 3, durationWeeks: 24 },
     ],
+    linkedMetric: "yoga_sessions_weekly",
     priority: "niche",
   }),
   template("l3_f_flexibility_hours", "Total Flexibility Hours", 3, "outcome", {
     lifeArea: FIT, displayCategory: "flexibility",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 200, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "flexibility_hours_cumulative",
     priority: "niche",
   }),
 ]
@@ -774,21 +783,25 @@ const L3_FIT_ENDURANCE: GoalTemplate[] = [
       { frequencyPerWeek: 3, durationWeeks: 12 },
       { frequencyPerWeek: 4, durationWeeks: 24 },
     ],
+    linkedMetric: "running_sessions_weekly",
   }),
   template("l3_f_running_distance", "Total Running Distance (km)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "endurance",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 1000, steps: 12, curveTension: CURVE_TENSION },
+    linkedMetric: "running_distance_cumulative",
   }),
   template("l3_f_longest_run", "Longest Run (km)", 3, "outcome", {
     lifeArea: FIT, displayCategory: "endurance",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 42, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "longest_run_km",
   }),
   template("l3_f_cardio_weeks", "Consecutive Cardio Weeks", 3, "outcome", {
     lifeArea: FIT, displayCategory: "endurance",
     templateType: "milestone_ladder",
     milestoneConfig: { start: 1, target: 52, steps: 10, curveTension: CURVE_TENSION },
+    linkedMetric: "consecutive_cardio_weeks",
   }),
 ]
 

@@ -714,13 +714,15 @@ function clamp01(n: number): number {
   return Math.max(0, Math.min(1, n))
 }
 
-function computeChunkConfidence(chunk: InternalChunk): number {
-  // Heuristic only: this is meant for downranking, not as a hard gate.
+function computeChunkQualityConfidence(
+  chunk: InternalChunk,
+  { includePhaseConfidence = true }: { includePhaseConfidence?: boolean } = {}
+): number {
   let conf = 1.0
 
-  // No type-based penalty: commentary is equally valuable for RAG retrieval
-
-  if (typeof chunk.phaseConfidence === "number") {
+  // No type-based penalty: commentary is equally valuable for RAG retrieval.
+  // Phase confidence helps retrieval ranking, but it is not transcript damage.
+  if (includePhaseConfidence && typeof chunk.phaseConfidence === "number") {
     const pc = clamp01(chunk.phaseConfidence)
     conf *= Math.max(0.3, pc)
   }
@@ -742,6 +744,15 @@ function computeChunkConfidence(chunk: InternalChunk): number {
   if ((chunk.damaged_segment_ids ?? []).length > 0) conf *= 0.82
 
   return clamp01(conf)
+}
+
+function computeChunkConfidence(chunk: InternalChunk): number {
+  // Heuristic only: this is meant for downranking, not as a hard gate.
+  return computeChunkQualityConfidence(chunk, { includePhaseConfidence: true })
+}
+
+function computeChunkDamageScore(chunk: InternalChunk): number {
+  return clamp01(1 - computeChunkQualityConfidence(chunk, { includePhaseConfidence: false }))
 }
 
 /**
@@ -1242,118 +1253,144 @@ function chunkCommentaryText(
   overlap: number,
   segments: ContentSegment[],
   speakerLabels: SpeakerLabels,
-  asrIndex: AsrQualityIndex | null
+  asrIndex: AsrQualityIndex | null,
+  maskedSegmentIds: Set<number>
 ): InternalChunk[] {
   if (text.length < 20) return []
 
-  // Split text into lines and track which segment each line came from.
-  // The caller builds text as "Speaker: seg.text" per segment, one line per segment,
-  // filtering out masked/empty lines. We mirror that logic to map line→segment.
-  const textLines = text.split("\n").filter((l) => l.trim().length > 0)
-
-  // Build line→segment mapping: for each non-empty text line, find the matching segment
-  const lineToSegment: (ContentSegment | undefined)[] = []
-  let segCursor = 0
-  for (const line of textLines) {
-    // Find the segment whose text appears in this line
-    let matched = false
-    for (let s = segCursor; s < segments.length; s++) {
-      const segText = (segments[s].text ?? "").trim()
-      if (segText && line.includes(segText)) {
-        lineToSegment.push(segments[s])
-        segCursor = s + 1
-        matched = true
-        break
-      }
-    }
-    if (!matched) lineToSegment.push(undefined)
+  type VisibleEntry = {
+    segIndex: number
+    renderedLine: string
   }
 
-  // Use the same splitting logic as splitTextBySize but track line indices per chunk
-  const chunkLineRanges: { start: number; end: number }[] = []
-  let current = ""
-  let chunkStartLine = 0
-  let lineIdx = 0
-
-  for (const line of textLines) {
-    const candidate = current ? current + "\n" + line : line
-    if (candidate.length > maxSize && current.length > 0) {
-      chunkLineRanges.push({ start: chunkStartLine, end: lineIdx })
-      // Overlap: rewind by overlap chars worth of lines
-      const overlapStart = Math.max(0, current.length - overlap)
-      const overlapText = current.slice(overlapStart).trim()
-      current = overlapText ? overlapText + "\n" + line : line
-      // Approximate: overlap lines come from the tail of the previous chunk
-      const overlapLineCount = current.split("\n").length - 1
-      chunkStartLine = Math.max(0, lineIdx - overlapLineCount)
-    } else {
-      current = candidate
-    }
-    lineIdx++
-  }
-  if (current.trim()) {
-    chunkLineRanges.push({ start: chunkStartLine, end: textLines.length })
+  function joinedVisibleLength(entries: VisibleEntry[]): number {
+    return entries.reduce((acc, entry, idx) => acc + entry.renderedLine.length + (idx > 0 ? 1 : 0), 0)
   }
 
-  const parts = splitTextBySize(text, maxSize, overlap)
+  function tailVisibleEntriesByChars(entries: VisibleEntry[], maxChars: number): VisibleEntry[] {
+    if (maxChars <= 0 || entries.length === 0) return []
+    const tail: VisibleEntry[] = []
+    let chars = 0
+    for (let idx = entries.length - 1; idx >= 0; idx--) {
+      const renderedLine = entries[idx].renderedLine
+      const add = renderedLine.length + (tail.length > 0 ? 1 : 0)
+      if (tail.length > 0 && chars + add > maxChars) break
+      tail.unshift(entries[idx])
+      chars += add
+    }
+    return tail
+  }
 
-  return parts.map((content, idx) => {
-    // Gather segments for this specific chunk
-    const range = chunkLineRanges[idx] ?? { start: 0, end: textLines.length }
-    const chunkSegments: ContentSegment[] = []
-    for (let l = range.start; l < range.end; l++) {
-      const seg = lineToSegment[l]
-      if (seg) chunkSegments.push(seg)
-    }
-    // Fall back to all segments if mapping produced nothing (safety net)
-    const segs = chunkSegments.length > 0 ? chunkSegments : segments
+  const chunkRanges: Array<{
+    startSegIndex: number
+    endSegIndex: number
+    visibleEntries: VisibleEntry[]
+  }> = []
+  let currentStartSegIndex = 0
+  let currentEndSegIndex = -1
+  let currentVisibleEntries: VisibleEntry[] = []
+  let currentTextLength = 0
 
-    const problems = assessSegmentsForProblems(segs, speakerLabels)
-    const asrStats = collectAsrStats(segs, asrIndex)
-    const confStats = collectConfidenceDamageStats(segs)
+  for (let segIndex = 0; segIndex < segments.length; segIndex++) {
+    const seg = segments[segIndex]
+    const segId = seg.id
+    const segText = (seg.text ?? "").trim()
+    const masked = typeof segId === "number" && maskedSegmentIds.has(segId)
+    const renderedLine = !masked && segText ? `${mapSpeakerLabel(seg.speaker_role ?? seg.speaker_id)}: ${segText}` : ""
 
-    if (asrStats.lowQualityCount > 0) {
-      problems.push("asr_low_quality")
-    }
-    if (asrStats.transcriptArtifactTypes.length > 0) {
-      for (const t of asrStats.transcriptArtifactTypes) {
-        problems.push(`asr_transcript_artifact:${t}`)
-      }
-    }
-    if (confStats.lowTierCount > 0) {
-      problems.push("confidence_tier:low")
-    } else if (confStats.mediumTierCount > 0) {
-      problems.push("confidence_tier:medium")
-    }
-    if (confStats.damaged_segment_ids.length > 0) {
-      problems.push("contamination_sources_present")
+    if (currentEndSegIndex < currentStartSegIndex) {
+      currentStartSegIndex = segIndex
     }
 
-    const chunkStartSec = Math.min(
-      ...segs.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
-    )
-    const chunkEndSec = Math.max(
-      ...segs.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
-    )
+    const candidateLength = renderedLine
+      ? currentTextLength + (currentVisibleEntries.length > 0 ? 1 : 0) + renderedLine.length
+      : currentTextLength
 
-    return {
-      content,
-      type: "COMMENTARY" as SegmentType,
-      chunkIndex: idx,
-      totalChunks: parts.length,
-      techniques,
-      topics,
-      startSec: Number.isFinite(chunkStartSec) ? chunkStartSec : undefined,
-      endSec: Number.isFinite(chunkEndSec) ? chunkEndSec : undefined,
-      asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
-      asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
-      asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
-      worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
-      problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
-      damaged_segment_ids: confStats.damaged_segment_ids.length > 0 ? confStats.damaged_segment_ids : undefined,
-      contains_repaired_text: confStats.contains_repaired_text || undefined,
+    if (renderedLine && currentVisibleEntries.length > 0 && candidateLength > maxSize) {
+      chunkRanges.push({
+        startSegIndex: currentStartSegIndex,
+        endSegIndex: currentEndSegIndex,
+        visibleEntries: currentVisibleEntries,
+      })
+      currentVisibleEntries = tailVisibleEntriesByChars(currentVisibleEntries, overlap)
+      currentTextLength = joinedVisibleLength(currentVisibleEntries)
+      currentStartSegIndex = currentVisibleEntries.length > 0 ? currentVisibleEntries[0].segIndex : segIndex
     }
+
+    currentEndSegIndex = segIndex
+
+    if (renderedLine) {
+      currentVisibleEntries.push({ segIndex, renderedLine })
+      currentTextLength = joinedVisibleLength(currentVisibleEntries)
+    }
+  }
+
+  if (currentVisibleEntries.length === 0) return []
+  chunkRanges.push({
+    startSegIndex: currentStartSegIndex,
+    endSegIndex: currentEndSegIndex,
+    visibleEntries: currentVisibleEntries,
   })
+
+  const chunks = chunkRanges
+    .map((range) => {
+      const content = range.visibleEntries.map((entry) => entry.renderedLine).join("\n").trim()
+      if (content.length < 20) return null
+      const segs = segments.slice(range.startSegIndex, range.endSegIndex + 1)
+
+      const problems = assessSegmentsForProblems(segs, speakerLabels)
+      const asrStats = collectAsrStats(segs, asrIndex)
+      const confStats = collectConfidenceDamageStats(segs)
+
+      if (asrStats.lowQualityCount > 0) {
+        problems.push("asr_low_quality")
+      }
+      if (asrStats.transcriptArtifactTypes.length > 0) {
+        for (const t of asrStats.transcriptArtifactTypes) {
+          problems.push(`asr_transcript_artifact:${t}`)
+        }
+      }
+      if (confStats.lowTierCount > 0) {
+        problems.push("confidence_tier:low")
+      } else if (confStats.mediumTierCount > 0) {
+        problems.push("confidence_tier:medium")
+      }
+      if (confStats.damaged_segment_ids.length > 0) {
+        problems.push("contamination_sources_present")
+      }
+
+      const chunkStartSec = Math.min(
+        ...segs.map((s) => (typeof s.start === "number" ? s.start : Number.POSITIVE_INFINITY))
+      )
+      const chunkEndSec = Math.max(
+        ...segs.map((s) => (typeof s.end === "number" ? s.end : Number.NEGATIVE_INFINITY))
+      )
+
+      return {
+        content,
+        type: "COMMENTARY" as SegmentType,
+        chunkIndex: 0,
+        totalChunks: 0,
+        techniques,
+        topics,
+        startSec: Number.isFinite(chunkStartSec) ? chunkStartSec : undefined,
+        endSec: Number.isFinite(chunkEndSec) ? chunkEndSec : undefined,
+        asrLowQualitySegmentCount: asrStats.lowQualityCount || undefined,
+        asrTranscriptArtifactCount: asrStats.transcriptArtifactCount || undefined,
+        asrTranscriptArtifactTypes: asrStats.transcriptArtifactTypes.length > 0 ? asrStats.transcriptArtifactTypes : undefined,
+        worstArtifactSeverity: asrStats.worstArtifactSeverity ?? undefined,
+        problematicReason: problems.length > 0 ? [...new Set(problems)] : undefined,
+        damaged_segment_ids: confStats.damaged_segment_ids.length > 0 ? confStats.damaged_segment_ids : undefined,
+        contains_repaired_text: confStats.contains_repaired_text || undefined,
+      }
+    })
+    .filter((chunk): chunk is InternalChunk => chunk !== null)
+
+  for (let idx = 0; idx < chunks.length; idx++) {
+    chunks[idx].chunkIndex = idx
+    chunks[idx].totalChunks = chunks.length
+  }
+  return chunks
 }
 
 // ---------------------------------------------------------------------------
@@ -2029,7 +2066,8 @@ async function main() {
         chunkOverlap,
         block,
         speakerLabelsForCommentary,
-        asrIndex
+        asrIndex,
+        maskedSegmentIds
       )
 
       // Propagate description from enrichment
@@ -2101,7 +2139,8 @@ async function main() {
         chunkOverlap,
         sectionSegs,
         speakerLabelsForSections,
-        asrIndex
+        asrIndex,
+        maskedSegmentIds
       )
       // Propagate description + section_index from enrichment
       const sectionDesc = typeof section.description === "string" ? section.description : undefined
@@ -2135,8 +2174,7 @@ async function main() {
       } else if (chunk.chunk_confidence_score === undefined) {
         chunk.chunk_confidence_score = 1.0
       }
-      const confidence = typeof chunk.chunk_confidence_score === "number" ? clamp01(chunk.chunk_confidence_score) : 1.0
-      chunk.damage_score = clamp01(1 - confidence)
+      chunk.damage_score = chunk.isSummary ? 0 : computeChunkDamageScore(chunk)
       if (chunk.damaged_segment_ids && chunk.damaged_segment_ids.length > 0) {
         chunk.damage_segment_windows = buildDamageSegmentWindows(chunk.damaged_segment_ids, 1)
       }
@@ -2293,18 +2331,19 @@ async function main() {
     await fsp.mkdir(outputDir, { recursive: true })
 
     const outputPath = path.join(outputDir, `${videoId}.chunks.json`)
-    const chunkDamageScores = chunks
-      .map((row) => (typeof row.metadata.damage_score === "number" ? clamp01(row.metadata.damage_score) : 0))
+    const qualityProfileChunks = normalizedChunks
+    const chunkDamageScores = qualityProfileChunks
+      .map((row) => (typeof row.damage_score === "number" ? clamp01(row.damage_score) : 0))
     const damagedChunkCount = chunkDamageScores.filter((score) => score > 0).length
     const uniqueDamagedSegmentIds = [...new Set(
-      chunks.flatMap((row) => Array.isArray(row.metadata.damaged_segment_ids) ? row.metadata.damaged_segment_ids : [])
+      qualityProfileChunks.flatMap((row) => Array.isArray(row.damaged_segment_ids) ? row.damaged_segment_ids : [])
     )]
       .filter((sid): sid is number => Number.isInteger(sid))
       .sort((a, b) => a - b)
     const qualityProfile = {
-      chunk_count: chunks.length,
+      chunk_count: qualityProfileChunks.length,
       damaged_chunk_count: damagedChunkCount,
-      damaged_chunk_ratio: chunks.length > 0 ? damagedChunkCount / chunks.length : 0,
+      damaged_chunk_ratio: qualityProfileChunks.length > 0 ? damagedChunkCount / qualityProfileChunks.length : 0,
       video_damage_score: chunkDamageScores.length > 0
         ? chunkDamageScores.reduce((acc, score) => acc + score, 0) / chunkDamageScores.length
         : 0,

@@ -12,9 +12,10 @@ const SetSchema = z.object({
 })
 
 const CreateSchema = z.object({
-  session_type: z.enum(["weights", "cardio", "mobility"]),
+  session_type: z.enum(["weights", "cardio", "mobility", "yoga", "running"]),
   duration_min: z.number().int().positive().max(600),
   intensity: z.number().int().min(1).max(5),
+  distance_km: z.number().min(0).max(1000).nullable().optional(),
   sets: z.array(SetSchema).optional(),
   logged_at: z.string().optional(),
 })

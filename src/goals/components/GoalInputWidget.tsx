@@ -85,18 +85,19 @@ export function GoalInputWidget({
         <div className="flex items-center rounded-md border border-border bg-card overflow-hidden">
           <Input
             type="number"
+            inputMode="numeric"
             min={0}
             value={directValue}
             onChange={(e) => setDirectValue(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSet()}
-            className="w-20 h-8 text-sm border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0"
+            className="w-20 h-9 sm:h-8 text-sm border-0 rounded-none bg-transparent shadow-none focus-visible:ring-0"
           />
           <Button
             variant="ghost"
             size="sm"
             onClick={handleSet}
             disabled={isLoading}
-            className="h-8 rounded-none border-l border-border text-primary hover:bg-primary/10 hover:text-primary px-3"
+            className="h-9 sm:h-8 rounded-none border-l border-border text-primary hover:bg-primary/10 hover:text-primary px-3"
           >
             {isLoading ? <Loader2 className="size-3 animate-spin" /> : "Set"}
           </Button>

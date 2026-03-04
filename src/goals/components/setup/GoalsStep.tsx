@@ -17,6 +17,7 @@ import { MilestoneCurveEditor } from "@/src/goals/components/MilestoneCurveEdito
 import { HabitRampEditor } from "@/src/goals/components/HabitRampEditor"
 import { getCategoryLabel } from "@/src/goals/goalDisplayService"
 import { GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
+import type { AreaTemplateCatalog } from "@/src/goals/hooks/useSetupCatalog"
 import type {
   GoalTemplate,
   HabitRampStep,
@@ -85,6 +86,7 @@ function TargetStepper({
           }}
           className="text-xs font-semibold text-white text-center px-1 min-w-[2ch] rounded hover:bg-white/10 transition-colors"
           title="Click to edit"
+          data-tour={isTourTarget ? "target-number" : undefined}
         >
           {value}
         </button>
@@ -277,7 +279,8 @@ function PathBanner({ path, targetDate }: { path: DaygamePath | null; targetDate
 /* ── Area ID resolution ───────────────────────────────── */
 
 function getAreaIdForGoal(goalId: string, customGoals: SetupCustomGoal[]): string {
-  if (GOAL_TEMPLATE_MAP[goalId]) return "daygame"
+  const tmpl = GOAL_TEMPLATE_MAP[goalId]
+  if (tmpl) return tmpl.lifeArea
   const match = goalId.match(/^(.+)_s\d+$/)
   if (match) return match[1]
   const cg = customGoals.find((g) => g.id === goalId)
@@ -298,12 +301,396 @@ export interface GoalsStepTourHandle {
   closeRampEditor(): void
 }
 
+/* ── TemplateCategorySection ──────────────────────────── */
+
+interface TemplateCategorySectionProps {
+  sectionId: string
+  category: string
+  goals: GoalTemplate[]
+  accentColor: string
+  areaDateKey: string
+  selectedGoals: Set<string>
+  targets: Record<string, number>
+  curveConfigs: Record<string, MilestoneLadderConfig>
+  rampConfigs: Record<string, HabitRampStep[]>
+  rampEnabled: Set<string>
+  expandedCurve: string | null
+  expandedRamp: string | null
+  expandedSections: Set<string>
+  goalDates: Record<string, string>
+  targetDates: Record<string, string>
+  getGoalMeta: (g: GoalTemplate) => {
+    type: "habit" | "milestone"
+    target: number
+    period: string
+    hasCurve: boolean
+    defaultCurve: MilestoneLadderConfig | null
+    hasRamp: boolean
+    canAddRamp: boolean
+    defaultRampSteps: import("@/src/goals/types").HabitRampStep[] | null
+  }
+  onToggle: (id: string) => void
+  onUpdateTarget: (id: string, value: number) => void
+  onUpdateCurve: (id: string, config: MilestoneLadderConfig) => void
+  onUpdateRamp: (id: string, steps: HabitRampStep[]) => void
+  onToggleRamp: (id: string) => void
+  onUpdateGoalDate: (goalId: string, date: string) => void
+  setExpandedCurve: (id: string | null) => void
+  setExpandedRamp: (id: string | null) => void
+  toggleSection: (id: string) => void
+  customGoals: SetupCustomGoal[]
+  onAddCustomGoal: (categoryId: string) => void
+  onRemoveCustomGoal: (goalId: string) => void
+  onUpdateCustomGoalTitle: (goalId: string, title: string) => void
+  // Tour props — only rendered when tourActive is true (or undefined for backwards compat)
+  tourActive?: boolean
+  firstPreselectedGoalId?: string | null
+  firstCurveGoalId?: string | null
+  firstRampGoalId?: string | null
+  catIdx?: number
+  daygameByCategory?: { category: string }[]
+}
+
+function TemplateCategorySection({
+  sectionId,
+  category,
+  goals,
+  accentColor,
+  areaDateKey,
+  selectedGoals,
+  targets,
+  curveConfigs,
+  rampConfigs,
+  rampEnabled,
+  expandedCurve,
+  expandedRamp,
+  expandedSections,
+  goalDates,
+  targetDates,
+  getGoalMeta,
+  onToggle,
+  onUpdateTarget,
+  onUpdateCurve,
+  onUpdateRamp,
+  onToggleRamp,
+  onUpdateGoalDate,
+  setExpandedCurve,
+  setExpandedRamp,
+  toggleSection,
+  customGoals,
+  onAddCustomGoal,
+  onRemoveCustomGoal,
+  onUpdateCustomGoalTitle,
+  tourActive = true,
+  firstPreselectedGoalId,
+  firstCurveGoalId,
+  firstRampGoalId,
+  catIdx,
+  daygameByCategory,
+}: TemplateCategorySectionProps) {
+  const isExpanded = expandedSections.has(sectionId)
+  const selectedCount = goals.filter((g) => selectedGoals.has(g.id)).length
+  const catColor = accentColor
+
+  // Rank among expanded categories (for tour data attrs — daygame only)
+  let expandedRank = -1
+  if (isExpanded && catIdx !== undefined && daygameByCategory) {
+    let r = 0
+    for (let i = 0; i < catIdx; i++) {
+      if (expandedSections.has(`dg_${daygameByCategory[i].category}`)) r++
+    }
+    expandedRank = r
+  }
+
+  const customGoalsForCat = customGoals.filter((g) => g.categoryId === category)
+
+  return (
+    <div className="mb-3">
+      <button
+        onClick={() => toggleSection(sectionId)}
+        data-tour={tourActive ? (expandedRank === 0 ? "category-1" : expandedRank === 1 ? "category-2" : undefined) : undefined}
+        data-tour-role={tourActive ? "category" : undefined}
+        data-tour-expanded={tourActive ? (isExpanded ? "true" : "false") : undefined}
+        className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
+        style={{
+          background:
+            selectedCount > 0
+              ? `${catColor}0f`
+              : "rgba(255,255,255,0.02)",
+          backdropFilter: "blur(8px)",
+          border:
+            selectedCount > 0
+              ? `1px solid ${catColor}25`
+              : "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        {isExpanded ? (
+          <ChevronDown className="size-3.5" style={{ color: `${catColor}99` }} />
+        ) : (
+          <ChevronRight className="size-3.5" style={{ color: `${catColor}99` }} />
+        )}
+        <span className="text-sm text-white/80 flex-1 text-left">
+          {getCategoryLabel(category)}
+        </span>
+        <span className="text-[10px] text-white/30">
+          {selectedCount}/{goals.length}
+        </span>
+      </button>
+
+      {isExpanded && (
+        <div className="ml-4 mt-1.5 space-y-1" style={{ animation: "v9c-slideDown 0.25s ease-out" }}>
+          {goals.map((l3) => {
+            const isOn = selectedGoals.has(l3.id)
+            const meta = getGoalMeta(l3)
+            return (
+              <div key={l3.id}>
+                <div
+                  onClick={() => onToggle(l3.id)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
+                  data-tour={tourActive && isOn && l3.id === firstPreselectedGoalId ? "preselected-goal" : undefined}
+                  data-tour-role={tourActive ? (isOn ? "selected-goal" : "unselected-goal") : undefined}
+                  style={{
+                    background: isOn ? `${catColor}0f` : "transparent",
+                    border: isOn
+                      ? `1px solid ${catColor}25`
+                      : "1px solid transparent",
+                  }}
+                >
+                  <div
+                    className="size-4 rounded flex items-center justify-center shrink-0 transition-all duration-200"
+                    style={{
+                      background: isOn ? catColor : "rgba(255,255,255,0.1)",
+                      border: isOn ? "none" : "1px solid rgba(255,255,255,0.2)",
+                      boxShadow: isOn ? `0 0 8px ${catColor}4d` : "none",
+                    }}
+                  >
+                    {isOn && <Check className="size-2.5 text-white" />}
+                  </div>
+                  <span
+                    className={`flex-1 min-w-0 ${isOn ? "text-white" : "text-white/50"}`}
+                  >
+                    <span className="text-sm">{l3.title}</span>
+                    {rampEnabled.has(l3.id) && l3.templateType === "habit_ramp" && (
+                      <span className="block text-[11px] text-orange-400 italic">habit ramp</span>
+                    )}
+                    {isOn && meta.canAddRamp && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onToggleRamp(l3.id)
+                        }}
+                        className="block text-[11px] text-orange-400/50 hover:text-orange-400 italic transition-colors"
+                      >
+                        + add habit ramp
+                      </button>
+                    )}
+                  </span>
+                  {category === "dirty_dog" && (
+                    <span className="text-[9px] px-1.5 py-0.5 rounded text-orange-400/60 bg-orange-400/10 shrink-0">
+                      advanced
+                    </span>
+                  )}
+                  {isOn && (
+                    <TargetStepper
+                      value={meta.target}
+                      period={meta.period}
+                      onUpdate={(v) => onUpdateTarget(l3.id, v)}
+                      isTourTarget={l3.id === firstCurveGoalId}
+                      curveButton={
+                        <>
+                        <GoalDateButton
+                          goalId={l3.id}
+                          effectiveDate={goalDates[l3.id] || targetDates[areaDateKey] || ""}
+                          accentColor={catColor}
+                          onUpdate={onUpdateGoalDate}
+                        />
+                        {meta.hasCurve ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setExpandedCurve(
+                                expandedCurve === l3.id ? null : l3.id
+                              )
+                            }}
+                            className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+                            style={{
+                              border:
+                                expandedCurve === l3.id
+                                  ? `1px solid ${catColor}66`
+                                  : "1px solid rgba(255,255,255,0.1)",
+                              background:
+                                expandedCurve === l3.id
+                                  ? `${catColor}1a`
+                                  : "transparent",
+                            }}
+                            title="Customize milestone curve"
+                            data-tour={l3.id === firstCurveGoalId ? "curve-button" : undefined}
+                          >
+                            <SlidersHorizontal
+                              className="size-2.5"
+                              style={{
+                                color:
+                                  expandedCurve === l3.id
+                                    ? catColor
+                                    : "rgba(255,255,255,0.5)",
+                              }}
+                            />
+                          </button>
+                        ) : meta.hasRamp ? (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setExpandedRamp(
+                                expandedRamp === l3.id ? null : l3.id
+                              )
+                            }}
+                            className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
+                            style={{
+                              border:
+                                expandedRamp === l3.id
+                                  ? `1px solid ${catColor}66`
+                                  : "1px solid rgba(255,255,255,0.1)",
+                              background:
+                                expandedRamp === l3.id
+                                  ? `${catColor}1a`
+                                  : "transparent",
+                            }}
+                            title="Customize ramp schedule"
+                            data-tour={l3.id === firstRampGoalId ? "ramp-button" : undefined}
+                          >
+                            <SlidersHorizontal
+                              className="size-2.5"
+                              style={{
+                                color:
+                                  expandedRamp === l3.id
+                                    ? catColor
+                                    : "rgba(255,255,255,0.5)",
+                              }}
+                            />
+                          </button>
+                        ) : undefined}
+                        </>
+                      }
+                    />
+                  )}
+                </div>
+                {isOn &&
+                  meta.hasCurve &&
+                  expandedCurve === l3.id &&
+                  meta.defaultCurve && (
+                    <div className="mt-1 ml-7 mr-2 mb-2" data-tour="curve-editor">
+                      <MilestoneCurveEditor
+                        config={curveConfigs[l3.id] ?? meta.defaultCurve}
+                        onChange={(config) => onUpdateCurve(l3.id, config)}
+                        allowDirectEdit
+                        themeId="orrery"
+                        targetDate={goalDates[l3.id] || targetDates[areaDateKey] || undefined}
+                      />
+                      <button
+                        onClick={() => setExpandedCurve(null)}
+                        className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors"
+                        style={{
+                          background: `${catColor}14`,
+                          border: `1px solid ${catColor}40`,
+                          color: catColor,
+                        }}
+                      >
+                        <Check className="size-3" />
+                        Accept Curve
+                      </button>
+                    </div>
+                  )}
+                {isOn &&
+                  meta.hasRamp &&
+                  expandedRamp === l3.id &&
+                  meta.defaultRampSteps && (
+                    <div className="mt-1 ml-7 mr-2 mb-2" data-tour="ramp-editor">
+                      <div
+                        className="rounded-xl p-4"
+                        style={{
+                          background: "rgba(0, 0, 0, 0.5)",
+                          backdropFilter: "blur(12px)",
+                          border: "1px solid rgba(255,255,255,0.08)",
+                        }}
+                      >
+                        <HabitRampEditor
+                          steps={rampConfigs[l3.id] ?? meta.defaultRampSteps}
+                          onChange={(steps) => onUpdateRamp(l3.id, steps)}
+                          accentColor={catColor}
+                          targetDate={goalDates[l3.id] || targetDates[areaDateKey] || undefined}
+                        />
+                      </div>
+                      <button
+                        onClick={() => setExpandedRamp(null)}
+                        className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors"
+                        style={{
+                          background: `${catColor}14`,
+                          border: `1px solid ${catColor}40`,
+                          color: catColor,
+                        }}
+                      >
+                        <Check className="size-3" />
+                        Accept Ramp
+                      </button>
+                    </div>
+                  )}
+              </div>
+            )
+          })}
+
+          {customGoalsForCat.map((cg) => (
+            <div
+              key={cg.id}
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5"
+              style={{
+                background: `${catColor}0f`,
+                border: `1px solid ${catColor}25`,
+              }}
+            >
+              <div
+                className="size-4 rounded flex items-center justify-center shrink-0"
+                style={{ background: catColor }}
+              >
+                <Check className="size-2.5 text-white" />
+              </div>
+              <input
+                type="text"
+                value={cg.title}
+                onChange={(e) => onUpdateCustomGoalTitle(cg.id, e.target.value)}
+                placeholder="Goal name..."
+                className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
+                autoFocus={!cg.title}
+              />
+              <CustomGoalStepper
+                value={targets[cg.id] ?? cg.target}
+                onUpdate={(v) => onUpdateTarget(cg.id, v)}
+                onRemove={() => onRemoveCustomGoal(cg.id)}
+              />
+            </div>
+          ))}
+
+          <button
+            onClick={() => onAddCustomGoal(category)}
+            className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
+            style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
+            data-tour={tourActive ? "add-custom-goal" : undefined}
+          >
+            <Plus className="size-3.5 text-white/25" />
+            <span className="text-sm text-white/25">Add custom goal</span>
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── GoalsStep ─────────────────────────────────────────── */
 
 interface GoalsStepProps {
   daygameByCategory: { category: string; goals: GoalTemplate[] }[]
   daygameL3Goals: GoalTemplate[]
   lifeAreas: LifeAreaConfig[]
+  areaCatalogs: Record<string, AreaTemplateCatalog>
   selectedAreas: Set<string>
   selectedGoals: Set<string>
   targets: Record<string, number>
@@ -334,6 +721,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
   daygameByCategory,
   daygameL3Goals,
   lifeAreas,
+  areaCatalogs,
   selectedAreas,
   selectedGoals,
   targets,
@@ -372,6 +760,10 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
       setExpandedSections((prev) => {
         const next = new Set(prev)
         for (const { category } of daygameByCategory) next.add(`dg_${category}`)
+        for (const [areaId, catalog] of Object.entries(areaCatalogs)) {
+          if (!selectedAreas.has(areaId)) continue
+          for (const { category } of catalog.byCategory) next.add(`${areaId}_${category}`)
+        }
         return next
       })
     },
@@ -389,10 +781,28 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
       setExpandedSections((prev) => {
         const next = new Set<string>()
         for (const id of prev) {
-          const cat = id.replace(/^dg_/, "")
-          const group = daygameByCategory.find((c) => c.category === cat)
-          if (group && group.goals.some((g) => selectedGoals.has(g.id))) next.add(id)
-          if (!id.startsWith("dg_")) next.add(id) // keep non-daygame sections
+          // Check daygame sections
+          if (id.startsWith("dg_")) {
+            const cat = id.replace(/^dg_/, "")
+            const group = daygameByCategory.find((c) => c.category === cat)
+            if (group && group.goals.some((g) => selectedGoals.has(g.id))) next.add(id)
+            continue
+          }
+          // Check non-daygame area sections (pattern: areaId_category)
+          let kept = false
+          for (const [areaId, catalog] of Object.entries(areaCatalogs)) {
+            if (!selectedAreas.has(areaId)) continue
+            const prefix = `${areaId}_`
+            if (id.startsWith(prefix)) {
+              const cat = id.slice(prefix.length)
+              const group = catalog.byCategory.find((c) => c.category === cat)
+              if (group && group.goals.some((g) => selectedGoals.has(g.id))) next.add(id)
+              kept = true
+              break
+            }
+          }
+          // Keep custom sections and any other non-area sections
+          if (!kept) next.add(id)
         }
         return next
       })
@@ -421,13 +831,13 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
           next.add(`dg_${category}`)
         }
       }
-      // Also auto-expand life area sections with selected suggestions
-      for (const area of lifeAreas) {
-        if (!selectedAreas.has(area.id) || area.id === "daygame" || area.id === "custom") continue
-        const suggestions = area.suggestions
-        if (!suggestions) continue
-        if (suggestions.some((_, i) => selectedGoals.has(`${area.id}_s${i}`))) {
-          next.add(area.id)
+      // Also auto-expand non-daygame template sections with selected goals
+      for (const [areaId, catalog] of Object.entries(areaCatalogs)) {
+        if (!selectedAreas.has(areaId)) continue
+        for (const { category, goals } of catalog.byCategory) {
+          if (goals.some((g) => selectedGoals.has(g.id))) {
+            next.add(`${areaId}_${category}`)
+          }
         }
       }
       // If nothing was preselected, expand first category as fallback
@@ -456,16 +866,23 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
 
   const daygameSelected = daygameL3Goals.filter((g) => selectedGoals.has(g.id)).length
 
+  // Tour: pool all L3 goals (daygame first, then selected areas) for area-agnostic targeting
+  const allL3ForTour = [
+    ...daygameByCategory.flatMap(({ goals }) => goals),
+    ...Object.entries(areaCatalogs)
+      .filter(([areaId]) => selectedAreas.has(areaId))
+      .flatMap(([, cat]) => cat.allL3Goals),
+  ]
+
   // Tour: find first preselected goal dynamically (for tour annotation)
-  const firstPreselectedGoalId = daygameByCategory
-    .flatMap(({ goals }) => goals)
+  const firstPreselectedGoalId = allL3ForTour
     .find((g) => selectedGoals.has(g.id))?.id ?? null
 
   // Tour: find first selected curve/ramp goal dynamically
-  const firstCurveGoalId = daygameL3Goals.find(
+  const firstCurveGoalId = allL3ForTour.find(
     (g) => selectedGoals.has(g.id) && g.templateType === "milestone_ladder" && g.defaultMilestoneConfig != null
   )?.id ?? null
-  const firstRampGoalId = daygameL3Goals.find(
+  const firstRampGoalId = allL3ForTour.find(
     (g) => selectedGoals.has(g.id) && g.templateType === "habit_ramp" && rampEnabled.has(g.id) && g.defaultRampSteps != null && g.defaultRampSteps.length > 1
   )?.id ?? null
 
@@ -514,308 +931,54 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
         <PathBanner path={path} targetDate={targetDates["daygame"]} />
 
         {daygameByCategory.length > 0 && (
-          <div className="mb-8">
-            <div className="flex items-center gap-2 mb-3" data-tour="area-header">
+          <div className="mb-8" data-tour={path ? "all-categories" : undefined}>
+            <div className="flex items-center gap-2 mb-3" data-tour={path ? "area-header" : undefined}>
               <span className="text-xs font-semibold uppercase tracking-wider text-orange-400">
                 Dating & Daygame
               </span>
               <span className="text-xs text-white/30">{daygameSelected} selected</span>
             </div>
 
-            {daygameByCategory.map(({ category, goals }, catIdx) => {
-              const sectionId = `dg_${category}`
-              const isExpanded = expandedSections.has(sectionId)
-              const selectedCount = goals.filter((g) => selectedGoals.has(g.id)).length
-              const catColor = CATEGORY_COLORS[category] ?? "#00E676"
-              // Rank among expanded categories (0 = first, 1 = second, etc.)
-              let expandedRank = -1
-              if (isExpanded) {
-                let r = 0
-                for (let i = 0; i < catIdx; i++) {
-                  if (expandedSections.has(`dg_${daygameByCategory[i].category}`)) r++
-                }
-                expandedRank = r
-              }
-
-              return (
-                <div key={category} className="mb-3">
-                  <button
-                    onClick={() => toggleSection(sectionId)}
-                    data-tour={expandedRank === 0 ? "category-1" : expandedRank === 1 ? "category-2" : undefined}
-                    data-tour-role="category"
-                    data-tour-expanded={isExpanded ? "true" : "false"}
-                    className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
-                    style={{
-                      background:
-                        selectedCount > 0
-                          ? `${catColor}0f`
-                          : "rgba(255,255,255,0.02)",
-                      backdropFilter: "blur(8px)",
-                      border:
-                        selectedCount > 0
-                          ? `1px solid ${catColor}25`
-                          : "1px solid rgba(255,255,255,0.05)",
-                    }}
-                  >
-                    {isExpanded ? (
-                      <ChevronDown className="size-3.5" style={{ color: `${catColor}99` }} />
-                    ) : (
-                      <ChevronRight className="size-3.5" style={{ color: `${catColor}99` }} />
-                    )}
-                    <span className="text-sm text-white/80 flex-1 text-left">
-                      {getCategoryLabel(category)}
-                    </span>
-                    <span className="text-[10px] text-white/30">
-                      {selectedCount}/{goals.length}
-                    </span>
-                  </button>
-
-                  {isExpanded && (
-                    <div className="ml-4 mt-1.5 space-y-1" style={{ animation: "v9c-slideDown 0.25s ease-out" }}>
-                      {goals.map((l3) => {
-                        const isOn = selectedGoals.has(l3.id)
-                        const meta = getGoalMeta(l3)
-                        return (
-                          <div key={l3.id}>
-                            <div
-                              onClick={() => onToggle(l3.id)}
-                              className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
-                              data-tour={isOn && l3.id === firstPreselectedGoalId ? "preselected-goal" : undefined}
-                              data-tour-role={isOn ? "selected-goal" : "unselected-goal"}
-                              style={{
-                                background: isOn ? `${catColor}0f` : "transparent",
-                                border: isOn
-                                  ? `1px solid ${catColor}25`
-                                  : "1px solid transparent",
-                              }}
-                            >
-                              <div
-                                className="size-4 rounded flex items-center justify-center shrink-0 transition-all duration-200"
-                                style={{
-                                  background: isOn ? catColor : "rgba(255,255,255,0.1)",
-                                  border: isOn ? "none" : "1px solid rgba(255,255,255,0.2)",
-                                  boxShadow: isOn ? `0 0 8px ${catColor}4d` : "none",
-                                }}
-                              >
-                                {isOn && <Check className="size-2.5 text-white" />}
-                              </div>
-                              <span
-                                className={`flex-1 min-w-0 ${isOn ? "text-white" : "text-white/50"}`}
-                              >
-                                <span className="text-sm">{l3.title}</span>
-                                {rampEnabled.has(l3.id) && l3.templateType === "habit_ramp" && (
-                                  <span className="block text-[11px] text-orange-400 italic">habit ramp</span>
-                                )}
-                                {isOn && meta.canAddRamp && (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      onToggleRamp(l3.id)
-                                    }}
-                                    className="block text-[11px] text-orange-400/50 hover:text-orange-400 italic transition-colors"
-                                  >
-                                    + add habit ramp
-                                  </button>
-                                )}
-                              </span>
-                              {category === "dirty_dog" && (
-                                <span className="text-[9px] px-1.5 py-0.5 rounded text-orange-400/60 bg-orange-400/10 shrink-0">
-                                  advanced
-                                </span>
-                              )}
-                              {isOn && (
-                                <TargetStepper
-                                  value={meta.target}
-                                  period={meta.period}
-                                  onUpdate={(v) => onUpdateTarget(l3.id, v)}
-                                  isTourTarget={l3.id === firstCurveGoalId}
-                                  curveButton={
-                                    <>
-                                    <GoalDateButton
-                                      goalId={l3.id}
-                                      effectiveDate={goalDates[l3.id] || targetDates["daygame"] || ""}
-                                      accentColor={catColor}
-                                      onUpdate={onUpdateGoalDate}
-                                    />
-                                    {meta.hasCurve ? (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          setExpandedCurve(
-                                            expandedCurve === l3.id ? null : l3.id
-                                          )
-                                        }}
-                                        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                        style={{
-                                          border:
-                                            expandedCurve === l3.id
-                                              ? `1px solid ${catColor}66`
-                                              : "1px solid rgba(255,255,255,0.1)",
-                                          background:
-                                            expandedCurve === l3.id
-                                              ? `${catColor}1a`
-                                              : "transparent",
-                                        }}
-                                        title="Customize milestone curve"
-                                        data-tour={l3.id === firstCurveGoalId ? "curve-button" : undefined}
-                                      >
-                                        <SlidersHorizontal
-                                          className="size-2.5"
-                                          style={{
-                                            color:
-                                              expandedCurve === l3.id
-                                                ? catColor
-                                                : "rgba(255,255,255,0.5)",
-                                          }}
-                                        />
-                                      </button>
-                                    ) : meta.hasRamp ? (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          setExpandedRamp(
-                                            expandedRamp === l3.id ? null : l3.id
-                                          )
-                                        }}
-                                        className="size-6 rounded flex items-center justify-center transition-colors hover:bg-white/10"
-                                        style={{
-                                          border:
-                                            expandedRamp === l3.id
-                                              ? `1px solid ${catColor}66`
-                                              : "1px solid rgba(255,255,255,0.1)",
-                                          background:
-                                            expandedRamp === l3.id
-                                              ? `${catColor}1a`
-                                              : "transparent",
-                                        }}
-                                        title="Customize ramp schedule"
-                                        data-tour={l3.id === firstRampGoalId ? "ramp-button" : undefined}
-                                      >
-                                        <SlidersHorizontal
-                                          className="size-2.5"
-                                          style={{
-                                            color:
-                                              expandedRamp === l3.id
-                                                ? catColor
-                                                : "rgba(255,255,255,0.5)",
-                                          }}
-                                        />
-                                      </button>
-                                    ) : undefined}
-                                    </>
-                                  }
-                                />
-                              )}
-                            </div>
-                            {isOn &&
-                              meta.hasCurve &&
-                              expandedCurve === l3.id &&
-                              meta.defaultCurve && (
-                                <div className="mt-1 ml-7 mr-2 mb-2" data-tour="curve-editor">
-                                  <MilestoneCurveEditor
-                                    config={curveConfigs[l3.id] ?? meta.defaultCurve}
-                                    onChange={(config) => onUpdateCurve(l3.id, config)}
-                                    allowDirectEdit
-                                    themeId="orrery"
-                                    targetDate={goalDates[l3.id] || targetDates["daygame"] || undefined}
-                                  />
-                                  <button
-                                    onClick={() => setExpandedCurve(null)}
-                                    className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors"
-                                    style={{
-                                      background: `${catColor}14`,
-                                      border: `1px solid ${catColor}40`,
-                                      color: catColor,
-                                    }}
-                                  >
-                                    <Check className="size-3" />
-                                    Accept Curve
-                                  </button>
-                                </div>
-                              )}
-                            {isOn &&
-                              meta.hasRamp &&
-                              expandedRamp === l3.id &&
-                              meta.defaultRampSteps && (
-                                <div className="mt-1 ml-7 mr-2 mb-2" data-tour="ramp-editor">
-                                  <div
-                                    className="rounded-xl p-4"
-                                    style={{
-                                      background: "rgba(0, 0, 0, 0.5)",
-                                      backdropFilter: "blur(12px)",
-                                      border: "1px solid rgba(255,255,255,0.08)",
-                                    }}
-                                  >
-                                    <HabitRampEditor
-                                      steps={rampConfigs[l3.id] ?? meta.defaultRampSteps}
-                                      onChange={(steps) => onUpdateRamp(l3.id, steps)}
-                                      accentColor={catColor}
-                                      targetDate={goalDates[l3.id] || targetDates["daygame"] || undefined}
-                                    />
-                                  </div>
-                                  <button
-                                    onClick={() => setExpandedRamp(null)}
-                                    className="mt-2 w-full flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-colors"
-                                    style={{
-                                      background: `${catColor}14`,
-                                      border: `1px solid ${catColor}40`,
-                                      color: catColor,
-                                    }}
-                                  >
-                                    <Check className="size-3" />
-                                    Accept Ramp
-                                  </button>
-                                </div>
-                              )}
-                          </div>
-                        )
-                      })}
-
-                      {customGoalsForCategory(category).map((cg) => (
-                        <div
-                          key={cg.id}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-                          style={{
-                            background: `${catColor}0f`,
-                            border: `1px solid ${catColor}25`,
-                          }}
-                        >
-                          <div
-                            className="size-4 rounded flex items-center justify-center shrink-0"
-                            style={{ background: catColor }}
-                          >
-                            <Check className="size-2.5 text-white" />
-                          </div>
-                          <input
-                            type="text"
-                            value={cg.title}
-                            onChange={(e) => onUpdateCustomGoalTitle(cg.id, e.target.value)}
-                            placeholder="Goal name..."
-                            className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
-                            autoFocus={!cg.title}
-                          />
-                          <CustomGoalStepper
-                            value={targets[cg.id] ?? cg.target}
-                            onUpdate={(v) => onUpdateTarget(cg.id, v)}
-                            onRemove={() => onRemoveCustomGoal(cg.id)}
-                          />
-                        </div>
-                      ))}
-
-                      <button
-                        onClick={() => onAddCustomGoal(category)}
-                        className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
-                        style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
-                        data-tour="add-custom-goal"
-                      >
-                        <Plus className="size-3.5 text-white/25" />
-                        <span className="text-sm text-white/25">Add custom goal</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+            {daygameByCategory.map(({ category, goals }, catIdx) => (
+              <TemplateCategorySection
+                key={category}
+                sectionId={`dg_${category}`}
+                category={category}
+                goals={goals}
+                accentColor={CATEGORY_COLORS[category] ?? "#00E676"}
+                areaDateKey="daygame"
+                selectedGoals={selectedGoals}
+                targets={targets}
+                curveConfigs={curveConfigs}
+                rampConfigs={rampConfigs}
+                rampEnabled={rampEnabled}
+                expandedCurve={expandedCurve}
+                expandedRamp={expandedRamp}
+                expandedSections={expandedSections}
+                goalDates={goalDates}
+                targetDates={targetDates}
+                getGoalMeta={getGoalMeta}
+                onToggle={onToggle}
+                onUpdateTarget={onUpdateTarget}
+                onUpdateCurve={onUpdateCurve}
+                onUpdateRamp={onUpdateRamp}
+                onToggleRamp={onToggleRamp}
+                onUpdateGoalDate={onUpdateGoalDate}
+                setExpandedCurve={setExpandedCurve}
+                setExpandedRamp={setExpandedRamp}
+                toggleSection={toggleSection}
+                customGoals={customGoals}
+                onAddCustomGoal={onAddCustomGoal}
+                onRemoveCustomGoal={onRemoveCustomGoal}
+                onUpdateCustomGoalTitle={onUpdateCustomGoalTitle}
+                tourActive={!!path}
+                firstPreselectedGoalId={firstPreselectedGoalId}
+                firstCurveGoalId={firstCurveGoalId}
+                firstRampGoalId={firstRampGoalId}
+                catIdx={catIdx}
+                daygameByCategory={daygameByCategory}
+              />
+            ))}
 
             {customCategories.map((cat) => {
               const sectionId = `custom_${cat.id}`
@@ -903,7 +1066,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
                         onClick={() => onAddCustomGoal(cat.id)}
                         className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
                         style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
-                        data-tour="add-custom-goal"
+                        data-tour={path ? "add-custom-goal" : undefined}
                       >
                         <Plus className="size-3.5 text-white/25" />
                         <span className="text-sm text-white/25">Add custom goal</span>
@@ -918,7 +1081,7 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
               onClick={onAddCustomCategory}
               className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-colors hover:bg-white/5 mb-3"
               style={{ border: "1px dashed rgba(0,230,118,0.15)" }}
-              data-tour="add-custom-category"
+              data-tour={path ? "add-custom-category" : undefined}
             >
               <Plus className="size-3.5 text-emerald-400/40" />
               <span className="text-sm text-emerald-400/40">Add custom category</span>
@@ -926,135 +1089,56 @@ export const GoalsStep = forwardRef<GoalsStepTourHandle, GoalsStepProps>(functio
           </div>
         )}
 
-        {lifeAreas
-          .filter((a) => selectedAreas.has(a.id) && a.id !== "daygame" && a.id !== "custom")
-          .map((area) => {
-            const Icon = area.icon
-            const suggestions = area.suggestions
-            if (!suggestions || suggestions.length === 0) return null
-            const isExpanded = expandedSections.has(area.id)
-            const areaSelected = suggestions.filter((_, i) =>
-              selectedGoals.has(`${area.id}_s${i}`)
-            ).length
-
+        {/* Template-based goals for non-daygame areas */}
+        {Object.entries(areaCatalogs)
+          .filter(([areaId]) => selectedAreas.has(areaId))
+          .map(([areaId, catalog], idx) => {
+            const areaSelected = catalog.allL3Goals.filter((g) => selectedGoals.has(g.id)).length
             return (
-              <div key={area.id} className="mb-4">
-                <button
-                  onClick={() => toggleSection(area.id)}
-                  className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all duration-200"
-                  style={{
-                    background: `${area.hex}06`,
-                    backdropFilter: "blur(8px)",
-                    border: `1px solid ${area.hex}15`,
-                  }}
-                >
-                  {isExpanded ? (
-                    <ChevronDown className="size-3.5" style={{ color: `${area.hex}80` }} />
-                  ) : (
-                    <ChevronRight className="size-3.5" style={{ color: `${area.hex}80` }} />
-                  )}
-                  <Icon className="size-3.5" style={{ color: area.hex }} />
-                  <span className="text-sm text-white/80 flex-1 text-left">{area.name}</span>
-                  <span className="text-[10px] text-white/30">
-                    {areaSelected}/{suggestions.length}
+              <div key={areaId} className="mb-8" data-tour={!path && idx === 0 ? "all-categories" : undefined}>
+                <div className="flex items-center gap-2 mb-3" data-tour={!path && idx === 0 ? "area-header" : undefined}>
+                  <span style={{ color: catalog.hex }} className="text-xs font-semibold uppercase tracking-wider">
+                    {catalog.areaName}
                   </span>
-                </button>
-
-                {isExpanded && (
-                  <div className="ml-4 mt-1.5 space-y-1" style={{ animation: "v9c-slideDown 0.25s ease-out" }}>
-                    {suggestions.map((s, i) => {
-                      const id = `${area.id}_s${i}`
-                      const isOn = selectedGoals.has(id)
-                      const target = targets[id] ?? s.defaultTarget
-                      return (
-                        <div
-                          key={id}
-                          onClick={() => onToggle(id)}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 cursor-pointer"
-                          style={{
-                            background: isOn ? `${area.hex}06` : "transparent",
-                            border: isOn
-                              ? `1px solid ${area.hex}15`
-                              : "1px solid transparent",
-                          }}
-                        >
-                          <div
-                            className="size-4 rounded flex items-center justify-center shrink-0 transition-all duration-200"
-                            style={{
-                              background: isOn ? area.hex : "rgba(255,255,255,0.1)",
-                              border: isOn ? "none" : "1px solid rgba(255,255,255,0.2)",
-                              boxShadow: isOn ? `0 0 8px ${area.hex}30` : "none",
-                            }}
-                          >
-                            {isOn && <Check className="size-2.5 text-white" />}
-                          </div>
-                          <span
-                            className={`text-sm flex-1 ${isOn ? "text-white" : "text-white/50"}`}
-                          >
-                            {s.title}
-                          </span>
-
-                          {isOn && (
-                            <TargetStepper
-                              value={target}
-                              period={s.defaultPeriod}
-                              onUpdate={(v) => onUpdateTarget(id, v)}
-                              curveButton={
-                                <GoalDateButton
-                                  goalId={id}
-                                  effectiveDate={goalDates[id] || targetDates[area.id] || ""}
-                                  accentColor={area.hex}
-                                  onUpdate={onUpdateGoalDate}
-                                />
-                              }
-                            />
-                          )}
-                        </div>
-                      )
-                    })}
-
-                    {customGoalsForCategory(area.id).map((cg) => (
-                      <div
-                        key={cg.id}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2.5"
-                        style={{
-                          background: `${area.hex}06`,
-                          border: `1px solid ${area.hex}15`,
-                        }}
-                      >
-                        <div
-                          className="size-4 rounded flex items-center justify-center shrink-0"
-                          style={{ background: area.hex }}
-                        >
-                          <Check className="size-2.5 text-white" />
-                        </div>
-                        <input
-                          type="text"
-                          value={cg.title}
-                          onChange={(e) => onUpdateCustomGoalTitle(cg.id, e.target.value)}
-                          placeholder="Goal name..."
-                          className="text-sm flex-1 min-w-0 bg-transparent text-white outline-none placeholder:text-white/25"
-                          autoFocus={!cg.title}
-                        />
-                        <CustomGoalStepper
-                          value={targets[cg.id] ?? cg.target}
-                          onUpdate={(v) => onUpdateTarget(cg.id, v)}
-                          onRemove={() => onRemoveCustomGoal(cg.id)}
-                        />
-                      </div>
-                    ))}
-
-                    <button
-                      onClick={() => onAddCustomGoal(area.id)}
-                      className="w-full flex items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-white/5"
-                      style={{ border: "1px dashed rgba(255,255,255,0.08)" }}
-                      data-tour="add-custom-goal"
-                    >
-                      <Plus className="size-3.5 text-white/25" />
-                      <span className="text-sm text-white/25">Add custom goal</span>
-                    </button>
-                  </div>
-                )}
+                  <span className="text-xs text-white/30">{areaSelected} selected</span>
+                </div>
+                {catalog.byCategory.map(({ category, goals }) => (
+                  <TemplateCategorySection
+                    key={category}
+                    sectionId={`${areaId}_${category}`}
+                    category={category}
+                    goals={goals}
+                    accentColor={CATEGORY_COLORS[category] ?? catalog.hex}
+                    areaDateKey={areaId}
+                    selectedGoals={selectedGoals}
+                    targets={targets}
+                    curveConfigs={curveConfigs}
+                    rampConfigs={rampConfigs}
+                    rampEnabled={rampEnabled}
+                    expandedCurve={expandedCurve}
+                    expandedRamp={expandedRamp}
+                    expandedSections={expandedSections}
+                    goalDates={goalDates}
+                    targetDates={targetDates}
+                    getGoalMeta={getGoalMeta}
+                    onToggle={onToggle}
+                    onUpdateTarget={onUpdateTarget}
+                    onUpdateCurve={onUpdateCurve}
+                    onUpdateRamp={onUpdateRamp}
+                    onToggleRamp={onToggleRamp}
+                    onUpdateGoalDate={onUpdateGoalDate}
+                    setExpandedCurve={setExpandedCurve}
+                    setExpandedRamp={setExpandedRamp}
+                    toggleSection={toggleSection}
+                    customGoals={customGoals}
+                    onAddCustomGoal={onAddCustomGoal}
+                    onRemoveCustomGoal={onRemoveCustomGoal}
+                    onUpdateCustomGoalTitle={onUpdateCustomGoalTitle}
+                    firstPreselectedGoalId={firstPreselectedGoalId}
+                    firstCurveGoalId={firstCurveGoalId}
+                    firstRampGoalId={firstRampGoalId}
+                  />
+                ))}
               </div>
             )
           })}

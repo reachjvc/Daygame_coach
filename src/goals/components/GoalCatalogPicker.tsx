@@ -134,7 +134,7 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
       )}
 
       {/* 3-column Miller columns layout */}
-      <div className="grid grid-cols-[minmax(180px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)] gap-0 min-h-[340px]">
+      <div className="grid grid-cols-1 sm:grid-cols-[minmax(180px,1fr)_minmax(0,1.4fr)_minmax(0,1.4fr)] gap-0 min-h-[340px]">
         {/* Column 1: Categories (Tier 1) */}
         <div className="pr-3">
           <div className="flex items-center gap-2 mb-2.5">
@@ -210,9 +210,9 @@ export function GoalCatalogPicker({ onTreeCreated, existingGoals, onClose, onCre
   if (!isModalMode) return <div data-testid="goal-catalog-picker">{content}</div>
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 pb-8" data-testid="goal-catalog-picker">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 pb-8 pt-safe pb-safe" data-testid="goal-catalog-picker">
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-4xl max-h-full overflow-y-auto rounded-xl border border-border bg-background p-6 shadow-xl">
+      <div className="relative z-10 w-full max-w-4xl max-h-full overflow-y-auto rounded-xl border border-border bg-background p-4 sm:p-6 shadow-xl">
         <Button
           variant="ghost"
           size="icon"

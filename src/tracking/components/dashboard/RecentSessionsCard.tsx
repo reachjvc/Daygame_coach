@@ -38,7 +38,7 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
 
   return (
     <div className="md:col-span-2 relative">
-      <Card className="p-6">
+      <Card className="p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold text-lg">Recent Sessions</h2>
           <Link
@@ -129,13 +129,13 @@ export function RecentSessionsCard({ sessions, onDeleteSession }: RecentSessions
                       <Link href={`/dashboard/tracking/session/${session.id}`}>
                         <Button variant="outline" size="sm" className="gap-1 text-xs">
                           <Pencil className="size-3" />
-                          Edit
+                          <span className="hidden sm:inline">Edit</span>
                         </Button>
                       </Link>
                       <Link href={`/dashboard/tracking/report?session=${session.id}`}>
                         <Button variant="outline" size="sm" className="gap-1 text-xs">
                           <FileText className="size-3" />
-                          Report
+                          <span className="hidden sm:inline">Report</span>
                         </Button>
                       </Link>
                     </>

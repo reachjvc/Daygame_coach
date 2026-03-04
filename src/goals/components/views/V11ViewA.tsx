@@ -943,12 +943,13 @@ function CompactGoalRow({
             >
               <Input
                 type="number"
+                inputMode="numeric"
                 placeholder={String(goal.target_value)}
                 value={directValue}
                 onChange={(e) => setDirectValue(e.target.value)}
                 className="w-14 h-7 text-xs px-2"
               />
-              <Button type="submit" size="sm" variant="ghost" className="h-7 w-7 p-0" disabled={isSubmitting}>
+              <Button type="submit" size="sm" variant="ghost" className="h-9 w-9 sm:h-7 sm:w-7 p-0" disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
               </Button>
             </form>
@@ -987,8 +988,8 @@ function CompactGoalRow({
           {confirmDelete ? (
             <div className="flex items-center gap-1 ml-auto">
               <span className="text-[10px] text-destructive">Delete permanently?</span>
-              <Button variant="destructive" size="sm" className="h-6 text-[10px] px-2" onClick={() => onDelete(goal.id)}>Yes</Button>
-              <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setConfirmDelete(false)}>No</Button>
+              <Button variant="destructive" size="sm" className="h-8 sm:h-6 text-[10px] px-2" onClick={() => onDelete(goal.id)}>Yes</Button>
+              <Button variant="ghost" size="sm" className="h-8 sm:h-6 text-[10px] px-2" onClick={() => setConfirmDelete(false)}>No</Button>
             </div>
           ) : (
             <Button
@@ -1039,7 +1040,7 @@ function EditGoalPanel({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 pt-safe pb-safe">
       <div className="bg-card border border-border rounded-xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-border/50">
           <h3 className="font-semibold text-foreground">Edit Goal</h3>
@@ -1141,7 +1142,7 @@ function CreateGoalPanel({
   const filteredAreas = lifeAreas.filter((a) => a.id !== "custom")
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 pt-safe pb-safe">
       <div className="bg-card border border-border rounded-xl w-full max-w-md shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-border/50">
           <h3 className="font-semibold text-foreground">Create Custom Goal</h3>
@@ -1405,7 +1406,7 @@ function CatalogBrowser({
   const areas = lifeAreas.filter((a) => a.id !== "custom")
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background pt-safe pb-safe">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 shrink-0">
         <h2 className="text-base font-semibold text-foreground">Goal Catalog</h2>
         <div className="flex items-center gap-2">
@@ -1764,7 +1765,7 @@ function ManagementSidebar({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-end pt-safe pb-safe">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       {/* Panel */}

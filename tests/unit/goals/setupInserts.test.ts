@@ -8,10 +8,12 @@ function createSelections(overrides: Partial<GoalSetupSelections> = {}): GoalSet
   return {
     path: "fto",
     selectedAreas: new Set<string>(),
+    selectedL1s: new Set<string>(),
     selectedGoalIds: new Set<string>(),
     targets: {},
     curveConfigs: {},
     rampConfigs: {},
+    rampEnabled: new Set<string>(),
     customGoals: [],
     customCategories: [],
     targetDates: {},
@@ -164,23 +166,28 @@ describe("buildSetupInserts", () => {
     expect(l3!.milestone_config).toBeDefined()
   })
 
-  test("creates suggestion goals as standalone inserts", () => {
+  test("creates suggestion goals parented to area L1", () => {
     const selections = createSelections({
       selectedAreas: new Set(["health_fitness"]),
       selectedGoalIds: new Set(["health_fitness_s0"]),
     })
     const result = buildSetupInserts(selections)
 
-    expect(result).toHaveLength(1)
-    const insert = result[0]
-    expect(insert._tempParentId).toBeNull()
-    expect(insert.life_area).toBe("health_fitness")
-    expect(insert.goal_type).toBe("recurring")
+    // Should emit L1 + L2 achievements + suggestion L3
+    const l1 = result.find((r) => r.goal_level === 1)
+    expect(l1).toBeDefined()
+    expect(l1!.life_area).toBe("health_fitness")
+
+    const l3 = result.find((r) => r.goal_level === 3)
+    expect(l3).toBeDefined()
+    expect(l3!._tempParentId).toBe(l1!._tempId)
+    expect(l3!.life_area).toBe("health_fitness")
+    expect(l3!.goal_type).toBe("recurring")
 
     // Check it matches the first suggestion from LIFE_AREAS
     const area = LIFE_AREAS.find((a) => a.id === "health_fitness")!
-    expect(insert.title).toBe(area.suggestions![0].title)
-    expect(insert.target_value).toBe(area.suggestions![0].defaultTarget)
+    expect(l3!.title).toBe(area.suggestions![0].title)
+    expect(l3!.target_value).toBe(area.suggestions![0].defaultTarget)
   })
 
   test("applies target override to suggestion goal", () => {
@@ -372,5 +379,112 @@ describe("buildSetupInserts", () => {
 
     const l3 = result.find((r) => r.template_id === "l3_approach_volume")
     expect(l3!.target_date).toBeUndefined()
+  })
+
+  // ── Non-daygame template tests ────────────────────────────────────────
+
+  test("health_fitness template L3 builds L1 + L2 + L3 tree", () => {
+    const selections = createSelections({
+      selectedAreas: new Set(["health_fitness"]),
+      selectedGoalIds: new Set(["l3_f_bench_press"]),
+    })
+    const result = buildSetupInserts(selections)
+
+    // Should have L1 (health_fitness) + L2 achievements + L3 template
+    const l1 = result.find((r) => r.goal_level === 1 && r.life_area === "health_fitness")
+    expect(l1).toBeDefined()
+    expect(l1!._tempParentId).toBeNull()
+
+    const l3 = result.find((r) => r.template_id === "l3_f_bench_press")
+    expect(l3).toBeDefined()
+    expect(l3!._tempParentId).toBe(l1!._tempId)
+    expect(l3!.life_area).toBe("health_fitness")
+    expect(l3!.goal_type).toBe("milestone")
+
+    // L2 achievements should be standalone
+    const l2s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 2)
+    expect(l2s.length).toBeGreaterThan(0)
+    for (const l2 of l2s) {
+      expect(l2._tempParentId).toBeNull()
+    }
+  })
+
+  test("curve config applied to non-daygame template", () => {
+    const config: MilestoneLadderConfig = {
+      start: 0,
+      target: 200,
+      steps: 8,
+      curveTension: 0.3,
+    }
+    const selections = createSelections({
+      selectedAreas: new Set(["health_fitness"]),
+      selectedGoalIds: new Set(["l3_f_bench_press"]),
+      curveConfigs: { l3_f_bench_press: config },
+    })
+    const result = buildSetupInserts(selections)
+
+    const l3 = result.find((r) => r.template_id === "l3_f_bench_press")
+    expect(l3).toBeDefined()
+    expect(l3!.target_value).toBe(200)
+    expect(l3!.goal_type).toBe("milestone")
+    expect(l3!.milestone_config).toBeDefined()
+  })
+
+  test("mixed daygame templates + health templates in same selection", () => {
+    const selections = createSelections({
+      selectedAreas: new Set(["health_fitness"]),
+      selectedGoalIds: new Set(["l3_approach_volume", "l3_f_bench_press"]),
+    })
+    const result = buildSetupInserts(selections)
+
+    // Should have 2 separate L1s
+    const l1s = result.filter((r) => GOAL_TEMPLATE_MAP[r.template_id!]?.level === 1)
+    expect(l1s.length).toBe(2)
+    const l1Areas = new Set(l1s.map((r) => r.life_area))
+    expect(l1Areas.has("daygame")).toBe(true)
+    expect(l1Areas.has("health_fitness")).toBe(true)
+
+    // Each L3 parented to its area's L1
+    const dgL3 = result.find((r) => r.template_id === "l3_approach_volume")
+    const fitL3 = result.find((r) => r.template_id === "l3_f_bench_press")
+    expect(dgL3).toBeDefined()
+    expect(fitL3).toBeDefined()
+
+    const dgL1 = l1s.find((r) => r.life_area === "daygame")!
+    const fitL1 = l1s.find((r) => r.life_area === "health_fitness")!
+    expect(dgL3!._tempParentId).toBe(dgL1._tempId)
+    expect(fitL3!._tempParentId).toBe(fitL1._tempId)
+  })
+
+  test("area date cascades to non-daygame template L3", () => {
+    const selections = createSelections({
+      selectedAreas: new Set(["health_fitness"]),
+      selectedGoalIds: new Set(["l3_f_bench_press"]),
+      targetDates: { health_fitness: "2027-03-01" },
+    })
+    const result = buildSetupInserts(selections)
+
+    const l3 = result.find((r) => r.template_id === "l3_f_bench_press")
+    expect(l3).toBeDefined()
+    expect(l3!.target_date).toBe("2027-03-01")
+
+    // L1 also gets the area date
+    const l1 = result.find((r) => r.goal_level === 1 && r.life_area === "health_fitness")
+    expect(l1!.target_date).toBe("2027-03-01")
+  })
+
+  test("temp ID references valid for non-daygame template tree", () => {
+    const selections = createSelections({
+      selectedAreas: new Set(["health_fitness"]),
+      selectedGoalIds: new Set(["l3_f_bench_press", "l3_f_squat"]),
+    })
+    const result = buildSetupInserts(selections)
+
+    const tempIds = new Set(result.map((r) => r._tempId))
+    for (const insert of result) {
+      if (insert._tempParentId) {
+        expect(tempIds.has(insert._tempParentId)).toBe(true)
+      }
+    }
   })
 })

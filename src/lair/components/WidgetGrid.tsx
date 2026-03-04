@@ -45,10 +45,10 @@ function StaticWidgetPreview({
   collapsed: boolean
 }) {
   const sizeClasses: Record<string, string> = {
-    small: "col-span-1 w-[300px]",
-    medium: "col-span-1 w-[300px]",
-    large: "col-span-1 sm:col-span-2 lg:col-span-2 w-[620px]",
-    full: "col-span-1 sm:col-span-2 lg:col-span-3 w-[960px]",
+    small: "col-span-1 w-full max-w-[300px]",
+    medium: "col-span-1 w-full max-w-[300px]",
+    large: "col-span-1 sm:col-span-2 lg:col-span-2 w-full max-w-[620px]",
+    full: "col-span-1 sm:col-span-2 lg:col-span-3 w-full max-w-[960px]",
   }
 
   const WidgetComponent = widget.component

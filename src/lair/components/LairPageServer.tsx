@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { createServerSupabaseClient, getProfile } from "@/src/db/server"
 import { getUserLairConfig } from "@/src/db/lairRepo"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { LairContent } from "./LairContent"
 
 export async function LairPageServer() {
@@ -32,9 +33,10 @@ export async function LairPageServer() {
   const layout = await getUserLairConfig(user.id)
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-tab-bar">
       <AppHeader currentPage="lair" isLoggedIn={true} hasPurchased={true} />
       <LairContent initialLayout={layout} />
+      <MobileTabBar />
     </div>
   )
 }

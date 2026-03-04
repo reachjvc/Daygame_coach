@@ -1,0 +1,2771 @@
+{
+  "id": "coach-kyle-001",
+  "name": "Coach Kyle",
+  "language": "en",
+  "rootNodeId": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Coach Kyle - Approach Patterns"
+      },
+      "children": [
+        "opener-direct-compliment",
+        "opener-direct-cute-sporty",
+        "opener-direct-interesting-look",
+        "opener-observation-food",
+        "opener-compliment-item",
+        "opener-question-location",
+        "opener-observation-behavior",
+        "opener-casual-greeting",
+        "opener-gym-curling",
+        "opener-store-eye-contact",
+        "opener-dog",
+        "opener-startle-sorry",
+        "proper-greeting-intro",
+        "opener-semi-direct-look",
+        "opener-push-pull-expecting",
+        "opener-time-constraint-leave",
+        "opener-instant-date-blue",
+        "opinion-opener-long-distance"
+      ]
+    },
+
+    "opener-direct-compliment": {
+      "id": "opener-direct-compliment",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me. I actually have to get going, but I just wanted to say I thought you looked really cute. I just wanted to come over and say what's up really quick."
+      },
+      "children": [
+        "her-direct-positive-stop",
+        "her-direct-neutral-confused",
+        "her-direct-keep-walking",
+        "her-direct-warm-thankyou"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ], Easiest Way To Start More Conversations [YOEP0380xD4], 5 Women 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-direct-positive-stop": {
+      "id": "her-direct-positive-stop",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you! That's sweet."
+      },
+      "children": [
+        "followup-observation-outfit",
+        "followup-observation-vibe"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "followup-observation-outfit": {
+      "id": "followup-observation-outfit",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, I thought you looked really cute with the all white on. Is that your job uniform? Oh, did you just get out of work or what?"
+      },
+      "children": [
+        "her-outfit-work-yes"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "her-outfit-work-yes": {
+      "id": "her-outfit-work-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, it's actually my job outfit."
+      },
+      "children": [
+        "followup-observation-relieved"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "followup-observation-relieved": {
+      "id": "followup-observation-relieved",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, I can tell because you looked so relieved. I saw you sitting here, lounging back, smiling, smoking your cigarette. Did you have a long week or what?"
+      },
+      "children": [
+        "her-long-week-yes"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "her-long-week-yes": {
+      "id": "her-long-week-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I actually worked a lot."
+      },
+      "children": [
+        "transition-second-intent"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "transition-second-intent": {
+      "id": "transition-second-intent",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I mean honestly I was gonna meet some friends in a couple minutes but I just thought you looked cute so I was like I need to come over and say what's up."
+      },
+      "children": [
+        "her-second-intent-positive"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "her-second-intent-positive": {
+      "id": "her-second-intent-positive",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Thank you."
+      },
+      "children": [
+        "close-whatsapp-number"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "close-whatsapp-number": {
+      "id": "close-whatsapp-number",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I know you're kind of just lounging back. So are you going home after this or what are you doing? Whatever, IG or do you use WhatsApp or what do you have?"
+      },
+      "children": [
+        "her-gives-number"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "her-gives-number": {
+      "id": "her-gives-number",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, let's keep in touch. You have Instagram?"
+      },
+      "children": [
+        "close-confirm-names"
+      ],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "close-confirm-names": {
+      "id": "close-confirm-names",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Cool, yeah. I'm Kyle by the way. K-Y-L-E. Yeah, we'll talk soon, all right? Take care."
+      },
+      "children": [],
+      "source": "Simple cold approach [neZv2hbkABQ]"
+    },
+
+    "followup-observation-vibe": {
+      "id": "followup-observation-vibe",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You have an interesting personality. You're very fun and animated, in a good way. I like your vibe. I could totally tell Miami has not corrupted you."
+      },
+      "children": [
+        "her-vibe-semi-corrupted"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "her-vibe-semi-corrupted": {
+      "id": "her-vibe-semi-corrupted",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, thankfully. I'm semi-corrupted. I'm not from here originally, but I've been here for a little while."
+      },
+      "children": [
+        "transition-ethnicity"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "her-direct-neutral-confused": {
+      "id": "her-direct-neutral-confused",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Looks over shoulder, still walking, looks confused]"
+      },
+      "children": [
+        "persist-one-second"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "persist-one-second": {
+      "id": "persist-one-second",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me. Excuse me. Hi, one second, really quick. I was actually walking back that way, but I just saw you. I thought you had a really interesting look. I wanted to come over really quick and say hi."
+      },
+      "children": [
+        "her-still-confused"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-still-confused": {
+      "id": "her-still-confused",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Stops but still looks around, uncertain]"
+      },
+      "children": [
+        "stay-calm-processing"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "stay-calm-processing": {
+      "id": "stay-calm-processing",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You look confused, are you okay? Yeah, you processing?"
+      },
+      "children": [
+        "her-processing-yeah"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-processing-yeah": {
+      "id": "her-processing-yeah",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah."
+      },
+      "children": [
+        "false-time-constraint-friends"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "false-time-constraint-friends": {
+      "id": "false-time-constraint-friends",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm actually meeting up with friends in like two minutes, but I just thought you were cute, so I was like, let's go see the cute girl. I was kind of intrigued to get to know you."
+      },
+      "children": [
+        "her-phone-interrupt"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-phone-interrupt": {
+      "id": "her-phone-interrupt",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, wait one second. Sorry, I was just talking to my friend."
+      },
+      "children": [
+        "engage-friend-facetime"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "engage-friend-facetime": {
+      "id": "engage-friend-facetime",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Who's your friend? Who is she? Let me say hi. Listen, are you in the mall? We'll find you. We're headed over."
+      },
+      "children": [
+        "transition-walk-together"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "transition-walk-together": {
+      "id": "transition-walk-together",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "All right, I'm gonna head out in a minute. I'm not gonna hang out with your friends and stuff. How often are you in Brickell?"
+      },
+      "children": [
+        "her-offers-number"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-offers-number": {
+      "id": "her-offers-number",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, you could take my number, if that's what you were asking."
+      },
+      "children": [
+        "dont-pounce-get-to-know"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "dont-pounce-get-to-know": {
+      "id": "dont-pounce-get-to-know",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Well, I mean, I was just trying to get to know the cute woman first."
+      },
+      "children": [
+        "her-age-question"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-age-question": {
+      "id": "her-age-question",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "How old are you?"
+      },
+      "children": [
+        "flip-script-too-young"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "flip-script-too-young": {
+      "id": "flip-script-too-young",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm 35. I think you're too young for me."
+      },
+      "children": [
+        "her-qualifies-herself"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-qualifies-herself": {
+      "id": "her-qualifies-herself",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm not 18, but I have daddy issues. So it's not a problem."
+      },
+      "children": [
+        "tease-fuckboy-phase"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "tease-fuckboy-phase": {
+      "id": "tease-fuckboy-phase",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Would the family approve? Did I make a good impression or no?"
+      },
+      "children": [
+        "her-sweet-but-fuckboy"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-sweet-but-fuckboy": {
+      "id": "her-sweet-but-fuckboy",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, no, you're really sweet. But you do give off fuckboy-like vibes though. Are you out of that phase?"
+      },
+      "children": [
+        "reframe-20-year-olds"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "reframe-20-year-olds": {
+      "id": "reframe-20-year-olds",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm 35, damn. I ain't some little kid. I think you hang around a lot of 20-year-olds, I guess, right?"
+      },
+      "children": [
+        "her-subbing-me"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-subbing-me": {
+      "id": "her-subbing-me",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, you're subbing me."
+      },
+      "children": [],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-direct-keep-walking": {
+      "id": "her-direct-keep-walking",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Doesn't stop, keeps walking at normal pace]"
+      },
+      "children": [
+        "persist-excuse-me-repeat"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA], Cold Approaching Girls [7o6FNxnsAnE]"
+    },
+
+    "persist-excuse-me-repeat": {
+      "id": "persist-excuse-me-repeat",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me. Excuse me. Hi, one second, really quickly."
+      },
+      "children": [
+        "her-slows-down"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-slows-down": {
+      "id": "her-slows-down",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Slows down and looks at you]"
+      },
+      "children": [
+        "walk-parallel-lower-intent"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "walk-parallel-lower-intent": {
+      "id": "walk-parallel-lower-intent",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I was actually headed that way, but I just saw you. I thought you had a really interesting look. I wanted to come over really quick and say hi."
+      },
+      "children": [
+        "her-still-confused"
+      ],
+      "source": "From DISINTEREST to Getting Her Number [FNpZs1VhwaA]"
+    },
+
+    "her-direct-warm-thankyou": {
+      "id": "her-direct-warm-thankyou",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you! I thought you were cute too."
+      },
+      "children": [
+        "transition-ethnicity",
+        "transition-what-are-you-up-to",
+        "transition-instant-date-proposal",
+        "tease-soft-spoken"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA], What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "opener-direct-cute-sporty": {
+      "id": "opener-direct-cute-sporty",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me, hi. I just saw you walking by. I thought you looked super cute. I just wanted to come over and say what's up really quick. I know it's a little random."
+      },
+      "children": [
+        "her-sporty-whats-up",
+        "her-sporty-with-friend"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA], 6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "her-sporty-whats-up": {
+      "id": "her-sporty-whats-up",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "What's up?"
+      },
+      "children": [
+        "followup-sporty-latina-vibe",
+        "tease-imitation-arm-wrap"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "followup-sporty-latina-vibe": {
+      "id": "followup-sporty-latina-vibe",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You have this like fitness sporty latina vibe to you. Are you? What ethnicity are you?"
+      },
+      "children": [
+        "her-puerto-rican"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "her-puerto-rican": {
+      "id": "her-puerto-rican",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I'm Puerto Rican."
+      },
+      "children": [
+        "tease-strutting-preworkout"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "tease-strutting-preworkout": {
+      "id": "tease-strutting-preworkout",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hold on, are you late for something or what are you up to? I saw you strutting in here like on a mission, like the pre-workout was hitting."
+      },
+      "children": [
+        "her-gym-mode"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "her-gym-mode": {
+      "id": "her-gym-mode",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Kind of, kind of. I didn't have my chest day so I'm like, ah."
+      },
+      "children": [
+        "transition-where-from"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "her-sporty-with-friend": {
+      "id": "her-sporty-with-friend",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you. We're gonna go see our friends."
+      },
+      "children": [
+        "engage-friend-group"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "engage-friend-group": {
+      "id": "engage-friend-group",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm Kyle by the way. What are you guys up to right now? So what do I need to know about this girl? You guys are close friends, right?"
+      },
+      "children": [
+        "her-friend-vouches"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-friend-vouches": {
+      "id": "her-friend-vouches",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "She's goofy. She's funny. She works at a gym."
+      },
+      "children": [
+        "followup-workout-area"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "followup-workout-area": {
+      "id": "followup-workout-area",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, you work out around here or where? I'm brand new over here. I came in beginning of February."
+      },
+      "children": [
+        "her-just-moved"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-just-moved": {
+      "id": "her-just-moved",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, shoot, like really? So you just living here? Just got here? So you're having the party life?"
+      },
+      "children": [
+        "reframe-party-vibes"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "reframe-party-vibes": {
+      "id": "reframe-party-vibes",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Not so much, honestly. Do I give off party vibes? I feel like if I brought you out to a party, you'd be quiet at first and then a couple shots you'd be fucking in."
+      },
+      "children": [
+        "her-ultra-confession"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-ultra-confession": {
+      "id": "her-ultra-confession",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "So I went to Ultra..."
+      },
+      "children": [
+        "walk-together-close-number"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "walk-together-close-number": {
+      "id": "walk-together-close-number",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I just thought you looked cute, honestly. You guys are going this way? I'm actually headed home, but I'll walk with you for like one block. Why don't we just exchange numbers? You down to hang out sometime?"
+      },
+      "children": [
+        "her-yeah-100-percent"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-yeah-100-percent": {
+      "id": "her-yeah-100-percent",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, 100%. Here, give me your number."
+      },
+      "children": [
+        "close-coordinate-date"
+      ],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "close-coordinate-date": {
+      "id": "close-coordinate-date",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Cool, let's do it. If the party's lame and you're bored, I'll be in the area. Maybe we can meet up. It doesn't need to be tonight, obviously."
+      },
+      "children": [],
+      "source": "Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "opener-direct-interesting-look": {
+      "id": "opener-direct-interesting-look",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me, hi. I was actually just walking back that way and I saw you. I thought you looked really cute. That's why I wanted to come say hi really quick. That's all. How's your day going?"
+      },
+      "children": [
+        "her-shopping-positive",
+        "her-handshake-warm"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-shopping-positive": {
+      "id": "her-shopping-positive",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Good, I'm just shopping."
+      },
+      "children": [
+        "followup-brickell-tease"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "followup-brickell-tease": {
+      "id": "followup-brickell-tease",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You got so much stuff on your one arm. You ever come down to Brickell or not really? I was in Brickell, I was looking. I was like, where is she? Donde esta?"
+      },
+      "children": [
+        "her-dad-is-here"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-dad-is-here": {
+      "id": "her-dad-is-here",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Actually my daddy's here. He's on the first floor waiting for me."
+      },
+      "children": [
+        "close-not-ready-meet-father"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "close-not-ready-meet-father": {
+      "id": "close-not-ready-meet-father",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I mean, I'm not ready to meet the father or anything like that. Maybe we could keep in touch if you come to Brickell. You have WhatsApp or what do you use?"
+      },
+      "children": [
+        "her-whatsapp-yes"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-whatsapp-yes": {
+      "id": "her-whatsapp-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "WhatsApp."
+      },
+      "children": [],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-handshake-warm": {
+      "id": "her-handshake-warm",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, I wasn't going for the handshake but... you're so warm and friendly."
+      },
+      "children": [
+        "tease-warm-welcoming"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "tease-warm-welcoming": {
+      "id": "tease-warm-welcoming",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Wow, you're so warm and friendly. Are you like that with all strangers? That's concerning. No, I just wanted to say I thought you looked cute. That's all."
+      },
+      "children": [
+        "her-warm-welcoming-laugh"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-warm-welcoming-laugh": {
+      "id": "her-warm-welcoming-laugh",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I know, you're so warm and welcoming."
+      },
+      "children": [
+        "close-coffee-keep-in-touch"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "close-coffee-keep-in-touch": {
+      "id": "close-coffee-keep-in-touch",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I feel obligated to get you a coffee or something. You like coffee or tea? Let's just stay in touch and if you're down we could do that. If not, maybe we could do something like tomorrow or a different day."
+      },
+      "children": [],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "opener-observation-food": {
+      "id": "opener-observation-food",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Can I just say that that looks really good? Is it an acai bowl or ice cream, or what'd you get?"
+      },
+      "children": [
+        "her-food-positive",
+        "her-food-brief"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-food-positive": {
+      "id": "her-food-positive",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, acai bowl."
+      },
+      "children": [
+        "transition-food-to-personal"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "transition-food-to-personal": {
+      "id": "transition-food-to-personal",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh nice. I've been looking for a good spot around here. Are you from the area? You seem like you know the good spots."
+      },
+      "children": [
+        "her-from-area-yes"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ] - transition pattern (generalized from teaching)"
+    },
+
+    "her-from-area-yes": {
+      "id": "her-from-area-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I live nearby. There's a few good places."
+      },
+      "children": [
+        "transition-ethnicity"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ] - transition pattern (generalized from teaching)"
+    },
+
+    "her-food-brief": {
+      "id": "her-food-brief",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, thanks."
+      },
+      "children": [
+        "graceful-exit-walk-away"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "graceful-exit-walk-away": {
+      "id": "graceful-exit-walk-away",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Nice. Enjoy it. Have a good day."
+      },
+      "children": [
+        "soft-close-time-constraint",
+        "ran-out-of-things-honest"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ] - Kyle teaches you can just walk away if she's not responsive"
+    },
+
+    "opener-compliment-item": {
+      "id": "opener-compliment-item",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I really like your jersey, by the way. What is it exactly? I'm not familiar. I just like the color scheme."
+      },
+      "children": [
+        "her-item-explains",
+        "her-item-thanks-brief"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-item-explains": {
+      "id": "her-item-explains",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, it's just a fashion piece. It's my brand."
+      },
+      "children": [
+        "tease-spokesman-brand"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "tease-spokesman-brand": {
+      "id": "tease-spokesman-brand",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, the way you're talking about it, you sound like you're the spokesman. Or it's like your brand. And you got the matching shorts too. I thought maybe it was a sports team but it's just a fashion piece. I saw you walking by and I was like, who's the cute girl with the jersey."
+      },
+      "children": [
+        "transition-where-from"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-item-thanks-brief": {
+      "id": "her-item-thanks-brief",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Thank you."
+      },
+      "children": [
+        "graceful-exit-walk-away"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "opener-question-location": {
+      "id": "opener-question-location",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, do you know if there's like a Pura Vida or something over here? Are you familiar with the area or not really?"
+      },
+      "children": [
+        "her-location-helpful",
+        "her-location-not-sure"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ], 10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "her-location-helpful": {
+      "id": "her-location-helpful",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "If you go to Moffy's and then just go like down two blocks to the left."
+      },
+      "children": [
+        "transition-from-location-to-personal"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "transition-from-location-to-personal": {
+      "id": "transition-from-location-to-personal",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Got it, okay cool. Are you from the area? You seem like you know your way around."
+      },
+      "children": [
+        "her-from-california"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-from-california": {
+      "id": "her-from-california",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm from California."
+      },
+      "children": [
+        "tease-not-from-here-vibe"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "tease-not-from-here-vibe": {
+      "id": "tease-not-from-here-vibe",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I was gonna say, you have a vibe that you're definitely not from here. I wasn't sure if it was Cali. You're only like a tiny bit corrupted by Miami then. That's probably why I could tell."
+      },
+      "children": [
+        "her-not-corrupted"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-not-corrupted": {
+      "id": "her-not-corrupted",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Not at all. Just purebred, no, zero corruption."
+      },
+      "children": [],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-location-not-sure": {
+      "id": "her-location-not-sure",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, I know that there is one in Brickell, but I'm not sure where."
+      },
+      "children": [
+        "transition-from-location-to-personal"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "opener-observation-behavior": {
+      "id": "opener-observation-behavior",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You seem to be really vibing right now. I don't know what music you're listening to, but I was over there and I saw a cute girl walking, swagging to the music. I was like, what is she listening to?"
+      },
+      "children": [
+        "her-vibing-engaged"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "her-vibing-engaged": {
+      "id": "her-vibing-engaged",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Takes off headphones, smiles]"
+      },
+      "children": [
+        "followup-sitting-observation"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "followup-sitting-observation": {
+      "id": "followup-sitting-observation",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Excuse me, can I just say really quickly, I thought you looked super cute, like, sitting in the all black. You look like you're dressed up, but you're comfy and casual at the same time."
+      },
+      "children": [
+        "her-observation-laugh"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0], 10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "her-observation-laugh": {
+      "id": "her-observation-laugh",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Smiles, engages in conversation]"
+      },
+      "children": [
+        "transition-ethnicity"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "opener-casual-greeting": {
+      "id": "opener-casual-greeting",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, what's up? How's it going?"
+      },
+      "children": [
+        "her-casual-good",
+        "her-casual-flustered"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ], What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-casual-good": {
+      "id": "her-casual-good",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm good, how you doing?"
+      },
+      "children": [
+        "followup-observation-general"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "followup-observation-general": {
+      "id": "followup-observation-general",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I didn't see the sweaty side of you. That's the good news. You were actually walking that way. I was like, oh, she's actually pretty cute. I just wanted to come over and say what's up. How was your run?"
+      },
+      "children": [
+        "her-run-exhausting"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-run-exhausting": {
+      "id": "her-run-exhausting",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Good. Exhausting, but that means that it did what it had to do, so."
+      },
+      "children": [
+        "transition-local-or-tourist"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "transition-local-or-tourist": {
+      "id": "transition-local-or-tourist",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Cool. Do you live here? You don't seem like a touristy vacation girl. You seem like you're actually one of the locals."
+      },
+      "children": [
+        "her-yeah-local"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-yeah-local": {
+      "id": "her-yeah-local",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I do now. I'm actually relatively new to the area."
+      },
+      "children": [
+        "tease-rare-breed"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "tease-rare-breed": {
+      "id": "tease-rare-breed",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You're a rare breed then. I had a couple people ask me, are you here for spring break? I could just tell after talking just for a little bit. Which is refreshing actually."
+      },
+      "children": [
+        "her-thought-selling-something"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-thought-selling-something": {
+      "id": "her-thought-selling-something",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You probably thought I was like coming up to sell you something or what?"
+      },
+      "children": [
+        "clarify-mutual-attraction"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "clarify-mutual-attraction": {
+      "id": "clarify-mutual-attraction",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh no. I thought you were cute. I thought you were cute."
+      },
+      "children": [
+        "her-mutual-cute"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-mutual-cute": {
+      "id": "her-mutual-cute",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I thought you were cute! I guess we're cute."
+      },
+      "children": [
+        "transition-name-introduction",
+        "her-asks-do-you-work-out"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "transition-name-introduction": {
+      "id": "transition-name-introduction",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Who are you? Who are you, by the way? What's your name? I'm Kyle, by the way."
+      },
+      "children": [
+        "her-sweaty-handshake"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-sweaty-handshake": {
+      "id": "her-sweaty-handshake",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Is your hand sweaty? It is, low-key."
+      },
+      "children": [
+        "tease-sweaty-see-again"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "tease-sweaty-see-again": {
+      "id": "tease-sweaty-see-again",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "It's okay. If I ever see you again, you need to be like fully dried off, dolled up. You probably look even cuter if you're actually wearing some... how do you dress?"
+      },
+      "children": [
+        "her-this-is-peak"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-this-is-peak": {
+      "id": "her-this-is-peak",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I think that this is my peak. This is the peak."
+      },
+      "children": [
+        "close-tempted-see-you"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "close-tempted-see-you": {
+      "id": "close-tempted-see-you",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm tempted to see you in an environment where you're not dripping sweat. I think it would be cool, right? Let's do this then. What do you usually do? Are you free typically? When are you typically free?"
+      },
+      "children": [
+        "her-free-now"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-free-now": {
+      "id": "her-free-now",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Well, right now. Are we going to go?"
+      },
+      "children": [
+        "close-coordinate-monday"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "close-coordinate-monday": {
+      "id": "close-coordinate-monday",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm meeting up with some friends, but let's figure out when. Mondays I do have client calls and I like to hit the gym, but I'm free after like four or five. Maybe we could do something early evening. I'll hit you up over the weekend and maybe we can lock something in."
+      },
+      "children": [],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "her-casual-flustered": {
+      "id": "her-casual-flustered",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Are you like flustered? I literally just finished working out."
+      },
+      "children": [
+        "followup-observation-general"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "transition-ethnicity": {
+      "id": "transition-ethnicity",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What ethnicity are you, by the way? I can't tell if you're like Latin or Middle Eastern."
+      },
+      "children": [
+        "her-ethnicity-hispanic",
+        "her-ethnicity-other"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM], Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-ethnicity-hispanic": {
+      "id": "her-ethnicity-hispanic",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm Mexican."
+      },
+      "children": [
+        "tease-ethnicity-trouble",
+        "her-ethnicity-argentinian"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "tease-ethnicity-trouble": {
+      "id": "tease-ethnicity-trouble",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh, I knew it. You almost look like... I couldn't tell if you were Italian or... Yeah, my mom told me to stay away from girls like you."
+      },
+      "children": [
+        "her-ethnicity-laughs"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "her-ethnicity-laughs": {
+      "id": "her-ethnicity-laughs",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Laughs] What about you? What are you?"
+      },
+      "children": [
+        "share-ethnicity-story",
+        "tease-ethnicity-accent"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "share-ethnicity-story": {
+      "id": "share-ethnicity-story",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm actually mainly Italian. My grandparents actually came here on a boat from Italy. Grandpa was like stereotypical Italian man, just talks with his hands, so much cursing in Italian at the dinner table."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun",
+        "evaluate-what-else-to-know"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "her-ethnicity-other": {
+      "id": "her-ethnicity-other",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm just like white, whatever."
+      },
+      "children": [
+        "tease-vanilla"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "tease-vanilla": {
+      "id": "tease-vanilla",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh damn, okay so you're just vanilla. Got it. Wait, are you just vanilla all around, like personality? No, you're not personality, because I feel like you low-key have like a little bit of spice to you."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "transition-what-do-you-do-for-fun": {
+      "id": "transition-what-do-you-do-for-fun",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "So what do you do for fun? You have anything fun planned for the weekend? You seem like the type of girl that would be into..."
+      },
+      "children": [
+        "her-fun-plans-yes",
+        "her-fun-plans-no"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "her-fun-plans-yes": {
+      "id": "her-fun-plans-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm actually going out this weekend. There's this event..."
+      },
+      "children": [
+        "seed-meetup-from-plans",
+        "first-fight-tease",
+        "disqualify-invite-tease",
+        "subtle-invitation-tease"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "seed-meetup-from-plans": {
+      "id": "seed-meetup-from-plans",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Oh nice. I've been wanting to check that out actually. Maybe we should go together sometime. When are you typically free? Why don't we exchange numbers?"
+      },
+      "children": [],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM] - closing pattern"
+    },
+
+    "her-fun-plans-no": {
+      "id": "her-fun-plans-no",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, nothing really. How about you?"
+      },
+      "children": [
+        "share-plans-seed-date",
+        "her-cooking-women"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "share-plans-seed-date": {
+      "id": "share-plans-seed-date",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Honestly, I don't have anything too crazy going on, but what I typically like to do is... One place I've been really wanting to go check out is... Maybe we should go grab a drink sometime. Are you sure we should go out and grab a drink sometime?"
+      },
+      "children": [
+        "her-yeah-im-down"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM], How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "her-yeah-im-down": {
+      "id": "her-yeah-im-down",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I'm down."
+      },
+      "children": [
+        "close-take-number"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "close-take-number": {
+      "id": "close-take-number",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Okay cool. I'll take your number."
+      },
+      "children": [],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "transition-where-from": {
+      "id": "transition-where-from",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Where are you from? I moved here from New York. I feel like there's a lot of people coming from New York."
+      },
+      "children": [
+        "her-from-new-york",
+        "her-from-elsewhere"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0], 3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-from-new-york": {
+      "id": "her-from-new-york",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I moved here from New York like two months ago."
+      },
+      "children": [
+        "tease-new-york-attitude"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0]"
+    },
+
+    "tease-new-york-attitude": {
+      "id": "tease-new-york-attitude",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I love it. How do you feel about it? You got a problem with it? I don't know if that's a good thing. Still got the New York? What does that mean? Does that mean you have New York attitude?"
+      },
+      "children": [
+        "her-always-new-york"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0], 3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-always-new-york": {
+      "id": "her-always-new-york",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, I always have New York. Give me... what can I say?"
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-from-elsewhere": {
+      "id": "her-from-elsewhere",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm from Boca. It's north of here."
+      },
+      "children": [
+        "tease-long-distance"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "tease-long-distance": {
+      "id": "tease-long-distance",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Damn, what the fuck. You come out here a lot? We're gonna be friends. We're gonna be long distance. We're gonna make it work."
+      },
+      "children": [
+        "her-anything-worth-doing"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-anything-worth-doing": {
+      "id": "her-anything-worth-doing",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I mean, anything worth doing isn't easy. Isn't that the thing?"
+      },
+      "children": [
+        "close-tempted-see-you"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "transition-what-are-you-up-to": {
+      "id": "transition-what-are-you-up-to",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What are you up to right now? Are you headed somewhere? I'll walk with you for like two minutes before I meet up with my friends."
+      },
+      "children": [
+        "her-going-home",
+        "her-meeting-friends"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-going-home": {
+      "id": "her-going-home",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, to go home."
+      },
+      "children": [
+        "walk-with-dont-follow-garage"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "walk-with-dont-follow-garage": {
+      "id": "walk-with-dont-follow-garage",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Which way? You're going this way? I'll walk with you for like two minutes. What do you do for fun? Let's stop here because I'm not gonna follow you into the parking garage on some creeper shit."
+      },
+      "children": [
+        "close-do-this-sometime"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "close-do-this-sometime": {
+      "id": "close-do-this-sometime",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I don't know, maybe we can do some of this sometime. Are you fully planned out for the night?"
+      },
+      "children": [
+        "vibe-fading-exit-high",
+        "vibe-fading-reopen-later"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-meeting-friends": {
+      "id": "her-meeting-friends",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm heading back to my car because actually my best friend's going through a breakup right now."
+      },
+      "children": [
+        "tease-friend-breakup"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "tease-friend-breakup": {
+      "id": "tease-friend-breakup",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "That actually says a lot about you as a friend. I'll be here for you, just don't hug me. But I'm here, girl. Come here... well no, don't come here too. Just stay there, but I'm here for you."
+      },
+      "children": [
+        "close-tempted-see-you"
+      ],
+      "source": "What Happens When You Talk To Girls After Working Out [u2R8_rF_j2s]"
+    },
+
+    "opener-gym-curling": {
+      "id": "opener-gym-curling",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You're curling the 20s. I said, I see you curling the 20s. That's actually pretty impressive for a girl your size."
+      },
+      "children": [
+        "her-gym-impressed"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "her-gym-impressed": {
+      "id": "her-gym-impressed",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Smiles, takes out headphones]"
+      },
+      "children": [
+        "transition-ethnicity"
+      ],
+      "source": "5 Phrases To Approach ANY woman [RHfsmA7QmmQ]"
+    },
+
+    "opener-store-eye-contact": {
+      "id": "opener-store-eye-contact",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Excuse me, I just saw you earlier in the store. I feel like we made eye contact. I just wanted to come over and say what's up."
+      },
+      "children": [
+        "her-store-thats-whats-up"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "her-store-thats-whats-up": {
+      "id": "her-store-thats-whats-up",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, that's what's up."
+      },
+      "children": [
+        "store-how-is-your-day"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "store-how-is-your-day": {
+      "id": "store-how-is-your-day",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah. How's your day going? It's so crazy because I was in the parking lot earlier. I was so tired from this weekend. Literally parked the car and reclined in the driver's seat for a couple minutes."
+      },
+      "children": [
+        "her-just-shopping"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "her-just-shopping": {
+      "id": "her-just-shopping",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, I'm just shopping."
+      },
+      "children": [
+        "store-walk-to-car"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "store-walk-to-car": {
+      "id": "store-walk-to-car",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Cool. Are you in the area? Where are you from? Are you in the parking lot by the way? I'll walk you over to the car and then I gotta head out of here."
+      },
+      "children": [
+        "store-close-drink"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "store-close-drink": {
+      "id": "store-close-drink",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Anyway, we should go out and grab a drink sometime."
+      },
+      "children": [
+        "her-yeah-im-down"
+      ],
+      "source": "How To Approach & Talk To Girls At Stores [rMNSFU7TyIg]"
+    },
+
+    "opener-startle-sorry": {
+      "id": "opener-startle-sorry",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me, sorry, didn't mean to startle you. I was actually headed that way but I just saw you walking and I thought you had a very cute sporty look to you."
+      },
+      "children": [
+        "her-startled-english"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-startled-english": {
+      "id": "her-startled-english",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I do speak English. Why, do I look Chinese?"
+      },
+      "children": [
+        "recover-startle-bubble"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "recover-startle-bubble": {
+      "id": "recover-startle-bubble",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "No, as I was talking to you, you were just looking at me like not... yeah, you were like in a mission, in your own little bubble walking."
+      },
+      "children": [
+        "her-yeah-going-home-bubble"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-yeah-going-home-bubble": {
+      "id": "her-yeah-going-home-bubble",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, to go home."
+      },
+      "children": [
+        "walk-with-dont-follow-garage"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "vibe-fading-exit-high": {
+      "id": "vibe-fading-exit-high",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Anyway, I actually got to get going. I got to meet up with some friends. It was a pleasure meeting you. Maybe I'll see you later. Cheers, let's have a fucking epic night."
+      },
+      "children": [],
+      "source": "When The Vibe Starts Fading Away [6AORxTf8StM]"
+    },
+
+    "vibe-fading-reopen-later": {
+      "id": "vibe-fading-reopen-later",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'll catch up with you guys later. It was a pleasure. Have some fun tonight. Maybe I'll see you in a little bit. I'm going to go meet up with some friends. Cheers."
+      },
+      "children": [],
+      "source": "When The Vibe Starts Fading Away [6AORxTf8StM]"
+    },
+
+    "ran-out-of-things-honest": {
+      "id": "ran-out-of-things-honest",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "So, uh... honestly, that's all I got. I don't know what else to say."
+      },
+      "children": [],
+      "source": "When The Vibe Starts Fading Away [6AORxTf8StM]"
+    },
+
+    "soft-close-time-constraint": {
+      "id": "soft-close-time-constraint",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, I actually have to get going. I just wanted to say I really like your outfit today. That's all. Have a good day."
+      },
+      "children": [],
+      "source": "10 Conversation Starters [SPDOb_IE5YM], Easiest Way To Start More Conversations [YOEP0380xD4]"
+    },
+
+    "opener-dog": {
+      "id": "opener-dog",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, what kind of dog is that, by the way? Border Collie? Wow, he's so well trained. He doesn't even need the leash or anything. Did you train him like that or what?"
+      },
+      "children": [
+        "her-dog-school"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "her-dog-school": {
+      "id": "her-dog-school",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "He went to school."
+      },
+      "children": [
+        "tease-dog-likewise"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "tease-dog-likewise": {
+      "id": "tease-dog-likewise",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah? Likewise. Maybe we could keep in touch."
+      },
+      "children": [],
+      "source": "10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "her-cooking-women": {
+      "id": "her-cooking-women",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Women cooking for me."
+      },
+      "children": [
+        "tease-better-cook"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "tease-better-cook": {
+      "id": "tease-better-cook",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Okay, but then what if I'm a better cook than you? What are we gonna do? I'm just gonna settle for subpar food?"
+      },
+      "children": [
+        "her-im-really-good"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "her-im-really-good": {
+      "id": "her-im-really-good",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm really good. We could cook again. How should I save you? My wife?"
+      },
+      "children": [
+        "slow-down-like-you"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "slow-down-like-you": {
+      "id": "slow-down-like-you",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Really, are we on that level already? No, I mean, I like you, I think you're cute. I enjoy talking to you."
+      },
+      "children": [],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "first-fight-tease": {
+      "id": "first-fight-tease",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I feel like eventually it might get kind of..."
+      },
+      "children": [
+        "her-first-fight"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-first-fight": {
+      "id": "her-first-fight",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Dang, already? We're fighting? First fight?"
+      },
+      "children": [
+        "out-of-order-tease"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "out-of-order-tease": {
+      "id": "out-of-order-tease",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Is this the first fight? We didn't even go on the first date. We're doing shit out of order."
+      },
+      "children": [],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "proper-greeting-intro": {
+      "id": "proper-greeting-intro",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, what's up? [firm handshake, good eye contact, relaxed smile] Pleasure to meet you."
+      },
+      "children": [
+        "her-proper-greeting-response"
+      ],
+      "source": "How To Approach A Girl You Don't Know [ndYaBU7K82o]"
+    },
+
+    "her-proper-greeting-response": {
+      "id": "her-proper-greeting-response",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Hi, nice to meet you. Pleasure to meet you too."
+      },
+      "children": [
+        "transition-ethnicity",
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "How To Approach A Girl You Don't Know [ndYaBU7K82o]"
+    },
+
+    "opener-semi-direct-look": {
+      "id": "opener-semi-direct-look",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me, hi. I was actually headed that way but I just wanted to say I thought you had a really interesting look."
+      },
+      "children": [
+        "her-semi-direct-thanks",
+        "her-semi-direct-confused"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - semi-direct approach pattern"
+    },
+
+    "her-semi-direct-thanks": {
+      "id": "her-semi-direct-thanks",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you!"
+      },
+      "children": [
+        "transition-ethnicity",
+        "followup-observation-vibe"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - semi-direct approach pattern"
+    },
+
+    "her-semi-direct-confused": {
+      "id": "her-semi-direct-confused",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Looks uncertain, not sure how to react]"
+      },
+      "children": [
+        "statement-of-empathy"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - statement of empathy pattern"
+    },
+
+    "statement-of-empathy": {
+      "id": "statement-of-empathy",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I know this is a little random, but I was actually headed that way. I saw you walking by. I thought you looked really cute. I just wanted to say hi really quick."
+      },
+      "children": [
+        "her-empathy-relaxes"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - statement of empathy pattern"
+    },
+
+    "her-empathy-relaxes": {
+      "id": "her-empathy-relaxes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, okay. That's sweet, thank you."
+      },
+      "children": [
+        "transition-ethnicity",
+        "transition-what-are-you-up-to"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - statement of empathy pattern"
+    },
+
+    "opener-push-pull-expecting": {
+      "id": "opener-push-pull-expecting",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me... Wait, why are you laughing? I was actually coming up to just tell you I thought you looked cute. I just wanted to say hi really quick."
+      },
+      "children": [
+        "her-expecting-universe"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "her-expecting-universe": {
+      "id": "her-expecting-universe",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I was expecting you to pop up. It's a sign from the universe."
+      },
+      "children": [
+        "misinterpret-expecting"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "misinterpret-expecting": {
+      "id": "misinterpret-expecting",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You threw me off. I thought you said you were literally expecting me. I was like, okay, that's weird. Well, I thought you looked cute but then you hit me with this curveball and I was like, what's going on?"
+      },
+      "children": [
+        "her-push-pull-name"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "her-push-pull-name": {
+      "id": "her-push-pull-name",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "What's your name?"
+      },
+      "children": [
+        "followup-observation-vibe"
+      ],
+      "source": "5 Small Things That Create BIG Attraction [SwKI2EmazhA]"
+    },
+
+    "opener-time-constraint-leave": {
+      "id": "opener-time-constraint-leave",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me. I actually have to get going. I just wanted to say I really like your outfit today. That's all."
+      },
+      "children": [
+        "her-time-constraint-thanks",
+        "her-time-constraint-wait"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM], Easiest Way To Start More Conversations [YOEP0380xD4]"
+    },
+
+    "her-time-constraint-thanks": {
+      "id": "her-time-constraint-thanks",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, thank you! Have a good day."
+      },
+      "children": [],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - time constraint where you can just leave"
+    },
+
+    "her-time-constraint-wait": {
+      "id": "her-time-constraint-wait",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Looks at you, lingers, seems open to talking more]"
+      },
+      "children": [
+        "extend-from-time-constraint"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - girl responds positively to time constraint"
+    },
+
+    "extend-from-time-constraint": {
+      "id": "extend-from-time-constraint",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Actually, hold on. Are you from the area? You seem like you know your way around."
+      },
+      "children": [
+        "transition-ethnicity",
+        "transition-what-are-you-up-to"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - extending after a time constraint open"
+    },
+
+    "opener-instant-date-blue": {
+      "id": "opener-instant-date-blue",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, excuse me. Hi. I saw you walking by with the all blue and the tan and just looking cute. I just wanted to say what's up."
+      },
+      "children": [
+        "her-instant-date-positive"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-instant-date-positive": {
+      "id": "her-instant-date-positive",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Thank you. Yeah, what's up?"
+      },
+      "children": [
+        "followup-tattoos-petite"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "followup-tattoos-petite": {
+      "id": "followup-tattoos-petite",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I wasn't even sure if you were Hispanic. You got just interesting look. Where are you from? You're tiny. What are you, 4'11? I like your tattoos."
+      },
+      "children": [
+        "her-five-two-not"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-five-two-not": {
+      "id": "her-five-two-not",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "No, I'm 5'2. It's a good height. Thank you. You have a cute face."
+      },
+      "children": [
+        "transition-instant-date-proposal"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "transition-instant-date-proposal": {
+      "id": "transition-instant-date-proposal",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Really quick, why don't we hang out just for a little bit? Maybe get like a water or a drink or a tea or something."
+      },
+      "children": [
+        "her-instant-date-yes",
+        "her-instant-date-not-today"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-instant-date-yes": {
+      "id": "her-instant-date-yes",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I'm down."
+      },
+      "children": [
+        "walk-to-venue"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "walk-to-venue": {
+      "id": "walk-to-venue",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You want to go to one of these spots, or you know a better spot? Let's keep going. Maybe we see something nice. Nothing crazy."
+      },
+      "children": [
+        "her-walk-getting-to-know"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-walk-getting-to-know": {
+      "id": "her-walk-getting-to-know",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "You party a lot? What do you do?"
+      },
+      "children": [
+        "instant-date-sit-down"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "instant-date-sit-down": {
+      "id": "instant-date-sit-down",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Not so much. You don't look like a party girl. I like that. That means you're fun though. You come out with me."
+      },
+      "children": [
+        "her-instant-date-flirty"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-instant-date-flirty": {
+      "id": "her-instant-date-flirty",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I love to cook. I cook every fucking meal. My dinner's already at home."
+      },
+      "children": [
+        "instant-date-deeper-connection"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "instant-date-deeper-connection": {
+      "id": "instant-date-deeper-connection",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "What am I gonna find out about you that's concerning? It's always the girl that says she's perfect that's the biggest red flag."
+      },
+      "children": [
+        "her-instant-date-backstory"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-instant-date-backstory": {
+      "id": "her-instant-date-backstory",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Talking too much, and you're not talking at all! What about you?"
+      },
+      "children": [
+        "instant-date-extend-or-close"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "instant-date-extend-or-close": {
+      "id": "instant-date-extend-or-close",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'm probably just going to go back to Brickell, chill out, nothing too crazy. But maybe we could do a little something after this, right?"
+      },
+      "children": [
+        "her-maybe-another-day",
+        "her-lets-go-now"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-maybe-another-day": {
+      "id": "her-maybe-another-day",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Maybe we can go another day. I have to do something tonight."
+      },
+      "children": [
+        "close-solid-plans-number"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-lets-go-now": {
+      "id": "her-lets-go-now",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, I mean, I'm free right now. Let's do something."
+      },
+      "children": [
+        "close-solid-plans-number"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI] - pattern where girl is very available"
+    },
+
+    "close-solid-plans-number": {
+      "id": "close-solid-plans-number",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Okay, cool. Let's exchange numbers. I'll hit you up and we can set something up. I had a really good time talking to you."
+      },
+      "children": [],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "her-instant-date-not-today": {
+      "id": "her-instant-date-not-today",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I can't right now, I have to go somewhere."
+      },
+      "children": [
+        "close-tempted-see-you"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI] - when instant date isn't possible"
+    },
+
+    "evaluate-what-else-to-know": {
+      "id": "evaluate-what-else-to-know",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "So what else do I need to know? What's the quick rundown story?"
+      },
+      "children": [
+        "her-evaluate-opens-up",
+        "her-evaluate-nothing-much"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-evaluate-opens-up": {
+      "id": "her-evaluate-opens-up",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Well, I just moved here. I've been in Florida for five years now..."
+      },
+      "children": [
+        "evaluate-not-from-miami-vibe"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "evaluate-not-from-miami-vibe": {
+      "id": "evaluate-not-from-miami-vibe",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "You don't have like a Miami vibe to you. I can tell you're not from here. I don't know if that's a good thing or I guess it's a good thing."
+      },
+      "children": [
+        "her-evaluate-qualify"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-evaluate-qualify": {
+      "id": "her-evaluate-qualify",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "We should change that. We should be friends."
+      },
+      "children": [
+        "evaluate-pause-cool"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "evaluate-pause-cool": {
+      "id": "evaluate-pause-cool",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "[One-second pause, looks in her eyes] We could. We could. What do you like to do?"
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-evaluate-nothing-much": {
+      "id": "her-evaluate-nothing-much",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Not much really. Just working and stuff."
+      },
+      "children": [
+        "evaluate-toxic-trait"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM] - what's your story pattern"
+    },
+
+    "evaluate-toxic-trait": {
+      "id": "evaluate-toxic-trait",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Damn, nothing? What's like the bad shit that you don't want me to know? Like what's your one toxic trait?"
+      },
+      "children": [
+        "her-toxic-trait-response"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "her-toxic-trait-response": {
+      "id": "her-toxic-trait-response",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I don't have any toxic traits!"
+      },
+      "children": [
+        "tease-always-perfect-girls"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "tease-always-perfect-girls": {
+      "id": "tease-always-perfect-girls",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Damn, that's so cliche. It's always the girls that say there's no flaws that you gotta watch out for. Six months down the road, that's when the trauma dump comes out."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "subtle-invitation-tease": {
+      "id": "subtle-invitation-tease",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Was that like a subtle invitation? Maybe we'll meet out here first. I'll kind of suss you out. And then, you know, if all goes well..."
+      },
+      "children": [
+        "her-subtle-invitation-laugh"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-subtle-invitation-laugh": {
+      "id": "her-subtle-invitation-laugh",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "[Laughs] Yeah, I guess you'll have to find out."
+      },
+      "children": [
+        "close-take-number"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "tease-workout-question-deflect": {
+      "id": "tease-workout-question-deflect",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "More or less, yeah."
+      },
+      "children": [
+        "her-impressed-workout"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y] - never qualify yourself pattern"
+    },
+
+    "her-impressed-workout": {
+      "id": "her-impressed-workout",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I can tell. No, you looked good."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "her-asks-do-you-work-out": {
+      "id": "her-asks-do-you-work-out",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Do you work out?"
+      },
+      "children": [
+        "tease-workout-question-deflect"
+      ],
+      "source": "3 Easy Ways To Make Her Chase You [7BfD4URAD1Y]"
+    },
+
+    "disqualify-invite-tease": {
+      "id": "disqualify-invite-tease",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I'd invite you to come work out, but I don't know if you'd be able to keep up."
+      },
+      "children": [
+        "her-disqualify-prove"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM] - rejection-proof invite pattern"
+    },
+
+    "her-disqualify-prove": {
+      "id": "her-disqualify-prove",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Oh, please. I would keep up. Try me."
+      },
+      "children": [
+        "close-take-number"
+      ],
+      "source": "3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM] - rejection-proof invite pattern"
+    },
+
+    "tease-soft-spoken": {
+      "id": "tease-soft-spoken",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, you're very soft-spoken. I can barely even hear your voice. I was hoping you weren't loud, but you have a soft, soothing voice. You must just be having a very relaxing Saturday just shopping around."
+      },
+      "children": [
+        "her-soft-spoken-shopping"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8], 10 Conversation Starters [SPDOb_IE5YM]"
+    },
+
+    "her-soft-spoken-shopping": {
+      "id": "her-soft-spoken-shopping",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Yeah, just kind of looking around."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun",
+        "transition-ethnicity"
+      ],
+      "source": "5 Women, 5 Different Reactions [5sTASDqe0u8]"
+    },
+
+    "tease-imitation-arm-wrap": {
+      "id": "tease-imitation-arm-wrap",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "That was an interesting wrap around. [Exaggerates her handshake, laughs] What are you guys up to right now?"
+      },
+      "children": [
+        "her-sporty-with-friend"
+      ],
+      "source": "6 examples of how to tease women [NioqePIJzN0], Get a Date in 5 Minutes [e2dLEB-AwmA]"
+    },
+
+    "her-ethnicity-argentinian": {
+      "id": "her-ethnicity-argentinian",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "I'm from Argentina."
+      },
+      "children": [
+        "tease-ethnicity-accent"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI]"
+    },
+
+    "tease-ethnicity-accent": {
+      "id": "tease-ethnicity-accent",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "I noticed before when I was talking to you, you have this very cute, subtle accent. I couldn't tell if you were Italian or... So I was gonna walk back, maybe call an Uber. But then I saw a cute Argentinian girl and I was like, I gotta at least say what's up."
+      },
+      "children": [
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "5 Easy Steps to Turn a Hi into an INSTANT Date [6ImEzB6NhiI], 3 Conversation Topics That Attract ALL Women [d8C0t7FS3qM]"
+    },
+
+    "opinion-opener-long-distance": {
+      "id": "opinion-opener-long-distance",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Hey, can I get a female opinion on something? Do you think men and women could actually make a long distance relationship work?"
+      },
+      "children": [
+        "her-opinion-engaged"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - opinion opener pattern"
+    },
+
+    "her-opinion-engaged": {
+      "id": "her-opinion-engaged",
+      "speaker": "her",
+      "text": {
+        "da": "",
+        "en": "Depends on how long distance they are. Like different states?"
+      },
+      "children": [
+        "opinion-embed-story"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - opinion opener pattern"
+    },
+
+    "opinion-embed-story": {
+      "id": "opinion-embed-story",
+      "speaker": "me",
+      "text": {
+        "da": "",
+        "en": "Yeah, I mean honestly, I was running this live event last week and my one friend met this girl who lives far away. She's not down to fly out here. I was telling him, dude, you gotta drop that. But I don't know. What are your thoughts?"
+      },
+      "children": [
+        "transition-ethnicity",
+        "transition-what-do-you-do-for-fun"
+      ],
+      "source": "10 Conversation Starters [SPDOb_IE5YM] - opinion opener with embedded story"
+    }
+  },
+  "createdAt": "2026-03-04T12:00:00Z",
+  "updatedAt": "2026-03-04T18:00:00Z"
+}

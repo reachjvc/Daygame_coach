@@ -16,6 +16,8 @@ import type {
   WorkoutSetInsert,
   NutritionLogRow,
   NutritionLogInsert,
+  BodyMeasurementRow,
+  BodyMeasurementInsert,
 } from "@/src/health/types"
 
 // ============================================
@@ -439,6 +441,237 @@ export async function getPullUpsMax(userId: string): Promise<number> {
   if (!sets || sets.length === 0) return 0
 
   return Math.max(...sets.map((s) => s.reps))
+}
+
+// ============================================
+// Body Measurements
+// ============================================
+
+export async function createBodyMeasurement(userId: string, m: BodyMeasurementInsert): Promise<BodyMeasurementRow> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("body_measurements")
+    .insert({ user_id: userId, ...m })
+    .select()
+    .single()
+  if (error) throw new Error(`Failed to create body measurement: ${error.message}`)
+  return data as BodyMeasurementRow
+}
+
+export async function getBodyMeasurements(userId: string, days: number = 90): Promise<BodyMeasurementRow[]> {
+  const supabase = await createServerSupabaseClient()
+  const since = new Date()
+  since.setDate(since.getDate() - days)
+  const { data, error } = await supabase
+    .from("body_measurements")
+    .select("*")
+    .eq("user_id", userId)
+    .gte("logged_at", since.toISOString())
+    .order("logged_at", { ascending: true })
+  if (error) throw new Error(`Failed to get body measurements: ${error.message}`)
+  return (data ?? []) as BodyMeasurementRow[]
+}
+
+export async function getBodyMeasurementCount(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { count, error } = await supabase
+    .from("body_measurements")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+  if (error) throw new Error(`Failed to count body measurements: ${error.message}`)
+  return count ?? 0
+}
+
+export async function deleteBodyMeasurement(userId: string, id: string): Promise<void> {
+  const supabase = await createServerSupabaseClient()
+  const { error } = await supabase
+    .from("body_measurements")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", userId)
+  if (error) throw new Error(`Failed to delete body measurement: ${error.message}`)
+}
+
+// ============================================
+// Additional Aggregation Helpers
+// ============================================
+
+export async function getCalorieDaysHitWeekly(userId: string, target: number = 2000): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = new Date()
+  const dayOfWeek = now.getDay() || 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - dayOfWeek + 1)
+  monday.setHours(0, 0, 0, 0)
+
+  const { data, error } = await supabase
+    .from("nutrition_logs")
+    .select("calories")
+    .eq("user_id", userId)
+    .gte("logged_at", monday.toISOString())
+    .not("calories", "is", null)
+  if (error) throw new Error(`Failed to get calorie days: ${error.message}`)
+  if (!data) return 0
+  return data.filter((d) => (d.calories ?? 0) >= target).length
+}
+
+export async function getWeightLostFromPeak(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("weight_logs")
+    .select("weight_kg")
+    .eq("user_id", userId)
+    .order("logged_at", { ascending: true })
+  if (error) throw new Error(`Failed to get weight history: ${error.message}`)
+  if (!data || data.length < 2) return 0
+  const peak = Math.max(...data.map((d) => d.weight_kg))
+  const latest = data[data.length - 1].weight_kg
+  const lost = peak - latest
+  return lost > 0 ? Math.round(lost * 10) / 10 : 0
+}
+
+export async function getWeightGainedFromLowest(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("weight_logs")
+    .select("weight_kg")
+    .eq("user_id", userId)
+    .order("logged_at", { ascending: true })
+  if (error) throw new Error(`Failed to get weight history: ${error.message}`)
+  if (!data || data.length < 2) return 0
+  const lowest = Math.min(...data.map((d) => d.weight_kg))
+  const latest = data[data.length - 1].weight_kg
+  const gained = latest - lowest
+  return gained > 0 ? Math.round(gained * 10) / 10 : 0
+}
+
+export async function getMobilitySessionsWeekly(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = new Date()
+  const dayOfWeek = now.getDay() || 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - dayOfWeek + 1)
+  monday.setHours(0, 0, 0, 0)
+
+  const { count, error } = await supabase
+    .from("workout_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("session_type", "mobility")
+    .gte("logged_at", monday.toISOString())
+  if (error) throw new Error(`Failed to count mobility sessions: ${error.message}`)
+  return count ?? 0
+}
+
+export async function getYogaSessionsWeekly(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = new Date()
+  const dayOfWeek = now.getDay() || 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - dayOfWeek + 1)
+  monday.setHours(0, 0, 0, 0)
+
+  const { count, error } = await supabase
+    .from("workout_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("session_type", "yoga")
+    .gte("logged_at", monday.toISOString())
+  if (error) throw new Error(`Failed to count yoga sessions: ${error.message}`)
+  return count ?? 0
+}
+
+export async function getFlexibilityHoursCumulative(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("duration_min")
+    .eq("user_id", userId)
+    .in("session_type", ["mobility", "yoga"])
+  if (error) throw new Error(`Failed to sum flexibility hours: ${error.message}`)
+  if (!data || data.length === 0) return 0
+  return Math.round(data.reduce((sum, d) => sum + d.duration_min, 0) / 60)
+}
+
+export async function getRunningSessionsWeekly(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const now = new Date()
+  const dayOfWeek = now.getDay() || 7
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - dayOfWeek + 1)
+  monday.setHours(0, 0, 0, 0)
+
+  const { count, error } = await supabase
+    .from("workout_logs")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("session_type", "running")
+    .gte("logged_at", monday.toISOString())
+  if (error) throw new Error(`Failed to count running sessions: ${error.message}`)
+  return count ?? 0
+}
+
+export async function getRunningDistanceCumulative(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("distance_km")
+    .eq("user_id", userId)
+    .eq("session_type", "running")
+    .not("distance_km", "is", null)
+  if (error) throw new Error(`Failed to sum running distance: ${error.message}`)
+  if (!data || data.length === 0) return 0
+  return Math.round(data.reduce((sum, d) => sum + (d.distance_km ?? 0), 0) * 10) / 10
+}
+
+export async function getLongestRunKm(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("distance_km")
+    .eq("user_id", userId)
+    .eq("session_type", "running")
+    .not("distance_km", "is", null)
+    .order("distance_km", { ascending: false })
+    .limit(1)
+  if (error) throw new Error(`Failed to get longest run: ${error.message}`)
+  if (!data || data.length === 0) return 0
+  return data[0].distance_km ?? 0
+}
+
+export async function getConsecutiveCardioWeeks(userId: string): Promise<number> {
+  const supabase = await createServerSupabaseClient()
+  const { data, error } = await supabase
+    .from("workout_logs")
+    .select("logged_at")
+    .eq("user_id", userId)
+    .in("session_type", ["cardio", "running"])
+    .order("logged_at", { ascending: false })
+  if (error) throw new Error(`Failed to get cardio weeks: ${error.message}`)
+  if (!data || data.length === 0) return 0
+
+  const weeksWithCardio = new Set<string>()
+  for (const row of data) {
+    const d = new Date(row.logged_at)
+    const dayOfWeek = d.getDay() || 7
+    const monday = new Date(d)
+    monday.setDate(d.getDate() - dayOfWeek + 1)
+    weeksWithCardio.add(monday.toISOString().split("T")[0])
+  }
+
+  const now = new Date()
+  const dayOfWeek = now.getDay() || 7
+  const currentMonday = new Date(now)
+  currentMonday.setDate(now.getDate() - dayOfWeek + 1)
+  currentMonday.setHours(0, 0, 0, 0)
+
+  let streak = 0
+  const checkDate = new Date(currentMonday)
+  while (weeksWithCardio.has(checkDate.toISOString().split("T")[0])) {
+    streak++
+    checkDate.setDate(checkDate.getDate() - 7)
+  }
+  return streak
 }
 
 export async function getSleepWeeklyAvgHours(userId: string): Promise<number | null> {

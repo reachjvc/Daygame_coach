@@ -68,9 +68,9 @@ export function ArchetypeSelector({
   }
 
   return (
-    <div className="min-h-dvh bg-background flex items-center justify-center p-6">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-5xl">
-        <Card className="p-8 bg-card border-border">
+        <Card className="p-5 sm:p-8 bg-card border-border">
           <div className="flex items-center gap-3 mb-4">
             <CircleDot className="size-8 text-primary" />
             <div>

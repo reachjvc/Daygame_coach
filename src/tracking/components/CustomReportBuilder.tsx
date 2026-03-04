@@ -427,7 +427,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
 
         {/* Header */}
         <div className="rounded-2xl overflow-hidden mb-8 border border-border/50">
-          <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
+          <div className={`p-4 sm:p-6 bg-gradient-to-br ${colors.gradient}`}>
             <div className="flex items-center gap-4">
               <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
                 <Settings2 className="size-6" />
@@ -449,7 +449,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
           {/* Template Only Option */}
           <button
             onClick={() => setMode("template-only")}
-            className="w-full text-left p-6 rounded-2xl border-2 border-border hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
+            className="w-full text-left p-4 sm:p-6 rounded-2xl border-2 border-border hover:border-indigo-500/50 hover:bg-indigo-500/5 transition-all group"
             data-testid="mode-template-only"
           >
             <div className="flex items-start gap-4">
@@ -468,7 +468,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
           {/* Report + Template Option */}
           <button
             onClick={() => setMode("report")}
-            className="w-full text-left p-6 rounded-2xl border-2 border-border hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group"
+            className="w-full text-left p-4 sm:p-6 rounded-2xl border-2 border-border hover:border-emerald-500/50 hover:bg-emerald-500/5 transition-all group"
             data-testid="mode-report"
           >
             <div className="flex items-start gap-4">
@@ -507,7 +507,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
 
       {/* Header with gradient */}
       <div className="rounded-2xl overflow-hidden mb-6 border border-border/50">
-        <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
+        <div className={`p-4 sm:p-6 bg-gradient-to-br ${colors.gradient}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
               {mode === "template-only" ? <LayoutTemplate className="size-6" /> : <Settings2 className="size-6" />}
@@ -559,7 +559,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
       <div className="space-y-6">
         {/* Template-only mode: just name and field selection */}
         {mode === "template-only" && (
-          <Card className="p-6 space-y-5">
+          <Card className="p-4 sm:p-6 space-y-5">
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
                 Template Name
@@ -580,7 +580,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
 
         {/* Report mode: full form with title, notes, and values */}
         {mode === "report" && (
-          <Card className="p-6 space-y-5">
+          <Card className="p-4 sm:p-6 space-y-5">
             {/* Template name (hidden but used for saving) */}
             <div className="space-y-3">
               <label className="text-sm font-medium text-foreground">
@@ -771,7 +771,7 @@ export function CustomReportBuilder({ sessionData, onBack, onSavedTemplate, onSa
         )}
 
         {/* Action buttons */}
-        <Card className="p-6 rounded-2xl border-border/50">
+        <Card className="p-4 sm:p-6 rounded-2xl border-border/50">
           <div className="flex gap-3">
             <Button
               variant="outline"

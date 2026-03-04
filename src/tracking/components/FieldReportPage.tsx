@@ -724,7 +724,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
           <ArrowLeft className="size-4" />
           Back to History
         </Link>
-        <Card className="p-6 rounded-2xl border-destructive/50">
+        <Card className="p-4 sm:p-6 rounded-2xl border-destructive/50">
           <div className="text-center">
             <FileText className="size-12 mx-auto mb-4 text-muted-foreground/30" />
             <h2 className="text-xl font-semibold mb-2">Failed to Load Report</h2>
@@ -789,7 +789,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
 
         {/* Session Summary Card */}
         {sessionData && (
-          <Card className="p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+          <Card className="p-4 sm:p-6 mb-8 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
             <div className="flex items-start justify-between mb-4">
               <div>
                 <h2 className="font-semibold text-lg">Session Summary</h2>
@@ -929,7 +929,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                 </div>
 
                 {/* Content */}
-                <div className="p-5">
+                <div className="p-3 sm:p-5">
                   <h3 className="text-xl font-bold text-foreground mb-1">{template.name}</h3>
                   <p className="text-muted-foreground text-sm italic mb-3">{tagline}</p>
                   <p className="text-foreground/70 text-sm leading-relaxed mb-4">{template.description}</p>
@@ -1015,7 +1015,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
               </div>
 
               {/* Content */}
-              <div className="p-5">
+              <div className="p-3 sm:p-5">
                 <h3 className="text-xl font-bold text-muted-foreground mb-1">Add a Favorite</h3>
                 <p className="text-muted-foreground/70 text-sm italic mb-3">Quick access to your go-to templates.</p>
                 <p className="text-muted-foreground/60 text-sm leading-relaxed mb-4">
@@ -1095,7 +1095,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
                 </div>
 
                 {/* Content */}
-                <div className="p-5">
+                <div className="p-3 sm:p-5">
                   <h3 className="text-xl font-bold text-foreground mb-1">{template.name}</h3>
                   <p className="text-muted-foreground text-sm italic mb-3">{tagline}</p>
                   <p className="text-foreground/70 text-sm leading-relaxed mb-4">{template.description}</p>
@@ -1183,7 +1183,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
             </div>
 
             {/* Content */}
-            <div className="p-5">
+            <div className="p-3 sm:p-5">
               <h3 className="text-xl font-bold text-foreground mb-1">Custom Report</h3>
               <p className="text-muted-foreground text-sm italic mb-3">Your fields, your way.</p>
               <p className="text-foreground/70 text-sm leading-relaxed mb-4">
@@ -1271,7 +1271,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
 
       {/* Template header with gradient */}
       <div className={`rounded-2xl overflow-hidden mb-6 border border-border/50`}>
-        <div className={`p-6 bg-gradient-to-br ${colors.gradient}`}>
+        <div className={`p-4 sm:p-6 bg-gradient-to-br ${colors.gradient}`}>
           <div className="flex items-center gap-4">
             <div className={`p-3 rounded-xl ${colors.icon} shadow-lg`}>
               {(TEMPLATE_ICONS as Record<string, React.ReactNode>)[templateSlug] || <FileText className="size-6" />}
@@ -1316,7 +1316,7 @@ export function FieldReportPage({ userId, sessionId, reportId }: FieldReportPage
       </div>
 
       <form onSubmit={(e) => { e.preventDefault(); handleSubmit(false) }}>
-        <Card className="p-6 rounded-2xl border-border/50">
+        <Card className="p-4 sm:p-6 rounded-2xl border-border/50">
           {/* Report Title Section */}
           <div className="space-y-3 mb-6 pb-6 border-b border-border/50">
             <div className="flex items-center justify-between">

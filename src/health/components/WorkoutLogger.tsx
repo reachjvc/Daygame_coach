@@ -20,6 +20,7 @@ export function WorkoutLogger() {
   const [sessionType, setSessionType] = useState<SessionType>("weights")
   const [duration, setDuration] = useState("")
   const [intensity, setIntensity] = useState<WorkoutIntensity>(3)
+  const [distanceKm, setDistanceKm] = useState("")
   const [sets, setSets] = useState<SetInput[]>([{ exercise: "", weight_kg: "", reps: "" }])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -68,12 +69,14 @@ export function WorkoutLogger() {
           session_type: sessionType,
           duration_min: dur,
           intensity,
+          distance_km: distanceKm ? parseFloat(distanceKm) : null,
           sets: validSets.length > 0 ? validSets : undefined,
         }),
       })
       if (!res.ok) throw new Error("Failed to save")
       setDuration("")
       setIntensity(3)
+      setDistanceKm("")
       setSets([{ exercise: "", weight_kg: "", reps: "" }])
       setIsAdding(false)
       await fetchLogs()
@@ -143,7 +146,7 @@ export function WorkoutLogger() {
             <div>
               <Label>Session type</Label>
               <div className="flex gap-2 mt-1">
-                {(["weights", "cardio", "mobility"] as const).map((t) => (
+                {(["weights", "cardio", "mobility", "yoga", "running"] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setSessionType(t)}
@@ -183,6 +186,14 @@ export function WorkoutLogger() {
                 </div>
               </div>
             </div>
+
+            {/* Distance (for running/cardio) */}
+            {(sessionType === "running" || sessionType === "cardio") && (
+              <div>
+                <Label htmlFor="distance">Distance (km) — optional</Label>
+                <Input id="distance" type="number" placeholder="5.0" value={distanceKm} onChange={(e) => setDistanceKm(e.target.value)} />
+              </div>
+            )}
 
             {/* Sets (for weights sessions) */}
             {sessionType === "weights" && (

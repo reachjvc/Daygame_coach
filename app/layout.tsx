@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { ViewportHeightUpdater } from "@/components/ViewportHeightUpdater"
 import { HistoryBarrierProvider } from "@/src/shared/HistoryBarrierContext"
@@ -14,6 +14,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
 })
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
   title: "AI Daygame Coach - Practice Social Skills from Home",

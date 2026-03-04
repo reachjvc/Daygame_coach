@@ -1,0 +1,1068 @@
+{
+  "id": "nick-krauser-001",
+  "name": "Nick Krauser",
+  "language": "en",
+  "model": "London Daygame Model (Outlaw variant)",
+  "phases": ["pre-open", "open", "stack", "vibe", "invest", "close"],
+  "sourceVideos": [
+    "Outlaw Daygame Part 1-11 (NICK_KRAUSER_OUTLAWDAYGAME)",
+    "Virtua Resi #1-6 (NICK_KRAUSER_VIRTUARESI)"
+  ],
+  "rootNodeId": "root",
+  "nodes": {
+    "root": {
+      "id": "root",
+      "speaker": "me",
+      "phase": "pre-open",
+      "text": {
+        "da": "",
+        "en": "Nick Krauser - London Daygame Model (Outlaw variant). Choose your opening style."
+      },
+      "annotation": "Pre-open: Walk with swag, happy dog face, open exuberant expression. Soft shiny eyes, relaxed facial muscles. 'The face of a happy dog about to go out and chase tennis balls.' Turn the swag on when you spot a target. Manoeuvre your walking path so she walks past you. Walk like you're fucking the air as you walk through it - hip sway, shoulder sway, springiness in the thighs. The street has a 30-second memory. Source: Outlaw Daygame Parts 5-6, Virtua Resi #4, #6",
+      "children": [
+        "open-smooth-front-stop",
+        "open-belligerent-front-stop",
+        "open-accusational",
+        "open-ioi-reactive",
+        "open-belligerent-shout"
+      ]
+    },
+
+    "open-smooth-front-stop": {
+      "id": "open-smooth-front-stop",
+      "speaker": "me",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "Excuse me, excuse me... hi."
+      },
+      "annotation": "Smooth front stop. Cheeky smirk, twinkling eyes. 'Open like you've got a joke you haven't told anyone.' Soft initial kino - light touch on approach. Give her quite a bit of space, not too close but not nervous-chode distance. Like a matador - probing and drawing, letting the bull go around. You're showing self-possession, social acuity, grace. Source: Outlaw Daygame Part 7, segments 68-80",
+      "children": [
+        "her-stops-smiles",
+        "her-stops-guarded",
+        "her-keeps-walking",
+        "her-stops-confused"
+      ]
+    },
+
+    "open-belligerent-front-stop": {
+      "id": "open-belligerent-front-stop",
+      "speaker": "me",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "Hey you! You! You! Yeah, girl, black dress, miserable face, you, stop."
+      },
+      "annotation": "Belligerent front stop. Shouting from a distance. 'I was doing a lot of that in Kiev on my last trip.' Requires high vibe - cannot do on first set of the day. Hands on both shoulders on the stop. Pointing, finger wagging. Like the battering ram just smashing it down - more power based, pushing your frame onto the girl. 'Girls can't believe some guy is doing that to them.' Easier if you already got an IOI. Source: Outlaw Daygame Part 7, segments 82-91",
+      "children": [
+        "her-stops-laughing",
+        "her-stops-shocked",
+        "her-keeps-walking",
+        "her-stops-group"
+      ]
+    },
+
+    "open-accusational": {
+      "id": "open-accusational",
+      "speaker": "me",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "No, no, no, no. You, girl. You can't look at me like that."
+      },
+      "annotation": "Accusational opener. Playfully accuses her of checking you out. Belligerent frame pushing. Works especially well off an IOI. Source: Outlaw Daygame Part 7, segments 96-99",
+      "children": [
+        "her-accusational-denies-laughing",
+        "her-accusational-plays-along",
+        "her-accusational-confused"
+      ]
+    },
+
+    "open-ioi-reactive": {
+      "id": "open-ioi-reactive",
+      "speaker": "me",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "Stop. Hello."
+      },
+      "annotation": "Lightning-quick reactive open off an IOI. The moment she gives an IOI (sideways glance, double glance, held stare, direction change) you react instantly. 'Doesn't fucking matter, right, just in.' IOI types per Part 6: sideways glance (eyes flick over and back), double glance (looks, looks away, looks back), held stare (anything longer than basic politeness), change of direction (stops to check a shop window). 'Would she bother doing that if she weren't interested?' You can only really do the instant reactive open off an IOI because it's socially calibrated. Source: Virtua Resi #5-6, Outlaw Daygame Part 6 segments 42-65",
+      "children": [
+        "her-stops-smiles",
+        "her-stops-shy-ioi",
+        "her-keeps-walking"
+      ]
+    },
+
+    "open-belligerent-shout": {
+      "id": "open-belligerent-shout",
+      "speaker": "me",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "You, you, stop. You, three girls, three girls, you, stop. Right, crazy one, you, you, you. Are you... sorry girls, sorry, I don't mean to interrupt. Right. You."
+      },
+      "annotation": "Belligerent group open. High vibe. Pointing and singling out the target from a group. 'One of the girls gave me an IOI, she's 10 yards away.' Source: Outlaw Daygame Part 7, segments 88-91",
+      "children": [
+        "her-stops-group",
+        "her-stops-laughing"
+      ]
+    },
+
+    "her-stops-smiles": {
+      "id": "her-stops-smiles",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She stops and smiles, making eye contact. Open body language.]"
+      },
+      "annotation": "Positive response. She's receptive. Like whacking in a good first serve - 'you're making the rest of your set easy.' Proceed to stack with observation. Source: Virtua Resi #4, #6 (street stop as first serve analogy)",
+      "children": [
+        "stack-observation-compliment-tease",
+        "stack-smooth-observation"
+      ]
+    },
+
+    "her-stops-guarded": {
+      "id": "her-stops-guarded",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She stops but arms crossed, looking uncertain. Neutral expression.]"
+      },
+      "annotation": "Guarded response. She stopped which is positive, but hasn't given hook point yet. Need to stack quickly to earn her attention. Don't show nervousness at her guardedness. 'You force it, and then her reaction tells you where you are.' Source: Virtua Resi #1 (proactive calibration)",
+      "children": [
+        "stack-observation-compliment-tease",
+        "stack-direct-intent"
+      ]
+    },
+
+    "her-keeps-walking": {
+      "id": "her-keeps-walking",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She keeps walking, doesn't stop.]"
+      },
+      "annotation": "Blowout. Let her go. Don't chase. 'If you feel like your vibe is solid enough to handle a blowout, you do it. If you feel like one blowout might knock you from good vibe to bad vibe, you let it go.' Source: Virtua Resi #4",
+      "children": [
+        "recovery-vibe-reset"
+      ]
+    },
+
+    "her-stops-confused": {
+      "id": "her-stops-confused",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "What? Sorry?"
+      },
+      "annotation": "Confused response. She stopped but doesn't understand what's happening. Immediately transition to the stack to give context.",
+      "children": [
+        "stack-direct-intent"
+      ]
+    },
+
+    "her-stops-laughing": {
+      "id": "her-stops-laughing",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She stops, laughing or grinning at the audacity.]"
+      },
+      "annotation": "Positive belligerent response. The boldness delighted her. 'Girls can't believe some guy is doing that to them.' She's off balance and amused - the delightfully intimidating power mismatch. Source: Outlaw Daygame Part 8, segments 179-181",
+      "children": [
+        "stack-observation-compliment-tease",
+        "stack-belligerent-tease"
+      ]
+    },
+
+    "her-stops-shocked": {
+      "id": "her-stops-shocked",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She stops, wide-eyed, slightly shocked but intrigued.]"
+      },
+      "annotation": "Overwhelmed / brain fry response. The belligerent open was powerful. 'She feels like she's firing a spud gun at a tank. Nothing penetrates, everything bounces off. She experiences you as a force of nature, a tidal wave smashing everything in your path.' Tone it down slightly and transition to stack. Source: Outlaw Daygame Part 8, segments 199-205",
+      "children": [
+        "stack-smooth-observation"
+      ]
+    },
+
+    "her-stops-group": {
+      "id": "her-stops-group",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[Her friends giggle. She stops and looks at you. Friends watch.]"
+      },
+      "annotation": "Group stop. Friends are watching. Quickly acknowledge the friends ('sorry girls, sorry') but maintain focus on the target. Move her slightly away if possible with a mini-bounce. Source: Outlaw Daygame Part 7, segments 88-91",
+      "children": [
+        "stack-observation-compliment-tease"
+      ]
+    },
+
+    "her-stops-shy-ioi": {
+      "id": "her-stops-shy-ioi",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "[She stops, looks down or away, slightly shy. She was the one who looked at you first.]"
+      },
+      "annotation": "Shy IOI response. She gave the IOI but now is bashful about being called on it. Good sign - she's already interested. Be warm, not overwhelming. Source: Outlaw Daygame Part 6, segments 43-52",
+      "children": [
+        "stack-smooth-observation",
+        "stack-direct-intent"
+      ]
+    },
+
+    "her-accusational-denies-laughing": {
+      "id": "her-accusational-denies-laughing",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "What? No I wasn't! [laughing]"
+      },
+      "annotation": "Classic response to accusational opener. She denies it but is laughing - attraction spike. The accusation put her on the back foot in a fun way. Source: Outlaw Daygame Part 7, segments 97-99",
+      "children": [
+        "stack-observation-compliment-tease"
+      ]
+    },
+
+    "her-accusational-plays-along": {
+      "id": "her-accusational-plays-along",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "Maybe I was... [smiling]"
+      },
+      "annotation": "She plays along with the accusation. Strong interest signal. She's already vibing. Move to stack quickly while energy is high.",
+      "children": [
+        "stack-belligerent-tease",
+        "stack-observation-compliment-tease"
+      ]
+    },
+
+    "her-accusational-confused": {
+      "id": "her-accusational-confused",
+      "speaker": "her",
+      "phase": "open",
+      "text": {
+        "da": "",
+        "en": "What? Look at you like what?"
+      },
+      "annotation": "Confused by the accusation. She either genuinely didn't look or doesn't understand the frame. Transition to a more direct stack to provide context.",
+      "children": [
+        "stack-direct-intent"
+      ]
+    },
+
+    "recovery-vibe-reset": {
+      "id": "recovery-vibe-reset",
+      "speaker": "me",
+      "phase": "pre-open",
+      "text": {
+        "da": "",
+        "en": "[Let her go. Reset vibe. Walk with swag. Do the pinball drill - let the street bounce you to the next set.]"
+      },
+      "annotation": "Vibe management after blowout. 'So much of daygaming is vibe management. The actual technical stuff is relatively easy.' Pinball metaphor: 'imagine myself as a pinball just getting bounced off all the flippers, the bumpers, hitting the bells. Just allow the street to bounce you around from set to set.' Also the absorption drill: open all your sensors to the street, notice the leaves, the bark, the buildings, the colours - connect your vibe to the street vibe. The street has a 30-second memory. Source: Outlaw Daygame Part 5 segments 173-186, Virtua Resi #4",
+      "children": [
+        "root"
+      ]
+    },
+
+    "stack-observation-compliment-tease": {
+      "id": "stack-observation-compliment-tease",
+      "speaker": "me",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "I just noticed about you over there... you had this kind of very colourful look about you. [pause, eye contact] Like you've got this energy about you... but what's going on here? [pointing at accessory] That's a bit fucking weird, isn't it?"
+      },
+      "annotation": "London-style observation stack: observe three things about her, two compliments and one tease. Slow delivery with pauses. 'Start the sentence, gesture a bit, pause, and then continue it, and all the time the girl's drawn in.' Roll the sentences around your mouth like a boiled sweet. Leave pauses, leave sentences unfinished then finish them - it gets her hanging on. One-handed gestures only - 'more commanding.' Source: Outlaw Daygame Part 10 segments 42-47, Part 8 segments 126-136, 149-160, Virtua Resi #4 (voice cadence coaching)",
+      "children": [
+        "her-stack-laughs-hooks",
+        "her-stack-defends-tease",
+        "her-stack-asks-question"
+      ]
+    },
+
+    "stack-smooth-observation": {
+      "id": "stack-smooth-observation",
+      "speaker": "me",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "What I just noticed about you over there... was you had this kind of [pause]... very colourful look about you."
+      },
+      "annotation": "Smooth stack. 'Can you see how I'm drawing it out and slowing it? Much more compelling, much more charismatic.' Roll the sentences around your mouth like a boiled sweet. 'Because you let her know at the beginning you're talking about HER, she wants to hear it. Somebody's telling me something about myself, what what what what?' Fight the natural urge to speak quickly in case she goes away - 'leaving spaces, leaving sentences unfinished, a space then finishing it is actually much more compelling.' Source: Virtua Resi #4 (voice cadence coaching section, lines 931-958)",
+      "children": [
+        "her-stack-smiles-waits",
+        "her-stack-asks-question"
+      ]
+    },
+
+    "stack-direct-intent": {
+      "id": "stack-direct-intent",
+      "speaker": "me",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "I just saw you walking past and I thought... [pause] you looked really nice. I had to come say hello."
+      },
+      "annotation": "Direct intent stack for when confusion or guardedness needs to be resolved. 'Going direct was this huge death-defying stunt. Now it's just routine.' But still use the slow cadence - don't rush it. Source: Virtua Resi #2, Virtua Resi #4",
+      "children": [
+        "her-stack-smiles-waits",
+        "her-stack-thanks-guarded"
+      ]
+    },
+
+    "stack-belligerent-tease": {
+      "id": "stack-belligerent-tease",
+      "speaker": "me",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "Right, so I saw you over there and you had this look... like trouble. Like you're the kind of girl who causes problems wherever she goes. Am I right?"
+      },
+      "annotation": "Belligerent tease stack. 'Giving yourself the permission to be more playfully rude. She gets that it's all a bit tongue in cheek and you don't really mean it.' Belligerence tends to be more teasing than challenging. Can also compare her to an animal - 'I remember the first time I started comparing girls to animals it was like oh I wonder what she's gonna say about that. Now it's like nothing.' Source: Outlaw Daygame Part 10, segments 24-33; Virtua Resi #2",
+      "children": [
+        "her-stack-laughs-hooks",
+        "her-stack-defends-tease"
+      ]
+    },
+
+    "her-stack-laughs-hooks": {
+      "id": "her-stack-laughs-hooks",
+      "speaker": "her",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "[Laughs] That's so random! / Oh my god! [She's engaged, facing you, not leaving.]"
+      },
+      "annotation": "Hook point achieved. 'The girl asks you the question. You're like, right, I've got hook point, I can dial my energy down.' Source: Outlaw Daygame Part 10, segments 65-67",
+      "children": [
+        "vibe-tease-challenge",
+        "vibe-sceptical-parrot",
+        "vibe-careening-off-road"
+      ]
+    },
+
+    "her-stack-defends-tease": {
+      "id": "her-stack-defends-tease",
+      "speaker": "her",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "Hey! It's not weird, I got this in [place]! / No I'm not trouble!"
+      },
+      "annotation": "She's defending herself against the tease - this IS investment. She cares what you think. This is the boundary being drawn and her responding to it. 'You proactively create that opportunity... you can look at her and pick something she's wearing or carrying. What's going on here? That's a bit fucking weird, isn't it? You've just created that opportunity.' Source: Outlaw Daygame Part 10, segments 0-9, 34-47",
+      "children": [
+        "vibe-tease-challenge",
+        "vibe-qualify-her"
+      ]
+    },
+
+    "her-stack-asks-question": {
+      "id": "her-stack-asks-question",
+      "speaker": "her",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "So... what do you want? / Where are you from? / Do you do this a lot?"
+      },
+      "annotation": "She asks a question = clear hook point. She wants to talk to you. Dial energy down. 'The girl asks you the question. You're like, right, I've got hook point, I can dial my energy down.' Source: Outlaw Daygame Part 10, segments 65-67",
+      "children": [
+        "vibe-answer-reframe",
+        "vibe-qualify-her"
+      ]
+    },
+
+    "her-stack-smiles-waits": {
+      "id": "her-stack-smiles-waits",
+      "speaker": "her",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "[Smiles, waits for you to continue. Eye contact held.]"
+      },
+      "annotation": "Passive positive. She's listening and receptive but not yet hooked. Continue stacking - add the tease element or move to vibing. Need to provoke a reaction. 'Do these proactive calibration decisions where you force it, and then her reaction tells you where you are.' Source: Virtua Resi #1",
+      "children": [
+        "vibe-tease-challenge",
+        "vibe-physical-tease"
+      ]
+    },
+
+    "her-stack-thanks-guarded": {
+      "id": "her-stack-thanks-guarded",
+      "speaker": "her",
+      "phase": "stack",
+      "text": {
+        "da": "",
+        "en": "Oh... thanks. [Still guarded, hasn't committed to staying.]"
+      },
+      "annotation": "Polite but guarded. She hasn't committed. Throw something out that forces a reaction. 'Do these proactive calibration decisions where you force it, and then her reaction tells you where you are.' If she takes the touch, immediate sexuality. If she doesn't, dial it back. Source: Virtua Resi #1",
+      "children": [
+        "vibe-tease-challenge",
+        "vibe-physical-tease"
+      ]
+    },
+
+    "vibe-tease-challenge": {
+      "id": "vibe-tease-challenge",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "So where are you from? [She answers.] Really? [Sceptical tone] Why? You don't look like you're from there."
+      },
+      "annotation": "Sceptical parroting / vacuum. 'Really? Why?' Repeat back what she says in a sceptical tone. 'It's non-combative but it's a challenge and that shows the boundary, shows masculine polarity and she'll justify herself.' Smoothness tends to be more challenging than teasing. Source: Outlaw Daygame Part 10, segments 14-22",
+      "children": [
+        "her-vibe-justifies-herself",
+        "her-vibe-laughs-attracted"
+      ]
+    },
+
+    "vibe-sceptical-parrot": {
+      "id": "vibe-sceptical-parrot",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[She says something about herself.] Really? [Pause, eyebrow raise.] Why?"
+      },
+      "annotation": "The vacuum technique. 'Really? Why?' - sceptical, non-combative disagreement through tone of voice showing masculine polarity. It challenges her without being combative. 'You repeat it back to her in a sceptical tone of voice, or you vacuum her.' Source: Outlaw Daygame Part 10, segments 15-22",
+      "children": [
+        "her-vibe-justifies-herself",
+        "her-vibe-eye-mesmer"
+      ]
+    },
+
+    "vibe-answer-reframe": {
+      "id": "vibe-answer-reframe",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[To 'do you do this a lot?'] What, talk to pretty girls on the street? [Pause] Only the ones who look like trouble."
+      },
+      "annotation": "Reframe her question back with a tease. Never apologize for approaching. Shows frame control - 'it's the Nick show, the conversation is going where I want it to go.' Source: Outlaw Daygame Part 10, segments 118-119",
+      "children": [
+        "her-vibe-laughs-attracted",
+        "her-vibe-eye-mesmer"
+      ]
+    },
+
+    "vibe-careening-off-road": {
+      "id": "vibe-careening-off-road",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[Go off on a wild rant.] Oh what's this bracelet? You make this? You sell them? Right, so you make really nice jewellery... so what, this is the stuff you can't sell because it's not very good? That's what you wear? Yeah?"
+      },
+      "annotation": "Careening off road. 'A lot of what we do, a lot of the way we break the frame, is we come off these conversational tracks. An easy way of yanking yourself off the track is you start doing these silly rants.' She's 'sitting in the back of a Jeep hanging on for dear life, she hasn't got a fucking clue where you're going, but it's exhilarating.' Shows tremendous self-possession, creativity, frame control. 'Once you get her far enough off, she can't get back anyway.' The bracelet tease is an actual example from the transcripts. Source: Virtua Resi #5 (careening off road section)",
+      "children": [
+        "her-vibe-laughs-attracted",
+        "her-vibe-eye-mesmer"
+      ]
+    },
+
+    "vibe-qualify-her": {
+      "id": "vibe-qualify-her",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "So what do you do? [She answers.] Hmm. [Sizing her up.] And what do you do for fun? Like... are you adventurous, or more of a stay-at-home type?"
+      },
+      "annotation": "Investment/qualification. 'She's auditioning for you. You're sizing her up - is she right for you? Is she impressing you?' Getting her to talk about herself but in a directed way, not letting her prattle. Also covertly placing her on r/K spectrum: stable family = K, hasn't seen dad since six = R. What are her hobbies? 'Studying hard to be an architect' = K. 'Fashion blogging, Ibiza holidays' = R. Source: Outlaw Daygame Part 10, segments 126-131; Virtua Resi #3",
+      "children": [
+        "her-vibe-adventurous-r",
+        "her-vibe-stable-k",
+        "her-vibe-prattles"
+      ]
+    },
+
+    "vibe-physical-tease": {
+      "id": "vibe-physical-tease",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "Oh, give me a look at this. [Grabs accessory - bracelet, hat, scarf.] What's this? Did you make this yourself?"
+      },
+      "annotation": "Smooth touch tied to conversation content. 'The conversation gives you the permission to touch. You're probing like a boxer, jabbing and feinting, getting her to create the opening so you can take it.' Smooth physicality example: 'Oh look at this hat. It's like a marshmallow fell on your head.' And then play with the hat. 'You've kind of jabbed your way in to that.' Source: Outlaw Daygame Part 8, segments 38-50, 60-61",
+      "children": [
+        "her-vibe-takes-touch",
+        "her-vibe-pulls-away"
+      ]
+    },
+
+    "vibe-physical-belligerent": {
+      "id": "vibe-physical-belligerent",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[Tap nose. Prod belly. Grab hair and look at it.] No, no, no. [Nose tap.] Yeah, yeah, so anyway... [belly prod]"
+      },
+      "annotation": "Belligerent physicality. Fast and early in the set with childish exuberance. 'Tapping the nose, prodding the belly, grabbing accessories - it's quite belligerent. You're doing it fast and early in the set, and it's got a childish exuberance about it. Like you have the right to touch her. Bull in a china shop.' Example from Virtua Resi #2: grabbing a girl's hair and whiplashing it - 'imagine what that must sub-communicate in terms of confidence, entitlement, social savvy.' Source: Outlaw Daygame Part 8, segments 35-38; Virtua Resi #2",
+      "children": [
+        "her-vibe-takes-touch",
+        "her-vibe-pulls-away"
+      ]
+    },
+
+    "her-vibe-justifies-herself": {
+      "id": "her-vibe-justifies-herself",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "Well actually I'm from there because... / No, I really am! Because..."
+      },
+      "annotation": "She's justifying herself to you. This IS investment. The sceptical parrot worked - she cares what you think. 'She's talking in a direction where you're still leading the conversation.' Source: Outlaw Daygame Part 10, segments 78-80",
+      "children": [
+        "invest-direct-questions",
+        "vibe-pattern-interrupt"
+      ]
+    },
+
+    "her-vibe-laughs-attracted": {
+      "id": "her-vibe-laughs-attracted",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[Laughs, maybe touches her hair or gets a bit closer.]"
+      },
+      "annotation": "Clear attraction signal. She's warming up. Look for the eye mesmer - a little flash through her eyes signalling sexual tension. If your set has pizzazz - that electric spark, the careening rants, the physical boldness - this is when it separates you from the 'solid workmanlike sets that never pull the hot ones.' Source: Outlaw Daygame Part 10, segments 56-60; Virtua Resi #6 (pizzazz)",
+      "children": [
+        "invest-direct-questions",
+        "vibe-qualify-her"
+      ]
+    },
+
+    "her-vibe-eye-mesmer": {
+      "id": "her-vibe-eye-mesmer",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[A flash goes through her eyes. Awkward pause. She shifts a bit uncomfortably, sexually. Little crackle of sexual tension.]"
+      },
+      "annotation": "Eye mesmer - THE attraction signal. 'Something will come through on her eyes or her body language... and immediately you just think, right, she fancies me. There'll be that moment where I tick the checkbox of, she fancies me. Often it's like a little bit of eye mesmer. A little flash goes through her eyes, or there's like a little awkward pause, or she shifts a bit uncomfortably, like sexually.' Attraction's done. You don't have to keep flogging the dead horse. Tone down belligerence. Source: Outlaw Daygame Part 10, segments 56-64",
+      "children": [
+        "invest-direct-questions",
+        "invest-tone-down-comfort"
+      ]
+    },
+
+    "her-vibe-adventurous-r": {
+      "id": "her-vibe-adventurous-r",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "Oh, I love adventure. I'm always doing crazy things. / I just got back from [exotic place]."
+      },
+      "annotation": "R-selected signals: impulsive, adventurous, mentions taboos, 'a bit slutty, fashion blogging, Ibiza holidays.' Hasn't seen her dad since she was six. For R-girls, pull out DHVs about being a bad boy, getting deported, wild stories. Source: Virtua Resi #3 - 'if she's a bit of a bad girl, got some taboos, a bit slutty, he's gonna be telling the DHVs about getting deported from Germany for headbutting a guy in the bar'",
+      "children": [
+        "invest-r-selected-dhv",
+        "close-idate-proposal"
+      ]
+    },
+
+    "her-vibe-stable-k": {
+      "id": "her-vibe-stable-k",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "I study architecture. / I'm visiting with my family. / I like museums and history."
+      },
+      "annotation": "K-selected signals: stable married family, studying hard, conservative hobbies, mentions family positively, 'going to look at monasteries in the south of Italy.' For K-girls, pull out DHVs about being the strong wolf, looking after family. Source: Virtua Resi #3 - 'he's going to do DHVs about his niece, helping his dad buy a house, about his mum, helping her run her business, investing in her business'",
+      "children": [
+        "invest-k-selected-dhv",
+        "close-number-close"
+      ]
+    },
+
+    "her-vibe-prattles": {
+      "id": "her-vibe-prattles",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "Oh my god so she's going to buy some shoes because she saw in this shop they're only like $3.99 because there's like a sale on and she read in the newspaper that there's like a discount coupon..."
+      },
+      "annotation": "False investment / prattle. 'You can get a lot of false investment where the girl's just banging on about stuff. North American women particularly, it's just in their culture to prattle on. And that's not good prattle, because you're losing the frame. It's easy to think, oh well, she's talking therefore she's investing. No, she's just prattling on and taking the frame away.' The Canadian shoe story is straight from the transcript. Source: Outlaw Daygame Part 10, segments 80-99",
+      "children": [
+        "invest-grab-reins"
+      ]
+    },
+
+    "her-vibe-takes-touch": {
+      "id": "her-vibe-takes-touch",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[She lets you handle the accessory, doesn't pull away. Maybe shows it to you.]"
+      },
+      "annotation": "Positive compliance to touch. 'If you step in at the beginning of a set, if she takes it, immediate sexuality. If she doesn't, dial it back.' Her reaction tells you where you are - that's proactive calibration. Source: Virtua Resi #1",
+      "children": [
+        "invest-direct-questions",
+        "close-idate-proposal"
+      ]
+    },
+
+    "her-vibe-pulls-away": {
+      "id": "her-vibe-pulls-away",
+      "speaker": "her",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "[She pulls back slightly, uncomfortable with the touch.]"
+      },
+      "annotation": "Negative response to touch. Dial back. Her reaction tells you where you are - she needs more comfort before physical escalation. Don't apologize but move to verbal vibing. Source: Virtua Resi #1",
+      "children": [
+        "vibe-tease-challenge",
+        "vibe-qualify-her"
+      ]
+    },
+
+    "vibe-pattern-interrupt": {
+      "id": "vibe-pattern-interrupt",
+      "speaker": "me",
+      "phase": "vibe",
+      "text": {
+        "da": "",
+        "en": "Nice legs by the way. [Pause.] Anyway, carry on."
+      },
+      "annotation": "Sexual spike as pattern interrupt. 'The girl is talking, you look at her legs. Nice legs by the way. Anyway, carry on. Pattern interrupt, spiking, rest in control. What it's all got in common is she's going in a certain direction and you're giving her a fucking nudge off that direction.' You can also use this on an iDate: 'girl goes off to get sugar for a coffee, comes back, you're like, oh, all right, your legs are very long. She gets the point.' Source: Outlaw Daygame Part 8, segments 182-192; Virtua Resi #1",
+      "children": [
+        "her-vibe-laughs-attracted",
+        "her-vibe-eye-mesmer"
+      ]
+    },
+
+    "invest-direct-questions": {
+      "id": "invest-direct-questions",
+      "speaker": "me",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "So what brings you here? What are you doing today? [Finding out logistics - is she free, does she have plans, is she a tourist?]"
+      },
+      "annotation": "Clearing logistics. What you're really finding out: is the iDate open-ended? 'She finished whatever she was doing, not going to do something.' Tourist with a rucksack finished sightseeing = high SDL probability. Meeting friends in 30 minutes = take the number. 'You need about three hours to be safe on an SDL. Any less and you really risk burning the set by overcooking it.' Source: Virtua Resi #1 (gutter game and SDL logistics sections)",
+      "children": [
+        "her-invest-free-time",
+        "her-invest-time-pressure",
+        "her-invest-mentions-boyfriend"
+      ]
+    },
+
+    "invest-tone-down-comfort": {
+      "id": "invest-tone-down-comfort",
+      "speaker": "me",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "[Tone down the belligerence. Be a lot more normal.] So how long are you here for? [Genuine interest, soft dominant.]"
+      },
+      "annotation": "After spotting eye mesmer / attraction confirmation: 'even the flashiest and most belligerent sets still require you to tone it down, make it comfortable. Don't get addicted to frying their brains.' Turn off the belligerence. Show the soft dominant side. 'You're showing that you're receptive to her interests and concerns. It doesn't mean you agree with them but you just accept them as a valid position.' Like the castle metaphor: palace without walls = soft dominance only. Prison = hard dominance only. Good game is balance - 'panda bear in a leather jacket.' Source: Outlaw Daygame Part 10, segments 49-75, 131-137; Part 2 (castle metaphor)",
+      "children": [
+        "her-invest-free-time",
+        "her-invest-time-pressure"
+      ]
+    },
+
+    "invest-grab-reins": {
+      "id": "invest-grab-reins",
+      "speaker": "me",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "Whoa, whoa, whoa, whoa. [Pause.] Shh. [Maybe finger on lip.] Right. So. Where are you actually from?"
+      },
+      "annotation": "Grabbing the reins when she prattles. 'Whoa whoa whoa whoa whoa when she's talking normally makes her clam up then you're leading again.' Or 'shh shh shh with finger on lip - very belligerent, very commanding. Girls start cracking up and giggling because they can't believe some guy is doing that to them.' The purpose: 'if the conversation's going in a direction that's not leading you towards fucking it, grab the reins and move it in the direction that's taking you towards fucking it.' Source: Outlaw Daygame Part 8, segments 169-181; Part 10, segments 100-125",
+      "children": [
+        "her-invest-complies-giggles",
+        "her-vibe-eye-mesmer"
+      ]
+    },
+
+    "invest-r-selected-dhv": {
+      "id": "invest-r-selected-dhv",
+      "speaker": "me",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "Ha, you remind me of... [wild story, travel adventure, something edgy.] I was in Belgrade last month and..."
+      },
+      "annotation": "R-selected DHV for adventurous girls. 'If she's a bit of a bad girl, got some taboos, a bit slutty, he's gonna be telling the DHVs about getting deported from Germany for headbutting a guy in the bar.' She's fascinated by sex, impulsive, wants excitement. 'The K-selected girl is just gonna be reviled. What fucking idiots. Whereas the R-selected girl is gonna be, fucking hell he's cool, he's a bad boy.' Source: Virtua Resi #3",
+      "children": [
+        "her-invest-free-time",
+        "close-idate-proposal",
+        "close-gutter-game-extraction"
+      ]
+    },
+
+    "invest-k-selected-dhv": {
+      "id": "invest-k-selected-dhv",
+      "speaker": "me",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "That's cool. I actually love that kind of thing. I was helping my mum with her business recently... [responsible, stable, leadership DHVs]"
+      },
+      "annotation": "K-selected DHV for stable/traditional girls. 'He's going to do DHVs about his niece, about looking after his niece, helping his dad buy a house in the south of Spain, about his mum, helping her run her business, investing in her business because she's retired and needed something to do to occupy her mind.' She wants a cool boyfriend who's well-connected. Source: Virtua Resi #3",
+      "children": [
+        "her-invest-free-time",
+        "close-number-close"
+      ]
+    },
+
+    "her-invest-complies-giggles": {
+      "id": "her-invest-complies-giggles",
+      "speaker": "her",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "[Giggles, goes quiet, looks at you waiting.] Okay, okay... I'm from..."
+      },
+      "annotation": "She complied with the interruption. Now she's talking in YOUR direction, not random prattle. This is real investment. 'She's auditioning for you. You're getting her to talk about herself, but she's talking about herself in the same way that interviewers get you to talk about yourself.' Source: Outlaw Daygame Part 10, segments 126-130",
+      "children": [
+        "invest-direct-questions",
+        "close-mini-bounce"
+      ]
+    },
+
+    "her-invest-free-time": {
+      "id": "her-invest-free-time",
+      "speaker": "her",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "I'm just walking around. / I just finished [activity]. / Nothing really, just exploring."
+      },
+      "annotation": "Open-ended logistics = SDL/iDate potential. 'Open-ended like I was just on my way home, I've been to the cinema.' The tourist with the rucksack at 8pm who's been out all day is the ideal: 'finished whatever she was doing, she's vulnerable by being a tourist, she's off by herself, she's got nothing better to do.' Tick the SDL checklist: free time, clear sexual tension, doesn't mention a boyfriend. Source: Virtua Resi #1",
+      "children": [
+        "close-idate-proposal",
+        "close-gutter-game-extraction",
+        "close-mini-bounce"
+      ]
+    },
+
+    "her-invest-time-pressure": {
+      "id": "her-invest-time-pressure",
+      "speaker": "her",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "I'm meeting my friend in 30 minutes. / I'm on my lunch break. / I have to go to class."
+      },
+      "annotation": "Time-pressured logistics. Take the number and try to get her out again. 'Oh I'm on my lunch break, going back to work in half an hour - those are all cases where you take the number.' Eye dating in the sunshine with time pressure = 'much less likely to lead to sex proposition. You're much more likely to end with a number and then try and get her out again.' Source: Virtua Resi #1",
+      "children": [
+        "close-number-close"
+      ]
+    },
+
+    "her-invest-mentions-boyfriend": {
+      "id": "her-invest-mentions-boyfriend",
+      "speaker": "her",
+      "phase": "invest",
+      "text": {
+        "da": "",
+        "en": "Well, my boyfriend... / I actually have a boyfriend."
+      },
+      "annotation": "Obstacle presented. The dog that didn't bark (Sherlock Holmes Silver Blaze analogy): 'You are looking for the absence of an expected form of evidence. By it not being there, that's the passing the test.' The Sherlock Holmes story: a horse kicked a stable-hand, and Holmes deduced it because the dog didn't bark at a stranger - meaning no stranger came. Similarly, 'if she doesn't mention a boyfriend, that's the signal. Girls will give you obstacles in escalation. If she's just dumbly following you around without resisting, that's an amber light. You just take her home.' Source: Virtua Resi #1",
+      "children": [
+        "close-number-close",
+        "eject-graceful"
+      ]
+    },
+
+    "close-mini-bounce": {
+      "id": "close-mini-bounce",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Come on, we're in the middle of the street. Let's just walk over there."
+      },
+      "annotation": "Mini-bounce. 'You stop the girl in the middle of the street. Once you know you've got hook point, you say, come on, we're in the middle of the street, let's just walk over there. And you move like three meters towards the edge of the pavement. That's taking control of her body. It's a compliance test. It's also an expression of physical dominance, of masculinity.' Source: Outlaw Daygame Part 11, segments 22-27",
+      "children": [
+        "her-close-complies-bounce",
+        "close-number-close"
+      ]
+    },
+
+    "close-idate-proposal": {
+      "id": "close-idate-proposal",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "You know what, there's a cafe over there. Come on, let's go."
+      },
+      "annotation": "iDate proposal. 'Why we stand in the middle of the street talking? There's a cafe over there, come on, let's go.' The biggest trap: 'most guys, biggest problem with iDates is they slip straight into rapport. They just stop escalating. They just stop being sexual.' Need about 3 hours for an SDL. On the iDate you have to 'covertly but clearly make your intent known.' Source: Outlaw Daygame Part 11, segment 28; Virtua Resi #1",
+      "children": [
+        "her-close-accepts-idate",
+        "her-close-declines-idate"
+      ]
+    },
+
+    "close-gutter-game-extraction": {
+      "id": "close-gutter-game-extraction",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "I've got a better idea. Tell you what, there's a bar just around the corner. Let's just go get a quick drink right now. Like, 15 minutes."
+      },
+      "annotation": "Gutter game extraction for evening sets. '15 minutes is the low ball to get them moving because by this point that's what they kind of hope you do anyway.' Walk them off, give comfort on the walk, get alcohol in them for plausible deniability. Filter for vulnerability: 'is the girl off from the herd? Is she wandering a bit slow? Like the lame buffalo who can't keep up with the herd.' The tourist with the rucksack at 8pm is the archetype. Source: Virtua Resi #1 (gutter game section)",
+      "children": [
+        "her-close-accepts-idate",
+        "her-close-declines-idate"
+      ]
+    },
+
+    "close-number-close": {
+      "id": "close-number-close",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Look, I've got to go, but you seem cool. Let me take your number and we'll grab a drink sometime."
+      },
+      "annotation": "Standard number close. Default when logistics don't allow iDate. 'My normal day game is find the girls you want, chat to them for five to ten minutes, take a number.' Filter for 'girls who are going to be into me, like the idea of day game, end up pretty.' Source: Virtua Resi #1",
+      "children": [
+        "her-close-gives-number",
+        "her-close-declines-number"
+      ]
+    },
+
+    "her-close-complies-bounce": {
+      "id": "her-close-complies-bounce",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[She walks with you to the side of the street.]"
+      },
+      "annotation": "Strong compliance. She moved with you. 'That's taking control of her body, a major escalation signal. It's an expression of physical dominance, of masculinity.' Now either propose the iDate or continue investing and close with number. Source: Outlaw Daygame Part 11, segments 22-27",
+      "children": [
+        "close-idate-proposal",
+        "close-number-close"
+      ]
+    },
+
+    "her-close-accepts-idate": {
+      "id": "her-close-accepts-idate",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Yeah, okay. / Sure, why not."
+      },
+      "annotation": "She accepted the iDate. 'The biggest trap of iDating is failing to escalate. Most guys slip straight into rapport. They just stop being sexual.' On the iDate 'you have to covertly but clearly make your intent known while also letting her know that the reason you're not escalating isn't because you're a pussy, it's because you're reading the signals correctly.' Source: Virtua Resi #1",
+      "children": [
+        "idate-walk-to-venue"
+      ]
+    },
+
+    "her-close-declines-idate": {
+      "id": "her-close-declines-idate",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "I can't right now, I have to go..."
+      },
+      "annotation": "She declined the iDate but didn't reject you. Still take the number. An iDate rejection is not a rejection of you - she just has logistics. Source: Virtua Resi #1",
+      "children": [
+        "close-number-close"
+      ]
+    },
+
+    "her-close-gives-number": {
+      "id": "her-close-gives-number",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[She gives you her number.]"
+      },
+      "annotation": "Number acquired. Text game follows. But 'don't get too full of yourself. Some of the stuff I do in the street, it's so easy to think, right, this is the next new plateau. And then the numbers flake and you're like, well, I might be onto something new but I haven't figured it out yet.' Source: Virtua Resi #2",
+      "children": []
+    },
+
+    "her-close-declines-number": {
+      "id": "her-close-declines-number",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Sorry, I don't give my number out. / I have a boyfriend."
+      },
+      "annotation": "Number declined. Let her go gracefully. Don't chase. The street has a 30-second memory - nobody will remember or care. Move to next set.",
+      "children": [
+        "eject-graceful"
+      ]
+    },
+
+    "eject-graceful": {
+      "id": "eject-graceful",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "No worries. Enjoy your day."
+      },
+      "annotation": "Graceful exit. Don't linger. Don't apologize. 'The street has a 30-second memory.' 'The internet always remembers but the street never does.' Reset vibe and look for the next opportunity. Source: Outlaw Daygame Part 4 segment 59, Part 5 (pinball drill)",
+      "children": [
+        "recovery-vibe-reset"
+      ]
+    },
+
+    "idate-walk-to-venue": {
+      "id": "idate-walk-to-venue",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[Walking to venue. Directional touching - 'I was over Shevchenko Park, you know, like over there' - turn her a little bit towards that, just a little touch. Shoulder barge playfully.]"
+      },
+      "annotation": "On the walk to venue: directional touching. 'If you want to touch her and be masculine about it, you can say, oh, yeah, I was over Shevchenko Park, you know, like over there - turn her a little bit towards that, just a little touch.' Shoulder barging: 'nudge her, she's like what are you doing? I said sorry that was an accident, I won't do it again. And then bam, do it again.' Also: pushing her into lampposts and bollards - 'she's like what are you doing you idiot.' Stomach stop at traffic lights: 'Stop, stop, stop! Put my hand on her stomach. Then green man comes on, it's like on the back, come on.' Source: Outlaw Daygame Part 11, segments 29-95",
+      "children": [
+        "idate-seated-escalation"
+      ]
+    },
+
+    "idate-seated-escalation": {
+      "id": "idate-seated-escalation",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[At the venue. Put drinks down, pull her chair close.] Sit here. [If she sits close = green light. If she moves to opposite side = slow down. Get halves not pints - time distortion effect.]"
+      },
+      "annotation": "Venue seating test. 'You walk to the table, the drinks, you put a drink then pull the chair right. If she goes there that's telling you something. If she sits there, it's telling you this is fine.' Get short drinks/halves: 'instead of one big beer you get a half and then another half - it's that time distortion effect, silly futures on a second drink.' First drink: 'relatively escalation-free. Get to know her, do attraction, rapport. Don't go for the kiss in that first half. Might play with her rings, touch her hair, give her a bit of a look but low-balling it.' If she accepts second drink: 'game on, because drink one is oh well I'll just see what this guy's got to offer, drink two is I want more of this.' Source: Virtua Resi #1 (gutter game iDate protocol)",
+      "children": [
+        "idate-kiss-close-gambit"
+      ]
+    },
+
+    "idate-kiss-close-gambit": {
+      "id": "idate-kiss-close-gambit",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Look, you've got five seconds to think of a question or I'm going to kiss you. [If she comes closer:] Come closer. [She moves.] No, no, closer. Come closer. [When she's close enough, just tip in.]"
+      },
+      "annotation": "Kiss close gambit. 'Halfway through the second drink. You've got five seconds to think of it or I'm going to kiss you. That's going to force a response out of her. She might burst out the question really fast - carry on, do another gambit later. Or come closer. I always do the same way - come closer, she'll be like that, no no closer, come closer, she'll be like closer closer because she knows exactly what's happening, normally grinning at this point, and then when they're about that far away I'll just tip and go for the kiss.' Source: Virtua Resi #1",
+      "children": [
+        "her-idate-kisses-back",
+        "her-idate-deflects-kiss"
+      ]
+    },
+
+    "her-idate-kisses-back": {
+      "id": "her-idate-kisses-back",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[She kisses you back.]"
+      },
+      "annotation": "Kiss closed. 'Her kiss tells you a lot. Is she jumping all over you on the kiss or is she timid? If she's jumping all over me, I'll think at the end of the drink I'm going to take her home. If she's still a bit timid, maybe another drink or bounce to another venue.' After the kiss: 'back off a little, spend the rest of that drink doing more rapport, physical rapport as well as verbal.' Source: Virtua Resi #1",
+      "children": [
+        "idate-extraction"
+      ]
+    },
+
+    "her-idate-deflects-kiss": {
+      "id": "her-idate-deflects-kiss",
+      "speaker": "her",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "[She pulls back or deflects the kiss.]"
+      },
+      "annotation": "Kiss deflected. Don't panic. 'The fact that they get there tells you they want it. Every now and then a girl will freak out at that point and not do it but it's rare.' Back off, do more comfort, try again later. Or take the number and try on a proper date. Source: Virtua Resi #1",
+      "children": []
+    },
+
+    "idate-extraction": {
+      "id": "idate-extraction",
+      "speaker": "me",
+      "phase": "close",
+      "text": {
+        "da": "",
+        "en": "Right, come on, let's go for a walk. [Walking towards your place.] Let's get a bottle of wine, my place is around the corner."
+      },
+      "annotation": "Extraction attempt. 'She'll probably say where are we going? Be vague or use bamboozlement - I'll be talking about like a YouTube video or some fucking architecture or something while I'm opening the door. If she comes in, great. If she doesn't, push her up against the door on the outside and make out with her for five minutes, get her really hot and horny, then try and go in again. I'll say look I'm not saying let's have sex, let's just go in for a while. Or you can leave whenever you want. These are all true. Normally once she's in, that's it, mind's made up.' Source: Virtua Resi #1 (gutter game extraction)",
+      "children": []
+    }
+  },
+  "metadata": {
+    "totalNodes": 68,
+    "openerVariations": 5,
+    "maxDepth": 9,
+    "phases": {
+      "pre-open": "Swag walk (hip sway, shoulder sway, springiness), happy dog face (open exuberant expression, no guile, soft shiny eyes), vibe drills (mindfulness, absorption, pinball), forcing IOIs, archetype purity, value tapping with wing",
+      "open": "Front stop (smooth/belligerent), accusational, IOI-reactive (lightning-quick off sideways glance, double glance, held stare, direction change), group open. Smooth = matador, probing and drawing. Belligerent = battering ram, overwhelming",
+      "stack": "London-style observation (2 compliments + 1 tease), direct intent, belligerent tease. Slow cadence - roll sentences like a boiled sweet. One-handed gestures. Start sentence, pause, lock eye contact, finish",
+      "vibe": "Sceptical parroting/vacuum, tease/challenge, physical tease (smooth: conversation-justified. belligerent: nose tap, belly prod, hair grab), pattern interrupt, careening off road (wild rants to break frame), r/K placement",
+      "invest": "Directed questions (she's auditioning for you), logistics clearing (SDL needs 3 hours), grabbing reins from prattle (whoa/shh), r/K-adjusted DHVs, tone down belligerence after eye mesmer, the dog that didn't bark (absence of boyfriend = amber light)",
+      "close": "Mini-bounce (3m compliance test), iDate (don't slip into rapport), gutter game extraction (15-minute low ball, vulnerability filtering), number close (5-10 min default), directional touching on walk, shoulder barging, seated escalation (pull chair close, halves not pints), kiss close gambit (5 seconds), bamboozlement extraction"
+    },
+    "keyTerminology": {
+      "front_stop": "Physically stopping a walking girl from the front",
+      "hook_point": "When she asks you a question - 'right, I've got hook point, I can dial my energy down'",
+      "eye_mesmer": "'A little flash goes through her eyes, there's an awkward pause, she shifts a bit uncomfortably, sexually. A little crackle of sexual tension.' THE attraction confirmation signal",
+      "stacking": "Adding conversational threads (observations, teases) after the opener. Two compliments and one tease in the London style",
+      "vibing": "Creating fun emotional connection through teasing and challenging. Sceptical parroting, physical teases, pattern interrupts",
+      "investment": "Getting her to talk about herself IN A DIRECTION YOU'RE LEADING. Not prattle. 'She's auditioning for you'",
+      "mini_bounce": "Moving her 3 meters to the edge of the pavement as a compliance test and expression of physical dominance",
+      "iDate": "Instant date - taking her to a venue immediately from the street. Biggest trap: failing to escalate, slipping into rapport",
+      "SDL": "Same Day Lay - sex on the day you met. Need about 3 hours to be safe. Filter for open-ended logistics",
+      "gutter_game": "Night-time street game. Filter for vulnerability: 'is she off from the herd, wandering slow, like the lame buffalo.' The twilight shift where streets feel sexual and iDates become open-ended",
+      "r_K_spectrum": "r-selected (impulsive, adventurous, taboos, fashion blogging, Ibiza) vs K-selected (stable family, architecture student, monasteries). Determines which DHVs to deploy",
+      "value_tapping": "Drawing value from your wing to force IOIs. Step ahead of wing and start lecturing them - 'girl looks up and sees a leader giving it the swag.' Take turns, street has no memory",
+      "belligerent": "Hard dominant style - overwhelming, commanding, battering ram energy. 'Panda bear in a leather jacket.' Like boxers walking to the ring. The outward push",
+      "smooth": "Soft dominant style - matador grace, social acuity, self-possession. 'Wolf in sheep's clothing.' Like the fencer - probing, jabbing, waiting for openings. The inward pull",
+      "happy_dog_face": "'The face of a happy dog about to go out and chase tennis balls. Open exuberant expression, soft shiny eyes, relaxed facial muscles, no guile.' Like how everyone loves dogs because they have zero guile. The happy dog face IS the clean lens",
+      "sceptical_parroting": "'Really? Why?' Repeating her words back in a sceptical tone. Non-combative disagreement through tone of voice. She justifies herself = investment",
+      "pattern_interrupt": "'She's going in a certain direction and you're giving her a fucking nudge off that direction.' Sexual spike (nice legs), or physical (grab accessory), or conversational",
+      "command_presence": "'When the general of the army comes into the room and everyone snaps to attention.' Projecting authority. Belligerent = outward push. Smooth = inward pull, sucking her in",
+      "pizzazz": "'The game you need for younger-hotter-tighter. It's not enough to do a workmanlike set.' The electric spark, the careening rants, the bold physicality. 'What separates solid steady work from sets that pull younger-hotter-tighter is volatility.' Source: Virtua Resi #6",
+      "ping_range": "How many girls will notice you on the street. Widen it through archetype purity, swag walk, vibe. 'Really tall good-looking guys, it's very wide. Guys who don't have these naturally attractive characteristics, it's really narrow.' Source: Outlaw Daygame Part 3",
+      "archetype": "Pick a form of idealised masculinity and embody it. James Dean bad boy, leather jacket, skulls. 'The girl looks at you and doesn't just think nondescript cubicle guy. She thinks bad boy.' Widens your ping range. Source: Outlaw Daygame Part 3",
+      "proactive_calibration": "'Do these proactive calibration decisions where you force it, and then her reaction tells you where you are.' Don't wait for IOIs - force them. Step in physically to test compliance. Pull the chair close. The reaction IS the information. Source: Virtua Resi #1",
+      "careening_off_road": "'Come off the conversational tracks. Yank the wheels off the road and go cross-country. She's sitting in the back of a Jeep hanging on for dear life.' Wild flights of fancy, silly rants. Shows self-possession, creativity, frame control. Source: Virtua Resi #5",
+      "bamboozlement": "Talking about something irrelevant (YouTube video, architecture) while physically escalating (opening the door to your place). Misdirecting her logical brain while the emotional/physical proceeds. Source: Virtua Resi #1",
+      "amber_light": "'She's not giving any eyes, she's not telling you you're good-looking, but she's just dumbly following you around without resisting. That's an amber light. You just take her home.' The absence of resistance IS the green light. Source: Virtua Resi #1",
+      "hunting_vs_fishing": "Two masculine frames for daygame. Hunting: 'go out searching, tiger stalking, lock onto prey, take them down.' Belligerent. Fishing: 'make an attractive lure, throw it out, wait to see what bites, reel it in expertly.' Smooth. Source: Outlaw Daygame Part 4",
+      "clean_lens": "'A lot of game is about polishing the lens that you project your personality through. A lifetime of being a chode is like having a warped lens with scratches and dirt. The inner game work is about cleaning that lens.' Happy dog face = perfectly clean lens. Source: Outlaw Daygame Part 5, Virtua Resi #6",
+      "castle_on_hill": "Hard dominance: 'she's kicking the walls, checking the moat - is this castle safe?' Soft dominance: 'she's checking the sofas, the tapestries, the jacuzzi - is this a nice place to be?' Prison = hard only. Palace without walls = soft only. Good game = both. Source: Outlaw Daygame Part 2"
+    }
+  },
+  "createdAt": "2026-03-04T12:00:00Z",
+  "updatedAt": "2026-03-04T14:00:00Z"
+}

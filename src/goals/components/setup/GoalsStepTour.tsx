@@ -9,7 +9,7 @@ import "./goalsStepTour.css"
 /* ── localStorage persistence ────────────────────────────────── */
 
 const TOUR_STORAGE_KEY = "goals-tour-step"
-const TOUR_STORAGE_VERSION = 2 // bump to invalidate stale step numbers (5a/5b split)
+const TOUR_STORAGE_VERSION = 4 // bump to invalidate stale step numbers (curve+ramp merge)
 const TOUR_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000 // 7 days
 
 function loadSavedStep(): number {
@@ -75,7 +75,18 @@ interface DriverHolder {
   d: Driver | null
   handle: GoalsStepTourHandle | null
   steps: DriveStep[]
+  firstCurveGoalId: string | null
+  firstRampGoalId: string | null
 }
+
+/* ── Module-level state for curve/ramp step choreography ───── */
+let curveBlinkTimeout: ReturnType<typeof setTimeout> | null = null
+let isRefreshingCurve = false
+let rampBlinkTimeout: ReturnType<typeof setTimeout> | null = null
+let isRefreshingRamp = false
+// Prevent double-fire from closing an editor that was just opened
+let curveEditorJustOpened = false
+let rampEditorJustOpened = false
 
 /* ── Tour step builder ──────────────────────────────────────── */
 
@@ -127,13 +138,17 @@ function buildDriverSteps(
           "Toggle these to add them to your plan. You can always change your selection later.",
       },
     },
-    // 4: All Categories — choreography handled by handleNext/handleBack
+    // 4: All Categories — expand handled by handleNext, highlight a hidden category
     {
-      element: '[data-tour-role="category"]',
+      element: () => {
+        // Pick the first collapsed/non-preselected category to spotlight
+        const cats = document.querySelectorAll('[data-tour-role="category"]')
+        return (cats[2] ?? cats[0]) as Element // 3rd category (e.g. Dirty Dog)
+      },
       popover: {
         title: "All Categories",
         description:
-          "Expanding all sections lets you see every category at a glance and discover goals you might have missed.",
+          "All sections are now expanded so you can see every category and discover goals you might have missed.",
       },
       onDeselected: () => {
         handle.collapseNonPreselected()
@@ -149,51 +164,119 @@ function buildDriverSteps(
         description:
           "Tap the number to set your target. This defines how much you want to achieve for this goal.",
       },
-    })
-    steps.push({
-      element: '[data-tour="curve-button"]',
-      popover: {
-        title: "Curve Editor Button",
-        description:
-          "Opens your milestone progression curve. Define how your targets ramp up over time.",
-      },
-    })
-    steps.push({
-      element: '[data-tour="curve-editor"]',
-      popover: {
-        title: "Curve Editor",
-        description:
-          "The curve editor lets you visualize and adjust your milestone ladder. Drag the tension to make progression linear or exponential.",
-      },
-      onHighlightStarted: () => {
-        handle.openCurveEditor(opts.firstCurveGoalId!)
+      onHighlighted: () => {
+        document
+          .querySelector('[data-tour="target-stepper"]')
+          ?.classList.add("gt-pulse-ring")
+        document
+          .querySelector('[data-tour="target-number"]')
+          ?.classList.add("gt-number-glow")
       },
       onDeselected: () => {
+        document
+          .querySelector('[data-tour="target-stepper"]')
+          ?.classList.remove("gt-pulse-ring")
+        document
+          .querySelector('[data-tour="target-number"]')
+          ?.classList.remove("gt-number-glow")
+      },
+    })
+    // Merged curve button + editor step: blink button → auto-open editor → spotlight shifts
+    steps.push({
+      element: () => {
+        const editor = document.querySelector('[data-tour="curve-editor"]')
+        if (editor) return editor
+        return document.querySelector('[data-tour="curve-button"]') as Element
+      },
+      popover: {
+        title: "Progression Curve",
+        description:
+          "Your milestone progression curve. Visualize and adjust how your targets ramp up — drag the tension to go linear or exponential.",
+      },
+      onHighlighted: () => {
+        // If editor already open (re-driven after auto-open), skip blink
+        if (document.querySelector('[data-tour="curve-editor"]')) return
+        const btn = document.querySelector('[data-tour="curve-button"]')
+        if (btn) btn.classList.add("gt-curve-blink")
+        curveBlinkTimeout = setTimeout(async () => {
+          curveBlinkTimeout = null
+          document
+            .querySelector('[data-tour="curve-button"]')
+            ?.classList.remove("gt-curve-blink")
+          handle.openCurveEditor(opts.firstCurveGoalId!)
+          await waitForElement('[data-tour="curve-editor"]')
+          if (holder.d) {
+            const idx = holder.d.getActiveIndex()
+            if (idx !== undefined) {
+              isRefreshingCurve = true
+              holder.d.drive(idx)
+            }
+          }
+        }, 2000)
+      },
+      onDeselected: () => {
+        if (isRefreshingCurve) {
+          isRefreshingCurve = false
+          return
+        }
+        if (curveBlinkTimeout) {
+          clearTimeout(curveBlinkTimeout)
+          curveBlinkTimeout = null
+        }
+        document
+          .querySelector('[data-tour="curve-button"]')
+          ?.classList.remove("gt-curve-blink")
         handle.closeCurveEditor()
       },
     })
   }
 
   if (opts.firstRampGoalId) {
+    // Merged ramp button + editor step: blink button → auto-open editor → spotlight shifts
     steps.push({
-      element: '[data-tour="ramp-button"]',
-      popover: {
-        title: "Ramp Button",
-        description:
-          "Opens your habit frequency ramp. Build habits gradually instead of going all-in from day one.",
+      element: () => {
+        const editor = document.querySelector('[data-tour="ramp-editor"]')
+        if (editor) return editor
+        return document.querySelector('[data-tour="ramp-button"]') as Element
       },
-    })
-    steps.push({
-      element: '[data-tour="ramp-editor"]',
       popover: {
-        title: "Ramp Editor",
+        title: "Habit Ramp",
         description:
-          "The ramp editor lets you set weekly frequency targets across phases. Start easy and build momentum.",
+          "Your habit frequency ramp. Set weekly targets across phases — start easy and build momentum over time.",
       },
-      onHighlightStarted: () => {
-        handle.openRampEditor(opts.firstRampGoalId!)
+      onHighlighted: () => {
+        // If editor already open (re-driven after auto-open), skip blink
+        if (document.querySelector('[data-tour="ramp-editor"]')) return
+        const btn = document.querySelector('[data-tour="ramp-button"]')
+        if (btn) btn.classList.add("gt-ramp-blink")
+        rampBlinkTimeout = setTimeout(async () => {
+          rampBlinkTimeout = null
+          document
+            .querySelector('[data-tour="ramp-button"]')
+            ?.classList.remove("gt-ramp-blink")
+          handle.openRampEditor(opts.firstRampGoalId!)
+          await waitForElement('[data-tour="ramp-editor"]')
+          if (holder.d) {
+            const idx = holder.d.getActiveIndex()
+            if (idx !== undefined) {
+              isRefreshingRamp = true
+              holder.d.drive(idx)
+            }
+          }
+        }, 2000)
       },
       onDeselected: () => {
+        if (isRefreshingRamp) {
+          isRefreshingRamp = false
+          return
+        }
+        if (rampBlinkTimeout) {
+          clearTimeout(rampBlinkTimeout)
+          rampBlinkTimeout = null
+        }
+        document
+          .querySelector('[data-tour="ramp-button"]')
+          ?.classList.remove("gt-ramp-blink")
         handle.closeRampEditor()
       },
     })
@@ -310,7 +393,7 @@ function renderCustomPopoverUI(
     backBtn.textContent = "Back"
     backBtn.addEventListener("click", () => {
       if (holder.d && holder.handle) {
-        handleBack(holder.d, holder.handle, holder.steps)
+        handleBack(holder)
       }
     })
     btnGroup.appendChild(backBtn)
@@ -321,7 +404,7 @@ function renderCustomPopoverUI(
   nextBtn.textContent = stepIndex === totalSteps - 1 ? "Finish" : "Next"
   nextBtn.addEventListener("click", () => {
     if (holder.d && holder.handle) {
-      handleNext(holder.d, holder.handle, holder.steps)
+      handleNext(holder)
     }
   })
   btnGroup.appendChild(nextBtn)
@@ -367,7 +450,7 @@ export function GoalsStepTour({
   onTourEndRef.current = onTourEnd
   const lastStepRef = useRef(loadSavedStep())
   const driverRef = useRef<Driver | null>(null)
-  const holderRef = useRef<DriverHolder>({ d: null, handle: null, steps: [] })
+  const holderRef = useRef<DriverHolder>({ d: null, handle: null, steps: [], firstCurveGoalId: null, firstRampGoalId: null })
 
   // Re-trigger welcome when help button pressed
   useEffect(() => {
@@ -377,6 +460,12 @@ export function GoalsStepTour({
   }, [triggerStart, phase])
 
   const cleanupTour = useCallback(() => {
+    if (curveBlinkTimeout) { clearTimeout(curveBlinkTimeout); curveBlinkTimeout = null }
+    if (rampBlinkTimeout) { clearTimeout(rampBlinkTimeout); rampBlinkTimeout = null }
+    isRefreshingCurve = false
+    isRefreshingRamp = false
+    curveEditorJustOpened = false
+    rampEditorJustOpened = false
     if (tourRef.current) {
       tourRef.current.collapseNonPreselected()
       tourRef.current.closeCurveEditor()
@@ -412,6 +501,8 @@ export function GoalsStepTour({
 
       const holder = holderRef.current
       holder.handle = handle
+      holder.firstCurveGoalId = firstCurveGoalId
+      holder.firstRampGoalId = firstRampGoalId
 
       const skipFromPopover = () => {
         // Save position before destroying
@@ -480,10 +571,12 @@ export function GoalsStepTour({
       const startAtStep = async (index: number) => {
         const step = steps[index]
 
-        // Resume onto "All Categories": expand first so step makes sense
+        // Resume onto "All Categories": expand after drive so user sees it
         if (isAllCategoriesStep(steps, index)) {
+          d.drive(index)
+          await sleep(800)
           handle.expandAllSections()
-          await sleep(350)
+          return
         }
 
         if (step.element && typeof step.element === "string") {
@@ -532,18 +625,17 @@ export function GoalsStepTour({
       if (phase === "touring") {
         const d = driverRef.current
         if (!d?.isActive()) return
-        const handle = tourRef.current
-        if (!handle) return
+        if (!tourRef.current) return
         const holder = holderRef.current
 
         if (e.key === "ArrowRight" || e.key === "Enter") {
           e.preventDefault()
           e.stopPropagation()
-          handleNext(d, handle, holder.steps)
+          handleNext(holder)
         } else if (e.key === "ArrowLeft") {
           e.preventDefault()
           e.stopPropagation()
-          handleBack(d, handle, holder.steps)
+          handleBack(holder)
         } else if (e.key === "Escape") {
           e.preventDefault()
           e.stopPropagation()
@@ -561,8 +653,21 @@ export function GoalsStepTour({
       }
     }
 
+    // Prevent keyup from triggering button clicks (Enter keyup on auto-focused
+    // Next button would fire a second handleNext, skipping the editor)
+    const keyupHandler = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "ArrowRight" || e.key === "ArrowLeft" || e.key === "Escape") {
+        e.preventDefault()
+        e.stopPropagation()
+      }
+    }
+
     window.addEventListener("keydown", handler, true)
-    return () => window.removeEventListener("keydown", handler, true)
+    window.addEventListener("keyup", keyupHandler, true)
+    return () => {
+      window.removeEventListener("keydown", handler, true)
+      window.removeEventListener("keyup", keyupHandler, true)
+    }
   }, [phase, startTour, skipTour, dismissFinish, tourRef])
 
   // Cleanup on unmount
@@ -674,12 +779,66 @@ export function GoalsStepTour({
 
 /* ── Step transition helpers ────────────────────────────────── */
 
-async function handleNext(
-  d: Driver,
-  handle: GoalsStepTourHandle,
-  steps: DriveStep[]
-) {
+async function handleNext(holder: DriverHolder) {
+  const { d, handle, steps } = holder
+  if (!d || !handle) return
+
   const currentIndex = d.getActiveIndex() ?? 0
+
+  // Curve step: blink → open editor & stay; editor open → close & advance
+  if (isCurveStep(steps, currentIndex)) {
+    const editorOpen = !!document.querySelector('[data-tour="curve-editor"]')
+    if (!editorOpen) {
+      if (curveBlinkTimeout) {
+        clearTimeout(curveBlinkTimeout)
+        curveBlinkTimeout = null
+      }
+      document
+        .querySelector('[data-tour="curve-button"]')
+        ?.classList.remove("gt-curve-blink")
+      handle.openCurveEditor(holder.firstCurveGoalId!)
+      await waitForElement('[data-tour="curve-editor"]')
+      isRefreshingCurve = true
+      d.drive(currentIndex)
+      curveEditorJustOpened = true
+      setTimeout(() => { curveEditorJustOpened = false }, 400)
+      return
+    }
+    // Guard: don't close an editor that was just opened (double-fire protection)
+    if (curveEditorJustOpened) return
+    handle.closeCurveEditor()
+    await sleep(300)
+    d.moveNext()
+    return
+  }
+
+  // Ramp step: blink → open editor & stay; editor open → close & advance
+  if (isRampStep(steps, currentIndex)) {
+    const editorOpen = !!document.querySelector('[data-tour="ramp-editor"]')
+    if (!editorOpen) {
+      if (rampBlinkTimeout) {
+        clearTimeout(rampBlinkTimeout)
+        rampBlinkTimeout = null
+      }
+      document
+        .querySelector('[data-tour="ramp-button"]')
+        ?.classList.remove("gt-ramp-blink")
+      handle.openRampEditor(holder.firstRampGoalId!)
+      await waitForElement('[data-tour="ramp-editor"]')
+      isRefreshingRamp = true
+      d.drive(currentIndex)
+      rampEditorJustOpened = true
+      setTimeout(() => { rampEditorJustOpened = false }, 400)
+      return
+    }
+    // Guard: don't close an editor that was just opened (double-fire protection)
+    if (rampEditorJustOpened) return
+    handle.closeRampEditor()
+    await sleep(300)
+    d.moveNext()
+    return
+  }
+
   const nextIndex = currentIndex + 1
 
   if (nextIndex >= steps.length) {
@@ -689,18 +848,35 @@ async function handleNext(
 
   const nextStep = steps[nextIndex]
 
-  // "All Categories" step: expand all, then move so spotlight fits
+  // "All Categories" step: move first (scrolls to collapsed category), then expand
   if (isAllCategoriesStep(steps, nextIndex)) {
-    // 1. Expand all sections first so driver.js sees correct geometry
-    handle.expandAllSections()
-    // 2. Wait for React to re-render and DOM to settle
-    await sleep(350)
-    // 3. Move to the step — spotlight now wraps the full expanded list
     d.moveNext()
-    // 4. Refresh positions after any layout shift
-    await sleep(100)
-    d.refresh()
+    await sleep(800)
+    handle.expandAllSections()
     return
+  }
+
+  // Leaving "All Categories": collapseNonPreselected triggers async React re-render
+  // that changes layout. Move first, then wait and re-drive so driver.js repositions.
+  if (isAllCategoriesStep(steps, currentIndex)) {
+    d.moveNext()
+    // Wait for React to re-render after collapseNonPreselected (called in onDeselected)
+    await sleep(500)
+    const newIdx = d.getActiveIndex()
+    if (newIdx !== undefined) d.drive(newIdx)
+    return
+  }
+
+  // Pre-cleanup: if current step removes DOM on deselect (e.g. closing an editor),
+  // run cleanup BEFORE moveNext so driver.js positions against settled layout.
+  const currentStep = steps[currentIndex]
+  const elStr = typeof currentStep.element === "string" ? currentStep.element : ""
+  if (elStr.includes("editor") && currentStep.onDeselected) {
+    currentStep.onDeselected(undefined as unknown as Element, currentStep, {
+      config: currentStep,
+      state: "this" as unknown as never,
+    })
+    await sleep(300)
   }
 
   // Async setup: if the next step's element needs to be created
@@ -718,11 +894,10 @@ async function handleNext(
   d.moveNext()
 }
 
-async function handleBack(
-  d: Driver,
-  handle: GoalsStepTourHandle,
-  steps: DriveStep[]
-) {
+async function handleBack(holder: DriverHolder) {
+  const { d, handle, steps } = holder
+  if (!d || !handle) return
+
   const currentIndex = d.getActiveIndex() ?? 0
   if (currentIndex <= 0) return
 
@@ -731,8 +906,6 @@ async function handleBack(
     handle.collapseNonPreselected()
     await sleep(350)
     d.movePrevious()
-    await sleep(100)
-    d.refresh()
     return
   }
 
@@ -752,4 +925,14 @@ async function handleBack(
 function isAllCategoriesStep(steps: DriveStep[], index: number): boolean {
   const step = steps[index]
   return step?.popover?.title === "All Categories"
+}
+
+function isCurveStep(steps: DriveStep[], index: number): boolean {
+  const step = steps[index]
+  return step?.popover?.title === "Progression Curve"
+}
+
+function isRampStep(steps: DriveStep[], index: number): boolean {
+  const step = steps[index]
+  return step?.popover?.title === "Habit Ramp"
 }

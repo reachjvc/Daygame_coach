@@ -66,7 +66,7 @@ except ImportError:  # pragma: no cover - non-posix fallback
 # Configuration
 # ---------------------------
 
-PIPELINE_VERSION = "06b.LLM.verify-v3.0"  # v3.0: strict single-path verification
+PIPELINE_VERSION = "06b.LLM.verify-v3.1"  # v3.1: structured flag classes + deterministic flag summary
 
 DEBUG_MODE = False
 
@@ -95,6 +95,18 @@ _CACHED_SCHEMA: Optional[Dict[str, Any]] = None
 ALLOWED_VIDEO_TYPES = {"infield", "compilation", "talking_head", "podcast"}
 ALLOWED_MISATTRIBUTION_ROLES = {"coach", "student", "target", "other", "voiceover"}
 ALLOWED_COLLAPSE_OVERRIDES = {"coach", "student", "target", "other"}
+ALLOWED_OTHER_FLAG_CLASSES = {
+    "missing_target_coverage",
+    "mixed_speaker_segment",
+    "same_speaker_multi_role_conflict",
+    "diarization_split_same_person",
+    "duplicate_teaser_content",
+    "video_type_ambiguity",
+    "within_segment_boundary_bleed",
+    "transcript_artifact",
+    "role_ambiguity",
+    "other",
+}
 ALLOWED_BOUNDARY_FIXES = {"merge_with_next", "merge_with_previous", "reclassify_as_commentary"}
 _SPLIT_FIX_RE = re.compile(r"split(?:[_\s-]*at)?(?:[_\s-]*segment)?[_\s-]*(\d+)", re.IGNORECASE)
 _YES_VALUES = {"1", "true", "yes", "y", "agree", "agrees", "ok", "pass"}
@@ -121,6 +133,7 @@ TRANSIENT_LLM_ERROR_MARKERS = (
     "api.anthropic.com",
     "subtype='error_during_execution'",
 )
+NONE_LIKE_PLACEHOLDERS = {"", "none", "null", "n/a", "na"}
 
 
 def _load_schema() -> Optional[Dict[str, Any]]:
@@ -147,6 +160,14 @@ def _validate_verification_schema(output_data: Dict[str, Any]) -> None:
     except jsonschema.ValidationError as e:
         path = ".".join(str(p) for p in e.absolute_path) if e.absolute_path else "(root)"
         raise RuntimeError(f"Verification output schema invalid at {path}: {e.message[:200]}")
+
+
+def _is_none_like_placeholder(value: Any) -> bool:
+    if value is None:
+        return True
+    if not isinstance(value, str):
+        return False
+    return value.strip().lower() in NONE_LIKE_PLACEHOLDERS
 
 
 # ---------------------------
@@ -365,6 +386,14 @@ EXAMPLE OUTPUT:
     "evidence": "Segment is during Conv 2, should be Conv 2's target not Conv 1's"
   }}],
   "other_flags": ["Transcription error at seg 11: target name transcribed as 'James' (coach's name)"],
+  "other_flags_detailed": [{{
+    "flag_class": "transcript_artifact",
+    "severity": "minor",
+    "segment_id": 11,
+    "conversation_id": null,
+    "speaker_id": null,
+    "notes": "Target name appears mistranscribed as the coach's name"
+  }}],
   "summary": "Video type misclassified as podcast, should be talking_head. One misattribution and boundary issue detected."
 }}
 ```
@@ -377,6 +406,13 @@ VERDICT RULES:
 Be specific. Cite segment IDs and quote text when flagging issues. Empty arrays are fine if no issues found for a category.
 
 CRITICAL: When you identify multiple segments with the same issue (e.g., "segments 0, 5, 25, 118 are all coach audio on wrong speaker"), create a SEPARATE misattribution or collapse_issue entry for EACH segment. Do NOT summarize multiple fixable issues into one other_flags string. The other_flags array is ONLY for issues that cannot be expressed as individual segment fixes.
+For each `other_flags` entry, ALSO emit a matching `other_flags_detailed` entry with:
+- `flag_class`: one of `missing_target_coverage`, `mixed_speaker_segment`, `same_speaker_multi_role_conflict`, `diarization_split_same_person`, `duplicate_teaser_content`, `video_type_ambiguity`, `within_segment_boundary_bleed`, `transcript_artifact`, `role_ambiguity`, `other`
+- `severity`: one of `minor`, `moderate`, `major`
+- `segment_id`: integer or null
+- `conversation_id`: integer or null
+- `speaker_id`: string or null
+- `notes`: short machine-stable explanation aligned with the human-readable `other_flags` string
 """
 
 # ---------------------------
@@ -918,7 +954,9 @@ def normalize_misattributions(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
             continue
 
         suggested_raw = item.get("suggested_role")
-        suggested = str(suggested_raw).strip().lower() if suggested_raw is not None else ""
+        if _is_none_like_placeholder(suggested_raw):
+            continue
+        suggested = str(suggested_raw).strip().lower()
         if suggested not in allowed_roles:
             dropped.append(
                 f"Dropped misattribution seg {seg_id_int}: invalid suggested_role '{suggested_raw}'"
@@ -973,7 +1011,9 @@ def normalize_collapse_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
             dropped.append(f"Dropped collapse issue for {speaker_id}: invalid segment_id")
             continue
 
-        suggested = str(suggested_raw).strip().lower() if suggested_raw is not None else ""
+        if _is_none_like_placeholder(suggested_raw):
+            continue
+        suggested = str(suggested_raw).strip().lower()
         if suggested not in allowed_overrides:
             dropped.append(
                 f"Dropped collapse issue seg {seg_id_int}: invalid suggested_override '{suggested_raw}'"
@@ -998,6 +1038,68 @@ def normalize_collapse_issues(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]
             "confidence": conf_val,
         }
         out.append(out_item)
+
+    return out, dropped
+
+
+def normalize_other_flags_detailed(raw: Any) -> Tuple[List[Dict[str, Any]], List[str]]:
+    if not isinstance(raw, list):
+        return [], []
+
+    def normalize_severity(v: Any) -> str:
+        if v is None:
+            return "moderate"
+        s = str(v).strip().lower()
+        if s in {"minor", "moderate", "major"}:
+            return s
+        if s in {"critical", "severe", "high"}:
+            return "major"
+        if s in {"medium", "med"}:
+            return "moderate"
+        if s in {"low"}:
+            return "minor"
+        return "moderate"
+
+    out: List[Dict[str, Any]] = []
+    dropped: List[str] = []
+
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+
+        flag_class_raw = item.get("flag_class")
+        flag_class = str(flag_class_raw).strip().lower() if flag_class_raw is not None else ""
+        if flag_class not in ALLOWED_OTHER_FLAG_CLASSES:
+            dropped.append(f"Dropped detailed other_flag with invalid flag_class '{flag_class_raw}'")
+            continue
+
+        def normalize_optional_int(value: Any, *, minimum: int) -> Optional[int]:
+            if value is None:
+                return None
+            try:
+                parsed = int(value)
+            except Exception:
+                return None
+            return parsed if parsed >= minimum else None
+
+        segment_id = normalize_optional_int(item.get("segment_id"), minimum=0)
+        conversation_id = normalize_optional_int(item.get("conversation_id"), minimum=1)
+        speaker_id_raw = item.get("speaker_id")
+        speaker_id = str(speaker_id_raw).strip() if isinstance(speaker_id_raw, str) and speaker_id_raw.strip() else None
+        notes_raw = item.get("notes")
+        notes = str(notes_raw).strip() if notes_raw is not None else ""
+        if not notes:
+            dropped.append(f"Dropped detailed other_flag '{flag_class}' without notes")
+            continue
+
+        out.append({
+            "flag_class": flag_class,
+            "severity": normalize_severity(item.get("severity")),
+            "segment_id": segment_id,
+            "conversation_id": conversation_id,
+            "speaker_id": speaker_id,
+            "notes": notes,
+        })
 
     return out, dropped
 
@@ -1349,8 +1451,39 @@ def verify_file(
     collapse_issues, dropped_collapse = normalize_collapse_issues(result.get("collapse_issues", []))
     other_flags_raw = result.get("other_flags", [])
     other_flags = [str(x) for x in other_flags_raw] if isinstance(other_flags_raw, list) else []
-    for note in dropped_misattributions + dropped_collapse + dropped_boundary:
+    other_flags_detailed, dropped_other_flags_detailed = normalize_other_flags_detailed(
+        result.get("other_flags_detailed", [])
+    )
+    for note in dropped_misattributions + dropped_collapse + dropped_boundary + dropped_other_flags_detailed:
         other_flags.append(note)
+
+    structured_flag_class_counts: Dict[str, int] = {}
+    if not video_type_check.get("agrees", True):
+        structured_flag_class_counts["video_type_mismatch"] = 1
+    if misattributions:
+        structured_flag_class_counts["misattribution"] = len(misattributions)
+    if boundary_issues:
+        structured_flag_class_counts["boundary_issue"] = len(boundary_issues)
+        major_or_moderate = len([b for b in boundary_issues if b.get("severity") in {"moderate", "major"}])
+        if major_or_moderate:
+            structured_flag_class_counts["boundary_issue_major_or_moderate"] = major_or_moderate
+    if collapse_issues:
+        structured_flag_class_counts["collapse_issue"] = len(collapse_issues)
+    conversation_issue_count = len([c for c in conversation_verdicts if c.get("verdict") == "ISSUE"])
+    if conversation_issue_count:
+        structured_flag_class_counts["conversation_issue"] = conversation_issue_count
+    conversation_flag_count = len([c for c in conversation_verdicts if c.get("verdict") == "FLAG"])
+    if conversation_flag_count:
+        structured_flag_class_counts["conversation_flag"] = conversation_flag_count
+
+    other_flag_class_counts: Dict[str, int] = {}
+    for row in other_flags_detailed:
+        flag_class = row.get("flag_class")
+        if isinstance(flag_class, str) and flag_class:
+            other_flag_class_counts[flag_class] = int(other_flag_class_counts.get(flag_class, 0)) + 1
+    unmatched_other_flags = max(0, len(other_flags) - len(other_flags_detailed))
+    if unmatched_other_flags:
+        other_flag_class_counts["other_unclassified"] = unmatched_other_flags
 
     metadata: Dict[str, Any] = {
         "input_file": str(input_path),
@@ -1362,6 +1495,13 @@ def verify_file(
             if isinstance(claude_model, str) and claude_model.strip()
             else {}
         ),
+        "flag_summary": {
+            "video_type_agrees": bool(video_type_check.get("agrees", True)),
+            "structured_flag_class_counts": structured_flag_class_counts,
+            "other_flag_class_counts": other_flag_class_counts,
+            "other_flag_count": len(other_flags),
+            "other_flag_detailed_count": len(other_flags_detailed),
+        },
     }
 
     output: Dict[str, Any] = {
@@ -1375,6 +1515,7 @@ def verify_file(
         "boundary_issues": boundary_issues,
         "collapse_issues": collapse_issues,
         "other_flags": other_flags,
+        "other_flags_detailed": other_flags_detailed,
         "summary": str(result.get("summary", "")),
         "metadata": metadata,
     }
@@ -1410,6 +1551,9 @@ def verify_file(
         print(f"{LOG_PREFIX}   Other flags: {len(other_flags)}")
         for flag in other_flags:
             print(f"{LOG_PREFIX}     {flag[:100]}")
+    other_flag_class_counts_print = metadata.get("flag_summary", {}).get("other_flag_class_counts")
+    if isinstance(other_flag_class_counts_print, dict) and other_flag_class_counts_print:
+        print(f"{LOG_PREFIX}   Other flag classes: {other_flag_class_counts_print}")
     print(f"{LOG_PREFIX}   Summary: {result.get('summary', '')[:200]}")
     print(f"{LOG_PREFIX}   Time: {elapsed:.1f}s")
     print(f"{LOG_PREFIX}   Output: {output_path}")

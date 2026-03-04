@@ -46,6 +46,12 @@ LEGACY_QUARANTINE_CHECK_MAP = {
 
 DEFAULT_PARALLEL = 10
 
+STAGE06B_FLAG_MISATTRIBUTION_BLOCK_THRESHOLD = 5
+STAGE06B_FLAG_CONVERSATION_BLOCK_THRESHOLD = 4
+STAGE06B_FLAG_BOUNDARY_BLOCK_THRESHOLD = 2
+STAGE06B_FLAG_MISSING_TARGET_COVERAGE_BLOCK_THRESHOLD = 2
+STAGE06B_FLAG_MAJOR_OTHER_BLOCK_THRESHOLD = 1
+
 
 # ── Stage registry ──────────────────────────────────────────────────────────
 
@@ -73,11 +79,15 @@ STAGES = [
 STAGE_KEYS = [s.key for s in STAGES]
 STAGE_KEY_INDEX = {key: idx for idx, key in enumerate(STAGE_KEYS)}
 STAGE_KEYS_BY_LENGTH = sorted(STAGE_KEYS, key=len, reverse=True)
+EMBEDDED_STAGE_CHECK_RE = re.compile(
+    r"(?:^|_)stage(" + "|".join(re.escape(key) for key in STAGE_KEYS_BY_LENGTH) + r")(?:_|$)"
+)
 STAGES_SUPPORTING_QUARANTINE = {"06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"}
 STAGES_SUPPORTING_OVERWRITE = {"06", "06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b"}
 STAGES_SUPPORTING_APPLY_REPAIRS = {"06h"}
 STAGES_SUPPORTING_LLM_RUNTIME_FLAGS = {"06", "06b", "06e", "06g", "07", "07b"}
 STAGES_SUPPORTING_SKIP_PREFLIGHT = {"06", "06b"}
+STAGES_SUPPORTING_FORCE = {"09"}
 
 STAGE_OUTPUT_DIRS = {
     "06": DATA_DIR / "06.LLM.video-type",
@@ -240,6 +250,9 @@ def quarantine_reason_stage(check: str) -> Optional[str]:
     for stage_key in STAGE_KEYS_BY_LENGTH:
         if normalized.startswith(f"stage{stage_key}"):
             return stage_key
+    match = EMBEDDED_STAGE_CHECK_RE.search(normalized)
+    if match:
+        return match.group(1)
     return None
 
 
@@ -287,6 +300,8 @@ def filter_quarantine_rows_for_restart(
         if isinstance(reasons, list):
             for reason in reasons:
                 check = str(reason.get("check", "")).strip()
+                if check == "preexisting_quarantine":
+                    continue
                 reason_stage = quarantine_reason_stage(check)
                 if reason_stage is None or STAGE_KEY_INDEX[reason_stage] < start_idx:
                     retained_reasons.append(reason)
@@ -299,6 +314,8 @@ def filter_quarantine_rows_for_restart(
             for check in checks:
                 check_text = str(check).strip()
                 if not check_text:
+                    continue
+                if check_text == "preexisting_quarantine":
                     continue
                 reason_stage = quarantine_reason_stage(check_text)
                 if reason_stage is None or STAGE_KEY_INDEX[reason_stage] < start_idx:
@@ -351,6 +368,7 @@ def build_stage_command(
     *,
     llm_timeout_seconds: int | None = None,
     llm_retries: int | None = None,
+    force_stages: Optional[Set[str]] = None,
 ) -> List[str]:
     """Build the command list to execute a stage script."""
     script_path = str(REPO_ROOT / "scripts" / "training-data" / stage.script)
@@ -370,6 +388,8 @@ def build_stage_command(
     if stage.key in STAGES_SUPPORTING_SKIP_PREFLIGHT:
         # Avoid N-way Claude startup probes when conveyor mode fans out many LLM workers.
         cmd.append("--skip-preflight")
+    if force_stages and stage.key in force_stages and stage.key in STAGES_SUPPORTING_FORCE:
+        cmd.append("--force")
 
     # Stage 08 per-video runs are only used for immediate gating progression.
     # Canonical manifest-level Stage 08 reporting is emitted in end-of-run
@@ -600,23 +620,119 @@ async def run_stage_validator_errors(
     return quarantined_ids, reasons_by_video
 
 
-def check_06b_verdict(video_id: str, source: str) -> bool:
-    """Check if a video was REJECTED by stage 06b. Returns True if REJECT."""
+def _safe_count_list(value: Any) -> int:
+    if isinstance(value, list):
+        return len(value)
+    return 0
+
+
+def _stage06b_flag_summary_counts(payload: dict) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    if not isinstance(payload, dict):
+        return counts
+    metadata = payload.get("metadata")
+    if not isinstance(metadata, dict):
+        return counts
+    flag_summary = metadata.get("flag_summary")
+    if not isinstance(flag_summary, dict):
+        return counts
+    structured_counts = flag_summary.get("structured_flag_class_counts")
+    if not isinstance(structured_counts, dict):
+        return counts
+    for key, raw_value in structured_counts.items():
+        if isinstance(raw_value, bool):
+            continue
+        if isinstance(raw_value, int) and raw_value >= 0:
+            counts[str(key)] = raw_value
+    return counts
+
+
+def evaluate_06b_gate(video_id: str, source: str) -> Tuple[bool, Optional[str], Optional[str]]:
+    """Fail-closed gate for Stage 06b REJECT + severe FLAG outcomes."""
     verify_dir = DATA_DIR / "06b.LLM.verify" / source
     if not verify_dir.exists():
-        return False
-    candidates = list(verify_dir.rglob(f"*{video_id}*.verification.json"))
-    for cpath in candidates:
-        try:
-            payload = json.loads(cpath.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            continue
-        verdict = str(
-            payload.get("verdict") or payload.get("overall_verdict") or ""
-        ).strip().upper()
-        if verdict == "REJECT":
-            return True
-    return False
+        return False, None, None
+    verification_path = _pick_newest(list(verify_dir.rglob(f"*{video_id}*.verification.json")))
+    if verification_path is None:
+        return False, None, None
+    try:
+        payload = json.loads(verification_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False, None, None
+
+    verdict = str(
+        payload.get("verdict") or payload.get("overall_verdict") or ""
+    ).strip().upper()
+    if verdict == "REJECT":
+        return True, "stage06b_reject", "Stage 06b verdict: REJECT"
+    if verdict != "FLAG":
+        return False, None, None
+
+    structured_counts = _stage06b_flag_summary_counts(payload)
+
+    misattribution_count = _safe_count_list(payload.get("misattributions"))
+
+    conversation_flag_count = structured_counts.get("conversation_flag")
+    if not isinstance(conversation_flag_count, int):
+        conversation_flag_count = 0
+        conversation_verdicts = payload.get("conversation_verdicts")
+        if isinstance(conversation_verdicts, list):
+            for row in conversation_verdicts:
+                if not isinstance(row, dict):
+                    continue
+                verdict_text = str(row.get("verdict", "")).strip().upper()
+                if verdict_text in {"FLAG", "ISSUE"}:
+                    conversation_flag_count += 1
+
+    boundary_major_or_moderate_count = structured_counts.get("boundary_issue_major_or_moderate")
+    if not isinstance(boundary_major_or_moderate_count, int):
+        boundary_major_or_moderate_count = 0
+        boundary_issues = payload.get("boundary_issues")
+        if isinstance(boundary_issues, list):
+            for row in boundary_issues:
+                if not isinstance(row, dict):
+                    continue
+                severity = str(row.get("severity", "")).strip().lower()
+                if severity in {"major", "moderate"}:
+                    boundary_major_or_moderate_count += 1
+
+    major_other_flag_count = 0
+    missing_target_coverage_count = 0
+    other_flags_detailed = payload.get("other_flags_detailed")
+    if isinstance(other_flags_detailed, list):
+        for row in other_flags_detailed:
+            if not isinstance(row, dict):
+                continue
+            flag_class = str(row.get("flag_class", "")).strip()
+            severity = str(row.get("severity", "")).strip().lower()
+            if flag_class == "missing_target_coverage":
+                missing_target_coverage_count += 1
+            if severity == "major":
+                major_other_flag_count += 1
+
+    triggered: List[str] = []
+    if misattribution_count >= STAGE06B_FLAG_MISATTRIBUTION_BLOCK_THRESHOLD:
+        triggered.append(f"misattributions={misattribution_count}")
+    if conversation_flag_count >= STAGE06B_FLAG_CONVERSATION_BLOCK_THRESHOLD:
+        triggered.append(f"conversation_flags={conversation_flag_count}")
+    if boundary_major_or_moderate_count >= STAGE06B_FLAG_BOUNDARY_BLOCK_THRESHOLD:
+        triggered.append(f"boundary_major_or_moderate={boundary_major_or_moderate_count}")
+    if missing_target_coverage_count >= STAGE06B_FLAG_MISSING_TARGET_COVERAGE_BLOCK_THRESHOLD:
+        triggered.append(f"missing_target_coverage={missing_target_coverage_count}")
+    if major_other_flag_count >= STAGE06B_FLAG_MAJOR_OTHER_BLOCK_THRESHOLD:
+        triggered.append(f"major_other_flags={major_other_flag_count}")
+
+    if not triggered:
+        return False, None, None
+
+    details = (
+        f"mis={misattribution_count}, conv_flags={conversation_flag_count}, "
+        f"boundary_major_or_moderate={boundary_major_or_moderate_count}, "
+        f"missing_target_coverage={missing_target_coverage_count}, "
+        f"major_other={major_other_flag_count}"
+    )
+    message = f"Stage 06b severe FLAG ({'; '.join(triggered)}). Metrics: {details}."
+    return True, "stage06b_flag_severe", message
 
 
 def write_quarantine_file(
@@ -686,12 +802,12 @@ async def run_video(
     progress: Dict[str, str],
     llm_timeout_seconds: int | None = None,
     llm_retries: int | None = None,
+    force_stages: Optional[Set[str]] = None,
 ) -> None:
     """Run one video through all stages sequentially."""
     log_prefix = f"[{vs.video_id}]"
     if vs.video_id in preexisting_quarantine_ids:
-        vs.status = "quarantined"
-        add_quarantine_reason(vs, "preexisting_quarantine", "Video was already quarantined before this run.")
+        vs.status = "skipped_preexisting_quarantine"
         progress[vs.video_id] = "QUARANTINED"
         print(f"{log_prefix} SKIP: already quarantined before run")
         return
@@ -713,6 +829,7 @@ async def run_video(
                 quarantine_file,
                 llm_timeout_seconds=llm_timeout_seconds,
                 llm_retries=llm_retries,
+                force_stages=force_stages,
             )
 
             if dry_run:
@@ -757,12 +874,17 @@ async def run_video(
                 progress[vs.video_id] = "QUARANTINED"
                 return
 
-            # Post-06b: check for REJECT verdict
+            # Post-06b: fail-closed gate on REJECT + severe FLAG outcomes.
             if stage.key == "06b":
-                if check_06b_verdict(vs.video_id, vs.source):
+                should_quarantine, check_key, message = evaluate_06b_gate(vs.video_id, vs.source)
+                if should_quarantine:
                     vs.status = "quarantined"
-                    add_quarantine_reason(vs, "stage06b_reject", "Stage 06b verdict: REJECT")
-                    print(f"{log_prefix} QUARANTINED: REJECT verdict from 06b")
+                    add_quarantine_reason(
+                        vs,
+                        check_key or "stage06b_flag_severe",
+                        message or "Stage 06b severe verification failure.",
+                    )
+                    print(f"{log_prefix} QUARANTINED: {message or 'severe 06b gate trigger'}")
                     progress[vs.video_id] = "QUARANTINED"
                     return
 
@@ -970,6 +1092,7 @@ async def run_pipeline(args: argparse.Namespace) -> int:
                 progress,
                 llm_timeout_seconds=args.llm_timeout_seconds,
                 llm_retries=args.llm_retries,
+                force_stages=set(args.force_stage or []),
             )
         )
         for vs in videos
@@ -996,6 +1119,7 @@ async def run_pipeline(args: argparse.Namespace) -> int:
     done_count = sum(1 for v in videos if v.status == "done")
     fail_count = sum(1 for v in videos if v.status == "failed")
     q_count = sum(1 for v in videos if v.status == "quarantined")
+    skipped_preexisting_count = sum(1 for v in videos if v.status == "skipped_preexisting_quarantine")
 
     print()
     print("=" * 56)
@@ -1006,6 +1130,11 @@ async def run_pipeline(args: argparse.Namespace) -> int:
         print(f"  Quarantined: {q_count}")
         for v in quarantined:
             print(f"    {v.video_id}")
+    if skipped_preexisting_count:
+        print(f"  Skipped preexisting quarantine: {skipped_preexisting_count}")
+        for v in videos:
+            if v.status == "skipped_preexisting_quarantine":
+                print(f"    {v.video_id}")
     if fail_count:
         print(f"  Failed:      {fail_count}")
         for v in videos:
@@ -1088,6 +1217,12 @@ def main() -> None:
         default=[],
         help="Optional per-stage LLM concurrency cap (repeatable, format: STAGE=N)",
     )
+    parser.add_argument(
+        "--force-stage",
+        action="append",
+        default=[],
+        help="Force eligible stage(s) to rebuild even when their own state cache says unchanged (repeatable).",
+    )
     args = parser.parse_args()
     if args.parallel < 1:
         parser.error("--parallel must be >= 1")
@@ -1099,6 +1234,22 @@ def main() -> None:
         args.stage_parallel_caps = parse_stage_parallel_caps(list(args.stage_parallel_cap or []))
     except ValueError as exc:
         parser.error(str(exc))
+    requested_force_stages = [str(stage_key or "").strip() for stage_key in (args.force_stage or []) if str(stage_key or "").strip()]
+    unknown_force_stages = sorted({stage_key for stage_key in requested_force_stages if stage_key not in STAGE_KEYS})
+    if unknown_force_stages:
+        parser.error(
+            f"unknown --force-stage value(s): {', '.join(unknown_force_stages)} "
+            f"(valid: {', '.join(STAGE_KEYS)})"
+        )
+    unsupported_force_stages = sorted(
+        {stage_key for stage_key in requested_force_stages if stage_key not in STAGES_SUPPORTING_FORCE}
+    )
+    if unsupported_force_stages:
+        parser.error(
+            f"--force-stage only supports: {', '.join(sorted(STAGES_SUPPORTING_FORCE))}; "
+            f"unsupported: {', '.join(unsupported_force_stages)}"
+        )
+    args.force_stage = sorted(set(requested_force_stages))
     rc = asyncio.run(run_pipeline(args))
     sys.exit(rc)
 

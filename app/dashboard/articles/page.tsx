@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { ArticlesPage } from "@/src/articles"
 
 export default async function DashboardArticlesPage() {
@@ -25,9 +26,10 @@ export default async function DashboardArticlesPage() {
   const hasPurchased = profile?.has_purchased ?? false
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-tab-bar">
       <AppHeader currentPage="articles" isLoggedIn={true} hasPurchased={hasPurchased} />
       <ArticlesPage />
+      {hasPurchased && <MobileTabBar />}
     </div>
   )
 }

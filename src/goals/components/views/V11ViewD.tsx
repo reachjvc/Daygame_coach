@@ -782,7 +782,7 @@ function KanbanColumnView({
       <div className="relative flex-1">
         <div
           ref={scrollRef}
-          className="overflow-y-auto p-2 space-y-2 min-h-[120px] max-h-[calc(100vh-220px)]"
+          className="overflow-y-auto p-2 space-y-2 min-h-[120px] max-h-[calc(100dvh-220px)]"
         >
           {goals.map((goal) => (
             <KanbanCard
@@ -1978,7 +1978,7 @@ export function V11ViewD(props: V11ViewProps) {
 
       {/* Desktop: horizontal kanban columns (hidden on mobile) */}
       <div className="hidden md:block px-4">
-        <div className="grid grid-cols-4 gap-3" style={{ minHeight: "calc(100vh - 200px)" }}>
+        <div className="grid grid-cols-4 gap-3" style={{ minHeight: "calc(100dvh - 200px)" }}>
           {KANBAN_COLUMNS.map((col) => (
             <KanbanColumnView
               key={col.id}
@@ -2070,7 +2070,7 @@ export function V11ViewD(props: V11ViewProps) {
       {/* Edit goal modal overlay -- stays on top of kanban board */}
       {editGoal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 pt-safe pb-safe"
           onClick={(e) => {
             // Close on backdrop click
             if (e.target === e.currentTarget) setScreen({ kind: "main" })

@@ -61,6 +61,7 @@ export const UTILITY_ICONS = new Set([
 // ask the user first.
 // ---------------------------------------------------------------------------
 export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
+  Activity: ["health tracking panel header"],
   Award: ["achievements", "milestone badges"],
   Ban: ["vices/elimination life area"],
   Beaker: ["test pages (dev only)"],
@@ -93,10 +94,11 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Milestone: ["milestone goal type"],
   Repeat: ["recurring goal type"],
   Scale: ["balance", "calibration", "key stats"],
-  SlidersHorizontal: ["milestone curve customization", "calibration principles"],
+  SlidersHorizontal: ["milestone curve customization", "calibration principles", "review template icons"],
   ShieldCheck: ["safety", "protection", "key stats"],
-  BarChart3: ["feature highlight", "marketing stats"],
+  BarChart3: ["feature highlight", "marketing stats", "tracking bottom tab"],
   CircleDot: ["individual L1 goal header", "goal widgets empty state", "generic objective icon"],
+  ClipboardCheck: ["structured review templates", "checklist-style reviews"],
   Compass: ["navigation", "direction", "principles section"],
   Crosshair: ["site logo/branding", "evaluator calibration"],
   Dumbbell: ["fitness life area", "technique focus"],
@@ -123,7 +125,7 @@ export const SEMANTIC_ICON_ROLES: Record<string, string[]> = {
   Swords: ["scenarios module", "practice/sparring"],
   Sun: ["daily view"],
   Sunrise: ["inner-game aspiration", "value prioritization"],
-  Target: ["icon preview"],
+  Target: ["icon preview", "review template icons"],
   TrendingUp: ["growth metrics", "progress indicators", "milestone progress"],
   Trophy: ["achievement badges", "completion step"],
   Users: ["social life area", "common humanity"],

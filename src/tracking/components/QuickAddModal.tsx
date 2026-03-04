@@ -201,6 +201,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
               </Button>
               <Input
                 type="number"
+                inputMode="numeric"
                 value={approachCount}
                 onChange={(e) => handleApproachCountChange(parseInt(e.target.value) || 1)}
                 className="w-20 text-center text-lg font-bold"
@@ -238,7 +239,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="size-7"
+                      className="size-9 sm:size-7"
                       onClick={() => handleOutcomeChange(option.value, -1)}
                       disabled={outcomes[option.value] === 0}
                     >
@@ -251,7 +252,7 @@ export function QuickAddModal({ open, onOpenChange, onSuccess }: QuickAddModalPr
                       type="button"
                       variant="ghost"
                       size="icon"
-                      className="size-7"
+                      className="size-9 sm:size-7"
                       onClick={() => handleOutcomeChange(option.value, 1)}
                       disabled={totalOutcomes >= approachCount}
                     >

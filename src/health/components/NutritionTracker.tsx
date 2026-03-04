@@ -16,6 +16,7 @@ export function NutritionTracker() {
   const [qualityScore, setQualityScore] = useState<NutritionQuality>(3)
   const [note, setNote] = useState("")
   const [proteinG, setProteinG] = useState("")
+  const [calories, setCalories] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -46,12 +47,14 @@ export function NutritionTracker() {
           quality_score: qualityScore,
           note: note.trim(),
           protein_g: proteinG ? parseFloat(proteinG) : null,
+          calories: calories ? parseInt(calories) : null,
         }),
       })
       if (!res.ok) throw new Error("Failed to save")
       setQualityScore(3)
       setNote("")
       setProteinG("")
+      setCalories("")
       setIsAdding(false)
       await fetchLogs()
     } catch (e) {
@@ -149,15 +152,27 @@ export function NutritionTracker() {
                 Context matters — &quot;pizza after rejection spiral&quot; ≠ &quot;pizza at planned date&quot;
               </p>
             </div>
-            <div>
-              <Label htmlFor="protein">Protein (g) — optional</Label>
-              <Input
-                id="protein"
-                type="number"
-                placeholder="150"
-                value={proteinG}
-                onChange={(e) => setProteinG(e.target.value)}
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="protein">Protein (g)</Label>
+                <Input
+                  id="protein"
+                  type="number"
+                  placeholder="150"
+                  value={proteinG}
+                  onChange={(e) => setProteinG(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="calories">Calories</Label>
+                <Input
+                  id="calories"
+                  type="number"
+                  placeholder="2000"
+                  value={calories}
+                  onChange={(e) => setCalories(e.target.value)}
+                />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={handleSubmit} disabled={isSaving || !note.trim()}>
@@ -206,6 +221,7 @@ export function NutritionTracker() {
                   <div className="text-xs text-muted-foreground">
                     {new Date(log.logged_at).toLocaleDateString()}
                     {log.protein_g !== null && ` · ${log.protein_g}g protein`}
+                    {log.calories !== null && ` · ${log.calories} kcal`}
                   </div>
                 </div>
               </div>

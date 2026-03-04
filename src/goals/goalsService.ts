@@ -6,7 +6,7 @@ import type { GoalWithProgress, GoalTreeNode, GoalFilterState, InputMode, Celebr
 import type { DailyGoalSnapshotRow, GoalPhase, LinkedMetric } from "@/src/db/goalTypes"
 import type { BatchGoalInsert } from "./treeGenerationService"
 import { generateMilestoneLadder, computeRampMilestoneDates } from "./milestoneService"
-import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getDaygamePathL1 } from "./data/goalGraph"
+import { getTemplatesByCategory, GOAL_TEMPLATE_MAP, getL2AchievementsForL3, getDaygamePathL1, getAreaCatalog } from "./data/goalGraph"
 import { LIFE_AREAS } from "./data/lifeAreas"
 import { detectTierUpgrades } from "./badgeEngineService"
 
@@ -1089,75 +1089,132 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
   const TEMP_PREFIX = "__temp_"
   const inserts: BatchGoalInsert[] = []
 
-  // --- 1. Daygame template L3 goals → build tree with deduped ancestors ---
+  // --- 1. Template L3 goals → build L1→L2→L3 tree per area ---
   const selectedL3Ids = [...selections.selectedGoalIds].filter(
     (id) => GOAL_TEMPLATE_MAP[id]?.level === 3
   )
 
-  if (selectedL3Ids.length > 0) {
-    // Find the L1 for the user's chosen path
-    const pathL1s = getDaygamePathL1(selections.path)
-    const l1 = pathL1s[0]
+  // Group selected L3 IDs by their life area
+  const l3ByArea = new Map<string, string[]>()
+  for (const l3Id of selectedL3Ids) {
+    const tmpl = GOAL_TEMPLATE_MAP[l3Id]
+    if (!tmpl) continue
+    const area = tmpl.lifeArea
+    if (!l3ByArea.has(area)) l3ByArea.set(area, [])
+    l3ByArea.get(area)!.push(l3Id)
+  }
 
-    if (l1) {
-      // Emit L1
-      const l1TempId = TEMP_PREFIX + l1.id
+  // Track L1 temp IDs so suggestion goals can reference them
+  const areaL1TempIds = new Map<string, string>()
+
+  // Process each area's template L3s
+  for (const [areaId, areaL3Ids] of l3ByArea) {
+    let l1TempId: string
+
+    if (areaId === "daygame") {
+      // Daygame: use path-based L1
+      const pathL1s = getDaygamePathL1(selections.path)
+      const l1 = pathL1s[0]
+      if (!l1) continue
+      l1TempId = TEMP_PREFIX + l1.id
       const l1Insert = templateToSetupInsert(l1, null)
       if (selections.targetDates?.["daygame"]) {
         l1Insert.target_date = selections.targetDates["daygame"]
       }
       inserts.push(l1Insert)
 
-      // Collect unique L2 achievements referenced by selected L3s (standalone badges)
+      // Collect unique L2 achievements referenced by selected L3s
       const l2Map = new Map<string, typeof GOAL_TEMPLATE_MAP[string]>()
-      for (const l3Id of selectedL3Ids) {
+      for (const l3Id of areaL3Ids) {
         for (const l2 of getL2AchievementsForL3(l3Id)) {
           l2Map.set(l2.id, l2)
         }
       }
-
-      // Emit unique L2s as standalone (no parent — they're badges, not hierarchy nodes)
       for (const [, l2] of l2Map) {
         inserts.push(templateToSetupInsert(l2, null))
       }
-
-      // Emit L3s — parent directly to L1
-      for (const l3Id of selectedL3Ids) {
-        const tmpl = GOAL_TEMPLATE_MAP[l3Id]
-        if (!tmpl) continue
-        const rampActive = selections.rampEnabled?.has(l3Id) ?? true
-        const insert = templateToSetupInsert(tmpl, l1TempId, rampActive)
-
-        // Apply user overrides
-        if (selections.targets[l3Id] !== undefined) {
-          insert.target_value = selections.targets[l3Id]
-        }
-        if (selections.curveConfigs[l3Id]) {
-          insert.milestone_config = selections.curveConfigs[l3Id] as unknown as Record<string, unknown>
-          insert.target_value = selections.curveConfigs[l3Id].target
-          insert.goal_type = "milestone"
-        }
-        if (rampActive && selections.rampConfigs?.[l3Id]) {
-          insert.ramp_steps = selections.rampConfigs[l3Id] as unknown as Record<string, unknown>[]
-          insert.target_value = selections.rampConfigs[l3Id][0].frequencyPerWeek
-        }
-
-        // Per-goal date → area date cascade
-        const l3Date = selections.goalDates?.[l3Id] || selections.targetDates?.["daygame"]
-        if (l3Date) insert.target_date = l3Date
-
-        inserts.push(insert)
+    } else {
+      // Non-daygame: use area catalog's L1
+      const catalog = getAreaCatalog(areaId)
+      if (!catalog) continue
+      const areaL1 = catalog.l1Goals.find((l1) => selections.selectedL1s?.has(l1.id)) ?? catalog.l1Goals[0]
+      if (!areaL1) continue
+      l1TempId = TEMP_PREFIX + areaL1.id
+      const l1Insert = templateToSetupInsert(areaL1, null)
+      if (selections.targetDates?.[areaId]) {
+        l1Insert.target_date = selections.targetDates[areaId]
       }
+      inserts.push(l1Insert)
+
+      // Emit L2 achievements for this area
+      for (const l2 of catalog.l2Achievements) {
+        inserts.push(templateToSetupInsert(l2, null))
+      }
+    }
+
+    areaL1TempIds.set(areaId, l1TempId)
+
+    // Emit L3s — parent directly to L1
+    for (const l3Id of areaL3Ids) {
+      const tmpl = GOAL_TEMPLATE_MAP[l3Id]
+      if (!tmpl) continue
+      const rampActive = selections.rampEnabled?.has(l3Id) ?? true
+      const insert = templateToSetupInsert(tmpl, l1TempId, rampActive)
+
+      // Apply user overrides
+      if (selections.targets[l3Id] !== undefined) {
+        insert.target_value = selections.targets[l3Id]
+      }
+      if (selections.curveConfigs[l3Id]) {
+        insert.milestone_config = selections.curveConfigs[l3Id] as unknown as Record<string, unknown>
+        insert.target_value = selections.curveConfigs[l3Id].target
+        insert.goal_type = "milestone"
+      }
+      if (rampActive && selections.rampConfigs?.[l3Id]) {
+        insert.ramp_steps = selections.rampConfigs[l3Id] as unknown as Record<string, unknown>[]
+        insert.target_value = selections.rampConfigs[l3Id][0].frequencyPerWeek
+      }
+
+      // Per-goal date → area date cascade
+      const l3Date = selections.goalDates?.[l3Id] || selections.targetDates?.[areaId]
+      if (l3Date) insert.target_date = l3Date
+
+      inserts.push(insert)
     }
   }
 
-  // --- 2. Life area suggestion goals → standalone ---
+  // --- 2. Non-daygame areas: emit L1 + suggestion L3s for areas WITHOUT template selections ---
+
+  // Also create L1s for areas that have suggestion goals but no template L3s selected
+  for (const areaId of selections.selectedAreas) {
+    if (areaId === "daygame" || areaL1TempIds.has(areaId)) continue
+
+    const catalog = getAreaCatalog(areaId)
+    if (!catalog) continue
+
+    const areaL1 = catalog.l1Goals.find((l1) => selections.selectedL1s?.has(l1.id)) ?? catalog.l1Goals[0]
+    if (!areaL1) continue
+
+    const l1TempId = TEMP_PREFIX + areaL1.id
+    areaL1TempIds.set(areaId, l1TempId)
+
+    const l1Insert = templateToSetupInsert(areaL1, null)
+    if (selections.targetDates?.[areaId]) {
+      l1Insert.target_date = selections.targetDates[areaId]
+    }
+    inserts.push(l1Insert)
+
+    for (const l2 of catalog.l2Achievements) {
+      inserts.push(templateToSetupInsert(l2, null))
+    }
+  }
+
+  // Emit suggestion L3 goals, parented to the area's L1
   for (const goalId of selections.selectedGoalIds) {
     const match = goalId.match(/^(.+)_s(\d+)$/)
     if (!match) continue
 
     const [, areaId, indexStr] = match
-    // Skip if this is actually a template ID that matched the pattern
     if (GOAL_TEMPLATE_MAP[goalId]) continue
 
     const area = LIFE_AREAS.find((a) => a.id === areaId)
@@ -1169,7 +1226,7 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
 
     const insert: BatchGoalInsert = {
       _tempId: `${TEMP_PREFIX}suggestion_${goalId}`,
-      _tempParentId: null,
+      _tempParentId: areaL1TempIds.get(areaId) ?? null,
       title: suggestion.title,
       category: areaId,
       life_area: areaId,
@@ -1184,7 +1241,6 @@ export function buildSetupInserts(selections: GoalSetupSelections): BatchGoalIns
       insert.linked_metric = suggestion.linkedMetric as LinkedMetric
     }
 
-    // Per-goal date → area date cascade
     const suggestionDate = selections.goalDates?.[goalId] || selections.targetDates?.[areaId]
     if (suggestionDate) insert.target_date = suggestionDate
 

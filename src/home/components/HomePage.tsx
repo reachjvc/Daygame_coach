@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { CheckoutButton } from "@/src/home/components/CheckoutButton"
 import { PRODUCTS } from "@/src/home/products"
 
@@ -17,12 +18,12 @@ interface HomePageProps {
 
 export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageProps) {
   return (
-    <div className="min-h-dvh bg-background">
+    <div className={`min-h-dvh bg-background ${hasPurchased ? "pb-tab-bar" : ""}`}>
       <AppHeader currentPage="home" isLoggedIn={isLoggedIn} hasPurchased={hasPurchased} />
 
       {/* Hero Section */}
       <section className="w-full py-24 lg:py-32">
-        <div className="mx-auto max-w-6xl px-8 text-center">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8 text-center">
           <Badge className="mb-6 bg-primary/10 text-primary border-primary/20" variant="outline">
             <Zap className="size-3 mr-1" />
             AI-Powered Training
@@ -54,12 +55,12 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
 
       {/* Features Section */}
       <section id="features" className="w-full py-8 bg-card/30">
-        <div className="mx-auto max-w-6xl px-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8">
           <h2 className="text-balance text-3xl font-bold text-center mb-16 text-foreground">
             Why Practice With AI?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="p-6 bg-card border-border">
+            <Card className="p-4 sm:p-6 bg-card border-border">
               <MessageCircle className="size-12 text-primary mb-4" />
               <h3 className="font-semibold text-xl mb-3 text-foreground">Realistic Conversations</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -67,7 +68,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
               </p>
             </Card>
 
-            <Card className="p-6 bg-card border-border">
+            <Card className="p-4 sm:p-6 bg-card border-border">
               <Swords className="size-12 text-primary mb-4" />
               <h3 className="font-semibold text-xl mb-3 text-foreground">Scenario-Based Training</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -75,7 +76,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
               </p>
             </Card>
 
-            <Card className="p-6 bg-card border-border">
+            <Card className="p-4 sm:p-6 bg-card border-border">
               <BarChart3 className="size-12 text-primary mb-4" />
               <h3 className="font-semibold text-xl mb-3 text-foreground">Instant Feedback</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -85,7 +86,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
           </div>
 
           {/* Preview Dashboard CTA */}
-          <Card className="mt-8 p-6 bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-accent/40">
+          <Card className="mt-8 p-4 sm:p-6 bg-gradient-to-r from-accent/20 via-accent/30 to-accent/20 border-accent/40">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex items-center gap-4">
                 <div className="size-12 rounded-full bg-accent/30 flex items-center justify-center shrink-0">
@@ -112,7 +113,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
 
       {/* Pricing Section */}
       <section id="pricing" className="w-full py-24">
-        <div className="mx-auto max-w-6xl px-8">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8">
           <h2 className="text-balance text-3xl font-bold text-center mb-4 text-foreground">
             Choose Your Plan
           </h2>
@@ -183,7 +184,7 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
 
       {/* CTA Section */}
       <section className="w-full py-24 bg-primary text-primary-foreground my-12 rounded-lg">
-        <div className="mx-auto max-w-6xl px-8 text-center">
+        <div className="mx-auto max-w-6xl px-4 sm:px-8 text-center">
           <h2 className="text-balance text-3xl font-bold mb-6">Ready to Build Your Confidence?</h2>
           <p className="text-pretty text-lg mb-8 opacity-90 leading-relaxed">
             Join hundreds of men who are improving their social skills from the comfort of home.
@@ -210,6 +211,8 @@ export function HomePage({ isLoggedIn = false, hasPurchased = false }: HomePageP
           </div>
         </div>
       </footer>
+
+      {hasPurchased && <MobileTabBar />}
     </div>
   )
 }

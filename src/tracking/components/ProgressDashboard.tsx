@@ -4,6 +4,7 @@ import { useState, useEffect, lazy, Suspense } from "react"
 import { useTrackingStats } from "../hooks/useTrackingStats"
 import { Button } from "@/components/ui/button"
 import { Play } from "lucide-react"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import Link from "next/link"
 import { QuickAddModal } from "./QuickAddModal"
 import {
@@ -14,6 +15,7 @@ import {
   RecentSessionsCard,
   RecentFieldReportsCard,
   WeeklyReviewsCard,
+  DailyReviewCard,
 } from "./dashboard"
 
 // Lazy load the achievements modal (only needed when opened)
@@ -41,7 +43,7 @@ export function ProgressDashboard() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8" data-testid="tracking-dashboard">
+    <div className="max-w-6xl mx-auto px-4 py-8 pb-tab-bar" data-testid="tracking-dashboard">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
@@ -83,22 +85,33 @@ export function ProgressDashboard() {
         )}
 
         {/* Recent Sessions */}
-        <RecentSessionsCard
-          sessions={state.recentSessions}
-          onDeleteSession={deleteSession}
-        />
+        <div className="md:col-span-2">
+          <RecentSessionsCard
+            sessions={state.recentSessions}
+            onDeleteSession={deleteSession}
+          />
+        </div>
 
         {/* Recent Field Reports */}
-        <RecentFieldReportsCard
-          reports={state.recentFieldReports}
-          onDeleteReport={deleteFieldReport}
-        />
+        <div className="md:col-span-2">
+          <RecentFieldReportsCard
+            reports={state.recentFieldReports}
+            onDeleteReport={deleteFieldReport}
+          />
+        </div>
+
+        {/* Daily Reflection */}
+        <div className="md:col-span-2">
+          <DailyReviewCard />
+        </div>
 
         {/* Weekly Reviews */}
-        <WeeklyReviewsCard
-          stats={state.stats}
-          recentReviews={state.recentReviews}
-        />
+        <div className="md:col-span-2">
+          <WeeklyReviewsCard
+            stats={state.stats}
+            recentReviews={state.recentReviews}
+          />
+        </div>
       </div>
 
       {/* Quick Add Modal */}
@@ -107,6 +120,8 @@ export function ProgressDashboard() {
         onOpenChange={setQuickAddOpen}
         onSuccess={refresh}
       />
+
+      <MobileTabBar />
     </div>
   )
 }

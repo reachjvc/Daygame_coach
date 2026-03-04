@@ -414,7 +414,7 @@ export function GoalsHubContent({ setupPath = "/dashboard/goals/setup" }: { setu
 
   return (
     <div
-      className="space-y-6 p-6 -mx-2"
+      className="space-y-4 sm:space-y-6 p-4 sm:p-6 -mx-2"
       data-testid="goals-page"
       style={{ borderRadius: 12 }}
     >

@@ -66,6 +66,15 @@ def repo_root() -> Path:
 
 
 _SAFE_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+LEGACY_QUARANTINE_CHECK_MAP = {
+    "stage07b_enrichment_verify_error": "stage07b_gate_block",
+}
+STAGE_ORDER = ["06", "06b", "06c", "06d", "06e", "06f", "06g", "06h", "07", "07b", "08", "09"]
+STAGE_INDEX = {stage_key: idx for idx, stage_key in enumerate(STAGE_ORDER)}
+STAGE_KEYS_BY_LENGTH = sorted(STAGE_ORDER, key=len, reverse=True)
+EMBEDDED_STAGE_CHECK_RE = re.compile(
+    r"(?:^|_)stage(" + "|".join(re.escape(key) for key in STAGE_KEYS_BY_LENGTH) + r")(?:_|$)"
+)
 
 
 def safe_report_name(raw: str) -> str:
@@ -83,6 +92,76 @@ def extract_video_id(name: str) -> Optional[str]:
     """Extract video ID from filename or folder name (e.g., 'Title [abc123]' -> 'abc123')."""
     match = re.search(r"\[([a-zA-Z0-9_-]{11})\]", name)
     return match.group(1) if match else None
+
+
+def normalize_quarantine_check(raw_check: Any) -> str:
+    check = str(raw_check or "").strip()
+    return LEGACY_QUARANTINE_CHECK_MAP.get(check, check)
+
+
+def quarantine_reason_stage(check: Any) -> Optional[str]:
+    normalized = normalize_quarantine_check(check)
+    for stage_key in STAGE_KEYS_BY_LENGTH:
+        if normalized.startswith(f"stage{stage_key}"):
+            return stage_key
+    match = EMBEDDED_STAGE_CHECK_RE.search(normalized)
+    if match:
+        return match.group(1)
+    return None
+
+
+def load_upstream_quarantine_video_ids(
+    quarantine_path: Path,
+    *,
+    before_stage: str,
+) -> Set[str]:
+    """Load only upstream quarantine IDs so Stage 08 never self-hides stale Stage 08/09 blocks."""
+    try:
+        payload = json.loads(quarantine_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return set()
+    if not isinstance(payload, dict):
+        return set()
+
+    before_idx = STAGE_INDEX[before_stage]
+    quarantined: Set[str] = set()
+    video_rows = payload.get("videos")
+    if isinstance(video_rows, list):
+        for row in video_rows:
+            if not isinstance(row, dict):
+                continue
+            video_id = str(row.get("video_id", "")).strip()
+            if not video_id:
+                continue
+
+            has_upstream_reason = False
+            reasons = row.get("reasons")
+            if isinstance(reasons, list):
+                for reason in reasons:
+                    if not isinstance(reason, dict):
+                        continue
+                    reason_stage = quarantine_reason_stage(reason.get("check"))
+                    if reason_stage and STAGE_INDEX[reason_stage] < before_idx:
+                        has_upstream_reason = True
+                        break
+
+            if not has_upstream_reason:
+                checks = row.get("checks")
+                if isinstance(checks, list):
+                    for check in checks:
+                        reason_stage = quarantine_reason_stage(check)
+                        if reason_stage and STAGE_INDEX[reason_stage] < before_idx:
+                            has_upstream_reason = True
+                            break
+
+            if has_upstream_reason:
+                quarantined.add(video_id)
+        return quarantined
+
+    raw_ids = payload.get("quarantined_video_ids")
+    if isinstance(raw_ids, list):
+        return {str(video_id).strip() for video_id in raw_ids if isinstance(video_id, str) and str(video_id).strip()}
+    return set()
 
 
 def infer_source_from_path(file_path: Path) -> Optional[str]:
@@ -905,11 +984,13 @@ def main() -> int:
         qf = Path(args.quarantine_file)
         if qf.exists():
             try:
-                qdata = json.loads(qf.read_text(encoding="utf-8"))
-                quarantine_video_ids = set(qdata.get("quarantined_video_ids", []))
+                quarantine_video_ids = load_upstream_quarantine_video_ids(qf, before_stage="08")
                 if quarantine_video_ids:
-                    print(f"[08.DET.taxonomy-validation] Quarantine: excluding {len(quarantine_video_ids)} video(s) from coverage")
-            except (json.JSONDecodeError, OSError):
+                    print(
+                        "[08.DET.taxonomy-validation] Quarantine: excluding "
+                        f"{len(quarantine_video_ids)} upstream-quarantined video(s) from coverage"
+                    )
+            except (json.JSONDecodeError, OSError, ValueError):
                 pass
 
     # Filter by manifest if provided

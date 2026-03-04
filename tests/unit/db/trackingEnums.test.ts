@@ -26,8 +26,9 @@ describe("const arrays", () => {
     expect(SET_TYPES).toContain("triple_set")
   })
 
-  test("REVIEW_TYPES has 3 values", () => {
-    expect(REVIEW_TYPES.length).toBe(3)
+  test("REVIEW_TYPES has 4 values", () => {
+    expect(REVIEW_TYPES.length).toBe(4)
+    expect(REVIEW_TYPES).toContain("daily")
     expect(REVIEW_TYPES).toContain("weekly")
     expect(REVIEW_TYPES).toContain("quarterly")
   })
@@ -83,7 +84,7 @@ describe("Zod schemas", () => {
   })
 
   test("ReviewTypeSchema rejects invalid value", () => {
-    expect(ReviewTypeSchema.safeParse("daily").success).toBe(false)
+    expect(ReviewTypeSchema.safeParse("yearly").success).toBe(false)
   })
 
   test("FieldTypeSchema accepts all valid values", () => {
@@ -137,9 +138,10 @@ describe("type guards", () => {
   })
 
   test("isKnownReviewType", () => {
+    expect(isKnownReviewType("daily")).toBe(true)
     expect(isKnownReviewType("weekly")).toBe(true)
     expect(isKnownReviewType("quarterly")).toBe(true)
-    expect(isKnownReviewType("daily")).toBe(false)
+    expect(isKnownReviewType("yearly")).toBe(false)
   })
 
   test("isKnownFieldType", () => {

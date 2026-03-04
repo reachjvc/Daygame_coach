@@ -32,7 +32,7 @@ export function DashboardSkeleton() {
       {/* Content grid skeleton */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Quick Actions skeleton */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="h-6 w-32 bg-muted rounded animate-pulse mb-4" />
           <div className="space-y-3">
             {[1, 2, 3, 4].map((i) => (
@@ -42,7 +42,7 @@ export function DashboardSkeleton() {
         </Card>
 
         {/* Achievements skeleton */}
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           <div className="h-6 w-44 bg-muted rounded animate-pulse mb-4" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
@@ -58,7 +58,7 @@ export function DashboardSkeleton() {
         </Card>
 
         {/* Sessions skeleton */}
-        <Card className="p-6 md:col-span-2">
+        <Card className="p-4 sm:p-6 md:col-span-2">
           <div className="h-6 w-36 bg-muted rounded animate-pulse mb-4" />
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (

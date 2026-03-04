@@ -8,6 +8,7 @@ const CreateSchema = z.object({
   quality_score: z.number().int().min(1).max(5),
   note: z.string().min(1).max(500),
   protein_g: z.number().min(0).max(1000).nullable().optional(),
+  calories: z.number().int().min(1).max(10000).nullable().optional(),
   logged_at: z.string().optional(),
 })
 

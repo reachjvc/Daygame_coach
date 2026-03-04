@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Check, ChevronRight, Plus, Sparkles, Star, X } from "lucide-react"
 import { FutureDateInput } from "../FutureDateInput"
-import { getDaygamePathL1, getAreaCatalog } from "@/src/goals/data/goalGraph"
+import { getDaygamePathL1, getAreaCatalog, GOAL_TEMPLATE_MAP } from "@/src/goals/data/goalGraph"
 import type { DaygamePath, LifeAreaConfig } from "@/src/goals/types"
 
 /* ── Neon wireframe palette ── */
@@ -43,7 +43,6 @@ interface DirectionStepProps {
   onUpdateCustomL1: (id: string, text: string) => void
   onRemoveCustomL1: (id: string) => void
   onToggleArea: (areaId: string) => void
-  onToggleGoal: (id: string) => void
   onUpdateTargetDate: (areaId: string, date: string) => void
   onAdvance: () => void
   onSkipToGoals: () => void
@@ -72,7 +71,6 @@ export function DirectionStep({
   onUpdateCustomL1,
   onRemoveCustomL1,
   onToggleArea,
-  onToggleGoal,
   onUpdateTargetDate,
   onAdvance,
   onSkipToGoals,
@@ -81,15 +79,17 @@ export function DirectionStep({
 
   const otherAreas = lifeAreas.filter((a) => a.id !== "daygame" && a.id !== "custom")
 
+  const hasTemplateGoalsForArea = (areaId: string) =>
+    [...selectedGoals].some((id) => {
+      const tmpl = GOAL_TEMPLATE_MAP[id]
+      return tmpl && tmpl.lifeArea === areaId && tmpl.level === 3
+    })
+
   const handleAreaCardClick = (areaId: string) => {
     if (expandedAreaId === areaId) {
-      // Collapsing — auto-deselect if no goals checked
-      const area = lifeAreas.find((a) => a.id === areaId)
-      if (area?.suggestions && selectedAreas.has(areaId)) {
-        const hasAny = area.suggestions.some((_, i) =>
-          selectedGoals.has(`${areaId}_s${i}`)
-        )
-        if (!hasAny) onToggleArea(areaId)
+      // Collapsing — auto-deselect if no template goals selected
+      if (selectedAreas.has(areaId) && !hasTemplateGoalsForArea(areaId)) {
+        onToggleArea(areaId)
       }
       setExpandedAreaId(null)
     } else {
@@ -100,23 +100,12 @@ export function DirectionStep({
     }
   }
 
-  const handleAreaDone = (areaId: string) => {
-    const area = lifeAreas.find((a) => a.id === areaId)
-    if (area?.suggestions && selectedAreas.has(areaId)) {
-      const hasAny = area.suggestions.some((_, i) =>
-        selectedGoals.has(`${areaId}_s${i}`)
-      )
-      if (!hasAny) onToggleArea(areaId)
-    }
-    setExpandedAreaId(null)
-  }
 
-  const countSelected = (area: LifeAreaConfig) => {
-    if (!area.suggestions) return 0
-    return area.suggestions.filter((_, i) =>
-      selectedGoals.has(`${area.id}_s${i}`)
-    ).length
-  }
+  const countSelected = (area: LifeAreaConfig) =>
+    [...selectedGoals].filter((id) => {
+      const tmpl = GOAL_TEMPLATE_MAP[id]
+      return tmpl && tmpl.lifeArea === area.id && tmpl.level === 3
+    }).length
 
   const expandedArea = expandedAreaId
     ? lifeAreas.find((a) => a.id === expandedAreaId) ?? null
@@ -212,16 +201,12 @@ export function DirectionStep({
           >
             <SuggestionsContent
               area={expandedArea}
-              selectedGoals={selectedGoals}
               selectedL1s={selectedL1s}
-              onToggleGoal={onToggleGoal}
               onToggleL1={onToggleL1}
             />
 
             {/* Target date */}
-            {(expandedArea.suggestions ?? []).some((_, i) =>
-              selectedGoals.has(`${expandedArea.id}_s${i}`)
-            ) && (
+            {selectedAreas.has(expandedArea.id) && (
               <div className="mt-5 pt-4" style={{ borderTop: `1px solid ${expandedArea.hex}30` }}>
                 <label className="text-sm text-white/50 block mb-2">
                   Target date (optional)
@@ -236,15 +221,15 @@ export function DirectionStep({
 
             <button
               onMouseDown={keepFocus}
-              onClick={() => handleAreaDone(expandedArea.id)}
-              className="mt-4 w-full rounded-lg py-2.5 text-sm font-semibold transition-all"
+              onClick={onAdvance}
+              className="relative mt-5 w-full rounded-lg py-3 text-sm font-semibold transition-all"
               style={{
-                background: expandedArea.hex,
-                color: "#fff",
-                boxShadow: `0 0 16px ${expandedArea.hex}40`,
+                background: "linear-gradient(135deg, #00E676, #7C4DFF)",
+                color: "white",
+                boxShadow: "0 0 16px rgba(0,230,118,0.3), 0 0 32px rgba(124,77,255,0.15)",
               }}
             >
-              Done
+              Choose Goals →
             </button>
           </div>
         )}
@@ -550,18 +535,13 @@ function GoalRow({
 
 function SuggestionsContent({
   area,
-  selectedGoals,
   selectedL1s,
-  onToggleGoal,
   onToggleL1,
 }: {
   area: LifeAreaConfig
-  selectedGoals: Set<string>
   selectedL1s: Set<string>
-  onToggleGoal: (id: string) => void
   onToggleL1: (id: string) => void
 }) {
-  const suggestions = area.suggestions ?? []
   const catalog = getAreaCatalog(area.id)
   const l1Goals = catalog?.l1Goals ?? []
 
@@ -575,38 +555,12 @@ function SuggestionsContent({
           {l1Goals.map((l1) => (
             <GoalRow
               key={l1.id}
-
               label={l1.title}
               isOn={selectedL1s.has(l1.id)}
               accentColor={area.hex}
               onToggle={() => onToggleL1(l1.id)}
             />
           ))}
-        </div>
-      )}
-
-      {suggestions.length > 0 && (
-        <div className="space-y-1">
-          {l1Goals.length > 0 && (
-            <p className="text-xs text-white/30 uppercase tracking-wider font-medium mb-2 px-1">
-              Goals to track
-            </p>
-          )}
-          {suggestions.map((s, i) => {
-            const goalId = `${area.id}_s${i}`
-            const isOn = selectedGoals.has(goalId)
-            return (
-              <GoalRow
-                key={goalId}
-
-                label={s.title}
-                isOn={isOn}
-                accentColor={area.hex}
-                onToggle={() => onToggleGoal(goalId)}
-                featured={s.featured}
-              />
-            )
-          })}
         </div>
       )}
     </div>

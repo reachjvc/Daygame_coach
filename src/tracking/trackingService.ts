@@ -103,7 +103,7 @@ import type {
   StickingPointUpdate,
   DailyStats,
 } from "@/src/db/trackingTypes"
-import type { ConversationFieldValue } from "./types"
+import type { ConversationFieldValue, DailyWeekSummary } from "./types"
 import { ALL_MILESTONES } from "@/src/tracking/data/milestones"
 import { syncLinkedGoals } from "@/src/db/goalRepo"
 
@@ -583,6 +583,89 @@ export async function deleteCustomReviewTemplate(
 }
 
 // ============================================
+// Daily Review Aggregation
+// ============================================
+
+/**
+ * Aggregate daily reviews for a given week range.
+ * Used by the weekly review to show daily reflection patterns.
+ */
+export async function aggregateDailyReviewsForWeek(
+  userId: string,
+  weekStart: string,
+  weekEnd: string
+): Promise<DailyWeekSummary> {
+  const reviews = await repoGetUserReviews(userId, "daily", 14)
+  const startDate = new Date(weekStart)
+  const endDate = new Date(weekEnd)
+
+  const weekReviews = reviews.filter((r) => {
+    const date = new Date(r.period_start)
+    return date >= startDate && date <= endDate && !r.is_draft
+  })
+
+  const energies: number[] = []
+  const dayRatings: number[] = []
+  const processRatings: number[] = []
+  const blockers: string[] = []
+  const gladMoments: string[] = []
+  const valuesAlignment = { toward: 0, neutral: 0, away: 0 }
+  let lowDays = 0
+
+  for (const review of weekReviews) {
+    const fields = (review.fields || {}) as Record<string, string>
+
+    const energy = Number(fields.energy)
+    const dayRating = Number(fields.day_rating)
+    const processRating = Number(fields.process_rating)
+
+    if (energy > 0) energies.push(energy)
+    if (dayRating > 0) dayRatings.push(dayRating)
+    if (processRating > 0) processRatings.push(processRating)
+
+    if (energy > 0 && energy <= 2 && dayRating > 0 && dayRating <= 2) {
+      lowDays++
+    }
+
+    if (fields.blocker?.trim()) {
+      blockers.push(fields.blocker.trim())
+    }
+
+    if (fields.glad_moment?.trim()) {
+      gladMoments.push(fields.glad_moment.trim())
+    }
+
+    const alignment = fields.values_alignment
+    if (alignment === "toward" || alignment === "neutral" || alignment === "away") {
+      valuesAlignment[alignment]++
+    }
+  }
+
+  const avg = (arr: number[]) => arr.length > 0
+    ? Math.round((arr.reduce((a, b) => a + b, 0) / arr.length) * 10) / 10
+    : null
+
+  const avgEnergy = avg(energies)
+  const avgDayRating = avg(dayRatings)
+  const avgProcessRating = avg(processRatings)
+  const processOutcomeGap = avgProcessRating !== null && avgDayRating !== null
+    ? Math.round((avgProcessRating - avgDayRating) * 10) / 10
+    : null
+
+  return {
+    count: weekReviews.length,
+    avgEnergy,
+    avgDayRating,
+    avgProcessRating,
+    processOutcomeGap,
+    blockers: blockers.slice(0, 7),
+    valuesAlignment,
+    gladMoments: gladMoments.slice(0, 5),
+    lowDays,
+  }
+}
+
+// ============================================
 // Stats
 // ============================================
 
@@ -1006,3 +1089,5 @@ export type {
   StickingPointUpdate,
   DailyStats,
 }
+
+export type { DailyWeekSummary } from "./types"

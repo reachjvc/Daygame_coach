@@ -17,8 +17,8 @@ export function ConfirmDeleteAllDialog({
   onCancel,
 }: ConfirmDeleteAllDialogProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200" data-testid="goals-delete-all-confirm">
-      <div className="relative bg-card border border-border rounded-2xl p-6 max-w-sm mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-in fade-in duration-200 pt-safe pb-safe" data-testid="goals-delete-all-confirm">
+      <div className="relative bg-card border border-border rounded-2xl p-4 sm:p-6 max-w-sm mx-4 text-center shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="mx-auto w-14 h-14 rounded-full flex items-center justify-center mb-4 bg-destructive/15">
           <AlertTriangle className="size-7 text-destructive" />
         </div>

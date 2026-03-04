@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell } from "lucide-react"
+import { ArrowLeft, Beaker, BookOpen, Medal, Sparkles, User, Video, Crosshair, Palette, Play, FlaskConical, ListChecks, Layers, Orbit, Paintbrush, Navigation, Dumbbell, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 const testPages = [
@@ -100,6 +100,12 @@ const testPages = [
     href: "/test/health",
     description: "Weight, sleep, workout, and nutrition trackers with cross-domain correlation",
     icon: Dumbbell,
+  },
+  {
+    name: "Script Builder",
+    href: "/test/script-builder",
+    description: "Branching conversation script editor with DA/EN toggle — saves to filesystem JSON",
+    icon: MessageSquare,
   },
 ]
 

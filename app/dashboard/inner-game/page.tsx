@@ -1,5 +1,6 @@
 import { createServerSupabaseClient } from "@/src/db/server"
 import { AppHeader } from "@/components/AppHeader"
+import { MobileTabBar } from "@/components/MobileTabBar"
 import { InnerGamePage } from "@/src/inner-game"
 
 export default async function DashboardInnerGamePage() {
@@ -41,9 +42,10 @@ export default async function DashboardInnerGamePage() {
 
   // Full access
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background pb-tab-bar">
       <AppHeader currentPage="inner-game" isLoggedIn={true} hasPurchased={true} />
       <InnerGamePage isPreviewMode={false} />
+      <MobileTabBar />
     </div>
   )
 }
